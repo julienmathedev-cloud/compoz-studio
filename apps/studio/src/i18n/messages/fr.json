@@ -1,0 +1,1230 @@
+{
+  "gate": {
+    "title": "Compoz Studio",
+    "tagline": "Le studio pour composer, gérer et publier vos sites efficacement.",
+    "actions": {
+      "public": "Accèder au site public",
+      "admin": "Accèder à l’admin"
+    },
+    "ariaLabel": "Accueil Compoz Studio"
+  },
+
+  "common": {
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "loading": "Chargement…",
+    "modified": "Modifié",
+    "published": "Publié",
+    "publishing": "Publication…",
+    "saved": "Sauvegardé",
+    "cancel": "Annuler",
+    "reset": "Réinitialiser",
+    "retry": "Réessayer",
+    "sync": "Synchroniser",
+    "delete": "Supprimer",
+    "new": "Nouveau",
+    "deleted": "Supprimé",
+    "error": "Erreur",
+    "oneError": "{count} erreur",
+    "multipleErrors": "{count} erreurs",
+    "selectPlaceholder": "Sélectionner une option",
+    "add": "Ajouter",
+    "addLink": "Ajouter un lien",
+    "addSubLink": "Ajouter un sous-lien",
+    "moveUp": "Monter",
+    "moveDown": "Descendre",
+    "actionUnavailable": "Action indisponible",
+    "tabNavigation": "Navigation entre les onglets",
+    "language": "Langue",
+    "alreadyTop": "Déjà en haut",
+    "alreadyBottom": "Déjà en bas",
+    "navigation": "Navigation",
+    "upToDate": "À jour",
+    "status": "État"
+  },
+
+  "notifications": {
+    "noChanges": {
+      "title": "Aucun changement",
+      "description": "Aucun changement détecté sur {entity}."
+    },
+    "updated": {
+      "title": "{entity} mis à jour",
+      "description": "Les champs suivants ont été mis à jour : {fields}."
+    },
+    "created": {
+      "title": "{entity} créé",
+      "description": "{entity} « {name} » a été créé."
+    },
+    "deleted": {
+      "title": "{entity} supprimé",
+      "description": "{entity} « {name} » a été supprimé."
+    }
+  },
+
+  "errors": {
+    "NOT_FOUND": "La ressource demandée est introuvable.",
+    "VALIDATION_ERROR": "Certains champs sont invalides.",
+    "INTERNAL": "Une erreur interne est survenue.",
+    "CONFLICT": "Un conflit a été détecté. L’opération ne peut pas être effectuée.",
+    "FORBIDDEN": "Vous n’avez pas les droits nécessaires pour effectuer cette action.",
+    "INVALID_ARGUMENT": "Un paramètre fourni est invalide.",
+    "UNAUTHORIZED": "Votre session a expiré. Veuillez vous reconnecter.",
+    "UNSUPPORTED_MEDIA_TYPE": "Type de média non pris en charge.",
+    "JSON_INVALID": "Le corps de la requête n’est pas un JSON valide.",
+    "JSON_OBJECT_EXPECTED": "Le corps de la requête doit être un objet JSON.",
+
+    "HREF_RELATIVE_INVALID": "Le lien doit être un chemin relatif (ex. /contact).",
+    "HREF_ABSOLUTE_HTTP_INVALID": "Le lien doit être une URL absolue http(s).",
+    "HREF_MAILTO_INVALID": "Le lien email est invalide (ex. mailto:adresse@exemple.com).",
+
+    "PAYLOAD_TOO_LARGE": "La taille de la requête dépasse la limite autorisée.",
+    "UPLOAD_FILE_MISSING": "Aucun fichier n’a été fourni.",
+    "UPLOAD_IMAGE_REQUIRED": "Le fichier doit être une image.",
+    "UPLOAD_MIME_NOT_ALLOWED": "Le type de fichier n’est pas autorisé.",
+    "UPLOAD_EMPTY_FILE": "Le fichier est vide.",
+    "UPLOAD_IMAGE_DIMENSIONS_INVALID": "Les dimensions de l'image sont invalides.",
+    "UPLOAD_FILE_TOO_LARGE": "Le fichier est trop volumineux.",
+    "UPLOAD_SVG_NOT_SAFE": "Ce fichier SVG n’est pas autorisé (contenu potentiellement dangereux).",
+
+    "PUBLISH_EMPTY_INDEX": "Avertissement : aucune page n’est définie. Le site publié sera vide.",
+    "PUBLISH_PAGE_MISSING": "Avertissement : une page référencée n’a pas pu être copiée.",
+    "PUBLISH_PAGE_DELETE_FAILED": "Avertissement : une page n'a pas pu être supprimée pendant la publication.",
+    "PUBLISH_SETTINGS_COPY_FAILED": "Avertissement : échec lors de la copie des réglages pendant la publication.",
+    "PUBLISH_IDENTICAL_STATES": "Publication inutile : les états source et cible sont identiques.",
+    "PUBLISH_HOME_MISSING": "Avertissement : la page “home” est absente. Le site n’aura probablement pas de page d’accueil.",
+    "PUBLISH_PRIMARY_MENU_EMPTY": "Avertissement : le menu principal est vide.",
+    "PUBLISH_LEGAL_MENU_EMPTY": "Avertissement : le menu légal est vide.",
+    "PUBLISH_SOCIAL_EMPTY": "Avertissement : aucun lien social n’est défini.",
+    "PUBLISH_IDENTITY_LOGO_MISSING": "Avertissement : aucun logo n’est défini.",
+    "PUBLISH_IDENTITY_FAVICON_MISSING": "Avertissement : aucun favicon n’est défini.",
+    "PUBLISH_SEO_OG_IMAGE_MISSING": "Avertissement : aucune image OpenGraph par défaut n’est définie.",
+    "PUBLISH_SEO_ROBOTS_NOINDEX": "Avertissement : robots contient “noindex” (le site risque de ne pas être indexé).",
+    "PUBLISH_SEO_BASEURL_MISSING": "Avertissement : l’URL de base du site est manquante.",
+
+    "SLUG_REQUIRED": "Le slug (identifiant de l'URL) est requis.",
+    "SLUG_INVALID_FORMAT": "Le slug (identifiant de l'URL) est invalide (format attendu : kebab-case).",
+    "SLUG_RESERVED": "Ce slug (identifiant de l'URL) est réservé et ne peut pas être utilisé.",
+    "SLUG_NORMALIZED_DIFFERENT": "Le slug a été normalisé automatiquement.",
+    "SLUG_RESERVED_HINT": "Ce slug est réservé, veuillez en choisir un autre.",
+
+    "PAGE_TITLE_REQUIRED": "Le titre de la page est requis.",
+    "PAGE_TITLE_TOO_SHORT": "Le titre est trop court.",
+    "PAGE_TITLE_TOO_LONG": "Le titre est trop long.",
+    "PAGE_SLUG_REQUIRED": "Le slug (identifiant de l'URL) de la page est requis.",
+    "PAGE_SLUG_RESERVED": "Ce slug (identifiant de l'URL) est réservé et ne peut pas être utilisé.",
+    "PAGE_SLUG_INVALID_FORMAT": "Le slug (identifiant de l'URL) doit être au format kebab-case (ex. \"ma-page\").",
+
+    "FOOTER_COPYRIGHT_TOO_LONG": "Le texte de copyright est trop long.",
+
+    "PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE": "La priorité du sitemap doit être comprise entre 0 et 1.",
+    "PAGE_NOT_FOUND": "La page demandée est introuvable.",
+    "PAGE_SLUG_CONFLICT": "Ce slug (identifiant de l'URL) est déjà utilisé par une autre page.",
+    "PAGE_ID_REQUIRED": "L’identifiant de la page est requis.",
+
+    "LEGAL_MENU_LABEL_REQUIRED": "Le libellé du lien légal est requis.",
+    "LEGAL_MENU_LABEL_TOO_LONG": "Le libellé du lien légal est trop long.",
+    "LEGAL_MENU_HREF_REQUIRED": "Le lien (URL ou chemin) est requis.",
+    "LEGAL_MENU_HREF_INVALID": "Le lien (URL ou chemin) est invalide.",
+    "LEGAL_MENU_TOO_MANY_ITEMS": "Vous avez ajouté trop de liens dans le menu légal.",
+
+    "PRIMARY_MENU_LABEL_TOO_LONG": "Le libellé du menu principal est trop long.",
+    "PRIMARY_MENU_LABEL_REQUIRED": "Le libellé du menu principal est requis.",
+    "PRIMARY_MENU_HREF_REQUIRED": "Le lien (URL ou chemin) du menu principal est requis.",
+    "PRIMARY_MENU_HREF_INVALID": "Le lien (URL ou chemin) du menu principal est invalide.",
+    "PRIMARY_MENU_TOO_MANY_ITEMS": "Vous avez ajouté trop de liens dans le menu principal.",
+    "PRIMARY_MENU_PARENT_WITH_CHILDREN_NEWTAB_FORBIDDEN": "Un lien parent avec des sous-liens ne doit pas s’ouvrir dans un nouvel onglet.",
+
+    "CONTENT_STATE_INVALID": "Le paramètre d’état (draft/published) est invalide.",
+
+    "URL_REQUIRED": "L’URL est requise.",
+    "URL_NO_SPACES": "L’URL ne doit pas contenir d’espaces.",
+    "URL_NO_BACKSLASH": "L’URL ne doit pas contenir de \\\\.",
+    "URL_TOO_LONG": "L’URL est trop longue.",
+    "URL_ABSOLUTE_HTTP_REQUIRED": "L’URL doit être une URL absolue http(s).",
+    "URL_RELATIVE_REQUIRED": "L’URL doit être un chemin relatif (ex. /contact).",
+
+    "IDENTITY_SITENAME_REQUIRED": "Le nom du site est requis.",
+    "IDENTITY_LOGO_ALT_REQUIRED": "Le texte alternatif du logo est requis.",
+    "IDENTITY_SITENAME_TOO_LONG": "Le nom du site est trop long.",
+    "IDENTITY_TAGLINE_TOO_LONG": "La phrase d’accroche est trop longue.",
+    "IDENTITY_LOGO_ALT_TOO_LONG": "Le texte alternatif du logo est trop long.",
+
+    "SEO_TITLE_REQUIRED": "Le titre SEO par défaut est requis.",
+    "SEO_TITLE_TEMPLATE_MISSING_PLACEHOLDER": "Le template de titre doit contenir le placeholder %s (ex. “%s — Mon site”).",
+    "SEO_BASEURL_INVALID": "L’URL de base du site n’est pas une URL absolue valide.",
+    "SEO_CANONICAL_URL_INVALID": "L’URL canonique n’est pas une URL absolue valide.",
+    "SEO_BASEURL_REQUIRED": "L’URL de base du site est requise.",
+    "SEO_BASEURL_HTTPS_REQUIRED": "En production, l’URL de base du site doit être en https.",
+    "SEO_ROBOTS_TOO_LONG": "Le champ robots est trop long.",
+    "SEO_OPEN_GRAPH_TITLE_TOO_LONG": "Le champ title est trop long.",
+    "SEO_OPEN_GRAPH_DESCRIPTION_TOO_LONG": "Le champ description est trop long.",
+    "SEO_OPEN_GRAPH_IMAGE_ALT_TOO_LONG": "Le champ imageAlt est trop long.",
+    "SEO_TITLE_TOO_LONG": "Le champ title est trop long.",
+    "SEO_DESCRIPTION_TOO_LONG": "Le champ description est trop long.",
+    "SEO_TITLE_TEMPLATE_TOO_LONG": "Le champ titleTemplate est trop long.",
+
+    "SITE_INDEX_DUPLICATE_SLUGS": "Des slugs (identifiants de l'URL) en double ont été détectés dans l’index du site.",
+    "SOCIAL_DUPLICATE_KIND": "Certaines plateformes sociales sont renseignées plusieurs fois (doublons).",
+    "SOCIAL_INVALID_FOR_PLATFORM": "Le lien renseigné ne correspond pas au format attendu pour cette plateforme.",
+    "SOCIAL_ABSOLUTE_REQUIRED": "Le lien doit être une URL http(s) absolue.",
+    "SOCIAL_HREF_REQUIRED": "Le lien est requis.",
+    "SOCIAL_TOO_MANY_ITEMS": "Vous avez ajouté trop de liens sociaux.",
+    "SOCIAL_MAILTO_INVALID": "Le lien mailto est invalide (ex. mailto:adresse@exemple.com).",
+    "SOCIAL_EMAIL_REQUIRES_MAILTO": "Pour un email, utilisez le format mailto:adresse@exemple.com.",
+    "SOCIAL_MAILTO_RESERVED_FOR_EMAIL": "Le format mailto: est réservé au type Email.",
+
+    "SEO_TWITTER_HANDLE_INVALID": "Le handle Twitter est invalide (ex. @monsite).",
+    "SEO_DEFAULT_DESCRIPTION_TOO_SHORT": "La description par défaut est trop courte.",
+    "SEO_TITLE_TEMPLATE_TOO_SHORT": "Le template de titre est trop court.",
+    "SEO_ASSET_URL_INVALID": "L’URL de l'image est invalide.",
+
+    "BLOCKS_INVALID": "Liste de blocs invalide.",
+    "BLOCK_ID_REQUIRED": "Un identifiant de bloc est requis.",
+    "BLOCK_ID_DUPLICATE": "Cet identifiant de bloc est déjà utilisé.",
+    "BLOCKS_MULTIPLE_LCP_DETECTED": "Plusieurs blocs LCP détectés pour cette page.",
+    "BLOCK_TYPE_UNSUPPORTED": "Ce type de bloc n’est pas supporté.",
+    "BLOCK_NOT_FOUND": "Ce bloc est introuvable.",
+    "BLOCK_ID_MISMATCH": "L’identifiant du bloc dans l’URL ne correspond pas à celui des données envoyées.",
+
+    "LAYOUT_SECTION_COLUMNS_INVALID": "Le nombre de colonnes de la section est invalide (attendu : 1 à 3).",
+    "LAYOUT_SECTION_CELLS_INVALID": "Les cellules de la section sont invalides.",
+    "LAYOUT_SECTION_CELLS_COUNT_MISMATCH": "Le nombre de cellules ne correspond pas au nombre de colonnes.",
+    "LAYOUT_SECTION_TITLE_REQUIRED": "Le titre de la section est requis.",
+    "LAYOUT_SECTION_TITLE_DISPLAY_INVALID": "L’affichage du titre de la section est invalide.",
+    "LAYOUT_SECTION_CONTAINER_MODE_INVALID": "Le mode de conteneur de la section n'est pas valide.",
+
+    "CELL_INVALID": "Une cellule est invalide.",
+    "CELL_KIND_UNSUPPORTED": "Ce type de cellule n’est pas supporté.",
+
+    "RICH_TEXT_CONTENT_INVALID": "Le contenu du texte riche est invalide.",
+
+    "IMAGE_SRC_REQUIRED": "La source de l’image est requise.",
+    "IMAGE_ALT_INVALID": "Le texte alternatif de l’image est invalide.",
+    "IMAGE_VARIANT_INVALID": "Le format d’image est invalide.",
+
+    "GALLERY_MAX_COLUMNS_INVALID": "Le nombre de colonnes de la galerie est invalide.",
+
+    "CELL_IMAGES_INVALID": "Les images sont invalides.",
+    "CELL_IMAGES_MIN_1": "Au moins une image est requise.",
+    "CELL_IMAGE_INVALID": "Une image est invalide.",
+    "CELL_IMAGE_SRC_REQUIRED": "La source de l'image est requise.",
+    "CELL_IMAGE_WIDTH_REQUIRED": "La largeur de l'image est requise.",
+    "CELL_IMAGE_HEIGHT_REQUIRED": "La hauteur de l'image est requise.",
+    "CELL_IMAGE_ALT_INVALID": "Le texte alternatif de l’image est invalide.",
+    "CELL_IMAGE_CAPTION_INVALID": "La légende de l’image est invalide.",
+    "CELL_IMAGE_ID_REQUIRED": "L’ID de l’image est requis.",
+    "CELL_IMAGE_HREF_INVALID": "Le lien de l’image est invalide."
+  },
+
+  "uiErrors": {
+    "errorGeneric": "Une erreur est survenue.",
+    "error": "Erreur",
+    "networkError": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
+    "operationCancelled": "Opération annulée",
+    "requestAborted": "La requête a été annulée.",
+    "serverError": "Erreur serveur",
+    "unexpectedSave": "Une erreur inattendue est survenue lors de l’enregistrement.",
+    "http400": "Les données envoyées sont invalides. Veuillez vérifier votre saisie.",
+    "http400Title": "Requête invalide",
+    "http401": "Votre session a expiré. Veuillez vous reconnecter.",
+    "http401Title": "Non authentifié",
+    "http403": "Vous n’avez pas les droits nécessaires pour effectuer cette action.",
+    "http403Title": "Accès refusé",
+    "http404": "La ressource demandée est introuvable.",
+    "http404Title": "Introuvable",
+    "http405": "Cette action n’est pas autorisée.",
+    "http405Title": "Action non autorisée",
+    "http409": "Un conflit a été détecté. Veuillez actualiser et réessayer.",
+    "http409Title": "Conflit",
+    "http422": "Certaines données sont invalides. Veuillez vérifier votre saisie.",
+    "http422Title": "Erreur de validation",
+    "http500": "Une erreur interne est survenue. Veuillez réessayer dans quelques instants.",
+    "http500Title": "Erreur serveur",
+
+    "formHasErrors": "Le formulaire contient des erreurs.",
+
+    "notImage": "Le fichier sélectionné n’est pas une image.",
+    "uploadFailed": "Échec de l’envoi du fichier. Veuillez réessayer.",
+    "fileTooLarge": "Le fichier sélectionné est trop volumineux. La taille maximale autorisée est de {max}"
+  },
+
+  "admin": {
+    "shared": {
+      "visualize": {
+        "draft": "Brouillon",
+        "published": "Publié"
+      },
+      "entities": {
+        "overview": "Vue d’ensemble",
+        "identity": "Identité",
+        "menus": "Menus",
+        "primaryMenu": "Menu principal",
+        "legalMenu": "Menu légal",
+        "header": "Header",
+        "footer": "Footer",
+        "social": "Social",
+        "page": "Page",
+        "pages": "Pages",
+        "blocks": "Blocs",
+        "seo": "SEO",
+        "siteIndex": "Index du site",
+        "settings": "Réglages",
+        "site": "Site"
+      },
+
+      "upload": {
+        "optimized": "Image optimisée : {from} → {to}"
+      },
+
+      "homeLabel": "Accueil",
+
+      "loading": {
+        "section": "Chargement : {title}…",
+        "preview": "Chargement de l'apercu…"
+      },
+
+      "warningsPanel": {
+        "label": "Recommandations",
+        "labelWithCount": "Recommandations ({count})",
+        "title": "Points à vérifier"
+      },
+
+      "confirm": {
+        "saveDespiteWarnings": {
+          "title": "Enregistrer malgré les avertissements ?",
+          "intro": "Certains éléments peuvent être améliorés. Vous pouvez continuer si vous avez vérifié ces points.",
+          "confirmLabel": "Enregistrer quand même",
+          "requireAckLabel": "J'ai compris : je souhaite continuer"
+        },
+        "delete": {
+          "title": "Supprimer ?",
+          "intro": "Cette action est irréversible."
+        },
+        "destructiveChange": {
+          "title": "Modifications non enregistrées",
+          "intro": "Cette action peut entraîner une perte de contenu non sauvegardé.",
+          "items": "Le contenu supprimé ne pourra pas être récupéré.",
+          "confirmLabel": "Continuer",
+          "cancelLabel": "Annuler",
+          "requireAckLabel": "J’ai compris : je vais perdre mes modifications"
+        },
+        "dirty": {
+          "title": "Modifications non enregistrées",
+          "intro": "Vous avez des modifications en cours sur cette page. Si vous changez de page, elles seront perdues.",
+          "items": "Les modifications non enregistrées seront abandonnées.",
+          "confirmLabel": "Changer d’onglet",
+          "cancelLabel": "Rester sur cette page",
+          "requireAckLabel": "J’ai compris : je vais perdre mes modifications"
+        }
+      },
+
+      "preview": {
+        "title": "Apercu — {entity}",
+        "navDisabled": "La navigation est désactivée en mode aperçu.",
+        "infoOverride": "Modifications en cours (non enregistrées)",
+        "infoBaseline": "Version enregistrée"
+      }
+    },
+
+    "emptyPreview": {
+      "footer": "Aucune donnée à prévisualiser pour le footer.",
+      "header": "Aucune donnée à prévisualiser pour le header.",
+      "legalMenu": "Aucune donnée à prévisualiser pour le menu légal.",
+      "primaryMenu": "Aucune donnée à prévisualiser pour le menu principal.",
+      "social": "Aucune donnée à prévisualiser pour les réseaux sociaux.",
+      "homeMissing": "Aucune page d'accueil n’est définie.",
+      "pageNotFound": "La page {page} n’existe pas.",
+      "blocks": "Aucun bloc n’est défini."
+    },
+
+    "pages": {
+      "blocksList": {
+        "title": "Liste des blocs"
+      },
+      "blocksEdit": {
+        "title": "Édition d'un bloc"
+      },
+      "error": {
+        "ariaLabel": "Erreur dans l’interface d’administration",
+        "title": "Une erreur est survenue",
+        "description": "Impossible de charger cette section. Vous pouvez réessayer.",
+        "retry": "Réessayer",
+        "errorCode": "Code d’erreur :",
+        "backToAdmin": "Retour à l’admin"
+      },
+      "notFound": {
+        "ariaLabel": "Page d’administration introuvable",
+        "title": "Page introuvable",
+        "description": "La page d’administration que vous recherchez n’existe pas ou a été déplacée.",
+        "backToAdmin": "Retour à l’admin"
+      }
+    },
+
+    "theme": {
+      "toLight": "Passer en thème clair",
+      "toDark": "Passer en thème sombre"
+    },
+
+    "shell": {
+      "loading": "Chargement de l’interface d’administration"
+    },
+
+    "social": {
+      "kind": {
+        "website": "Site web",
+        "email": "Email",
+        "phone": "Téléphone",
+        "custom": "Personnalisé",
+        "whatsapp": "WhatsApp",
+        "github": "GitHub",
+        "linkedin": "LinkedIn",
+        "instagram": "Instagram",
+        "x": "X",
+        "youtube": "YouTube",
+        "tiktok": "TikTok",
+        "facebook": "Facebook",
+        "behance": "Behance",
+        "dribbble": "Dribbble"
+      }
+    },
+
+    "expandable": {
+      "advancedOptions": "Options avancées"
+    },
+
+    "footer": {
+      "ariaLabel": "Pied de page de l’interface d’administration",
+      "legalNavLabel": "Liens légaux",
+      "legalNotices": "Mentions légales",
+      "cookies": "Cookies",
+      "privacy": "Confidentialité"
+    },
+
+    "header": {
+      "ariaLabel": "En-tête de l’interface d’administration",
+      "skipToContent": "Aller au contenu principal",
+      "title": "Compoz — Admin",
+      "comingSoon": "Bientôt dispo",
+      "comingSoonTooltip": "Fonctionnalité en cours de développement",
+      "comingSoonAria": "Fonctionnalité bientôt disponible"
+    },
+
+    "imageSelector": {
+      "uploadingSr": "Téléversement en cours…",
+      "uploadingButton": "Téléversement…",
+      "chooseFile": "Choisir un fichier",
+      "previewAria": "Aperçu de l’image",
+      "placeholders": {
+        "noneSelected": "Aucune image sélectionnée"
+      },
+      "tooltips": {
+        "disabledWhileUploading": "Action indisponible pendant le téléversement.",
+        "nothingToDelete": "Aucune image à supprimer."
+      },
+      "confirm": {
+        "title": "Supprimer l’image ?",
+        "description": "Cette action réinitialise l’URL et l’aperçu actuel."
+      },
+      "hints": {
+        "notRecommendedType": "Le type de fichier choisi n’est pas recommandé pour cet usage. Préférez {types}."
+      }
+    },
+
+    "socialLinkField": {
+      "label": "Lien social"
+    },
+
+    "actionsBar": {
+      "noChangesToSave": "Aucun changement à enregistrer.",
+      "noChangesToReset": "Aucun changement à réinitialiser."
+    },
+
+    "favicon": {
+      "altFallback": "Favicon",
+      "label": "Favicon",
+      "help": "Téléchargez une icône 512×512 : les formats nécessaires sont générés automatiquement.",
+      "preferredTypeHint": "PNG (512×512) ou ICO. SVG possible selon compatibilité navigateur."
+    },
+
+    "logoFields": {
+      "altFallback": "Logo",
+      "preferredTypeHint": "Format recommandé : SVG pour un rendu net sur tous les écrans.",
+      "image": {
+        "label": "Logo principal",
+        "help": "Télécharger votre logo (format recommandé : SVG)."
+      },
+      "alt": {
+        "label": "Texte alternatif du logo",
+        "placeholder": "Décrivez brièvement votre logo (accessibilité)",
+        "help": "Texte alternatif utilisé par les lecteurs d’écran. Décrivez brièvement le logo.",
+        "helpNearLimit": "Texte proche de la limite : il vous reste {remaining} caractère(s)."
+      }
+    },
+
+    "menuBadges": {
+      "ariaLabel": "Type de lien : {types}",
+      "kinds": {
+        "group": "Groupe",
+        "external": "Lien externe",
+        "internal": "Lien interne"
+      }
+    },
+
+    "menuFieldsItem": {
+      "labelField": {
+        "label": "Libellé du lien",
+        "placeholder": "Texte du lien (ex. Accueil)"
+      },
+      "confirmDelete": {
+        "title": "Supprimer ce lien ?",
+        "description": "Cette action retirera ce lien du menu."
+      }
+    },
+
+    "menuLink": {
+      "expandableLabel": "Options du lien",
+      "href": {
+        "label": "Lien (URL ou chemin)",
+        "placeholder": "URL externe ou chemin interne (ex. /contact)"
+      },
+      "hasChildrenHelp": "Cet élément contient des sous-liens. Le lien principal est ignoré.",
+      "defaultHelp": "Définissez le lien associé à cet élément du menu.",
+      "internalPicker": {
+        "label": "Lier à une page interne",
+        "placeholder": "Choisir une page interne…"
+      },
+      "externalSwitch": {
+        "label": "Lien externe",
+        "help": "Activez pour une URL externe (https://…). Désactivez pour lier une page du site."
+      },
+      "newTabSwitch": {
+        "label": "Ouvrir dans un nouvel onglet",
+        "help": "Recommandé pour les liens externes."
+      }
+    },
+
+    "pageListItem": {
+      "editMeta": "Modifier les métadonnées",
+      "editContent": "Éditer le contenu",
+      "deletePage": "Supprimer la page"
+    },
+
+    "socialFieldsItem": {
+      "kind": {
+        "label": "Plateforme",
+        "placeholder": "Sélectionner une plateforme",
+        "help": "Choisissez la plateforme associée à ce lien."
+      },
+      "href": {
+        "placeholderEmail": "adresse@exemple.com",
+        "placeholderUrl": "exemple.com/profil",
+        "helpEmail": "Adresse e-mail utilisée pour ce contact (un mailto: sera généré).",
+        "helpUrl": "Chemin ou domaine de votre profil (le https:// est préfixé automatiquement)."
+      },
+      "confirmDelete": {
+        "title": "Supprimer ce lien social ?",
+        "description": "Cette action retirera ce lien social de la liste."
+      }
+    },
+
+    "footerForm": {
+      "showYear": {
+        "label": "Afficher l’année courante",
+        "help": "Ajoute automatiquement l’année en cours dans la ligne de copyright."
+      },
+      "copyright": {
+        "label": "Texte de copyright",
+        "help": "S’affiche dans le pied de page. Tu peux utiliser le nom de ton activité, ta raison sociale, etc.",
+        "placeholder": "© 2025 Mon activité. Tous droits réservés."
+      }
+    },
+
+    "headerForm": {
+      "showLogo": {
+        "label": "Afficher le logo",
+        "help": "Affiche le logo du site dans l’en-tête, s’il est configuré dans l’onglet Identité."
+      },
+      "showSiteName": {
+        "label": "Afficher le nom du site",
+        "help": "Affiche le nom du site à côté du logo dans l’en-tête."
+      },
+      "sticky": {
+        "label": "En-tête fixe",
+        "help": "L’en-tête reste visible en haut de la page lors du défilement."
+      },
+      "blur": {
+        "label": "Arrière-plan flouté",
+        "help": "Ajoute un effet de flou et de transparence derrière l’en-tête (style moderne)."
+      },
+      "swapPrimaryAndSocial": {
+        "label": "Inverser menu et réseaux sociaux",
+        "help": "Inverse la zone du menu principal et celle des liens sociaux dans l’en-tête."
+      }
+    },
+
+    "identityForm": {
+      "siteName": {
+        "label": "Nom du site",
+        "placeholder": "Nom du site (affiché dans l’en-tête et l’onglet du navigateur)",
+        "help": "Nom principal de votre site (utilisé par défaut pour l’en-tête et le SEO).",
+        "helpNearLimit": "Nom du site presque au maximum — il reste {remaining} caractère(s)."
+      },
+      "tagline": {
+        "label": "Phrase d’accroche",
+        "placeholder": "Une phrase courte pour décrire votre activité",
+        "help": "Phrase d’accroche affichée sous le titre du site (optionnelle).",
+        "helpNearLimit": "Phrase d’accroche presque au maximum — il reste {remaining} caractère(s)."
+      }
+    },
+
+    "legalMenuForm": {
+      "empty": "Aucun lien légal n’est encore configuré."
+    },
+
+    "pageForm": {
+      "title": {
+        "label": "Titre de la page",
+        "help": "Choisissez un titre clair et descriptif (par ex. “Accueil”, “Galerie”, “Contact”).",
+        "helpNearLimit": "Il ne reste plus que {remaining} caractères disponibles pour le titre.",
+        "placeholderEdit": "Modifier le titre de la page",
+        "placeholderCreate": "Titre de la page (ex. Accueil)"
+      },
+      "slug": {
+        "label": "Slug (identifiant de l'URL)",
+        "helpEmpty": "Si vous laissez ce champ vide, le slug sera généré automatiquement à partir du titre.",
+        "helpWillNormalize": "Le slug sera automatiquement normalisé (minuscules, tirets).",
+        "help": "Le slug doit être court, descriptif et unique (ex: “contact”). Pour l'accueil, utilisez simplement “/”.",
+        "placeholderEdit": "Modifier le slug de la page",
+        "placeholderCreate": "Laisser vide pour le dériver du titre",
+        "inputTitle": "Le slug doit contenir uniquement des lettres minuscules, chiffres et tirets."
+      },
+      "parent": {
+        "label": "Page parente",
+        "help": "Selectionner une page afin d'associer celle-ci en tant que parente.",
+        "none": "Aucune page parente"
+      },
+      "pagination": {
+        "label": "Activer la pagination",
+        "help": "Les pages filles pourront être navigables via un module de pagination.",
+        "helpRootForcedOff": "La pagination est désactivée car la page n'a pas de parente."
+      },
+      "childrens": {
+        "label": "Pages enfants ({count})",
+        "help": "Les pages enfants peuvent être réordonnées depuis la liste ci-dessous. Cet ordre est utilisé pour la navigation entre les pages."
+      },
+      "sitemap": {
+        "expandableLabel": "Options SEO : Sitemap",
+        "include": {
+          "label": "Inclure dans le sitemap",
+          "help": "Décochez pour exclure cette page du sitemap.xml."
+        },
+        "priority": {
+          "label": "Priorité (0.0 à 1.0)",
+          "placeholder": "Ex : 0.8",
+          "help": "Laissez vide pour utiliser la priorité par défaut."
+        },
+        "changefreq": {
+          "label": "Fréquence de changement",
+          "help": "Optionnel — utile uniquement si vous souhaitez surcharger le comportement par défaut.",
+          "options": {
+            "always": "Toujours",
+            "hourly": "Toutes les heures",
+            "daily": "Quotidienne",
+            "weekly": "Hebdomadaire",
+            "monthly": "Mensuelle",
+            "yearly": "Annuelle",
+            "never": "Jamais"
+          }
+        }
+      },
+      "actions": {
+        "create": "Créer la page",
+        "creating": "Création en cours…"
+      }
+    },
+
+    "primaryMenuForm": {
+      "empty": {
+        "primary": "Aucun lien dans le menu principal pour le moment."
+      },
+      "children": {
+        "label": "Sous-liens",
+        "labelWithCount": "Sous-liens ({count})",
+        "empty": "Aucun sous-lien pour le moment.",
+        "tooltips": {
+          "unavailableWhileBusy": "Action indisponible pendant l’édition/sauvegarde."
+        }
+      }
+    },
+
+    "seoForm": {
+      "base": {
+        "defaultTitle": {
+          "label": "Titre par défaut du site",
+          "placeholder": "Ex. Mon porfolio",
+          "help": "Titre utilisé par défaut quand aucune meta spécifique n’est définie."
+        },
+        "titleTemplate": {
+          "label": "Template de titre",
+          "placeholder": "%s — Nom du site",
+          "help": "Utilisez \"%s\" comme placeholder pour le titre de la page."
+        },
+        "defaultDescription": {
+          "label": "Description par défaut",
+          "placeholder": "Description générale de votre site utilisée quand aucune description spécifique n’est fournie.",
+          "help": "Essayez de rester entre 140 et 160 caractères pour un affichage optimal dans Google."
+        }
+      },
+      "indexing": {
+        "baseUrl": {
+          "label": "URL de base du site",
+          "placeholder": "https://www.exemple.com",
+          "help": "L’URL principale de votre site, sans slash final."
+        },
+        "canonicalUrl": {
+          "label": "URL canonique par défaut",
+          "placeholder": "https://www.exemple.com",
+          "help": "L’URL canonique utilisée quand aucune URL spécifique n’est définie."
+        },
+        "robots": {
+          "label": "Directive robots",
+          "placeholder": "index,follow",
+          "help": "Contrôle l’indexation (ex: index,follow, noindex, nofollow…)."
+        },
+        "structuredData": {
+          "label": "Données structurées JSON-LD",
+          "help": "Active l’injection de données structurées basiques pour améliorer la compréhension du site par les moteurs de recherche."
+        }
+      },
+      "twitter": {
+        "card": {
+          "label": "Twitter card",
+          "placeholder": "Sélectionner un type de carte",
+          "help": "Sélectionnez le type de carte Twitter qui sera utilisé pour le site."
+        },
+        "site": {
+          "label": "Compte Twitter du site",
+          "placeholder": "@votrecompte",
+          "help": "Compte officiel du site ou de la marque."
+        },
+        "creator": {
+          "label": "Compte Twitter du créateur",
+          "placeholder": "@auteur",
+          "help": "Compte de l’auteur principal du contenu (optionnel)."
+        }
+      },
+      "openGraph": {
+        "defaultImageUrl": {
+          "label": "Image Open Graph par défaut",
+          "placeholder": "https://…/og-default.jpg",
+          "help": "Image utilisée par défaut lors du partage sur les réseaux sociaux.",
+          "altFallback": "Image Open Graph par défaut",
+          "preferredTypeHint": "Formats recommandés : jpg, png, webp"
+        },
+        "title": {
+          "label": "Titre Open Graph",
+          "placeholder": "Titre affiché lors du partage sur les réseaux sociaux.",
+          "help": "Peut être différent du titre HTML si nécessaire."
+        },
+        "imageAlt": {
+          "label": "Texte alternatif de l’image OG",
+          "placeholder": "Description de l’image pour l’accessibilité.",
+          "help": "Améliore l’accessibilité et le SEO image."
+        },
+        "description": {
+          "label": "Description Open Graph",
+          "placeholder": "Description affichée lors du partage sur les réseaux sociaux.",
+          "help": "Essayez de garder une description claire et synthétique."
+        }
+      }
+    },
+
+    "socialForm": {
+      "empty": "Aucun lien social configuré pour le moment.",
+      "addLink": "Ajouter un lien social"
+    },
+
+    "dashboard": {
+      "title": "Tableau de bord",
+      "tabBarAriaLabel": "Onglets du tableau de bord d’administration",
+      "tabs": {
+        "overview": "Vue d’ensemble",
+        "identity": "Identité",
+        "menu": "Menus",
+        "social": "Réseaux sociaux",
+        "header": "Header",
+        "footer": "Footer",
+        "pages": "Pages",
+        "blocks": "Blocs",
+        "seo": "SEO"
+      }
+    },
+
+    "previewFrame": {
+      "devices": {
+        "mobile": "Mobile",
+        "tablet": "Tablette",
+        "laptop": "Laptop (1024)",
+        "desktop": "Desktop (1440)",
+        "wqhd": "WQHD (2560)",
+        "uhd": "4K (3840)"
+      }
+    },
+
+    "footerSection": {
+      "section": {
+        "title": "Réglages du footer",
+        "description": "Configurez ici le texte de copyright et l’affichage de l’année dans le pied de page de votre site."
+      },
+      "warnings": {
+        "copyrightEmpty": "Vous n’avez pas renseigné de texte de copyright. Cela peut nuire à la crédibilité du site.",
+        "footerLooksEmpty": "Votre footer est quasiment vide (ni année ni texte). Pensez à y ajouter des informations utiles."
+      }
+    },
+
+    "headerSection": {
+      "section": {
+        "title": "Réglages du header",
+        "description": "Configurez l’affichage du logo et du titre dans l’entête de votre site."
+      },
+      "warnings": {
+        "noBranding": "Ni logo ni titre ne sont affichés dans le header. Le visiteur risque de ne pas identifier clairement le site."
+      }
+    },
+
+    "identitySection": {
+      "section": {
+        "title": "Identité du site",
+        "description": "Configurez le nom du site, le texte alternatif du logo et les icônes de favicon utilisées dans l’onglet du navigateur."
+      },
+      "warnings": {
+        "logoMissing": "Aucun logo n’est défini pour le site.",
+        "faviconMissing": "Aucune favicon n’est définie pour le site.",
+        "logoAndFaviconMissing": "Aucun logo ni favicon ne sont définis pour le site."
+      }
+    },
+
+    "legalMenuSection": {
+      "section": {
+        "title": "Menu légal",
+        "description": "Configurez les liens légaux affichés dans le pied de page (mentions légales, cookies, CGU, etc.)."
+      },
+      "warnings": {
+        "legalMenuEmpty": "Aucun lien légal n’est défini dans le menu.",
+        "dupLabelsTop": "Plusieurs liens du menu légal partagent le même libellé.",
+        "dupLinksTop": "Plusieurs liens du menu légal pointent vers la même URL.",
+        "externalNoNewTab": "Certains liens externes ne sont pas ouverts dans un nouvel onglet.",
+        "externalPrefixOnly": "Certains liens externes semblent incomplets (préfixe http(s) seulement).",
+        "internalHrefNotFound": "Certains liens internes ne correspondent à aucune page connue."
+      }
+    },
+
+    "overviewSection": {
+      "globalStatus": {
+        "title": "État global",
+        "description": "Synthèse de l’état du site (brouillon / publié) et des changements en attente.",
+        "lastPublishedLabel": "Dernière publication",
+        "never": "Jamais",
+        "clean": "Aucun changement en attente",
+        "changesPending": "Modifications en attente",
+        "publicationStatusLabel": "Statut de publication",
+        "draftStatusLabel": "État du brouillon",
+        "payloadInvalidHint": "Impossible de déterminer l’état du site. Les données reçues sont incomplètes."
+      },
+      "details": {
+        "title": "Vue d'ensemble des pages",
+        "showAll": "Tout afficher",
+        "showDirty": "Afficher les pages modifiées",
+        "empty": "Aucune page modifiées."
+      },
+
+      "section": {
+        "title": "Vue d’ensemble",
+        "description": "Vue d’ensemble des contenus du site et des actions de publication."
+      },
+      "stats": {
+        "title": "Statistiques globales",
+        "description": "Aperçu rapide des contenus de votre site.",
+        "pages": {
+          "description": "Pages visibles sur le site public",
+          "valueHint": "Configurées (brouillon)"
+        },
+        "blocks": {
+          "description": "Sections utilisées dans les pages publiées.",
+          "valueHint": "Utilisés (brouillon)"
+        },
+        "breakdown": {
+          "published": "publiés",
+          "new": "nouveaux",
+          "modified": "modifiés",
+          "deleted": "supprimés"
+        }
+      },
+      "settings": {
+        "title": "Paramètres",
+        "description": "Statut des paramètres du site (brouillon vs publié)."
+      },
+      "publish": {
+        "title": "Publication du site",
+        "description": "Publiez vos réglages pour les rendre visibles sur la version publique.",
+        "currentState": "État actuel",
+        "action": "Publier les changements",
+        "actionAria": "Publier les changements",
+        "inProgress": "Publication en cours…",
+        "inProgressAria": "Publication en cours",
+        "view": "Visualiser",
+        "success": {
+          "title": "Publication réussie",
+          "description": "Les contenus de l’espace brouillon ont été copiés vers la version publiée."
+        },
+        "warning": {
+          "title": "Publication avec avertissements",
+          "description": "{count} avertissements ont été détectés pendant la publication :"
+        },
+        "last": "Dernière publication : {pages} pages copiées · réglages {settings}.",
+        "settingsUpdated": "mis à jour",
+        "settingsUnchanged": "inchangés"
+      },
+      "preview": {
+        "cardTitle": "Aperçu du site",
+        "cardDescription": "Vérifiez rapidement le rendu global (header + footer) via l'apercu.",
+        "ready": "Baselines chargées",
+        "loading": "Chargement des baselines…"
+      }
+    },
+
+    "pageEditSection": {
+      "section": {
+        "titleCreate": "Créer une nouvelle page",
+        "titleEdit": "Modifier la page « {title} »",
+        "descriptionCreate": "Créez une nouvelle page en définissant son titre et son slug (identifiant de l'URL).",
+        "descriptionEdit": "Modifiez le titre et le slug (identifiant de l'URL) de la page sélectionnée."
+      },
+      "warnings": {
+        "titleLooksThin": "Le titre est très court. Un titre plus descriptif peut aider les visiteurs et le SEO.",
+        "slugNotNormalized": "Le slug (identifiant de l'URL) sera normalisé (minuscules, tirets). Vérifiez qu’il reste lisible après normalisation."
+      },
+      "errors": {
+        "originalMissing": "Impossible d’enregistrer : la page d’origine est introuvable. Rechargez l’index et réessayez."
+      }
+    },
+
+    "pagesListSection": {
+      "section": {
+        "title": "Pages du site",
+        "description": "Consultez, modifiez ou supprimez les pages de votre site. Vous pouvez aussi ouvrir l’édition du contenu ou des métadonnées."
+      },
+      "childrenExpandableLabel": "Pages enfants",
+      "empty": "Aucune page n’a encore été créée.",
+      "confirm": {
+        "title": "Supprimer cette page ?",
+        "intro": "Cette action est irréversible. La page sera supprimée ainsi que son contenu.",
+        "requireAckLabel": "Je confirme la suppression"
+      }
+    },
+
+    "primaryMenuSection": {
+      "section": {
+        "title": "Menu principal",
+        "description": "Configurez les liens de navigation affichés dans le header de votre site, ainsi que leurs sous-menus éventuels."
+      },
+      "warnings": {
+        "primaryMenuEmpty": "Aucun élément n’est défini dans le menu principal.",
+        "dupLabelsTop": "Plusieurs éléments de niveau 1 partagent le même libellé.",
+        "dupLinksTop": "Plusieurs éléments de niveau 1 pointent vers la même URL.",
+        "dupLabelsChildren": "Certains sous-liens partagent le même libellé.",
+        "dupLinksChildren": "Certains sous-liens pointent vers la même URL.",
+        "externalNoNewTab": "Certains liens externes ne sont pas ouverts dans un nouvel onglet.",
+        "externalPrefixOnly": "Certains liens externes semblent incomplets (préfixe http(s) seulement).",
+        "internalHrefNotFound": "Certains liens internes ne correspondent à aucune page connue."
+      }
+    },
+
+    "seoSection": {
+      "section": {
+        "title": "SEO",
+        "description": "Configurez ici les métadonnées globales de votre site : titre par défaut, description, indexation, Open Graph et Twitter."
+      },
+      "warnings": {
+        "description": {
+          "length": "La description SEO semble trop courte ou trop longue (idéalement entre les bornes recommandées)."
+        },
+        "titleTemplate": {
+          "placeholderMissing": "Le template de titre ne contient pas le placeholder %s (ex: “%s — Mon site”)."
+        },
+        "robots": {
+          "noindex": "Le robots contient “noindex” : votre site risque de ne pas apparaître dans les moteurs de recherche."
+        },
+        "openGraph": {
+          "image": {
+            "missing": "Aucune image Open Graph n’est définie. Elle améliore le rendu lors du partage sur les réseaux."
+          }
+        }
+      }
+    },
+
+    "socialSection": {
+      "section": {
+        "title": "Réseaux sociaux",
+        "description": "Configurez ici les liens vers vos réseaux sociaux. Ils seront affichés sur la version publique de votre site, généralement dans le footer ou l’en-tête."
+      },
+      "warnings": {
+        "socialEmpty": "Aucun lien social n’est défini pour le moment.",
+        "dupLinks": "Certains liens sont identiques (doublons d’URL)."
+      }
+    },
+
+    "pageBlocksListSection": {
+      "section": {
+        "title": "Blocs - Page {title}",
+        "description": "Configurez ici les blocs qui apparaitront sur la page.",
+        "empty": "Aucun bloc n’a encore été créé.",
+        "pageSettings": "Réglages de la page"
+      },
+      "bloc": {
+        "title": "Bloc {title}",
+        "description": "{cols, plural, one {# colonne} other {# colonnes}} · {kinds}",
+        "empty": "Bloc vide",
+        "unknown": "Type de bloc inconnu",
+        "edit": "Modifier le bloc",
+        "add": "Ajouter un bloc",
+        "delete": "Supprimer le bloc",
+        "back": "Retour aux pages",
+        "kinds": {
+          "richText": "Texte",
+          "image": "Image",
+          "gallery": "Galerie",
+          "carousel": "Carrousel"
+        },
+        "fallbackSummary": "Type : {type}"
+      }
+    },
+
+    "pageBlockEditSection": {
+      "section": {
+        "title": "Bloc {title} - Page {slug}",
+        "description": "Configurez le contenu du bloc.",
+        "back": "Retour aux blocs",
+        "notFound": "Une erreur est survenue lors de la récupération du bloc."
+      }
+    },
+
+    "pageBlockEditHeader": {
+      "blockTitle": {
+        "label": "Titre du bloc",
+        "switchLabel": "Activer le titre",
+        "switchHelp": "Le bloc possède un titre visible ou SR-only.",
+        "displayLabel": "Affichage du titre",
+        "placeholder": "Titre du bloc (ex. “Mon bloc”)",
+        "help": "Le titre sera de niveau H2 si actif.",
+        "none": "Aucun titre",
+        "visible": "Visible",
+        "srOnly": "SR-only",
+        "displayHelp": "Visible : affiché à l’écran. SR-only : uniquement pour l’accessibilité/SEO."
+      },
+      "lcpPriority": {
+        "label": "Bloc prioritaire (LCP)",
+        "helpEnabled": "Ce bloc sera prioritaire pour le Largest Contentful Paint.",
+        "helpDisabled": "Activez si ce bloc contient l’élément principal visible.",
+        "replacedInfo": "L'ancien bloc prioritaire a été remplacé par celui-ci."
+      },
+      "columns": {
+        "label": "Nombre de colonnes",
+        "hint": "Les colonnes sont réparties automatiquement selon le nombre de colonnes configuré.",
+        "options": {
+          "1": "1 colonne",
+          "2": "2 colonnes",
+          "3": "3 colonnes"
+        }
+      },
+      "containerMode": {
+        "label": "Désactiver les marges du bloc",
+        "helpFullBleed": "Aucune marge ne sera appliquée.",
+        "helpContained": "Marge par defaut appliquée."
+      }
+    },
+
+    "cellEditorTabs": {
+      "tabs": "Colonne {number}",
+      "kindLabel": "Type de cellule",
+      "kindHelp": "Choisissez le type de cellule que vous souhaitez utiliser.",
+      "kinds": {
+        "richText": "Texte",
+        "image": "Image",
+        "gallery": "Galerie",
+        "carousel": "Carrousel"
+      },
+      "richText": {
+        "undo": "Annuler",
+        "redo": "Rétablir",
+        "heading": "Titre",
+        "heading2": "Titre 2",
+        "heading3": "Titre 3",
+        "heading4": "Titre 4",
+        "heading5": "Titre 5",
+        "heading6": "Titre 6",
+        "list": "Liste",
+        "bulletList": "Liste à puces",
+        "orderedList": "Liste numérotée",
+        "quote": "Citation",
+        "bold": "Gras",
+        "italic": "Italique",
+        "underline": "Souligné",
+        "strike": "Barré",
+        "link": "Lien",
+        "applyLink": "Appliquer un lien",
+        "removeLink": "Supprimer le lien",
+        "superScript": "Exposant",
+        "subScript": "Indice",
+        "alignLeft": "Aligner à gauche",
+        "alignCenter": "Centrer",
+        "alignRight": "Aligner à droite",
+        "alignJustify": "Justifier"
+      },
+      "imageCellEditor": {
+        "variantLabel": "Formats",
+        "variants": {
+          "default": "Par défaut",
+          "wide": "Large",
+          "portrait": "Portrait",
+          "square": "Carré"
+        }
+      },
+      "image": {
+        "srcLabel": "Sélectionner une image",
+        "srcHelp": "Télécharger votre image (format recommandé : .webp).",
+        "altLabel": "Texte descriptif",
+        "altPlaceholder": "Décrivez brièvement votre image (accessibilité)",
+        "altHelp": "Décrivez brièvement votre image. Laisser vide si elle est purement décorative.",
+        "hrefLabel": "Lien",
+        "hrefHelp": "Lien vers une page interne."
+      }
+    },
+
+    "galleryCellEditor": {
+      "linksEnabled": {
+        "label": "Activer la navigation",
+        "help": "Activer la navigation permet de transformer une gallerie en menu"
+      },
+      "maxColumns": {
+        "label": "Nombre de colonnes",
+        "help": "Nombre maximum de colonnes à afficher dans la gallerie."
+      }
+    },
+
+    "legal": {
+      "privacy": {
+        "h1": "Confidentialité",
+        "title": "Confidentialité",
+        "description": "Informations sur la collecte, l’utilisation et la protection des données dans Compoz Studio.",
+        "sections": {
+          "data": {
+            "title": "Données collectées",
+            "p1": "Compoz Studio collecte uniquement les données nécessaires au fonctionnement de l’interface (ex. contenus que vous saisissez, paramètres du site, journaux techniques liés aux erreurs).",
+            "note": "Aucune donnée n’est vendue ni partagée à des fins publicitaires."
+          },
+          "purposes": {
+            "title": "Finalités",
+            "items": [
+              "Fournir et sécuriser l’accès à l’interface d’administration.",
+              "Enregistrer vos contenus et réglages pour permettre la prévisualisation et la publication.",
+              "Diagnostiquer les erreurs et améliorer la stabilité du service."
+            ]
+          },
+          "retention": {
+            "title": "Durée de conservation",
+            "p1": "Les données sont conservées le temps nécessaire au fonctionnement du service. Les journaux techniques sont conservés pour une durée limitée afin de résoudre les incidents."
+          },
+          "rights": {
+            "title": "Vos droits",
+            "p1": "Conformément au RGPD, vous disposez de droits sur vos données :",
+            "items": [
+              "Accès à vos données",
+              "Rectification",
+              "Suppression",
+              "Opposition et limitation du traitement"
+            ]
+          },
+          "contact": {
+            "title": "Contact",
+            "p1": "Pour toute question relative à la protection des données, vous pouvez nous contacter à l’adresse suivante : <email>{emailAdress}</email>."
+          }
+        }
+      },
+      "mentions": {
+        "h1": "Mentions légales",
+        "title": "Mentions légales",
+        "description": "Informations légales relatives à l’outil Compoz Studio.",
+        "sections": {
+          "editor": {
+            "title": "Éditeur du site",
+            "p1": "Le présent site est édité par Julien Mathé, entrepreneur individuel exerçant en micro-entreprise.",
+            "p2": "Le service est exploité sous l’appellation Compoz Studio."
+          },
+          "legalStatus": {
+            "title": "Statut juridique",
+            "p1": "Entrepreneur individuel (micro-entreprise).",
+            "p2": "Numéro SIRET : {siret}",
+            "p3": "TVA : Franchise en base de TVA (article 293 B du CGI)."
+          },
+          "publication": {
+            "title": "Responsable de publication",
+            "p1": "Le responsable de la publication est Julien Mathé."
+          },
+          "hosting": {
+            "title": "Hébergement",
+            "p1": "Le site est hébergé par Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis."
+          },
+          "activity": {
+            "title": "Activité",
+            "p1": "Compoz Studio est un outil de gestion et d’édition de contenus web destiné à la création et à l’administration de sites internet.",
+            "p2": "L’outil peut être utilisé dans le cadre de prestations de services ou de démonstrations."
+          },
+          "intellectual": {
+            "title": "Propriété intellectuelle",
+            "p1": "L’ensemble des éléments du site (code source, structure, design, contenus) est protégé par les lois en vigueur relatives à la propriété intellectuelle.",
+            "p2": "Toute reproduction, distribution ou utilisation sans autorisation préalable est strictement interdite."
+          },
+          "liability": {
+            "title": "Responsabilité",
+            "p1": "L’éditeur s’efforce de fournir des informations exactes et mises à jour. Toutefois, il ne saurait être tenu responsable des erreurs, omissions ou indisponibilités du service."
+          },
+          "data": {
+            "title": "Données personnelles",
+            "p1": "Les informations relatives au traitement des données personnelles sont disponibles dans la politique de confidentialité."
+          }
+        }
+      },
+      "cookies": {
+        "h1": "Cookies",
+        "title": "Politique relative aux cookies",
+        "description": "Informations concernant l’utilisation des cookies sur l’outil Compoz Studio.",
+        "sections": {
+          "intro": {
+            "title": "Qu’est-ce qu’un cookie ?",
+            "p1": "Un cookie est un petit fichier texte déposé sur votre terminal (ordinateur, tablette ou smartphone) lors de la consultation d’un site internet."
+          },
+          "usage": {
+            "title": "Utilisation des cookies",
+            "p1": "À ce jour, Compoz Studio n’utilise aucun cookie à des fins publicitaires, de suivi marketing ou d’analyse d’audience.",
+            "p2": "Aucun cookie tiers (Google Analytics, pixels sociaux, outils publicitaires, etc.) n’est installé lors de votre navigation."
+          },
+          "technical": {
+            "title": "Cookies strictement nécessaires",
+            "p1": "Seuls des cookies strictement nécessaires au fonctionnement technique de l’application peuvent être utilisés (ex. gestion de session, sécurité, préférences d’interface).",
+            "p2": "Ces cookies ne nécessitent pas votre consentement conformément à la réglementation en vigueur."
+          },
+          "future": {
+            "title": "Évolution de la politique",
+            "p1": "Si des outils de mesure d’audience ou de suivi venaient à être ajoutés à l’avenir, cette page serait mise à jour et un mécanisme de gestion du consentement serait mis en place si nécessaire."
+          },
+          "contact": {
+            "title": "Contact",
+            "p1": "Pour toute question relative à cette politique de cookies, vous pouvez nous contacter à l’adresse : <email>{emailAddress}</email>"
+          }
+        }
+      }
+    }
+  }
+}

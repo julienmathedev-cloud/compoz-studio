@@ -1,0 +1,16 @@
+{
+  "name": "@compoz/http",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@compoz/core": "workspace:*"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

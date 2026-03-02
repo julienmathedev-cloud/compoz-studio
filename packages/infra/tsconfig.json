@@ -1,0 +1,14 @@
+/**
+ * @file packages/infra/tsconfig.json
+ * @description
+ * Configuration du package Infra.
+ * @layer infra
+ */
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["esnext", "dom"],
+    "types": ["node"],
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"]
+}

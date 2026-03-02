@@ -1,0 +1,14 @@
+/**
+ * @file packages/core/tsconfig.json
+ * @description
+ * Configuration du package Core.
+ * @layer core
+ */
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts"]
+}

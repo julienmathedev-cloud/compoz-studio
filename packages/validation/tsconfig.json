@@ -1,0 +1,14 @@
+/**
+ * @file packages/validation/tsconfig.json
+ * @description
+ * Configuration du package Validation.
+ * @layer validation
+ */
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts"]
+}

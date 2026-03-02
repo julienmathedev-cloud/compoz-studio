@@ -1,0 +1,1174 @@
+{
+  "gate": {
+    "title": "Compoz Studio",
+    "tagline": "The studio to compose, manage and publish your sites efficiently.",
+    "actions": {
+      "public": "Go to public site",
+      "admin": "Go to admin"
+    },
+    "ariaLabel": "Compoz Studio home"
+  },
+  "common": {
+    "save": "Save",
+    "saving": "Saving…",
+    "loading": "Loading…",
+    "cancel": "Cancel",
+    "modified": "Modified",
+    "published": "Published",
+    "publishing": "Publishing…",
+    "saved": "Saved",
+    "reset": "Reset",
+    "sync": "Sync",
+    "delete": "Delete",
+    "new": "New",
+    "deleted": "Deleted",
+    "retry": "Retry",
+    "error": "Error",
+    "oneError": "{count} error",
+    "multipleErrors": "{count} errors",
+    "selectPlaceholder": "Select an option",
+    "add": "Add",
+    "addLink": "Add a link",
+    "addSubLink": "Add a sub-link",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "actionUnavailable": "Action unavailable",
+    "tabNavigation": "Tab navigation",
+    "language": "Language",
+    "alreadyTop": "Already at the top",
+    "alreadyBottom": "Already at the bottom",
+    "navigation": "Navigation",
+    "upToDate": "Up to date",
+    "status": "Status"
+  },
+
+  "notifications": {
+    "noChanges": {
+      "title": "No changes",
+      "description": "No changes detected on {entity}."
+    },
+    "updated": {
+      "title": "{entity} updated",
+      "description": "The following fields have been updated: {fields}."
+    },
+    "created": {
+      "title": "{entity} created",
+      "description": "{entity} “{name}” has been created."
+    },
+    "deleted": {
+      "title": "{entity} deleted",
+      "description": "{entity} “{name}” has been deleted."
+    }
+  },
+
+  "errors": {
+    "NOT_FOUND": "The requested resource was not found.",
+    "VALIDATION_ERROR": "Some fields are invalid.",
+    "INTERNAL": "An internal error occurred.",
+    "CONFLICT": "A conflict has been detected. The operation cannot be performed.",
+    "FORBIDDEN": "You do not have the necessary permissions to perform this action.",
+    "INVALID_ARGUMENT": "Invalid argument provided.",
+    "UNAUTHORIZED": "Your session has expired. Please log in again.",
+    "UNSUPPORTED_MEDIA_TYPE": "Unsupported media type.",
+    "JSON_INVALID": "The request body is not a valid JSON.",
+    "JSON_OBJECT_EXPECTED": "The request body must be a JSON object.",
+
+    "HREF_RELATIVE_INVALID": "The link must be a relative path (ex. /contact).",
+    "HREF_ABSOLUTE_HTTP_INVALID": "The link must be an absolute http(s) URL.",
+    "HREF_MAILTO_INVALID": "The email is invalid (ex. mailto:address@example.com).",
+
+    "PAYLOAD_TOO_LARGE": "The request body exceeds the allowed size.",
+    "UPLOAD_FILE_MISSING": "No file was provided.",
+    "UPLOAD_IMAGE_REQUIRED": "The file must be an image.",
+    "UPLOAD_MIME_NOT_ALLOWED": "The file type is not allowed.",
+    "UPLOAD_EMPTY_FILE": "The file is empty (no data).",
+    "UPLOAD_IMAGE_DIMENSIONS_INVALID": "The image dimensions are invalid.",
+    "UPLOAD_FILE_TOO_LARGE": "The file is too large (max: {max}).",
+    "UPLOAD_SVG_NOT_SAFE": "This SVG file is not safe (potential dangerous content).",
+
+    "PUBLISH_EMPTY_INDEX": "Warning: no page is defined. The published site will be empty (no content).",
+    "PUBLISH_PAGE_MISSING": "Warning: a page reference cannot be copied.",
+    "PUBLISH_PAGE_DELETE_FAILED": "Warning: a page cannot be deleted during publishing.",
+    "PUBLISH_SETTINGS_COPY_FAILED": "Warning: the settings copy failed during publishing.",
+    "PUBLISH_IDENTICAL_STATES": "Publication inutile: the source and target states are identical.",
+    "PUBLISH_HOME_MISSING": "Warning: the home page is missing.",
+    "PUBLISH_PRIMARY_MENU_EMPTY": "Warning: the primary menu is empty.",
+    "PUBLISH_LEGAL_MENU_EMPTY": "Warning: the legal menu is empty.",
+    "PUBLISH_SOCIAL_EMPTY": "Warning: no social link is defined.",
+    "PUBLISH_IDENTITY_LOGO_MISSING": "Warning: no logo is defined.",
+    "PUBLISH_IDENTITY_FAVICON_MISSING": "Warning: no favicon is defined.",
+    "PUBLISH_SEO_OG_IMAGE_MISSING": "Warning: no default OpenGraph image is defined.",
+    "PUBLISH_SEO_ROBOTS_NOINDEX": "Warning: robots contains “noindex” (the site may not appear in search engines).",
+    "PUBLISH_SEO_BASEURL_MISSING": "Warning: the site base URL is missing.",
+
+    "SLUG_REQUIRED": "The slug (URL segment) is required.",
+    "SLUG_INVALID_FORMAT": "The slug (URL segment) is invalid (expected format: kebab-case).",
+    "SLUG_RESERVED": "This slug (URL segment) is reserved and cannot be used.",
+    "SLUG_NORMALIZED_DIFFERENT": "The slug has been automatically normalized.",
+    "SLUG_RESERVED_HINT": "This slug is reserved, please choose another one.",
+
+    "PAGE_TITLE_REQUIRED": "The page title is required.",
+    "PAGE_TITLE_TOO_SHORT": "The page title is too short.",
+    "PAGE_TITLE_TOO_LONG": "The page title is too long.",
+    "PAGE_SLUG_REQUIRED": "The page slug (URL segment) is required.",
+    "PAGE_SLUG_RESERVED": "This slug (URL segment) is reserved and cannot be used.",
+    "PAGE_SLUG_INVALID_FORMAT": "The slug (URL segment) must be in kebab-case (ex. “my-page”).",
+    "PAGE_ID_REQUIRED": "The page ID is required.",
+
+    "FOOTER_COPYRIGHT_TOO_LONG": "The copyright text is too long.",
+
+    "PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE": "The sitemap priority must be between 0 and 1.",
+    "PAGE_NOT_FOUND": "The requested page is not found.",
+    "PAGE_SLUG_CONFLICT": "This slug (URL segment) is already used by another page.",
+
+    "LEGAL_MENU_LABEL_REQUIRED": "The legal menu link label is required.",
+    "LEGAL_MENU_LABEL_TOO_LONG": "The legal menu link label is too long.",
+    "LEGAL_MENU_HREF_REQUIRED": "The legal menu link (URL or path) is required.",
+    "LEGAL_MENU_HREF_INVALID": "The legal menu link (URL or path) is invalid.",
+    "LEGAL_MENU_TOO_MANY_ITEMS": "You have added too many legal menu links.",
+
+    "PRIMARY_MENU_LABEL_TOO_LONG": "The primary menu link label is too long.",
+    "PRIMARY_MENU_LABEL_REQUIRED": "The primary menu link label is required.",
+    "PRIMARY_MENU_HREF_REQUIRED": "The primary menu link (URL or path) is required.",
+    "PRIMARY_MENU_HREF_INVALID": "The primary menu link (URL or path) is invalid.",
+    "PRIMARY_MENU_TOO_MANY_ITEMS": "You have added too many primary menu links.",
+    "PRIMARY_MENU_PARENT_WITH_CHILDREN_NEWTAB_FORBIDDEN": "A parent item has children but also a URL: usually, clicking should only open the sub-menu.",
+
+    "CONTENT_STATE_INVALID": "The content state is invalid.",
+
+    "URL_REQUIRED": "The URL is required.",
+    "URL_NO_SPACES": "The URL must not contain spaces.",
+    "URL_NO_BACKSLASH": "The URL must not contain \\\\.",
+    "URL_TOO_LONG": "The URL is too long.",
+    "URL_ABSOLUTE_HTTP_REQUIRED": "The URL must be an absolute http(s) URL.",
+    "URL_RELATIVE_REQUIRED": "The URL must be a relative path (ex. /contact).",
+
+    "IDENTITY_SITENAME_REQUIRED": "The site name is required.",
+    "IDENTITY_LOGO_ALT_REQUIRED": "The logo alt text is required.",
+    "IDENTITY_SITENAME_TOO_LONG": "The site name is too long.",
+    "IDENTITY_TAGLINE_TOO_LONG": "The tagline is too long.",
+    "IDENTITY_LOGO_ALT_TOO_LONG": "The logo alt text is too long.",
+
+    "SEO_TITLE_REQUIRED": "The default site title is required.",
+    "SEO_TITLE_TEMPLATE_MISSING_PLACEHOLDER": "The template title must contain the %s placeholder (ex. “%s — My site”).",
+    "SEO_BASEURL_INVALID": "The site base URL is not a valid absolute URL.",
+    "SEO_CANONICAL_URL_INVALID": "The canonical URL is not a valid absolute URL.",
+    "SEO_BASEURL_REQUIRED": "The site base URL is required.",
+    "SEO_BASEURL_HTTPS_REQUIRED": "The production site base URL must be https.",
+    "SEO_ROBOTS_TOO_LONG": "The robots field is too long.",
+    "SEO_OPEN_GRAPH_TITLE_TOO_LONG": "The title field is too long.",
+    "SEO_OPEN_GRAPH_DESCRIPTION_TOO_LONG": "The description field is too long.",
+    "SEO_OPEN_GRAPH_IMAGE_ALT_TOO_LONG": "The imageAlt field is too long.",
+    "SEO_TITLE_TOO_LONG": "The title field is too long.",
+    "SEO_DESCRIPTION_TOO_LONG": "The description field is too long.",
+    "SEO_TITLE_TEMPLATE_TOO_LONG": "The titleTemplate field is too long.",
+
+    "SITE_INDEX_DUPLICATE_SLUGS": "Duplicate site index pages found in the index.",
+    "SOCIAL_DUPLICATE_KIND": "Some social networks are provided multiple times (duplicates).",
+    "SOCIAL_INVALID_FOR_PLATFORM": "The provided link is not valid for this platform.",
+    "SOCIAL_ABSOLUTE_REQUIRED": "The link must be an http(s) URL.",
+    "SOCIAL_HREF_REQUIRED": "The link is required.",
+    "SOCIAL_TOO_MANY_ITEMS": "You have added too many social links.",
+    "SOCIAL_MAILTO_INVALID": "The email is invalid (ex. mailto:address@example.com).",
+    "SOCIAL_EMAIL_REQUIRES_MAILTO": "For an email, use the mailto: format.",
+    "SOCIAL_MAILTO_RESERVED_FOR_EMAIL": "The mailto: format is reserved for an email.",
+
+    "SEO_TWITTER_HANDLE_INVALID": "The Twitter handle is invalid (ex. @monsite).",
+    "SEO_DEFAULT_DESCRIPTION_TOO_SHORT": "The default description is too short.",
+    "SEO_TITLE_TEMPLATE_TOO_SHORT": "The template title is too short.",
+    "SEO_ASSET_URL_INVALID": "The image URL is invalid.",
+
+    "BLOCKS_INVALID": "The blocks are invalid.",
+    "BLOCK_ID_REQUIRED": "A block ID is required.",
+    "BLOCK_ID_DUPLICATE": "This block ID is already used.",
+    "BLOCKS_MULTIPLE_LCP_DETECTED": "Multiple LCP blocks detected for this page.",
+    "BLOCK_TYPE_UNSUPPORTED": "This block type is not supported.",
+    "BLOCK_NOT_FOUND": "This block is not found.",
+    "BLOCK_ID_MISMATCH": "The block ID in the URL does not match the data sent.",
+
+    "LAYOUT_SECTION_COLUMNS_INVALID": "The number of columns is invalid (expected 1 to 3).",
+    "LAYOUT_SECTION_CELLS_INVALID": "The cells are invalid.",
+    "LAYOUT_SECTION_CELLS_COUNT_MISMATCH": "The number of cells does not match the number of columns.",
+    "LAYOUT_SECTION_TITLE_REQUIRED": "The section title is required.",
+    "LAYOUT_SECTION_TITLE_DISPLAY_INVALID": "The section title display is invalid.",
+    "LAYOUT_SECTION_CONTAINER_MODE_INVALID": "Invalid container mode for this layout section.",
+
+    "CELL_INVALID": "A cell is invalid.",
+    "CELL_KIND_UNSUPPORTED": "This cell type is not supported.",
+
+    "RICH_TEXT_CONTENT_INVALID": "The rich text content is invalid.",
+
+    "IMAGE_SRC_REQUIRED": "The image source is required.",
+    "IMAGE_ALT_INVALID": "The image alt text is invalid.",
+    "IMAGE_VARIANT_INVALID": "The image format is invalid.",
+    "GALLERY_MAX_COLUMNS_INVALID": "The number of gallery columns is invalid.",
+
+    "CELL_IMAGES_INVALID": "An image is invalid.",
+    "CELL_IMAGES_MIN_1": "At least one image is required.",
+    "CELL_IMAGE_INVALID": "A image is invalid.",
+    "CELL_IMAGE_SRC_REQUIRED": "The image source is required.",
+    "CELL_IMAGE_WIDTH_REQUIRED": "The image width is required.",
+    "CELL_IMAGE_HEIGHT_REQUIRED": "The image height is required.",
+    "CELL_IMAGE_ALT_INVALID": "The image alt text is invalid.",
+    "CELL_IMAGE_CAPTION_INVALID": "The image caption is invalid.",
+    "CELL_IMAGE_ID_REQUIRED": "The image ID is required.",
+    "CELL_IMAGE_HREF_INVALID": "The image link is invalid."
+  },
+
+  "uiErrors": {
+    "errorGeneric": "An error occurred.",
+    "error": "Error",
+    "networkError": "Unable to reach the server. Please check your connection and try again.",
+    "operationCancelled": "Operation cancelled",
+    "requestAborted": "The request has been aborted.",
+    "serverError": "Server error",
+    "unexpectedSave": "An unexpected error occurred during save.",
+    "http400": "The data sent is invalid. Please check your input.",
+    "http400Title": "Invalid request",
+    "http401": "Your session has expired. Please log in again.",
+    "http401Title": "Not authenticated",
+    "http403": "You do not have the necessary permissions to perform this action.",
+    "http403Title": "Access denied",
+    "http404": "The requested resource was not found.",
+    "http404Title": "Not found",
+    "http405": "This action is not allowed.",
+    "http405Title": "Method not allowed",
+    "http409": "A conflict has been detected. Please refresh and try again.",
+    "http409Title": "Conflict",
+    "http422": "Some data is invalid. Please check your input.",
+    "http422Title": "Validation error",
+    "http500": "An internal error occurred. Please try again in a few moments.",
+    "http500Title": "Server error",
+
+    "formHasErrors": "The form contains errors.",
+
+    "notImage": "The selected file is not an image.",
+    "uploadFailed": "The file upload failed. Please try again.",
+    "fileTooLarge": "The selected file is too large. The maximum size is {max}."
+  },
+
+  "admin": {
+    "shared": {
+      "visualize": {
+        "draft": "Draft",
+        "published": "Published"
+      },
+      "entities": {
+        "overview": "Overview",
+        "identity": "Identity",
+        "menus": "Menus",
+        "primaryMenu": "Primary menu",
+        "legalMenu": "Legal menu",
+        "header": "Header",
+        "footer": "Footer",
+        "social": "Social",
+        "page": "Page",
+        "blocks": "Blocks",
+        "seo": "SEO",
+        "siteIndex": "Site index",
+        "settings": "Settings",
+        "site": "Site"
+      },
+      "loading": {
+        "section": "Loading : {title}…",
+        "preview": "Loading preview…"
+      },
+      "homeLabel": "Home",
+      "pages": {
+        "blocksList": {
+          "title": "Blocks list"
+        },
+        "blocksEdit": {
+          "title": "Edit a block"
+        },
+        "error": {
+          "ariaLabel": "Page error",
+          "title": "Error",
+          "description": "An error occurred while loading the page.",
+          "retry": "Retry",
+          "errorCode": "Error code :",
+          "backToAdmin": "Back to admin"
+        },
+        "notFound": {
+          "ariaLabel": "Page not found",
+          "title": "Page not found",
+          "description": "The requested page could not be found.",
+          "backToAdmin": "Back to admin"
+        }
+      },
+
+      "upload": {
+        "optimized": "Optimized image: {from} → {to}"
+      },
+
+      "warningsPanel": {
+        "label": "Recommendations",
+        "labelWithCount": "Recommendations ({count})",
+        "title": "Things to review"
+      },
+      "confirm": {
+        "saveDespiteWarnings": {
+          "title": "Save despite warnings?",
+          "intro": "Some items could be improved. You can continue if you have reviewed these points.",
+          "confirmLabel": "Save anyway",
+          "requireAckLabel": "I understand : I want to continue"
+        },
+        "delete": {
+          "title": "Delete?",
+          "intro": "This action is irreversible."
+        },
+        "destructiveChange": {
+          "title": "Destructive change",
+          "intro": "This action may result in data loss.",
+          "items": "The deleted content cannot be recovered.",
+          "confirmLabel": "Continue",
+          "cancelLabel": "Cancel",
+          "requireAckLabel": "I understand : I want to lose content"
+        },
+        "dirty": {
+          "title": "Unsaved changes",
+          "intro": "You have unsaved changes on this tab. If you switch tabs, they will be lost.",
+          "items": "Unsaved changes will be discarded.",
+          "confirmLabel": "Switch tab",
+          "cancelLabel": "Stay on this tab",
+          "requireAckLabel": "I understand : I will lose my changes"
+        }
+      },
+      "preview": {
+        "title": "Preview — {entity}",
+        "navDisabled": "Navigation is disabled in preview mode.",
+        "infoOverride": "Changes in progress (not saved)",
+        "infoBaseline": "Saved version"
+      }
+    },
+
+    "theme": {
+      "toLight": "Switch to light theme",
+      "toDark": "Switch to dark theme"
+    },
+    "shell": {
+      "loading": "Loading the admin interface"
+    },
+    "social": {
+      "kind": {
+        "website": "Website",
+        "email": "Email",
+        "phone": "Phone",
+        "custom": "Custom",
+        "whatsapp": "WhatsApp",
+        "github": "GitHub",
+        "linkedin": "LinkedIn",
+        "instagram": "Instagram",
+        "x": "X",
+        "youtube": "YouTube",
+        "tiktok": "TikTok",
+        "facebook": "Facebook",
+        "behance": "Behance",
+        "dribbble": "Dribbble"
+      }
+    },
+    "expandable": {
+      "advancedOptions": "Advanced options"
+    },
+    "footer": {
+      "ariaLabel": "Admin interface footer",
+      "legalNavLabel": "Legal links",
+      "legalNotices": "Legal notice",
+      "cookies": "Cookies",
+      "privacy": "Privacy"
+    },
+    "header": {
+      "ariaLabel": "Admin interface header",
+      "skipToContent": "Skip to main content",
+      "title": "Compoz — Admin",
+      "comingSoon": "Coming soon",
+      "comingSoonTooltip": "Feature in development",
+      "comingSoonAria": "Feature coming soon"
+    },
+    "imageSelector": {
+      "uploadingSr": "Uploading…",
+      "uploadingButton": "Uploading…",
+      "chooseFile": "Choose a file",
+      "previewAria": "Image preview",
+      "placeholders": {
+        "noneSelected": "No image selected"
+      },
+      "tooltips": {
+        "disabledWhileUploading": "Action unavailable during upload.",
+        "nothingToDelete": "No image to delete."
+      },
+      "confirm": {
+        "title": "Delete the image?",
+        "description": "This action resets the URL and the current preview."
+      },
+      "hints": {
+        "notRecommendedType": "The selected file type is not recommended for this use. Prefer {types}."
+      }
+    },
+    "socialLinkField": {
+      "label": "Social link"
+    },
+    "actionsBar": {
+      "noChangesToSave": "No changes to save.",
+      "noChangesToReset": "No changes to reset."
+    },
+    "favicon": {
+      "altFallback": "Favicon",
+      "label": "Favicon",
+      "help": "Upload a 512×512 icon: required formats are generated automatically.",
+      "preferredTypeHint": "Recommended: PNG (512×512) or ICO. SVG supported depending on browser compatibility."
+    },
+    "logoFields": {
+      "altFallback": "Logo",
+      "preferredTypeHint": "Recommended format: SVG for crisp rendering on all screens.",
+      "image": {
+        "label": "Main logo",
+        "help": "URLs can come from your public storage (CDN, etc.)."
+      },
+      "alt": {
+        "label": "Logo alt text",
+        "placeholder": "Briefly describe your logo (accessibility)",
+        "help": "Alt text used by screen readers. Briefly describe the logo.",
+        "helpNearLimit": "Text near the limit: {remaining} character(s) left."
+      }
+    },
+    "menuBadges": {
+      "ariaLabel": "Link type: {types}",
+      "kinds": {
+        "group": "Group",
+        "external": "External link",
+        "internal": "Internal link"
+      }
+    },
+    "menuFieldsItem": {
+      "labelField": {
+        "label": "Link label",
+        "placeholder": "Link text (ex. Home)"
+      },
+      "confirmDelete": {
+        "title": "Delete this link?",
+        "description": "This action will remove this link from the menu."
+      }
+    },
+    "menuLink": {
+      "expandableLabel": "Link options",
+      "href": {
+        "label": "Link (URL or path)",
+        "placeholder": "External URL or internal path (ex. /contact)"
+      },
+      "hasChildrenHelp": "This item has sub-links. The main link is ignored.",
+      "defaultHelp": "Set the link associated with this menu item.",
+      "internalPicker": {
+        "label": "Link to an internal page",
+        "placeholder": "Choose an internal page…"
+      },
+      "externalSwitch": {
+        "label": "External link",
+        "help": "Enable for an external URL (https://…). Disable to link a site page."
+      },
+      "newTabSwitch": {
+        "label": "Open in a new tab",
+        "help": "Recommended for external links."
+      }
+    },
+    "pageListItem": {
+      "editMeta": "Edit metadata",
+      "editContent": "Edit content",
+      "deletePage": "Delete page"
+    },
+    "socialFieldsItem": {
+      "kind": {
+        "label": "Platform",
+        "placeholder": "Select a platform",
+        "help": "Choose the platform associated with this link."
+      },
+      "href": {
+        "placeholderEmail": "address@example.com",
+        "placeholderUrl": "example.com/profile",
+        "helpEmail": "Email address used for this contact (a mailto: will be generated).",
+        "helpUrl": "Path or domain of your profile (https:// is automatically prefixed)."
+      },
+      "confirmDelete": {
+        "title": "Delete this social link?",
+        "description": "This action will remove this social link from the list."
+      }
+    },
+    "footerForm": {
+      "showYear": {
+        "label": "Show current year",
+        "help": "Automatically adds the current year to the copyright line."
+      },
+      "copyright": {
+        "label": "Copyright text",
+        "help": "Displayed in the footer. You can use your business name, legal name, etc.",
+        "placeholder": "© 2025 My business. All rights reserved."
+      }
+    },
+    "headerForm": {
+      "showLogo": {
+        "label": "Show logo",
+        "help": "Displays the site logo in the header, if configured in the Identity tab."
+      },
+      "showSiteName": {
+        "label": "Show site name",
+        "help": "Displays the site name next to the logo in the header."
+      },
+      "sticky": {
+        "label": "Sticky header",
+        "help": "The header stays visible at the top while scrolling."
+      },
+      "blur": {
+        "label": "Blurred background",
+        "help": "Adds a blur + transparency effect behind the header (modern style)."
+      },
+      "swapPrimaryAndSocial": {
+        "label": "Swap menu and social links",
+        "help": "Swaps the primary menu area and the social links area in the header."
+      }
+    },
+    "identityForm": {
+      "siteName": {
+        "label": "Site name",
+        "placeholder": "Site name (shown in the header and the browser tab)",
+        "help": "Main site name (used by default for header and SEO).",
+        "helpNearLimit": "Site name near the limit — it remains {remaining} character(s) left."
+      },
+      "tagline": {
+        "label": "Tagline",
+        "placeholder": "A short sentence to describe your activity",
+        "help": "Tagline displayed under the site name (optional).",
+        "helpNearLimit": "Tagline near the limit — it remains {remaining} character(s) left."
+      }
+    },
+    "legalMenuForm": {
+      "empty": "No legal link is defined in the menu."
+    },
+    "pageForm": {
+      "title": {
+        "label": "Page title",
+        "help": "Choose a clear and descriptive title (e.g. “Home”, “Gallery”, “Contact”).",
+        "helpNearLimit": "Only {remaining} character(s) left for the title.",
+        "placeholderEdit": "Edit page title",
+        "placeholderCreate": "Page title (ex. Home)"
+      },
+      "slug": {
+        "label": "Slug (URL segment)",
+        "helpEmpty": "If you leave this field empty, the slug will be generated automatically from the title.",
+        "helpWillNormalize": "The slug will be normalized automatically (lowercase, dashes).",
+        "help": "Slug should be short, descriptive, and unique (e.g. “contact”). For home, use simply “/”.",
+        "placeholderEdit": "Edit page slug",
+        "placeholderCreate": "Leave empty to derive from the title",
+        "inputTitle": "Slug must contain only lowercase letters, numbers and dashes."
+      },
+      "parent": {
+        "label": "Parent page",
+        "help": "Select a page to associate it as a parent.",
+        "none": "No parent page"
+      },
+      "pagination": {
+        "label": "Enable pagination",
+        "help": "Child pages can be navigable via a pagination module.",
+        "helpRootForcedOff": "Pagination is disabled because the page has no parent."
+      },
+      "childrens": {
+        "label": "Child pages ({count})",
+        "help": "The child pages can be reordered from the list below. This order is used for navigation between pages."
+      },
+      "sitemap": {
+        "expandableLabel": "SEO options: Sitemap",
+        "include": {
+          "label": "Include in sitemap",
+          "help": "Uncheck to exclude this page from sitemap.xml."
+        },
+        "priority": {
+          "label": "Priority (0.0 to 1.0)",
+          "placeholder": "e.g. 0.8",
+          "help": "Leave empty to use the default priority."
+        },
+        "changefreq": {
+          "label": "Change frequency",
+          "help": "Optional — only useful if you want to override the default behavior.",
+          "options": {
+            "always": "Always",
+            "hourly": "Hourly",
+            "daily": "Daily",
+            "weekly": "Weekly",
+            "monthly": "Monthly",
+            "yearly": "Yearly",
+            "never": "Never"
+          }
+        }
+      },
+      "actions": {
+        "create": "Create page",
+        "creating": "Creating…"
+      }
+    },
+    "primaryMenuForm": {
+      "empty": {
+        "primary": "No links in the primary menu yet."
+      },
+      "children": {
+        "label": "Sub-links",
+        "labelWithCount": "Sub-links ({count})",
+        "empty": "No sub-links yet.",
+        "tooltips": {
+          "unavailableWhileBusy": "Action unavailable during editing/saving."
+        }
+      }
+    },
+    "seoForm": {
+      "base": {
+        "defaultTitle": {
+          "label": "Default site title",
+          "placeholder": "e.g. My Portfolio",
+          "help": "Title used by default when no specific meta is defined."
+        },
+        "titleTemplate": {
+          "label": "Title template",
+          "placeholder": "%s — Site name",
+          "help": "Use \"%s\" as a placeholder for the page title."
+        },
+        "defaultDescription": {
+          "label": "Default description",
+          "placeholder": "General site description used when no specific description is provided.",
+          "help": "Try to stay between 140 and 160 characters for optimal display in Google."
+        }
+      },
+      "indexing": {
+        "baseUrl": {
+          "label": "Site base URL",
+          "placeholder": "https://www.example.com",
+          "help": "Main site URL, without a trailing slash."
+        },
+        "canonicalUrl": {
+          "label": "Default canonical URL",
+          "placeholder": "https://www.example.com",
+          "help": "Canonical URL used when no specific URL is defined."
+        },
+        "robots": {
+          "label": "Robots directive",
+          "placeholder": "index,follow",
+          "help": "Controls indexing (ex. index,follow, noindex, nofollow…)."
+        },
+        "structuredData": {
+          "label": "JSON-LD structured data",
+          "help": "Enables basic structured data injection to improve search engine understanding."
+        }
+      },
+      "twitter": {
+        "card": {
+          "label": "Twitter card",
+          "placeholder": "Select a card type",
+          "help": "Select the Twitter card type that will be used for the site."
+        },
+        "site": {
+          "label": "Site Twitter account",
+          "placeholder": "@youraccount",
+          "help": "Official site or brand account."
+        },
+        "creator": {
+          "label": "Creator Twitter account",
+          "placeholder": "@author",
+          "help": "Main content author account (optional)."
+        }
+      },
+      "openGraph": {
+        "defaultImageUrl": {
+          "label": "Default Open Graph image",
+          "placeholder": "https://…/og-default.jpg",
+          "help": "Image used by default when sharing on social networks.",
+          "altFallback": "Default Open Graph image",
+          "preferredTypeHint": "Recommended formats: jpg, png, webp"
+        },
+        "title": {
+          "label": "Open Graph title",
+          "placeholder": "Title displayed when sharing on social networks.",
+          "help": "Can differ from the HTML title if needed."
+        },
+        "imageAlt": {
+          "label": "OG image alt text",
+          "placeholder": "Image description for accessibility.",
+          "help": "Improves accessibility and image SEO."
+        },
+        "description": {
+          "label": "Open Graph description",
+          "placeholder": "Description displayed when sharing on social networks.",
+          "help": "Try to keep the description clear and concise."
+        }
+      }
+    },
+    "socialForm": {
+      "empty": "No social link configured yet.",
+      "addLink": "Add a social link"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "tabBarAriaLabel": "Admin dashboard tabs",
+      "tabs": {
+        "overview": "Overview",
+        "identity": "Identity",
+        "menu": "Menus",
+        "social": "Social",
+        "header": "Header",
+        "footer": "Footer",
+        "pages": "Pages",
+        "blocks": "Blocks",
+        "seo": "SEO"
+      }
+    },
+    "previewFrame": {
+      "devices": {
+        "mobile": "Mobile",
+        "tablet": "Tablet",
+        "laptop": "Laptop (1024)",
+        "desktop": "Desktop (1440)",
+        "wqhd": "WQHD (2560)",
+        "uhd": "4K (3840)"
+      }
+    },
+    "footerSection": {
+      "section": {
+        "title": "Footer settings",
+        "description": "Configure the copyright text and the display of the year in your site footer."
+      },
+      "warnings": {
+        "copyrightEmpty": "You haven't provided any copyright text. This can hurt the site's credibility.",
+        "footerLooksEmpty": "Your footer is almost empty (no year and no text). Consider adding useful information."
+      }
+    },
+    "headerSection": {
+      "section": {
+        "title": "Header settings",
+        "description": "Configure the display of the logo and the site name in your site header."
+      },
+      "warnings": {
+        "noBranding": "Neither logo nor site name is shown in the header. Visitors may not clearly identify the site."
+      }
+    },
+    "identitySection": {
+      "section": {
+        "title": "Site identity",
+        "description": "Configure the site name, logo alt text, and the favicon icons used in the browser tab."
+      },
+      "warnings": {
+        "logoMissing": "No logo is set for the site.",
+        "faviconMissing": "No favicon is set for the site.",
+        "logoAndFaviconMissing": "No logo and no favicon are set for the site."
+      }
+    },
+    "legalMenuSection": {
+      "section": {
+        "title": "Legal menu",
+        "description": "Configure legal links shown in the footer (legal notice, cookies, terms, etc.)."
+      },
+      "warnings": {
+        "legalMenuEmpty": "No legal link is defined in the menu.",
+        "dupLabelsTop": "Several legal menu links share the same label.",
+        "dupLinksTop": "Several legal menu links point to the same URL.",
+        "externalNoNewTab": "Some external links are not opened in a new tab.",
+        "externalPrefixOnly": "Some external links look incomplete (only http(s) prefix).",
+        "internalHrefNotFound": "Some internal links don't match any known page."
+      }
+    },
+    "overviewSection": {
+      "globalStatus": {
+        "title": "Global status (draft)",
+        "description": "Overview of the site status (draft / published) and pending changes (pages / blocks).",
+        "publishedLabel": "Published (draft)",
+        "never": "Never",
+        "clean": "No pending changes",
+        "changesPending": "Pending changes",
+        "publicationStatusLabel": "Publication status",
+        "draftStatusLabel": "Draft status",
+        "payloadInvalidHint": "Unable to determine site state. Received data is incomplete."
+      },
+      "details": {
+        "title": "Overview of pages",
+        "showAll": "Show all",
+        "showDirty": "Show dirty pages",
+        "empty": "No modified pages."
+      },
+
+      "section": {
+        "title": "Overview",
+        "description": "Overview of site content and publishing actions."
+      },
+      "stats": {
+        "title": "Global stats",
+        "description": "Quick overview of your site's content.",
+        "pages": {
+          "description": "Pages visibles on the public site",
+          "valueHint": "Configured (draft)"
+        },
+        "blocks": {
+          "description": "Blocks used in published pages.",
+          "valueHint": "Used (draft)"
+        },
+        "breakdown": {
+          "published": "published",
+          "new": "new",
+          "modified": "modified",
+          "deleted": "deleted"
+        }
+      },
+      "settings": {
+        "title": "Settings",
+        "description": "Site settings status (draft vs published)."
+      },
+      "publish": {
+        "title": "Publish site",
+        "description": "Publish your settings to make them visible on the public version.",
+        "currentState": "Current state",
+        "action": "Publish changes",
+        "actionAria": "Publish changes",
+        "inProgress": "Publishing…",
+        "inProgressAria": "Publishing",
+        "view": "View",
+        "success": {
+          "title": "Publish successful",
+          "description": "Draft contents have been copied to the published version."
+        },
+        "warning": {
+          "title": "Publish with warnings",
+          "description": "{count} warnings have been detected during the publication:"
+        },
+        "last": "Last publish: {pages} pages copied · settings {settings}.",
+        "settingsUpdated": "updated",
+        "settingsUnchanged": "unchanged"
+      },
+      "preview": {
+        "cardTitle": "Site preview",
+        "cardDescription": "Quickly review the global rendering (header + footer) via the preview.",
+        "ready": "Baselines loaded",
+        "loading": "Loading baselines…"
+      }
+    },
+    "pageEditSection": {
+      "section": {
+        "titleCreate": "Create a new page",
+        "titleEdit": "Edit page “{title}”",
+        "descriptionCreate": "Create a new page by defining its title and slug (URL segment).",
+        "descriptionEdit": "Edit the title and slug (URL segment) of the selected page."
+      },
+      "warnings": {
+        "titleLooksThin": "The title is very short. A more descriptive title can help visitors and SEO.",
+        "slugNotNormalized": "Slug (URL segment) will be normalized (lowercase, dashes). Make sure it stays readable after normalization."
+      },
+      "errors": {
+        "originalMissing": "Cannot save: the original page was not found. Reload the index and try again."
+      }
+    },
+    "pagesListSection": {
+      "section": {
+        "title": "Site pages",
+        "description": "View, edit, or delete pages. You can also open content or metadata editing."
+      },
+      "childrenExpandableLabel": "Child pages",
+      "empty": "No page has been created yet.",
+      "confirm": {
+        "title": "Delete this page?",
+        "intro": "This action is irreversible. The page will be deleted along with its content.",
+        "requireAckLabel": "I confirm deletion"
+      },
+      "toasts": {
+        "deleted": {
+          "title": "Page deleted",
+          "description": "Page “{title}” has been deleted."
+        },
+        "validationError": {
+          "title": "Deletion failed",
+          "description": "The request is invalid."
+        },
+        "genericError": {
+          "description": "An error occurred while deleting."
+        }
+      }
+    },
+    "primaryMenuSection": {
+      "section": {
+        "title": "Primary menu",
+        "description": "Configure navigation links displayed in your site header, including optional sub-menus."
+      },
+      "warnings": {
+        "primaryMenuEmpty": "No item is defined in the primary menu.",
+        "dupLabelsTop": "Several top-level items share the same label.",
+        "dupLinksTop": "Several top-level items point to the same URL.",
+        "dupLabelsChildren": "Some sub-links share the same label.",
+        "dupLinksChildren": "Some sub-links point to the same URL.",
+        "externalNoNewTab": "Some external links are not opened in a new tab.",
+        "externalPrefixOnly": "Some external links look incomplete (only http(s) prefix).",
+        "internalHrefNotFound": "Some internal links don't match any known page."
+      }
+    },
+    "seoSection": {
+      "section": {
+        "title": "SEO",
+        "description": "Configure global site metadata: default title, description, indexing, Open Graph, and Twitter."
+      },
+      "warnings": {
+        "description": {
+          "length": "The SEO description seems too short or too long (ideally within the recommended range)."
+        },
+        "titleTemplate": {
+          "placeholderMissing": "Title template does not include the %s placeholder (e.g. “%s — My site”)."
+        },
+        "robots": {
+          "noindex": "Robots contains “noindex”: your site may not appear in search engines."
+        },
+        "openGraph": {
+          "image": {
+            "missing": "No Open Graph image is set. It improves the appearance when sharing on social networks."
+          }
+        }
+      }
+    },
+    "socialSection": {
+      "section": {
+        "title": "Social links",
+        "description": "Configure links to your social networks. They will be displayed on the public site, usually in the footer or header."
+      },
+      "warnings": {
+        "socialEmpty": "No social link is defined yet.",
+        "dupLinks": "Some links are identical (duplicates)."
+      }
+    },
+    "pageBlocksListSection": {
+      "section": {
+        "title": "Blocks - Page {title}",
+        "description": "Configure blocks which will be displayed on the page.",
+        "empty": "No block has been created yet.",
+        "pageSettings": "Page settings"
+      },
+      "bloc": {
+        "title": "Block {index}",
+        "description": "{cols, plural, one {# colonne} other {# colonnes}} · {kinds}",
+        "empty": "Block is empty",
+        "unknown": "Unknown block type",
+        "edit": "Edit block",
+        "delete": "Delete block",
+        "add": "Add a block",
+        "back": "Back to pages",
+        "fallbackSummary": "Type : {type}"
+      }
+    },
+    "pageBlockEditSection": {
+      "section": {
+        "title": "Block {title} - Page {slug}",
+        "description": "Configure the content of the block.",
+        "back": "Back to blocks",
+        "notFound": "An error occurred while retrieving the block."
+      }
+    },
+    "pageBlockEditHeader": {
+      "blockTitle": {
+        "label": "Block title",
+        "switchLabel": "Enable title",
+        "switchHelp": "The block has a visible or SR-only title.",
+        "displayLabel": "Display title",
+        "placeholder": "Block title (ex. “My block”)",
+        "help": "The title will be H2 if enabled.",
+        "none": "No title",
+        "visible": "Visible",
+        "srOnly": "SR-only",
+        "displayHelp": "Visible : displayed on screen. SR-only : only for accessibility/SEO."
+      },
+      "lcpPriority": {
+        "label": "LCP priority block",
+        "helpEnabled": "This block will be prioritized for the Largest Contentful Paint.",
+        "helpDisabled": "Enable if this block contains the main visible element.",
+        "replacedInfo": "The previous LCP priority block has been replaced by this one."
+      },
+      "columns": {
+        "label": "Number of columns",
+        "hint": "Columns are automatically distributed based on the number of columns configured.",
+        "options": {
+          "1": "1 column",
+          "2": "2 columns",
+          "3": "3 columns"
+        }
+      }
+    },
+    "cellEditorTabs": {
+      "tabs": "Column {number}",
+      "kindLabel": "Cell type",
+      "kindHelp": "Choose the type of cell you want to use.",
+      "kinds": {
+        "richText": "Text",
+        "image": "Image",
+        "gallery": "Gallery",
+        "carousel": "Carousel"
+      },
+      "richText": {
+        "undo": "Undo",
+        "redo": "Redo",
+        "heading": "Heading",
+        "heading2": "Heading 2",
+        "heading3": "Heading 3",
+        "heading4": "Heading 4",
+        "heading5": "Heading 5",
+        "heading6": "Heading 6",
+        "list": "List",
+        "bulletList": "Bullet list",
+        "orderedList": "Ordered list",
+        "quote": "Quote",
+        "bold": "Bold",
+        "italic": "Italic",
+        "underline": "Underline",
+        "strike": "Strike",
+        "link": "Link",
+        "applyLink": "Apply link",
+        "removeLink": "Remove link",
+        "superScript": "Superscript",
+        "subScript": "Subscript",
+        "alignLeft": "Align left",
+        "alignCenter": "Align center",
+        "alignRight": "Align right",
+        "alignJustify": "Justify"
+      },
+      "imageCellEditor": {
+        "variantLabel": "Formats",
+        "variants": {
+          "default": "Default",
+          "wide": "Wide",
+          "portrait": "Portrait",
+          "square": "Square"
+        }
+      },
+      "image": {
+        "srcLabel": "Select an image",
+        "srcHelp": "Upload your image (recommended format: .webp).",
+        "altLabel": "Image alt text",
+        "altPlaceholder": "Briefly describe your image (accessibility)",
+        "altHelp": "Briefly describe your image. Leave empty if it is purely decorative.",
+        "hrefLabel": "Link",
+        "hrefHelp": "Link to an internal page."
+      }
+    },
+
+    "galleryCellEditor": {
+      "linksEnabled": {
+        "label": "Enable navigation",
+        "help": "Enable navigation to transform a gallery into a menu."
+      },
+      "maxColumns": {
+        "label": "Number of columns",
+        "help": "Maximum number of columns to display in the gallery."
+      }
+    },
+
+    "legal": {
+      "privacy": {
+        "h1": "Privacy",
+        "title": "Privacy",
+        "description": "Information about data collection, usage, and protection in Compoz Studio.",
+        "sections": {
+          "data": {
+            "title": "Data we collect",
+            "p1": "Compoz Studio only collects data required to operate the admin interface (e.g. content you enter, site settings, and technical logs related to errors).",
+            "note": "No data is sold or shared for advertising purposes."
+          },
+          "purposes": {
+            "title": "Purposes",
+            "items": [
+              "Provide and secure access to the admin interface.",
+              "Save your content and settings for preview and publishing.",
+              "Diagnose errors and improve service stability."
+            ]
+          },
+          "retention": {
+            "title": "Retention period",
+            "p1": "Data is kept as long as needed to operate the service. Technical logs are retained for a limited time to investigate and fix incidents."
+          },
+          "rights": {
+            "title": "Your rights",
+            "p1": "In accordance with GDPR, you have rights regarding your data:",
+            "items": [
+              "Access to your data",
+              "Rectification",
+              "Deletion",
+              "Objection and restriction of processing"
+            ]
+          },
+          "contact": {
+            "title": "Contact",
+            "p1": "For any question regarding data protection, you can contact us at: <email>{emailAdress}</email>."
+          }
+        }
+      },
+      "mentions": {
+        "h1": "Legal Notice",
+        "title": "Legal Notice",
+        "description": "Legal information regarding the Compoz Studio tool.",
+        "sections": {
+          "editor": {
+            "title": "Website Publisher",
+            "p1": "This website is published by Julien Mathé, sole trader (French micro-enterprise status).",
+            "p2": "The service is operated under the name Compoz Studio."
+          },
+          "legalStatus": {
+            "title": "Legal Status",
+            "p1": "Sole trader (micro-enterprise).",
+            "p2": "Business registration number (SIRET): {siret}",
+            "p3": "VAT: VAT exemption under Article 293 B of the French General Tax Code."
+          },
+          "publication": {
+            "title": "Publication Director",
+            "p1": "The publication director is Julien Mathé."
+          },
+          "hosting": {
+            "title": "Hosting",
+            "p1": "The website is hosted by Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA."
+          },
+          "activity": {
+            "title": "Activity",
+            "p1": "Compoz Studio is a web content management and site administration tool.",
+            "p2": "The tool may be used for service delivery or demonstration purposes."
+          },
+          "intellectual": {
+            "title": "Intellectual Property",
+            "p1": "All elements of this website (source code, structure, design, content) are protected by intellectual property laws.",
+            "p2": "Any reproduction or use without prior authorization is strictly prohibited."
+          },
+          "liability": {
+            "title": "Liability",
+            "p1": "The publisher strives to provide accurate and up-to-date information but cannot be held liable for errors, omissions or service unavailability."
+          },
+          "data": {
+            "title": "Personal Data",
+            "p1": "Information regarding personal data processing is available in the Privacy Policy."
+          }
+        }
+      },
+      "cookies": {
+        "h1": "Cookies",
+        "title": "Cookie Policy",
+        "description": "Information regarding the use of cookies on Compoz Studio.",
+        "sections": {
+          "intro": {
+            "title": "What is a cookie?",
+            "p1": "A cookie is a small text file stored on your device (computer, tablet, or smartphone) when visiting a website."
+          },
+          "usage": {
+            "title": "Use of cookies",
+            "p1": "At this time, Compoz Studio does not use any cookies for advertising, marketing tracking, or audience analytics purposes.",
+            "p2": "No third-party cookies (Google Analytics, social media pixels, advertising tools, etc.) are installed during your navigation."
+          },
+          "technical": {
+            "title": "Strictly necessary cookies",
+            "p1": "Only strictly necessary cookies required for the technical operation of the application may be used (e.g. session management, security, interface preferences).",
+            "p2": "These cookies do not require user consent under applicable regulations."
+          },
+          "future": {
+            "title": "Policy updates",
+            "p1": "If analytics or tracking tools are added in the future, this page will be updated accordingly and a consent management mechanism will be implemented if required."
+          },
+          "contact": {
+            "title": "Contact",
+            "p1": "For any questions regarding this cookie policy, you can contact us at: <email>{emailAddress}</email>"
+          }
+        }
+      }
+    }
+  }
+}

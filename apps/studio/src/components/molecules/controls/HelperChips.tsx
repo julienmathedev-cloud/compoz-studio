@@ -1,0 +1,37 @@
+/**
+ * @file apps/studio/src/components/molecules/controls/HelperChips.tsx
+ * @layer ui/molecules
+ * @description Composant réutilisable pour afficher une série de petits boutons permettant d'insérer des snippets ou valeurs dans un champ de formulaire.
+ * @remarks Peut être utilisé pour les champs SEO (titleTemplate, robots) ou tout champ nécessitant des boutons d'aide.
+ */
+
+import { Button } from "@compoz/ui/components/ui/button";
+import { cn } from "@compoz/ui/lib/utils";
+import { ROW_SM } from "@compoz/ui/styles/studio/layout";
+
+type HelperChipsProps = Readonly<{
+  items: ReadonlyArray<string>;
+  onPick: (value: string) => void;
+}>;
+
+export function HelperChips({ items, onPick }: HelperChipsProps) {
+  if (!items.length) return null;
+
+  return (
+    <div className={cn("flex-wrap", ROW_SM)}>
+      {items.map((item) => (
+        <Button
+          key={`helper-chip-${item}`}
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => onPick(item)}
+        >
+          {item}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
+HelperChips.displayName = "HelperChips";

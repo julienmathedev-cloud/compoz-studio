@@ -1,0 +1,437 @@
+"use client";
+
+/**
+ * @file apps/studio/src/components/molecules/media/ImageUploader.tsx
+ * @layer ui/molecules
+ *
+ * @description
+ * Sélecteur d’image contrôlé (input file + preview locale + upload optionnel).
+ *
+ * @remarks
+ * - Molecule UI : compose des atoms et des primitives UI (Field).
+ * - La valeur finale est contrôlée via `url` / `onUrlChange`.
+ * - `onFileSelect` (optionnel) gère l’upload et retourne une URL publique.
+ * - Gère une preview via `URL.createObjectURL` avec cleanup à l’unmount.
+ * - Les IDs ARIA (champ / hint / error) sont fournis par le parent (`ids`).
+ * - Strictement UI-only : aucune logique métier.
+ */
+
+import { useTranslations } from "next-intl";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+
+import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
+import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
+import { LoadingStatus } from "@compoz/studio/components/atoms/LoadingStatus";
+import { ErrorText } from "@compoz/studio/components/atoms/typography/ErrorText";
+import { HelpText } from "@compoz/studio/components/atoms/typography/HelpText";
+import { Text } from "@compoz/studio/components/atoms/typography/Text";
+import { EmptyState } from "@compoz/studio/components/molecules/feedback/EmptyState";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@compoz/ui/components/ui/field";
+import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
+import { cn } from "@compoz/ui/lib/utils";
+import { EMPTY_CARD } from "@compoz/ui/styles/studio/layout";
+
+type UploadedRasterImage = Readonly<{
+  url: string;
+  width: number;
+  height: number;
+}>;
+
+type ImageSelectorPreviewMode = "fill" | "icon";
+
+/**
+ * Props du composant `ImageSelector`.
+ */
+type ImageSelectorProps = Readonly<{
+  /** Ensemble des IDs ARIA pour ce champ (fournis par le parent). */
+  ids: FieldIds;
+  /** Libellé du champ. */
+  label: string;
+  /** URL actuelle de l’image (contrôlée par le parent). */
+  url: string;
+  /** Callback de mise à jour de l’URL (image finale, souvent publique). */
+  onUrlChange: (next: string) => void;
+  /** Désactive l’input et les actions. */
+  disabled?: boolean;
+  /** Types MIME acceptés par l’input file (défaut: "image/*"). */
+  accept?: string;
+  /** Texte alternatif pour la preview. */
+  previewAlt: string;
+  /** Texte d’aide optionnel affiché sous le champ. */
+  help?: string;
+  /** Upload optionnel : reçoit le fichier sélectionné et retourne une URL publique. */
+  onFileSelect?: (file: File) => Promise<UploadedRasterImage>;
+  onUploaded?: (meta: UploadedRasterImage) => void;
+  /** Types MIME recommandés (hint non bloquant si différent). */
+  preferredTypes?: ReadonlyArray<string>;
+  /** Message affiché si le type choisi n’est pas recommandé. */
+  preferredTypeHint?: string;
+
+  /**
+   * Taille maximale autorisée côté UI (en octets).
+   * @example 5_000_000 pour 5 MB (doit matcher le serveur).
+   */
+  maxBytes?: number;
+
+  /** Handler appelé lors d’un reset complet (URL + preview). */
+  onClear?: () => void;
+
+  /**
+   * Erreur externe (ex: Zod/RHF : src requis).
+   *
+   * @remarks
+   * - `fileError` (local) est prioritaire si présent.
+   * - Sinon, on affiche l’erreur externe si `invalid` est true.
+   */
+  invalid?: boolean;
+  errorMessage?: string;
+
+  /**
+   * Mode de rendu de la preview.
+   * - "fill" : (défaut) Image en `fill` + object-contain (comportement actuel)
+   * - "icon" : image centrée, taille fixe (utile pour favicons)
+   */
+  previewMode?: ImageSelectorPreviewMode;
+
+  /**
+   * Taille (px) utilisée en mode "icon".
+   * @default 128
+   */
+  previewSize?: number;
+}>;
+
+export function ImageSelector({
+  ids,
+  label,
+  url,
+  onUrlChange,
+  disabled,
+  accept = "image/*",
+  previewAlt,
+  help,
+  onFileSelect,
+  onUploaded,
+  preferredTypes,
+  preferredTypeHint,
+  maxBytes,
+  onClear,
+  invalid,
+  errorMessage,
+  previewMode = "fill",
+  previewSize = 128,
+}: ImageSelectorProps) {
+  const { fieldId, errorId, hintId } = ids;
+
+  const t = useTranslations();
+
+  const [uploading, setUploading] = useState(false);
+  const [fileError, setFileError] = useState<string | undefined>(undefined);
+  const [typeHint, setTypeHint] = useState<string | undefined>(undefined);
+  const [localPreview, setLocalPreview] = useState<string | undefined>();
+  const [pickedName, setPickedName] = useState<string | undefined>();
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const blobRef = useRef<string | undefined>(undefined);
+
+  // Nettoyage de l’URL blob locale à l’unmount
+  useEffect(() => {
+    return () => {
+      if (blobRef.current) {
+        URL.revokeObjectURL(blobRef.current);
+      }
+    };
+  }, []);
+
+  // Erreur effective : locale > externe (RHF/Zod)
+  const effectiveError =
+    fileError ?? (invalid ? (errorMessage ?? undefined) : undefined);
+
+  const isInvalid = Boolean(effectiveError);
+
+  // Construction de l’attribut aria-describedby à partir des IDs fournis
+  const describedByIds: string[] = [];
+  const hasHintContent = Boolean(typeHint) || Boolean(help);
+
+  if (hintId && hasHintContent) {
+    describedByIds.push(hintId);
+  }
+
+  // ✅ Important : on référence l’errorId si une erreur (locale OU externe) existe
+  if (errorId && isInvalid) {
+    describedByIds.push(errorId);
+  }
+
+  const describedBy =
+    describedByIds.length > 0 ? describedByIds.join(" ") : undefined;
+
+  // Nom affiché : nom choisi localement ou dernier segment de l’URL distante
+  const showName = pickedName || (url ? url.split("/").pop() : "");
+
+  // Busy UI : désactivation globale + upload en cours
+  const isBusy = Boolean(disabled || uploading);
+
+  // Taille plus compacte (évite les gros pavés vides)
+  const PREVIEW_MIN_HEIGHT = 180;
+
+  // Désactivation du bouton de suppression : rien à supprimer (URL + preview + nom vides)
+  const isDeleteDisabled = isBusy || (!url && !localPreview && !pickedName);
+
+  function formatBytes(bytes: number): string {
+    if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";
+    const units = ["B", "KB", "MB", "GB"];
+    let v = bytes;
+    let i = 0;
+    while (v >= 1024 && i < units.length - 1) {
+      v = v / 1024;
+      i++;
+    }
+    const rounded = i === 0 ? Math.round(v) : Math.round(v * 10) / 10;
+    return `${rounded} ${units[i]}`;
+  }
+
+  async function doUpload(file: File) {
+    if (!onFileSelect) return;
+
+    try {
+      setUploading(true);
+      const uploaded = await onFileSelect(file);
+
+      // ✅ url contrôlée (string)
+      onUrlChange(uploaded.url);
+
+      // ✅ preview = URL publique (plus stable que blob)
+      setLocalPreview(uploaded.url);
+
+      // ✅ remonte width/height au parent
+      onUploaded?.(uploaded);
+
+      setFileError(undefined);
+    } catch (err) {
+      const msg =
+        (err as { message?: string })?.message ?? t("uiErrors.uploadFailed");
+      setFileError(msg);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleFileChange(file: File) {
+    try {
+      // 1) Validation basique : enforce MIME image/*
+      if (!file.type.startsWith("image/")) {
+        setFileError(t("uiErrors.notImage"));
+        return;
+      }
+
+      // 1bis) Validation taille max côté UI (si fournie)
+      if (typeof maxBytes === "number" && Number.isFinite(maxBytes)) {
+        if (file.size > maxBytes) {
+          setFileError(
+            t("uiErrors.fileTooLarge", {
+              max: formatBytes(maxBytes),
+            }),
+          );
+          return;
+        }
+      }
+
+      setFileError(undefined);
+
+      // 2) Hint non bloquant sur les types recommandés
+      if (Array.isArray(preferredTypes) && preferredTypes.length > 0) {
+        if (!preferredTypes.includes(file.type)) {
+          setTypeHint(
+            preferredTypeHint ??
+              t("admin.imageSelector.hints.notRecommendedType", { types: "" }),
+          );
+        } else {
+          setTypeHint(undefined);
+        }
+      } else {
+        setTypeHint(undefined);
+      }
+
+      // 3) Preview locale via object URL (avec cleanup)
+      if (blobRef.current) {
+        URL.revokeObjectURL(blobRef.current);
+      }
+      const objectUrl = URL.createObjectURL(file);
+      blobRef.current = objectUrl;
+      setLocalPreview(objectUrl);
+      setPickedName(file.name);
+
+      // 4) Upload (si callback fourni) → met à jour l’URL publique
+      if (onFileSelect) {
+        await doUpload(file);
+      }
+    } finally {
+      // ✅ IMPORTANT : permet de re-sélectionner le même fichier
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }
+
+  function clearAll() {
+    setPickedName(undefined);
+    setLocalPreview(undefined);
+    setFileError(undefined);
+    setTypeHint(undefined);
+
+    if (blobRef.current) {
+      URL.revokeObjectURL(blobRef.current);
+      blobRef.current = undefined;
+    }
+
+    onUrlChange("");
+    onClear?.();
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
+  function openPicker() {
+    if (isBusy) return;
+    fileInputRef.current?.click();
+  }
+
+  const hasPreview = Boolean(localPreview || url);
+  const src = localPreview || url;
+  const isBlob = Boolean(localPreview?.startsWith("blob:"));
+
+  return (
+    <Field
+      // ✅ on se base sur l’erreur effective (locale OU externe)
+      data-invalid={isInvalid ? true : undefined}
+      aria-busy={isBusy || undefined}
+    >
+      <FieldLabel htmlFor={fieldId}>{label}</FieldLabel>
+
+      {/* Statut a11y uniquement (pas de layout shift) */}
+      {uploading && (
+        <LoadingStatus
+          label={t("admin.imageSelector.uploadingSr")}
+          withSpinner={false}
+          className="sr-only"
+        />
+      )}
+
+      {/* Input file masqué (piloté via la zone cliquable) */}
+      <input
+        ref={fileInputRef}
+        id={fieldId}
+        type="file"
+        accept={accept}
+        disabled={isBusy}
+        aria-describedby={describedBy}
+        aria-invalid={isInvalid ? true : undefined}
+        tabIndex={-1}
+        onChange={async (e) => {
+          const f = e.currentTarget.files?.[0];
+          if (!f) return;
+          await handleFileChange(f);
+        }}
+        className="sr-only"
+      />
+
+      {/* Zone interactive : placeholder (empty) → preview (filled) */}
+      <div className="relative">
+        <TooltipButton
+          type="button"
+          disabled={isBusy}
+          tooltip={showName || undefined}
+          tabIndex={isBusy ? -1 : 0}
+          onClick={openPicker}
+          aria-disabled={isBusy || undefined}
+          className={cn(
+            EMPTY_CARD,
+            hasPreview && "pr-10 pl-10", // ✅ padding “anti-overlap”
+            "flex w-full bg-accent/20",
+            // Affordance : hover/focus
+            !isBusy &&
+              "cursor-pointer hover:bg-accent/50 hover:border-primary focus-visible:ring-offset-2",
+            isBusy && "cursor-not-allowed opacity-70",
+          )}
+          style={{ minHeight: PREVIEW_MIN_HEIGHT }}
+          aria-label={t("admin.imageSelector.previewAria")}
+        >
+          <div
+            className={cn("relative h-full w-full items-center justify-center")}
+          >
+            {hasPreview ? (
+              previewMode === "icon" ? (
+                <div className="flex h-full w-full items-center justify-center">
+                  <Image
+                    src={src}
+                    alt={previewAlt}
+                    width={previewSize}
+                    height={previewSize}
+                    className="object-contain"
+                    unoptimized={isBlob}
+                  />
+                </div>
+              ) : (
+                <Image
+                  src={src}
+                  alt={previewAlt}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-contain"
+                  unoptimized={isBlob}
+                />
+              )
+            ) : (
+              <EmptyState text={t("admin.imageSelector.chooseFile")} />
+            )}
+          </div>
+        </TooltipButton>
+
+        {/* Action secondaire : supprimer, discrète, sans voler la vedette */}
+        <div className="absolute right-2 top-2 flex items-center gap-2">
+          <DeleteButton
+            disabled={isDeleteDisabled}
+            disabledTooltip={
+              isBusy
+                ? t("admin.imageSelector.tooltips.disabledWhileUploading")
+                : t("admin.imageSelector.tooltips.nothingToDelete")
+            }
+            onConfirmDelete={clearAll}
+            confirm={{
+              title: t("admin.imageSelector.confirm.title"),
+              description: t("admin.imageSelector.confirm.description"),
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Description / hints (types recommandés) */}
+      {(typeHint || help) && (
+        <FieldDescription id={hintId}>
+          {typeHint ? (
+            <Text as="span" variant="meta">
+              {typeHint}
+            </Text>
+          ) : (
+            <HelpText as="span">{help}</HelpText>
+          )}
+        </FieldDescription>
+      )}
+
+      {/* ✅ Erreur bloquante : locale OU externe */}
+      {effectiveError && (
+        <FieldError id={errorId}>
+          <ErrorText error={effectiveError} />
+        </FieldError>
+      )}
+    </Field>
+  );
+}
+
+ImageSelector.displayName = "ImageSelector";

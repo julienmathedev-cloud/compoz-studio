@@ -1,0 +1,126 @@
+/* ✅ Shared base (imports tailwind + radix + layers + utilities) */
+@config "../../tailwind.config.ts";
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@import "tw-animate-css";
+
+@import "@compoz/ui/styles/base.css";
+
+/* ---------------------------------------------------------------------------
+ * Admin theme mapping
+ * - Light : Mauve + Indigo
+ * - Dark  : Slate + Indigo
+ * ------------------------------------------------------------------------- */
+:root {
+  --background: var(--mauve-2);
+  --foreground: var(--mauve-12);
+
+  --card: var(--mauve-1);
+  --card-foreground: var(--mauve-12);
+
+  --popover: var(--mauve-1);
+  --popover-foreground: var(--mauve-12);
+
+  --secondary: var(--mauve-1);
+  --secondary-foreground: var(--mauve-12);
+
+  --muted: var(--mauve-3);
+  --muted-foreground: var(--mauve-11);
+
+  --accent: var(--indigo-3);
+  --accent-foreground: var(--indigo-11);
+
+  --border: var(--indigo-4);
+  --input: var(--indigo-4);
+
+  --primary: var(--indigo-9);
+  --primary-foreground: white;
+
+  --ring: var(--indigo-9);
+
+  --destructive: oklch(0.577 0.245 27.325);
+
+  --success: oklch(53.417% 0.16772 144.031);
+  --success-border: var(--green-6);
+  --success-foreground: var(--green-2);
+
+  --warning: oklch(55.883% 0.12107 67.623);
+  --warning-border: var(--orange-6);
+  --warning-foreground: var(--orange-2);
+
+  --info: var(--indigo-9);
+  --info-border: var(--indigo-6);
+  --info-foreground: var(--indigo-2);
+
+  --chart-1: oklch(0.85 0.13 165);
+  --chart-2: oklch(0.77 0.15 163);
+  --chart-3: oklch(0.7 0.15 162);
+  --chart-4: oklch(0.6 0.13 163);
+  --chart-5: oklch(0.51 0.1 166);
+
+  --radius: 0.625rem;
+
+  --sidebar: var(--mauve-3);
+  --sidebar-foreground: var(--mauve-12);
+
+  --sidebar-primary: var(--indigo-9);
+  --sidebar-primary-foreground: white;
+
+  --sidebar-accent: var(--indigo-9);
+  --sidebar-accent-foreground: var(--mauve-1);
+
+  --sidebar-border: var(--mauve-6);
+  --sidebar-ring: var(--indigo-9);
+}
+
+/* Dark mode (admin) */
+.dark {
+  --background: var(--slate-1);
+  --foreground: var(--slate-12);
+
+  --card: var(--slate-2);
+  --card-foreground: var(--slate-12);
+
+  --popover: var(--slate-2);
+  --popover-foreground: var(--slate-12);
+
+  --secondary: var(--slate-3);
+  --secondary-foreground: var(--slate-12);
+
+  --muted: var(--slate-3);
+  --muted-foreground: var(--slate-11);
+
+  --accent: var(--slate-4);
+  --accent-foreground: var(--slate-12);
+
+  --border: var(--slate-6);
+  --input: var(--slate-6);
+
+  --primary: var(--indigo-9);
+  --primary-foreground: white;
+
+  --ring: var(--indigo-9);
+
+  --destructive: oklch(0.704 0.191 22.216);
+
+  --success: var(--green-9);
+  --success-foreground: white;
+
+  --warning: var(--orange-9);
+  --warning-foreground: var(--orange-12);
+
+  --info: var(--indigo-9);
+  --info-foreground: white;
+
+  --sidebar: var(--slate-2);
+  --sidebar-foreground: var(--slate-12);
+
+  --sidebar-primary: var(--indigo-9);
+  --sidebar-primary-foreground: white;
+
+  --sidebar-accent: var(--slate-4);
+  --sidebar-accent-foreground: var(--slate-12);
+
+  --sidebar-border: var(--slate-6);
+  --sidebar-ring: var(--indigo-9);
+}

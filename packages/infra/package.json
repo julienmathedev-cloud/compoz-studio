@@ -1,0 +1,22 @@
+{
+  "name": "@compoz/infra",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@compoz/core": "workspace:*",
+    "@upstash/redis": "^1.36.3",
+    "sharp": "^0.34.5",
+    "uuid": "^13.0.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  }
+}

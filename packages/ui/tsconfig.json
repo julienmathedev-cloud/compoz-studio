@@ -1,0 +1,15 @@
+/**
+ * @file packages/ui/tsconfig.json
+ * @description
+ * Configuration du package UI.
+ * @layer ui
+ */
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["esnext", "dom"],
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

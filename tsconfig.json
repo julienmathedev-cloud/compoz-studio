@@ -1,0 +1,18 @@
+/**
+ * @file tsconfig.json
+ * @description
+ * Configuration de tous les packages et applications.
+ * @layer root
+ */
+{
+  "files": [],
+  "references": [
+    { "path": "./apps/studio" },
+    { "path": "./apps/site" },
+    { "path": "./packages/core" },
+    { "path": "./packages/infra" },
+    { "path": "./packages/ui" },
+    { "path": "./packages/validation" },
+    { "path": "./packages/http" }
+  ]
+}

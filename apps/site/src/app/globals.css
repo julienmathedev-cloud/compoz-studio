@@ -1,0 +1,70 @@
+/* ✅ Shared base (imports tailwind + radix + layers + utilities) */
+@config "../../tailwind.config.ts";
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@import "tw-animate-css";
+
+@import "@compoz/ui/styles/base.css";
+
+.theme-public {
+  --background: var(--slate-1);
+  --foreground: var(--slate-12);
+
+  --card: var(--slate-1);
+  --card-foreground: var(--slate-12);
+
+  --popover: var(--slate-1);
+  --popover-foreground: var(--slate-12);
+
+  --secondary: var(--slate-2);
+  --secondary-foreground: var(--slate-12);
+
+  --muted: var(--slate-3);
+  --muted-foreground: var(--slate-11);
+
+  --accent: var(--slate-3);
+  --accent-foreground: var(--slate-12);
+
+  --border: var(--slate-6);
+  --input: var(--slate-6);
+
+  /* CTA sobre (noir “Slate”) */
+  --primary: var(--slate-12);
+  --primary-foreground: var(--slate-1);
+
+  --ring: var(--slate-9);
+
+  --destructive: oklch(0.577 0.245 27.325);
+
+  --success: var(--green-9);
+  --success-border: var(--green-6);
+  --success-foreground: white;
+
+  --warning: var(--orange-9);
+  --warning-border: var(--orange-6);
+  --warning-foreground: var(--orange-12);
+
+  --info: var(--indigo-9);
+  --info-border: var(--indigo-6);
+  --info-foreground: white;
+
+  --sidebar: var(--slate-2);
+  --sidebar-foreground: var(--slate-12);
+
+  --sidebar-primary: var(--slate-12);
+  --sidebar-primary-foreground: var(--slate-1);
+
+  --sidebar-accent: var(--slate-3);
+  --sidebar-accent-foreground: var(--slate-12);
+
+  --sidebar-border: var(--slate-6);
+  --sidebar-ring: var(--slate-9);
+
+  --chart-1: oklch(0.85 0.13 165);
+  --chart-2: oklch(0.77 0.15 163);
+  --chart-3: oklch(0.7 0.15 162);
+  --chart-4: oklch(0.6 0.13 163);
+  --chart-5: oklch(0.51 0.1 166);
+
+  --radius: 0.625rem;
+}

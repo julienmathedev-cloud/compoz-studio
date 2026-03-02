@@ -1,0 +1,14 @@
+/**
+ * @file packages/http/tsconfig.json
+ * @description
+ * Configuration du package HTTP.
+ * @layer http
+ */
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts"]
+}

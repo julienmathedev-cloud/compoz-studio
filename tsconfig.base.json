@@ -1,0 +1,50 @@
+/**
+ * @file tsconfig.base.json
+ * @description
+ * Configuration de base pour tous les packages et applications.
+ * @layer base
+ */
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+
+    "noImplicitAny": true,
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "incremental": true,
+
+    // ✅ OBLIGATOIRE pour utiliser "paths"
+    "baseUrl": ".",
+    "paths": {
+      "@compoz/studio": ["apps/studio/src"],
+      "@compoz/studio/*": ["apps/studio/src/*"],
+
+      "@compoz/site": ["apps/site/src"],
+      "@compoz/site/*": ["apps/site/src/*"],
+
+      "@compoz/core": ["packages/core/src"],
+      "@compoz/core/*": ["packages/core/src/*"],
+
+      "@compoz/infra": ["packages/infra/src"],
+      "@compoz/infra/*": ["packages/infra/src/*"],
+
+      "@compoz/ui": ["packages/ui/src"],
+      "@compoz/ui/*": ["packages/ui/src/*"],
+
+      "@compoz/validation": ["packages/validation/src"],
+      "@compoz/validation/*": ["packages/validation/src/*"],
+
+      "@compoz/http": ["packages/http/src"],
+      "@compoz/http/*": ["packages/http/src/*"]
+    }
+  }
+}

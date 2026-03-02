@@ -34,6 +34,7 @@ export function DiffStatusBadge({
   } as const;
 
   const cfg = map[kind] ?? map.published;
+
   return <StatusBadge variant={cfg.variant} label={cfg.label} />;
 }
 

@@ -7,19 +7,16 @@
  * et règles de cohérence sont traités dans le domaine.
  */
 
-import { PrimaryMenuSettingsSchema } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
-import type { z } from "zod";
+import { PrimaryMenuItemSchema } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 
-/**
- * Intention de mise à jour des réglages du menu principal.
- * Contrat : payload partiel aligné sur la forme des settings (draft-only).
- */
-export const UpdatePrimaryMenuSettingsIntentSchema =
-  PrimaryMenuSettingsSchema.partial().strict();
+import { z } from "zod";
 
-/**
- * DTO d’intention : résultat typé du parsing du payload de mise à jour.
- */
+export const UpdatePrimaryMenuSettingsIntentSchema = z
+  .object({
+    items: z.array(PrimaryMenuItemSchema).optional(),
+  })
+  .strict();
+
 export type UpdatePrimaryMenuSettingsIntentDTO = z.infer<
   typeof UpdatePrimaryMenuSettingsIntentSchema
 >;

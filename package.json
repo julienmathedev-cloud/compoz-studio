@@ -6,14 +6,14 @@
   "packageManager": "pnpm@10.14.0",
   "scripts": {
     "dev": "pnpm -r --parallel --filter @compoz/studio --filter @compoz/site dev",
-    "dev:admin": "pnpm --filter @compoz/studio dev",
-    "dev:public": "pnpm --filter @compoz/site dev",
+    "dev:studio": "pnpm --filter @compoz/studio dev",
+    "dev:site": "pnpm --filter @compoz/site dev",
     "build": "pnpm -r --filter @compoz/studio --filter @compoz/site build",
-    "build:admin": "pnpm --filter @compoz/studio build",
-    "build:public": "pnpm --filter @compoz/site build",
+    "build:studio": "pnpm --filter @compoz/studio build",
+    "build:site": "pnpm --filter @compoz/site build",
     "start": "pnpm -r --parallel --filter @compoz/studio --filter @compoz/site start",
-    "start:admin": "pnpm --filter @compoz/studio start",
-    "start:public": "pnpm --filter @compoz/site start",
+    "start:studio": "pnpm --filter @compoz/studio start",
+    "start:site": "pnpm --filter @compoz/site start",
     "lint": "pnpm -r lint"
   },
   "engines": {

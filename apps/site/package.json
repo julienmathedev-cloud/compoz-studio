@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@compoz/core": "workspace:*",
+    "@compoz/infra": "workspace:*",
+    "@compoz/http": "workspace:*",
+    "@compoz/validation": "workspace:*",
     "@compoz/ui": "workspace:*",
     "next": "16.1.6",
     "react": "19.2.3",

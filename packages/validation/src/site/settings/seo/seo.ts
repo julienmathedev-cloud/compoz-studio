@@ -91,7 +91,7 @@ export type TwitterSettingsShape = z.infer<typeof TwitterSettingsSchema>;
 /*                               Inline validation                            */
 /* -------------------------------------------------------------------------- */
 
-function validateSeoSettingsValues(
+export function validateSeoSettingsValues(
   val: z.infer<typeof SeoSettingsObjectSchema>,
   ctx: z.RefinementCtx,
 ) {
@@ -160,7 +160,7 @@ function validateSeoSettingsValues(
 /*                           Schéma principal SEO                              */
 /* -------------------------------------------------------------------------- */
 
-const SeoSettingsObjectSchema = z
+export const SeoSettingsObjectSchema = z
   .object({
     baseUrl: OptionalAbsoluteHttpUrlDraftSchema,
 

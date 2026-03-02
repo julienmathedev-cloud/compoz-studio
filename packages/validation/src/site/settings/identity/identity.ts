@@ -16,7 +16,15 @@ import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { AssetUrlSchema } from "@compoz/validation/common/url-fragments";
 import { z } from "zod";
 
-export const IdentitySettingsSchema = z
+/* -------------------------------------------------------------------------- */
+/*                                    Base                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Schéma "pur" (sans refine) pour permettre de dériver des variantes
+ * - Utilisé comme base pour le schéma canonique complet et les intents patch.
+ */
+export const IdentitySettingsBaseSchema = z
   .object({
     /** Nom du site — requis (contrainte "non vide" gérée en superRefine). */
     siteName: z
@@ -48,7 +56,14 @@ export const IdentitySettingsSchema = z
     /** URL du favicon — relative ou absolue. Null/undefined si aucun favicon. */
     faviconUrl: z.union([AssetUrlSchema, z.null()]).optional(),
   })
-  .superRefine((val, ctx) => {
+  .strict();
+
+/* -------------------------------------------------------------------------- */
+/*                                Canonique (full)                            */
+/* -------------------------------------------------------------------------- */
+
+export const IdentitySettingsSchema = IdentitySettingsBaseSchema.superRefine(
+  (val, ctx) => {
     // --- siteName requis ---
     const siteName = val.siteName.trim();
     if (siteName.length < IDENTITY_SITENAME.MIN) {
@@ -72,8 +87,8 @@ export const IdentitySettingsSchema = z
         message: ERROR_CODES.IDENTITY_LOGO_ALT_REQUIRED,
       });
     }
-  })
-  .strict();
+  },
+);
 
 /** Shape frontière (après parsing Zod). */
 export type IdentitySettingsShape = z.infer<typeof IdentitySettingsSchema>;

@@ -35,7 +35,6 @@ type ApiHandler<T> = (props: HandlerProps) => Promise<T>;
 /* -------------------------------------------------------------------------- */
 /* Main wrapper                                                                */
 /* -------------------------------------------------------------------------- */
-
 export async function handleRoute<T>(
   ns: string,
   req: Request,

@@ -109,9 +109,18 @@ importers:
       '@compoz/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@compoz/http':
+        specifier: workspace:*
+        version: link:../../packages/http
+      '@compoz/infra':
+        specifier: workspace:*
+        version: link:../../packages/infra
       '@compoz/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@compoz/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.71.2(react@19.2.3))

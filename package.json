@@ -17,7 +17,7 @@
     "lint": "pnpm -r lint"
   },
   "engines": {
-    "node": "22.14.0"
+    "node": "22.22.0"
   },
   "keywords": [],
   "author": "",

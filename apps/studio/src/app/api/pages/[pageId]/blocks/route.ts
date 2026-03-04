@@ -15,8 +15,8 @@
 import { throwHttp } from "@compoz/http/http-error";
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import { log, logSpan } from "@compoz/infra/lib/log";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteStatusCache } from "@compoz/infra/site";
@@ -30,13 +30,15 @@ import type {
   AddLayoutSectionBlockResponse,
   ListPageBlocksResponse,
 } from "@compoz/infra/http/studio/pages.types";
+import { adaptCreateLayoutSectionBlockIntent } from "@compoz/studio/app/api/_adapters/pages/blocks";
+import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import {
   CreateLayoutSectionBlockIntentSchema,
   type CreateLayoutSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
 import { PageIdParamSchema } from "@compoz/validation/pages/page";
-import { adaptCreateLayoutSectionBlockIntent } from "@compoz/studio/app/api/_adapters/pages/blocks";
-import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
+
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 
 // -------------------------------------------------
 // GET /api/pages/:pageId/blocks → lister les blocks
@@ -46,7 +48,9 @@ export async function GET(req: Request, ctx: { params: unknown }) {
   const NS = "api.pages.id.blocks.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    return logSpan(NS, { ns: NS, method: "GET", state }, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "GET", state, tenantId }, async () => {
       const params = await unwrapParams(ctx.params);
 
       const { pageId } = parseDTOOrHttp(PageIdParamSchema, params, {
@@ -54,7 +58,7 @@ export async function GET(req: Request, ctx: { params: unknown }) {
         extras: { where: "api.admin.pages.id.blocks.GET.params" },
       });
 
-      const pagesRepo = getPagesRepository();
+      const pagesRepo = getPagesRepository({ tenantId });
       const page = await pagesRepo.readById(state, pageId);
 
       if (!page) {
@@ -77,9 +81,11 @@ export async function POST(req: Request, ctx: { params: unknown }) {
   const NS = "api.pages.id.blocks.POST" as const;
 
   return handleRoute(NS, req, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
     return logSpan(
       NS,
-      { ns: NS, method: "POST", state: WRITE_CONTENT_STATE },
+      { ns: NS, method: "POST", state: WRITE_CONTENT_STATE, tenantId },
       async () => {
         const lg = log.child({ ns: NS });
 
@@ -101,8 +107,8 @@ export async function POST(req: Request, ctx: { params: unknown }) {
           },
         );
 
-        const pagesRepo = getPagesRepository();
-        const statusCache = getSiteStatusCache();
+        const pagesRepo = getPagesRepository({ tenantId });
+        const statusCache = getSiteStatusCache({ tenantId });
 
         const patch = adaptCreateLayoutSectionBlockIntent(dto);
 

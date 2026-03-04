@@ -20,8 +20,7 @@ import { DEFAULT_FOOTER_SETTINGS } from "@compoz/core/domain/site/defaults/foote
  */
 
 import { settingsAdminApi } from "@compoz/infra/http/studio/site-settings.client";
-import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
-import type { FooterFormValues } from "@compoz/validation/site/settings/footer/footer-form";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import type { SettingsHookResult } from "@compoz/studio/features/settings/hooks/useSettingsResource";
@@ -35,6 +34,8 @@ import {
   toUpdateFooterIntentDTOFromFormValues,
 } from "@compoz/studio/features/settings/mappers/footer-form";
 import { invalidateSiteStatus } from "@compoz/studio/features/site/status/invalidate";
+import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
+import type { FooterFormValues } from "@compoz/validation/site/settings/footer/footer-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
@@ -47,6 +48,7 @@ export function useFooterSettings(): UseFooterSettingsResult {
   const t = useTranslations();
   const qc = useQueryClient();
   const entityLabel = t("admin.shared.entities.footer");
+  const tenantId = useTenantId();
 
   const resource = useSettingsResource<FooterFormValues>({
     entityLabel,
@@ -58,7 +60,7 @@ export function useFooterSettings(): UseFooterSettingsResult {
 
     /** GET → DTO domaine → UI normalisée. */
     load: async (state: ContentState, opts) => {
-      const bundle = await getSettingsBundle(qc, state, opts);
+      const bundle = await getSettingsBundle(qc, tenantId, state, opts);
       return normalizeFooterFormValues(
         toFooterFormValuesFromDTO(bundle.footer),
       );
@@ -68,7 +70,7 @@ export function useFooterSettings(): UseFooterSettingsResult {
       const patch = toUpdateFooterIntentDTOFromFormValues(next);
       const dto = await settingsAdminApi.footer.patch(patch, opts);
 
-      patchSettingsBundleCache(qc, WRITE_CONTENT_STATE, (prev) => ({
+      patchSettingsBundleCache(qc, tenantId, WRITE_CONTENT_STATE, (prev) => ({
         ...prev,
         footer: dto.settings,
       }));
@@ -95,8 +97,7 @@ export function useFooterSettings(): UseFooterSettingsResult {
      * - Côté client, on force React Query à refetch `useSiteStatus()`.
      */
     onSaved: () => {
-      void invalidateSiteStatus(qc);
-      // void invalidateSiteStatusDetails(qc);
+      void invalidateSiteStatus(qc, tenantId);
     },
   });
 

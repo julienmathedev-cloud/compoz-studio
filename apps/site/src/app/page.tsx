@@ -3,11 +3,10 @@
  * @layer app/site
  *
  * @description
- * Route publique "/site" : rend la page publiée "home" (SEO stable).
+ * Route publique "/" : rend la page publiée "home" (SEO stable).
  *
  * @remarks
- * - Cette route est volontairement PUBLISHED-only pour garantir un head/metadata stable.
- * - Le draft est accessible via /draft (route dédiée).
+ * - PUBLISHED-only pour garder un head/metadata stable.
  */
 
 import type { Metadata } from "next";
@@ -17,13 +16,13 @@ import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
 import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
 import { resolvePublicUi } from "@compoz/ui/site/skins/resolvePublicUi";
 
-import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 import type { Page } from "@compoz/core/domain/pages/entities/page";
 import type { SiteIndex } from "@compoz/core/domain/site/entities";
 import {
   getPublishedHomePage,
   getPublishedIndex,
 } from "@compoz/site/lib/pages/public-page-loaders";
+import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 /* -------------------------------------------------------------------------- */
 /* Metadata                                                                   */
@@ -35,16 +34,16 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: (page.title ?? "").trim(),
-    alternates: { canonical: "/site" },
+    alternates: { canonical: "/" },
   };
 }
 
 /* -------------------------------------------------------------------------- */
-/* Pager (inchangé)                                                           */
+/* Pager                                                                      */
 /* -------------------------------------------------------------------------- */
 
 function __hrefForSlug(slug: string) {
-  return slug === "home" ? "/site" : `/site/${slug}`;
+  return slug === "home" ? "/" : `/${slug}`;
 }
 
 function __computePager(args: {

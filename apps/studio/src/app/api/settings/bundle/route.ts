@@ -1,5 +1,5 @@
 /**
- * @file apps/studio/src/app/api/settings/settings-bundle/route.ts
+ * @file apps/studio/src/app/api/settings/bundle/route.ts
  * @layer app/api
  * @description
  * Route Admin — Settings bundle (READ global).
@@ -9,18 +9,20 @@
  *
  * @remarks
  * - Read-model canonique pour l’admin (Option B).
- * - Avec KV : le repo stocke déjà `SiteSettings` en un seul document → read direct.
+ * - L’impl repo est choisie via la factory (`SITE_REPO_IMPL`) et est tenant-aware.
  */
 
-import { NextResponse } from "next/server";
+import { logSpan } from "@compoz/infra/lib/log";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
-
 import type { GetSettingsBundleResponse } from "@compoz/infra/http/studio/site-settings.types";
-import { KvSiteRepository } from "@compoz/infra/site/kv-site-repository";
+
+import { getSiteRepository } from "@compoz/infra/site";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 
 /* -------------------------------------------------------------------------- */
-/*                                  Helpers                                   */
+/* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
 function parseState(url: URL): ContentState {
@@ -29,16 +31,24 @@ function parseState(url: URL): ContentState {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                    GET                                     */
+/* GET                                                                        */
 /* -------------------------------------------------------------------------- */
 
 export async function GET(req: Request) {
-  const state = parseState(new URL(req.url));
+  const NS = "api.admin.settings.bundle.GET" as const;
 
-  const repo = new KvSiteRepository();
-  await repo.ensureBase(); // no-op KV, mais garde le contrat
-  const settings = await repo.readSettings(state);
+  return handleRoute(NS, req, async () => {
+    const { tenantId } = await requireSessionWithTenant();
 
-  const res: GetSettingsBundleResponse = { settings };
-  return NextResponse.json(res);
+    const state = parseState(new URL(req.url));
+
+    return logSpan(NS, { ns: NS, method: "GET", state, tenantId }, async () => {
+      const repo = getSiteRepository({ tenantId });
+      await repo.ensureBase(); // no-op KV, mais garde le contrat (FS en a besoin)
+      const settings = await repo.readSettings(state);
+
+      const res: GetSettingsBundleResponse = { settings };
+      return res;
+    });
+  });
 }

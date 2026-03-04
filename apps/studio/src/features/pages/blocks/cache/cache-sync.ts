@@ -11,11 +11,12 @@ import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state
 import type { PageDTO } from "@compoz/core/domain/pages/dto";
 import type { QueryClient } from "@tanstack/react-query";
 
-import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
 import { setPageBlocksCache } from "@compoz/studio/features/pages/blocks/cache/cache";
+import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
 
 export function syncBlocksFromPageCache(
   qc: QueryClient,
+  tenantId: string,
   pageId: string,
   page: PageDTO,
   state: ContentState = WRITE_CONTENT_STATE,
@@ -24,8 +25,8 @@ export function syncBlocksFromPageCache(
   if (!pid) return;
 
   // 1) page-by-id
-  qc.setQueryData(pageByIdKey(pid, state), page);
+  qc.setQueryData(pageByIdKey(tenantId, pid, state), page);
 
   // 2) blocks list by pageId
-  setPageBlocksCache(qc, pid, state, page.blocks ?? []);
+  setPageBlocksCache(qc, tenantId, pid, state, page.blocks ?? []);
 }

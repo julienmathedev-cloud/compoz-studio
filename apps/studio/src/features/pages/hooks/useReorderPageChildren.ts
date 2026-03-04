@@ -27,6 +27,7 @@ import {
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 import { pagesAdminApi } from "@compoz/infra/http/studio/pages.client";
 import { log, logSpan } from "@compoz/infra/lib/log";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
 import { setSiteIndexCache } from "@compoz/studio/features/site-index/cache";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
@@ -47,9 +48,18 @@ export function useReorderPageChildren(
   state: ContentState = WRITE_CONTENT_STATE,
 ): UseReorderPageChildrenResult {
   const qc = useQueryClient();
+  const tenantId = useTenantId();
 
   const mutation = useMutation<SiteIndexDTO, unknown, ReorderChildrenArgs>({
-    mutationKey: ["admin", "pages", "children", "reorder", state] as const,
+    mutationKey: [
+      "t",
+      tenantId,
+      "admin",
+      "pages",
+      "children",
+      "reorder",
+      state,
+    ] as const,
 
     mutationFn: async ({ parentId, childIds }) => {
       const pid = String(parentId ?? "").trim();
@@ -67,7 +77,7 @@ export function useReorderPageChildren(
 
     onSuccess: async (nextIndex, variables) => {
       // ✅ 1) push immédiat dans le cache (SoT helper)
-      setSiteIndexCache(qc, state, nextIndex);
+      setSiteIndexCache(qc, tenantId, state, nextIndex);
 
       lg.info("reorder.ok", {
         state,

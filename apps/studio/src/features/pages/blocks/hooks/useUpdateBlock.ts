@@ -14,12 +14,12 @@
  * - Aucune logique métier ni validation domaine.
  */
 
-import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import {
   notifyNoChanges,
   notifyUpdated,
 } from "@compoz/studio/lib/ui/notify-presets";
+import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
@@ -27,13 +27,17 @@ import { useCallback, useMemo, useState } from "react";
 import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { pagesAdminApi } from "@compoz/infra/http/studio/pages.client";
 import { log } from "@compoz/infra/lib/log";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
+import { syncBlocksFromPageCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
+import { toUpdateLayoutSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
+import {
+  invalidateSiteStatus,
+  invalidateSiteStatusDetails,
+} from "@compoz/studio/features/site/status/invalidate";
+import { UiError } from "@compoz/studio/lib/ui/uiError";
 import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
 import type { LayoutSectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 import type { UpdateLayoutSectionBlockIntentDTO } from "@compoz/validation/pages/blocks/block-intents";
-import { syncBlocksFromPageCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
-import { toUpdateLayoutSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
-import { invalidateBlocksBadgesForPage } from "@compoz/studio/features/site/status/invalidate";
-import { UiError } from "@compoz/studio/lib/ui/uiError";
 
 type UseUpdateBlockResult = Readonly<{
   update: (
@@ -60,12 +64,14 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
   const t = useTranslations();
   const qc = useQueryClient();
   const entityLabel = t("admin.shared.entities.blocks");
+  const tenantId = useTenantId();
+
   const [lcpWasActivated, setLcpWasActivated] = useState(false);
 
   const [updatingBlockId, setUpdatingBlockId] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationKey: ["admin", "pages", "blocks", "update"] as const,
+    mutationKey: ["t", tenantId, "admin", "pages", "blocks", "update"] as const,
 
     mutationFn: async (args: UpdateBlockArgs & { signal?: AbortSignal }) => {
       const { pageId, blockId, payload, fields, signal } = args;
@@ -97,12 +103,19 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
       const pageIdKey = (pageId ?? "").trim();
 
       if (pageIdKey && page) {
-        syncBlocksFromPageCache(qc, pageIdKey, page, WRITE_CONTENT_STATE);
+        syncBlocksFromPageCache(
+          qc,
+          tenantId,
+          pageIdKey,
+          page,
+          WRITE_CONTENT_STATE,
+        );
       }
 
-      if (pageIdKey) {
-        await invalidateBlocksBadgesForPage(qc, pageIdKey);
-      }
+      await Promise.all([
+        invalidateSiteStatus(qc, tenantId),
+        invalidateSiteStatusDetails(qc, tenantId),
+      ]);
 
       onSuccess?.();
     },

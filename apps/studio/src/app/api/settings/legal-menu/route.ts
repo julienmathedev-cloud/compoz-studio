@@ -14,24 +14,26 @@
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { updateLegalMenuSettings } from "@compoz/core/domain/site/use-cases/legal-menu/update-legal-menu-settings";
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
-import { log, logSpan } from "@compoz/infra/lib/log";
-import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
-import { adaptUpdateLegalMenuIntent } from "@compoz/studio/app/api/_adapters/menus";
-import { handleRoute } from "@compoz/studio/lib/api/handle-route";
-
 import type {
   GetLegalMenuResponse,
   PatchLegalMenuResponse,
 } from "@compoz/infra/http/studio/site-settings.types";
+import { log, logSpan } from "@compoz/infra/lib/log";
+import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
+import { adaptUpdateLegalMenuIntent } from "@compoz/studio/app/api/_adapters/menus";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { UpdateLegalMenuSettingsIntentSchema } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-intents";
 
 export async function GET(req: Request) {
   const NS = "api.admin.site.legal-menu.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    return logSpan(NS, { ns: NS, method: "GET", state }, async () => {
-      const repo = getSiteRepository();
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "GET", state, tenantId }, async () => {
+      const repo = getSiteRepository({ tenantId });
       const settings = await repo.readSettings(state);
 
       const res: GetLegalMenuResponse = { settings: settings.legalMenu };
@@ -44,13 +46,15 @@ export async function PATCH(req: Request) {
   const NS = "api.admin.site.legal-menu.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
-    return logSpan(NS, { ns: NS, method: "PATCH" }, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "PATCH", tenantId }, async () => {
       const raw = await readJsonOr400(req);
 
       log.info?.("LEGAL_MENU.PATCH.start", {
+        tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
-        envTenant: process.env["COMPOZ_SITE_ID"] ?? "default",
         hasKvUrl: Boolean(
           process.env["KV_REST_API_URL"] ??
           process.env["UPSTASH_REDIS_REST_URL"],
@@ -64,25 +68,30 @@ export async function PATCH(req: Request) {
 
       const input = adaptUpdateLegalMenuIntent(dto);
 
-      const repo = getSiteRepository();
-      const statusCache = getSiteStatusCache();
+      const repo = getSiteRepository({ tenantId });
+      const statusCache = getSiteStatusCache({ tenantId });
 
       const run = updateLegalMenuSettings({ repo });
       const { settings } = await run(input);
 
       log.info?.("LEGAL_MENU.PATCH.afterWrite", {
+        tenantId,
         legalMenuKeys: settings?.legalMenu
           ? Object.keys(settings.legalMenu)
           : [],
       });
 
       try {
-        log.info?.("LEGAL_MENU.PATCH.invalidate.start", {});
+        log.info?.("LEGAL_MENU.PATCH.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        log.info?.("LEGAL_MENU.PATCH.invalidate.done", {});
+        log.info?.("LEGAL_MENU.PATCH.invalidate.done", { tenantId });
       } catch (e) {
-        log.error?.("LEGAL_MENU.PATCH.invalidate.failed", { err: String(e) });
+        log.error?.("LEGAL_MENU.PATCH.invalidate.failed", {
+          tenantId,
+          err: String(e),
+        });
       }
+
       const res: PatchLegalMenuResponse = { settings: settings.legalMenu };
       return res;
     });

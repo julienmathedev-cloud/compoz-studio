@@ -23,8 +23,6 @@
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_PRIMARY_MENU_SETTINGS } from "@compoz/core/domain/site/defaults/primary-menu";
 import { settingsAdminApi } from "@compoz/infra/http/studio/site-settings.client";
-import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
-import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-form";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import type { SettingsHookResult } from "@compoz/studio/features/settings/hooks/useSettingsResource";
@@ -38,10 +36,13 @@ import {
   toUpdatePrimaryMenuIntentDTOFromFormValues,
 } from "@compoz/studio/features/settings/mappers/primary-menu-form";
 import { invalidateSiteStatus } from "@compoz/studio/features/site/status/invalidate";
+import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
+import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
 
 type UsePrimaryMenuSettingsResult = SettingsHookResult<PrimaryMenuFormValues>;
 
@@ -49,6 +50,7 @@ export function usePrimaryMenuSettings(): UsePrimaryMenuSettingsResult {
   const t = useTranslations();
   const qc = useQueryClient();
   const entityLabel = t("admin.shared.entities.primaryMenu");
+  const tenantId = useTenantId();
 
   const resource = useSettingsResource<PrimaryMenuFormValues>({
     entityLabel,
@@ -60,7 +62,7 @@ export function usePrimaryMenuSettings(): UsePrimaryMenuSettingsResult {
 
     /** READ (bundle) : cache-first + fetchQuery fallback. */
     load: async (state: ContentState, opts) => {
-      const bundle = await getSettingsBundle(qc, state, opts);
+      const bundle = await getSettingsBundle(qc, tenantId, state, opts);
       return normalizePrimaryMenuFormValues(
         toPrimaryMenuFormValuesFromDTO(bundle.primaryMenu),
       );
@@ -76,7 +78,7 @@ export function usePrimaryMenuSettings(): UsePrimaryMenuSettingsResult {
       const patch = toUpdatePrimaryMenuIntentDTOFromFormValues(next);
       const dto = await settingsAdminApi.primaryMenu.patch(patch, opts);
 
-      patchSettingsBundleCache(qc, WRITE_CONTENT_STATE, (prev) => ({
+      patchSettingsBundleCache(qc, tenantId, WRITE_CONTENT_STATE, (prev) => ({
         ...prev,
         primaryMenu: dto.settings,
       }));
@@ -100,8 +102,7 @@ export function usePrimaryMenuSettings(): UsePrimaryMenuSettingsResult {
     beforeSave: normalizePrimaryMenuFormValues,
 
     onSaved: () => {
-      void invalidateSiteStatus(qc);
-      // void invalidateSiteStatusDetails(qc);
+      void invalidateSiteStatus(qc, tenantId);
     },
   });
 

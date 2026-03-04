@@ -13,8 +13,8 @@
 import { throwHttp } from "@compoz/http/http-error";
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import { log, logSpan } from "@compoz/infra/lib/log";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { deletePage } from "@compoz/core/domain/pages/use-cases/delete-page";
@@ -26,13 +26,13 @@ import type { PageDTO } from "@compoz/core/domain/pages/dto";
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 
 import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { adaptUpdatePagePayload } from "@compoz/studio/app/api/_adapters/pages/pages";
+import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import { PageIdParamSchema } from "@compoz/validation/pages/page";
 import {
   UpdatePageIntentSchema,
   type UpdatePageIntentDTO,
 } from "@compoz/validation/pages/page-intents";
-import { adaptUpdatePagePayload } from "@compoz/studio/app/api/_adapters/pages/pages";
-import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 
 import type {
   DeletePageResponse,
@@ -40,15 +40,20 @@ import type {
   UpdatePageResponse,
 } from "@compoz/infra/http/studio/pages.types";
 
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+
 /* -------------------------------------------------------------------------- */
 /* Helpers index                                                              */
 /* -------------------------------------------------------------------------- */
 
-async function rebuildAndWriteIndex(state: typeof WRITE_CONTENT_STATE) {
-  const pagesRepo = getPagesRepository();
-  const siteRepo = getSiteRepository();
+async function rebuildAndWriteIndex(args: {
+  tenantId: string;
+  state: typeof WRITE_CONTENT_STATE;
+}) {
+  const pagesRepo = getPagesRepository({ tenantId: args.tenantId });
+  const siteRepo = getSiteRepository({ tenantId: args.tenantId });
 
-  const summaries = await pagesRepo.list(state);
+  const summaries = await pagesRepo.list(args.state);
 
   const index: SiteIndexDTO = {
     pages: summaries.map((p) => ({
@@ -60,7 +65,7 @@ async function rebuildAndWriteIndex(state: typeof WRITE_CONTENT_STATE) {
     updatedAt: new Date().toISOString(),
   };
 
-  await siteRepo.writeIndex(state, index);
+  await siteRepo.writeIndex(args.state, index);
 
   return { index, pagesCount: index.pages.length };
 }
@@ -73,7 +78,9 @@ export async function GET(req: Request, ctx: { params: unknown }) {
   const NS = "api.pages.id.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    return logSpan(NS, { ns: NS, method: "GET", state }, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "GET", state, tenantId }, async () => {
       const params = await unwrapParams(ctx.params);
 
       const { pageId } = parseDTOOrHttp(PageIdParamSchema, params, {
@@ -81,7 +88,7 @@ export async function GET(req: Request, ctx: { params: unknown }) {
         extras: { where: "api.pages.id.GET.params" },
       });
 
-      const pagesRepo = getPagesRepository();
+      const pagesRepo = getPagesRepository({ tenantId });
       const page = await pagesRepo.readById(state, pageId);
 
       if (!page) {
@@ -102,9 +109,11 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
   const NS = "api.pages.id.DELETE" as const;
 
   return handleRoute(NS, req, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
     return logSpan(
       NS,
-      { ns: NS, method: "DELETE", state: WRITE_CONTENT_STATE },
+      { ns: NS, method: "DELETE", state: WRITE_CONTENT_STATE, tenantId },
       async () => {
         const lg = log.child({ ns: NS });
 
@@ -115,8 +124,8 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
           extras: { where: "api.admin.pages.id.DELETE.params" },
         });
 
-        const pagesRepo = getPagesRepository();
-        const statusCache = getSiteStatusCache();
+        const pagesRepo = getPagesRepository({ tenantId });
+        const statusCache = getSiteStatusCache({ tenantId });
 
         await pagesRepo.ensureBase();
 
@@ -130,6 +139,7 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
           const now = new Date().toISOString();
 
           lg.debug("route.delete.detachChildren.start", {
+            tenantId,
             pageId,
             childrenCount: childIds.length,
           });
@@ -155,6 +165,7 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
           );
 
           lg.debug("route.delete.detachChildren.done", {
+            tenantId,
             pageId,
             childrenCount: childIds.length,
           });
@@ -165,10 +176,12 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
         await runDelete({ pageId });
 
         // ✅ 3) Rebuild index (SoT)
-        const { index, pagesCount } =
-          await rebuildAndWriteIndex(WRITE_CONTENT_STATE);
+        const { index, pagesCount } = await rebuildAndWriteIndex({
+          tenantId,
+          state: WRITE_CONTENT_STATE,
+        });
 
-        lg.debug("route.index.rebuilt", { pagesCount });
+        lg.debug("route.index.rebuilt", { tenantId, pagesCount });
 
         // ✅ 4) Invalidation KV (best-effort)
         try {
@@ -196,9 +209,11 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
   const NS = "api.pages.id.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
     return logSpan(
       NS,
-      { ns: NS, method: "PATCH", state: WRITE_CONTENT_STATE },
+      { ns: NS, method: "PATCH", state: WRITE_CONTENT_STATE, tenantId },
       async () => {
         const lg = log.child({ ns: NS });
 
@@ -220,9 +235,9 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
           },
         );
 
-        const pagesRepo = getPagesRepository();
-        const siteRepo = getSiteRepository(); // slug rename → update menus
-        const statusCache = getSiteStatusCache();
+        const pagesRepo = getPagesRepository({ tenantId });
+        const siteRepo = getSiteRepository({ tenantId }); // slug rename → update menus
+        const statusCache = getSiteStatusCache({ tenantId });
 
         const payload = adaptUpdatePagePayload(dto);
 
@@ -234,10 +249,12 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
 
         const { page } = await runUpdate({ pageId, ...payload });
 
-        const { index, pagesCount } =
-          await rebuildAndWriteIndex(WRITE_CONTENT_STATE);
+        const { index, pagesCount } = await rebuildAndWriteIndex({
+          tenantId,
+          state: WRITE_CONTENT_STATE,
+        });
 
-        lg.debug("route.index.rebuilt", { pagesCount });
+        lg.debug("route.index.rebuilt", { tenantId, pagesCount });
 
         // ✅ Invalidation KV (best-effort)
         try {

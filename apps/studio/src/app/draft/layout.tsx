@@ -23,7 +23,7 @@ import { toLegalMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/leg
 import { toPrimaryMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/primary-menu-shape";
 import { toSocialSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/social-shape";
 
-import { getDraftSettings } from "@compoz/studio/lib/pages/public-page-loaders";
+import { getDraftSettings } from "@compoz/studio/lib/pages/draft-page-loaders";
 
 import { cn } from "@compoz/ui/lib/utils";
 import {

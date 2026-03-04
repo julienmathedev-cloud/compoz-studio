@@ -11,20 +11,26 @@
  * - Orchestration UI-only (mutation, logs, notifications).
  * - Invalide les queries liées à l’état du site (status + details).
  * - Aucune logique métier : la route + use-case sont la SoT.
+ * - Tenant-scoped : les query keys incluent tenantId.
  */
 
 import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { siteAdminApi } from "@compoz/infra/http/studio/site.client";
 import { log } from "@compoz/infra/lib/log";
-import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
+import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
 
 import type { PublishSiteResultDTO } from "@compoz/core/domain/site/dto";
 import type { PublishSiteResponse } from "@compoz/infra/http/studio/site.types";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
+import {
+  invalidateSiteStatus,
+  invalidateSiteStatusDetails,
+} from "@compoz/studio/features/site/status/invalidate";
 
 type UsePublishSiteResult = Readonly<{
   publish: () => Promise<PublishSiteResultDTO | null>;
@@ -36,9 +42,10 @@ const lg = log.child({ ns: "hook", name: "usePublishSite" });
 export function usePublishSite(onSuccess?: () => void): UsePublishSiteResult {
   const t = useTranslations();
   const qc = useQueryClient();
+  const tenantId = useTenantId();
 
   const mutation = useMutation({
-    mutationKey: ["admin", "site", "publish"] as const,
+    mutationKey: ["t", tenantId, "admin", "site", "publish"] as const,
 
     mutationFn: async (): Promise<PublishSiteResultDTO> => {
       const res: PublishSiteResponse = await withSaveLogs(
@@ -53,7 +60,6 @@ export function usePublishSite(onSuccess?: () => void): UsePublishSiteResult {
         { entity: t("admin.shared.entities.site"), fields: ["publish"] },
       );
 
-      // ✅ flatten ici
       return res.publishResult;
     },
 
@@ -72,16 +78,14 @@ export function usePublishSite(onSuccess?: () => void): UsePublishSiteResult {
         );
       }
 
+      // ✅ SoT invalidations (tenant-scoped)
       await Promise.all([
-        qc.invalidateQueries({
-          queryKey: ["admin", "site", "status"] as const,
-        }),
-        qc.invalidateQueries({
-          queryKey: ["admin", "site", "statusDetails"] as const,
-        }),
+        invalidateSiteStatus(qc, tenantId),
+        invalidateSiteStatusDetails(qc, tenantId),
       ]);
 
       lg.info("publish.ok", {
+        tenantId,
         from: publishResult.from,
         to: publishResult.to,
         pagesCopied: publishResult.pagesCopied,
@@ -94,8 +98,10 @@ export function usePublishSite(onSuccess?: () => void): UsePublishSiteResult {
 
     onError: (e: unknown) => {
       notify.fromError(e, UiError.unexpectedSave);
-      lg.error("publish.failed", { msg: String(e) });
+      lg.error("publish.failed", { tenantId, msg: String(e) });
     },
+
+    retry: false,
   });
 
   const publish = useCallback(async () => {

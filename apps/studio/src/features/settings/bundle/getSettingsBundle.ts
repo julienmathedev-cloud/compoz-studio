@@ -8,6 +8,7 @@
  * Helper "cache-first" pour obtenir le bundle SiteSettings.
  *
  * @remarks
+ * - Tenant-scoped : le cache inclut tenantId.
  * - Centralise la logique cache -> fetchQuery fallback.
  * - Utilisable depuis les hooks settings (footer/header/identity/etc.).
  */
@@ -22,10 +23,15 @@ import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys"
 
 export async function getSettingsBundle(
   qc: QueryClient,
+  tenantId: string,
   state: ContentState,
   opts?: HttpOpts,
 ): Promise<SiteSettings> {
-  const key = settingsBundleKey(state);
+  const tid = String(tenantId ?? "")
+    .trim()
+    .toLowerCase();
+
+  const key = settingsBundleKey(tid, state);
 
   const cached = qc.getQueryData<SiteSettings>(key);
   if (cached) return cached;

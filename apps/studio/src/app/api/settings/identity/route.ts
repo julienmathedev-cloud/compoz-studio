@@ -14,25 +14,26 @@
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { updateIdentitySettings } from "@compoz/core/domain/site/use-cases/identity/update-identity-settings";
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
-import { log, logSpan } from "@compoz/infra/lib/log";
-import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
-import { adaptUpdateIdentityIntent } from "@compoz/studio/app/api/_adapters/identity";
-import { handleRoute } from "@compoz/studio/lib/api/handle-route";
-
-import { UpdateIdentitySettingsIntentSchema } from "@compoz/validation/site/settings/identity/identity-intents";
-
 import type {
   GetIdentityResponse,
   PatchIdentityResponse,
 } from "@compoz/infra/http/studio/site-settings.types";
+import { log, logSpan } from "@compoz/infra/lib/log";
+import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
+import { adaptUpdateIdentityIntent } from "@compoz/studio/app/api/_adapters/identity";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
+import { UpdateIdentitySettingsIntentSchema } from "@compoz/validation/site/settings/identity/identity-intents";
 
 export async function GET(req: Request) {
   const NS = "api.admin.site.identity.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    return logSpan(NS, { ns: NS, method: "GET", state }, async () => {
-      const repo = getSiteRepository();
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "GET", state, tenantId }, async () => {
+      const repo = getSiteRepository({ tenantId });
       const settings = await repo.readSettings(state);
 
       const res: GetIdentityResponse = { settings: settings.identity };
@@ -45,13 +46,15 @@ export async function PATCH(req: Request) {
   const NS = "api.admin.site.identity.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
-    return logSpan(NS, { ns: NS, method: "PATCH" }, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "PATCH", tenantId }, async () => {
       const raw = await readJsonOr400(req);
 
       log.info?.("IDENTITY.PATCH.start", {
+        tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
-        envTenant: process.env["COMPOZ_SITE_ID"] ?? "default",
         hasKvUrl: Boolean(
           process.env["KV_REST_API_URL"] ??
           process.env["UPSTASH_REDIS_REST_URL"],
@@ -65,23 +68,27 @@ export async function PATCH(req: Request) {
 
       const input = adaptUpdateIdentityIntent(dto);
 
-      const repo = getSiteRepository();
-      const statusCache = getSiteStatusCache();
+      const repo = getSiteRepository({ tenantId });
+      const statusCache = getSiteStatusCache({ tenantId });
 
       // ⚠️ Aligné footer : le use-case ne reçoit que `repo`
       const run = updateIdentitySettings({ repo });
       const { settings } = await run(input);
 
       log.info?.("IDENTITY.PATCH.afterWrite", {
+        tenantId,
         identityKeys: settings?.identity ? Object.keys(settings.identity) : [],
       });
 
       try {
-        log.info?.("IDENTITY.PATCH.invalidate.start", {});
+        log.info?.("IDENTITY.PATCH.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        log.info?.("IDENTITY.PATCH.invalidate.done", {});
+        log.info?.("IDENTITY.PATCH.invalidate.done", { tenantId });
       } catch (e) {
-        log.error?.("IDENTITY.PATCH.invalidate.failed", { err: String(e) });
+        log.error?.("IDENTITY.PATCH.invalidate.failed", {
+          tenantId,
+          err: String(e),
+        });
       }
 
       const res: PatchIdentityResponse = { settings: settings.identity };

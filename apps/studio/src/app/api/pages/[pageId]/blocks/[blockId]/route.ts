@@ -15,8 +15,8 @@
 import { throwHttp } from "@compoz/http/http-error";
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import { log, logSpan } from "@compoz/infra/lib/log";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteStatusCache } from "@compoz/infra/site";
@@ -31,13 +31,15 @@ import type {
   DeleteBlockResponse,
   UpdateLayoutSectionBlockResponse,
 } from "@compoz/infra/http/studio/pages.types";
+import { adaptUpdateLayoutSectionBlockIntent } from "@compoz/studio/app/api/_adapters/pages/blocks";
+import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import {
   UpdateLayoutSectionBlockIntentSchema,
   type UpdateLayoutSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
 import { PageIdAndBlockIdParamSchema } from "@compoz/validation/routes/params";
-import { adaptUpdateLayoutSectionBlockIntent } from "@compoz/studio/app/api/_adapters/pages/blocks";
-import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
+
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 
 // -------------------------------------------------
 // PATCH /api/pages/:pageId/blocks/:blockId → update LayoutSection
@@ -47,71 +49,79 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
   const NS = "api.pages.id.blocks.blockId.PATCH" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    return logSpan(NS, { ns: NS, method: "PATCH", state }, async () => {
-      const lg = log.child({ ns: NS });
+    const { tenantId } = await requireSessionWithTenant();
 
-      const params = await unwrapParams(ctx.params);
+    return logSpan(
+      NS,
+      { ns: NS, method: "PATCH", state, tenantId },
+      async () => {
+        const lg = log.child({ ns: NS });
 
-      const { pageId, blockId: paramBlockId } = parseDTOOrHttp(
-        PageIdAndBlockIdParamSchema,
-        params,
-        {
-          message: EC.INVALID_ARGUMENT,
-          extras: { where: "api.admin.pages.id.blocks.blockId.PATCH.params" },
-        },
-      );
+        const params = await unwrapParams(ctx.params);
 
-      const body = await readJsonOr400(req);
-
-      const dto: UpdateLayoutSectionBlockIntentDTO = parseDTOOrHttp(
-        UpdateLayoutSectionBlockIntentSchema,
-        body,
-        {
-          message: EC.VALIDATION_ERROR,
-          extras: { where: "api.admin.pages.id.blocks.blockId.PATCH.payload" },
-        },
-      );
-
-      if ("blockId" in dto && dto.blockId !== paramBlockId) {
-        throwHttp(400, {
-          code: EC.INVALID_ARGUMENT,
-          message: EC.BLOCK_ID_MISMATCH,
-          details: {
-            path: ["blockId"],
-            meta: { paramBlockId, bodyBlockId: dto.blockId },
+        const { pageId, blockId: paramBlockId } = parseDTOOrHttp(
+          PageIdAndBlockIdParamSchema,
+          params,
+          {
+            message: EC.INVALID_ARGUMENT,
+            extras: { where: "api.admin.pages.id.blocks.blockId.PATCH.params" },
           },
+        );
+
+        const body = await readJsonOr400(req);
+
+        const dto: UpdateLayoutSectionBlockIntentDTO = parseDTOOrHttp(
+          UpdateLayoutSectionBlockIntentSchema,
+          body,
+          {
+            message: EC.VALIDATION_ERROR,
+            extras: {
+              where: "api.admin.pages.id.blocks.blockId.PATCH.payload",
+            },
+          },
+        );
+
+        if ("blockId" in dto && dto.blockId !== paramBlockId) {
+          throwHttp(400, {
+            code: EC.INVALID_ARGUMENT,
+            message: EC.BLOCK_ID_MISMATCH,
+            details: {
+              path: ["blockId"],
+              meta: { paramBlockId, bodyBlockId: dto.blockId },
+            },
+          });
+        }
+
+        const pagesRepo = getPagesRepository({ tenantId });
+        const statusCache = getSiteStatusCache({ tenantId });
+
+        const runUpdate = updateLayoutSectionBlock({
+          pages: pagesRepo,
         });
-      }
 
-      const pagesRepo = getPagesRepository();
-      const statusCache = getSiteStatusCache();
+        const adapted = adaptUpdateLayoutSectionBlockIntent(dto);
 
-      const runUpdate = updateLayoutSectionBlock({
-        pages: pagesRepo,
-      });
-
-      const adapted = adaptUpdateLayoutSectionBlockIntent(dto);
-
-      const { page } = await runUpdate({
-        pageId,
-        blockId: paramBlockId,
-        patch: adapted.patch,
-      });
-
-      // ✅ Invalidation KV snapshots (best-effort)
-      try {
-        lg.info?.("route.statusCache.invalidateAll.start", {});
-        await statusCache.invalidateAll();
-        lg.info?.("route.statusCache.invalidateAll.done", {});
-      } catch (e) {
-        lg.error?.("route.statusCache.invalidateAll.failed", {
-          err: String(e),
+        const { page } = await runUpdate({
+          pageId,
+          blockId: paramBlockId,
+          patch: adapted.patch,
         });
-      }
 
-      const res: UpdateLayoutSectionBlockResponse = { page: page as PageDTO };
-      return res;
-    });
+        // ✅ Invalidation KV snapshots (best-effort)
+        try {
+          lg.info?.("route.statusCache.invalidateAll.start", {});
+          await statusCache.invalidateAll();
+          lg.info?.("route.statusCache.invalidateAll.done", {});
+        } catch (e) {
+          lg.error?.("route.statusCache.invalidateAll.failed", {
+            err: String(e),
+          });
+        }
+
+        const res: UpdateLayoutSectionBlockResponse = { page: page as PageDTO };
+        return res;
+      },
+    );
   });
 }
 
@@ -123,44 +133,50 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
   const NS = "api.pages.id.blocks.blockId.DELETE" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    return logSpan(NS, { ns: NS, method: "DELETE", state }, async () => {
-      const lg = log.child({ ns: NS });
+    const { tenantId } = await requireSessionWithTenant();
 
-      const params = await unwrapParams(ctx.params);
+    return logSpan(
+      NS,
+      { ns: NS, method: "DELETE", state, tenantId },
+      async () => {
+        const lg = log.child({ ns: NS });
 
-      const { pageId, blockId: paramBlockId } = parseDTOOrHttp(
-        PageIdAndBlockIdParamSchema,
-        params,
-        {
-          message: EC.INVALID_ARGUMENT,
-          extras: {
-            where: "api.admin.pages.id.blocks.blockId.DELETE.params",
+        const params = await unwrapParams(ctx.params);
+
+        const { pageId, blockId: paramBlockId } = parseDTOOrHttp(
+          PageIdAndBlockIdParamSchema,
+          params,
+          {
+            message: EC.INVALID_ARGUMENT,
+            extras: {
+              where: "api.admin.pages.id.blocks.blockId.DELETE.params",
+            },
           },
-        },
-      );
+        );
 
-      const pagesRepo = getPagesRepository();
-      const statusCache = getSiteStatusCache();
+        const pagesRepo = getPagesRepository({ tenantId });
+        const statusCache = getSiteStatusCache({ tenantId });
 
-      const runDelete = deleteBlock({ pages: pagesRepo });
-      const { page } = await runDelete({
-        pageId,
-        blockId: paramBlockId,
-      });
-
-      // ✅ Invalidation KV snapshots (best-effort)
-      try {
-        lg.info?.("route.statusCache.invalidateAll.start", {});
-        await statusCache.invalidateAll();
-        lg.info?.("route.statusCache.invalidateAll.done", {});
-      } catch (e) {
-        lg.error?.("route.statusCache.invalidateAll.failed", {
-          err: String(e),
+        const runDelete = deleteBlock({ pages: pagesRepo });
+        const { page } = await runDelete({
+          pageId,
+          blockId: paramBlockId,
         });
-      }
 
-      const res: DeleteBlockResponse = { page: page as PageDTO };
-      return res;
-    });
+        // ✅ Invalidation KV snapshots (best-effort)
+        try {
+          lg.info?.("route.statusCache.invalidateAll.start", {});
+          await statusCache.invalidateAll();
+          lg.info?.("route.statusCache.invalidateAll.done", {});
+        } catch (e) {
+          lg.error?.("route.statusCache.invalidateAll.failed", {
+            err: String(e),
+          });
+        }
+
+        const res: DeleteBlockResponse = { page: page as PageDTO };
+        return res;
+      },
+    );
   });
 }

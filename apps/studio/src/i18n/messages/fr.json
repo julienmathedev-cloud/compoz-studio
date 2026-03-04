@@ -40,7 +40,10 @@
     "alreadyBottom": "Déjà en bas",
     "navigation": "Navigation",
     "upToDate": "À jour",
-    "status": "État"
+    "status": "État",
+    "create": "Créer",
+    "creating": "Création…",
+    "availableInNextVersion": "Disponible dans la prochaine version"
   },
 
   "notifications": {
@@ -214,7 +217,23 @@
     "CELL_IMAGE_ALT_INVALID": "Le texte alternatif de l’image est invalide.",
     "CELL_IMAGE_CAPTION_INVALID": "La légende de l’image est invalide.",
     "CELL_IMAGE_ID_REQUIRED": "L’ID de l’image est requis.",
-    "CELL_IMAGE_HREF_INVALID": "Le lien de l’image est invalide."
+    "CELL_IMAGE_HREF_INVALID": "Le lien de l’image est invalide.",
+
+    "USER_ID_REQUIRED": "L’ID de l’utilisateur est requis.",
+    "USER_EMAIL_REQUIRED": "L’adresse e-mail de l’utilisateur est requise.",
+    "USER_EMAIL_INVALID_FORMAT": "L’adresse e-mail de l’utilisateur est invalide (format attendu : adresse@exemple.com).",
+    "USER_NAME_REQUIRED": "Le nom de l’utilisateur est requis.",
+    "USER_ROLE_REQUIRED": "Le rôle de l’utilisateur est requis.",
+    "USER_ROLE_INVALID": "Le rôle de l’utilisateur est invalide.",
+    "USER_TENANT_IDS_INVALID": "Les IDs de tenant de l’utilisateur sont invalides.",
+    "USER_DEFAULT_TENANT_REQUIRED": "Le tenant par défaut de l’utilisateur est requis.",
+    "USER_DEFAULT_TENANT_NOT_ALLOWED": "Le tenant par défaut de l’utilisateur ne peut pas être le même que celui de l’utilisateur.",
+    "USER_RBAC_INVALID": "Le RBAC de l’utilisateur est invalide.",
+    "USER_STATUS_INVALID": "Le statut de l’utilisateur est invalide.",
+    "USER_TENANT_IDS_REQUIRED": "Les IDs de tenant de l’utilisateur sont requis.",
+    "USER_PASSWORD_REQUIRED": "Le mot de passe de l’utilisateur est requis.",
+    "USER_EMAIL_CONFLICT": "L’adresse e-mail de l’utilisateur est déjà utilisée.",
+    "USER_NOT_FOUND": "L’utilisateur est introuvable."
   },
 
   "uiErrors": {
@@ -270,7 +289,10 @@
         "seo": "SEO",
         "siteIndex": "Index du site",
         "settings": "Réglages",
-        "site": "Site"
+        "site": "Site",
+        "user": "Utilisateur",
+        "users": "Utilisateurs",
+        "tenant": "Site"
       },
 
       "upload": {
@@ -334,8 +356,103 @@
       "primaryMenu": "Aucune donnée à prévisualiser pour le menu principal.",
       "social": "Aucune donnée à prévisualiser pour les réseaux sociaux.",
       "homeMissing": "Aucune page d'accueil n’est définie.",
-      "pageNotFound": "La page {page} n’existe pas.",
+      "pageEmpty": "Cette page n'a pas encore de contenu",
       "blocks": "Aucun bloc n’est défini."
+    },
+
+    "login": {
+      "title": "Connexion",
+      "ariaLabel": "Connexion à l’interface d’administration",
+      "tagline": "Accédez à Compoz Studio afin d'administrer votre site.",
+      "email": "Adresse e-mail",
+      "password": "Mot de passe",
+      "signin": "Se connecter",
+      "signOut": "Se déconnecter",
+      "pending": "Connexion en cours…",
+      "errors": {
+        "unexpected": "Une erreur inattendue est survenue.",
+        "emailRequired": "L’adresse e-mail est requise.",
+        "passwordRequired": "Le mot de passe est requis.",
+        "emailNotFound": "L’adresse e-mail n’existe pas.",
+        "invalidPassword": "Le mot de passe est incorrect.",
+        "invalidCredentials": "L’adresse e-mail ou le mot de passe est incorrect."
+      }
+    },
+
+    "users": {
+      "section": {
+        "title": "Utilisateurs",
+        "description": "Page d'administration des utilisateurs (Studio).",
+        "titleEdit": "Éditer l’utilisateur",
+        "descriptionEdit": "Modifier l'utilisateur en utilisant le formulaire ci-dessous",
+        "titleCreate": "Créer un utilisateur",
+        "descriptionCreate": "Créer un utilisateur en utilisant le formulaire ci-dessous"
+      },
+      "header": {
+        "site": {
+          "label": "Site",
+          "help": "Choisissez ici le site à éditer"
+        },
+        "user": {
+          "label": "Utilisateur",
+          "help": "Choisissez ici l’utilisateur à éditer",
+          "placeholder": "Aucun utilisateur"
+        }
+      },
+      "form": {
+        "email": {
+          "label": "Email",
+          "placeholder": "adresse@exemple.com",
+          "help": "L’email est utilisé pour se connecter et pour la communication.",
+          "placeholderEdit": "Modifier l’email",
+          "placeholderCreate": "Adresse email",
+          "helpNearLimit": "Email {{remaining}} caractères restants."
+        },
+        "name": {
+          "label": "Nom",
+          "placeholder": "John Doe",
+          "help": "Le nom est affiché dans l’interface d’administration.",
+          "placeholderEdit": "Modifier le nom",
+          "placeholderCreate": "Nom",
+          "helpNearLimit": "Nom {{remaining}} caractères restants."
+        },
+        "password": {
+          "label": "Mot de passe",
+          "placeholder": "Mot de passe",
+          "help": "Le mot de passe est utilisé pour se connecter.",
+          "placeholderEdit": "Modifier le mot de passe",
+          "placeholderCreate": "Mot de passe",
+          "helpNearLimit": "Mot de passe {{remaining}} caractères restants.",
+          "helpCreate": "Le mot de passe est utilisé pour se connecter.",
+          "helpEdit": "Modifier le mot de passe"
+        },
+        "rbac": {
+          "role": {
+            "label": "Rôle",
+            "placeholder": "Sélectionner un rôle",
+            "help": "Sélectionner le rôle de l’utilisateur.",
+            "options": {
+              "admin": "Administrateur",
+              "editor": "Éditeur"
+            }
+          },
+          "tenantIds": {
+            "label": "Tenants",
+            "placeholder": "Sélectionner un tenant",
+            "help": "Sélectionner les tenants autorisés pour l’utilisateur."
+          },
+          "defaultTenantId": {
+            "label": "Tenant par défaut",
+            "placeholder": "Sélectionner un tenant",
+            "help": "Le tenant utilisé par défaut lorsqu’aucun tenant spécifique n’est défini."
+          },
+          "expandableLabel": "RBAC"
+        },
+        "label": "RBAC",
+        "help": "Configurer les rôles et les tenants autorisés pour l’utilisateur.",
+        "placeholderEdit": "Modifier les rôles et les tenants",
+        "placeholderCreate": "Rôles et tenants"
+      }
     },
 
     "pages": {

@@ -12,8 +12,8 @@
 
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import { log, logSpan } from "@compoz/infra/lib/log";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteStatusCache } from "@compoz/infra/site";
@@ -25,17 +25,21 @@ import type { PageDTO } from "@compoz/core/domain/pages/dto";
 
 import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import type { ReorderBlocksResponse } from "@compoz/infra/http/studio/pages.types";
+import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import { ReorderBlocksIntentSchema } from "@compoz/validation/pages/blocks/block-intents";
 import { PageIdParamSchema } from "@compoz/validation/pages/page";
-import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
+
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 
 export async function POST(req: Request, ctx: { params: unknown }) {
   const NS = "api.admin.pages.id.blocks.reorder.POST" as const;
 
   return handleRoute(NS, req, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
     return logSpan(
       NS,
-      { ns: NS, method: "POST", state: WRITE_CONTENT_STATE },
+      { ns: NS, method: "POST", state: WRITE_CONTENT_STATE, tenantId },
       async () => {
         const lg = log.child({ ns: NS });
 
@@ -53,8 +57,8 @@ export async function POST(req: Request, ctx: { params: unknown }) {
           extras: { where: "api.admin.pages.id.blocks.reorder.POST.payload" },
         });
 
-        const pagesRepo = getPagesRepository();
-        const statusCache = getSiteStatusCache();
+        const pagesRepo = getPagesRepository({ tenantId });
+        const statusCache = getSiteStatusCache({ tenantId });
 
         const run = reorderBlocks({ pages: pagesRepo });
         const { page } = await run({

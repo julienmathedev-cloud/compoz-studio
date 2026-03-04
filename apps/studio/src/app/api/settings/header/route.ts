@@ -20,9 +20,10 @@ import type {
 } from "@compoz/infra/http/studio/site-settings.types";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { adaptUpdateHeaderIntent } from "@compoz/studio/app/api/_adapters/header";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 
 import { UpdateHeaderSettingsIntentSchema } from "@compoz/validation/site/settings/header/header-intents";
 
@@ -30,8 +31,10 @@ export async function GET(req: Request) {
   const NS = "api.admin.site.header.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    return logSpan(NS, { ns: NS, method: "GET", state }, async () => {
-      const repo = getSiteRepository();
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "GET", state, tenantId }, async () => {
+      const repo = getSiteRepository({ tenantId });
       const settings = await repo.readSettings(state);
 
       const res: GetHeaderResponse = { settings: settings.header };
@@ -44,13 +47,15 @@ export async function PATCH(req: Request) {
   const NS = "api.admin.site.header.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
-    return logSpan(NS, { ns: NS, method: "PATCH" }, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "PATCH", tenantId }, async () => {
       const raw = await readJsonOr400(req);
 
       log.info?.("HEADER.PATCH.start", {
+        tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
-        envTenant: process.env["COMPOZ_SITE_ID"] ?? "default",
         hasKvUrl: Boolean(
           process.env["KV_REST_API_URL"] ??
           process.env["UPSTASH_REDIS_REST_URL"],
@@ -64,24 +69,29 @@ export async function PATCH(req: Request) {
 
       const input = adaptUpdateHeaderIntent(dto);
 
-      const repo = getSiteRepository();
-      const statusCache = getSiteStatusCache();
+      const repo = getSiteRepository({ tenantId });
+      const statusCache = getSiteStatusCache({ tenantId });
 
       // ⚠️ Aligné footer : le use-case ne reçoit que `repo`
       const run = updateHeaderSettings({ repo });
       const { settings } = await run(input);
 
       log.info?.("HEADER.PATCH.afterWrite", {
+        tenantId,
         headerKeys: settings?.header ? Object.keys(settings.header) : [],
       });
 
       try {
-        log.info?.("HEADER.PATCH.invalidate.start", {});
+        log.info?.("HEADER.PATCH.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        log.info?.("HEADER.PATCH.invalidate.done", {});
+        log.info?.("HEADER.PATCH.invalidate.done", { tenantId });
       } catch (e) {
-        log.error?.("HEADER.PATCH.invalidate.failed", { err: String(e) });
+        log.error?.("HEADER.PATCH.invalidate.failed", {
+          tenantId,
+          err: String(e),
+        });
       }
+
       const res: PatchHeaderResponse = { settings: settings.header };
       return res;
     });

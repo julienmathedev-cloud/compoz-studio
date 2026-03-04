@@ -41,6 +41,7 @@ import { useTranslations } from "next-intl";
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import type { HeaderFormValues } from "@compoz/validation/site/settings/header/header-form";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
 
 /**
  * Alias du contrat de retour du hook `useHeaderSettings`.
@@ -51,6 +52,7 @@ export function useHeaderSettings(): UseHeaderSettingsResult {
   const t = useTranslations();
   const qc = useQueryClient();
   const entityLabel = t("admin.shared.entities.header");
+  const tenantId = useTenantId();
 
   const resource = useSettingsResource<HeaderFormValues>({
     entityLabel,
@@ -62,7 +64,7 @@ export function useHeaderSettings(): UseHeaderSettingsResult {
 
     /** READ (bundle) : cache-first + fetchQuery fallback. */
     load: async (state: ContentState, opts) => {
-      const bundle = await getSettingsBundle(qc, state, opts);
+      const bundle = await getSettingsBundle(qc, tenantId, state, opts);
       return normalizeHeaderFormValues(
         toHeaderFormValuesFromDTO(bundle.header),
       );
@@ -73,7 +75,7 @@ export function useHeaderSettings(): UseHeaderSettingsResult {
       const patch = toUpdateHeaderIntentDTOFromFormValues(next);
       const dto = await settingsAdminApi.header.patch(patch, opts);
 
-      patchSettingsBundleCache(qc, WRITE_CONTENT_STATE, (prev) => ({
+      patchSettingsBundleCache(qc, tenantId, WRITE_CONTENT_STATE, (prev) => ({
         ...prev,
         header: dto.settings,
       }));
@@ -96,7 +98,7 @@ export function useHeaderSettings(): UseHeaderSettingsResult {
 
     /** Après save : invalide le read-model "status". */
     onSaved: () => {
-      void invalidateSiteStatus(qc);
+      void invalidateSiteStatus(qc, tenantId);
     },
   });
 

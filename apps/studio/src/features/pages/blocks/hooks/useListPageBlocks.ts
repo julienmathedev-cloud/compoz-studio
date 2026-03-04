@@ -9,14 +9,14 @@
  *
  * @remarks
  * - Read-only.
- * - Le refresh est déclenché uniquement via invalidation (`invalidateDraftBlocksList`).
  * - Draft-only par défaut.
+ * - Tenant-scoped : la queryKey inclut tenantId pour éviter les caches “croisés” au switch.
  */
 
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -24,8 +24,9 @@ import type { BlockDTO } from "@compoz/core/domain/pages/dto";
 import { pagesAdminApi } from "@compoz/infra/http/studio/pages.client";
 import type { ListPageBlocksResponse } from "@compoz/infra/http/studio/pages.types";
 import { log } from "@compoz/infra/lib/log";
-import { withLoadLogs } from "@compoz/ui/hooks/instrumentation";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
 import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
+import { withLoadLogs } from "@compoz/ui/hooks/instrumentation";
 
 const lg = log.child({ ns: "hook", name: "useListPageBlocks" });
 
@@ -39,11 +40,23 @@ export function useListPageBlocks(
   state: ContentState = WRITE_CONTENT_STATE,
 ): UseListPageBlocksResult {
   const t = useTranslations();
-  const enabled = Boolean(pageId?.trim());
   const entityLabel = t("admin.shared.entities.blocks");
+  const tenantId = useTenantId();
+
+  const tid = useMemo(
+    () =>
+      String(tenantId ?? "")
+        .trim()
+        .toLowerCase(),
+    [tenantId],
+  );
+
+  const pid = useMemo(() => String(pageId ?? "").trim(), [pageId]);
+
+  const enabled = Boolean(tid && pid);
 
   const options = {
-    queryKey: pageBlocksKey(pageId, state),
+    queryKey: pageBlocksKey(tid, pid, state),
     enabled,
 
     // ✅ hook retourne des blocks (DTO UI), mais consomme la route SoT
@@ -55,13 +68,18 @@ export function useListPageBlocks(
       const res: ListPageBlocksResponse = await withLoadLogs(
         "useListPageBlocks",
         state,
-        () => pagesAdminApi.getPageBlocks(pageId, state, { signal }),
-        { entity: entityLabel, pageId },
+        () => pagesAdminApi.getPageBlocks(pid, state, { signal }),
+        { entity: entityLabel, tenantId: tid, pageId: pid },
       );
 
       // ✅ flatten
       const blocks = res.blocks ?? [];
-      lg.debug("read.ok", { pageId, state, count: blocks.length });
+      lg.debug("read.ok", {
+        tenantId: tid,
+        pageId: pid,
+        state,
+        count: blocks.length,
+      });
       return blocks;
     },
 
@@ -77,11 +95,18 @@ export function useListPageBlocks(
     if (!query.error) return;
 
     notify.fromError(query.error);
-    lg.error("read.failed", { pageId, state, msg: String(query.error) });
-  }, [query.error, pageId, state]);
+    lg.error("read.failed", {
+      tenantId: tid,
+      pageId: pid,
+      state,
+      msg: String(query.error),
+    });
+  }, [query.error, tid, pid, state]);
 
   return {
     blocks: enabled ? (query.data ?? []) : [],
     isLoading: enabled ? query.isPending : false,
   } as const;
 }
+
+useListPageBlocks.displayName = "useListPageBlocks";

@@ -29,8 +29,23 @@ import { PageSchema } from "@compoz/validation/pages/page";
 import { Redis } from "@upstash/redis";
 
 /* -------------------------------------------------------------------------- */
+/* Options                                                                    */
+/* -------------------------------------------------------------------------- */
+
+type KvPagesRepositoryOptions = {
+  /** Tenant cible (siteId). Fallback: "default". */
+  tenantId?: string;
+};
+
+function normalizeTenantId(input: unknown): string {
+  const t = String(input ?? "").trim();
+  return t.length > 0 ? t : "default";
+}
+
+/* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
+
 function toDomainPage(p: PageShape): Page {
   const meta: PageMeta = {
     createdAt: p.meta.createdAt,
@@ -83,10 +98,6 @@ function parseRedisJson<T>(raw: unknown): T | null {
   return JSON.parse(String(raw)) as T;
 }
 
-function pickTenantId(): string {
-  return String(process.env["COMPOZ_SITE_ID"] ?? "default").trim() || "default";
-}
-
 let _redisSingleton: Redis | null = null;
 
 function getUpstashRedis(): Redis {
@@ -107,13 +118,11 @@ function getUpstashRedis(): Redis {
   return _redisSingleton;
 }
 
-function pageKey(state: ContentState, pageId: string): string {
-  const tenant = pickTenantId();
+function pageKey(tenant: string, state: ContentState, pageId: string): string {
   return `compoz:${tenant}:${state}:pages:${pageId}`;
 }
 
-function pageKeyPattern(state: ContentState): string {
-  const tenant = pickTenantId();
+function pageKeyPattern(tenant: string, state: ContentState): string {
   return `compoz:${tenant}:${state}:pages:*`;
 }
 
@@ -138,9 +147,11 @@ function kvCtx(base: string, state: ContentState): string {
 
 export class KvPagesRepository implements PagesRepository {
   private readonly redis: Redis;
+  private readonly tenantId: string;
 
-  constructor() {
+  constructor(opts: KvPagesRepositoryOptions = {}) {
     this.redis = getUpstashRedis();
+    this.tenantId = normalizeTenantId(opts.tenantId);
   }
 
   async ensureBase(): Promise<void> {
@@ -152,7 +163,7 @@ export class KvPagesRepository implements PagesRepository {
     if (!id) return null;
 
     const raw = await kvCmd(kvCtx("readById.get", state), "get", () =>
-      this.redis.get(pageKey(state, id)),
+      this.redis.get(pageKey(this.tenantId, state, id)),
     );
 
     const json = parseRedisJson<unknown>(raw);
@@ -184,7 +195,10 @@ export class KvPagesRepository implements PagesRepository {
 
     // Stockage en string JSON (ok même si Upstash auto-parse au get)
     await kvCmd(kvCtx("put.set", state), "set", () =>
-      this.redis.set(pageKey(state, pageId), JSON.stringify(page)),
+      this.redis.set(
+        pageKey(this.tenantId, state, pageId),
+        JSON.stringify(page),
+      ),
     );
   }
 
@@ -203,7 +217,7 @@ export class KvPagesRepository implements PagesRepository {
       if (!id) continue;
 
       PageSchema.parse(p);
-      record[pageKey(state, id)] = JSON.stringify(p);
+      record[pageKey(this.tenantId, state, id)] = JSON.stringify(p);
     }
 
     if (Object.keys(record).length === 0) return;
@@ -218,7 +232,7 @@ export class KvPagesRepository implements PagesRepository {
     if (!id) return;
 
     await kvCmd(kvCtx("deleteById.del", state), "del", () =>
-      this.redis.del(pageKey(state, id)),
+      this.redis.del(pageKey(this.tenantId, state, id)),
     );
   }
 
@@ -237,7 +251,7 @@ export class KvPagesRepository implements PagesRepository {
     if (!id) return false;
 
     const n = await kvCmd(kvCtx("existsById.exists", state), "other", () =>
-      this.redis.exists(pageKey(state, id)),
+      this.redis.exists(pageKey(this.tenantId, state, id)),
     );
 
     return n === 1;
@@ -252,7 +266,7 @@ export class KvPagesRepository implements PagesRepository {
   }
 
   async list(state: ContentState): Promise<Array<PageSummary>> {
-    const pattern = pageKeyPattern(state);
+    const pattern = pageKeyPattern(this.tenantId, state);
 
     // 1) récupérer les keys de pages (V0.5 : KEYS OK, mais O(N))
     const keys = await kvCmd(kvCtx("list.keys", state), "other", () =>
@@ -300,7 +314,7 @@ export class KvPagesRepository implements PagesRepository {
     const ids = pageIds.map((x) => String(x ?? "").trim()).filter(Boolean);
     if (ids.length === 0) return [];
 
-    const keys = ids.map((id) => pageKey(state, id));
+    const keys = ids.map((id) => pageKey(this.tenantId, state, id));
 
     const raws = await kvCmd(kvCtx("readManyById.mget", state), "other", () =>
       this.redis.mget(...keys),

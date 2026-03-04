@@ -9,7 +9,7 @@
  *
  * @remarks
  * - Coordonne `PagesListSection` (listing) et `PageEditSection` (création/édition meta).
- * - L’édition du contenu se fait via navigation (`/dashboard/pages/[pageId]/blocks`).
+ * - L’édition du contenu se fait via navigation (`/pages/[pageId]/blocks`).
  * - Dirty guard : bloque la navigation route-based si la page courante est dirty.
  * - UX : un clic “éditer les métadonnées” déclenche un scroll vers le formulaire.
  */
@@ -82,7 +82,7 @@ export function PagesPage() {
 
   const handleEditContent = useCallback(
     async (pageId: string) => {
-      const href = `/${locale}/dashboard/pages/${pageId}/blocks`;
+      const href = `/${locale}/pages/${pageId}/blocks`;
       await dirtyGuard.navigate(href);
     },
     [dirtyGuard, locale],

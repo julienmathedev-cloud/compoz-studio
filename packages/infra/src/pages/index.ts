@@ -2,9 +2,12 @@
  * @file packages/infra/src/pages/index.ts
  * @layer infra/pages
  * @description
- * Factory et singleton du PagesRepository.
+ * Factory et singleton(s) du PagesRepository.
  * Permet de choisir l’implémentation (FileSystem / KV / InMemory) via variables d’environnement.
  * Instanciation lazy et HMR-safe.
+ *
+ * ✅ Multi-tenant:
+ * - En KV, on instancie le repo par `tenantId`.
  */
 
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
@@ -16,25 +19,50 @@ import { KvPagesRepository } from "@compoz/infra/pages/kv-pages-repository";
 
 const lg = log.child({ ns: "infra:pages", factory: "pagesRepo" });
 
-/**
- * Instance singleton (HMR-safe).
- *
- * @remarks
- * - `repo` n’est créé qu’une seule fois dans le process.
- * - `inited` sert à éviter des re-init indésirables sous HMR.
- */
-let repo: PagesRepository | null = null;
+/* -------------------------------------------------------------------------- */
+/* Types                                                                      */
+/* -------------------------------------------------------------------------- */
+
+export type PagesRepoOptions = {
+  tenantId?: string;
+};
+
+function normalizeTenantId(input: unknown): string {
+  const t = String(input ?? "").trim();
+  return t.length > 0 ? t : "default";
+}
+
+/* -------------------------------------------------------------------------- */
+/* Repo cache (HMR-safe)                                                      */
+/* -------------------------------------------------------------------------- */
+
+const repoByKey = new Map<string, PagesRepository>();
 let inited = false;
+
+function cacheKey(impl: string, opts: PagesRepoOptions): string {
+  const tenant = normalizeTenantId(opts.tenantId);
+
+  if (impl === "kv") return `kv:${tenant}`;
+
+  // FS/memory : V0.5 => pas de multi-tenant natif
+  const root = process.env["CONTENT_ROOT"] ?? "(cwd)/content";
+  if (impl === "fs") return `fs:${root}`;
+  return `memory`;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Factory                                                                    */
+/* -------------------------------------------------------------------------- */
 
 /**
  * Fabrique l’implémentation concrète du repository.
  *
  * Contrat : renvoie une instance selon la variable `PAGES_REPO_IMPL` :
  * - "memory" → InMemoryPagesRepository
- * - "kv"     → KvPagesRepository
+ * - "kv"     → KvPagesRepository ✅ tenant-aware
  * - défaut   → FileSystemPagesRepository
  */
-function createRepo(): PagesRepository {
+function createRepo(opts: PagesRepoOptions): PagesRepository {
   const impl = (process.env["PAGES_REPO_IMPL"] ?? "fs").toLowerCase();
 
   if (impl === "memory") {
@@ -43,8 +71,9 @@ function createRepo(): PagesRepository {
   }
 
   if (impl === "kv") {
-    lg.debug("pages.repository.init", { impl: "kv" });
-    return new KvPagesRepository();
+    const tenantId = normalizeTenantId(opts.tenantId);
+    lg.debug("pages.repository.init", { impl: "kv", tenantId });
+    return new KvPagesRepository({ tenantId });
   }
 
   const root = process.env["CONTENT_ROOT"] ?? undefined;
@@ -58,17 +87,29 @@ function createRepo(): PagesRepository {
 }
 
 /**
- * Retourne le singleton global PagesRepository.
+ * Retourne le repository (cache HMR-safe).
  *
- * Contrat : lazy instantiation, stable en HMR.
+ * ✅ Multi-tenant:
+ * - en KV, le cache est par `tenantId`.
  */
-export function getPagesRepository(): PagesRepository {
-  if (!repo) {
-    repo = createRepo();
-    inited = true;
-  } else if (!inited) {
-    lg.debug("pages.repository.reuse");
-    inited = true;
+export function getPagesRepository(
+  opts: PagesRepoOptions = {},
+): PagesRepository {
+  const impl = (process.env["PAGES_REPO_IMPL"] ?? "fs").toLowerCase();
+  const key = cacheKey(impl, opts);
+
+  const existing = repoByKey.get(key);
+  if (existing) {
+    if (!inited) {
+      lg.debug("pages.repository.reuse", { key });
+      inited = true;
+    }
+    return existing;
   }
-  return repo;
+
+  const created = createRepo(opts);
+  repoByKey.set(key, created);
+  inited = true;
+
+  return created;
 }

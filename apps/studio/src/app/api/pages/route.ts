@@ -13,8 +13,8 @@
 
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import { log, logSpan } from "@compoz/infra/lib/log";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
@@ -37,6 +37,8 @@ import type {
   GetPagesIndexResponse,
 } from "@compoz/infra/http/studio/pages.types";
 
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+
 // -------------------------------------------------
 // GET /api/pages → index des pages (draft-only)
 // -------------------------------------------------
@@ -45,11 +47,13 @@ export async function GET(req: Request) {
   const NS = "api.pages.GET" as const;
 
   return handleRoute(NS, req, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
     return logSpan(
       NS,
-      { ns: NS, method: "GET", state: WRITE_CONTENT_STATE },
+      { ns: NS, method: "GET", state: WRITE_CONTENT_STATE, tenantId },
       async () => {
-        const siteRepo = getSiteRepository();
+        const siteRepo = getSiteRepository({ tenantId });
 
         // L’index est la source de vérité pour la liste des pages côté admin
         const index = await siteRepo.readIndex(WRITE_CONTENT_STATE);
@@ -68,9 +72,11 @@ export async function POST(req: Request) {
   const NS = "api.pages.POST" as const;
 
   return handleRoute(NS, req, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
     return logSpan(
       NS,
-      { ns: NS, method: "POST", state: WRITE_CONTENT_STATE },
+      { ns: NS, method: "POST", state: WRITE_CONTENT_STATE, tenantId },
       async () => {
         const lg = log.child({ ns: NS });
 
@@ -85,9 +91,9 @@ export async function POST(req: Request) {
           },
         );
 
-        const pagesRepo = getPagesRepository();
-        const siteRepo = getSiteRepository();
-        const statusCache = getSiteStatusCache();
+        const pagesRepo = getPagesRepository({ tenantId });
+        const siteRepo = getSiteRepository({ tenantId });
+        const statusCache = getSiteStatusCache({ tenantId });
 
         await pagesRepo.ensureBase();
 

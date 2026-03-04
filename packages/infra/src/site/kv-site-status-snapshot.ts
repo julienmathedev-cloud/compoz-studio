@@ -1,5 +1,5 @@
 /**
- * @file src/infrastructure/site/kv-site-status-snapshot.ts
+ * @file packages/infra/src/site/kv-site-status-snapshot.ts
  * @layer infra/site
  *
  * @description
@@ -25,12 +25,22 @@ import { kvCmd } from "@compoz/infra/kv/kv-telemetry";
 import { Redis } from "@upstash/redis";
 
 /* -------------------------------------------------------------------------- */
-/* Tenant / Redis                                                             */
+/* Options                                                                    */
 /* -------------------------------------------------------------------------- */
 
-function pickTenantId(): string {
-  return String(process.env["COMPOZ_SITE_ID"] ?? "default").trim() || "default";
+type KvSiteStatusSnapshotOptions = {
+  /** Tenant cible (siteId). Fallback: "default". */
+  tenantId?: string;
+};
+
+function normalizeTenantId(input: unknown): string {
+  const t = String(input ?? "").trim();
+  return t.length > 0 ? t : "default";
 }
+
+/* -------------------------------------------------------------------------- */
+/* Redis                                                                      */
+/* -------------------------------------------------------------------------- */
 
 let _redisSingleton: Redis | null = null;
 
@@ -85,8 +95,7 @@ const STATUS_DETAILS_TTL_SECONDS = 15 * 60;
 /* Keys                                                                       */
 /* -------------------------------------------------------------------------- */
 
-function statusSnapshotKey(): string {
-  const tenant = pickTenantId();
+function statusSnapshotKey(tenant: string): string {
   return `compoz:${tenant}:status:snapshot`;
 }
 
@@ -94,16 +103,15 @@ function statusSnapshotKey(): string {
  * Version token pour les snapshots "details".
  * Invalidation = INCR cette clé (1 write).
  */
-function statusDetailsVersionKey(): string {
-  const tenant = pickTenantId();
+function statusDetailsVersionKey(tenant: string): string {
   return `compoz:${tenant}:statusDetails:version`;
 }
 
 function statusDetailsSnapshotKey(
+  tenant: string,
   version: number,
   query: SiteStatusDetailsQuery,
 ): string {
-  const tenant = pickTenantId();
   const scope = query?.scope === "all" ? "all" : "dirty";
   const include = query?.includeBlocks ? "1" : "0";
 
@@ -124,6 +132,7 @@ function kvCtx(base: string): string {
 
 export class KvSiteStatusSnapshot implements SiteStatusCachePort {
   private readonly redis: Redis;
+  private readonly tenantId: string;
 
   /**
    * Micro-cache process-local pour éviter de GET la version plusieurs fois
@@ -131,14 +140,15 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
    */
   private detailsVersionMemo: number | null = null;
 
-  constructor() {
+  constructor(opts: KvSiteStatusSnapshotOptions = {}) {
     this.redis = getUpstashRedis();
+    this.tenantId = normalizeTenantId(opts.tenantId);
   }
 
   private async getDetailsVersion(): Promise<number> {
     if (this.detailsVersionMemo != null) return this.detailsVersionMemo;
 
-    const key = statusDetailsVersionKey();
+    const key = statusDetailsVersionKey(this.tenantId);
 
     const raw = await kvCmd(kvCtx("details.version.get"), "get", () =>
       this.redis.get(key),
@@ -160,7 +170,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
   }
 
   async readStatusSnapshot(): Promise<SiteStatusDTO | null> {
-    const key = statusSnapshotKey();
+    const key = statusSnapshotKey(this.tenantId);
 
     const raw = await kvCmd(kvCtx("status.get"), "get", () =>
       this.redis.get(key),
@@ -169,7 +179,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
   }
 
   async writeStatusSnapshot(status: SiteStatusDTO): Promise<void> {
-    const key = statusSnapshotKey();
+    const key = statusSnapshotKey(this.tenantId);
 
     await kvCmd(kvCtx("status.set"), "set", () =>
       this.redis.set(key, JSON.stringify(status)),
@@ -180,7 +190,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
     query: SiteStatusDetailsQuery,
   ): Promise<SiteStatusDetailsDTO | null> {
     const version = await this.getDetailsVersion();
-    const key = statusDetailsSnapshotKey(version, query);
+    const key = statusDetailsSnapshotKey(this.tenantId, version, query);
 
     const raw = await kvCmd(kvCtx("details.get"), "get", () =>
       this.redis.get(key),
@@ -193,7 +203,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
     details: SiteStatusDetailsDTO,
   ): Promise<void> {
     const version = await this.getDetailsVersion();
-    const key = statusDetailsSnapshotKey(version, query);
+    const key = statusDetailsSnapshotKey(this.tenantId, version, query);
 
     await kvCmd(kvCtx("details.set"), "set", () =>
       this.redis.set(key, JSON.stringify(details), {
@@ -203,7 +213,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
   }
 
   async invalidateStatus(): Promise<void> {
-    const key = statusSnapshotKey();
+    const key = statusSnapshotKey(this.tenantId);
 
     await kvCmd(kvCtx("invalidate.status.del"), "del", () =>
       this.redis.del(key),
@@ -216,7 +226,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
    * - TTL sur les snapshots pour éviter l’accumulation après bump version.
    */
   async invalidateStatusDetails(): Promise<void> {
-    const key = statusDetailsVersionKey();
+    const key = statusDetailsVersionKey(this.tenantId);
 
     const next = await kvCmd(kvCtx("invalidate.details.incr"), "other", () =>
       this.redis.incr(key),

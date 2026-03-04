@@ -11,7 +11,10 @@
  * V0.5 perf:
  * - `scope="dirty"` doit être le défaut côté UI (éviter les full-scans).
  * - On évite les refetch automatiques (focus/reconnect) qui peuvent relancer des scans.
+ * Tenant-scoped :
+ * - La queryKey inclut tenantId (sinon cache cross-tenant après switch).
  */
+
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import type {
@@ -19,6 +22,7 @@ import type {
   SiteStatusDetailsScopeDTO,
 } from "@compoz/core/domain/site/dto";
 import { siteAdminApi } from "@compoz/infra/http/studio/site.client";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
 
 type UseSiteStatusDetailsParams = Readonly<{
   enabled: boolean;
@@ -27,20 +31,48 @@ type UseSiteStatusDetailsParams = Readonly<{
   pageId?: string | null;
 }>;
 
-export function useSiteStatusDetails(params: UseSiteStatusDetailsParams) {
-  const scope = params.scope ?? "dirty";
-  const includeBlocks = params.includeBlocks ?? false;
-  const pageId = (params.pageId ?? "").trim() || null;
+function siteStatusDetailsKey(args: {
+  tenantId: string;
+  scope: SiteStatusDetailsScopeDTO;
+  includeBlocks: boolean;
+  pageId: string | null;
+}) {
+  const tid = String(args.tenantId ?? "")
+    .trim()
+    .toLowerCase();
+
+  const pageId = (args.pageId ?? "").trim() || null;
+
+  return [
+    "t",
+    tid,
+    "admin",
+    "site",
+    "statusDetails",
+    args.scope,
+    args.includeBlocks,
+    pageId,
+  ] as const;
+}
+
+export function useSiteStatusDetails({
+  enabled,
+  scope = "dirty",
+  includeBlocks = false,
+  pageId,
+}: UseSiteStatusDetailsParams) {
+  const pId = (pageId ?? "").trim() || null;
+  const tenantId = useTenantId();
+
+  const isEnabled = Boolean(enabled) && Boolean(String(tenantId ?? "").trim());
 
   const options = {
-    queryKey: [
-      "admin",
-      "site",
-      "statusDetails",
+    queryKey: siteStatusDetailsKey({
+      tenantId,
       scope,
       includeBlocks,
-      pageId,
-    ] as const,
+      pageId: pId,
+    }),
 
     queryFn: async (): Promise<SiteStatusDetailsDTO> => {
       const res = await siteAdminApi.statusDetails({
@@ -51,7 +83,7 @@ export function useSiteStatusDetails(params: UseSiteStatusDetailsParams) {
       return res.details; // ✅ flatten
     },
 
-    enabled: params.enabled,
+    enabled: isEnabled,
 
     // ✅ garde l'ancienne data quand la key change
     placeholderData: keepPreviousData,
@@ -59,9 +91,6 @@ export function useSiteStatusDetails(params: UseSiteStatusDetailsParams) {
     // ✅ V0.5 perf : évite les refetch “bruit KV”
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-
-    // ✅ évite de retaper KV trop souvent lors des navigations rapides
-    staleTime: 15_000,
   } as const;
 
   return useQuery(options);

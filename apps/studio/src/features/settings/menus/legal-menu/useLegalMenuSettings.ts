@@ -27,8 +27,7 @@ import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_LEGAL_MENU_SETTINGS } from "@compoz/core/domain/site/defaults/legal-menu";
 import { settingsAdminApi } from "@compoz/infra/http/studio/site-settings.client";
-import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
-import type { LegalMenuFormValues } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-form";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import type { SettingsHookResult } from "@compoz/studio/features/settings/hooks/useSettingsResource";
@@ -42,6 +41,8 @@ import {
   toUpdateLegalMenuIntentDTOFromFormValues,
 } from "@compoz/studio/features/settings/mappers/legal-menu-form";
 import { invalidateSiteStatus } from "@compoz/studio/features/site/status/invalidate";
+import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
+import type { LegalMenuFormValues } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-form";
 
 type UseLegalMenuSettingsResult = SettingsHookResult<LegalMenuFormValues>;
 
@@ -49,6 +50,7 @@ export function useLegalMenuSettings(): UseLegalMenuSettingsResult {
   const t = useTranslations();
   const qc = useQueryClient();
   const entityLabel = t("admin.shared.entities.legalMenu");
+  const tenantId = useTenantId();
 
   const resource = useSettingsResource<LegalMenuFormValues>({
     entityLabel,
@@ -60,7 +62,7 @@ export function useLegalMenuSettings(): UseLegalMenuSettingsResult {
 
     /** READ (bundle) : cache-first + fetchQuery fallback. */
     load: async (state: ContentState, opts) => {
-      const bundle = await getSettingsBundle(qc, state, opts);
+      const bundle = await getSettingsBundle(qc, tenantId, state, opts);
       return normalizeLegalMenuFormValues(
         toLegalMenuFormValuesFromDTO(bundle.legalMenu),
       );
@@ -76,7 +78,7 @@ export function useLegalMenuSettings(): UseLegalMenuSettingsResult {
       const patch = toUpdateLegalMenuIntentDTOFromFormValues(next);
       const dto = await settingsAdminApi.legalMenu.patch(patch, opts);
 
-      patchSettingsBundleCache(qc, WRITE_CONTENT_STATE, (prev) => ({
+      patchSettingsBundleCache(qc, tenantId, WRITE_CONTENT_STATE, (prev) => ({
         ...prev,
         legalMenu: dto.settings,
       }));
@@ -100,8 +102,7 @@ export function useLegalMenuSettings(): UseLegalMenuSettingsResult {
     beforeSave: normalizeLegalMenuFormValues,
 
     onSaved: () => {
-      void invalidateSiteStatus(qc);
-      // void invalidateSiteStatusDetails(qc);
+      void invalidateSiteStatus(qc, tenantId);
     },
   });
 

@@ -25,13 +25,16 @@ import type {
   PatchSocialResponse,
 } from "@compoz/infra/http/studio/site-settings.types";
 import { UpdateSocialSettingsIntentSchema } from "@compoz/validation/site/settings/social/social-intents";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 
 export async function GET(req: Request) {
   const NS = "api.admin.site.social.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    return logSpan(NS, { ns: NS, method: "GET", state }, async () => {
-      const repo = getSiteRepository();
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "GET", state, tenantId }, async () => {
+      const repo = getSiteRepository({ tenantId });
       const settings = await repo.readSettings(state);
 
       const res: GetSocialResponse = { settings: settings.social };
@@ -44,13 +47,15 @@ export async function PATCH(req: Request) {
   const NS = "api.admin.site.social.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
-    return logSpan(NS, { ns: NS, method: "PATCH" }, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "PATCH", tenantId }, async () => {
       const raw = await readJsonOr400(req);
 
       log.info?.("SOCIAL.PATCH.start", {
+        tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
-        envTenant: process.env["COMPOZ_SITE_ID"] ?? "default",
         hasKvUrl: Boolean(
           process.env["KV_REST_API_URL"] ??
           process.env["UPSTASH_REDIS_REST_URL"],
@@ -64,22 +69,26 @@ export async function PATCH(req: Request) {
 
       const input = adaptUpdateSocialIntent(dto);
 
-      const repo = getSiteRepository();
-      const statusCache = getSiteStatusCache();
+      const repo = getSiteRepository({ tenantId });
+      const statusCache = getSiteStatusCache({ tenantId });
 
       const run = updateSocialSettings({ repo });
       const { settings } = await run(input);
 
       log.info?.("SOCIAL.PATCH.afterWrite", {
+        tenantId,
         socialKeys: settings?.social ? Object.keys(settings.social) : [],
       });
 
       try {
-        log.info?.("SOCIAL.PATCH.invalidate.start", {});
+        log.info?.("SOCIAL.PATCH.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        log.info?.("SOCIAL.PATCH.invalidate.done", {});
+        log.info?.("SOCIAL.PATCH.invalidate.done", { tenantId });
       } catch (e) {
-        log.error?.("SOCIAL.PATCH.invalidate.failed", { err: String(e) });
+        log.error?.("SOCIAL.PATCH.invalidate.failed", {
+          tenantId,
+          err: String(e),
+        });
       }
 
       const res: PatchSocialResponse = { settings: settings.social };

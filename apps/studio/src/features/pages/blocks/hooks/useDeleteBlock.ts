@@ -18,16 +18,20 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 
-import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { notifyDeleted } from "@compoz/studio/lib/ui/notify-presets";
+import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
 
 import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { pagesAdminApi } from "@compoz/infra/http/studio/pages.client";
 import type { DeleteBlockResponse } from "@compoz/infra/http/studio/pages.types";
 import { log } from "@compoz/infra/lib/log";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
 import { syncBlocksFromPageCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
-import { invalidateBlocksBadgesForPage } from "@compoz/studio/features/site/status/invalidate";
+import {
+  invalidateSiteStatus,
+  invalidateSiteStatusDetails,
+} from "@compoz/studio/features/site/status/invalidate";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 
 type UseDeleteBlockResult = Readonly<{
@@ -44,11 +48,12 @@ export function useDeleteBlock(onSuccess?: () => void): UseDeleteBlockResult {
   const t = useTranslations();
   const qc = useQueryClient();
   const entityLabel = t("admin.shared.entities.blocks");
+  const tenantId = useTenantId();
 
   const [deletingBlockId, setDeletingBlockId] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationKey: ["admin", "pages", "blocks", "delete"] as const,
+    mutationKey: ["t", tenantId, "admin", "pages", "blocks", "delete"] as const,
 
     mutationFn: async ({ pageId, blockId }: DeleteBlockArgs) => {
       const res: DeleteBlockResponse = await withSaveLogs(
@@ -74,12 +79,13 @@ export function useDeleteBlock(onSuccess?: () => void): UseDeleteBlockResult {
       const pid = (pageId ?? "").trim();
 
       if (pid && page) {
-        syncBlocksFromPageCache(qc, pid, page, WRITE_CONTENT_STATE);
+        syncBlocksFromPageCache(qc, tenantId, pid, page, WRITE_CONTENT_STATE);
       }
 
-      if (pid) {
-        await invalidateBlocksBadgesForPage(qc, pid);
-      }
+      await Promise.all([
+        invalidateSiteStatus(qc, tenantId),
+        invalidateSiteStatusDetails(qc, tenantId),
+      ]);
 
       lg.info("delete.ok", { pageId, blockId });
       onSuccess?.();

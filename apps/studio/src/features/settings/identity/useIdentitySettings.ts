@@ -24,8 +24,7 @@ import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_IDENTITY_SETTINGS } from "@compoz/core/domain/site/defaults/identity";
 import { settingsAdminApi } from "@compoz/infra/http/studio/site-settings.client";
-import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
-import type { IdentityFormValues } from "@compoz/validation/site/settings/identity/identity-form";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import type { SettingsHookResult } from "@compoz/studio/features/settings/hooks/useSettingsResource";
@@ -39,6 +38,8 @@ import {
   toUpdateIdentityIntentDTOFromFormValues,
 } from "@compoz/studio/features/settings/mappers/identity-form";
 import { invalidateSiteStatus } from "@compoz/studio/features/site/status/invalidate";
+import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
+import type { IdentityFormValues } from "@compoz/validation/site/settings/identity/identity-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
@@ -47,6 +48,7 @@ type UseIdentitySettingsResult = SettingsHookResult<IdentityFormValues>;
 export function useIdentitySettings(): UseIdentitySettingsResult {
   const t = useTranslations();
   const qc = useQueryClient();
+  const tenantId = useTenantId();
 
   const entityLabel = t("admin.shared.entities.identity");
 
@@ -59,7 +61,7 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
 
     /** READ (bundle) : cache-first + fetchQuery fallback. */
     load: async (state: ContentState, opts) => {
-      const bundle = await getSettingsBundle(qc, state, opts);
+      const bundle = await getSettingsBundle(qc, tenantId, state, opts);
       return normalizeIdentityFormValues(
         toIdentityFormValuesFromDTO(bundle.identity),
       );
@@ -69,7 +71,7 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
       const patch = toUpdateIdentityIntentDTOFromFormValues(next);
       const dto = await settingsAdminApi.identity.patch(patch, opts);
 
-      patchSettingsBundleCache(qc, WRITE_CONTENT_STATE, (prev) => ({
+      patchSettingsBundleCache(qc, tenantId, WRITE_CONTENT_STATE, (prev) => ({
         ...prev,
         identity: dto.settings,
       }));
@@ -89,8 +91,7 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
     beforeSave: normalizeIdentityFormValues,
 
     onSaved: () => {
-      void invalidateSiteStatus(qc);
-      // void invalidateSiteStatusDetails(qc);
+      void invalidateSiteStatus(qc, tenantId);
     },
   });
 

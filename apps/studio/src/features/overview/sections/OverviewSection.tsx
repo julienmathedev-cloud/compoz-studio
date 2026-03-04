@@ -10,8 +10,8 @@
 
 import { useTranslations } from "next-intl";
 
-import { cn } from "@compoz/ui/lib/utils";
 import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
+import { cn } from "@compoz/ui/lib/utils";
 
 import { useSiteStatus } from "@compoz/studio/features/site/status/useSiteStatus";
 
@@ -24,7 +24,7 @@ import { StateAndActionsCard } from "@compoz/studio/features/overview/StateAndAc
 export function OverviewSection() {
   const t = useTranslations();
   const siteStatus = useSiteStatus();
-
+  console.log("status.overview", siteStatus);
   return (
     <SettingsSection
       id="overview"

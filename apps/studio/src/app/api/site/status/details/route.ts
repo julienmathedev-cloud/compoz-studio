@@ -3,16 +3,19 @@
  * @layer api/routes
  */
 
+import { NextResponse } from "next/server";
+
 import { logSpan } from "@compoz/infra/lib/log";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 
 import type { SiteStatusDetailsScope } from "@compoz/core/domain/site/entities/site-status-details";
 
 import { getPagesRepository } from "@compoz/infra/pages";
+import { getSiteStatusCache } from "@compoz/infra/site";
 
 import { getSiteStatusDetails } from "@compoz/core/domain/site/use-cases/status/get-site-status-details";
 import type { GetSiteStatusDetailsResponse } from "@compoz/infra/http/studio/site.types";
-import { KvSiteStatusSnapshot } from "@compoz/infra/site/kv-site-status-snapshot";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 
 type ParsedQuery = Readonly<{
   scope: SiteStatusDetailsScope;
@@ -41,14 +44,19 @@ function parseQueryFromUrl(url: string): ParsedQuery {
 }
 
 export async function GET(req: Request) {
+  const { tenantId } = await requireSessionWithTenant();
+  if (!tenantId) {
+    return NextResponse.json({ error: "Missing tenant" }, { status: 400 });
+  }
+
   const NS = "api.admin.site.status.details.GET" as const;
 
   return handleRoute(NS, req, async () => {
     return logSpan(NS, { ns: NS, method: "GET" }, async () => {
       const { scope, includeBlocks, pageId } = parseQueryFromUrl(req.url);
 
-      const pages = getPagesRepository();
-      const cache = new KvSiteStatusSnapshot();
+      const pages = getPagesRepository({ tenantId });
+      const cache = getSiteStatusCache({ tenantId });
 
       const run = getSiteStatusDetails({ pages, cache });
       const { details } = await run({ scope, includeBlocks, pageId });

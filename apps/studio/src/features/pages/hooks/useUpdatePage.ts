@@ -16,10 +16,7 @@ import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 import { pagesAdminApi } from "@compoz/infra/http/studio/pages.client";
 import type { UpdatePageResponse } from "@compoz/infra/http/studio/pages.types";
 import { log } from "@compoz/infra/lib/log";
-import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
-import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
-import type { PageFormValues } from "@compoz/validation/pages/page-form";
-import type { UpdatePageIntentDTO } from "@compoz/validation/pages/page-intents";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
 import { toUpdatePageIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/pages-form";
 import { setSiteIndexCache } from "@compoz/studio/features/site-index/cache";
@@ -30,6 +27,10 @@ import {
   notifyUpdated,
 } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
+import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
+import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
+import type { PageFormValues } from "@compoz/validation/pages/page-form";
+import type { UpdatePageIntentDTO } from "@compoz/validation/pages/page-intents";
 
 type UseUpdatePageResult = Readonly<{
   update: (
@@ -61,11 +62,12 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
   const t = useTranslations();
   const qc = useQueryClient();
   const entityLabel = t("admin.shared.entities.page");
+  const tenantId = useTenantId();
 
   const [updatingPageId, setUpdatingPageId] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationKey: ["admin", "pages", "update"] as const,
+    mutationKey: [tenantId, "admin", "pages", "update"] as const,
 
     mutationFn: async (
       args: UpdatePageArgs,
@@ -101,14 +103,14 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
 
       // ✅ 1) push siteIndex si fourni par la route (zéro read)
       if (index) {
-        setSiteIndexCache(qc, WRITE_CONTENT_STATE, index);
+        setSiteIndexCache(qc, tenantId, WRITE_CONTENT_STATE, index);
       }
 
       // ✅ 2) seed/patch cache page-by-id (évite un GET + UI cohérente)
-      qc.setQueryData(pageByIdKey(pageId, WRITE_CONTENT_STATE), page);
+      qc.setQueryData(pageByIdKey(tenantId, pageId, WRITE_CONTENT_STATE), page);
 
       // ✅ 3) status snapshot (par page)
-      await invalidatePageStatusDetails(qc, pageId);
+      await invalidatePageStatusDetails(qc, tenantId, pageId);
 
       lg.info("update.ok", { pageId, nextSlug, fields });
       onSuccess?.();

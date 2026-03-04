@@ -17,19 +17,24 @@ import type { QueryClient } from "@tanstack/react-query";
 
 export function setSiteIndexCache(
   qc: QueryClient,
+  tenantId: string,
   state: ContentState = WRITE_CONTENT_STATE,
   next: SiteIndexDTO,
 ) {
-  qc.setQueryData(siteIndexKey(state), next);
+  qc.setQueryData(siteIndexKey(tenantId, state), next);
 }
 
 export function patchSiteIndexCache(
   qc: QueryClient,
+  tenantId: string,
   state: ContentState = WRITE_CONTENT_STATE,
   patcher: (prev: SiteIndexDTO) => SiteIndexDTO,
 ) {
-  qc.setQueryData(siteIndexKey(state), (prev: SiteIndexDTO | undefined) => {
-    if (!prev) return prev;
-    return patcher(prev);
-  });
+  qc.setQueryData(
+    siteIndexKey(tenantId, state),
+    (prev: SiteIndexDTO | undefined) => {
+      if (!prev) return prev;
+      return patcher(prev);
+    },
+  );
 }

@@ -11,8 +11,8 @@
 
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import { log, logSpan } from "@compoz/infra/lib/log";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 
 import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -21,20 +21,24 @@ import type { ReorderChildrenResponse } from "@compoz/infra/http/studio/pages.ty
 
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 
+import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import { PageIdParamSchema } from "@compoz/validation/pages/page";
 import {
   ReorderChildrenIntentSchema,
   type ReorderChildrenIntentDTO,
 } from "@compoz/validation/pages/page-intents";
-import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
+
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 
 export async function POST(req: Request, ctx: { params: unknown }) {
   const NS = "api.admin.pages.children.reorder.POST" as const;
 
   return handleRoute(NS, req, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
     return logSpan(
       NS,
-      { ns: NS, method: "POST", state: WRITE_CONTENT_STATE },
+      { ns: NS, method: "POST", state: WRITE_CONTENT_STATE, tenantId },
       async () => {
         const lg = log.child({ ns: NS });
 
@@ -56,8 +60,8 @@ export async function POST(req: Request, ctx: { params: unknown }) {
           },
         );
 
-        const siteRepo = getSiteRepository();
-        const statusCache = getSiteStatusCache();
+        const siteRepo = getSiteRepository({ tenantId });
+        const statusCache = getSiteStatusCache({ tenantId });
 
         // domain pur (pas de statusCache)
         const run = reorderPageChildren({
@@ -70,6 +74,7 @@ export async function POST(req: Request, ctx: { params: unknown }) {
         });
 
         lg.debug("route.children.reordered", {
+          tenantId,
           pageId,
           count: dto.childIds.length,
         });

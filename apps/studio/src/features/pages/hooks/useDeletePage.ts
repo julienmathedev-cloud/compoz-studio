@@ -3,22 +3,29 @@
 /**
  * @file apps/studio/src/features/pages/hooks/useDeletePage.ts
  * @layer hooks/admin/pages
+ *
+ * @remarks
+ * - Tenant-scoped cache: toutes les query keys doivent inclure tenantId,
+ *   pour éviter les collisions lors d’un switch tenant.
  */
 
 import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { pagesAdminApi } from "@compoz/infra/http/studio/pages.client";
 import { log } from "@compoz/infra/lib/log";
 import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
-import { notify } from "@compoz/studio/lib/ui/notify";
-import { notifyDeleted } from "@compoz/studio/lib/ui/notify-presets";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 
-import { pagesAdminApi } from "@compoz/infra/http/studio/pages.client";
-import { invalidateDraftBlocksList } from "@compoz/studio/features/pages/blocks/cache/invalidate";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
 import { setSiteIndexCache } from "@compoz/studio/features/site-index/cache";
-import { invalidateSiteStatusDetails } from "@compoz/studio/features/site/status/invalidate";
+import {
+  invalidateSiteStatus,
+  invalidateSiteStatusDetails,
+} from "@compoz/studio/features/site/status/invalidate";
+import { notify } from "@compoz/studio/lib/ui/notify";
+import { notifyDeleted } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 
 type UseDeletePageResult = Readonly<{
@@ -34,15 +41,21 @@ type DeletePageArgs = Readonly<{
 
 const lg = log.child({ ns: "hook", name: "useDeletePage" });
 
+/**
+ * Hook delete page (tenant-scoped).
+ *
+ * @param tenantId - tenant courant (SoT : cookie tenant actif résolu côté server, puis passé au client)
+ */
 export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
   const t = useTranslations();
   const qc = useQueryClient();
   const entityLabel = t("admin.shared.entities.page");
+  const tenantId = useTenantId();
 
   const [deletingPageId, setDeletingPageId] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationKey: ["admin", "pages", "delete"] as const,
+    mutationKey: ["t", tenantId, "admin", "pages", "delete"] as const,
 
     mutationFn: async (args: DeletePageArgs) => {
       const pageId = String(args.pageId ?? "").trim();
@@ -52,7 +65,7 @@ export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
         "useDeletePage",
         WRITE_CONTENT_STATE,
         () => pagesAdminApi.remove(pageId),
-        { entity: entityLabel, fields, pageId },
+        { entity: entityLabel, fields, pageId, tenantId },
       );
 
       // ✅ flatten route response (DeletePageResponse = { index: SiteIndexDTO })
@@ -71,23 +84,27 @@ export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
       );
 
       // ✅ 1) push immédiat siteIndex (plus d’invalidate/read)
+      // ⚠️ Si setSiteIndexCache devient tenant-scoped, adapte sa signature pareil.
       if (args.nextIndex) {
-        setSiteIndexCache(qc, WRITE_CONTENT_STATE, args.nextIndex);
+        setSiteIndexCache(qc, tenantId, WRITE_CONTENT_STATE, args.nextIndex);
       }
 
       // ✅ 2) purge cache page-by-id (évite une UI “fantôme”)
       qc.removeQueries({
-        queryKey: pageByIdKey(args.pageId, WRITE_CONTENT_STATE),
+        queryKey: pageByIdKey(tenantId, args.pageId, WRITE_CONTENT_STATE),
         exact: true,
       });
 
       // ✅ 3) nettoyage blocks (draft) + snapshot status (kv)
+      // ⚠️ invalidateDraftBlocksList doit aussi devenir tenant-scoped => invalidateDraftBlocksList(qc, tId, pageId)
       await Promise.all([
-        invalidateDraftBlocksList(qc, args.pageId),
-        invalidateSiteStatusDetails(qc),
+        //invalidateDraftBlocksList(qc, tenantId, args.pageId),
+        invalidateSiteStatus(qc, tenantId),
+        invalidateSiteStatusDetails(qc, tenantId),
       ]);
 
       lg.info("delete.ok", {
+        tenantId: tenantId,
         pageId: args.pageId,
         pagesInIndex: args.nextIndex?.pages?.length ?? undefined,
       });
@@ -97,7 +114,11 @@ export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
 
     onError: (e: unknown, args) => {
       notify.fromError(e, UiError.unexpectedSave);
-      lg.error("delete.failed", { pageId: args.pageId, msg: String(e) });
+      lg.error("delete.failed", {
+        tenantId: tenantId,
+        pageId: args.pageId,
+        msg: String(e),
+      });
     },
 
     onSettled: () => {

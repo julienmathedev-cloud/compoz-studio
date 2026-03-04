@@ -17,21 +17,23 @@ import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
 
 export function setPageBlocksCache(
   qc: QueryClient,
+  tenantId: string,
   pageId: string,
   state: ContentState,
   next: ReadonlyArray<BlockDTO>,
 ) {
-  qc.setQueryData(pageBlocksKey(pageId, state), next);
+  qc.setQueryData(pageBlocksKey(tenantId, pageId, state), next);
 }
 
 export function patchPageBlocksCache(
   qc: QueryClient,
+  tenantId: string,
   pageId: string,
   state: ContentState,
   patcher: (prev: ReadonlyArray<BlockDTO>) => ReadonlyArray<BlockDTO>,
 ) {
   qc.setQueryData(
-    pageBlocksKey(pageId, state),
+    pageBlocksKey(tenantId, pageId, state),
     (prev: ReadonlyArray<BlockDTO> | undefined) => {
       if (!prev) return prev;
       return patcher(prev);
@@ -41,8 +43,12 @@ export function patchPageBlocksCache(
 
 export function removePageBlocksCache(
   qc: QueryClient,
+  tenantId: string,
   pageId: string,
   state: ContentState,
 ) {
-  qc.removeQueries({ queryKey: pageBlocksKey(pageId, state), exact: true });
+  qc.removeQueries({
+    queryKey: pageBlocksKey(tenantId, pageId, state),
+    exact: true,
+  });
 }

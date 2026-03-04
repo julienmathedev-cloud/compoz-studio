@@ -17,16 +17,20 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-import { log } from "@compoz/infra/lib/log";
-import type { LayoutSectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
-import { toCreateLayoutSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
-import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
 import { pagesAdminApi } from "@compoz/infra/http/studio/pages.client";
-import { notifyCreated } from "@compoz/studio/lib/ui/notify-presets";
+import { log } from "@compoz/infra/lib/log";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
 import { syncBlocksFromPageCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
-import { invalidateBlocksBadgesForPage } from "@compoz/studio/features/site/status/invalidate";
+import { toCreateLayoutSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
+import {
+  invalidateSiteStatus,
+  invalidateSiteStatusDetails,
+} from "@compoz/studio/features/site/status/invalidate";
 import { notify } from "@compoz/studio/lib/ui/notify";
+import { notifyCreated } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
+import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
+import type { LayoutSectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 
 type CreateBlockArgs = Readonly<{
   pageId: string;
@@ -46,9 +50,10 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
   const t = useTranslations();
   const qc = useQueryClient();
   const entityLabel = t("admin.shared.entities.blocks");
+  const tenantId = useTenantId();
 
   const mutation = useMutation({
-    mutationKey: ["admin", "pages", "blocks", "create"] as const,
+    mutationKey: ["t", tenantId, "admin", "pages", "blocks", "create"] as const,
 
     mutationFn: async (args: CreateBlockArgs) => {
       const pageId = (args.pageId ?? "").trim();
@@ -90,9 +95,14 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
       );
 
       // ✅ 1) push cache (page + blocks)
+      // if (pid) await invalidateBlocksBadgesForPage(qc, tenantId, pid);
       if (pid && page)
-        syncBlocksFromPageCache(qc, pid, page, WRITE_CONTENT_STATE);
-      if (pid) await invalidateBlocksBadgesForPage(qc, pid);
+        syncBlocksFromPageCache(qc, tenantId, pid, page, WRITE_CONTENT_STATE);
+
+      await Promise.all([
+        invalidateSiteStatus(qc, tenantId),
+        invalidateSiteStatusDetails(qc, tenantId),
+      ]);
 
       lg.info("create.ok", {
         pageId,

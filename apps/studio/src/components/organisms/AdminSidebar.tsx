@@ -37,7 +37,7 @@ import {
 import { useAdminDirtyGuard } from "@compoz/studio/features/dirty-guard/useAdminDirtyGuard";
 import { cn } from "@compoz/ui/lib/utils";
 import type { LucideIcon } from "lucide-react";
-import { Cookie, FileText, Shield } from "lucide-react";
+import { Cookie, FileText, Shield, Users } from "lucide-react";
 
 import {
   Blocks,
@@ -61,6 +61,9 @@ export const ADMIN_SIDEBAR_ICONS = {
   pages: Files,
   blocks: Blocks,
   seo: Search,
+
+  // ✅ Admin-only
+  users: Users,
 } satisfies Record<string, LucideIcon>;
 
 export type AdminSidebarItemKey = keyof typeof ADMIN_SIDEBAR_ICONS;
@@ -73,7 +76,7 @@ export type AdminSidebarItem = Readonly<{
   key: AdminSidebarItemKey;
   /** Libellé visible. */
   label: string;
-  /** Href (route admin). Ex: "/dashboard/identity" */
+  /** Href (route admin). Ex: "/identity" */
   href: string;
   /** Désactive l’item. */
   disabled?: boolean;
@@ -87,6 +90,9 @@ type AdminSidebarProps = Readonly<{
   title?: string;
 
   locale: string;
+
+  /** Affiche les items admin-only (ex: Users). */
+  isAdmin?: boolean;
 }>;
 
 /**
@@ -118,7 +124,11 @@ function isPlainLeftClick(e: MouseEvent): boolean {
 /**
  * Sidebar de l’admin (route-based).
  */
-export function AdminSidebar({ title, locale }: AdminSidebarProps) {
+export function AdminSidebar({
+  title,
+  locale,
+  isAdmin = false,
+}: AdminSidebarProps) {
   const t = useTranslations();
   const dirtyGuard = useAdminDirtyGuard();
 
@@ -126,56 +136,66 @@ export function AdminSidebar({ title, locale }: AdminSidebarProps) {
   const pathname = normalizePathname(pathnameRaw ?? "");
   const base = `/${locale}`;
 
-  const items: ReadonlyArray<AdminSidebarItem> = useMemo(
-    () => [
+  const items: ReadonlyArray<AdminSidebarItem> = useMemo(() => {
+    const baseItems: AdminSidebarItem[] = [
       {
         key: "overview",
         label: t("admin.dashboard.tabs.overview"),
-        href: `${base}/dashboard`,
+        href: `${base}`,
       },
       {
         key: "identity",
         label: t("admin.dashboard.tabs.identity"),
-        href: `${base}/dashboard/identity`,
+        href: `${base}/identity`,
       },
       {
         key: "menu",
         label: t("admin.dashboard.tabs.menu"),
-        href: `${base}/dashboard/menu`,
+        href: `${base}/menu`,
       },
       {
         key: "social",
         label: t("admin.dashboard.tabs.social"),
-        href: `${base}/dashboard/social`,
+        href: `${base}/social`,
       },
       {
         key: "header",
         label: t("admin.dashboard.tabs.header"),
-        href: `${base}/dashboard/header`,
+        href: `${base}/header`,
       },
       {
         key: "footer",
         label: t("admin.dashboard.tabs.footer"),
-        href: `${base}/dashboard/footer`,
+        href: `${base}/footer`,
       },
       {
         key: "pages",
         label: t("admin.dashboard.tabs.pages"),
-        href: `${base}/dashboard/pages`,
+        href: `${base}/pages`,
       },
       {
         key: "blocks",
         label: t("admin.dashboard.tabs.blocks"),
-        href: `${base}/dashboard/blocks`,
+        href: `${base}/blocks`,
       },
       {
         key: "seo",
         label: t("admin.dashboard.tabs.seo"),
-        href: `${base}/dashboard/seo`,
+        href: `${base}/seo`,
       },
-    ],
-    [t, base],
-  );
+    ];
+
+    // ✅ Admin-only
+    if (isAdmin) {
+      baseItems.push({
+        key: "users",
+        label: t("admin.shared.entities.users"),
+        href: `${base}/admin/users`,
+      });
+    }
+
+    return baseItems;
+  }, [t, base, isAdmin]);
 
   /**
    * Items “Autre” (routes publiques).
@@ -189,19 +209,19 @@ export function AdminSidebar({ title, locale }: AdminSidebarProps) {
       [
         {
           key: "legal-notices",
-          href: `${base}/dashboard/mentions-legales`,
+          href: `${base}/mentions-legales`,
           label: t("admin.footer.legalNotices"),
           Icon: FileText,
         },
         {
           key: "privacy",
-          href: `${base}/dashboard/confidentialite`,
+          href: `${base}/confidentialite`,
           label: t("admin.footer.privacy"),
           Icon: Shield,
         },
         {
           key: "cookies",
-          href: `${base}/dashboard/cookies`,
+          href: `${base}/cookies`,
           label: t("admin.footer.cookies"),
           Icon: Cookie,
         },
@@ -247,8 +267,8 @@ export function AdminSidebar({ title, locale }: AdminSidebarProps) {
             <SidebarMenu>
               {items.map((item) => {
                 const isActive =
-                  item.href === `${base}/dashboard`
-                    ? pathname === `${base}/dashboard`
+                  item.href === `${base}`
+                    ? pathname === `${base}`
                     : pathname.startsWith(item.href);
 
                 const Icon = ADMIN_SIDEBAR_ICONS[item.key];
@@ -301,7 +321,7 @@ export function AdminSidebar({ title, locale }: AdminSidebarProps) {
 
       <SidebarFooter className="items-center justify-center">
         <SidebarGroupLabel className="truncate text-sm font-semibold">
-          V0.5 • Compoz
+          V0.5
         </SidebarGroupLabel>
       </SidebarFooter>
 

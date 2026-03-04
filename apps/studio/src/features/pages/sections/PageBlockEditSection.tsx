@@ -67,7 +67,7 @@ export function PageBlockEditSection({
   // ✅ Dirty state (navigation guard)
   const dirtyGuard = useAdminDirtyGuard();
 
-  const backHref = `/${locale}/dashboard/pages/${pageId}/blocks`;
+  const backHref = `/${locale}/pages/${pageId}/blocks`;
 
   const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
 

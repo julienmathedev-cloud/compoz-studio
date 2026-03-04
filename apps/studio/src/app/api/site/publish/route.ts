@@ -16,8 +16,6 @@
  * - En V0.5, on déclenche une revalidation ISR des routes publiques après publication.
  */
 
-import { revalidatePath } from "next/cache";
-
 import {
   CONTENT_STATE,
   type ContentState,
@@ -30,8 +28,9 @@ import type { PublishSiteResponse } from "@compoz/infra/http/studio/site.types";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 
 import {
   PublishSiteIntentSchema,
@@ -83,28 +82,58 @@ function resolveStateOr422(args: {
 }
 
 async function revalidatePublicAfterPublish(params: {
+  siteBaseUrl?: string; // ex: http://localhost:3001
+  tenantId: string;
   slugs: ReadonlyArray<string>;
 }) {
-  revalidatePath("/site");
+  const baseUrl = String(
+    params.siteBaseUrl ?? process.env["NEXT_PUBLIC_SITE_ORIGIN"] ?? "",
+  ).trim();
 
-  for (const slug of params.slugs) {
-    const s = String(slug ?? "").trim();
-    if (!s || s === "home") continue;
-    revalidatePath(`/site/${s}`);
+  // Si pas configuré : no-op (mais publication OK)
+  if (!baseUrl) return;
+
+  const secret = String(process.env["COMPOZ_REVALIDATE_SECRET"] ?? "").trim();
+
+  try {
+    const res = await fetch(`${baseUrl}/api/revalidate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(secret ? { "x-revalidate-secret": secret } : {}),
+      },
+      body: JSON.stringify({
+        tenantId: params.tenantId,
+        slugs: params.slugs,
+      }),
+    });
+
+    if (!res.ok) {
+      // best-effort : pas bloquant
+      throw new Error(`public_revalidate_failed:${res.status}`);
+    }
+  } catch (e) {
+    // best-effort : pas bloquant
+    log.warn?.("publish.revalidate.public.failed", {
+      err: e instanceof Error ? e.message : String(e),
+      baseUrl,
+      tenantId: params.tenantId,
+    });
   }
-
-  revalidatePath("/sitemap.xml");
 }
 
 export async function POST(req: Request) {
   const NS = "api.admin.site.publish.POST" as const;
 
   return handleRoute(NS, req, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
     return logSpan(
       NS,
       {
         ns: NS,
         method: "POST",
+        tenantId,
         contentTypeHeader: req.headers.get("content-type") ?? undefined,
       },
       async () => {
@@ -114,7 +143,6 @@ export async function POST(req: Request) {
         const raw = await readJsonOptionalOrEmpty(req);
 
         // ✅ DTO Zod (unchanged)
-        // Note: on garde ta validation Zod + erreurs normalisées.
         const dto: PublishSiteIntentDTO = parseDTOOrHttp(
           PublishSiteIntentSchema,
           raw,
@@ -124,7 +152,7 @@ export async function POST(req: Request) {
           },
         );
 
-        // ✅ Body > Query > defaults, sans resolveContentStateOrHttp
+        // ✅ Body > Query > defaults
         const from = resolveStateOr422({
           value: dto.from,
           fallback: qs.from ?? CONTENT_STATE.DRAFT,
@@ -138,11 +166,14 @@ export async function POST(req: Request) {
         });
 
         const run = publishSite({
-          site: getSiteRepository(),
-          pages: getPagesRepository(),
+          site: getSiteRepository({ tenantId }),
+          pages: getPagesRepository({ tenantId }),
           revalidator: {
             async revalidatePublished({ slugs }) {
-              await revalidatePublicAfterPublish({ slugs });
+              await revalidatePublicAfterPublish({
+                tenantId,
+                slugs,
+              });
             },
           },
         });
@@ -154,6 +185,7 @@ export async function POST(req: Request) {
         });
 
         lg.info("publish.metrics", {
+          tenantId,
           from: result.from,
           to: result.to,
           pagesCopied: result.pagesCopied,
@@ -162,7 +194,7 @@ export async function POST(req: Request) {
         });
 
         // ✅ Invalidation snapshots (route-level, best-effort)
-        const statusCache = getSiteStatusCache();
+        const statusCache = getSiteStatusCache({ tenantId });
         try {
           lg.info?.("route.statusCache.invalidateAll.start", {});
           await statusCache.invalidateAll();

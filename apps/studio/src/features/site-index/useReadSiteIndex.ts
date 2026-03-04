@@ -26,6 +26,7 @@ import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
 import { notify } from "@compoz/studio/lib/ui/notify";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
+import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
 
 type UseReadSiteIndexResult = Readonly<{
   /** Dernier index chargé (ou `null` tant que rien n’a été récupéré). */
@@ -42,17 +43,22 @@ export function useReadSiteIndex(
   const t = useTranslations();
   const entityLabel = t("admin.shared.entities.siteIndex");
 
+  const tenantId = useTenantId();
+
+  const enabled = Boolean(tenantId);
+
   const query = useQuery({
-    queryKey: siteIndexKey(state),
+    queryKey: siteIndexKey(tenantId, state),
+    enabled,
 
     queryFn: async ({ signal }): Promise<SiteIndexDTO> => {
-      const res = await logSpan("ui.siteIndex.load", { state }, () =>
+      const res = await logSpan("ui.siteIndex.load", { tenantId, state }, () =>
         pagesAdminApi.getIndex(state, { signal }),
       );
 
       const index = res.index; // ✅ flatten
 
-      lg.debug("read.ok", { state, count: index.pages.length });
+      lg.debug("read.ok", { tenantId, state, count: index.pages.length });
       return index;
     },
 
@@ -65,14 +71,17 @@ export function useReadSiteIndex(
 
     notify.fromError(query.error);
     lg.error("read.failed", {
+      tenantId,
       state,
       entity: entityLabel,
       msg: String(query.error),
     });
-  }, [query.error, state, entityLabel]);
+  }, [query.error, tenantId, state, entityLabel]);
 
   return {
-    index: query.data ?? null,
-    isLoading: query.isPending,
+    index: enabled ? (query.data ?? null) : null,
+    isLoading: enabled ? query.isPending : false,
   } as const;
 }
+
+useReadSiteIndex.displayName = "useReadSiteIndex";

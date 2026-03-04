@@ -1,10 +1,17 @@
 /**
- * @file apps/site/src/app/page.tsx
+ * @file apps/site/src/app/[slug]/page.tsx
  * @layer app/site
  *
  * @description
- * Route publique "/site/[slug]" : rendu PUBLISHED-only (SEO stable).
+ * Route publique "/[slug]" : rendu PUBLISHED-only (SEO stable).
+ *
+ * @remarks
+ * Multi-tenant host-based:
+ * - dépend de `headers()` via getPublished* loaders
+ * - donc pas compatible avec SSG (`generateStaticParams`) au build
  */
+
+export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
@@ -15,34 +22,19 @@ import { resolvePublicUi } from "@compoz/ui/site/skins/resolvePublicUi";
 
 import type { Page } from "@compoz/core/domain/pages/entities/page";
 import type { SiteIndex } from "@compoz/core/domain/site/entities";
-import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 import {
   getPublishedIndex,
   getPublishedPageBySlug,
 } from "@compoz/site/lib/pages/public-page-loaders";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
-/**
- * ✅ Objectif V0.5 : head/metadata stables.
- * On force Next à pré-rendre les slugs connus (published).
- */
-export async function generateStaticParams() {
-  const index = await getPublishedIndex();
-
-  const slugs =
-    (index?.pages ?? [])
-      .map((p) => String(p.slug ?? "").trim())
-      .filter(Boolean)
-      .filter((s) => s !== "home") ?? [];
-
-  return slugs.map((slug) => ({ slug }));
-}
+import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
 function __hrefForSlug(slug: string) {
-  return slug === "home" ? "/site" : `/site/${slug}`;
+  return slug === "home" ? "/" : `/${slug}`;
 }
 
 function __computePager(args: {
@@ -89,7 +81,7 @@ export async function generateMetadata({
 }: PageParams): Promise<Metadata> {
   const { slug } = await unwrapParams(params);
 
-  // "home" est routée sur /site (page dédiée), donc pas de metadata ici
+  // "home" est routée sur / (page dédiée), donc pas de metadata ici
   if (slug === "home") return {};
 
   const page = await getPublishedPageBySlug(slug);
@@ -97,9 +89,7 @@ export async function generateMetadata({
 
   return {
     title: page.title,
-    alternates: {
-      canonical: `/site/${slug}`,
-    },
+    alternates: { canonical: `/${slug}` },
   };
 }
 
@@ -110,7 +100,7 @@ export async function generateMetadata({
 export default async function PublicPage({ params }: PageParams) {
   const { slug } = await unwrapParams(params);
 
-  if (slug === "home") redirect("/site");
+  if (slug === "home") redirect("/");
 
   const index = await getPublishedIndex();
   if (!index) notFound();

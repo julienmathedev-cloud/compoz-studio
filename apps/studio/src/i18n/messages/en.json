@@ -39,7 +39,10 @@
     "alreadyBottom": "Already at the bottom",
     "navigation": "Navigation",
     "upToDate": "Up to date",
-    "status": "Status"
+    "status": "Status",
+    "create": "Create",
+    "creating": "Creating…",
+    "availableInNextVersion": "Available in the next version"
   },
 
   "notifications": {
@@ -212,7 +215,23 @@
     "CELL_IMAGE_ALT_INVALID": "The image alt text is invalid.",
     "CELL_IMAGE_CAPTION_INVALID": "The image caption is invalid.",
     "CELL_IMAGE_ID_REQUIRED": "The image ID is required.",
-    "CELL_IMAGE_HREF_INVALID": "The image link is invalid."
+    "CELL_IMAGE_HREF_INVALID": "The image link is invalid.",
+
+    "USER_ID_REQUIRED": "The user ID is required.",
+    "USER_EMAIL_REQUIRED": "The user email is required.",
+    "USER_EMAIL_INVALID_FORMAT": "The user email is invalid (expected format: adresse@exemple.com).",
+    "USER_NAME_REQUIRED": "The user name is required.",
+    "USER_ROLE_REQUIRED": "The user role is required.",
+    "USER_ROLE_INVALID": "The user role is invalid.",
+    "USER_TENANT_IDS_INVALID": "The user tenant IDs are invalid.",
+    "USER_DEFAULT_TENANT_REQUIRED": "The user default tenant is required.",
+    "USER_DEFAULT_TENANT_NOT_ALLOWED": "The user default tenant cannot be the same as the user tenant.",
+    "USER_RBAC_INVALID": "The user RBAC is invalid.",
+    "USER_STATUS_INVALID": "The user status is invalid.",
+    "USER_TENANT_IDS_REQUIRED": "The user tenant IDs are required.",
+    "USER_PASSWORD_REQUIRED": "The user password is required.",
+    "USER_EMAIL_CONFLICT": "The user email is already used.",
+    "USER_NOT_FOUND": "The user is not found."
   },
 
   "uiErrors": {
@@ -267,7 +286,10 @@
         "seo": "SEO",
         "siteIndex": "Site index",
         "settings": "Settings",
-        "site": "Site"
+        "site": "Site",
+        "user": "User",
+        "users": "Users",
+        "tenant": "Site"
       },
       "loading": {
         "section": "Loading : {title}…",
@@ -339,6 +361,112 @@
         "navDisabled": "Navigation is disabled in preview mode.",
         "infoOverride": "Changes in progress (not saved)",
         "infoBaseline": "Saved version"
+      }
+    },
+
+    "emptyPreview": {
+      "footer": "No footer data to preview.",
+      "header": "No header data to preview.",
+      "legalMenu": "No legal menu data to preview.",
+      "primaryMenu": "No primary menu data to preview.",
+      "social": "No social data to preview.",
+      "homeMissing": "No home page is set.",
+      "pageEmpty": "This page has no content yet",
+      "blocks": "No blocks are set."
+    },
+
+    "login": {
+      "title": "Login",
+      "ariaLabel": "Login to the admin interface",
+      "tagline": "Access Compoz Studio to manage your site.",
+      "email": "Email address",
+      "password": "Password",
+      "signin": "Sign in",
+      "pending": "Signing in…",
+      "errors": {
+        "unexpected": "An unexpected error occurred.",
+        "emailRequired": "The email address is required.",
+        "passwordRequired": "The password is required.",
+        "emailNotFound": "The email address does not exist.",
+        "invalidPassword": "The password is incorrect.",
+        "invalidCredentials": "The email address or password is incorrect."
+      }
+    },
+
+    "users": {
+      "section": {
+        "title": "Users",
+        "description": "Administration page of users (Studio).",
+        "titleEdit": "Edit user",
+        "descriptionEdit": "Edit the user using the form below",
+        "titleCreate": "Create a user",
+        "descriptionCreate": "Create a user using the form below"
+      },
+      "header": {
+        "site": {
+          "label": "Site",
+          "help": "Choose the site to edit"
+        },
+        "user": {
+          "label": "User",
+          "help": "Choose the user to edit",
+          "placeholder": "No user"
+        }
+      },
+      "form": {
+        "email": {
+          "label": "Email",
+          "placeholder": "address@example.com",
+          "help": "The email is used to log in and for communication.",
+          "placeholderEdit": "Edit email",
+          "placeholderCreate": "Email address",
+          "helpNearLimit": "Email {{remaining}} characters remaining."
+        },
+        "name": {
+          "label": "Name",
+          "placeholder": "John Doe",
+          "help": "The name is displayed in the admin interface.",
+          "placeholderEdit": "Edit name",
+          "placeholderCreate": "Name",
+          "helpNearLimit": "Name {{remaining}} characters remaining."
+        },
+        "password": {
+          "label": "Password",
+          "placeholder": "Password",
+          "help": "The password is used to log in.",
+          "placeholderEdit": "Edit password",
+          "placeholderCreate": "Password",
+          "helpNearLimit": "Password {{remaining}} characters remaining.",
+          "helpCreate": "The password is used to log in.",
+          "helpEdit": "Edit password"
+        },
+        "rbac": {
+          "role": {
+            "label": "Role",
+            "placeholder": "Select a role",
+            "help": "Select the role of the user.",
+            "options": {
+              "admin": "Administrator",
+              "editor": "Editor"
+            }
+          },
+          "tenantIds": {
+            "label": "Tenants",
+            "placeholder": "Select a tenant",
+            "help": "Select the tenants allowed for the user."
+          },
+          "defaultTenantId": {
+            "label": "Default tenant",
+            "placeholder": "Select a tenant",
+            "help": "The tenant used by default when no specific tenant is defined."
+          },
+          "expandableLabel": "RBAC"
+        },
+
+        "label": "RBAC",
+        "help": "Configure the roles and tenants allowed for the user.",
+        "placeholderEdit": "Edit roles and tenants",
+        "placeholderCreate": "Roles and tenants"
       }
     },
 

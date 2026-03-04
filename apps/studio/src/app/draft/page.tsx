@@ -16,11 +16,11 @@ import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
 
 import type { Page } from "@compoz/core/domain/pages/entities/page";
 import type { SiteIndex } from "@compoz/core/domain/site/entities";
-import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 import {
   getDraftHomePage,
   getDraftIndex,
-} from "@compoz/studio/lib/pages/public-page-loaders";
+} from "@compoz/studio/lib/pages/draft-page-loaders";
+import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 /* -------------------------------------------------------------------------- */
 /* Metadata                                                                   */

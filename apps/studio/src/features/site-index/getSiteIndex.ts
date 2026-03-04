@@ -11,6 +11,7 @@
  * - Centralise la logique cache -> fetchQuery fallback.
  * - Utilisable depuis d’autres hooks (pages/menus/etc.) sans multiplier les reads.
  * - Aligné sur le pattern `getSettingsBundle`.
+ * - Tenant-scoped : la queryKey inclut tenantId (sinon cache cross-tenant).
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
@@ -21,12 +22,24 @@ import { pagesAdminApi } from "@compoz/infra/http/studio/pages.client";
 import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
 import type { QueryClient } from "@tanstack/react-query";
 
+function normalizeTenantId(tenantId: unknown): string {
+  return String(tenantId ?? "")
+    .trim()
+    .toLowerCase();
+}
+
 export async function getSiteIndex(
   qc: QueryClient,
+  tenantId: string,
   state: ContentState = WRITE_CONTENT_STATE,
   opts?: HttpOpts,
 ): Promise<SiteIndexDTO> {
-  const key = siteIndexKey(state);
+  const tid = normalizeTenantId(tenantId);
+  if (!tid) {
+    throw new Error("getSiteIndex: missing tenantId");
+  }
+
+  const key = siteIndexKey(tid, state);
 
   // 1) Cache-first
   const cached = qc.getQueryData<SiteIndexDTO>(key);

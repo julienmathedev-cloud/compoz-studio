@@ -34,9 +34,11 @@ export function AdminThemeToggle() {
       type="button"
       variant="header"
       size="icon"
+      disabled={true}
       onClick={toggle}
       aria-label={isDark ? t("admin.theme.toLight") : t("admin.theme.toDark")}
-      tooltip={isDark ? t("admin.theme.toLight") : t("admin.theme.toDark")}
+      tooltip={t("common.availableInNextVersion")}
+      //tooltip={isDark ? t("admin.theme.toLight") : t("admin.theme.toDark")}
     >
       <AdminIcon icon={isDark ? Sun : Moon} />
     </TooltipButton>

@@ -19,6 +19,7 @@ import { ROW_BETWEEN } from "@compoz/ui/styles/studio/layout";
 import { AdminThemeToggle } from "@compoz/studio/components/atoms/buttons/AdminThemeToggle";
 import { AdminLocaleSwitch } from "@compoz/studio/features/shell/components/AdminLocaleSwitch";
 import { useTranslations } from "next-intl";
+import { AdminSignOutButton } from "@compoz/studio/components/atoms/buttons/AdminSignOutButton";
 
 /**
  * Header principal de l’interface d’administration.
@@ -56,8 +57,10 @@ export function Header() {
 
         {/* Espace actions — bouton placeholder pour V0.5 */}
         <div className={cn("flex items-center gap-0.5", "mr-2")}>
-          <AdminLocaleSwitch />
           <AdminThemeToggle />
+          <AdminLocaleSwitch />
+
+          <AdminSignOutButton />
         </div>
       </div>
     </header>

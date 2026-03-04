@@ -48,6 +48,13 @@ export const ENDPOINTS = {
         ep(STUDIO_BASE, "pages", pageId, "blocks"),
     },
 
+    /** Routes de gestion des utilisateurs (admin). */
+    USERS: {
+      base: ep(STUDIO_BASE, "admin/users"),
+
+      byId: (userId: string | number) => ep(STUDIO_BASE, "admin/users", userId),
+    },
+
     /** Routes de gestion du site (sous-sections paramétrées). */
     SETTINGS: {
       base: SETTINGS_BASE,

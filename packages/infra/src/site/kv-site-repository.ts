@@ -28,12 +28,22 @@ import { kvCmd } from "@compoz/infra/kv/kv-telemetry";
 import { Redis } from "@upstash/redis";
 
 /* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
+/* Options                                                                    */
 /* -------------------------------------------------------------------------- */
 
-function pickTenantId(): string {
-  return String(process.env["COMPOZ_SITE_ID"] ?? "default").trim() || "default";
+type KvSiteRepositoryOptions = {
+  /** Tenant cible (siteId). Fallback: "default". */
+  tenantId?: string;
+};
+
+function normalizeTenantId(input: unknown): string {
+  const t = String(input ?? "").trim();
+  return t.length > 0 ? t : "default";
 }
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
 
 let _redisSingleton: Redis | null = null;
 
@@ -75,13 +85,11 @@ function parseRedisJson<T>(raw: unknown): T | null {
   return JSON.parse(String(raw)) as T;
 }
 
-function indexKey(state: ContentState): string {
-  const tenant = pickTenantId();
+function indexKey(tenant: string, state: ContentState): string {
   return `compoz:${tenant}:${state}:site:index`;
 }
 
-function settingsKey(state: ContentState): string {
-  const tenant = pickTenantId();
+function settingsKey(tenant: string, state: ContentState): string {
   return `compoz:${tenant}:${state}:site:settings`;
 }
 
@@ -111,9 +119,11 @@ function kvCtx(base: string, state: ContentState): string {
 
 export class KvSiteRepository implements SiteRepository {
   private readonly redis: Redis;
+  private readonly tenantId: string;
 
-  constructor() {
+  constructor(opts: KvSiteRepositoryOptions = {}) {
     this.redis = getUpstashRedis();
+    this.tenantId = normalizeTenantId(opts.tenantId);
   }
 
   async ensureBase(): Promise<void> {
@@ -122,7 +132,7 @@ export class KvSiteRepository implements SiteRepository {
 
   async readIndex(state: ContentState): Promise<SiteIndex> {
     const raw = await kvCmd(kvCtx("readIndex.get", state), "get", () =>
-      this.redis.get(indexKey(state)),
+      this.redis.get(indexKey(this.tenantId, state)),
     );
 
     const json = parseRedisJson<SiteIndex>(raw);
@@ -141,13 +151,13 @@ export class KvSiteRepository implements SiteRepository {
 
   async writeIndex(state: ContentState, index: SiteIndex): Promise<void> {
     await kvCmd(kvCtx("writeIndex.set", state), "set", () =>
-      this.redis.set(indexKey(state), JSON.stringify(index)),
+      this.redis.set(indexKey(this.tenantId, state), JSON.stringify(index)),
     );
   }
 
   async readSettings(state: ContentState): Promise<SiteSettings> {
     const raw = await kvCmd(kvCtx("readSettings.get", state), "get", () =>
-      this.redis.get(settingsKey(state)),
+      this.redis.get(settingsKey(this.tenantId, state)),
     );
 
     const json = parseRedisJson<Partial<SiteSettings>>(raw);
@@ -175,7 +185,10 @@ export class KvSiteRepository implements SiteRepository {
     settings: SiteSettings,
   ): Promise<void> {
     await kvCmd(kvCtx("writeSettings.set", state), "set", () =>
-      this.redis.set(settingsKey(state), JSON.stringify(settings)),
+      this.redis.set(
+        settingsKey(this.tenantId, state),
+        JSON.stringify(settings),
+      ),
     );
   }
 }

@@ -17,11 +17,12 @@ import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys"
 
 export function patchSettingsBundleCache(
   qc: QueryClient,
+  tenantId: string,
   state: ContentState,
   patcher: (prev: SiteSettings) => SiteSettings,
 ) {
   qc.setQueryData(
-    settingsBundleKey(state),
+    settingsBundleKey(tenantId, state),
     (prev: SiteSettings | undefined) => {
       if (!prev) return prev;
       return patcher(prev);

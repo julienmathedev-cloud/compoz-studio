@@ -84,7 +84,7 @@ export function PageBlocksListSection({
 
   const dirtyGuard = useAdminDirtyGuard();
   const confirmList = useConfirmList();
-  const backHref = `/${locale}/dashboard/pages`;
+  const backHref = `/${locale}/pages`;
 
   const { blocks, isLoading } = useListPageBlocks(pageId);
   const { index: siteIndex, isLoading: isLoadingIndex } = useReadSiteIndex();
@@ -532,7 +532,7 @@ export function PageBlocksListSection({
     pageBaselinePreview != null &&
     pageBaselinePreview.blocks.length === 0;
 
-  const emptyLabel = t("admin.emptyPreview.pageNotFound", { page: pageId });
+  const emptyLabel = t("admin.emptyPreview.pageEmpty");
 
   const isPreviewLoading =
     !isEmpty &&
@@ -601,7 +601,7 @@ export function PageBlocksListSection({
                       onMoveDown={() => move(index, index + 1)}
                       onEdit={() => {
                         router.push(
-                          `/${locale}/dashboard/pages/${pageId}/blocks/${b.id}`,
+                          `/${locale}/pages/${pageId}/blocks/${b.id}`,
                         );
                       }}
                       onDelete={() => handleDelete(b.id)}
@@ -724,7 +724,7 @@ export function PageBlocksListSection({
         heightClassName="h-[800px]"
         info={
           isEmpty
-            ? t("admin.emptyPreview.pageNotFound", { page: pageId })
+            ? t("admin.emptyPreview.pageEmpty")
             : !isPreviewLoading
               ? t("admin.shared.preview.infoBaseline")
               : t("admin.overviewSection.preview.loading")

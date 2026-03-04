@@ -13,25 +13,27 @@
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { updatePrimaryMenuSettings } from "@compoz/core/domain/site/use-cases/primary-menu/update-primary-menu-settings";
-import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
-import { adaptUpdatePrimaryMenuIntent } from "@compoz/studio/app/api/_adapters/menus";
-import { handleRoute } from "@compoz/studio/lib/api/handle-route";
-
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
+import { log, logSpan } from "@compoz/infra/lib/log";
+import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 import type {
   GetPrimaryMenuResponse,
   PatchPrimaryMenuResponse,
 } from "@compoz/infra/http/studio/site-settings.types";
-import { log, logSpan } from "@compoz/infra/lib/log";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { UpdatePrimaryMenuSettingsIntentSchema } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-intents";
+import { adaptUpdatePrimaryMenuIntent } from "@compoz/studio/app/api/_adapters/menus";
+import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 
 export async function GET(req: Request) {
   const NS = "api.admin.site.primary-menu.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    return logSpan(NS, { ns: NS, method: "GET", state }, async () => {
-      const repo = getSiteRepository();
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "GET", state, tenantId }, async () => {
+      const repo = getSiteRepository({ tenantId });
       const settings = await repo.readSettings(state);
 
       const res: GetPrimaryMenuResponse = { settings: settings.primaryMenu };
@@ -44,13 +46,15 @@ export async function PATCH(req: Request) {
   const NS = "api.admin.site.primary-menu.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
-    return logSpan(NS, { ns: NS, method: "PATCH" }, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "PATCH", tenantId }, async () => {
       const raw = await readJsonOr400(req);
 
       log.info?.("PRIMARY_MENU.PATCH.start", {
+        tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
-        envTenant: process.env["COMPOZ_SITE_ID"] ?? "default",
         hasKvUrl: Boolean(
           process.env["KV_REST_API_URL"] ??
           process.env["UPSTASH_REDIS_REST_URL"],
@@ -64,24 +68,28 @@ export async function PATCH(req: Request) {
 
       const input = adaptUpdatePrimaryMenuIntent(dto);
 
-      const repo = getSiteRepository();
-      const statusCache = getSiteStatusCache();
+      const repo = getSiteRepository({ tenantId });
+      const statusCache = getSiteStatusCache({ tenantId });
 
       const run = updatePrimaryMenuSettings({ repo });
       const { settings } = await run(input);
 
       log.info?.("PRIMARY_MENU.PATCH.afterWrite", {
+        tenantId,
         primaryMenuKeys: settings?.primaryMenu
           ? Object.keys(settings.primaryMenu)
           : [],
       });
 
       try {
-        log.info?.("PRIMARY_MENU.PATCH.invalidate.start", {});
+        log.info?.("PRIMARY_MENU.PATCH.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        log.info?.("PRIMARY_MENU.PATCH.invalidate.done", {});
+        log.info?.("PRIMARY_MENU.PATCH.invalidate.done", { tenantId });
       } catch (e) {
-        log.error?.("PRIMARY_MENU.PATCH.invalidate.failed", { err: String(e) });
+        log.error?.("PRIMARY_MENU.PATCH.invalidate.failed", {
+          tenantId,
+          err: String(e),
+        });
       }
 
       const res: PatchPrimaryMenuResponse = { settings: settings.primaryMenu };

@@ -7,12 +7,21 @@
  */
 
 import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-import type { QueryClient } from "@tanstack/react-query";
 import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
+import type { QueryClient } from "@tanstack/react-query";
 
-export function invalidateDraftBlocksList(qc: QueryClient, pageId: string) {
-  const id = (pageId ?? "").trim();
+export function invalidateDraftBlocksList(
+  qc: QueryClient,
+  tenantId: string,
+  pageId: string,
+) {
+  const tid = String(tenantId ?? "")
+    .trim()
+    .toLowerCase();
+
+  const id = String(pageId ?? "").trim();
+
   return qc.invalidateQueries({
-    queryKey: pageBlocksKey(id, WRITE_CONTENT_STATE),
+    queryKey: pageBlocksKey(tid, id, WRITE_CONTENT_STATE),
   });
 }

@@ -25,13 +25,16 @@ import type {
   PatchSeoResponse,
 } from "@compoz/infra/http/studio/site-settings.types";
 import { UpdateSeoSettingsIntentSchema } from "@compoz/validation/site/settings/seo/seo-intents";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 
 export async function GET(req: Request) {
   const NS = "api.admin.site.seo.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    return logSpan(NS, { ns: NS, method: "GET", state }, async () => {
-      const repo = getSiteRepository();
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "GET", state, tenantId }, async () => {
+      const repo = getSiteRepository({ tenantId });
       const settings = await repo.readSettings(state);
 
       const res: GetSeoResponse = { settings: settings.seo };
@@ -44,13 +47,15 @@ export async function PATCH(req: Request) {
   const NS = "api.admin.site.seo.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
-    return logSpan(NS, { ns: NS, method: "PATCH" }, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "PATCH", tenantId }, async () => {
       const raw = await readJsonOr400(req);
 
       log.info?.("SEO.PATCH.start", {
+        tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
-        envTenant: process.env["COMPOZ_SITE_ID"] ?? "default",
         hasKvUrl: Boolean(
           process.env["KV_REST_API_URL"] ??
           process.env["UPSTASH_REDIS_REST_URL"],
@@ -64,22 +69,26 @@ export async function PATCH(req: Request) {
 
       const input = adaptUpdateSeoIntent(dto);
 
-      const repo = getSiteRepository();
-      const statusCache = getSiteStatusCache();
+      const repo = getSiteRepository({ tenantId });
+      const statusCache = getSiteStatusCache({ tenantId });
 
       const run = updateSeoSettings({ repo });
       const { settings } = await run(input);
 
       log.info?.("SEO.PATCH.afterWrite", {
+        tenantId,
         seoKeys: settings?.seo ? Object.keys(settings.seo) : [],
       });
 
       try {
-        log.info?.("SEO.PATCH.invalidate.start", {});
+        log.info?.("SEO.PATCH.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        log.info?.("SEO.PATCH.invalidate.done", {});
+        log.info?.("SEO.PATCH.invalidate.done", { tenantId });
       } catch (e) {
-        log.error?.("SEO.PATCH.invalidate.failed", { err: String(e) });
+        log.error?.("SEO.PATCH.invalidate.failed", {
+          tenantId,
+          err: String(e),
+        });
       }
 
       const res: PatchSeoResponse = { settings: settings.seo };

@@ -18,12 +18,18 @@ import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
 
 export async function getPageBlocks(
   qc: QueryClient,
+  tenantId: string,
   pageId: string,
   state: ContentState = WRITE_CONTENT_STATE,
   opts?: HttpOpts,
 ): Promise<ReadonlyArray<BlockDTO>> {
+  const tid = String(tenantId ?? "")
+    .trim()
+    .toLowerCase();
+
   const pid = String(pageId ?? "").trim();
-  const key = pageBlocksKey(pid, state);
+
+  const key = pageBlocksKey(tid, pid, state);
 
   const cached = qc.getQueryData<ReadonlyArray<BlockDTO>>(key);
   if (cached) return cached;

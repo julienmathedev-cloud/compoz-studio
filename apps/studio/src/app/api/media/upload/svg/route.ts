@@ -12,6 +12,7 @@ import { throwHttp } from "@compoz/http/http-error";
 import type { UploadSvgResponse } from "@compoz/infra/http/studio/media.types";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getMediaStorage } from "@compoz/infra/media/storage";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 
 const MAX_IMAGE_UPLOAD_BYTES = Number(
@@ -31,11 +32,12 @@ function nowParts(d = new Date()) {
 }
 
 function buildStorageKey(args: {
+  tenantId: string;
   year: string;
   month: string;
   filename: string;
 }): string {
-  return `${args.year}/${args.month}/${args.filename}`;
+  return `tenants/${args.tenantId}/${args.year}/${args.month}/${args.filename}`;
 }
 
 export async function POST(req: Request) {
@@ -44,12 +46,14 @@ export async function POST(req: Request) {
   return handleRoute(NS, req, async () => {
     const lg = log.child({ ns: NS });
     const storage = getMediaStorage();
+    const { tenantId } = await requireSessionWithTenant();
 
     return logSpan(
       NS,
       {
         ns: NS,
         method: "POST",
+        tenantId,
         contentTypeHeader: req.headers.get("content-type") ?? undefined,
       },
       async () => {
@@ -126,6 +130,7 @@ export async function POST(req: Request) {
         const { y, m } = nowParts();
         const filename = `${safeBase}-${Date.now()}.svg`;
         const key = buildStorageKey({
+          tenantId,
           year: y,
           month: m,
           filename,
@@ -138,6 +143,7 @@ export async function POST(req: Request) {
         });
 
         lg.debug("upload.svg.ok", {
+          tenantId,
           contentType,
           size,
           url: stored.url,

@@ -21,6 +21,7 @@ import {
   optimizeOgImage,
 } from "@compoz/infra/media/optimizers";
 import { getMediaStorage } from "@compoz/infra/media/storage";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import sharp from "sharp";
 
@@ -65,11 +66,12 @@ function nowParts(d = new Date()) {
 }
 
 function buildStorageKey(args: {
+  tenantId: string;
   year: string;
   month: string;
   filename: string;
 }): string {
-  return `${args.year}/${args.month}/${args.filename}`;
+  return `tenants/${args.tenantId}/${args.year}/${args.month}/${args.filename}`;
 }
 
 export async function POST(req: Request) {
@@ -78,12 +80,14 @@ export async function POST(req: Request) {
   return handleRoute(NS, req, async () => {
     const lg = log.child({ ns: NS });
     const storage = getMediaStorage();
+    const { tenantId } = await requireSessionWithTenant();
 
     return logSpan(
       NS,
       {
         ns: NS,
         method: "POST",
+        tenantId,
         contentTypeHeader: req.headers.get("content-type") ?? undefined,
       },
       async () => {
@@ -176,6 +180,7 @@ export async function POST(req: Request) {
             for (const px of FAVICON_SIZES) {
               const filename = `${baseName}-${px}.png`;
               const key = buildStorageKey({
+                tenantId,
                 year: y,
                 month: m,
                 filename,
@@ -237,6 +242,7 @@ export async function POST(req: Request) {
         const { y, m } = nowParts();
         const filename = `${safeBase}-${Date.now()}.${optimized.ext}`;
         const key = buildStorageKey({
+          tenantId,
           year: y,
           month: m,
           filename,
@@ -249,6 +255,7 @@ export async function POST(req: Request) {
         });
 
         lg.debug("upload.ok", {
+          tenantId,
           kind,
           originalSize,
           optimizedSize,

@@ -2,22 +2,17 @@
  * @file apps/studio/src/app/api/media/upload/svg/route.ts
  * @layer studio/app/api
  * @description
- * Upload SVG “safe” (logo) vers public/uploads/YYYY/MM.
+ * Upload SVG “safe” (logo) vers le storage média.
  */
 
 import "server-only";
 
-import { join } from "node:path";
-
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { throwHttp } from "@compoz/http/http-error";
 import type { UploadSvgResponse } from "@compoz/infra/http/studio/media.types";
-import { ensureDirForFile, writeFileAtomic } from "@compoz/infra/lib/fs";
 import { log, logSpan } from "@compoz/infra/lib/log";
+import { getMediaStorage } from "@compoz/infra/media/storage";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
-
-const UPLOADS_ROOT =
-  process.env["PUBLIC_UPLOADS_DIR"] ?? join(process.cwd(), "public", "uploads");
 
 const MAX_IMAGE_UPLOAD_BYTES = Number(
   process.env["MAX_IMAGE_UPLOAD_BYTES"] ?? 5_000_000,
@@ -35,11 +30,20 @@ function nowParts(d = new Date()) {
   return { y, m };
 }
 
+function buildStorageKey(args: {
+  year: string;
+  month: string;
+  filename: string;
+}): string {
+  return `${args.year}/${args.month}/${args.filename}`;
+}
+
 export async function POST(req: Request) {
   const NS = "api.studio.media.upload.svg.POST" as const;
 
   return handleRoute(NS, req, async () => {
     const lg = log.child({ ns: NS });
+    const storage = getMediaStorage();
 
     return logSpan(
       NS,
@@ -89,7 +93,6 @@ export async function POST(req: Request) {
           });
         }
 
-        // “Safe-ish” check (V0.5 minimal et défensif)
         const text = await file.text();
         const lower = text.toLowerCase();
 
@@ -122,16 +125,31 @@ export async function POST(req: Request) {
 
         const { y, m } = nowParts();
         const filename = `${safeBase}-${Date.now()}.svg`;
-        const absPath = join(UPLOADS_ROOT, y, m, filename);
+        const key = buildStorageKey({
+          year: y,
+          month: m,
+          filename,
+        });
 
-        await ensureDirForFile(absPath);
-        await writeFileAtomic(absPath, Buffer.from(text));
+        const stored = await storage.put({
+          key,
+          buffer: Buffer.from(text),
+          contentType,
+        });
 
-        const url = `/uploads/${y}/${m}/${filename}`;
+        lg.debug("upload.svg.ok", {
+          contentType,
+          size,
+          url: stored.url,
+        });
 
-        lg.debug("upload.svg.ok", { contentType, size, url });
+        const res: UploadSvgResponse = {
+          url: stored.url,
+          filename,
+          size,
+          contentType,
+        };
 
-        const res: UploadSvgResponse = { url, filename, size, contentType };
         return res;
       },
     );

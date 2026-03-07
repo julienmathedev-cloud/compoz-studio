@@ -2,18 +2,15 @@
  * @file apps/studio/src/app/api/media/upload/image/route.ts
  * @layer studio/app/api
  * @description
- * Upload images raster (png/jpg/webp/gif/ico) vers public/uploads/YYYY/MM
+ * Upload images raster (png/jpg/webp/gif/ico) vers le storage média
  * avec optimisation automatique via Sharp.
  */
 
 import "server-only";
 
-import { join } from "node:path";
-
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { throwHttp } from "@compoz/http/http-error";
 import type { UploadImageResponse } from "@compoz/infra/http/studio/media.types";
-import { ensureDirForFile, writeFileAtomic } from "@compoz/infra/lib/fs";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import type { optimizeFavicon } from "@compoz/infra/media/optimizers";
 import {
@@ -23,11 +20,9 @@ import {
   optimizeLogo,
   optimizeOgImage,
 } from "@compoz/infra/media/optimizers";
+import { getMediaStorage } from "@compoz/infra/media/storage";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import sharp from "sharp";
-
-const UPLOADS_ROOT =
-  process.env["PUBLIC_UPLOADS_DIR"] ?? join(process.cwd(), "public", "uploads");
 
 const MAX_IMAGE_UPLOAD_BYTES = Number(
   process.env["MAX_IMAGE_UPLOAD_BYTES"] ?? 5_000_000,
@@ -69,11 +64,20 @@ function nowParts(d = new Date()) {
   return { y, m };
 }
 
+function buildStorageKey(args: {
+  year: string;
+  month: string;
+  filename: string;
+}): string {
+  return `${args.year}/${args.month}/${args.filename}`;
+}
+
 export async function POST(req: Request) {
   const NS = "api.studio.media.upload.image.POST" as const;
 
   return handleRoute(NS, req, async () => {
     const lg = log.child({ ns: NS });
+    const storage = getMediaStorage();
 
     return logSpan(
       NS,
@@ -137,7 +141,6 @@ export async function POST(req: Request) {
           });
         }
 
-        // 🔥 lecture kind via query param (whitelist runtime)
         const urlObj = new URL(req.url);
         const rawKind = urlObj.searchParams.get("kind");
         const kind: UploadKind = isUploadKind(rawKind) ? rawKind : "content";
@@ -172,15 +175,21 @@ export async function POST(req: Request) {
 
             for (const px of FAVICON_SIZES) {
               const filename = `${baseName}-${px}.png`;
-              const absPath = join(UPLOADS_ROOT, y, m, filename);
+              const key = buildStorageKey({
+                year: y,
+                month: m,
+                filename,
+              });
 
-              await ensureDirForFile(absPath);
-              await writeFileAtomic(absPath, favicons[px].buffer);
+              const stored = await storage.put({
+                key,
+                buffer: favicons[px].buffer,
+                contentType: "image/png",
+              });
 
-              urls[px] = `/uploads/${y}/${m}/${filename}`;
+              urls[px] = stored.url;
             }
 
-            // On retourne la 32px comme "primary"
             const res: UploadImageResponse = {
               url: urls[32],
               filename: `${baseName}-32.png`,
@@ -227,23 +236,27 @@ export async function POST(req: Request) {
 
         const { y, m } = nowParts();
         const filename = `${safeBase}-${Date.now()}.${optimized.ext}`;
+        const key = buildStorageKey({
+          year: y,
+          month: m,
+          filename,
+        });
 
-        const absPath = join(UPLOADS_ROOT, y, m, filename);
-
-        await ensureDirForFile(absPath);
-        await writeFileAtomic(absPath, optimized.buffer);
-
-        const url = `/uploads/${y}/${m}/${filename}`;
+        const stored = await storage.put({
+          key,
+          buffer: optimized.buffer,
+          contentType: optimized.mime,
+        });
 
         lg.debug("upload.ok", {
           kind,
           originalSize,
           optimizedSize,
-          url,
+          url: stored.url,
         });
 
         const res: UploadImageResponse = {
-          url,
+          url: stored.url,
           filename,
           size: optimizedSize,
           width,

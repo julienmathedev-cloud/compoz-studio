@@ -7,7 +7,7 @@
 @import "@compoz/ui/styles/base.css";
 
 /* ---------------------------------------------------------------------------
- * Admin theme mapping
+ * Studio theme mapping
  * - Light : Mauve + Indigo
  * - Dark  : Slate + Indigo
  * ------------------------------------------------------------------------- */
@@ -73,7 +73,7 @@
   --sidebar-ring: var(--indigo-9);
 }
 
-/* Dark mode (admin) */
+/* Dark mode (studio) */
 .dark {
   --background: var(--slate-1);
   --foreground: var(--slate-12);
@@ -104,12 +104,15 @@
   --destructive: oklch(0.704 0.191 22.216);
 
   --success: var(--green-9);
+  --success-border: var(--green-7);
   --success-foreground: white;
 
   --warning: var(--orange-9);
+  --warning-border: var(--orange-7);
   --warning-foreground: var(--orange-12);
 
   --info: var(--indigo-9);
+  --info-border: var(--indigo-7);
   --info-foreground: white;
 
   --sidebar: var(--slate-2);

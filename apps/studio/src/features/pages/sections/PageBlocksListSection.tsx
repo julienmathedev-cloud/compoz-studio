@@ -2,15 +2,51 @@
 
 /**
  * @file apps/studio/src/features/pages/sections/PageBlocksListSection.tsx
- * @layer ui/sections
+ * @layer ui/studio/pages/sections
  *
  * @description
- * Section “Blocks” (listing) : affiche les blocks (draft) d’une page et expose les actions UI
- * (ajouter, réordonner, supprimer, éditer) + preview de la page complète.
+ * Section “Blocks” (listing) : affiche les blocks draft d’une page et expose
+ * les actions UI (ajouter, réordonner, supprimer, éditer) + preview de la page complète.
  */
 
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { ArrowLeft } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import type { SiteDiffKindDTO } from "@compoz/core/domain/site/dto";
+import { Text } from "@compoz/studio/components/atoms/typography/Text";
+import { ExpandableLayout } from "@compoz/studio/components/layouts/ExpandableLayout";
+import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
+import { AddEmptyCardButton } from "@compoz/studio/components/molecules/controls/AddEmptyCardButton";
+import { StudioWarningsPanel } from "@compoz/studio/features/_shared/components/StudioWarningsPanel";
+import { useConfirmList } from "@compoz/studio/features/confirm/useConfirmList";
+import { useStudioDirtyGuard } from "@compoz/studio/features/dirty-guard/useStudioDirtyGuard";
+import { PageBlockListItem } from "@compoz/studio/features/pages/blocks/components/molecules/PageBlockListItem";
+import { useCreateBlock } from "@compoz/studio/features/pages/blocks/hooks/useCreateBlock";
+import { useDeleteBlock } from "@compoz/studio/features/pages/blocks/hooks/useDeleteBlock";
+import { useListPageBlocks } from "@compoz/studio/features/pages/blocks/hooks/useListPageBlocks";
+import { useReorderBlocks } from "@compoz/studio/features/pages/blocks/hooks/useReorderBlocks";
+import { ChildPageListItem } from "@compoz/studio/features/pages/components/molecules/ChildPageListItem";
+import { PageForm } from "@compoz/studio/features/pages/components/organisms/PageForm";
+import { useReadPage } from "@compoz/studio/features/pages/hooks/useReadPage";
+import { useReorderPageChildren } from "@compoz/studio/features/pages/hooks/useReorderPageChildren";
+import { useUpdatePage } from "@compoz/studio/features/pages/hooks/useUpdatePage";
+import { createEmptyLayoutSectionBlock } from "@compoz/studio/features/pages/mappers/blocks-form";
+import {
+  normalizePageFormValues,
+  toPageFormValuesFromDTO,
+} from "@compoz/studio/features/pages/mappers/pages-form";
+import type { PageWarningKey } from "@compoz/studio/features/pages/validation/validate";
+import { computePageWarnings } from "@compoz/studio/features/pages/validation/validate";
+import { useStudioPreview } from "@compoz/studio/features/preview/hooks/useStudioPreview";
+import { PreviewFrame } from "@compoz/studio/features/preview/PreviewFrame";
+import { useSettingsBundle } from "@compoz/studio/features/settings/bundle/useSettingsBundle";
+import { useReadSiteIndex } from "@compoz/studio/features/site-index/useReadSiteIndex";
+import { useSiteStatusDetails } from "@compoz/studio/features/site/status/useSiteStatusDetails";
+import { formatPagePath } from "@compoz/studio/lib/ui/pages";
 import { Button } from "@compoz/ui/components/ui/button";
 import { Card, CardContent } from "@compoz/ui/components/ui/card";
 import { Separator } from "@compoz/ui/components/ui/separator";
@@ -31,48 +67,16 @@ import type { IdentitySettingsShape } from "@compoz/validation/site/settings/ide
 import type { LegalMenuSettingsShape } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu";
 import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 import type { SocialSettingsShape } from "@compoz/validation/site/settings/social/social";
-import { Text } from "@compoz/studio/components/atoms/typography/Text";
-import { ExpandableLayout } from "@compoz/studio/components/layouts/ExpandableLayout";
-import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
-import { AddEmptyCardButton } from "@compoz/studio/components/molecules/controls/AddEmptyCardButton";
-import { HintList } from "@compoz/studio/components/molecules/feedback/HintList";
-import { useConfirmList } from "@compoz/studio/features/confirm/useConfirmList";
-import { useAdminDirtyGuard } from "@compoz/studio/features/dirty-guard/useAdminDirtyGuard";
-import { PageBlockListItem } from "@compoz/studio/features/pages/blocks/components/molecules/PageBlockListItem";
-import { useCreateBlock } from "@compoz/studio/features/pages/blocks/hooks/useCreateBlock";
-import { useDeleteBlock } from "@compoz/studio/features/pages/blocks/hooks/useDeleteBlock";
-import { useListPageBlocks } from "@compoz/studio/features/pages/blocks/hooks/useListPageBlocks";
-import { useReorderBlocks } from "@compoz/studio/features/pages/blocks/hooks/useReorderBlocks";
-import { ChildPageListItem } from "@compoz/studio/features/pages/components/molecules/ChildPageListItem";
-import { PageForm } from "@compoz/studio/features/pages/components/organisms/PageForm";
-import { useReadPage } from "@compoz/studio/features/pages/hooks/useReadPage";
-import { useReorderPageChildren } from "@compoz/studio/features/pages/hooks/useReorderPageChildren";
-import { useUpdatePage } from "@compoz/studio/features/pages/hooks/useUpdatePage";
-import { createEmptyLayoutSectionBlock } from "@compoz/studio/features/pages/mappers/blocks-form";
-import {
-  normalizePageFormValues,
-  toPageFormValuesFromDTO,
-} from "@compoz/studio/features/pages/mappers/pages-form";
-import type { PageWarningKey } from "@compoz/studio/features/pages/validation/validate";
-import { computePageWarnings } from "@compoz/studio/features/pages/validation/validate";
-import { useAdminPreview } from "@compoz/studio/features/preview/hooks/useAdminPreview";
-import { PreviewFrame } from "@compoz/studio/features/preview/PreviewFrame";
-import { useSettingsBundle } from "@compoz/studio/features/settings/bundle/useSettingsBundle";
-import { useReadSiteIndex } from "@compoz/studio/features/site-index/useReadSiteIndex";
-import { useSiteStatusDetails } from "@compoz/studio/features/site/status/useSiteStatusDetails";
-import { formatPagePath } from "@compoz/studio/lib/ui/pages";
-import { ArrowLeft } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type PageBlocksListSectionProps = Readonly<{
   pageId: string;
   slug: string;
 }>;
 
-type ParentOption = Readonly<{ value: string; label: string }>;
+type ParentOption = Readonly<{
+  value: string;
+  label: string;
+}>;
 
 export function PageBlocksListSection({
   pageId,
@@ -82,7 +86,7 @@ export function PageBlocksListSection({
   const router = useRouter();
   const locale = useLocale();
 
-  const dirtyGuard = useAdminDirtyGuard();
+  const dirtyGuard = useStudioDirtyGuard();
   const confirmList = useConfirmList();
   const backHref = `/${locale}/pages`;
 
@@ -96,8 +100,8 @@ export function PageBlocksListSection({
   /* ---------------------------------------------------------------------- */
 
   const { page, isLoading: isLoadingPage } = useReadPage(pageId);
+  const { update, isUpdating } = useUpdatePage();
 
-  // ✅ baseline pour patch/diff (pas de lecture pendant render).
   const baselineRef = useRef<PageFormValues | null>(null);
 
   const initialValues = useMemo<PageFormValues>(() => {
@@ -110,31 +114,28 @@ export function PageBlocksListSection({
 
   const parentOptions = useMemo<ReadonlyArray<ParentOption>>(() => {
     if (!siteIndex) return [];
+
     const currentId = pageId.trim();
 
     return (siteIndex.pages ?? [])
-      .filter((p) => {
-        if (!p.id) return false;
-        if (p.id === currentId) return false;
-        if (p.parentId !== null) return false; // profondeur 1
+      .filter((pageItem) => {
+        if (!pageItem.id) return false;
+        if (pageItem.id === currentId) return false;
+        if (pageItem.parentId !== null) return false;
         return true;
       })
-      .map((p) => ({
-        value: p.id,
-        label: `${p.title}${p.slug ? ` — ${formatPagePath(p.slug)}` : ""}`,
+      .map((pageItem) => ({
+        value: pageItem.id,
+        label: `${pageItem.title}${
+          pageItem.slug ? ` — ${formatPagePath(pageItem.slug)}` : ""
+        }`,
       }));
   }, [siteIndex, pageId]);
 
-  const { update, isUpdating } = useUpdatePage();
-
   /* ---------------------------------------------------------------------- */
-  /* Status pages (badges diff)                                              */
+  /* Status pages (badges diff)                                             */
   /* ---------------------------------------------------------------------- */
 
-  /**
-   * ✅ V0.5 perf : ne pas appeler `scope=all` automatiquement.
-   * On récupère uniquement les pages "dirty" et on fallback "published" en UI.
-   */
   const pageStatuses = useSiteStatusDetails({
     enabled: true,
     scope: "dirty",
@@ -144,33 +145,26 @@ export function PageBlocksListSection({
   const statusByPageId = useMemo<
     Readonly<Record<string, SiteDiffKindDTO>>
   >(() => {
-    const out: Record<string, SiteDiffKindDTO> = {};
+    const output: Record<string, SiteDiffKindDTO> = {};
 
-    // ✅ fallback : toutes les pages de l'index sont "published"
     const pagesFromIndex = siteIndex?.pages ?? [];
-    for (const p of pagesFromIndex) {
-      if (!p?.id) continue;
-      out[p.id] = "published";
+    for (const pageItem of pagesFromIndex) {
+      if (!pageItem?.id) continue;
+      output[pageItem.id] = "published";
     }
 
-    // ✅ override : dirty pages
-    const pages = pageStatuses.data?.pages ?? [];
-    for (const p of pages) {
-      if (!p?.id) continue;
-      out[p.id] = p.diff;
+    const dirtyPages = pageStatuses.data?.pages ?? [];
+    for (const pageItem of dirtyPages) {
+      if (!pageItem?.id) continue;
+      output[pageItem.id] = pageItem.diff;
     }
 
-    return out;
+    return output;
   }, [siteIndex?.pages, pageStatuses.data]);
 
   const [isMetaDirty, setIsMetaDirty] = useState(false);
   const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
   const [warningKeys, setWarningKeys] = useState<PageWarningKey[]>([]);
-
-  const warningHints = useMemo(
-    () => warningKeys.map((k) => t(`admin.pageEditSection.warnings.${k}`)),
-    [warningKeys, t],
-  );
 
   const handleSubmitPageMeta = useCallback(
     async (values: PageFormValues) => {
@@ -181,34 +175,33 @@ export function PageBlocksListSection({
         paginationEnabled: values.paginationEnabled ?? false,
       });
 
-      const warningHintsNow = warningKeysNow.map((k) =>
-        t(`admin.pageEditSection.warnings.${k}`),
+      const warningHintsNow = warningKeysNow.map((key) =>
+        t(`studio.pageEditSection.warnings.${key}`),
       );
 
       if (warningHintsNow.length > 0) {
         const ok = await confirmList({
-          title: t("admin.shared.confirm.saveDespiteWarnings.title"),
-          intro: t("admin.shared.confirm.saveDespiteWarnings.intro"),
+          title: t("studio.shared.confirm.saveDespiteWarnings.title"),
+          intro: t("studio.shared.confirm.saveDespiteWarnings.intro"),
           items: warningHintsNow,
           confirmLabel: t(
-            "admin.shared.confirm.saveDespiteWarnings.confirmLabel",
+            "studio.shared.confirm.saveDespiteWarnings.confirmLabel",
           ),
           cancelLabel: t("common.cancel"),
           requireAckLabel: t(
-            "admin.shared.confirm.saveDespiteWarnings.requireAckLabel",
+            "studio.shared.confirm.saveDespiteWarnings.requireAckLabel",
           ),
           tone: "default",
         });
+
         if (!ok) return;
       }
 
       const normalized = normalizePageFormValues(values);
-
       const originalId = pageId.trim();
       if (!originalId) return;
 
       const baselineForPatch = baselineRef.current ?? initialValues;
-
       await update(originalId, baselineForPatch, normalized);
 
       setWarningKeys([]);
@@ -224,19 +217,11 @@ export function PageBlocksListSection({
 
   const children = useMemo(() => {
     const pages = siteIndex?.pages ?? [];
-    return pages.filter((p) => p.parentId === pageId);
+    return pages.filter((pageItem) => pageItem.parentId === pageId);
   }, [siteIndex, pageId]);
 
   const list = useMemo(() => blocks ?? [], [blocks]);
 
-  /**
-   * ✅ V0.5 perf : pour les blocks, on limite au strict nécessaire :
-   * - scope="dirty"
-   * - includeBlocks=true
-   * - pageId fourni
-   *
-   * Objectif : éviter les rebuild globaux (scope=all) sans action explicite.
-   */
   const blockStatuses = useSiteStatusDetails({
     enabled: true,
     scope: "dirty",
@@ -247,19 +232,21 @@ export function PageBlocksListSection({
   const statusByBlockId = useMemo<
     Readonly<Record<string, SiteDiffKindDTO>>
   >(() => {
-    const out: Record<string, SiteDiffKindDTO> = {};
+    const output: Record<string, SiteDiffKindDTO> = {};
 
-    // ✅ fallback : tout bloc non mentionné est "published"
-    for (const b of list) out[b.id] = "published";
+    for (const block of list) {
+      output[block.id] = "published";
+    }
 
-    // ✅ override : si endpoint renvoie des blockItems pour la page, on applique les diff
     const pages = blockStatuses.data?.pages ?? [];
-    const pageForBlocks = pages.find((p) => p.id === pageId) ?? null;
+    const pageForBlocks = pages.find((pageItem) => pageItem.id === pageId);
 
     const items = pageForBlocks?.blockItems ?? [];
-    for (const it of items) out[it.id] = it.diff;
+    for (const item of items) {
+      output[item.id] = item.diff;
+    }
 
-    return out;
+    return output;
   }, [blockStatuses.data, list, pageId]);
 
   const { create, isCreating } = useCreateBlock();
@@ -278,12 +265,12 @@ export function PageBlocksListSection({
 
   const moveChild = useCallback(
     async (fromIndex: number, toIndex: number) => {
-      if (!pageId?.trim()) return;
+      if (!pageId.trim()) return;
       if (isBusy || busyId) return;
       if (toIndex < 0 || toIndex >= children.length) return;
       if (fromIndex === toIndex) return;
 
-      const ordered = children.map((c) => c.id);
+      const ordered = children.map((child) => child.id);
       const nextOrdered = moveItem(ordered, fromIndex, toIndex);
       const picked = ordered[fromIndex];
 
@@ -297,21 +284,18 @@ export function PageBlocksListSection({
     [busyId, children, isBusy, pageId, reorderChildren],
   );
 
-  const headingTitle = t("admin.pageBlocksListSection.section.title", {
+  const headingTitle = t("studio.pageBlocksListSection.section.title", {
     title: slug,
   });
-  const description = t("admin.pageBlocksListSection.section.description");
+  const description = t("studio.pageBlocksListSection.section.description");
 
   /* ---------------------------------------------------------------------- */
-  /* Preview page (read-only)                                                */
+  /* Preview page (read-only)                                               */
   /* ---------------------------------------------------------------------- */
 
-  // ✅ Option B : 1 seul READ global pour alimenter la preview
   const { data: settingsBundle, isLoading: isLoadingSettingsBundle } =
-    useSettingsBundle(WRITE_CONTENT_STATE);
+    useSettingsBundle(DEFAULT_CONTENT_STATE);
 
-  // ⚠️ Tant que certains mappers DTO->Shape n'existent pas, on cast.
-  // Dès que tu ajoutes `toHeaderSettingsShapeFromDTO`, etc., tu remplaces ces casts.
   const headerBaselinePreview = useMemo<HeaderSettingsShape | null>(() => {
     if (!settingsBundle) return null;
     return settingsBundle.header as HeaderSettingsShape;
@@ -344,19 +328,14 @@ export function PageBlocksListSection({
       return toLegalMenuSettingsShapeFromDTO(settingsBundle.legalMenu);
     }, [settingsBundle]);
 
-  // ✅ scope attendu par l'iframe preview (page:${slug})
   const previewScope = useMemo(() => `page:${slug}`, [slug]);
 
-  /**
-   * Baseline page : on ne la construit QUE si `page` est dispo.
-   * (évite d'injecter null / vide et de bloquer le gating côté iframe)
-   */
   const pageBaselinePreview = useMemo<PageRenderShape | null>(() => {
     if (!page) return null;
 
     const pageBlocks = list
       .map(toBlockShapeFromDTO)
-      .filter((x): x is BlockShape => Boolean(x));
+      .filter((shape): shape is BlockShape => Boolean(shape));
 
     return {
       title: page.title,
@@ -365,13 +344,9 @@ export function PageBlocksListSection({
     } as const;
   }, [list, page]);
 
-  // ✅ Hook preview (page baseline + overrides)
   const { ready, setBaseline, frame, iframeRef } =
-    useAdminPreview<PageRenderShape>(previewScope, pageBaselinePreview);
+    useStudioPreview<PageRenderShape>(previewScope, pageBaselinePreview);
 
-  /**
-   * Baselines site settings : on attend qu'elles existent avant de déclarer la preview "ready".
-   */
   const hasAllBaselines =
     settingsBundle != null &&
     headerBaselinePreview != null &&
@@ -381,10 +356,6 @@ export function PageBlocksListSection({
     footerBaselinePreview != null &&
     legalMenuBaselinePreview != null;
 
-  /**
-   * Handshake : l'iframe doit annoncer qu'elle est prête à recevoir ces scopes.
-   * (inclut siteIndex pour pagination fiable)
-   */
   const hasHandshake =
     ready.isReady("header") &&
     ready.isReady("identity") &&
@@ -399,11 +370,8 @@ export function PageBlocksListSection({
     (isLoading && list.length === 0) || (isLoadingIndex && !siteIndex);
 
   useEffect(() => {
-    // Guard data minimales
-    if (!siteIndex) return;
-    if (!pageBaselinePreview) return;
+    if (!siteIndex || !pageBaselinePreview) return;
 
-    // Settings baselines
     if (headerBaselinePreview != null && ready.isReady("header")) {
       setBaseline("header", headerBaselinePreview);
     }
@@ -428,46 +396,40 @@ export function PageBlocksListSection({
       setBaseline("legalMenu", legalMenuBaselinePreview);
     }
 
-    // siteIndex (pager)
     if (ready.isReady("siteIndex")) {
       setBaseline("siteIndex", siteIndex);
     }
 
-    // Page baseline
     if (ready.isReady(previewScope)) {
       setBaseline(previewScope, pageBaselinePreview);
     }
   }, [
-    // computed payloads
     headerBaselinePreview,
     identityBaselinePreview,
     primaryMenuBaselinePreview,
     socialBaselinePreview,
     footerBaselinePreview,
     legalMenuBaselinePreview,
-
-    // data page
     siteIndex,
     previewScope,
     pageBaselinePreview,
-
-    // api
     ready,
     setBaseline,
   ]);
 
   /* ---------------------------------------------------------------------- */
-  /* Actions                                                                 */
+  /* Actions                                                                */
   /* ---------------------------------------------------------------------- */
 
   const handleAdd = useCallback(async () => {
-    if (!pageId?.trim()) return;
+    if (!pageId.trim()) return;
     if (isBusy || busyId) return;
 
     try {
       setBusyId("__add__");
+
       const nextIndex = list.length + 1;
-      const nextTitle = t("admin.pageBlocksListSection.bloc.title", {
+      const nextTitle = t("studio.pageBlocksListSection.bloc.title", {
         title: nextIndex,
       });
 
@@ -484,13 +446,13 @@ export function PageBlocksListSection({
   }, [busyId, create, isBusy, pageId, list.length, t]);
 
   const handleDelete = useCallback(
-    async (blockId: string) => {
-      if (!pageId?.trim()) return;
+    async (blockIdToDelete: string) => {
+      if (!pageId.trim()) return;
       if (isBusy || busyId) return;
 
       try {
-        setBusyId(blockId);
-        await remove(pageId, blockId);
+        setBusyId(blockIdToDelete);
+        await remove(pageId, blockIdToDelete);
       } finally {
         setBusyId(null);
       }
@@ -500,12 +462,12 @@ export function PageBlocksListSection({
 
   const move = useCallback(
     async (fromIndex: number, toIndex: number) => {
-      if (!pageId?.trim()) return;
+      if (!pageId.trim()) return;
       if (isBusy || busyId) return;
       if (toIndex < 0 || toIndex >= list.length) return;
       if (fromIndex === toIndex) return;
 
-      const ordered = list.map((b) => b.id);
+      const ordered = list.map((block) => block.id);
       const nextOrdered = moveItem(ordered, fromIndex, toIndex);
       const picked = ordered[fromIndex];
 
@@ -520,7 +482,7 @@ export function PageBlocksListSection({
   );
 
   /* ---------------------------------------------------------------------- */
-  /* Render                                                                  */
+  /* Render                                                                 */
   /* ---------------------------------------------------------------------- */
 
   const sectionIsLoading = Boolean(sectionLoading || isLoadingPage);
@@ -532,7 +494,7 @@ export function PageBlocksListSection({
     pageBaselinePreview != null &&
     pageBaselinePreview.blocks.length === 0;
 
-  const emptyLabel = t("admin.emptyPreview.pageEmpty");
+  const emptyLabel = t("studio.emptyPreview.pageEmpty");
 
   const isPreviewLoading =
     !isEmpty &&
@@ -560,51 +522,57 @@ export function PageBlocksListSection({
         variant="outline"
         size="sm"
         className="gap-2"
-        aria-label={t("admin.pageBlocksListSection.bloc.back")}
+        aria-label={t("studio.pageBlocksListSection.bloc.back")}
       >
         <Link
           href={backHref}
-          onClick={(e) => {
-            if (e.defaultPrevented) return;
-            if (e.button !== 0) return;
-            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          onClick={(event) => {
+            if (event.defaultPrevented) return;
+            if (event.button !== 0) return;
+            if (
+              event.metaKey ||
+              event.ctrlKey ||
+              event.shiftKey ||
+              event.altKey
+            )
+              return;
 
-            e.preventDefault();
+            event.preventDefault();
             void dirtyGuard.navigate(backHref);
           }}
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          {t("admin.pageBlocksListSection.bloc.back")}
+          {t("studio.pageBlocksListSection.bloc.back")}
         </Link>
       </Button>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* Blocks list (toujours visible)                                      */}
-      {/* ------------------------------------------------------------------ */}
 
       <Card variant="panel">
         <CardContent className="flex flex-col gap-2">
           {list.length > 0 ? (
             <ul className={cn(STACK_SM)}>
-              {list.map((b, index) => {
-                const isRowBusy = deletingBlockId === b.id || busyId === b.id;
+              {list.map((block, index) => {
+                const isRowBusy =
+                  deletingBlockId === block.id || busyId === block.id;
 
                 return (
                   <li
-                    key={toStableUiKey({ id: b.id, label: b.type }, index)}
+                    key={toStableUiKey(
+                      { id: block.id, label: block.type },
+                      index,
+                    )}
                     className={cn(STACK_SM)}
                   >
                     <PageBlockListItem
-                      block={b}
-                      statusKind={statusByBlockId[b.id]}
+                      block={block}
+                      statusKind={statusByBlockId[block.id]}
                       onMoveUp={() => move(index, index - 1)}
                       onMoveDown={() => move(index, index + 1)}
                       onEdit={() => {
                         router.push(
-                          `/${locale}/pages/${pageId}/blocks/${b.id}`,
+                          `/${locale}/pages/${pageId}/blocks/${block.id}`,
                         );
                       }}
-                      onDelete={() => handleDelete(b.id)}
+                      onDelete={() => handleDelete(block.id)}
                       isDeleting={isRowBusy}
                       disabled={isBusy || Boolean(busyId)}
                       isFirst={index === 0}
@@ -623,21 +591,17 @@ export function PageBlocksListSection({
           <AddEmptyCardButton
             onClick={handleAdd}
             disabled={isBusy || Boolean(busyId)}
-            ariaLabel={t("admin.pageBlocksListSection.bloc.add")}
-            tooltip={t("admin.pageBlocksListSection.bloc.add")}
+            ariaLabel={t("studio.pageBlocksListSection.bloc.add")}
+            tooltip={t("studio.pageBlocksListSection.bloc.add")}
             compact
             className="w-full"
           />
         </CardContent>
       </Card>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Pages filles (repliable)                                            */}
-      {/* ------------------------------------------------------------------ */}
-
       <ExpandableLayout
         id="page-blocks-children"
-        label={t("admin.pageForm.childrens.label", { count: children.length })}
+        label={t("studio.pageForm.childrens.label", { count: children.length })}
         defaultOpen={false}
         disabled={children.length === 0}
       >
@@ -645,22 +609,22 @@ export function PageBlocksListSection({
           <Card variant="panel">
             <CardContent>
               <Text as="p" variant="muted">
-                {t("admin.pageForm.childrens.help")}
+                {t("studio.pageForm.childrens.help")}
               </Text>
 
               <ul className={cn(STACK_SM, "mt-4")}>
-                {children.map((p, idx) => (
-                  <li key={p.id}>
+                {children.map((pageItem, index) => (
+                  <li key={pageItem.id}>
                     <ChildPageListItem
-                      page={p}
-                      statusKind={statusByPageId[p.id]}
-                      index={idx}
+                      page={pageItem}
+                      statusKind={statusByPageId[pageItem.id]}
+                      index={index}
                       total={children.length}
                       isReordering={isBusy || Boolean(busyId)}
-                      onMoveUp={() => moveChild(idx, idx - 1)}
-                      onMoveDown={() => moveChild(idx, idx + 1)}
+                      onMoveUp={() => moveChild(index, index - 1)}
+                      onMoveDown={() => moveChild(index, index + 1)}
                     />
-                    {idx < children.length - 1 ? <Separator /> : null}
+                    {index < children.length - 1 ? <Separator /> : null}
                   </li>
                 ))}
               </ul>
@@ -669,23 +633,17 @@ export function PageBlocksListSection({
         ) : null}
       </ExpandableLayout>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Settings page (repliable)                                           */}
-      {/* ------------------------------------------------------------------ */}
-
       <ExpandableLayout
         id="page-blocks-settings"
-        label={t("admin.pageBlocksListSection.section.pageSettings")}
+        label={t("studio.pageBlocksListSection.section.pageSettings")}
         defaultOpen={false}
         disabled={false}
       >
-        {warningHints.length > 0 ? (
-          <HintList
-            variant="warning"
-            title={t("admin.shared.warningsPanel.title")}
-            hints={warningHints}
-          />
-        ) : null}
+        <StudioWarningsPanel
+          id="page-blocks-settings-warnings"
+          warningKeys={warningKeys}
+          warningMessageKeyPrefix="studio.pageEditSection.warnings"
+        />
 
         <PageForm
           initialValues={initialValues}
@@ -693,7 +651,7 @@ export function PageBlocksListSection({
           isSaving={isUpdating}
           mode="edit"
           bFocusFields={false}
-          bCancelAlwaysEnabledInEdit={true}
+          bCancelAlwaysEnabledInEdit
           onSubmit={handleSubmitPageMeta}
           onReset={() => {
             setWarningKeys([]);
@@ -706,13 +664,9 @@ export function PageBlocksListSection({
         />
       </ExpandableLayout>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Preview                                                             */}
-      {/* ------------------------------------------------------------------ */}
-
       <PreviewFrame
-        title={t("admin.shared.preview.title", {
-          entity: t("admin.shared.entities.page"),
+        title={t("studio.shared.preview.title", {
+          entity: t("studio.shared.entities.page"),
         })}
         src={`/preview/pages/${slug}`}
         iframeRef={iframeRef}
@@ -724,10 +678,10 @@ export function PageBlocksListSection({
         heightClassName="h-[800px]"
         info={
           isEmpty
-            ? t("admin.emptyPreview.pageEmpty")
+            ? t("studio.emptyPreview.pageEmpty")
             : !isPreviewLoading
-              ? t("admin.shared.preview.infoBaseline")
-              : t("admin.overviewSection.preview.loading")
+              ? t("studio.shared.preview.infoBaseline")
+              : t("studio.overviewSection.preview.loading")
         }
       />
     </SettingsSection>

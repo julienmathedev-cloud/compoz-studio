@@ -1,7 +1,8 @@
 "use client";
+
 /**
  * @file packages/ui/src/hooks/useIsMounted.tsx
- * @layer hooks/admin
+ * @layer ui/hooks
  *
  * @description
  * Hook React indiquant si le composant est monté côté client.
@@ -11,6 +12,7 @@
  * - Passe à `true` après le premier tick côté client.
  * - Strictement UI-only.
  */
+
 import { useEffect, useState } from "react";
 
 /**
@@ -23,12 +25,12 @@ export function useIsMounted(): boolean {
 
   useEffect(() => {
     // On décale la mise à jour dans une tâche asynchrone
-    const id = window.setTimeout(() => {
+    const id = setTimeout(() => {
       setMounted(true);
     }, 0);
 
     return () => {
-      window.clearTimeout(id);
+      clearTimeout(id);
     };
   }, []);
 

@@ -1,6 +1,6 @@
 /**
  * @file apps/studio/src/app/[locale]/(dashboard)/admin/users/page.tsx
- * @layer app/studio
+ * @layer studio/app
  *
  * @description
  * Page route "Admin / Users" (Server) :
@@ -10,6 +10,8 @@
  */
 
 import "server-only";
+
+import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 import { requireAdminSession } from "@compoz/studio/auth/require-session";
 import { AdminUsersPage } from "@compoz/studio/features/admin/users/pages/AdminUsersPage";
@@ -21,22 +23,21 @@ type CurrentUser = Readonly<{
   email: string;
 }>;
 
-export default async function AdminUsersRoutePage() {
+export default async function StudioAdminUsersRoutePage() {
   const session = await requireAdminSession();
 
-  const currentTenantId = String(session.tenantId ?? "")
-    .trim()
-    .toLowerCase();
+  const currentTenantId = toTenantId(session.tenantId);
+  if (!currentTenantId) {
+    // Session admin sans tenantId = état invalide → 404 (évite un comportement flou)
+    return null;
+  }
 
   const tenantIds = Array.isArray(session.tenantIds) ? session.tenantIds : [];
+
   const tenantOptions: ReadonlyArray<SelectOption> = tenantIds
-    .map((t) =>
-      String(t ?? "")
-        .trim()
-        .toLowerCase(),
-    )
-    .filter(Boolean)
-    .filter((x) => x !== "*")
+    .map((t) => toTenantId(t))
+    .filter((t): t is string => Boolean(t))
+    .filter((t) => t !== "*")
     .map((tenantId) => ({ value: tenantId, label: tenantId }) as const);
 
   const currentUser: CurrentUser = {
@@ -55,4 +56,4 @@ export default async function AdminUsersRoutePage() {
   );
 }
 
-AdminUsersRoutePage.displayName = "AdminUsersRoutePage";
+StudioAdminUsersRoutePage.displayName = "StudioAdminUsersRoutePage";

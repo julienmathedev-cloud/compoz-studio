@@ -1,8 +1,8 @@
 /**
  * @file apps/studio/src/app/api/settings/seo/route.ts
- * @layer api/routes
+ * @layer studio/app/api
  * @description
- * Route API Admin pour la lecture et la mise à jour des réglages SEO du site.
+ * Route API Studio pour la lecture et la mise à jour des réglages SEO du site.
  *
  * Responsabilités :
  * - GET   : retourne les settings SEO selon le state (draft/published).
@@ -11,24 +11,25 @@
  * - Le repository merge avec les defaults pour assurer la cohérence.
  */
 
+import "server-only";
+
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { updateSeoSettings } from "@compoz/core/domain/site/use-cases/seo/update-seo-settings";
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
-import { log, logSpan } from "@compoz/infra/lib/log";
-import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
-import { adaptUpdateSeoIntent } from "@compoz/studio/app/api/_adapters/seo";
-import { handleRoute } from "@compoz/studio/lib/api/handle-route";
-
 import type {
   GetSeoResponse,
   PatchSeoResponse,
 } from "@compoz/infra/http/studio/site-settings.types";
-import { UpdateSeoSettingsIntentSchema } from "@compoz/validation/site/settings/seo/seo-intents";
+import { log, logSpan } from "@compoz/infra/lib/log";
+import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
+import { adaptUpdateSeoIntent } from "@compoz/studio/app/api/_adapters/seo";
 import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
+import { createUpdateSeoSettingsIntentSchema } from "@compoz/validation/site/settings/seo/seo-intents";
 
 export async function GET(req: Request) {
-  const NS = "api.admin.site.seo.GET" as const;
+  const NS = "api.studio.site.seo.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
     const { tenantId } = await requireSessionWithTenant();
@@ -44,15 +45,17 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const NS = "api.admin.site.seo.PATCH" as const;
+  const NS = "api.studio.site.seo.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
     const { tenantId } = await requireSessionWithTenant();
 
     return logSpan(NS, { ns: NS, method: "PATCH", tenantId }, async () => {
+      const lg = log.child({ ns: NS });
+
       const raw = await readJsonOr400(req);
 
-      log.info?.("SEO.PATCH.start", {
+      lg.info?.("route.seo.patch.start", {
         tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
@@ -62,9 +65,15 @@ export async function PATCH(req: Request) {
         ),
       });
 
-      const dto = parseDTOOrHttp(UpdateSeoSettingsIntentSchema, raw, {
+      const isProd = process.env.NODE_ENV === "production";
+
+      const schema = createUpdateSeoSettingsIntentSchema({
+        requireBaseUrlHttps: isProd,
+      });
+
+      const dto = parseDTOOrHttp(schema, raw, {
         message: EC.VALIDATION_ERROR,
-        extras: { where: "api.admin.site.seo.PATCH.payload" },
+        extras: { where: "api.studio.site.seo.PATCH.payload" },
       });
 
       const input = adaptUpdateSeoIntent(dto);
@@ -75,17 +84,17 @@ export async function PATCH(req: Request) {
       const run = updateSeoSettings({ repo });
       const { settings } = await run(input);
 
-      log.info?.("SEO.PATCH.afterWrite", {
+      lg.info?.("route.seo.patch.afterWrite", {
         tenantId,
         seoKeys: settings?.seo ? Object.keys(settings.seo) : [],
       });
 
       try {
-        log.info?.("SEO.PATCH.invalidate.start", { tenantId });
+        lg.info?.("route.seo.patch.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        log.info?.("SEO.PATCH.invalidate.done", { tenantId });
+        lg.info?.("route.seo.patch.invalidate.done", { tenantId });
       } catch (e) {
-        log.error?.("SEO.PATCH.invalidate.failed", {
+        lg.error?.("route.seo.patch.invalidate.failed", {
           tenantId,
           err: String(e),
         });

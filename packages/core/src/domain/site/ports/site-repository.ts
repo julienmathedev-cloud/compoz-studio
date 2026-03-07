@@ -25,13 +25,13 @@ export interface SiteRepository {
   readIndex(state: ContentState): Promise<Readonly<SiteIndex>>;
 
   /** Écrit/remplace l’index pour l’état donné. */
-  writeIndex(state: ContentState, index: Readonly<SiteIndex>): Promise<void>;
+  putIndex(state: ContentState, index: Readonly<SiteIndex>): Promise<void>;
 
   /** Lit les réglages du site (header, footer, menus, identité, SEO, social). */
   readSettings(state: ContentState): Promise<Readonly<SiteSettings>>;
 
   /** Écrit/remplace les réglages du site pour l’état donné. */
-  writeSettings(
+  putSettings(
     state: ContentState,
     settings: Readonly<SiteSettings>,
   ): Promise<void>;

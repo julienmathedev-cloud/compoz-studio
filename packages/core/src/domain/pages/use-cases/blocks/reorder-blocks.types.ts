@@ -1,6 +1,6 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/blocks/reorder-blocks.types.ts
- * @layer core/domain
+ * @layer core/domain/pages/use-cases/blocks
  * @description
  * Contrat du use-case de réordonnancement des blocks d’une page (édition admin → draft).
  */

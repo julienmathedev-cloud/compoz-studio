@@ -2,10 +2,16 @@
 
 /**
  * @file apps/studio/src/features/preview/PreviewFrame.tsx
- * @layer ui/preview
+ * @layer ui/studio/preview
  *
  * @description
- * Iframe de preview réutilisable (admin) avec toolbar (device, sync/reset).
+ * Iframe de preview réutilisable (studio) avec toolbar (device, sync/reset).
+ *
+ * @remarks
+ * - Gère un mode “empty preview” en pointant vers une route dédiée.
+ * - Supporte deux stratégies d’ajustement : `responsive` et `scale`.
+ * - Le rechargement de l’iframe est forcé quand `resolvedSrc` change.
+ * - Strictement UI-only : aucune logique métier.
  */
 
 import {
@@ -20,20 +26,21 @@ import {
 
 import { useTranslations } from "next-intl";
 
+import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
 import { Heading } from "@compoz/studio/components/atoms/typography/Heading";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
+import { SectionLoader } from "@compoz/studio/components/loading/SectionLoader";
 import { Button } from "@compoz/ui/components/ui/button";
 import { Card, CardContent } from "@compoz/ui/components/ui/card";
 import { Separator } from "@compoz/ui/components/ui/separator";
 import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { cn } from "@compoz/ui/lib/utils";
 import {
-  ADMIN_SHADOW_PANEL,
   ROW_BETWEEN,
   ROW_CENTER,
   STACK_SM,
+  STUDIO_SHADOW_PANEL,
 } from "@compoz/ui/styles/studio/layout";
-
 import {
   Monitor,
   RefreshCw,
@@ -41,8 +48,6 @@ import {
   Smartphone,
   Tablet,
 } from "lucide-react";
-import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
-import { SectionLoader } from "@compoz/studio/components/loading/SectionLoader";
 
 export type PreviewDevice =
   | "mobile"
@@ -57,29 +62,21 @@ type PreviewFitMode = "responsive" | "scale";
 type PreviewFrameProps = Readonly<{
   title: string;
   src: string;
-
   onSync?: () => void | Promise<void>;
   onReset?: () => void | Promise<void>;
-
   syncDisabled?: boolean;
   isBusy?: boolean;
   isLoading?: boolean;
-
   info?: ReactNode;
-
   heightClassName?: string;
   defaultDevice?: PreviewDevice;
-
   sandbox?: string;
   iframeRef?: RefObject<HTMLIFrameElement | null>;
   onLoad?: () => void;
-
-  /** Si true, l'iframe pointe vers une route empty générique */
+  /** Si true, l'iframe pointe vers une route empty générique. */
   isEmpty?: boolean;
-
-  /** Label affiché dans l'empty preview */
+  /** Label affiché dans l'empty preview. */
   emptyLabel?: string;
-
   deviceMode?: "compact" | "full";
   className?: string;
   fitMode?: PreviewFitMode;
@@ -153,11 +150,9 @@ export function PreviewFrame({
     [resolvedDevice],
   );
 
-  // ✅ Résolution du src final (empty route si nécessaire)
   const resolvedSrc = useMemo(() => {
     if (!isEmpty) return src;
 
-    // On passe le texte via querystring (SSR-safe).
     const label = (emptyLabel ?? "").trim();
     if (!label) return "/preview/empty";
 
@@ -165,7 +160,6 @@ export function PreviewFrame({
     return `/preview/empty?${qs.toString()}`;
   }, [src, isEmpty, emptyLabel]);
 
-  // Mesure de la largeur disponible (container).
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [availableWidth, setAvailableWidth] = useState<number | null>(null);
 
@@ -174,8 +168,8 @@ export function PreviewFrame({
     if (!el) return;
 
     const ro = new ResizeObserver(() => {
-      const w = el.clientWidth;
-      setAvailableWidth(Number.isFinite(w) ? w : null);
+      const width = el.clientWidth;
+      setAvailableWidth(Number.isFinite(width) ? width : null);
     });
 
     ro.observe(el);
@@ -192,8 +186,10 @@ export function PreviewFrame({
 
   const scale = useMemo(() => {
     if (fitMode !== "scale") return 1;
+
     const available = availableWidth ?? deviceWidth;
     const next = Math.min(1, available / deviceWidth);
+
     return Number.isFinite(next) ? next : 1;
   }, [availableWidth, deviceWidth, fitMode]);
 
@@ -207,27 +203,32 @@ export function PreviewFrame({
       <Heading as="h2">{title}</Heading>
 
       <div className={cn(ROW_BETWEEN, "flex-wrap gap-2")}>
-        <Text>{t("admin.shared.preview.navDisabled")}</Text>
+        <Text>{t("studio.shared.preview.navDisabled")}</Text>
 
-        <Card className={cn(ADMIN_SHADOW_PANEL, "p-0 shadow-accent")}>
+        <Card className={cn(STUDIO_SHADOW_PANEL, "p-0 shadow-accent")}>
           <CardContent className={cn(ROW_CENTER, "gap-1 p-1")}>
-            {availableDevices.map((k, index) => {
-              const deviceLabel = t(`admin.previewFrame.devices.${k}`);
-              const isActive = resolvedDevice === k;
+            {availableDevices.map((currentDevice, index) => {
+              const deviceLabel = t(
+                `studio.previewFrame.devices.${currentDevice}`,
+              );
+              const isActive = resolvedDevice === currentDevice;
 
               return (
                 <Button
-                  key={toStableUiKey({ keyId: k, label: deviceLabel }, index)}
+                  key={toStableUiKey(
+                    { keyId: currentDevice, label: deviceLabel },
+                    index,
+                  )}
                   type="button"
                   size="icon"
                   variant={isActive ? "default" : "ghost"}
-                  onClick={() => setDevice(k)}
+                  onClick={() => setDevice(currentDevice)}
                   disabled={uiDisabled}
                   aria-label={deviceLabel}
                   title={deviceLabel}
                 >
                   {deviceMode === "compact" ? (
-                    DEVICE_ICON[k]
+                    DEVICE_ICON[currentDevice]
                   ) : (
                     <span>{deviceLabel}</span>
                   )}
@@ -283,9 +284,7 @@ export function PreviewFrame({
             <div
               className={cn(
                 "shadow-xs shadow-accent overflow-hidden",
-                "relative",
-                "origin-top-left",
-                "outline rounded-xl outline-border",
+                "relative origin-top-left rounded-xl outline outline-border",
               )}
               style={{
                 width: fitMode === "scale" ? deviceWidth : frameWidth,
@@ -294,9 +293,11 @@ export function PreviewFrame({
               }}
             >
               <iframe
-                key={resolvedSrc} // ✅ important pour forcer reload quand on switch empty/normal
+                key={resolvedSrc}
                 ref={(node) => {
-                  if (ref && "current" in ref) ref.current = node;
+                  if (ref && "current" in ref) {
+                    ref.current = node;
+                  }
                 }}
                 title={title}
                 tabIndex={-1}
@@ -316,7 +317,7 @@ export function PreviewFrame({
 
               {isLoading ? (
                 <div className="absolute inset-0 flex items-center justify-center bg-card">
-                  <SectionLoader label={t("admin.shared.loading.preview")} />
+                  <SectionLoader label={t("studio.shared.loading.preview")} />
                 </div>
               ) : null}
             </div>

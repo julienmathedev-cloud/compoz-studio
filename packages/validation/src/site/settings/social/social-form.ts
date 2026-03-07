@@ -12,7 +12,7 @@
  *   restent dans `social.ts` (settings/API) + domaine.
  */
 
-import { SOCIAL } from "@compoz/core/constants/limits/social";
+import { SOCIAL_ITEM } from "@compoz/core/constants/limits/social";
 
 import { SOCIAL_KINDS } from "@compoz/core/constants/social/social-kinds";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
@@ -31,40 +31,33 @@ export const SocialItemFormSchema = z
     kind: z.enum(SOCIAL_KINDS),
     href: z.string().trim(),
   })
+  .strict()
   .superRefine((val, ctx) => {
     const href = val.href.trim();
+    const isPrefixOnly = isMailtoPrefixOnly(href) || isHttpPrefixOnly(href);
 
     // UX minimal : "" ou "préfixe seul" => requis (message stable)
-    if (
-      href.length === 0 ||
-      isMailtoPrefixOnly(href) ||
-      isHttpPrefixOnly(href)
-    ) {
+    if (href.length === 0 || isPrefixOnly) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["href"],
         message: ERROR_CODES.SOCIAL_HREF_REQUIRED,
       });
     }
-  })
-  .strict();
-
-/* -------------------------------------------------------------------------- */
-/*                             Settings (UI)                                  */
-/* -------------------------------------------------------------------------- */
+  });
 
 export const SocialFormSchema = z
   .object({
     items: z
       .array(SocialItemFormSchema)
-      .max(SOCIAL.ITEM_MAX, ERROR_CODES.SOCIAL_TOO_MANY_ITEMS),
+      .max(SOCIAL_ITEM.MAX, ERROR_CODES.SOCIAL_TOO_MANY_ITEMS),
   })
+  .strict()
   .superRefine((val, ctx) => {
-    const items = val.items ?? [];
     const firstIndexByKind = new Map<string, number>();
 
-    for (let i = 0; i < items.length; i++) {
-      const kind = items[i]?.kind;
+    for (let i = 0; i < val.items.length; i++) {
+      const kind = val.items[i]?.kind;
       if (!kind) continue;
 
       const firstIdx = firstIndexByKind.get(kind);
@@ -73,15 +66,13 @@ export const SocialFormSchema = z
         continue;
       }
 
-      // ✅ Doublon bloquant : erreur directement sur le champ `kind`
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["items", i, "kind"],
         message: ERROR_CODES.SOCIAL_DUPLICATE_KIND,
       });
     }
-  })
-  .strict();
+  });
 
 export type SocialItemFormValues = z.infer<typeof SocialItemFormSchema>;
 export type SocialFormValues = z.infer<typeof SocialFormSchema>;

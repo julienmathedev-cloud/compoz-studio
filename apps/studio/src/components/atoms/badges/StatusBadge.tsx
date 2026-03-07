@@ -1,9 +1,13 @@
 /**
  * @file apps/studio/src/components/atoms/badges/StatusBadge.tsx
- * @layer ui/atoms
+ * @layer studio/atoms
  *
  * @description
- * Badge générique (variant + label). Sert de brique de base aux badges “scopés”.
+ * Badge générique de statut (variant + label), utilisé comme brique de base
+ * par les badges “scopés” du Studio (diff, publication, settings, etc.).
+ *
+ * @remarks
+ * - Rend `null` si le label est vide après trim (évite d’afficher un badge vide).
  */
 
 import { Badge } from "@compoz/ui/components/ui/badge";
@@ -16,8 +20,14 @@ export type StatusBadgeProps = Readonly<{
   className?: string;
 }>;
 
+/**
+ * Badge de statut générique (variant + label).
+ *
+ * @remarks
+ * - Rend `null` si `label.trim()` est vide (pas de badge vide).
+ */
 export function StatusBadge({ variant, label, className }: StatusBadgeProps) {
-  const text = String(label ?? "").trim();
+  const text = label.trim();
   if (!text) return null;
 
   return (

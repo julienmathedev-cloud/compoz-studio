@@ -1,5 +1,5 @@
 /**
- * @file src/core/domain/site/dto.ts
+ * @file packages/core/src/domain/site/dto.ts
  * @layer core/domain
  * @description
  * DTOs exposés pour les réglages du site.

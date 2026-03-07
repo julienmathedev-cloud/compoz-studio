@@ -1,6 +1,6 @@
 /**
- * @file src/core/domain/pages/entities/page.ts
- * @layer core/domain
+ * @file packages/core/src/domain/pages/entities/page.ts
+ * @layer core/domain/pages
  * @description
  * Entité métier représentant une page de contenu : slug/titre, métadonnées,
  * configuration sitemap et liste de blocks.
@@ -10,7 +10,7 @@
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";
 
-/** Fréquences possibles pour le sitemap XML. */
+/** Fréquences possibles pour le sitemap XML (valeurs standard). */
 export type SitemapChangeFreq =
   | "always"
   | "hourly"
@@ -43,12 +43,16 @@ export interface Page {
   /** Identifiant unique de la page (clé métier). */
   id: string;
 
+  /**
+   * Référence à la page parente (null = page racine).
+   * Utilisé pour structurer l’arborescence (menus, pagination, navigation).
+   */
   parentId: string | null;
 
   /** Slug unique de la page (clé métier). */
   slug: string;
 
-  /** Titre affiché (admin, listes, éventuellement SEO). */
+  /** Titre affiché (studio, listes, éventuellement SEO). */
   title: string;
 
   /** Blocs de contenu associés à la page (contenu structuré). */
@@ -60,10 +64,14 @@ export interface Page {
   /** Paramètres optionnels pour le sitemap XML. */
   sitemap?: PageSitemap;
 
+  /**
+   * Active/désactive la pagination pour une page enfant.
+   * (Invariant validé au runtime : une page racine ne peut pas paginer.)
+   */
   paginationEnabled: boolean;
 }
 
-/** Résumé minimal utilisé dans les listes/admin. */
+/** Résumé minimal utilisé dans les listes (studio). */
 export type PageSummary = Pick<Page, "id" | "slug" | "title" | "parentId">;
 
 /**
@@ -71,6 +79,10 @@ export type PageSummary = Pick<Page, "id" | "slug" | "title" | "parentId">;
  */
 export type InternalPageOption = Readonly<{
   label: string;
-  value: string; // valeur à écrire dans href (ex: "/about" ou "/#section")
+
+  /** Chemin interne à écrire dans `href` (ex: "/about" ou "/#section"). */
+  value: string;
+
+  /** Slug de la page ciblée (utile pour lookup/affichage). */
   slug: string;
 }>;

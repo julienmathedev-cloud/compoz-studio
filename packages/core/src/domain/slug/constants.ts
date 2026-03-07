@@ -1,5 +1,5 @@
 /**
- * @file src/core/domain/slug/constants.ts
+ * @file packages/core/src/domain/slug/constants.ts
  * @layer core/domain
  * @description
  * Source de vérité Domain pour :
@@ -18,19 +18,10 @@
  * - caractères autorisés : `[a-z0-9]` uniquement,
  * - segments séparés par des tirets (`-`),
  * - interdit les tirets multiples (`foo--bar`) et les débuts/fins en `-`.
- *
- * Exemples valides :
- *   - "contact"
- *   - "a-propos"
- *   - "portfolio-2024"
- *
- * Exemples invalides :
- *   - "Contact"   (majuscules interdites)
- *   - "a_propos"  (underscore interdit)
- *   - "-page"     (tiret initial interdit)
- *   - "page-"     (tiret final interdit)
  */
 export const SLUG_FINAL_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export const HOME_SLUG = "home";
 
 /* -------------------------------------------------------------------------- */
 /*                               Slugs réservés                               */

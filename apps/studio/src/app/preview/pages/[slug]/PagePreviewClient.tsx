@@ -1,55 +1,41 @@
 "use client";
+
 /**
  * @file apps/studio/src/app/preview/pages/[slug]/PagePreviewClient.tsx
- * @layer app/preview/pages
+ * @layer studio/app
+ *
+ * @description
+ * Client preview d’une page complète (V0.5) — baseline/override via postMessage.
+ *
+ * @remarks
+ * - Gating strict : ne rend rien tant que l’index et la page courante ne sont pas disponibles.
+ * - Preview : navigation/pager désactivés (pas de liens prev/next).
+ * - Le rendu final est délégué à `SitePageRenderer` (UI site).
  */
 
 import { useEffect, useMemo } from "react";
+
 import type { PageSummaryDTO } from "@compoz/core/domain/pages/dto";
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 import { log } from "@compoz/infra/lib/log";
+
 import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
-import { resolvePublicUi } from "@compoz/ui/site/skins/resolvePublicUi";
-import type { PageRenderShape } from "@compoz/validation/pages/page";
+import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
+
+import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePreviewOverride";
 import { PreviewShell } from "@compoz/studio/features/preview/PreviewShell";
+import type { PageRenderShape } from "@compoz/validation/pages/page";
 
 /* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
+/* Logger                                                                     */
 /* -------------------------------------------------------------------------- */
 
-function __hrefForSlug(slug: string) {
-  if (slug === "home" || slug === "") return "/site";
-  return `/site/${slug}`;
-}
-
-function __computePager(args: {
-  page: { id: string; parentId: string | null; paginationEnabled?: boolean };
-  index: SiteIndexDTO;
-}) {
-  const { page, index } = args;
-
-  const enabled = Boolean(page.paginationEnabled);
-  if (!enabled) return { enabled: false, prev: null, next: null };
-
-  const siblings = (index.pages ?? []).filter(
-    (p) => p.parentId === page.parentId,
-  );
-
-  if (siblings.length <= 1) return { enabled: true, prev: null, next: null };
-
-  const i = siblings.findIndex((p) => p.id === page.id);
-  if (i < 0) return { enabled: true, prev: null, next: null };
-
-  const prev = i > 0 ? siblings[i - 1] : null;
-  const next = i < siblings.length - 1 ? siblings[i + 1] : null;
-
-  return {
-    enabled: true,
-    prev: prev ? { href: __hrefForSlug(prev.slug), label: prev.title } : null,
-    next: next ? { href: __hrefForSlug(next.slug), label: next.title } : null,
-  };
-}
+const lg = log.child({
+  ns: "preview",
+  area: "page",
+  name: "PagePreviewClient",
+});
 
 /* -------------------------------------------------------------------------- */
 /* Component                                                                  */
@@ -75,26 +61,11 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
     // - si slug = "home" => on accepte "" comme home
     // - sinon match strict
     const found = (visibleIndex.pages ?? []).find(
-      (p) => p.slug === slug || (slug === "home" && p.slug === ""),
+      (p) => p.slug === slug || (slug === HOME_SLUG && p.slug === ""),
     );
 
     return found ?? null;
   }, [slug, visibleIndex]);
-
-  const pager = useMemo(() => {
-    if (!visibleIndex) return { enabled: false, prev: null, next: null };
-    if (!visiblePage) return { enabled: false, prev: null, next: null };
-    if (!currentFromIndex) return { enabled: false, prev: null, next: null };
-
-    return __computePager({
-      page: {
-        id: currentFromIndex.id,
-        parentId: currentFromIndex.parentId,
-        paginationEnabled: Boolean(visiblePage.paginationEnabled),
-      },
-      index: visibleIndex,
-    });
-  }, [visibleIndex, visiblePage, currentFromIndex]);
 
   const flags = useMemo(
     () => ({
@@ -108,11 +79,6 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
         paginationEnabled: Boolean(visiblePage?.paginationEnabled),
       },
       fromIndex: { hasCurrent: Boolean(currentFromIndex) },
-      pager: {
-        enabled: Boolean(pager?.enabled),
-        hasPrev: Boolean(pager?.prev),
-        hasNext: Boolean(pager?.next),
-      },
     }),
     [
       slug,
@@ -123,30 +89,27 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
       visiblePage?.paginationEnabled,
       blocks.length,
       currentFromIndex,
-      pager,
     ],
   );
 
   useEffect(() => {
-    log.debug("[preview][page.flags]", flags);
+    if (process.env.NODE_ENV !== "production") {
+      lg.debug("page.flags", flags);
+    }
   }, [flags]);
 
-  // 1) Tant que l’index n’est pas là : gating strict OK (handshake)
+  // Tant que l’index n’est pas là : gating strict OK (handshake)
   if (!visibleIndex) return null;
 
-  // 2) Index OK mais page introuvable ou pas de baseline envoyée
-  if (!visiblePage || !currentFromIndex) {
-    return null;
-  }
+  // Index OK mais page introuvable ou pas de baseline envoyée
+  if (!visiblePage || !currentFromIndex) return null;
 
-  // 4) OK : rendu normal
   return (
     <PreviewShell>
       <SitePageRenderer
-        ui={resolvePublicUi()}
+        ui={resolveSiteUi()}
         pageTitle={visiblePage.title}
         blocks={blocks}
-        pager={pager}
       />
     </PreviewShell>
   );

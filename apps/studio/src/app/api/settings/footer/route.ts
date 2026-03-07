@@ -1,8 +1,8 @@
 /**
  * @file apps/studio/src/app/api/settings/footer/route.ts
- * @layer api/routes
+ * @layer studio/app/api
  * @description
- * Route API Admin pour la lecture et la mise à jour des settings du Footer du site.
+ * Route API Studio pour la lecture et la mise à jour des settings du Footer du site.
  *
  * Responsabilités :
  * - GET  : retourne les settings Footer selon le state (draft/published).
@@ -10,24 +10,26 @@
  *          et exécution du use-case `updateFooterSettings`.
  * - Le repository gère le merge avec les defaults pour assurer la cohérence du footer.
  */
+
+import "server-only";
+
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { updateFooterSettings } from "@compoz/core/domain/site/use-cases/footer/update-footer-settings";
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
+import type {
+  GetFooterResponse,
+  PatchFooterResponse,
+} from "@compoz/infra/http/studio/site-settings.types";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 import { adaptUpdateFooterIntent } from "@compoz/studio/app/api/_adapters/footer";
 import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
-
-import type {
-  GetFooterResponse,
-  PatchFooterResponse,
-} from "@compoz/infra/http/studio/site-settings.types";
 import { UpdateFooterSettingsIntentSchema } from "@compoz/validation/site/settings/footer/footer-intents";
 
 export async function GET(req: Request) {
-  const NS = "api.admin.site.footer.GET" as const;
+  const NS = "api.studio.site.footer.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
     const { tenantId } = await requireSessionWithTenant();
@@ -43,15 +45,17 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const NS = "api.admin.site.footer.PATCH" as const;
+  const NS = "api.studio.site.footer.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
     const { tenantId } = await requireSessionWithTenant();
 
     return logSpan(NS, { ns: NS, method: "PATCH", tenantId }, async () => {
+      const lg = log.child({ ns: NS });
+
       const raw = await readJsonOr400(req);
 
-      log.info?.("FOOTER.PATCH.start", {
+      lg.info?.("route.footer.patch.start", {
         tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
@@ -63,7 +67,7 @@ export async function PATCH(req: Request) {
 
       const dto = parseDTOOrHttp(UpdateFooterSettingsIntentSchema, raw, {
         message: EC.VALIDATION_ERROR,
-        extras: { where: "api.admin.site.footer.PATCH.payload" },
+        extras: { where: "api.studio.site.footer.PATCH.payload" },
       });
 
       const input = adaptUpdateFooterIntent(dto);
@@ -74,17 +78,17 @@ export async function PATCH(req: Request) {
       const run = updateFooterSettings({ repo });
       const { settings } = await run(input);
 
-      log.info?.("FOOTER.PATCH.afterWrite", {
+      lg.info?.("route.footer.patch.afterWrite", {
         tenantId,
         footerKeys: settings?.footer ? Object.keys(settings.footer) : [],
       });
 
       try {
-        log.info?.("FOOTER.PATCH.invalidate.start", { tenantId });
+        lg.info?.("route.footer.patch.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        log.info?.("FOOTER.PATCH.invalidate.done", { tenantId });
+        lg.info?.("route.footer.patch.invalidate.done", { tenantId });
       } catch (e) {
-        log.error?.("FOOTER.PATCH.invalidate.failed", {
+        lg.error?.("route.footer.patch.invalidate.failed", {
           tenantId,
           err: String(e),
         });

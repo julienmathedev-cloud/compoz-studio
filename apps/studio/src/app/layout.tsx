@@ -1,14 +1,13 @@
 /**
  * @file apps/studio/src/app/layout.tsx
- * @layer app/studio/layout
+ * @layer studio/app
  *
  * @description
  * Root layout Studio (HTML/BODY + CSS globaux + fonts) — App Router.
  *
  * @remarks
- * - Root admin app (monorepo).
- * - La localisation peut rester gérée dans app/[locale]/layout.tsx si tu en as un côté admin,
- *   sinon ici suffit.
+ * - Root app (Studio/admin) du monorepo.
+ * - La localisation peut être gérée dans `app/[locale]/layout.tsx` si la structure est locale-first.
  * - `metadata` minimal (wiring SEO plus tard via settings).
  */
 
@@ -19,7 +18,10 @@ import type { ReactNode } from "react";
 import "@compoz/studio/app/globals.css";
 import { cn } from "@compoz/ui/lib/utils";
 
-const nunitoSans = Nunito_Sans({ subsets: ["latin"], variable: "--font-sans" });
+const nunitoSans = Nunito_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,16 +38,20 @@ export const metadata: Metadata = {
   description: "Administration panel for Compoz Studio",
 };
 
-type RootLayoutProps = Readonly<{
+type StudioRootLayoutProps = Readonly<{
   children: ReactNode;
 }>;
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default function StudioRootLayout({ children }: StudioRootLayoutProps) {
   return (
     <html
-      id="app-root"
+      id="app-studio"
       lang="fr"
-      className={cn(nunitoSans.variable, "overscroll-none")}
+      className={cn(
+        // Expose `--font-sans` pour la stack UI (si utilisée par Tailwind/base.css).
+        nunitoSans.variable,
+        "overscroll-none",
+      )}
     >
       <body
         className={cn(

@@ -1,11 +1,11 @@
 /**
  * @file apps/studio/src/features/settings/mappers/identity-form.ts
- * @layer ui-mappers/site
+ * @layer ui-mappers/studio/site
  * @description
  * Mappers UI Identity (studio forms) :
  * - DTO -> valeurs de formulaire RHF
  * - normalisation UI
- * - PATCH intent DTO pour l’API admin
+ * - PATCH intent DTO pour l’API studio
  *
  * @remarks
  * - Pour la shape runtime à partir d’un DTO : `toIdentitySettingsShapeFromDTO` (shared).
@@ -26,7 +26,6 @@ import {
   emptyToUndef,
   trimKeepEmpty,
 } from "@compoz/ui/lib/form-utils";
-
 import { toIdentitySettingsShapeFromDTO } from "@compoz/ui/settings/mappers/identity-shape";
 
 /* ----------------------- Domaine (DTO) -> UI (form values) ------------------ */
@@ -43,13 +42,13 @@ export function toIdentityFormValuesFromDTO(
   };
 }
 
-/* ------------------- Admin (RHF) -> Preview/Public (SettingsShape) ----------- */
+/* ------------------- Studio (RHF) -> Preview/Public (SettingsShape) ----------- */
 
 export function toIdentitySettingsShapeFromFormValues(
   values: IdentityFormValues,
 ): IdentitySettingsShape {
   const candidate = {
-    siteName: trimKeepEmpty(values.siteName), // peut être ""
+    siteName: trimKeepEmpty(values.siteName),
     tagline: emptyToUndef(values.tagline),
     logoUrl: assetUiToSettings(values.logoUrl),
     logoAlt: emptyToUndef(values.logoAlt),

@@ -1,6 +1,6 @@
 /**
  * @file apps/site/src/app/t/[tenantId]/page.tsx
- * @layer app/site
+ * @layer site/app
  *
  * @description
  * Fallback multi-tenant : "/t/[tenantId]" -> rend la home published du tenant.
@@ -9,18 +9,18 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
-import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
-import { resolvePublicUi } from "@compoz/ui/site/skins/resolvePublicUi";
-
-import type { Page } from "@compoz/core/domain/pages/entities/page";
-import type { SiteIndex } from "@compoz/core/domain/site/entities";
+import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import {
   getPublishedHomePageForTenant,
   getPublishedIndexForTenant,
-} from "@compoz/site/lib/pages/public-page-loaders";
+} from "@compoz/site/lib/pages/published-page-loaders";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
+import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
+import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
+import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
+
+import { computeSitePager } from "@compoz/site/app/_helpers/site-pager";
 
 type PageParams = Readonly<{
   params: Promise<Readonly<{ tenantId: string }>>;
@@ -36,68 +36,35 @@ export async function generateMetadata({
 
   return {
     title: (page.title ?? "").trim(),
-    alternates: { canonical: `/t/${tenantId}` },
+    alternates: { canonical: `/t/${encodeURIComponent(tenantId)}` },
   };
 }
 
-function __hrefForSlug(tenantId: string, slug: string) {
-  return slug === "home" ? `/t/${tenantId}` : `/t/${tenantId}/${slug}`;
-}
-
-function __computePager(args: {
-  tenantId: string;
-  page: Pick<Page, "id" | "parentId" | "paginationEnabled"> & {
-    title?: string;
-    slug?: string;
-  };
-  index: SiteIndex;
-}) {
-  const { tenantId, page, index } = args;
-
-  const enabled = Boolean(page.paginationEnabled);
-  if (!enabled) return { enabled: false, prev: null, next: null };
-
-  const siblings = (index.pages ?? []).filter(
-    (p) => p.parentId === page.parentId,
-  );
-
-  if (siblings.length <= 1) return { enabled: true, prev: null, next: null };
-
-  const i = siblings.findIndex((p) => p.id === page.id);
-  if (i < 0) return { enabled: true, prev: null, next: null };
-
-  const prev = i > 0 ? siblings[i - 1] : null;
-  const next = i < siblings.length - 1 ? siblings[i + 1] : null;
-
-  return {
-    enabled: true,
-    prev: prev
-      ? { href: __hrefForSlug(tenantId, prev.slug), label: prev.title }
-      : null,
-    next: next
-      ? { href: __hrefForSlug(tenantId, next.slug), label: next.title }
-      : null,
-  };
-}
-
-export default async function PublicTenantRootPage({ params }: PageParams) {
+export default async function SiteTenantRootPage({ params }: PageParams) {
   const { tenantId } = await unwrapParams(params);
 
   const index = await getPublishedIndexForTenant(tenantId);
-  if (!index) notFound();
+  if (!index) return notFound();
 
   const page = await getPublishedHomePageForTenant(tenantId);
-  if (!page) notFound();
+  if (!page) return notFound();
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
     .map(toBlockShapeFromDTO)
     .filter((b): b is BlockShape => Boolean(b));
 
-  const pager = __computePager({ tenantId, page, index });
+  const tenantPrefix = `/t/${encodeURIComponent(tenantId)}`;
+
+  const pager = computeSitePager({
+    page,
+    index,
+    hrefForSlug: (slug) =>
+      slug === HOME_SLUG ? tenantPrefix : `${tenantPrefix}/${slug}`,
+  });
 
   return (
     <SitePageRenderer
-      ui={resolvePublicUi()}
+      ui={resolveSiteUi()}
       pageTitle={page.title}
       blocks={blocks}
       pager={pager}

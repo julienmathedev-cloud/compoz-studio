@@ -7,15 +7,12 @@
  * et règles de cohérence sont traités dans le domaine.
  */
 
-import { PrimaryMenuItemSchema } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
+import { PrimaryMenuSettingsSchema } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 
-import { z } from "zod";
+import type { z } from "zod";
 
-export const UpdatePrimaryMenuSettingsIntentSchema = z
-  .object({
-    items: z.array(PrimaryMenuItemSchema).optional(),
-  })
-  .strict();
+export const UpdatePrimaryMenuSettingsIntentSchema =
+  PrimaryMenuSettingsSchema.partial().strict();
 
 export type UpdatePrimaryMenuSettingsIntentDTO = z.infer<
   typeof UpdatePrimaryMenuSettingsIntentSchema

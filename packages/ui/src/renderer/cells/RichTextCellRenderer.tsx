@@ -1,18 +1,20 @@
 /**
  * @file packages/ui/src/renderer/cells/RichTextCellRenderer.tsx
- * @layer ui/public/cells
+ * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer public/preview : rendu RichText (HTML TipTap) avec sanitization allowlist.
+ * Cell renderer site/preview : rendu RichText (HTML TipTap).
  *
  * @remarks
  * - On stocke le HTML brut (output TipTap) côté data.
- * - On sanitise au rendu (preview/public) pour éviter toute injection.
- * - On conserve un preset typographique stable via `prose`.
+ * - Ce composant rend le HTML tel quel via `dangerouslySetInnerHTML`.
+ * - La sanitization (allowlist) doit être gérée en amont (pipeline de contenu) ou ajoutée dans une passe dédiée.
  */
-import { cn } from "@compoz/ui/lib/utils";
-import type { PublicRichTextUi } from "@compoz/ui/site/public-ui.types";
+
 import type { RichTextCellShape } from "@compoz/validation/pages/blocks/cells/cell";
+
+import { cn } from "@compoz/ui/lib/utils";
+import type { SiteRichTextUi } from "@compoz/ui/site/site-ui.types";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -22,35 +24,24 @@ export type RichTextCellRendererProps = Readonly<{
   /** Shape frontière (cell richText). */
   cell?: RichTextCellShape | null;
 
-  /** UI fine (optionnel). */
-  ui: PublicRichTextUi;
-  /**
-   * Preset typographique (par défaut activé).
-   * Laisse `true` pour un rendu stable public/preview.
-   */
-  withPreset?: boolean;
-
-  /**
-   * Classes du preset typographique.
-   * Tu peux remplacer par tes tokens/constants quand tu les auras.
-   */
-  presetClassName?: string;
+  /** UI fine (skin). */
+  ui: SiteRichTextUi;
 }>;
+
+/* -------------------------------------------------------------------------- */
+/* Component                                                                  */
+/* -------------------------------------------------------------------------- */
 
 export function RichTextCellRenderer({ cell, ui }: RichTextCellRendererProps) {
   if (!cell) return null;
 
-  const rawHtml = typeof cell.content === "string" ? cell.content : "";
-
-  // Optionnel : éviter un wrapper vide.
-  if (!rawHtml) return null;
-
-  const safeHtml = rawHtml;
+  const html = typeof cell.content === "string" ? cell.content : "";
+  if (!html) return null;
 
   return (
     <div
       className={cn(ui.root, "whitespace-pre-wrap")}
-      dangerouslySetInnerHTML={{ __html: safeHtml }}
+      dangerouslySetInnerHTML={{ __html: html }}
     />
   );
 }

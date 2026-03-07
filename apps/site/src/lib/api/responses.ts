@@ -1,11 +1,13 @@
 /**
  * @file apps/site/src/lib/api/responses.ts
- * @layer lib/api
+ * @layer site/lib/api
  * @description
  * Helpers standardisés pour produire des réponses JSON dans l’App Router :
- * succès (`jsonOk`) et erreurs normalisées (`jsonHttpError`, `serverError`),
+ * succès (`jsonOk`) et erreurs normalisées (`jsonHttpError`),
  * avec cache désactivé via `Cache-Control: no-store`.
  */
+
+import { NextResponse } from "next/server";
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import {
@@ -13,7 +15,6 @@ import {
   type ApiErrorEnvelope,
 } from "@compoz/http/envelope";
 import type { HttpErrorBody } from "@compoz/http/http-error";
-import { NextResponse } from "next/server";
 
 /**
  * En-têtes HTTP désactivant explicitement le cache.
@@ -36,8 +37,7 @@ export function jsonOk<T>(data: T, status = 200): NextResponse<T> {
 
 /**
  * Génère une réponse JSON d'erreur normalisée.
- * Non exporté directement : utilisé par les helpers publics `serverError`
- * et `jsonHttpError`.
+ * Non exporté directement : utilisé par le helper public `jsonHttpError`.
  *
  * @param code    Code d’erreur métier stable.
  * @param message Message lisible (obligatoire côté appelant).
@@ -57,34 +57,9 @@ function jsonError(
 }
 
 /**
- * Helper pour produire une erreur serveur (500).
- *
- * - En production : message générique ("Internal server error.").
- * - En développement : détail du message réel (+ cause optionnelle).
- *
- * @param err Erreur brute (Error / string / inconnu).
- */
-export function serverError(err: unknown): NextResponse<ApiErrorEnvelope> {
-  const isProd = process.env.NODE_ENV === "production";
-
-  const detailed =
-    err instanceof Error ? err.message : err ? String(err) : "Unknown error";
-
-  const message = isProd ? "Internal server error." : detailed;
-
-  // En dev, on peut exposer un petit contexte (sans stack énorme) pour debug.
-  const extras = isProd
-    ? undefined
-    : {
-        cause: err instanceof Error ? err.name : typeof err,
-      };
-
-  return jsonError(EC.INTERNAL, message, 500, extras);
-}
-
-/**
  * Conversion générique “status + HttpErrorBody” → réponse d’erreur JSON.
  *
+ * @remarks
  * Utilisé principalement par `handleRoute` pour transformer des erreurs HTTP
  * structurées (issues de Zod, DomainError, etc.) en réponse JSON cohérente.
  */

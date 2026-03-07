@@ -13,10 +13,6 @@ import type { SocialSettings } from "@compoz/core/domain/site/entities/social";
 
 /**
  * Valeur par défaut pour la configuration des liens sociaux.
- *
- * @example
- * - `items: []` → aucun lien initial ; l’utilisateur peut en ajouter autant
- *   qu’il le souhaite via l’UI admin.
  */
 export const DEFAULT_SOCIAL_SETTINGS: SocialSettings = {
   items: [],

@@ -1,12 +1,13 @@
 /**
  * @file packages/core/src/constants/limits/seo.ts
+ * @layer core/constants/limits
  * @description Limites métier — SEO.
  */
 export const SEO = {
   TITLE: { MIN: 2, MAX: 80 },
   DESCRIPTION: { MIN: 0, MAX: 300 },
   TITLE_TEMPLATE: { MIN: 2, MAX: 120 },
-  IMAGE_ALT_MAX: 100,
+  IMAGE_ALT: { MAX: 100 },
   ROBOTS: { MIN: 0, MAX: 255 },
 
   OPEN_GRAPH: {

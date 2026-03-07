@@ -2,21 +2,22 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/primary-menu/components/molecules/PrimaryMenuChildRow.tsx
- * @layer ui/molecules
+ * @layer ui/studio/molecules
  * @description
- * Composant représentant une ligne d'item dans le formulaire du menu principal.
- * Il gère les champs label, href et newTab en utilisant react-hook-form.
+ * Composant représentant une ligne d’item dans le formulaire du menu principal.
+ * Il gère les champs `label`, `href` et `newTab` en utilisant react-hook-form.
  *
  * @remarks
  * - Utilise `useController` pour connecter les champs au formulaire RHF.
- * - Gère la validation et l'affichage des erreurs pour chaque champ.
- * - Permet la validation immédiate du champ href lors de changements programmatiques.
+ * - Gère la validation et l’affichage des erreurs pour chaque champ.
+ * - Permet la validation immédiate du champ `href` lors de changements programmatiques.
  */
+
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
+import { MenuFieldsItem } from "@compoz/studio/features/settings/menus/_shared/MenuFieldsItem";
 import { Separator } from "@compoz/ui/components/ui/separator";
 import { resolveLinkFlags, slugifyPath } from "@compoz/ui/lib/links/helpers";
 import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-form";
-import { MenuFieldsItem } from "@compoz/studio/features/settings/menus/_shared/MenuFieldsItem";
 import type {
   Control,
   ControllerRenderProps,
@@ -106,6 +107,7 @@ export function PrimaryMenuChildRow({
     if (markTouched) {
       hrefCtrl.field.onBlur();
     }
+
     void trigger(`items.${pIdx}.children.${cIdx}.href` as const);
   };
 
@@ -168,7 +170,6 @@ export function PrimaryMenuChildRow({
             `items.${number}.children.${number}.newTab`
           >
         }
-        // Pas de `isExternalField` : le mode est dérivé depuis `href`.
         invalid={invalid}
         error={error}
         onHrefValidateNow={validateHrefNow}

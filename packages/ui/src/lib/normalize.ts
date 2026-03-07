@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/lib/normalize.ts
- * @layer lib
+ * @layer ui/lib/normalize
  * @description
  * Normalisations utilitaires pour transformer des saisies admin en brouillons (drafts)
  * cohérents pour liens externes et internes.
@@ -8,6 +8,7 @@
  * ⚠️ Heuristiques UI uniquement : pas de validation sécurité.
  * La politique sécurité est centralisée ailleurs (helpers links).
  */
+
 import { isHttpPrefixOnly } from "@compoz/core/domain/urls/ui-heuristics";
 
 const HTTPS = "https://";
@@ -27,6 +28,34 @@ function hasScheme(s: string): boolean {
 /** Vrai si la chaîne ressemble à une URL HTTP(S) absolue (http:// ou https://). */
 function looksLikeAbsoluteHttp(s: string): boolean {
   return /^https?:\/\//i.test((s ?? "").trim());
+}
+
+/**
+ * Normalise les alias internes de "home".
+ *
+ * @remarks
+ * - Préserve query/hash.
+ * - Tolère "/home" et "/home/".
+ */
+function normalizeHomeAlias(path: string): string {
+  const p = (path ?? "").trim();
+  if (!p) return "/";
+
+  // Normalise les slashes initiaux (au moins un)
+  const withLeading = p.startsWith("/") ? p : `/${p.replace(/^\/+/, "")}`;
+
+  // Split propre path vs query/hash
+  const match = withLeading.match(/^([^?#]*)(\?[^#]*)?(#.*)?$/);
+  const pathname = match?.[1] ?? withLeading;
+  const search = match?.[2] ?? "";
+  const hash = match?.[3] ?? "";
+
+  // ✅ Alias home : "/home" ou "/home/" => "/"
+  if (pathname === "/home" || pathname === "/home/") {
+    return `/${search}${hash}`.replace(/^\/\?/, "/?").replace(/^\/#/, "/#");
+  }
+
+  return `${pathname}${search}${hash}` || "/";
 }
 
 /* -------------------------------------------------------------------------- */
@@ -73,28 +102,7 @@ export function toExternalDraft(raw: string): string {
 export function toInternalDraft(raw: string): string {
   const v = (raw ?? "").trim();
 
-  if (!v || isHttpPrefixOnly(v) || v === "") return "/";
-
-  const normalizeHomeAlias = (path: string): string => {
-    const p = (path ?? "").trim();
-    if (!p) return "/";
-
-    // Normalise les slashes initiaux (au moins un)
-    const withLeading = p.startsWith("/") ? p : `/${p.replace(/^\/+/, "")}`;
-
-    // Split propre path vs query/hash
-    const match = withLeading.match(/^([^?#]*)(\?[^#]*)?(#.*)?$/);
-    const pathname = match?.[1] ?? withLeading;
-    const search = match?.[2] ?? "";
-    const hash = match?.[3] ?? "";
-
-    // ✅ Alias home : "/home" ou "/home/" => "/"
-    if (pathname === "/home" || pathname === "/home/") {
-      return `/${search}${hash}`.replace(/^\/\?/, "/?").replace(/^\/#/, "/#");
-    }
-
-    return `${pathname}${search}${hash}` || "/";
-  };
+  if (!v || isHttpPrefixOnly(v)) return "/";
 
   if (looksLikeAbsoluteHttp(v)) {
     try {
@@ -127,6 +135,8 @@ export function toInternalDraft(raw: string): string {
  * - null/undefined → []
  * - array → cast défensif
  * - scalaire → [scalaire]
+ *
+ * @param filterFalsy Si `true`, supprime les valeurs falsy (`0`, `false`, `""`, `null`, `undefined`).
  */
 export function normalizeArray<T>(input: unknown, filterFalsy = true): T[] {
   const arr: T[] = Array.isArray(input)

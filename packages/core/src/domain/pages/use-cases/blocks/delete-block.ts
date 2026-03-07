@@ -1,11 +1,11 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/blocks/delete-block.ts
- * @layer core/domain
+ * @layer core/domain/pages/use-cases/blocks
  * @description
- * Use-case de suppression d’un block sur une page (édition admin → draft).
+ * Use-case : suppression d’un block sur une page (écriture dans l’état par défaut).
  */
 
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type { Block } from "@compoz/core/domain/pages/entities/block";
@@ -21,16 +21,34 @@ export function deleteBlock({ pages }: DeleteBlockDeps) {
   return async function run(
     input: DeleteBlockInput,
   ): Promise<DeleteBlockResult> {
+    const pageId = String(input.pageId ?? "").trim();
+    const blockId = String(input.blockId ?? "").trim();
+
+    if (!pageId) {
+      throw new DomainError({
+        code: EC.INVALID_ARGUMENT,
+        message: EC.INVALID_ARGUMENT,
+        details: { path: ["pageId"] },
+      });
+    }
+    if (!blockId) {
+      throw new DomainError({
+        code: EC.INVALID_ARGUMENT,
+        message: EC.INVALID_ARGUMENT,
+        details: { path: ["blockId"] },
+      });
+    }
+
     await pages.ensureBase();
 
-    const page = await pages.readById(WRITE_CONTENT_STATE, input.pageId);
+    const page = await pages.readById(DEFAULT_CONTENT_STATE, pageId);
     if (!page) {
       throw new DomainError({
         code: EC.PAGE_NOT_FOUND,
         message: EC.PAGE_NOT_FOUND,
         details: {
           path: ["pageId"],
-          meta: { pageId: input.pageId, WRITE_CONTENT_STATE },
+          meta: { pageId, state: DEFAULT_CONTENT_STATE },
         },
       });
     }
@@ -38,7 +56,7 @@ export function deleteBlock({ pages }: DeleteBlockDeps) {
     const currentBlocks: Block[] = Array.isArray(page.blocks)
       ? page.blocks
       : [];
-    const index = currentBlocks.findIndex((b) => b.id === input.blockId);
+    const index = currentBlocks.findIndex((b) => b.id === blockId);
 
     if (index < 0) {
       throw new DomainError({
@@ -46,14 +64,13 @@ export function deleteBlock({ pages }: DeleteBlockDeps) {
         message: EC.BLOCK_NOT_FOUND,
         details: {
           path: ["blockId"],
-          meta: { blockId: input.blockId, pageId: input.pageId },
+          meta: { blockId, pageId },
         },
       });
     }
 
-    const nextBlocks: Block[] = currentBlocks.filter(
-      (b) => b.id !== input.blockId,
-    );
+    const nextBlocks = [...currentBlocks];
+    nextBlocks.splice(index, 1);
 
     assertBlocks(nextBlocks);
 
@@ -63,7 +80,7 @@ export function deleteBlock({ pages }: DeleteBlockDeps) {
       meta: { ...page.meta, updatedAt: new Date().toISOString() },
     };
 
-    await pages.put(WRITE_CONTENT_STATE, nextPage);
+    await pages.put(DEFAULT_CONTENT_STATE, nextPage);
 
     return { page: nextPage, blocks: nextBlocks };
   };

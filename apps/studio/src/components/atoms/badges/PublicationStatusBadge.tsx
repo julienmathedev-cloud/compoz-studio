@@ -1,13 +1,14 @@
 /**
  * @file apps/studio/src/components/atoms/badges/PublicationStatusBadge.tsx
- * @layer ui/atoms
+ * @layer studio/atoms
  *
  * @description
  * Badge de statut de publication (published/never/publishing/changesPending/upToDate/error).
  */
 
-import { StatusBadge } from "@compoz/studio/components/atoms/badges/StatusBadge";
 import { useTranslations } from "next-intl";
+
+import { StatusBadge } from "@compoz/studio/components/atoms/badges/StatusBadge";
 
 export type PublicationStatusKind =
   | "published"
@@ -31,7 +32,7 @@ export function PublicationStatusBadge({ kind }: PublicationStatusBadgeProps) {
     },
     never: {
       variant: "info",
-      label: t("admin.overviewSection.globalStatus.never"),
+      label: t("studio.overviewSection.globalStatus.never"),
     },
     publishing: {
       variant: "info",
@@ -39,13 +40,14 @@ export function PublicationStatusBadge({ kind }: PublicationStatusBadgeProps) {
     },
     changesPending: {
       variant: "warning",
-      label: t("admin.overviewSection.globalStatus.changesPending"),
+      label: t("studio.overviewSection.globalStatus.changesPending"),
     },
     upToDate: { variant: "success", label: t("common.upToDate") },
     error: { variant: "destructive", label: t("common.error") },
   } as const;
 
-  const cfg = map[kind] ?? map.error;
+  const cfg = map[kind];
+
   return <StatusBadge variant={cfg.variant} label={cfg.label} />;
 }
 

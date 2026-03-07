@@ -1,17 +1,13 @@
 /**
  * @file packages/infra/src/http/studio/site-settings.types.ts
- * @layer infra/http
+ * @layer infra/http/studio
  * @description
- * DTO SoT des réponses "site settings" (admin).
+ * DTO SoT des réponses "siteSettings" (Studio).
  *
  * @remarks
- * - Source of truth alignée sur les routes Next :
- *   - /api/site/*
+ * - Source of truth alignée sur les routes Next côté Studio (préfixées via ENDPOINTS).
  * - Évite d'importer des types depuis `app/api/.../route.ts`
  *   (dépendance framework) dans un package partagé.
- *
- * IMPORTANT :
- * - Remplace les `unknown` par tes vrais DTO si tu les exposes depuis @compoz/core/domain.
  */
 
 import type {
@@ -38,9 +34,7 @@ export type GetSettingsBundleResponse = Readonly<{
 /* -------------------------------------------------------------------------- */
 
 type HeaderSettingsResponse = Readonly<{ settings: HeaderSettingsDTO }>;
-/** SoT réponse HTTP */
 export type GetHeaderResponse = HeaderSettingsResponse;
-/** SoT réponse HTTP */
 export type PatchHeaderResponse = HeaderSettingsResponse;
 
 /* -------------------------------------------------------------------------- */
@@ -48,51 +42,43 @@ export type PatchHeaderResponse = HeaderSettingsResponse;
 /* -------------------------------------------------------------------------- */
 
 type FooterSettingsResponse = Readonly<{ settings: FooterSettingsDTO }>;
-/** SoT réponse HTTP */
 export type GetFooterResponse = FooterSettingsResponse;
-/** SoT réponse HTTP */
 export type PatchFooterResponse = FooterSettingsResponse;
 
 /* -------------------------------------------------------------------------- */
 /* Identity                                                                   */
 /* -------------------------------------------------------------------------- */
+
 type IdentitySettingsResponse = Readonly<{ settings: IdentitySettingsDTO }>;
-/** SoT réponse HTTP */
 export type GetIdentityResponse = IdentitySettingsResponse;
-/** SoT réponse HTTP */
 export type PatchIdentityResponse = IdentitySettingsResponse;
 
 /* -------------------------------------------------------------------------- */
 /* Menus                                                                      */
 /* -------------------------------------------------------------------------- */
+
 type PrimaryMenuSettingsResponse = Readonly<{
   settings: PrimaryMenuSettingsDTO;
 }>;
-/** SoT réponse HTTP */
 export type GetPrimaryMenuResponse = PrimaryMenuSettingsResponse;
-/** SoT réponse HTTP */
 export type PatchPrimaryMenuResponse = PrimaryMenuSettingsResponse;
 
 type LegalMenuSettingsResponse = Readonly<{ settings: LegalMenuSettingsDTO }>;
-/** SoT réponse HTTP */
 export type GetLegalMenuResponse = LegalMenuSettingsResponse;
-/** SoT réponse HTTP */
 export type PatchLegalMenuResponse = LegalMenuSettingsResponse;
 
 /* -------------------------------------------------------------------------- */
 /* SEO                                                                        */
 /* -------------------------------------------------------------------------- */
+
 type SeoSettingsResponse = Readonly<{ settings: SeoSettingsDTO }>;
-/** SoT réponse HTTP */
 export type GetSeoResponse = SeoSettingsResponse;
-/** SoT réponse HTTP */
 export type PatchSeoResponse = SeoSettingsResponse;
 
 /* -------------------------------------------------------------------------- */
 /* Social                                                                     */
 /* -------------------------------------------------------------------------- */
+
 type SocialSettingsResponse = Readonly<{ settings: SocialSettingsDTO }>;
-/** SoT réponse HTTP */
 export type GetSocialResponse = SocialSettingsResponse;
-/** SoT réponse HTTP */
 export type PatchSocialResponse = SocialSettingsResponse;

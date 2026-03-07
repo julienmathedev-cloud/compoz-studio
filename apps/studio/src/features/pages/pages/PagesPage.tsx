@@ -2,46 +2,48 @@
 
 /**
  * @file apps/studio/src/features/pages/pages/PagesPage.tsx
- * @layer ui/pages
+ * @layer ui/studio/pages
  *
  * @description
- * Page “Pages” (admin) — coordination liste + édition (métadonnées + contenu).
+ * Page “Pages” (studio) — coordination liste + édition (métadonnées + contenu).
  *
  * @remarks
- * - Coordonne `PagesListSection` (listing) et `PageEditSection` (création/édition meta).
+ * - Coordonne `PagesListSection` (listing) et `PageEditSection` (création / édition meta).
  * - L’édition du contenu se fait via navigation (`/pages/[pageId]/blocks`).
  * - Dirty guard : bloque la navigation route-based si la page courante est dirty.
  * - UX : un clic “éditer les métadonnées” déclenche un scroll vers le formulaire.
  */
 
+import { useLocale, useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
 import type { SiteDiffKindDTO } from "@compoz/core/domain/site/dto";
-import { Separator } from "@compoz/ui/components/ui/separator";
-import { getScrollBehavior } from "@compoz/ui/lib/getScrollBehavior";
-import { cn } from "@compoz/ui/lib/utils";
-import { ADMIN_SECTION } from "@compoz/ui/styles/studio/layout";
 import { Heading } from "@compoz/studio/components/atoms/typography/Heading";
-import { useAdminDirtyGuard } from "@compoz/studio/features/dirty-guard/useAdminDirtyGuard";
+import { useStudioDirtyGuard } from "@compoz/studio/features/dirty-guard/useStudioDirtyGuard";
 import { PageEditSection } from "@compoz/studio/features/pages/sections/PageEditSection";
 import { PagesListSection } from "@compoz/studio/features/pages/sections/PagesListSection";
 import { useReadSiteIndex } from "@compoz/studio/features/site-index/useReadSiteIndex";
 import { useSiteStatusDetails } from "@compoz/studio/features/site/status/useSiteStatusDetails";
-import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Separator } from "@compoz/ui/components/ui/separator";
+import { getScrollBehavior } from "@compoz/ui/lib/getScrollBehavior";
+import { cn } from "@compoz/ui/lib/utils";
+import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 
 /**
- * Page Pages : coordination listing + édition (admin).
+ * Page Pages : coordination listing + édition (studio).
  */
 export function PagesPage() {
   const t = useTranslations();
   const locale = useLocale();
 
-  const dirtyGuard = useAdminDirtyGuard();
+  const dirtyGuard = useStudioDirtyGuard();
   const { index, isLoading } = useReadSiteIndex();
 
   const [editPageId, setEditPageId] = useState<string | null>(null);
+  const [metaDirty, setMetaDirty] = useState(false);
 
   /**
-   * ✅ V0.5 perf : on évite `scope=all` automatique (full scan).
+   * V0.5 perf : on évite `scope=all` automatique (full scan).
    * On ne récupère que les pages "dirty", et on met un fallback UI pour le reste.
    */
   const pageStatuses = useSiteStatusDetails({
@@ -53,29 +55,23 @@ export function PagesPage() {
   const statusByPageId = useMemo<
     Readonly<Record<string, SiteDiffKindDTO>>
   >(() => {
-    const out: Record<string, SiteDiffKindDTO> = {};
+    const output: Record<string, SiteDiffKindDTO> = {};
 
-    // ✅ Fallback : toutes les pages de l'index sont considérées "published"
     const pagesFromIndex = index?.pages ?? [];
-    for (const p of pagesFromIndex) {
-      if (!p?.id) continue;
-      out[p.id] = "published";
+    for (const page of pagesFromIndex) {
+      if (!page?.id) continue;
+      output[page.id] = "published";
     }
 
-    // ✅ Override : les pages retournées par statusDetails (dirty) portent leur diff réel
-    const pages = pageStatuses.data?.pages ?? [];
-    for (const p of pages) {
-      if (!p?.id) continue;
-      out[p.id] = p.diff;
+    const dirtyPages = pageStatuses.data?.pages ?? [];
+    for (const page of dirtyPages) {
+      if (!page?.id) continue;
+      output[page.id] = page.diff;
     }
 
-    return out;
+    return output;
   }, [index?.pages, pageStatuses.data]);
 
-  // Dirty state remonté par PageEditSection (si elle le supporte encore).
-  const [metaDirty, setMetaDirty] = useState(false);
-
-  // ✅ Sync vers le provider (ne jamais appeler setDirty dans le render)
   useEffect(() => {
     dirtyGuard.setDirty(metaDirty);
   }, [dirtyGuard, metaDirty]);
@@ -91,7 +87,6 @@ export function PagesPage() {
   const handleEditMeta = useCallback((pageId: string) => {
     setEditPageId(pageId);
 
-    // UX : scroll vers le formulaire d’édition des métadonnées
     requestAnimationFrame(() => {
       document.getElementById("page-edit")?.scrollIntoView({
         behavior: getScrollBehavior(),
@@ -106,9 +101,9 @@ export function PagesPage() {
   }, []);
 
   return (
-    <div className={cn(ADMIN_SECTION)}>
+    <div className={cn(STUDIO_SECTION)}>
       <Heading as="h1" className="sr-only">
-        {t("admin.shared.entities.pages")}
+        {t("studio.shared.entities.pages")}
       </Heading>
 
       <PageEditSection
@@ -122,7 +117,7 @@ export function PagesPage() {
       <Separator />
 
       <PagesListSection
-        title={t("admin.pagesListSection.section.title")}
+        title={t("studio.pagesListSection.section.title")}
         index={index}
         statusByPageId={statusByPageId}
         isLoadingIndex={isLoading}

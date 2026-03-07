@@ -39,16 +39,6 @@ export function asNonEmptyString(input: unknown): string | undefined {
  * Page diff
  * ------------------------------------------------------------------------------------------------- */
 
-/**
- * Détermine le diff d'une page entre draft et published.
- *
- * Règles V0.5 :
- * - draft && !published => new
- * - !draft && published => deleted
- * - draft && published =>
- *   - meta.updatedAt différent => modified
- *   - sinon => published (équivalent "up to date" côté liste)
- */
 export function pageDiffKind(
   draft?: Page | null,
   published?: Page | null,
@@ -81,14 +71,6 @@ function toBlockMap(blocks: ReadonlyArray<Block>): BlockMap {
   return m;
 }
 
-/**
- * Détermine le diff d'un block entre draft et published.
- *
- * Règles V0.5 :
- * - draft && !published => new
- * - !draft && published => deleted
- * - draft && published => JSON différent => modified, sinon published
- */
 export function blockDiffKind(draft?: Block, published?: Block): SiteDiffKind {
   if (draft && !published) return "new";
   if (!draft && published) return "deleted";
@@ -99,16 +81,12 @@ export function blockDiffKind(draft?: Block, published?: Block): SiteDiffKind {
     : "published";
 }
 
-/**
- * Construit le read-model blocks pour une page (items + counts + hasChanges).
- */
 export function buildBlockDetails(
   draftBlocks: ReadonlyArray<Block>,
   publishedBlocks: ReadonlyArray<Block>,
 ): {
   items: ReadonlyArray<SiteStatusBlockDetails>;
   counts: SiteStatusPageDetails["blocks"];
-  /** new + modified + deleted (sert au filtre scope=dirty) */
   hasChanges: boolean;
 } {
   const draftMap = toBlockMap(draftBlocks);
@@ -118,14 +96,24 @@ export function buildBlockDetails(
   let blocksModified = 0;
   let blocksDeleted = 0;
 
-  const allIds = new Set<string>([...draftMap.keys(), ...pubMap.keys()]);
+  // ✅ Ordre stable (utile pour snapshots KV + UI)
+  const allIds = Array.from(
+    new Set<string>([...draftMap.keys(), ...pubMap.keys()]),
+  ).sort();
+
   const items: SiteStatusBlockDetails[] = [];
 
   for (const id of allIds) {
     const d = draftMap.get(id);
     const p = pubMap.get(id);
 
-    const diff = blockDiffKind(d, p);
+    // ✅ micro-opt: stringify 1 fois si les deux existent
+    const diff =
+      d && p
+        ? safeStringify(d) !== safeStringify(p)
+          ? "modified"
+          : "published"
+        : blockDiffKind(d, p);
 
     if (diff === "new") blocksNew++;
     if (diff === "modified") blocksModified++;

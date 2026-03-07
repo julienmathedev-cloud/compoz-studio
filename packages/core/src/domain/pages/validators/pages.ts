@@ -1,6 +1,6 @@
 /**
- * @file src/core/domain/pages/validators/pages.ts
- * @layer core/domain
+ * @file packages/core/src/domain/pages/validators/pages.ts
+ * @layer core/domain/pages/validators
  * @description
  * Invariants métier des pages : validation title/slug, defaults sitemap et contrôle de priority.
  * Ce module reste purement domaine (pas de Zod/HTTP/UI).
@@ -12,12 +12,9 @@ import {
 } from "@compoz/core/domain/errors/codes";
 import {
   DomainError,
-  isDomainError,
+  isDomainErrorLike,
 } from "@compoz/core/domain/errors/domain-error";
-import type {
-  Page,
-  PageSitemap,
-} from "@compoz/core/domain/pages/entities/page";
+import type { Page } from "@compoz/core/domain/pages/entities/page";
 import { assertSlug } from "@compoz/core/domain/slug/validator";
 
 /**
@@ -70,7 +67,7 @@ export function assertPageSlug(
     return assertSlug(raw, path);
   } catch (e) {
     // Si ce n'est pas une DomainError, on relaie tel quel
-    if (!isDomainError(e)) {
+    if (!isDomainErrorLike(e)) {
       throw e;
     }
 
@@ -97,7 +94,7 @@ export function assertPageSlug(
     throw new DomainError({
       code: mappedCode,
       message: mappedCode,
-      details: e.details ?? { path },
+      details: { path },
       cause: e,
     });
   }
@@ -134,26 +131,6 @@ export function assertPaginationEnabled(args: {
   }
 
   return paginationEnabled;
-}
-
-/**
- * Applique des valeurs par défaut pour le sitemap d’une page.
- *
- * @param p - Patch partiel éventuel (include, changefreq, priority).
- * @returns Un objet `PageSitemap` complet (aucun champ undefined).
- *
- * @remarks
- * Defaults actuels :
- * - include    : true
- * - changefreq : "weekly"
- * - priority   : 0.7
- */
-export function applySitemapDefaults(p?: Partial<PageSitemap>): PageSitemap {
-  return {
-    include: p?.include ?? true,
-    changefreq: p?.changefreq ?? "weekly",
-    priority: p?.priority ?? 0.7,
-  };
 }
 
 /**

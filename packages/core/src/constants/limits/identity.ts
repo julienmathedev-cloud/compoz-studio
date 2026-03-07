@@ -1,5 +1,6 @@
 /**
  * @file packages/core/src/constants/limits/identity.ts
+ * @layer core/constants/limits
  * @description Limites métier — Identity.
  */
 export const IDENTITY_SITENAME = { MIN: 1, MAX: 80 } as const;

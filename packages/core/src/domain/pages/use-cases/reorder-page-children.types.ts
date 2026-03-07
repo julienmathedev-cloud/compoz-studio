@@ -1,17 +1,16 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/reorder-page-children.types.ts
- * @layer core/domain
- *
+ * @layer core/domain/pages/use-cases
  * @description
- * Types du use-case : reorder des enfants d’un parent (index-only, draft).
+ * Types du use-case : réordonner les enfants d’un parent dans l’index (index-only, draft).
  *
  * @remarks
- * - Opération "structurelle" (ordre de navigation) : invalide status + details via `statusCache`.
  * - Le write est fait sur `SiteRepository.writeIndex()` (SoT index).
+ * - Toute invalidation/cache est gérée hors domaine (routes / adapters).
  */
 
-import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
+import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 
 export type ReorderPageChildrenDeps = Readonly<{
   site: SiteRepository;

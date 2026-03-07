@@ -1,16 +1,18 @@
 /**
  * @file apps/studio/src/features/admin/users/mappers/users-form.ts
- * @layer ui-mappers/admin-users
+ * @layer ui-mappers/studio/users
  *
  * @description
- * Mappers "forms admin" dashboard pour les users :
+ * Mappers "forms studio" pour les users :
  * - normalisations UI (trim/coercitions simples)
- * - construction des Intent DTO pour l’API admin
+ * - construction des Intent DTO pour l’API Studio
  *
  * @remarks
  * - Users = Studio-only (pas de mapper shared runtime).
  * - Le password n'est jamais renvoyé depuis l’API.
  */
+
+import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 import type { UserDTO } from "@compoz/core/domain/users/dto";
 import type { UserFormValues } from "@compoz/validation/users/user-form";
@@ -28,6 +30,37 @@ const DEFAULT_RBAC: UserFormValues["rbac"] = {
   tenantIds: ["default"],
   defaultTenantId: "default",
 };
+
+/* -------------------------------------------------------------------------- */
+/* Normalizers                                                                */
+/* -------------------------------------------------------------------------- */
+
+/** Normalise une liste de tenantIds (trim + lowercase + filter). */
+function normalizeTenantIds(input: unknown): string[] {
+  const raw = Array.isArray(input) ? input : [];
+  const out = raw
+    .map((t) => toTenantId(t))
+    .filter((x): x is string => Boolean(x));
+
+  return out.length > 0 ? out : DEFAULT_RBAC.tenantIds;
+}
+
+/** Normalise un tenantId unique (trim + lowercase). */
+function normalizeTenantId(input: unknown): string {
+  return toTenantId(input) ?? DEFAULT_RBAC.defaultTenantId;
+}
+
+/** Normalise un email (trim + lowercase). */
+function normalizeEmail(input: unknown): string {
+  return String(input ?? "")
+    .trim()
+    .toLowerCase();
+}
+
+/** Normalise un nom (trim). */
+function normalizeName(input: unknown): string {
+  return String(input ?? "").trim();
+}
 
 /* -------------------------------------------------------------------------- */
 /* Domain (DTO) -> UI (form values)                                           */
@@ -52,15 +85,8 @@ export function toUserFormValuesFromDTO(
     password: "", // jamais exposé
     rbac: {
       role: user.rbac?.role ?? DEFAULT_RBAC.role,
-      tenantIds: (user.rbac?.tenantIds?.length
-        ? user.rbac.tenantIds
-        : DEFAULT_RBAC.tenantIds
-      )
-        .map((t) => String(t ?? "").trim())
-        .filter(Boolean),
-      defaultTenantId: String(
-        user.rbac?.defaultTenantId ?? DEFAULT_RBAC.defaultTenantId,
-      ).trim(),
+      tenantIds: normalizeTenantIds(user.rbac?.tenantIds),
+      defaultTenantId: normalizeTenantId(user.rbac?.defaultTenantId),
     },
   };
 }
@@ -72,35 +98,22 @@ export function toUserFormValuesFromDTO(
 export function normalizeUserFormValues(
   values: UserFormValues,
 ): UserFormValues {
-  const tenantIds = (values.rbac?.tenantIds ?? [])
-    .map((t) =>
-      String(t ?? "")
-        .trim()
-        .toLowerCase(),
-    )
-    .filter(Boolean);
-
-  const defaultTenantId = String(values.rbac?.defaultTenantId ?? "")
-    .trim()
-    .toLowerCase();
-
   return {
     ...(values.id ? { id: String(values.id).trim() } : {}),
-    email: String(values.email ?? "")
-      .trim()
-      .toLowerCase(),
-    name: String(values.name ?? "").trim(),
+    email: normalizeEmail(values.email),
+    name: normalizeName(values.name),
+    // ⚠️ on ne trim pas ici pour éviter de surprendre l’UI (le trim est fait au submit)
     password: String(values.password ?? ""),
     rbac: {
       role: values.rbac?.role ?? DEFAULT_RBAC.role,
-      tenantIds: tenantIds.length > 0 ? tenantIds : DEFAULT_RBAC.tenantIds,
-      defaultTenantId: defaultTenantId || DEFAULT_RBAC.defaultTenantId,
+      tenantIds: normalizeTenantIds(values.rbac?.tenantIds),
+      defaultTenantId: normalizeTenantId(values.rbac?.defaultTenantId),
     },
   };
 }
 
 /* -------------------------------------------------------------------------- */
-/* UI -> INTENTS (API admin)                                                  */
+/* UI -> INTENTS (API studio)                                                 */
 /* -------------------------------------------------------------------------- */
 
 export function toCreateUserIntentDTOFromFormValues(
@@ -122,13 +135,11 @@ export function toUpdateUserIntentDTOFromFormValues(
   const out: UpdateUserIntentDTO = {};
 
   if ("email" in p && p.email !== undefined) {
-    out.email = String(p.email ?? "")
-      .trim()
-      .toLowerCase();
+    out.email = normalizeEmail(p.email);
   }
 
   if ("name" in p && p.name !== undefined) {
-    out.name = String(p.name ?? "").trim();
+    out.name = normalizeName(p.name);
   }
 
   // password : optionnel, "" = no change
@@ -138,22 +149,10 @@ export function toUpdateUserIntentDTOFromFormValues(
   }
 
   if ("rbac" in p && p.rbac !== undefined) {
-    const tenantIds = (p.rbac?.tenantIds ?? [])
-      .map((t) =>
-        String(t ?? "")
-          .trim()
-          .toLowerCase(),
-      )
-      .filter(Boolean);
-
-    const defaultTenantId = String(p.rbac?.defaultTenantId ?? "")
-      .trim()
-      .toLowerCase();
-
     out.rbac = {
       role: p.rbac?.role ?? DEFAULT_RBAC.role,
-      tenantIds: tenantIds.length > 0 ? tenantIds : DEFAULT_RBAC.tenantIds,
-      defaultTenantId: defaultTenantId || DEFAULT_RBAC.defaultTenantId,
+      tenantIds: normalizeTenantIds(p.rbac?.tenantIds),
+      defaultTenantId: normalizeTenantId(p.rbac?.defaultTenantId),
     };
   }
 

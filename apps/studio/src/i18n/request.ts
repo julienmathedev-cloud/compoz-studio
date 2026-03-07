@@ -1,9 +1,9 @@
 /**
  * @file apps/studio/src/i18n/request.ts
- * @layer i18n
+ * @layer studio/i18n
  * @description
- * Configuration `next-intl` côté serveur : sélection de la locale, exécution des guards (dev/test),
- * chargement des messages JSON par locale.
+ * Configuration `next-intl` côté serveur : sélection de la locale,
+ * exécution des guards (dev/test) et chargement des messages JSON par locale.
  */
 
 import { routing } from "@compoz/studio/i18n/routing";
@@ -24,7 +24,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   }
 
   return {
-    locale, // ✅ string garanti
-    messages: (await import(`../i18n/messages/${locale}.json`)).default,
+    locale,
+    messages: (await import(`./messages/${locale}.json`)).default,
   };
 });

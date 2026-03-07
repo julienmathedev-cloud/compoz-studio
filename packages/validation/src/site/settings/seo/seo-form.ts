@@ -81,7 +81,7 @@ export const SeoOpenGraphFormSchema = z
     imageAlt: z
       .string()
       .trim()
-      .max(SEO.IMAGE_ALT_MAX, ERROR_CODES.SEO_OPEN_GRAPH_IMAGE_ALT_TOO_LONG),
+      .max(SEO.IMAGE_ALT.MAX, ERROR_CODES.SEO_OPEN_GRAPH_IMAGE_ALT_TOO_LONG),
   })
   .strict();
 

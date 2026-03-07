@@ -20,7 +20,7 @@ import { notify } from "@compoz/studio/lib/ui/notify";
 import { notifyCreated } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 
-import { usersAdminApi } from "@compoz/infra/http/studio/users.client";
+import { adminUsersStudioApi } from "@compoz/infra/http/studio/users.client";
 import { toCreateUserIntentDTOFromFormValues } from "@compoz/studio/features/admin/users/mappers/users-form";
 
 import { usersListKey } from "@compoz/studio/features/admin/users/cache/keys";
@@ -37,10 +37,10 @@ const lg = log.child({ ns: "hook", name: "useCreateUser" });
 export function useCreateUser(onSuccess?: () => void): UseCreateUserResult {
   const t = useTranslations();
   const qc = useQueryClient();
-  const entityLabel = t("admin.shared.entities.user");
+  const entityLabel = t("studio.shared.entities.user");
 
   const mutation = useMutation({
-    mutationKey: ["admin", "users", "create"] as const,
+    mutationKey: ["studio", "users", "create"] as const,
 
     mutationFn: async (values: UserFormValues) => {
       const payload: CreateUserIntentDTO =
@@ -49,7 +49,7 @@ export function useCreateUser(onSuccess?: () => void): UseCreateUserResult {
       const fields = Object.keys(payload ?? {});
 
       // ✅ no state for users
-      const res = await usersAdminApi.create(payload);
+      const res = await adminUsersStudioApi.create(payload);
 
       // ✅ flatten route response
       const user = res.user;

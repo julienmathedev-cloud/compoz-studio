@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/settings/social/SocialForm.tsx
- * @layer ui/organisms
+ * @layer ui/studio/organisms
  *
  * @description
  * Formulaire d’édition des liens sociaux (liste éditable) — RHF + Zod comme source de vérité UI.
@@ -12,16 +12,16 @@
  * - Les items sont gérés via `useFieldArray` et une row dédiée (obligatoire pour `useController`).
  * - Les erreurs bloquantes sont affichées au plus près des champs (au niveau row).
  * - Les warnings UI (non bloquants) sont dérivés des valeurs RHF live et remontés au parent.
- * - UX : focus/scroll sur la première erreur au submit (IDs stables, sans ref).
+ * - UX : focus / scroll sur la première erreur au submit (IDs stables, sans ref).
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import type { FieldErrors } from "react-hook-form";
 import {
   useController,
   useFieldArray,
-  useForm,
   useFormState,
   useWatch,
   type Control,
@@ -33,14 +33,23 @@ import {
 } from "react-hook-form";
 
 import { DEFAULT_SOCIAL_KIND } from "@compoz/core/constants/social/social-kinds";
+import { ActionsBar } from "@compoz/studio/components/molecules/controls/ActionsBar";
+import { EmptyState } from "@compoz/studio/components/molecules/feedback/EmptyState";
+import { focusFirstArrayFieldError } from "@compoz/studio/features/settings/_shared/focusFirstArrayFieldError";
+import { useSettingsSectionForm } from "@compoz/studio/features/settings/_shared/useSettingsSectionForm";
+import { useStableWarningKeys } from "@compoz/studio/features/settings/_shared/useStableWarningKeys";
+import { SocialFieldsItem } from "@compoz/studio/features/settings/social/components/molecules/SocialFieldsItem";
+import {
+  useSocialUiWarnings,
+  type SocialWarningKey,
+} from "@compoz/studio/features/settings/social/validate";
+import { notify } from "@compoz/studio/lib/ui/notify";
 import { Card, CardContent, CardFooter } from "@compoz/ui/components/ui/card";
 import { Separator } from "@compoz/ui/components/ui/separator";
-import { useStableOnValuesChange } from "@compoz/ui/hooks/useStableOnValuesChange";
 import {
   createFieldIds,
   useIdPrefix,
 } from "@compoz/ui/lib/forms/use-id-prefix";
-import { getScrollBehavior } from "@compoz/ui/lib/getScrollBehavior";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 import {
@@ -48,15 +57,6 @@ import {
   type SocialFormValues,
   type SocialItemFormValues,
 } from "@compoz/validation/site/settings/social/social-form";
-import { ActionsBar } from "@compoz/studio/components/molecules/controls/ActionsBar";
-import { EmptyState } from "@compoz/studio/components/molecules/feedback/EmptyState";
-import { SocialFieldsItem } from "@compoz/studio/features/settings/social/components/molecules/SocialFieldsItem";
-import {
-  useSocialUiWarnings,
-  type SocialWarningKey,
-} from "@compoz/studio/features/settings/social/validate";
-import { notify } from "@compoz/studio/lib/ui/notify";
-import { useTranslations } from "next-intl";
 
 /**
  * Props du composant `SocialForm`.
@@ -166,6 +166,7 @@ function SocialItemRow({
     if (markTouched) {
       hrefCtrl.field.onBlur();
     }
+
     void trigger(`items.${index}.href` as const);
   };
 
@@ -212,7 +213,7 @@ function SocialItemRow({
 }
 
 /**
- * Formulaire de configuration des liens sociaux (admin).
+ * Formulaire de configuration des liens sociaux (studio).
  */
 export function SocialForm({
   initialValues,
@@ -227,27 +228,27 @@ export function SocialForm({
   const {
     control,
     handleSubmit,
-    reset: rhfReset,
     trigger,
     setValue,
     clearErrors,
     getFieldState,
-  } = useForm<SocialFormValues>({
+    resetToInitialValues,
+    isDirty,
+    isSubmitting,
+    isBusy,
+    submitCount,
+  } = useSettingsSectionForm<SocialFormValues>({
     resolver: zodResolver(SocialFormSchema),
-    defaultValues: initialValues,
-    mode: "onBlur",
-    reValidateMode: "onChange",
-    shouldFocusError: false,
+    initialValues,
+    isSaving,
+    onValuesChange,
+    onDirtyChange,
   });
 
-  // ✅ État global du form
-  const { isDirty, isSubmitting, submitCount } = useFormState({ control });
-
-  // ✅ État “scopé” sur items : rerender quand errors/touched sous items bougent
+  // État “scopé” sur items : rerender quand errors / touched sous items bougent.
   const itemsState = useFormState({ control, name: "items" });
 
   const [hasSubmittedOnce, setHasSubmittedOnce] = useState(false);
-  const isBusy = Boolean(isSaving || isSubmitting);
   const t = useTranslations();
 
   const { fields, append, remove, move } = useFieldArray({
@@ -257,36 +258,15 @@ export function SocialForm({
 
   const formIdPrefix = useIdPrefix("social-form");
 
-  useEffect(() => {
-    rhfReset(initialValues, {
-      keepDirty: false,
-      keepTouched: false,
-      keepErrors: false,
-    });
-  }, [initialValues, rhfReset]);
-
-  // Dirty signal vers le parent (guard / navigation).
-  useEffect(() => {
-    onDirtyChange?.(Boolean(isDirty));
-  }, [isDirty, onDirtyChange]);
-
   const watched = useWatch({ control }) as SocialFormValues | undefined;
   const values = watched ?? initialValues;
 
-  useStableOnValuesChange(values, onValuesChange);
-
   const warningKeys = useSocialUiWarnings(values.items ?? []);
 
-  // Anti-spam : évite de renvoyer des warnings identiques.
-  const lastWarningsSigRef = useRef<string>("");
-
-  useEffect(() => {
-    if (!onWarningKeysChange) return;
-    const sig = warningKeys.join("|");
-    if (sig === lastWarningsSigRef.current) return;
-    lastWarningsSigRef.current = sig;
-    onWarningKeysChange(warningKeys);
-  }, [warningKeys, onWarningKeysChange]);
+  useStableWarningKeys({
+    warningKeys,
+    onWarningKeysChange,
+  });
 
   const createEmptyItem = (): SocialItemFormValues => ({
     kind: DEFAULT_SOCIAL_KIND,
@@ -295,7 +275,7 @@ export function SocialForm({
 
   const showError = hasSubmittedOnce || submitCount > 0;
 
-  // ✅ compteur d’erreurs bloquantes (pour badge section)
+  // Compteur d’erreurs bloquantes (pour badge section).
   const blockingErrorsCount = useMemo(() => {
     const items = values.items ?? [];
     let count = 0;
@@ -327,30 +307,14 @@ export function SocialForm({
           setHasSubmittedOnce(true);
           notify.error(t("uiErrors.formHasErrors"));
 
-          const itemErrors = formErrors.items;
-          if (!Array.isArray(itemErrors) || itemErrors.length === 0) return;
-
-          const firstIndex = itemErrors.findIndex(
-            (e) => !!e?.kind || !!e?.href,
-          );
-          if (firstIndex < 0) return;
-
-          const fieldPriority: Array<"kind" | "href"> = ["kind", "href"];
-          const firstField = fieldPriority.find(
-            (k) => !!itemErrors[firstIndex]?.[k],
-          );
-          if (!firstField) return;
-
-          const rowIdPrefix = `${formIdPrefix}-item-${firstIndex}`;
-          const targetId = createFieldIds(rowIdPrefix, firstField).fieldId;
-
-          const el = document.getElementById(targetId);
-          if (!el) return;
-
-          el.scrollIntoView({ behavior: getScrollBehavior(), block: "center" });
-          setTimeout(() => {
-            (el as HTMLElement).focus?.();
-          }, 50);
+          focusFirstArrayFieldError<"kind" | "href">({
+            itemErrors: formErrors.items,
+            fieldPriority: ["kind", "href"],
+            getFieldId: (index, field) => {
+              const rowIdPrefix = `${formIdPrefix}-item-${index}`;
+              return createFieldIds(rowIdPrefix, field).fieldId;
+            },
+          });
         },
       )}
       noValidate
@@ -358,7 +322,7 @@ export function SocialForm({
       <Card variant="panel">
         <CardContent className={cn(STACK_MD)}>
           {fields.length === 0 ? (
-            <EmptyState text={t("admin.socialForm.empty")} />
+            <EmptyState text={t("studio.socialForm.empty")} />
           ) : (
             fields.map((field, index) => {
               const rowIdPrefix = `${formIdPrefix}-item-${index}`;
@@ -397,14 +361,10 @@ export function SocialForm({
             isDirty={isDirty}
             onAdd={() => append(createEmptyItem())}
             onReset={() => {
-              rhfReset(initialValues, {
-                keepDirty: false,
-                keepTouched: false,
-                keepErrors: false,
-              });
+              resetToInitialValues();
               onReset?.();
             }}
-            addLabel={t("admin.socialForm.addLink")}
+            addLabel={t("studio.socialForm.addLink")}
           />
         </CardFooter>
       </Card>

@@ -1,9 +1,11 @@
 /**
  * @file apps/studio/src/app/api/media/upload/svg/route.ts
- * @layer api/routes
+ * @layer studio/app/api
  * @description
  * Upload SVG “safe” (logo) vers public/uploads/YYYY/MM.
  */
+
+import "server-only";
 
 import { join } from "node:path";
 
@@ -34,7 +36,7 @@ function nowParts(d = new Date()) {
 }
 
 export async function POST(req: Request) {
-  const NS = "api.admin.media.upload.svg.POST" as const;
+  const NS = "api.studio.media.upload.svg.POST" as const;
 
   return handleRoute(NS, req, async () => {
     const lg = log.child({ ns: NS });

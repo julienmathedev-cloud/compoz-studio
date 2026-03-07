@@ -1,8 +1,8 @@
 /**
  * @file apps/studio/src/app/api/settings/identity/route.ts
- * @layer api/routes
+ * @layer studio/app/api
  * @description
- * Route API Admin pour la lecture et la mise à jour des réglages Identity du site.
+ * Route API Studio pour la lecture et la mise à jour des réglages Identity du site.
  *
  * Responsabilités :
  * - GET   : retourne les settings Identity selon le state (draft/published).
@@ -10,6 +10,8 @@
  *           adaptation en patch domaine, et exécution du use-case `updateIdentitySettings`.
  * - Le repository merge avec les defaults pour assurer la cohérence.
  */
+
+import "server-only";
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { updateIdentitySettings } from "@compoz/core/domain/site/use-cases/identity/update-identity-settings";
@@ -27,7 +29,7 @@ import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { UpdateIdentitySettingsIntentSchema } from "@compoz/validation/site/settings/identity/identity-intents";
 
 export async function GET(req: Request) {
-  const NS = "api.admin.site.identity.GET" as const;
+  const NS = "api.studio.site.identity.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
     const { tenantId } = await requireSessionWithTenant();
@@ -43,15 +45,17 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const NS = "api.admin.site.identity.PATCH" as const;
+  const NS = "api.studio.site.identity.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
     const { tenantId } = await requireSessionWithTenant();
 
     return logSpan(NS, { ns: NS, method: "PATCH", tenantId }, async () => {
+      const lg = log.child({ ns: NS });
+
       const raw = await readJsonOr400(req);
 
-      log.info?.("IDENTITY.PATCH.start", {
+      lg.info?.("route.identity.patch.start", {
         tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
@@ -63,7 +67,7 @@ export async function PATCH(req: Request) {
 
       const dto = parseDTOOrHttp(UpdateIdentitySettingsIntentSchema, raw, {
         message: EC.VALIDATION_ERROR,
-        extras: { where: "api.admin.site.identity.PATCH.payload" },
+        extras: { where: "api.studio.site.identity.PATCH.payload" },
       });
 
       const input = adaptUpdateIdentityIntent(dto);
@@ -75,17 +79,17 @@ export async function PATCH(req: Request) {
       const run = updateIdentitySettings({ repo });
       const { settings } = await run(input);
 
-      log.info?.("IDENTITY.PATCH.afterWrite", {
+      lg.info?.("route.identity.patch.afterWrite", {
         tenantId,
         identityKeys: settings?.identity ? Object.keys(settings.identity) : [],
       });
 
       try {
-        log.info?.("IDENTITY.PATCH.invalidate.start", { tenantId });
+        lg.info?.("route.identity.patch.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        log.info?.("IDENTITY.PATCH.invalidate.done", { tenantId });
+        lg.info?.("route.identity.patch.invalidate.done", { tenantId });
       } catch (e) {
-        log.error?.("IDENTITY.PATCH.invalidate.failed", {
+        lg.error?.("route.identity.patch.invalidate.failed", {
           tenantId,
           err: String(e),
         });

@@ -1,16 +1,18 @@
 /**
  * @file apps/studio/src/app/api/settings/bundle/route.ts
- * @layer app/api
+ * @layer studio/app/api
  * @description
- * Route Admin — Settings bundle (READ global).
+ * Route Studio — Settings bundle (READ global).
  *
  * GET:
  * - Retourne l'agrégat `SiteSettings` pour un `state` donné (draft|published).
  *
  * @remarks
- * - Read-model canonique pour l’admin (Option B).
+ * - Read-model canonique pour Studio (Option B).
  * - L’impl repo est choisie via la factory (`SITE_REPO_IMPL`) et est tenant-aware.
  */
+
+import "server-only";
 
 import { logSpan } from "@compoz/infra/lib/log";
 
@@ -35,7 +37,7 @@ function parseState(url: URL): ContentState {
 /* -------------------------------------------------------------------------- */
 
 export async function GET(req: Request) {
-  const NS = "api.admin.settings.bundle.GET" as const;
+  const NS = "api.studio.settings.bundle.GET" as const;
 
   return handleRoute(NS, req, async () => {
     const { tenantId } = await requireSessionWithTenant();

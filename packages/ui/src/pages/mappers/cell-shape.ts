@@ -1,10 +1,10 @@
 /**
  * @file packages/ui/src/pages/mappers/cell-shape.ts
- * @layer ui-mappers/pages
+ * @layer ui/pages/mappers
  *
  * @description
  * Mapper "shared runtime" pour les cells :
- * - DTO domaine -> shape frontier (utilisée par renderer public + preview)
+ * - DTO domaine -> shape frontière (utilisée par renderer public + preview)
  *
  * @remarks
  * - Pas de factories UI (ça = studio/forms)
@@ -14,6 +14,16 @@
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";
 import type { CellFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
+
+type WithDims = { width?: number | null; height?: number | null };
+
+function coerceDims<T extends WithDims>(img: T): T {
+  return {
+    ...img,
+    width: img.width ?? undefined,
+    height: img.height ?? undefined,
+  };
+}
 
 /**
  * Convertit une Cell du domaine en shape "frontière" (safe pour runtime) :
@@ -33,11 +43,7 @@ export function toCellShapeFromDTO(cell: CellDTO): CellFormValues {
   if (cell.kind === "image") {
     return {
       kind: "image",
-      image: {
-        ...cell.image,
-        width: cell.image.width ?? undefined,
-        height: cell.image.height ?? undefined,
-      },
+      image: coerceDims(cell.image),
       variant: cell.variant,
     };
   }
@@ -47,21 +53,13 @@ export function toCellShapeFromDTO(cell: CellDTO): CellFormValues {
       kind: "gallery",
       linksEnabled: cell.linksEnabled,
       maxColumns: cell.maxColumns,
-      images: [...cell.images].map((img) => ({
-        ...img,
-        width: img.width ?? undefined,
-        height: img.height ?? undefined,
-      })),
+      images: [...cell.images].map(coerceDims),
     };
   }
 
   // carousel
   return {
     kind: "carousel",
-    images: [...cell.images].map((img) => ({
-      ...img,
-      width: img.width ?? undefined,
-      height: img.height ?? undefined,
-    })),
+    images: [...cell.images].map(coerceDims),
   };
 }

@@ -2,20 +2,21 @@
 
 /**
  * @file apps/studio/src/features/settings/seo/components/molecules/SeoOpenGraphFields.tsx
- * @layer ui/molecule
- * @description Champs Open Graph SEO (title/description + image via OpenGraphImageFields).
+ * @layer ui/studio/molecules
+ * @description Champs Open Graph SEO (title / description + image via OpenGraphImageFields).
  */
 
+import type { Control } from "react-hook-form";
+import { Controller, useController, useFormState } from "react-hook-form";
+
 import { SEO } from "@compoz/core/constants/limits/seo";
+import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
+import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
+import { OpenGraphImageFields } from "@compoz/studio/features/settings/seo/components/molecules/OpenGraphImageFields";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 import type { SeoFormValues } from "@compoz/validation/site/settings/seo/seo-form";
-import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
-import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
-import { OpenGraphImageFields } from "@compoz/studio/features/settings/seo/components/molecules/OpenGraphImageFields";
-import type { Control } from "react-hook-form";
-import { Controller, useController, useFormState } from "react-hook-form";
 
 type UploadedRasterImage = Readonly<{
   url: string;
@@ -91,6 +92,7 @@ export function SeoOpenGraphFields({
         altErrorMessage={ogAltErrorMessage}
         onUploadOgImage={onUploadOgImage}
       />
+
       <div className={cn(STACK_MD)}>
         <Controller
           name="openGraph.title"
@@ -98,12 +100,12 @@ export function SeoOpenGraphFields({
           render={({ field }) => (
             <InputField
               ids={ogTitleIds}
-              label={t("admin.seoForm.openGraph.title.label")}
+              label={t("studio.seoForm.openGraph.title.label")}
               value={field.value ?? ""}
               onChange={(v) => field.onChange(String(v ?? ""))}
               onBlur={field.onBlur}
-              placeholder={t("admin.seoForm.openGraph.title.placeholder")}
-              help={t("admin.seoForm.openGraph.title.help")}
+              placeholder={t("studio.seoForm.openGraph.title.placeholder")}
+              help={t("studio.seoForm.openGraph.title.help")}
               disabled={isBusy}
               showCount
               maxLength={SEO.TITLE.MAX}
@@ -117,12 +119,14 @@ export function SeoOpenGraphFields({
           render={({ field }) => (
             <TextareaField
               ids={ogDescriptionIds}
-              label={t("admin.seoForm.openGraph.description.label")}
+              label={t("studio.seoForm.openGraph.description.label")}
               value={field.value ?? ""}
               onChange={(v) => field.onChange(String(v ?? ""))}
               onBlur={field.onBlur}
-              placeholder={t("admin.seoForm.openGraph.description.placeholder")}
-              help={t("admin.seoForm.openGraph.description.help")}
+              placeholder={t(
+                "studio.seoForm.openGraph.description.placeholder",
+              )}
+              help={t("studio.seoForm.openGraph.description.help")}
               rows={6}
               disabled={isBusy}
               showCount

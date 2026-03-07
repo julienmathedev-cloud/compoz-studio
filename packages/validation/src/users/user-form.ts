@@ -95,11 +95,9 @@ const UserRbacFormSchema = z
   })
   .strict()
   .superRefine((rbac, ctx) => {
-    const tenantIds = (rbac.tenantIds ?? [])
-      .map((t) => t.trim())
-      .filter(Boolean);
-    const defaultTenantId = String(rbac.defaultTenantId ?? "").trim();
+    const tenantIds = rbac.tenantIds.map((t) => t.trim()).filter(Boolean);
 
+    const defaultTenantId = rbac.defaultTenantId.trim();
     const hasWildcard = tenantIds.includes("*");
 
     if (

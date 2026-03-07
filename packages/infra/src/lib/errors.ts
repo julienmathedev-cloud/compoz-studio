@@ -10,7 +10,11 @@
 const ERRNO = { ENOENT: "ENOENT" } as const;
 type ErrnoCode = (typeof ERRNO)[keyof typeof ERRNO];
 
+/** Forme minimale d’une erreur Node contenant potentiellement un code. */
 type NodeErr = { code?: unknown };
+
+/** Forme narrow quand `code` est un errno string. */
+type NodeErrnoError = { code: ErrnoCode };
 
 /**
  * Extrait la propriété `code` d’une erreur Node si elle est une string.
@@ -25,9 +29,9 @@ function nodeErrCode(e: unknown): string | undefined {
 
 /**
  * Vérifie si une erreur correspond à un code errno donné.
- * Contrat : narrowing vers `NodeErr` si true.
+ * Contrat : narrowing vers une erreur Node ayant `code`.
  */
-function isErrno(e: unknown, code: ErrnoCode): e is NodeErr {
+function isErrno(e: unknown, code: ErrnoCode): e is NodeErrnoError {
   return nodeErrCode(e) === code;
 }
 
@@ -35,4 +39,5 @@ function isErrno(e: unknown, code: ErrnoCode): e is NodeErr {
  * Prédicat spécialisé pour `ENOENT` (fichier ou dossier inexistant).
  * Contrat : utilisé pour gérer lecture ou suppression idempotente.
  */
-export const isENOENT = (e: unknown): e is NodeErr => isErrno(e, ERRNO.ENOENT);
+export const isENOENT = (e: unknown): e is NodeErrnoError =>
+  isErrno(e, ERRNO.ENOENT);

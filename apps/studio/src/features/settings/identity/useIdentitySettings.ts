@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/features/settings/identity/useIdentitySettings.ts
- * @layer hooks/admin/site/identity
+ * @layer hooks/studio/site/identity
  *
  * @description
- * Hook admin spécialisé pour gérer les réglages d’identité du site via l’API.
+ * Hook studio spécialisé pour gérer les réglages d’identité du site via l’API.
  *
  * @remarks
  * - Basé sur le pattern **Settings RHF-first** (`useSettingsResource`).
@@ -20,11 +20,14 @@
  * - Après un save : patch du cache bundle (identity) + invalidate status.
  */
 
+import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
+
 import type { ContentState } from "@compoz/core/constants/common/content-state";
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_IDENTITY_SETTINGS } from "@compoz/core/domain/site/defaults/identity";
-import { settingsAdminApi } from "@compoz/infra/http/studio/site-settings.client";
-import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
+import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
+import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import type { SettingsHookResult } from "@compoz/studio/features/settings/hooks/useSettingsResource";
@@ -40,17 +43,15 @@ import {
 import { invalidateSiteStatus } from "@compoz/studio/features/site/status/invalidate";
 import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
 import type { IdentityFormValues } from "@compoz/validation/site/settings/identity/identity-form";
-import { useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
 
 type UseIdentitySettingsResult = SettingsHookResult<IdentityFormValues>;
 
 export function useIdentitySettings(): UseIdentitySettingsResult {
   const t = useTranslations();
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   const tenantId = useTenantId();
 
-  const entityLabel = t("admin.shared.entities.identity");
+  const entityLabel = t("studio.shared.entities.identity");
 
   const resource = useSettingsResource<IdentityFormValues>({
     entityLabel,
@@ -61,7 +62,13 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
 
     /** READ (bundle) : cache-first + fetchQuery fallback. */
     load: async (state: ContentState, opts) => {
-      const bundle = await getSettingsBundle(qc, tenantId, state, opts);
+      const bundle = await getSettingsBundle(
+        queryClient,
+        tenantId,
+        state,
+        opts,
+      );
+
       return normalizeIdentityFormValues(
         toIdentityFormValuesFromDTO(bundle.identity),
       );
@@ -69,12 +76,17 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
 
     save: async (next, opts) => {
       const patch = toUpdateIdentityIntentDTOFromFormValues(next);
-      const dto = await settingsAdminApi.identity.patch(patch, opts);
+      const dto = await settingsStudioApi.identity.patch(patch, opts);
 
-      patchSettingsBundleCache(qc, tenantId, WRITE_CONTENT_STATE, (prev) => ({
-        ...prev,
-        identity: dto.settings,
-      }));
+      patchSettingsBundleCache(
+        queryClient,
+        tenantId,
+        DEFAULT_CONTENT_STATE,
+        (prev) => ({
+          ...prev,
+          identity: dto.settings,
+        }),
+      );
 
       return normalizeIdentityFormValues(
         toIdentityFormValuesFromDTO(dto.settings),
@@ -91,7 +103,7 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
     beforeSave: normalizeIdentityFormValues,
 
     onSaved: () => {
-      void invalidateSiteStatus(qc, tenantId);
+      void invalidateSiteStatus(queryClient, tenantId);
     },
   });
 

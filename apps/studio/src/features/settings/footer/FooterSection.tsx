@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/features/settings/footer/FooterSection.tsx
- * @layer ui/sections
+ * @layer ui/studio/sections
  *
  * @description
- * Section d’administration dédiée au footer : chargement (shell), édition (form), warnings UI et preview.
+ * Section Studio dédiée au footer : chargement (shell), édition (form), warnings UI et preview.
  *
  * @remarks
  * - Le chargement initial est géré par `SettingsSection` (shell).
@@ -15,44 +15,44 @@
  * - Strictement UI-only : aucune logique métier.
  */
 
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { log } from "@compoz/infra/lib/log";
-import { toLegalMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/legal-menu-shape";
-import { ExpandableLayout } from "@compoz/studio/components/layouts/ExpandableLayout";
 import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
-import { HintList } from "@compoz/studio/components/molecules/feedback/HintList";
-import { useConfirmList } from "@compoz/studio/features/confirm/useConfirmList";
-import { useAdminDirtyGuard } from "@compoz/studio/features/dirty-guard/useAdminDirtyGuard";
-import { useAdminPreview } from "@compoz/studio/features/preview/hooks/useAdminPreview";
+import { StudioWarningsPanel } from "@compoz/studio/features/_shared/components/StudioWarningsPanel";
+import { useStudioPreviewBaselineScope } from "@compoz/studio/features/_shared/hooks/useStudioPreviewBaselineScope";
+import { useStudioSaveDespiteWarningsConfirm } from "@compoz/studio/features/_shared/hooks/useStudioSaveDespiteWarningsConfirm";
+import { useStudioDirtyGuard } from "@compoz/studio/features/dirty-guard/useStudioDirtyGuard";
+import { PreviewFrame } from "@compoz/studio/features/preview/PreviewFrame";
+import { useStudioPreview } from "@compoz/studio/features/preview/hooks/useStudioPreview";
 import { useSettingsBundle } from "@compoz/studio/features/settings/bundle/useSettingsBundle";
 import { FooterForm } from "@compoz/studio/features/settings/footer/FooterForm";
 import { useFooterSettings } from "@compoz/studio/features/settings/footer/useFooterSettings";
 import type { FooterWarningKey } from "@compoz/studio/features/settings/footer/validate";
 import { computeFooterWarnings } from "@compoz/studio/features/settings/footer/validate";
 import { toFooterSettingsShapeFromFormValues } from "@compoz/studio/features/settings/mappers/footer-form";
+import { toLegalMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/legal-menu-shape";
 
 import type { FooterSettingsShape } from "@compoz/validation/site/settings/footer/footer";
 import type { FooterFormValues } from "@compoz/validation/site/settings/footer/footer-form";
 import type { LegalMenuSettingsShape } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu";
-import { PreviewFrame } from "@compoz/studio/features/preview/PreviewFrame";
-import { useTranslations } from "next-intl";
 
-const lg = log.child({ ns: "ui", area: "admin", name: "FooterSection" });
+const lg = log.child({ ns: "ui", area: "studio", name: "FooterSection" });
 
 export function FooterSection() {
-  const confirmList = useConfirmList();
   const t = useTranslations();
+  const { confirmSaveDespiteWarnings } = useStudioSaveDespiteWarningsConfirm();
 
-  const dirtyGuard = useAdminDirtyGuard();
+  const dirtyGuard = useStudioDirtyGuard();
 
   // Hook settings : modèle UI (RHF).
   const { baseline, isLoading, isSaving, save } = useFooterSettings();
 
   // Baseline du menu légal : injectée dans la preview `/preview/footer` (baseline-only).
   const { data: settingsBundle, isLoading: isLoadingSettingsBundle } =
-    useSettingsBundle(WRITE_CONTENT_STATE);
+    useSettingsBundle(DEFAULT_CONTENT_STATE);
 
   const [previewMode, setPreviewMode] = useState<"baseline" | "override">(
     "baseline",
@@ -84,7 +84,7 @@ export function FooterSection() {
     }, [settingsBundle]);
 
   const { ready, setBaseline, setDraft, frame, iframeRef } =
-    useAdminPreview<FooterSettingsShape>("footer", baselinePreview);
+    useStudioPreview<FooterSettingsShape>("footer", baselinePreview);
 
   /**
    * ✅ Empty state (dans l’iframe) :
@@ -98,7 +98,7 @@ export function FooterSection() {
       settingsBundle == null ||
       legalMenuBaselinePreview == null);
 
-  const emptyLabel = t("admin.emptyPreview.footer");
+  const emptyLabel = t("studio.emptyPreview.footer");
 
   // Preview loading :
   // - ⚠️ ne pas tester `baselinePreview` (il peut exister même si `baseline` est null/undefined)
@@ -114,16 +114,17 @@ export function FooterSection() {
       !ready.isReady("footer") ||
       !ready.isReady("legalMenu"));
 
-  useEffect(() => {
-    if (legalMenuBaselinePreview == null) return;
-    if (!ready.isReady("legalMenu")) return;
-
-    lg.debug("footer.preview.inject.legalMenu.baseline", {
-      scope: "legalMenu",
-    });
-
-    setBaseline<LegalMenuSettingsShape>("legalMenu", legalMenuBaselinePreview);
-  }, [legalMenuBaselinePreview, ready, setBaseline]);
+  useStudioPreviewBaselineScope<LegalMenuSettingsShape>({
+    scope: "legalMenu",
+    baseline: legalMenuBaselinePreview,
+    ready,
+    setBaseline,
+    onInject: () => {
+      lg.debug("footer.preview.inject.legalMenu.baseline", {
+        scope: "legalMenu",
+      });
+    },
+  });
 
   const handlePreviewSync = useCallback(() => {
     frame.onSync();
@@ -140,11 +141,6 @@ export function FooterSection() {
   // Warnings live dérivés des valeurs RHF (affichage uniquement).
   const [warningKeys, setWarningKeys] = useState<FooterWarningKey[]>([]);
 
-  const warningHints = useMemo(
-    () => warningKeys.map((k) => t(`admin.footerSection.warnings.${k}`)),
-    [warningKeys, t],
-  );
-
   // Submit : confirmation si warnings + save.
   const handleSubmit = useCallback(
     async (values: FooterFormValues) => {
@@ -152,28 +148,14 @@ export function FooterSection() {
 
       // 1) Warnings recalculés au submit (source de vérité).
       const warningKeysNow = computeFooterWarnings(values);
-      const warningHintsNow = warningKeysNow.map((k) =>
-        t(`admin.footerSection.warnings.${k}`),
-      );
 
       // 2) Confirmation si warnings.
-      if (warningHintsNow.length > 0) {
-        const ok = await confirmList({
-          title: t("admin.shared.confirm.saveDespiteWarnings.title"),
-          intro: t("admin.shared.confirm.saveDespiteWarnings.intro"),
-          items: warningHintsNow,
-          confirmLabel: t(
-            "admin.shared.confirm.saveDespiteWarnings.confirmLabel",
-          ),
-          cancelLabel: t("common.cancel"),
-          requireAckLabel: t(
-            "admin.shared.confirm.saveDespiteWarnings.requireAckLabel",
-          ),
-          tone: "default",
-        });
+      const ok = await confirmSaveDespiteWarnings(
+        warningKeysNow,
+        "studio.footerSection.warnings",
+      );
 
-        if (!ok) return;
-      }
+      if (!ok) return;
 
       // 3) Save.
       await save(values);
@@ -183,41 +165,32 @@ export function FooterSection() {
       frame.onReset();
       setPreviewMode("baseline");
     },
-    [confirmList, isLoading, isSaving, dirtyGuard, save, setBaseline, frame, t],
+    [
+      confirmSaveDespiteWarnings,
+      isLoading,
+      isSaving,
+      dirtyGuard,
+      save,
+      setBaseline,
+      frame,
+    ],
   );
-
-  // Render.
 
   return (
     <SettingsSection
       id="footer"
-      title={t("admin.footerSection.section.title")}
-      description={t("admin.footerSection.section.description")}
+      title={t("studio.footerSection.section.title")}
+      description={t("studio.footerSection.section.description")}
       isBusy={isSaving}
       isLoading={isLoading}
       isDirty={dirtyGuard.isDirty}
       blockingErrorsCount={blockingErrorsCount}
     >
-      <ExpandableLayout
+      <StudioWarningsPanel
         id="footer-warnings"
-        label={
-          warningHints.length > 0
-            ? t("admin.shared.warningsPanel.labelWithCount", {
-                count: warningHints.length,
-              })
-            : t("admin.shared.warningsPanel.label")
-        }
-        defaultOpen={false}
-        disabled={warningHints.length === 0}
-      >
-        {warningHints.length > 0 ? (
-          <HintList
-            variant="warning"
-            title={t("admin.shared.warningsPanel.title")}
-            hints={warningHints}
-          />
-        ) : null}
-      </ExpandableLayout>
+        warningKeys={warningKeys}
+        warningMessageKeyPrefix="studio.footerSection.warnings"
+      />
 
       <FooterForm
         initialValues={baseline}
@@ -242,8 +215,8 @@ export function FooterSection() {
       />
 
       <PreviewFrame
-        title={t("admin.shared.preview.title", {
-          entity: t("admin.shared.entities.footer"),
+        title={t("studio.shared.preview.title", {
+          entity: t("studio.shared.entities.footer"),
         })}
         src="/preview/footer"
         iframeRef={iframeRef}
@@ -257,10 +230,10 @@ export function FooterSection() {
         heightClassName="h-[80px]"
         info={
           isEmpty
-            ? t("admin.emptyPreview.footer")
+            ? t("studio.emptyPreview.footer")
             : previewMode === "override"
-              ? t("admin.shared.preview.infoOverride")
-              : t("admin.shared.preview.infoBaseline")
+              ? t("studio.shared.preview.infoOverride")
+              : t("studio.shared.preview.infoBaseline")
         }
       />
     </SettingsSection>

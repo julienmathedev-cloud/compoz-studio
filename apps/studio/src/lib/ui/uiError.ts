@@ -1,8 +1,13 @@
 /**
  * @file apps/studio/src/lib/ui/uiError.ts
- * @layer admin/lib/ui
+ * @layer studio/lib/ui
  * @description
- * Liste des tokens d’erreur utilisés par l’UI admin (toasts, forms, réseau…).
+ * Source de vérité des tokens d’erreur utilisés par l’UI du Studio.
+ *
+ * @remarks
+ * - Utilisés par `notify` pour afficher les toasts.
+ * - Les clés sont résolues par i18n sous `uiErrors.<token>`.
+ * - Les tokens HTTP sont séparés en `title` et `description`.
  */
 
 export const UiError = {
@@ -13,6 +18,7 @@ export const UiError = {
   requestAborted: "requestAborted",
   serverError: "serverError",
   unexpectedSave: "unexpectedSave",
+
   http400: "http400",
   http400Title: "http400Title",
   http401: "http401",
@@ -36,10 +42,3 @@ export const UiError = {
 } as const;
 
 export type UiErrorToken = (typeof UiError)[keyof typeof UiError];
-
-export function isUiErrorToken(v: unknown): v is UiErrorToken {
-  return (
-    typeof v === "string" &&
-    (Object.values(UiError) as readonly string[]).includes(v)
-  );
-}

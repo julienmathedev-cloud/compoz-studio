@@ -1,19 +1,21 @@
 /**
  * @file apps/studio/src/app/api/_adapters/identity.ts
- * @layer api/adapters
+ * @layer studio/app/api/adapters
+ *
  * @description
- * Adaptateur API Admin pour Identity :
+ * Adaptateur API Studio pour Identity :
  * convertit le DTO d’intention en input domaine pour le use-case.
  *
  * Responsabilités :
- * - trimming des champs texte
+ * - trimming défensif (champs texte)
  * - normalisation des assets (logo / favicon)
  * - aucune logique métier
  * - aucun handling de state (géré par la route)
  */
 
-import { asAssetUrlOrNull } from "@compoz/core/domain/urls/derive";
+import { asAssetUrlOrNull } from "@compoz/core/domain/urls/href";
 import { log } from "@compoz/infra/lib/log";
+import { trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type { IdentitySettings } from "@compoz/core/domain/site/entities/identity";
 import type { UpdateIdentitySettingsInput } from "@compoz/core/domain/site/use-cases/identity/update-identity-settings.types";
@@ -24,7 +26,7 @@ export function adaptUpdateIdentityIntent(
 ): UpdateIdentitySettingsInput {
   const started = Date.now();
 
-  log.debug("admin.adapter.identity.patch.start", {
+  log.debug("studio.adapter.identity.patch.start", {
     hasSiteName: typeof dto.siteName === "string",
     hasTagline: typeof dto.tagline === "string",
     hasLogoAlt: typeof dto.logoAlt === "string",
@@ -37,16 +39,16 @@ export function adaptUpdateIdentityIntent(
   /* --------------------------- Champs texte --------------------------- */
 
   if (typeof dto.siteName === "string") {
-    patch.siteName = dto.siteName.trim();
+    patch.siteName = trimOrKeep(dto.siteName);
   }
 
   if (typeof dto.tagline === "string") {
-    const v = dto.tagline.trim();
+    const v = trimOrKeep(dto.tagline);
     patch.tagline = v.length === 0 ? undefined : v;
   }
 
   if (typeof dto.logoAlt === "string") {
-    patch.logoAlt = dto.logoAlt.trim();
+    patch.logoAlt = trimOrKeep(dto.logoAlt);
   }
 
   /* --------------------------- Assets --------------------------- */
@@ -62,7 +64,7 @@ export function adaptUpdateIdentityIntent(
     patch.faviconUrl = asAssetUrlOrNull(dto.faviconUrl);
   }
 
-  log.debug("admin.adapter.identity.patch.end", {
+  log.debug("studio.adapter.identity.patch.end", {
     ms: Date.now() - started,
     outKeys: Object.keys(patch),
   });

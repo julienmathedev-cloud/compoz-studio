@@ -1,5 +1,5 @@
 /**
- * @file src/core/domain/slug/utils.ts
+ * @file packages/core/src/domain/slug/utils.ts
  * @layer core/domain
  * @description
  * Ce module fournit :
@@ -11,7 +11,9 @@
  * ou non conforme à la regex.
  */
 
+import { SITE_PATH } from "@compoz/core/constants/web/paths";
 import {
+  HOME_SLUG,
   RESERVED_SLUGS,
   SLUG_FINAL_RE,
 } from "@compoz/core/domain/slug/constants";
@@ -86,4 +88,23 @@ const RESERVED_SET = new Set<string>(RESERVED_SLUGS);
 export function isReservedSlug(slug: string): boolean {
   const n = normalizeSlug(slug);
   return n.length > 0 && RESERVED_SET.has(n);
+}
+
+export function toInternalPathFromSlug(slug: string): string {
+  const s = String(slug ?? "").trim();
+  if (!s || s === HOME_SLUG) return SITE_PATH.home;
+  return `/${s.replace(/^\/+/, "")}`;
+}
+
+export function normalizeSlugInput(input: string): string {
+  const raw = String(input ?? "").trim();
+  if (!raw) return "";
+
+  if (raw === SITE_PATH.home) return HOME_SLUG;
+
+  const stripped = raw.replace(/^\/+/, "").replace(/\/+$/, "");
+
+  if (!stripped) return HOME_SLUG;
+
+  return stripped;
 }

@@ -1,15 +1,18 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/blocks/reorder-blocks.ts
- * @layer core/domain
+ * @layer core/domain/pages/use-cases/blocks
  * @description
  * Use-case de réordonnancement des blocks d’une page (édition admin → draft).
  */
 
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
-import type { Block } from "@compoz/core/domain/pages/entities/block";
-import { assertBlocks } from "@compoz/core/domain/pages/validators/blocks";
+import type { Block, BlockId } from "@compoz/core/domain/pages/entities/block";
+import {
+  assertBlocks,
+  assertPermutation,
+} from "@compoz/core/domain/pages/validators/blocks";
 
 import type {
   ReorderBlocksDeps,
@@ -21,16 +24,39 @@ export function reorderBlocks({ pages }: ReorderBlocksDeps) {
   return async function run(
     input: ReorderBlocksInput,
   ): Promise<ReorderBlocksResult> {
+    const pageId = String(input.pageId ?? "").trim();
+    const orderedBlockIds: BlockId[] = Array.isArray(input.orderedBlockIds)
+      ? input.orderedBlockIds
+          .map((id) => String(id ?? "").trim())
+          .filter(Boolean)
+      : [];
+
+    if (!pageId) {
+      throw new DomainError({
+        code: EC.INVALID_ARGUMENT,
+        message: EC.INVALID_ARGUMENT,
+        details: { path: ["pageId"] },
+      });
+    }
+
+    if (orderedBlockIds.length === 0) {
+      throw new DomainError({
+        code: EC.INVALID_ARGUMENT,
+        message: EC.INVALID_ARGUMENT,
+        details: { path: ["orderedBlockIds"] },
+      });
+    }
+
     await pages.ensureBase();
 
-    const page = await pages.readById(WRITE_CONTENT_STATE, input.pageId);
+    const page = await pages.readById(DEFAULT_CONTENT_STATE, pageId);
     if (!page) {
       throw new DomainError({
         code: EC.PAGE_NOT_FOUND,
         message: EC.PAGE_NOT_FOUND,
         details: {
           path: ["pageId"],
-          meta: { pageId: input.pageId, WRITE_CONTENT_STATE },
+          meta: { pageId, state: DEFAULT_CONTENT_STATE },
         },
       });
     }
@@ -41,17 +67,14 @@ export function reorderBlocks({ pages }: ReorderBlocksDeps) {
     const currentIds = currentBlocks.map((b) => b.id);
 
     assertPermutation({
-      ordered: input.orderedBlockIds,
+      ordered: orderedBlockIds,
       current: currentIds,
     });
 
-    const byId = new Map<string, Block>();
+    const byId = new Map<BlockId, Block>();
     for (const b of currentBlocks) byId.set(b.id, b);
 
-    const nextBlocks: Block[] = input.orderedBlockIds.map((id) => {
-      // safe car assertPermutation() a déjà garanti la présence.
-      return byId.get(id)!;
-    });
+    const nextBlocks: Block[] = orderedBlockIds.map((id) => byId.get(id)!);
 
     assertBlocks(nextBlocks);
 
@@ -61,70 +84,8 @@ export function reorderBlocks({ pages }: ReorderBlocksDeps) {
       meta: { ...page.meta, updatedAt: new Date().toISOString() },
     };
 
-    await pages.put(WRITE_CONTENT_STATE, nextPage);
+    await pages.put(DEFAULT_CONTENT_STATE, nextPage);
 
     return { page: nextPage, blocks: nextBlocks };
   };
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Inline helpers                               */
-/* -------------------------------------------------------------------------- */
-
-type AssertPermutationProps = {
-  ordered: ReadonlyArray<string>;
-  current: ReadonlyArray<string>;
-};
-
-function assertPermutation({ ordered, current }: AssertPermutationProps): void {
-  if (!Array.isArray(ordered)) {
-    throw new DomainError({
-      code: EC.BLOCKS_INVALID,
-      message: EC.BLOCKS_INVALID,
-      details: { path: ["orderedBlockIds"] },
-    });
-  }
-
-  const currentSet = new Set(current);
-  const seen = new Set<string>();
-
-  for (let i = 0; i < ordered.length; i += 1) {
-    const id = ordered[i]?.trim?.() ?? "";
-
-    if (!id) {
-      throw new DomainError({
-        code: EC.BLOCK_ID_REQUIRED,
-        message: EC.BLOCK_ID_REQUIRED,
-        details: { path: ["orderedBlockIds", i] },
-      });
-    }
-
-    if (seen.has(id)) {
-      throw new DomainError({
-        code: EC.BLOCK_ID_DUPLICATE,
-        message: EC.BLOCK_ID_DUPLICATE,
-        details: { path: ["orderedBlockIds", i], meta: { id } },
-      });
-    }
-    seen.add(id);
-
-    if (!currentSet.has(id)) {
-      throw new DomainError({
-        code: EC.BLOCK_NOT_FOUND,
-        message: EC.BLOCK_NOT_FOUND,
-        details: { path: ["orderedBlockIds", i], meta: { id } },
-      });
-    }
-  }
-
-  if (ordered.length !== current.length) {
-    throw new DomainError({
-      code: EC.BLOCKS_INVALID,
-      message: EC.BLOCKS_INVALID,
-      details: {
-        path: ["orderedBlockIds"],
-        meta: { expected: current.length, actual: ordered.length },
-      },
-    });
-  }
 }

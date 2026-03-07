@@ -1,14 +1,14 @@
 /**
  * @file packages/ui/src/site/skins/default/pager.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
- * Skin UI — pager public (thème Default).
+ * Skin UI — pager site (thème Default).
  */
 
-import type { PublicDetailPagerUi } from "@compoz/ui/site/public-ui.types";
+import type { SiteDetailPagerUi } from "@compoz/ui/site/site-ui.types";
 
-export const defaultPagerUi: PublicDetailPagerUi = {
+export const defaultPagerUi: SiteDetailPagerUi = {
   nav: "w-full mx-auto max-w-screen-xl px-3 md:px-4 lg:px-6 flex flex-col gap-3 md:flex-row md:justify-between py-4",
 
   // ✅ PRM : transition uniquement si motion autorisé

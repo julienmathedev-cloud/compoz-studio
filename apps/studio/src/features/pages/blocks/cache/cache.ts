@@ -1,18 +1,19 @@
 /**
  * @file apps/studio/src/features/pages/blocks/cache/cache.ts
- * @layer hooks/admin/pages/blocks
+ * @layer hooks/studio/pages/blocks
  * @description
  * Helpers cache React Query pour les blocks d’une page (liste).
  *
- * Note:
- * - Les blocks vivent dans PageDTO.
- * - Après mutation, on sync via `syncBlocksFromPageCache` (qui met à jour page + liste blocks).
+ * @remarks
+ * - Les blocks vivent dans `PageDTO`.
+ * - Après mutation, la sync est faite via `syncBlocksFromPageCache`
+ *   (qui met à jour la page + la liste des blocks).
  */
+
+import type { QueryClient } from "@tanstack/react-query";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import type { BlockDTO } from "@compoz/core/domain/pages/dto";
-import type { QueryClient } from "@tanstack/react-query";
-
 import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
 
 export function setPageBlocksCache(

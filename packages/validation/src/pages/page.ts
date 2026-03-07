@@ -58,9 +58,14 @@ export const PageIdSchema = z
   .string()
   .trim()
   .min(1, ERROR_CODES.PAGE_ID_REQUIRED);
+
 export const PageParentIdSchema = z.union([PageIdSchema, z.null()]);
 
 export const PageIdParamSchema = z.object({ pageId: PageIdSchema }).strict();
+
+/**
+ * Param route : un parentId d’URL ne peut pas être null (contrairement à `parentId` dans la doc Page).
+ */
 export const PageParentIdParamSchema = z
   .object({ parentId: PageIdSchema })
   .strict();
@@ -131,8 +136,9 @@ export const PageSchema = z
   .strict();
 
 /* -------------------------------------------------------------------------- */
-/* schema pour le rendu (preview/public)                                    */
+/*                       Schéma pour le rendu (preview/public)                */
 /* -------------------------------------------------------------------------- */
+
 export const PageRenderSchema = z
   .object({
     title: PageTitleSchema,

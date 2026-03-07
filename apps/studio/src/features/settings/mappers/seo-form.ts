@@ -1,6 +1,6 @@
 /**
  * @file apps/studio/src/features/settings/mappers/seo-form.ts
- * @layer ui-mapper
+ * @layer ui-mapper/studio
  * @description
  * Mappers UI SEO (studio forms) :
  * - DTO -> valeurs de formulaire RHF (draft-friendly)

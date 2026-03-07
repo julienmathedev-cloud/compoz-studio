@@ -2,18 +2,27 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/editor/cells/ImageCellEditor.tsx
- * @layer ui/organisms
+ * @layer ui/studio/pages/blocks/editor/cells
+ *
+ * @description
+ * Éditeur UI d’une ImageCell avec gestion de la source, de l’alt et de la variante d’affichage.
+ *
+ * @remarks
+ * - UI-only : aucune logique métier.
+ * - Modèle contrôlé (value/onChange).
+ * - Réutilise `ImageFields` pour l’édition de l’image.
+ * - Réinitialise proprement les métadonnées image quand la source est vidée.
  */
 
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
-import { ImageFields } from "@compoz/studio/features/_shared/ui/molecules/fields/ImageFields";
+import { ImageFields } from "@compoz/studio/features/_shared/components/ImageFields";
 import { Button } from "@compoz/ui/components/ui/button";
 import { cn } from "@compoz/ui/lib/utils";
-import type { ImageCellFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 import { ROW_SM, STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
+import type { ImageCellFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 
 type UploadedRasterImage = Readonly<{
   url: string;
@@ -103,7 +112,7 @@ export function ImageCellEditor({
   const variantSlot = (
     <div className={cn(STACK_SM)}>
       <Text as="p" className="font-medium">
-        {t("admin.cellEditorTabs.imageCellEditor.variantLabel")}
+        {t("studio.cellEditorTabs.imageCellEditor.variantLabel")}
       </Text>
 
       <div className={cn(ROW_SM)}>
@@ -126,7 +135,7 @@ export function ImageCellEditor({
               onChange({ ...value, variant: v });
             }}
           >
-            {t(`admin.cellEditorTabs.imageCellEditor.variants.${v}`)}
+            {t(`studio.cellEditorTabs.imageCellEditor.variants.${v}`)}
           </Button>
         ))}
       </div>
@@ -154,16 +163,16 @@ export function ImageCellEditor({
         }}
         accept="image/jpeg,image/png,image/webp,image/avif"
         preferredTypes={["image/webp", "image/avif"]}
-        preferredTypeHint={t("admin.imageSelector.hints.notRecommendedType", {
+        preferredTypeHint={t("studio.imageSelector.hints.notRecommendedType", {
           types: "WEBP, AVIF",
         })}
         labels={{
-          image: t("admin.cellEditorTabs.image.srcLabel"),
-          alt: t("admin.cellEditorTabs.image.altLabel"),
+          image: t("studio.cellEditorTabs.image.srcLabel"),
+          alt: t("studio.cellEditorTabs.image.altLabel"),
         }}
         help={{
-          image: t("admin.cellEditorTabs.image.srcHelp"),
-          alt: t("admin.cellEditorTabs.image.altHelp"),
+          image: t("studio.cellEditorTabs.image.srcHelp"),
+          alt: t("studio.cellEditorTabs.image.altHelp"),
         }}
         layout="split"
         sideSlot={variantSlot}

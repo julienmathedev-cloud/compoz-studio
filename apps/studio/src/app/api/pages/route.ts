@@ -1,62 +1,59 @@
 /**
  * @file apps/studio/src/app/api/pages/route.ts
- * @layer api/routes
+ * @layer studio/app/api
  * @description
- * Route API Admin pour la création et le listing des pages (index du site).
+ * Route API Studio pour la création et le listing des pages (index du site).
  *
  * Responsabilités :
  * - GET  : retourne l’index des pages (draft-only).
- * - POST : crée une page (draft-only) et met à jour l’index.
- * - Draft-only : pas de résolution de state (body/query), toujours WRITE_CONTENT_STATE.
- * - L’index (SiteIndexDTO) est reconstruit et persisté via SiteRepository après chaque mutation.
+ * - POST : crée une page (draft-only) et met à jour l’index (SoT) par patch (pas de rebuild).
+ * - Draft-only : pas de résolution de state (body/query), toujours DEFAULT_CONTENT_STATE.
  */
 
-import { readJsonOr400 } from "@compoz/infra/http/read-json";
-import { log, logSpan } from "@compoz/infra/lib/log";
-import { handleRoute } from "@compoz/studio/lib/api/handle-route";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
+import "server-only";
 
-import { getPagesRepository } from "@compoz/infra/pages";
-import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
-
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import type { PageDTO } from "@compoz/core/domain/pages/dto";
 import { createPage } from "@compoz/core/domain/pages/use-cases/create-page";
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
-import { getIdGenerator } from "@compoz/infra/id/index";
-import { adaptCreatePagePayload } from "@compoz/studio/app/api/_adapters/pages/pages";
-
-import {
-  CreatePageIntentSchema,
-  type CreatePageIntentDTO,
-} from "@compoz/validation/pages/page-intents";
-
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { upsertPageRef } from "@compoz/core/domain/site/index/utils";
+import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import type {
   CreatePageResponse,
   GetPagesIndexResponse,
 } from "@compoz/infra/http/studio/pages.types";
-
+import { getIdGenerator } from "@compoz/infra/id/index";
+import { log, logSpan } from "@compoz/infra/lib/log";
+import { getPagesRepository } from "@compoz/infra/pages";
+import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
+import { adaptCreatePagePayload } from "@compoz/studio/app/api/_adapters/pages/pages";
 import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
+import {
+  CreatePageIntentSchema,
+  type CreatePageIntentDTO,
+} from "@compoz/validation/pages/page-intents";
 
 // -------------------------------------------------
 // GET /api/pages → index des pages (draft-only)
 // -------------------------------------------------
 
 export async function GET(req: Request) {
-  const NS = "api.pages.GET" as const;
+  const NS = "api.studio.pages.GET" as const;
 
   return handleRoute(NS, req, async () => {
     const { tenantId } = await requireSessionWithTenant();
 
     return logSpan(
       NS,
-      { ns: NS, method: "GET", state: WRITE_CONTENT_STATE, tenantId },
+      { ns: NS, method: "GET", state: DEFAULT_CONTENT_STATE, tenantId },
       async () => {
         const siteRepo = getSiteRepository({ tenantId });
 
-        // L’index est la source de vérité pour la liste des pages côté admin
-        const index = await siteRepo.readIndex(WRITE_CONTENT_STATE);
+        // L’index est la source de vérité pour la liste des pages côté studio.
+        const index = await siteRepo.readIndex(DEFAULT_CONTENT_STATE);
 
         const res: GetPagesIndexResponse = { index };
         return res;
@@ -68,15 +65,16 @@ export async function GET(req: Request) {
 // -------------------------------------------------
 // POST /api/pages → créer une page + mettre l’index à jour (draft-only)
 // -------------------------------------------------
+
 export async function POST(req: Request) {
-  const NS = "api.pages.POST" as const;
+  const NS = "api.studio.pages.POST" as const;
 
   return handleRoute(NS, req, async () => {
     const { tenantId } = await requireSessionWithTenant();
 
     return logSpan(
       NS,
-      { ns: NS, method: "POST", state: WRITE_CONTENT_STATE, tenantId },
+      { ns: NS, method: "POST", state: DEFAULT_CONTENT_STATE, tenantId },
       async () => {
         const lg = log.child({ ns: NS });
 
@@ -87,7 +85,7 @@ export async function POST(req: Request) {
           raw,
           {
             message: EC.INVALID_ARGUMENT,
-            extras: { where: "api.admin.pages.POST.payload" },
+            extras: { where: "api.studio.pages.POST.payload" },
           },
         );
 
@@ -96,50 +94,86 @@ export async function POST(req: Request) {
         const statusCache = getSiteStatusCache({ tenantId });
 
         await pagesRepo.ensureBase();
+        await siteRepo.ensureBase();
 
-        // ✅ A) Build a local slug index ONCE to avoid KV scans in createPage.
-        const existingSummaries = await pagesRepo.list(WRITE_CONTENT_STATE);
+        const nowIso = new Date().toISOString();
+
+        // ✅ A) Lire l’index SoT une seule fois :
+        // - sert de base pour patcher l’index après création
+        // - sert aussi à construire l’ensemble des slugs existants
+        const currentIndex = await siteRepo.readIndex(DEFAULT_CONTENT_STATE);
+
         const existingSlugs = new Set(
-          existingSummaries
+          (currentIndex?.pages ?? [])
             .map((p) => String(p.slug ?? "").trim())
             .filter(Boolean),
         );
 
         const idGenerator = getIdGenerator();
-        const runCreate = createPage({ pages: pagesRepo, idGenerator });
+        const runCreate = createPage({
+          pages: pagesRepo,
+          idGenerator,
+          nowIso: () => nowIso,
+        });
 
         const payload = adaptCreatePagePayload(dto);
         const { page } = await runCreate({ ...payload, existingSlugs });
 
-        // 4) Recalcul de l’index à partir des pages existantes
-        // (On relist pour inclure la page créée. Optimisation possible ensuite.)
-        const summaries = await pagesRepo.list(WRITE_CONTENT_STATE);
+        // ✅ B) Patch index SoT (no rebuild)
+        const baseIndex: SiteIndexDTO =
+          currentIndex ??
+          ({
+            pages: [],
+            updatedAt: nowIso,
+          } as SiteIndexDTO);
 
-        lg.debug("route.index.rebuild.input", {
-          summariesCount: summaries.length,
-          createdPageId: page.id,
-          createdSlug: page.slug,
+        const nextIndexEntity = upsertPageRef(baseIndex, {
+          id: page.id,
+          slug: page.slug,
+          title: page.title,
+          parentId: page.parentId,
         });
 
         const index: SiteIndexDTO = {
-          pages: summaries.map((p) => ({
+          pages: nextIndexEntity.pages.map((p) => ({
             id: p.id,
             slug: p.slug,
             title: p.title,
             parentId: p.parentId,
           })),
-          updatedAt: new Date().toISOString(),
+          updatedAt: nowIso,
         };
 
-        await siteRepo.writeIndex(WRITE_CONTENT_STATE, index);
+        await siteRepo.putIndex(DEFAULT_CONTENT_STATE, index);
 
+        lg.debug("route.index.patched", {
+          tenantId,
+          pagesCount: index.pages.length,
+          createdPageId: page.id,
+          createdSlug: page.slug,
+        });
+
+        // ✅ Invalidation KV snapshots (best-effort)
         try {
-          lg.info?.("route.statusCache.invalidateAll.start", {});
-          await statusCache.invalidateAll();
-          lg.info?.("route.statusCache.invalidateAll.done", {});
+          lg.info?.("route.statusCache.invalidate.start", {
+            invalidateStatus: true,
+            invalidateStatusDetails: true,
+          });
+
+          await Promise.all([
+            statusCache.invalidateStatus(),
+            statusCache.invalidateStatusDetails(),
+          ]);
+
+          lg.info?.("route.statusCache.invalidate.done", {
+            invalidateStatus: true,
+            invalidateStatusDetails: true,
+          });
         } catch (e) {
-          lg.error?.("route.statusCache.invalidateAll.failed", {
+          lg.error?.("route.statusCache.invalidate.failed", {
             err: String(e),
+            invalidateStatus: true,
+            invalidateStatusDetails: true,
           });
         }
 

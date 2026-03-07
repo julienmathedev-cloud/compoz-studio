@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/features/site/publish/usePublishSite.ts
- * @layer hooks/admin/site
+ * @layer hooks/studio/site
  *
  * @description
- * Hook admin React Query pour publier le site (draft → published).
+ * Hook Studio React Query pour publier le site (draft → published).
  *
  * @remarks
  * - Orchestration UI-only (mutation, logs, notifications).
@@ -14,23 +14,22 @@
  * - Tenant-scoped : les query keys incluent tenantId.
  */
 
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-import { siteAdminApi } from "@compoz/infra/http/studio/site.client";
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import type { PublishSiteResultDTO } from "@compoz/core/domain/site/dto";
+import { siteStudioApi } from "@compoz/infra/http/studio/site.client";
+import type { PublishSiteResponse } from "@compoz/infra/http/studio/site.types";
 import { log } from "@compoz/infra/lib/log";
+import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import {
+  invalidateSiteStatus,
+  invalidateSiteStatusDetails,
+} from "@compoz/studio/features/site/status/invalidate";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
-
-import type { PublishSiteResultDTO } from "@compoz/core/domain/site/dto";
-import type { PublishSiteResponse } from "@compoz/infra/http/studio/site.types";
-import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
-import {
-  invalidateSiteStatus,
-  invalidateSiteStatusDetails,
-} from "@compoz/studio/features/site/status/invalidate";
 
 type UsePublishSiteResult = Readonly<{
   publish: () => Promise<PublishSiteResultDTO | null>;
@@ -45,19 +44,19 @@ export function usePublishSite(onSuccess?: () => void): UsePublishSiteResult {
   const tenantId = useTenantId();
 
   const mutation = useMutation({
-    mutationKey: ["t", tenantId, "admin", "site", "publish"] as const,
+    mutationKey: ["t", tenantId, "studio", "site", "publish"] as const,
 
     mutationFn: async (): Promise<PublishSiteResultDTO> => {
       const res: PublishSiteResponse = await withSaveLogs(
         "usePublishSite",
-        WRITE_CONTENT_STATE,
+        DEFAULT_CONTENT_STATE,
         () =>
-          siteAdminApi.publish({
-            from: WRITE_CONTENT_STATE,
+          siteStudioApi.publish({
+            from: DEFAULT_CONTENT_STATE,
             to: "published",
             cleanOrphans: true,
           }),
-        { entity: t("admin.shared.entities.site"), fields: ["publish"] },
+        { entity: t("studio.shared.entities.site"), fields: ["publish"] },
       );
 
       return res.publishResult;
@@ -65,14 +64,14 @@ export function usePublishSite(onSuccess?: () => void): UsePublishSiteResult {
 
     onSuccess: async (publishResult) => {
       notify.success(
-        t("admin.overviewSection.publish.success.title"),
-        t("admin.overviewSection.publish.success.description"),
+        t("studio.overviewSection.publish.success.title"),
+        t("studio.overviewSection.publish.success.description"),
       );
 
       if (publishResult.warnings?.length) {
         notify.warning(
-          t("admin.overviewSection.publish.warning.title"),
-          t("admin.overviewSection.publish.warning.description", {
+          t("studio.overviewSection.publish.warning.title"),
+          t("studio.overviewSection.publish.warning.description", {
             count: publishResult.warnings.length,
           }),
         );

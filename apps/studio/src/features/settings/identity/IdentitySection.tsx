@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/features/settings/identity/IdentitySection.tsx
- * @layer ui/sections
+ * @layer ui/studio/sections
  *
  * @description
- * Section d’administration dédiée à l’identité du site : chargement (shell), édition (form), warnings UI et preview.
+ * Section Studio dédiée à l’identité du site : chargement (shell), édition (form), warnings UI et preview.
  *
  * @remarks
  * - Le chargement initial est géré par `SettingsSection` (shell).
@@ -15,35 +15,35 @@
  * - Strictement UI-only : aucune logique métier.
  */
 
-import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
-import { HintList } from "@compoz/studio/components/molecules/feedback/HintList";
-import { useConfirmList } from "@compoz/studio/features/confirm/useConfirmList";
-import { useAdminDirtyGuard } from "@compoz/studio/features/dirty-guard/useAdminDirtyGuard";
-import { IdentityForm } from "@compoz/studio/features/settings/identity/components/organisms/IdentityForm";
-import { useIdentitySettings } from "@compoz/studio/features/settings/identity/useIdentitySettings";
+import { useTranslations } from "next-intl";
+import { useCallback, useState } from "react";
 
 import { uploadImage, uploadSvg } from "@compoz/infra/http/studio/media.client";
-import { formatBytes } from "@compoz/ui/lib/format-bytes";
-import type { IdentityFormValues } from "@compoz/validation/site/settings/identity/identity-form";
-import { ExpandableLayout } from "@compoz/studio/components/layouts/ExpandableLayout";
+import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
+import { StudioWarningsPanel } from "@compoz/studio/features/_shared/components/StudioWarningsPanel";
+import { useStudioSaveDespiteWarningsConfirm } from "@compoz/studio/features/_shared/hooks/useStudioSaveDespiteWarningsConfirm";
+import { useStudioDirtyGuard } from "@compoz/studio/features/dirty-guard/useStudioDirtyGuard";
+import { IdentityForm } from "@compoz/studio/features/settings/identity/components/organisms/IdentityForm";
+import { useIdentitySettings } from "@compoz/studio/features/settings/identity/useIdentitySettings";
 import {
   computeIdentityWarnings,
   type IdentityWarningKey,
 } from "@compoz/studio/features/settings/identity/validate";
 import { notify } from "@compoz/studio/lib/ui/notify";
-import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
+import { formatBytes } from "@compoz/ui/lib/format-bytes";
+import type { IdentityFormValues } from "@compoz/validation/site/settings/identity/identity-form";
 
 type UploadedRasterImage = Readonly<{
   url: string;
   width: number;
   height: number;
 }>;
-export function IdentitySection() {
-  const confirmList = useConfirmList();
-  const t = useTranslations();
 
-  const dirtyGuard = useAdminDirtyGuard();
+export function IdentitySection() {
+  const t = useTranslations();
+  const { confirmSaveDespiteWarnings } = useStudioSaveDespiteWarningsConfirm();
+
+  const dirtyGuard = useStudioDirtyGuard();
 
   const { baseline, isLoading, isSaving, save } = useIdentitySettings();
 
@@ -61,7 +61,7 @@ export function IdentitySection() {
 
       if (res.wasResized || res.wasCompressed) {
         notify.info(
-          t("admin.shared.upload.optimized", {
+          t("studio.shared.upload.optimized", {
             from: formatBytes(res.originalSize),
             to: formatBytes(res.optimizedSize),
           }),
@@ -86,7 +86,7 @@ export function IdentitySection() {
 
       if (res.wasResized || res.wasCompressed) {
         notify.info(
-          t("admin.shared.upload.optimized", {
+          t("studio.shared.upload.optimized", {
             from: formatBytes(res.originalSize),
             to: formatBytes(res.optimizedSize),
           }),
@@ -105,11 +105,6 @@ export function IdentitySection() {
   // Warnings UI (non bloquants).
   const [warningKeys, setWarningKeys] = useState<IdentityWarningKey[]>([]);
 
-  const warningHints = useMemo(
-    () => warningKeys.map((k) => t(`admin.identitySection.warnings.${k}`)),
-    [warningKeys, t],
-  );
-
   const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
 
   // Submit : confirmation si warnings + save.
@@ -122,65 +117,36 @@ export function IdentitySection() {
         faviconUrl: values.faviconUrl,
       });
 
-      const warningHintsNow = warningKeysNow.map((k) =>
-        t(`admin.identitySection.warnings.${k}`),
+      const ok = await confirmSaveDespiteWarnings(
+        warningKeysNow,
+        "studio.identitySection.warnings",
       );
 
-      if (warningHintsNow.length > 0) {
-        const ok = await confirmList({
-          title: t("admin.shared.confirm.saveDespiteWarnings.title"),
-          intro: t("admin.shared.confirm.saveDespiteWarnings.intro"),
-          items: warningHintsNow,
-          confirmLabel: t(
-            "admin.shared.confirm.saveDespiteWarnings.confirmLabel",
-          ),
-          cancelLabel: t("common.cancel"),
-          requireAckLabel: t(
-            "admin.shared.confirm.saveDespiteWarnings.requireAckLabel",
-          ),
-          tone: "default",
-        });
-        if (!ok) return;
-      }
+      if (!ok) return;
 
       await save(values);
       dirtyGuard.setDirty(false);
     },
-    [confirmList, isLoading, isSaving, dirtyGuard, save, t],
+    [confirmSaveDespiteWarnings, isLoading, isSaving, dirtyGuard, save],
   );
 
-  const description = t("admin.identitySection.section.description");
+  const description = t("studio.identitySection.section.description");
 
   return (
     <SettingsSection
       id="identity"
-      title={t("admin.identitySection.section.title")}
+      title={t("studio.identitySection.section.title")}
       description={description}
       isBusy={isSaving}
       isLoading={isLoading}
       isDirty={dirtyGuard.isDirty}
       blockingErrorsCount={blockingErrorsCount}
     >
-      <ExpandableLayout
+      <StudioWarningsPanel
         id="identity-warnings"
-        label={
-          warningHints.length > 0
-            ? t("admin.shared.warningsPanel.labelWithCount", {
-                count: warningHints.length,
-              })
-            : t("admin.shared.warningsPanel.label")
-        }
-        defaultOpen={false}
-        disabled={warningHints.length === 0}
-      >
-        {warningHints.length > 0 ? (
-          <HintList
-            title={t("admin.shared.warningsPanel.title")}
-            hints={warningHints}
-            variant="warning"
-          />
-        ) : null}
-      </ExpandableLayout>
+        warningKeys={warningKeys}
+        warningMessageKeyPrefix="studio.identitySection.warnings"
+      />
 
       <IdentityForm
         initialValues={baseline}

@@ -1,16 +1,17 @@
 /**
  * @file apps/studio/src/components/atoms/badges/SettingsStatusBadge.tsx
- * @layer ui/atoms
+ * @layer studio/atoms
  *
  * @description
- * Badge de statut pour une section de réglages (upToDate/dirty/error).
+ * Badge de statut pour une section de réglages (upToDate/modified/error).
  *
  * @remarks
  * Les réglages ne peuvent pas être "new" ni "deleted".
  */
 
-import { StatusBadge } from "@compoz/studio/components/atoms/badges/StatusBadge";
 import { useTranslations } from "next-intl";
+
+import { StatusBadge } from "@compoz/studio/components/atoms/badges/StatusBadge";
 
 export type SettingsStatusKind = "upToDate" | "modified" | "error";
 

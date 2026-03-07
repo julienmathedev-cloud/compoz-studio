@@ -1,8 +1,8 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/blocks/delete-block.types.ts
- * @layer core/domain
+ * @layer core/domain/pages/use-cases/blocks
  * @description
- * Contrat du use-case de suppression d’un block sur une page (édition admin → draft).
+ * Contrat du use-case de suppression d’un block sur une page (édition Studio → draft).
  */
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";

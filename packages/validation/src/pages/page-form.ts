@@ -1,4 +1,4 @@
-/****
+/**
  * @file packages/validation/src/pages/page-form.ts
  * @layer schemas
  * @description
@@ -31,24 +31,18 @@ const PageSlugFormSchema = z
     const v = val.trim();
     if (v.length === 0) return; // draft accepté (requis géré par l’UI si besoin)
 
-    // ✅ Cas spécial UI : page d’accueil
+    // Cas spécial UI : page d’accueil
     if (v === "/") return;
 
-    if (v === "home") {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: [],
-        message: ERROR_CODES.PAGE_SLUG_RESERVED,
-      });
-      return;
-    }
+    const parsed = SlugSchema.safeParse(v);
+    if (!parsed.success) {
+      const firstMessage =
+        parsed.error.issues[0]?.message ?? ERROR_CODES.PAGE_SLUG_INVALID_FORMAT;
 
-    const ok = SlugSchema.safeParse(v).success;
-    if (!ok) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: [],
-        message: ERROR_CODES.PAGE_SLUG_INVALID_FORMAT,
+        message: firstMessage,
       });
     }
   });

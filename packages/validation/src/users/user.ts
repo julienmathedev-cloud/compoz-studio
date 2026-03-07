@@ -53,7 +53,10 @@ export const UserEmailSchema = z
  * @remarks
  * Les use-cases peuvent imposer "required" selon le flow (ex: create user).
  */
-export const UserNameSchema = z.string().trim().optional();
+export const UserNameSchema = z
+  .string()
+  .trim()
+  .min(1, ERROR_CODES.USER_NAME_REQUIRED);
 
 /**
  * Role RBAC minimal (V0.5).
@@ -94,12 +97,14 @@ export const TenantIdsSchema = z
   .array(TenantIdSchema)
   .min(1, ERROR_CODES.USER_TENANT_IDS_REQUIRED)
   .superRefine((arr, ctx) => {
-    // unique best-effort (en restant simple côté validation)
     const seen = new Set<string>();
-    for (const t of arr) {
+
+    for (let i = 0; i < arr.length; i++) {
+      const t = arr[i];
       if (seen.has(t)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
+          path: [i],
           message: ERROR_CODES.USER_TENANT_IDS_INVALID,
         });
         return;

@@ -14,12 +14,12 @@
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 import type { SiteStatusCachePort } from "@compoz/core/domain/site/ports/site-status-cache-port";
 
-import { FileSystemSiteRepository } from "@compoz/infra/site/file-system-site-repository";
 import { InMemorySiteRepository } from "@compoz/infra/site/in-memory-site-repository";
 import { KvSiteRepository } from "@compoz/infra/site/kv-site-repository";
 import { KvSiteStatusSnapshot } from "@compoz/infra/site/kv-site-status-snapshot";
 
 import { log } from "@compoz/infra/lib/log";
+import { normalizeTenantId } from "@compoz/infra/lib/normalize-tenant-id";
 
 const lg = log.child({ ns: "infra:site", factory: "siteRepo" });
 
@@ -31,11 +31,6 @@ export type SiteRepoOptions = {
   /** Tenant cible (siteId). Recommandé dans le Studio (via session). */
   tenantId?: string;
 };
-
-function normalizeTenantId(input: unknown): string {
-  const t = String(input ?? "").trim();
-  return t.length > 0 ? t : "default";
-}
 
 /* -------------------------------------------------------------------------- */
 /* Repo cache (HMR-safe)                                                      */
@@ -49,10 +44,6 @@ function cacheKey(impl: string, opts: SiteRepoOptions): string {
 
   if (impl === "kv") return `kv:${tenant}`;
 
-  // FS/memory : V0.5 => pas de multi-tenant natif
-  // On garde une clé unique (stable).
-  const root = process.env["CONTENT_ROOT"] ?? "(cwd)/content";
-  if (impl === "fs") return `fs:${root}`;
   return `memory`;
 }
 
@@ -75,20 +66,9 @@ function createRepo(opts: SiteRepoOptions): SiteRepository {
     return new InMemorySiteRepository();
   }
 
-  if (impl === "kv") {
-    const tenantId = normalizeTenantId(opts.tenantId);
-    lg.debug("site.repository.init", { impl: "kv", tenantId });
-    return new KvSiteRepository({ tenantId });
-  }
-
-  const root = process.env["CONTENT_ROOT"] ?? undefined;
-
-  lg.debug("site.repository.init", {
-    impl: "fs",
-    root: root ?? "(cwd)/content",
-  });
-
-  return new FileSystemSiteRepository(root);
+  const tenantId = normalizeTenantId(opts.tenantId);
+  lg.debug("site.repository.init", { impl: "kv", tenantId });
+  return new KvSiteRepository({ tenantId });
 }
 
 /**

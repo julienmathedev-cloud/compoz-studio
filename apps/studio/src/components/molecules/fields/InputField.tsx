@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/components/molecules/fields/TextField.tsx
- * @layer ui/molecules
+ * @layer studio/molecules
  *
  * @description
  * Champ texte contrôlé (label, aide, erreur, compteur) basé sur le composant `Field`.
@@ -15,8 +15,16 @@
  * - Strictement UI-only : aucune logique métier.
  */
 
+import type {
+  HTMLInputTypeAttribute,
+  InputHTMLAttributes,
+  ReactNode,
+  Ref,
+} from "react";
+
 import { ErrorText } from "@compoz/studio/components/atoms/typography/ErrorText";
 import { FieldMetaBar } from "@compoz/studio/components/molecules/fields/FieldMetaBar";
+
 import {
   Field,
   FieldDescription,
@@ -25,12 +33,6 @@ import {
 } from "@compoz/ui/components/ui/field";
 import { Input } from "@compoz/ui/components/ui/input";
 import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
-import type {
-  HTMLInputTypeAttribute,
-  InputHTMLAttributes,
-  ReactNode,
-  Ref,
-} from "react";
 
 /**
  * Props du composant `InputField`.
@@ -73,7 +75,7 @@ export type InputFieldProps = Readonly<
 >;
 
 /**
- * Champ texte contrôlé standardisé pour l’admin.
+ * Champ texte contrôlé standardisé pour le Studio.
  */
 export function InputField({
   ids,

@@ -76,8 +76,7 @@ export const UpdateIdentitySettingsIntentSchema =
       const logoUrl =
         typeof val.logoUrl === "string" ? val.logoUrl.trim() : null;
 
-      const isSettingLogo =
-        typeof logoUrl === "string" && logoUrl.trim().length > 0;
+      const isSettingLogo = typeof logoUrl === "string" && logoUrl.length > 0;
 
       // Si on "set" un logo (pas reset), on exige un logoAlt dans le payload patch.
       if (isSettingLogo) {

@@ -2,14 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/social/validate.ts
- * @layer hooks/admin/site/social
+ * @layer hooks/studio/site/social
  *
  * @description
  * Helpers et hooks de validation UI non bloquante pour les réseaux sociaux.
  *
  * @remarks
  * - Validation métier assurée par le domaine (Zod + use-cases serveur).
- * - Ici : UX uniquement (warnings légers, cohérence, doublons, préfixes incomplets).
+ * - Ici : UX uniquement (warnings légers, cohérence, doublons).
  */
 
 import { useMemo } from "react";
@@ -21,40 +21,44 @@ import type { SocialFormValues } from "@compoz/validation/site/settings/social/s
  */
 export type SocialWarningKey = "socialEmpty" | "dupLinks";
 
-/**
- * Paramètres nécessaires au calcul des warnings UI Social.
- */
-type WarningProps = Pick<SocialFormValues, "items">;
-
 /** Normalisation simple (trim + lowercase) pour la détection de doublons. */
-const normHref = (h: string) => h.trim().toLowerCase();
+function normHref(href: string): string {
+  return href.trim().toLowerCase();
+}
 
 /**
  * Calcule les warnings UI associés à un brouillon Social.
  */
-export function computeSocialWarnings(props: WarningProps): SocialWarningKey[] {
-  const out = new Set<SocialWarningKey>();
-  const items = Array.isArray(props.items) ? props.items : [];
+export function computeSocialWarnings({
+  items,
+}: Pick<SocialFormValues, "items">): SocialWarningKey[] {
+  const warnings = new Set<SocialWarningKey>();
+
+  const safeItems = Array.isArray(items) ? items : [];
 
   // Aucun lien → UX : inciter à ajouter au moins un réseau
-  if (items.length === 0) {
-    out.add("socialEmpty");
-    return Array.from(out);
+  if (safeItems.length === 0) {
+    warnings.add("socialEmpty");
+    return Array.from(warnings);
   }
 
   // Doublons de href (URL/mailto)
   const seenHrefs = new Set<string>();
-  for (const it of items) {
-    const h = normHref(it.href ?? "");
-    if (!h) continue;
-    if (seenHrefs.has(h)) {
-      out.add("dupLinks");
+
+  for (const item of safeItems) {
+    const href = normHref(item.href ?? "");
+
+    if (!href) continue;
+
+    if (seenHrefs.has(href)) {
+      warnings.add("dupLinks");
       break; // un warning suffit
     }
-    seenHrefs.add(h);
+
+    seenHrefs.add(href);
   }
 
-  return Array.from(out);
+  return Array.from(warnings);
 }
 
 /**

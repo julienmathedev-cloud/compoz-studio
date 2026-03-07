@@ -1,21 +1,28 @@
 /**
  * @file apps/studio/src/app/api/site/status/details/route.ts
- * @layer api/routes
+ * @layer studio/app/api
+ * @description
+ * Route API Studio — status details (diff pages/blocks draft vs published).
+ *
+ * Query :
+ * - scope=dirty|all (default: dirty)
+ * - includeBlocks=0|1|true|false (default: false)
+ * - pageId=<id> (optional)
  */
 
-import { NextResponse } from "next/server";
+import "server-only";
 
 import { logSpan } from "@compoz/infra/lib/log";
-import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { getPagesRepository } from "@compoz/infra/pages";
+import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 
 import type { SiteStatusDetailsScope } from "@compoz/core/domain/site/entities/site-status-details";
-
-import { getPagesRepository } from "@compoz/infra/pages";
-import { getSiteStatusCache } from "@compoz/infra/site";
-
 import { getSiteStatusDetails } from "@compoz/core/domain/site/use-cases/status/get-site-status-details";
+
 import type { GetSiteStatusDetailsResponse } from "@compoz/infra/http/studio/site.types";
+
 import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 
 type ParsedQuery = Readonly<{
   scope: SiteStatusDetailsScope;
@@ -44,21 +51,19 @@ function parseQueryFromUrl(url: string): ParsedQuery {
 }
 
 export async function GET(req: Request) {
-  const { tenantId } = await requireSessionWithTenant();
-  if (!tenantId) {
-    return NextResponse.json({ error: "Missing tenant" }, { status: 400 });
-  }
-
-  const NS = "api.admin.site.status.details.GET" as const;
+  const NS = "api.studio.site.status.details.GET" as const;
 
   return handleRoute(NS, req, async () => {
-    return logSpan(NS, { ns: NS, method: "GET" }, async () => {
+    const { tenantId } = await requireSessionWithTenant();
+
+    return logSpan(NS, { ns: NS, method: "GET", tenantId }, async () => {
       const { scope, includeBlocks, pageId } = parseQueryFromUrl(req.url);
 
       const pages = getPagesRepository({ tenantId });
+      const site = getSiteRepository({ tenantId });
       const cache = getSiteStatusCache({ tenantId });
 
-      const run = getSiteStatusDetails({ pages, cache });
+      const run = getSiteStatusDetails({ pages, site, cache });
       const { details } = await run({ scope, includeBlocks, pageId });
 
       const res: GetSiteStatusDetailsResponse = { details };

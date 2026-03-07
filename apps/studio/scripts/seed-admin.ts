@@ -1,9 +1,12 @@
 /**
  * @file apps/studio/scripts/seed-admin.ts
  * @description
- * Seed d’un user admin Studio via KvUsersRepository.
+ * Seed d’un user admin Studio via `KvUsersRepository`.
  *
- * Charge les variables depuis .env (dotenv).
+ * @remarks
+ * - Charge les variables depuis `.env.local`.
+ * - Aligne le payload repo avec `CreateUserRecord` :
+ *   `{ user, password }`.
  */
 
 import dotenv from "dotenv";
@@ -49,16 +52,25 @@ async function main() {
   const existing = await repo.readByEmail(email);
 
   if (!existing) {
+    const now = new Date().toISOString();
+
     const created = await repo.create({
-      id: "admin-default",
-      email,
-      name,
-      password,
-      rbac: {
-        role: "admin",
-        tenantIds: [defaultTenant],
-        defaultTenantId: defaultTenant,
+      user: {
+        id: "admin-default",
+        email,
+        name,
+        status: "active",
+        rbac: {
+          role: "admin",
+          tenantIds: [defaultTenant],
+          defaultTenantId: defaultTenant,
+        },
+        meta: {
+          createdAt: now,
+          updatedAt: now,
+        },
       },
+      password,
     });
 
     console.log("✅ Admin created:", {
@@ -70,10 +82,10 @@ async function main() {
     return;
   }
 
-  // Update si déjà présent
   await repo.put({
     ...existing,
     name,
+    status: "active",
     rbac: {
       role: "admin",
       tenantIds: [defaultTenant],

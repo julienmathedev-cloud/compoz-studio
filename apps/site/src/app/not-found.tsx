@@ -1,19 +1,19 @@
 /**
  * @file apps/site/src/app/not-found.tsx
- * @layer app/site
+ * @layer site/app
  *
  * @description
- * Page 404 pour le segment public (Server Component).
+ * Page 404 pour le segment site (Server Component).
  *
  * @remarks
  * - `not-found.tsx` doit rester server (pas de "use client").
  * - Le rendu UI dynamique (pathname/searchParams) est délégué à un composant client.
  */
 
-import { PublicNotFoundClient } from "@compoz/site/components/system/PublicNotFoundClient";
+import { SiteNotFoundClient } from "@compoz/site/components/system/SiteNotFoundClient";
 
-export default function PublicNotFound() {
-  return <PublicNotFoundClient />;
+export default function SiteNotFound() {
+  return <SiteNotFoundClient />;
 }
 
-PublicNotFound.displayName = "PublicNotFound";
+SiteNotFound.displayName = "SiteNotFound";

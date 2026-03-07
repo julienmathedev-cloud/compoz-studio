@@ -1,16 +1,22 @@
 /**
  * @file apps/studio/src/auth/next-auth.d.ts
- * @layer app/auth
+ * @layer studio/auth
+ *
  * @description
  * Module augmentation NextAuth/Auth.js :
  * - Ajoute les champs RBAC/tenants au User, Session et JWT.
  *
- * Important :
+ * @remarks
  * - Fichier .d.ts inclus par TypeScript (via tsconfig "include").
  */
 
-import type { AuthRole } from "@compoz/infra/auth/kv-auth-users-repository";
 import type { DefaultSession } from "next-auth";
+
+/**
+ * Rôle auth Studio (aligné sur la validation actuelle du Credentials provider).
+ * TS-only : n’impacte pas le runtime.
+ */
+type AuthRole = "admin" | "editor";
 
 declare module "next-auth" {
   interface User {

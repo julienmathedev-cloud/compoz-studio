@@ -1,12 +1,34 @@
 /**
  * @file packages/ui/src/lib/forms/use-id-prefix.ts
- * @layer lib/ui
+ * @layer ui/lib/forms
  * @description
  * Helpers pour générer des identifiants stables (SSR-safe) destinés à l’a11y des formulaires
  * (association label/input, messages d’erreur, textes d’aide).
  */
 
 import { useId, useMemo } from "react";
+
+/* -------------------------------------------------------------------------- */
+/*                            Internal helpers                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Normalise un segment d'ID pour garantir un format sûr :
+ * - trim
+ * - kebab-case
+ * - uniquement [a-z0-9-]
+ */
+function normalizeIdSegment(value: string | undefined): string {
+  return (value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+/* -------------------------------------------------------------------------- */
+/*                               useIdPrefix                                   */
+/* -------------------------------------------------------------------------- */
 
 /**
  * Génère un préfixe d'ID stable basé sur un `seed` + `useId()`.
@@ -20,15 +42,9 @@ export function useIdPrefix(seed: string): string {
   const reactId = useId();
 
   return useMemo(() => {
-    const normalizedSeed = (seed ?? "")
-      .trim()
-      .toLowerCase()
-      // remplace les séquences non alphanumériques par "-"
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+    const normalizedSeed = normalizeIdSegment(seed);
 
     // Nettoyage de l'id React : on garde uniquement [a-z0-9]
-    // (ça évite les surprises sur SSR/CSR et dans les sélecteurs CSS).
     const normalizedReactId = reactId.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
     return normalizedSeed
@@ -36,6 +52,10 @@ export function useIdPrefix(seed: string): string {
       : normalizedReactId;
   }, [seed, reactId]);
 }
+
+/* -------------------------------------------------------------------------- */
+/*                               FieldIds type                                 */
+/* -------------------------------------------------------------------------- */
 
 export type FieldIds = {
   /** Identifiant du champ (input, textarea, select, etc.) */
@@ -54,6 +74,10 @@ export type FieldIds = {
   hintId?: string;
 };
 
+/* -------------------------------------------------------------------------- */
+/*                              createFieldIds                                 */
+/* -------------------------------------------------------------------------- */
+
 /**
  * Génère les IDs standard pour un champ à partir d'un préfixe et d'un nom de champ.
  *
@@ -69,12 +93,8 @@ export function createFieldIds(
   },
 ): FieldIds {
   // Normalisation du nom : éviter "." et caractères spéciaux dans les IDs
-  const normalizedName =
-    name
-      .trim()
-      .replace(/[^a-z0-9]+/gi, "-")
-      .replace(/(^-|-$)/g, "")
-      .toLowerCase() || "field";
+  const normalizedName = normalizeIdSegment(name) || "field";
+
   const base = `${idPrefix}-${normalizedName}`;
 
   return {

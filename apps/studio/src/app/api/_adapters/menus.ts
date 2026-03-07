@@ -1,8 +1,9 @@
 /**
  * @file apps/studio/src/app/api/_adapters/menus.ts
- * @layer api/adapters
+ * @layer studio/app/api/adapters
+ *
  * @description
- * Adaptateurs API Admin pour les menus (Primary et Legal) : convertit les DTO reçus
+ * Adaptateurs API Studio pour les menus (Primary et Legal) : convertit les DTO reçus
  * en patchs partiels domaine avec trimming et normalisation.
  *
  * Responsabilités :
@@ -14,6 +15,10 @@
  * - `isExternal` n’est pas stocké : il est dérivé au render/preview à partir de `href`.
  */
 
+import { asAssetUrl } from "@compoz/core/domain/urls/href";
+import { log } from "@compoz/infra/lib/log";
+import { trimOrKeep } from "@compoz/studio/lib/strings";
+
 import type {
   LegalMenuItem,
   LegalMenuSettings,
@@ -24,14 +29,22 @@ import type {
 } from "@compoz/core/domain/site/entities/primary-menu";
 import type { UpdateLegalMenuSettingsInput } from "@compoz/core/domain/site/use-cases/legal-menu/update-legal-menu-settings.types";
 import type { UpdatePrimaryMenuSettingsInput } from "@compoz/core/domain/site/use-cases/primary-menu/update-primary-menu-settings.types";
-import { asAssetUrl } from "@compoz/core/domain/urls/derive";
-
-import { log } from "@compoz/infra/lib/log";
 
 import type { UpdateLegalMenuSettingsIntentDTO } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-intents";
 import type { UpdatePrimaryMenuSettingsIntentDTO } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-intents";
+import { SITE_PATH } from "@compoz/core/constants/web/paths";
 
 /* ─────────── LEGAL ─────────── */
+
+/**
+ * Assure un href string non vide avant normalisation domaine.
+ * - undefined / "" => "/"
+ * - sinon => trimming défensif
+ */
+function coerceHrefOrRoot(input: unknown): string {
+  const v = typeof input === "string" ? trimOrKeep(input) : "";
+  return v.length === 0 ? SITE_PATH.home : v;
+}
 
 /**
  * Transforme un item LegalMenu intent DTO en item domaine.
@@ -44,10 +57,10 @@ function adaptLegalItem(dto: {
   href: string;
   newTab: boolean;
 }): LegalMenuItem {
-  const href = asAssetUrl(dto.href);
+  const href = asAssetUrl(coerceHrefOrRoot(dto.href));
 
   return {
-    label: dto.label.trim(),
+    label: trimOrKeep(dto.label),
     href,
     newTab: !!dto.newTab,
   };
@@ -62,7 +75,7 @@ export function adaptUpdateLegalMenuIntent(
 ): UpdateLegalMenuSettingsInput {
   const started = Date.now();
 
-  log.debug("admin.adapter.legalMenu.patch.start", {
+  log.debug("studio.adapter.legalMenu.patch.start", {
     hasItems: Array.isArray(dto.items),
     itemsCount: Array.isArray(dto.items) ? dto.items.length : undefined,
   });
@@ -73,7 +86,7 @@ export function adaptUpdateLegalMenuIntent(
     patch.items = dto.items.map(adaptLegalItem);
   }
 
-  log.debug("admin.adapter.legalMenu.patch.end", {
+  log.debug("studio.adapter.legalMenu.patch.end", {
     ms: Date.now() - started,
     outKeys: Object.keys(patch),
   });
@@ -82,16 +95,6 @@ export function adaptUpdateLegalMenuIntent(
 }
 
 /* ─────────── PRIMARY (2 niveaux max) ─────────── */
-
-/**
- * Assure un href string non vide avant normalisation domaine.
- * - undefined / "" => "/"
- * - sinon => trim
- */
-function coerceHrefOrRoot(input: unknown): string {
-  const v = typeof input === "string" ? input.trim() : "";
-  return v.length === 0 ? "/" : v;
-}
 
 /**
  * Transforme un enfant de menu principal DTO en PrimaryMenuItem domaine.
@@ -105,7 +108,7 @@ function adaptPrimaryChild(dto: {
   const href = asAssetUrl(coerceHrefOrRoot(dto.href));
 
   return {
-    label: dto.label.trim(),
+    label: trimOrKeep(dto.label),
     href,
     newTab: !!dto.newTab,
     children: [],
@@ -128,7 +131,7 @@ function adaptPrimaryItem(dto: {
   const href = asAssetUrl(coerceHrefOrRoot(dto.href));
 
   const base: PrimaryMenuItem = {
-    label: dto.label.trim(),
+    label: trimOrKeep(dto.label),
     href,
     newTab: !!dto.newTab,
     children: [],
@@ -151,7 +154,7 @@ export function adaptUpdatePrimaryMenuIntent(
 ): UpdatePrimaryMenuSettingsInput {
   const started = Date.now();
 
-  log.debug("admin.adapter.primaryMenu.patch.start", {
+  log.debug("studio.adapter.primaryMenu.patch.start", {
     hasItems: Array.isArray(dto.items),
     itemsCount: Array.isArray(dto.items) ? dto.items.length : undefined,
   });
@@ -162,7 +165,7 @@ export function adaptUpdatePrimaryMenuIntent(
     patch.items = dto.items.map(adaptPrimaryItem);
   }
 
-  log.debug("admin.adapter.primaryMenu.patch.end", {
+  log.debug("studio.adapter.primaryMenu.patch.end", {
     ms: Date.now() - started,
     outKeys: Object.keys(patch),
   });

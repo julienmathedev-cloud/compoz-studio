@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/preview/hooks/usePreviewOverride.ts
- * @layer hooks/admin/preview
+ * @layer hooks/studio/preview
  *
  * @description
  * Hook preview (iframe) recevant et appliquant des overrides temporaires via `postMessage`.
@@ -76,13 +76,9 @@ function hasStringProp(
 function isPreviewMessage<T>(value: unknown): value is PreviewMessage<T> {
   if (!isRecord(value)) return false;
 
-  // scope
   if (!hasStringProp(value, "scope")) return false;
-
-  // type
   if (!hasStringProp(value, "type")) return false;
 
-  // type strict (on accepte seulement nos 4 types)
   return (
     value.type === "compoz.preview.ready" ||
     value.type === "compoz.preview.sync" ||
@@ -93,7 +89,11 @@ function isPreviewMessage<T>(value: unknown): value is PreviewMessage<T> {
 
 function getMessageMeta(message: unknown): { type?: unknown; scope?: unknown } {
   if (!isRecord(message)) return {};
-  return { type: message["type"], scope: message["scope"] };
+
+  return {
+    type: message["type"],
+    scope: message["scope"],
+  };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -103,7 +103,7 @@ function getMessageMeta(message: unknown): { type?: unknown; scope?: unknown } {
 /**
  * Options de configuration du receiver de preview.
  */
-type Options = {
+type Options = Readonly<{
   enabled?: boolean;
 
   /**
@@ -112,17 +112,17 @@ type Options = {
    * - Sinon : déduit depuis `document.referrer`.
    */
   origin?: string;
-};
+}>;
 
 /**
  * Contrat de retour du hook `usePreviewOverride`.
  */
-type Result<T> = {
+type Result<T> = Readonly<{
   baseline: T | null;
   override: T | null;
   isOverridden: boolean;
   reset: () => void;
-};
+}>;
 
 export function usePreviewOverride<T>(
   scope: PreviewScope,
@@ -135,6 +135,7 @@ export function usePreviewOverride<T>(
 
   const parentOrigin = useMemo(() => {
     if (typeof window === "undefined") return "";
+
     try {
       const ref = document.referrer;
       return ref ? new URL(ref).origin : "";
@@ -159,16 +160,20 @@ export function usePreviewOverride<T>(
       enabled,
     });
 
-    // Handshake : notifier l’admin que la preview est prête
     try {
       const ready: PreviewReadyMessage = {
         type: "compoz.preview.ready",
         scope,
       };
       const targetOrigin = parentOrigin || "*";
+
       window.parent?.postMessage(ready, targetOrigin);
 
-      log.debug("preview.ready.sent", { scope, targetOrigin, parentOrigin });
+      log.debug("preview.ready.sent", {
+        scope,
+        targetOrigin,
+        parentOrigin,
+      });
     } catch {
       // no-op
     }
@@ -185,7 +190,6 @@ export function usePreviewOverride<T>(
         msgScope: meta.scope,
       });
 
-      // Origin strict si on en a un
       if (allowedOrigin && event.origin !== allowedOrigin) return;
 
       const data = event.data;

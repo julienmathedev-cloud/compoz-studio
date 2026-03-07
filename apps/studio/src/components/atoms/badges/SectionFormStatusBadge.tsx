@@ -1,13 +1,14 @@
 /**
  * @file apps/studio/src/components/atoms/badges/SectionFormStatusBadge.tsx
- * @layer ui/atoms
+ * @layer studio/atoms
  *
  * @description
- * Badge de statut de section (saved/dirty/saving/error) à côté d’un formulaire.
+ * Badge de statut de section (none/modified/saved/saving/error) à côté d’un formulaire.
  */
 
-import { StatusBadge } from "@compoz/studio/components/atoms/badges/StatusBadge";
 import { useTranslations } from "next-intl";
+
+import { StatusBadge } from "@compoz/studio/components/atoms/badges/StatusBadge";
 
 export type SectionFormStatusKind =
   | "none"
@@ -35,6 +36,7 @@ export function SectionFormStatusBadge({
       count === 1
         ? t("common.oneError", { count })
         : t("common.multipleErrors", { count });
+
     return <StatusBadge variant="destructive" label={label} />;
   }
 
@@ -44,7 +46,8 @@ export function SectionFormStatusBadge({
     saving: { variant: "info", label: t("common.saving") },
   } as const;
 
-  const cfg = map[kind] ?? map.saved;
+  const cfg = map[kind];
+
   return <StatusBadge variant={cfg.variant} label={cfg.label} />;
 }
 

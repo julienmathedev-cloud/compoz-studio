@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/settings/legal-menu/validate.ts
- * @layer hooks/admin/site/legal-menu
+ * @layer hooks/studio/site/legal-menu
  *
  * @description
  * Helpers et hooks de validation UI non bloquante pour le menu légal.
@@ -12,12 +12,13 @@
  * - Ici : UX uniquement (warnings légers, cohérence et doublons).
  */
 
+import { useMemo } from "react";
+
 import { isHttpPrefixOnly } from "@compoz/core/domain/urls/ui-heuristics";
 import { hasDuplicates } from "@compoz/ui/hooks/validate/helpers";
 import { resolveLinkFlags } from "@compoz/ui/lib/links/helpers";
 import { hrefCompareKey, labelCompareKey } from "@compoz/ui/lib/urls/compare";
 import type { LegalMenuItemFormValues } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-form";
-import { useMemo } from "react";
 
 /* ────────────────────────────── 2) Warnings UI (non-bloquants) ───────────────────────────── */
 
@@ -102,6 +103,7 @@ export function computeLegalMenuWarnings(
   if (hasDuplicates(labelKeys)) {
     out.add("dupLabelsTop");
   }
+
   if (hasDuplicates(hrefKeys)) {
     out.add("dupLinksTop");
   }
@@ -109,6 +111,7 @@ export function computeLegalMenuWarnings(
   if (hasExternalNoNewTab) {
     out.add("externalNoNewTab");
   }
+
   if (hasExternalPrefixOnly) {
     out.add("externalPrefixOnly");
   }

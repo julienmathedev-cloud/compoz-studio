@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/components/atoms/buttons/DeleteButton.tsx
- * @layer ui/atoms
+ * @layer studio/atoms
  *
  * @description
- * Bouton de suppression réutilisable (admin) avec confirmation globale.
+ * Bouton de suppression réutilisable (Studio) avec confirmation globale.
  *
  * @remarks
  * - Atome UI : aucune logique métier.
@@ -13,14 +13,16 @@
  * - Peut afficher un état "en cours" via `isDeleting`.
  */
 
-import { AdminIcon } from "@compoz/studio/components/atoms/AdminIcon";
-import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
-import type { ConfirmOptions } from "@compoz/studio/features/confirm/ConfirmDialogProvider";
-import { useConfirm } from "@compoz/studio/features/confirm/useConfirm";
-import { Spinner } from "@compoz/ui/components/ui/spinner";
 import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+
+import { Spinner } from "@compoz/ui/components/ui/spinner";
+
+import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
+import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
+import type { ConfirmOptions } from "@compoz/studio/features/confirm/ConfirmDialogProvider";
+import { useConfirm } from "@compoz/studio/features/confirm/useConfirm";
 
 /**
  * Props du composant `DeleteButton`.
@@ -82,9 +84,9 @@ export function DeleteButton({
         if (isDisabled) return;
 
         const ok = await askConfirm({
-          title: confirm?.title ?? t("admin.shared.confirm.delete.title"),
+          title: confirm?.title ?? t("studio.shared.confirm.delete.title"),
           description:
-            confirm?.description ?? t("admin.shared.confirm.delete.intro"),
+            confirm?.description ?? t("studio.shared.confirm.delete.intro"),
           confirmLabel: confirm?.confirmLabel ?? t("common.delete"),
           cancelLabel: confirm?.cancelLabel ?? t("common.cancel"),
           tone: confirm?.tone ?? "danger",
@@ -95,7 +97,7 @@ export function DeleteButton({
         await onConfirmDelete();
       }}
     >
-      <AdminIcon
+      <StudioIcon
         icon={isDeleting ? Spinner : Trash2}
         className={isDeleting ? "motion-safe:animate-spin" : undefined}
       />

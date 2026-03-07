@@ -1,15 +1,28 @@
 "use client";
 
+/**
+ * @file apps/studio/src/features/admin/users/pages/AdminUsersPage.tsx
+ * @layer app/admin/users
+ *
+ * @description
+ * Page Users (Studio) : orchestration “tenant switch” + rendu de la section.
+ *
+ * @remarks
+ * - UI-only : pas de fetch ici.
+ * - Le changement de tenant passe par `useSetActiveTenant()` puis `router.refresh()`.
+ */
+
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
 import { Heading } from "@compoz/studio/components/atoms/typography/Heading";
+import { useSetActiveTenant } from "@compoz/studio/features/admin/tenant/useSetActiveTenant";
 import { AdminUsersSection } from "@compoz/studio/features/admin/users/sections/AdminUsersSection";
-import { cn } from "@compoz/ui/lib/utils";
-import { ADMIN_SECTION } from "@compoz/ui/styles/studio/layout";
 
-import { useSetActiveTenant } from "@compoz/studio/features/admin/tenant/hooks/useSetActiveTenant";
+import { requireTenantId } from "@compoz/ui/lib/tenant-id";
+import { cn } from "@compoz/ui/lib/utils";
+import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 
 type SelectOption = Readonly<{ value: string; label: string }>;
 
@@ -36,13 +49,7 @@ export function AdminUsersPage({
 
   const handleTenantChange = useCallback(
     async (tenantId: string) => {
-      const next = String(tenantId ?? "")
-        .trim()
-        .toLowerCase();
-      if (!next) return;
-
-      console.log("handleTenantChange", next);
-
+      const next = requireTenantId(tenantId, "tenantId");
       await setActiveTenant(next);
       router.refresh();
     },
@@ -50,9 +57,9 @@ export function AdminUsersPage({
   );
 
   return (
-    <div className={cn(ADMIN_SECTION)}>
+    <div className={cn(STUDIO_SECTION)}>
       <Heading as="h1" className="sr-only">
-        {t("admin.shared.entities.users")}
+        {t("studio.shared.entities.users")}
       </Heading>
 
       <AdminUsersSection

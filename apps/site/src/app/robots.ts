@@ -1,9 +1,9 @@
 /**
  * @file apps/site/src/app/robots.ts
- * @layer app/metadata
+ * @layer site/app/metadata
  *
  * @description
- * Route metadata `robots` (public) — directives d’indexation + lien sitemap.
+ * Route metadata `robots` (site) — directives d’indexation + lien sitemap.
  *
  * ✅ Multi-tenant
  * - Host-based : lvh.me (subdomain) + mapping env
@@ -17,25 +17,44 @@ import { headers } from "next/headers";
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { getSiteRepository } from "@compoz/infra/site";
-import { resolveTenantFromHost } from "@compoz/site/lib/tenant/resolve-public-tenant";
+import { resolveTenantFromHost } from "@compoz/site/lib/tenant/resolve-site-tenant";
 import {
   canonicalFromBase,
   stripTrailingSlashes,
 } from "@compoz/ui/lib/urls/formats";
 
-function hasToken(s: string | undefined, token: string): boolean {
-  return !!s
-    ?.toLowerCase()
+/* -------------------------------------------------------------------------- */
+/* Internals                                                                  */
+/* -------------------------------------------------------------------------- */
+
+function parseRobotsTokens(input: unknown): Set<string> {
+  const raw = typeof input === "string" ? input : "";
+  const tokens = raw
+    .toLowerCase()
     .split(",")
     .map((t) => t.trim())
-    .includes(token.toLowerCase());
+    .filter(Boolean);
+
+  return new Set(tokens);
 }
 
-function isVercelHost(host: string): boolean {
-  return host.endsWith(".vercel.app");
+function hostFromBaseUrl(baseUrl: string): string | undefined {
+  const s = stripTrailingSlashes(baseUrl);
+  if (!s) return undefined;
+
+  try {
+    return new URL(s).host || undefined;
+  } catch {
+    return undefined;
+  }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Route                                                                      */
+/* -------------------------------------------------------------------------- */
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
+  // ✅ compat: selon ta version Next, headers() peut être sync ou async
   const h = await headers();
   const hostRaw = h.get("x-forwarded-host") ?? h.get("host") ?? "";
 
@@ -47,22 +66,23 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
 
   const tenantId = resolved.tenantId;
 
-  const host = String(resolved.host ?? "")
-    .trim()
-    .toLowerCase();
-  const usePathTenantFallback = host ? isVercelHost(host) : true;
+  // Si le resolver tombe en fallback (vercel / host inconnu), on pointe vers /t/:tenant
+  const usePathTenantFallback = resolved.kind === "fallback";
 
   const repo = getSiteRepository({ tenantId });
   const settings = await repo.readSettings(CONTENT_STATE.PUBLISHED);
 
-  const robotsStr = settings?.seo?.robots;
-  const baseUrl = stripTrailingSlashes(settings?.seo?.baseUrl) || "";
+  const robotsTokens = parseRobotsTokens(settings?.seo?.robots);
+  const disallowAll = robotsTokens.has("noindex");
 
-  const disallowAll = hasToken(robotsStr, "noindex");
+  const baseUrl = stripTrailingSlashes(settings?.seo?.baseUrl) || "";
+  const hostOut = hostFromBaseUrl(baseUrl);
 
   const sitemapPath = usePathTenantFallback
-    ? `/t/${tenantId}/sitemap.xml`
+    ? `/t/${encodeURIComponent(tenantId)}/sitemap.xml`
     : "/sitemap.xml";
+
+  const sitemapAbs = baseUrl ? canonicalFromBase(baseUrl, sitemapPath) : null;
 
   return {
     rules: [
@@ -72,7 +92,8 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
         disallow: disallowAll ? "/" : undefined,
       },
     ],
-    host: baseUrl || undefined,
-    sitemap: baseUrl ? canonicalFromBase(baseUrl, sitemapPath) : undefined,
+    host: hostOut,
+    // ✅ Absolu si baseUrl connu, sinon relatif (dev/debug)
+    sitemap: sitemapAbs ?? sitemapPath,
   };
 }

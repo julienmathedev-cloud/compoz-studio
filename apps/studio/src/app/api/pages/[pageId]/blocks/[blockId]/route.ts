@@ -1,8 +1,8 @@
 /**
  * @file apps/studio/src/app/api/pages/[pageId]/blocks/[blockId]/route.ts
- * @layer api/routes
+ * @layer studio/app/api
  * @description
- * Route API Admin — ressource block d’une page (V0.5).
+ * Route API Studio — ressource block d’une page (V0.5).
  *
  * Responsabilités :
  * - PATCH  : met à jour un block `LayoutSection` (draft/published selon `state`).
@@ -12,41 +12,38 @@
  * - Invalidation statusCache (KV snapshots) après mutation.
  */
 
-import { throwHttp } from "@compoz/http/http-error";
-import { readJsonOr400 } from "@compoz/infra/http/read-json";
-import { log, logSpan } from "@compoz/infra/lib/log";
-import { handleRoute } from "@compoz/studio/lib/api/handle-route";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
-
-import { getPagesRepository } from "@compoz/infra/pages";
-import { getSiteStatusCache } from "@compoz/infra/site";
+import "server-only";
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
+import type { PageDTO } from "@compoz/core/domain/pages/dto";
 import { deleteBlock } from "@compoz/core/domain/pages/use-cases/blocks/delete-block";
 import { updateLayoutSectionBlock } from "@compoz/core/domain/pages/use-cases/blocks/update-layout-section-block";
-
-import type { PageDTO } from "@compoz/core/domain/pages/dto";
-
+import { throwHttp } from "@compoz/http/http-error";
+import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import type {
   DeleteBlockResponse,
   UpdateLayoutSectionBlockResponse,
 } from "@compoz/infra/http/studio/pages.types";
+import { log, logSpan } from "@compoz/infra/lib/log";
+import { getPagesRepository } from "@compoz/infra/pages";
+import { getSiteStatusCache } from "@compoz/infra/site";
 import { adaptUpdateLayoutSectionBlockIntent } from "@compoz/studio/app/api/_adapters/pages/blocks";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import {
   UpdateLayoutSectionBlockIntentSchema,
   type UpdateLayoutSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
 import { PageIdAndBlockIdParamSchema } from "@compoz/validation/routes/params";
 
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
-
 // -------------------------------------------------
 // PATCH /api/pages/:pageId/blocks/:blockId → update LayoutSection
 // -------------------------------------------------
 
 export async function PATCH(req: Request, ctx: { params: unknown }) {
-  const NS = "api.pages.id.blocks.blockId.PATCH" as const;
+  const NS = "api.studio.pages.id.blocks.blockId.PATCH" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
     const { tenantId } = await requireSessionWithTenant();
@@ -64,7 +61,9 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
           params,
           {
             message: EC.INVALID_ARGUMENT,
-            extras: { where: "api.admin.pages.id.blocks.blockId.PATCH.params" },
+            extras: {
+              where: "api.studio.pages.id.blocks.blockId.PATCH.params",
+            },
           },
         );
 
@@ -76,7 +75,7 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
           {
             message: EC.VALIDATION_ERROR,
             extras: {
-              where: "api.admin.pages.id.blocks.blockId.PATCH.payload",
+              where: "api.studio.pages.id.blocks.blockId.PATCH.payload",
             },
           },
         );
@@ -110,7 +109,10 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
         // ✅ Invalidation KV snapshots (best-effort)
         try {
           lg.info?.("route.statusCache.invalidateAll.start", {});
-          await statusCache.invalidateAll();
+          await Promise.all([
+            statusCache.invalidateStatus(),
+            statusCache.invalidateStatusDetails(),
+          ]);
           lg.info?.("route.statusCache.invalidateAll.done", {});
         } catch (e) {
           lg.error?.("route.statusCache.invalidateAll.failed", {
@@ -130,7 +132,7 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
 // -------------------------------------------------
 
 export async function DELETE(req: Request, ctx: { params: unknown }) {
-  const NS = "api.pages.id.blocks.blockId.DELETE" as const;
+  const NS = "api.studio.pages.id.blocks.blockId.DELETE" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
     const { tenantId } = await requireSessionWithTenant();
@@ -149,7 +151,7 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
           {
             message: EC.INVALID_ARGUMENT,
             extras: {
-              where: "api.admin.pages.id.blocks.blockId.DELETE.params",
+              where: "api.studio.pages.id.blocks.blockId.DELETE.params",
             },
           },
         );
@@ -166,7 +168,10 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
         // ✅ Invalidation KV snapshots (best-effort)
         try {
           lg.info?.("route.statusCache.invalidateAll.start", {});
-          await statusCache.invalidateAll();
+          await Promise.all([
+            statusCache.invalidateStatus(),
+            statusCache.invalidateStatusDetails(),
+          ]);
           lg.info?.("route.statusCache.invalidateAll.done", {});
         } catch (e) {
           lg.error?.("route.statusCache.invalidateAll.failed", {

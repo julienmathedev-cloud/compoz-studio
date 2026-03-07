@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/components/molecules/fields/TextareaField.tsx
- * @layer ui/molecules
+ * @layer studio/molecules
  *
  * @description
  * Champ textarea contrôlé (label, aide, erreur, compteur) basé sur le composant `Field`.
@@ -16,8 +16,11 @@
  * - Strictement UI-only : aucune logique métier.
  */
 
+import type { ReactNode, TextareaHTMLAttributes } from "react";
+
 import { ErrorText } from "@compoz/studio/components/atoms/typography/ErrorText";
 import { FieldMetaBar } from "@compoz/studio/components/molecules/fields/FieldMetaBar";
+
 import {
   Field,
   FieldDescription,
@@ -26,7 +29,6 @@ import {
 } from "@compoz/ui/components/ui/field";
 import { Textarea } from "@compoz/ui/components/ui/textarea";
 import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
-import type { ReactNode, TextareaHTMLAttributes } from "react";
 
 /**
  * Props du composant `TextareaField`.
@@ -67,7 +69,7 @@ export type TextareaFieldProps = Readonly<
 >;
 
 /**
- * Champ textarea contrôlé standardisé pour l’admin.
+ * Champ textarea contrôlé standardisé pour le Studio.
  */
 export function TextareaField({
   ids,

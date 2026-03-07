@@ -1,35 +1,35 @@
-/**
- * @file apps/studio/src/features/pages/blocks/cache/getPageBlocks.ts
- * @layer hooks/admin/pages/blocks
- * @description
- * Helpers React Query (SoT) pour les blocks d’une page (by id).
- */
-
 "use client";
 
-import type { ContentState } from "@compoz/core/constants/common/content-state";
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+/**
+ * @file apps/studio/src/features/pages/blocks/cache/getPageBlocks.ts
+ * @layer hooks/studio/pages/blocks
+ * @description
+ * Helpers React Query (SoT) pour récupérer les blocks d’une page (by pageId).
+ */
+
 import type { QueryClient } from "@tanstack/react-query";
 
-import type { BlockDTO } from "@compoz/core/domain/pages/dto"; // adapte
+import type { ContentState } from "@compoz/core/constants/common/content-state";
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import type { BlockDTO } from "@compoz/core/domain/pages/dto";
 import type { HttpOpts } from "@compoz/infra/http/internal";
-import { pagesAdminApi } from "@compoz/infra/http/studio/pages.client";
+import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
+import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 export async function getPageBlocks(
   qc: QueryClient,
   tenantId: string,
   pageId: string,
-  state: ContentState = WRITE_CONTENT_STATE,
+  state: ContentState = DEFAULT_CONTENT_STATE,
   opts?: HttpOpts,
 ): Promise<ReadonlyArray<BlockDTO>> {
-  const tid = String(tenantId ?? "")
-    .trim()
-    .toLowerCase();
+  const tid = toTenantId(tenantId);
+  const pageIdKey = String(pageId ?? "").trim();
 
-  const pid = String(pageId ?? "").trim();
+  if (!tid || !pageIdKey) return [];
 
-  const key = pageBlocksKey(tid, pid, state);
+  const key = pageBlocksKey(tid, pageIdKey, state);
 
   const cached = qc.getQueryData<ReadonlyArray<BlockDTO>>(key);
   if (cached) return cached;
@@ -37,10 +37,11 @@ export async function getPageBlocks(
   const blocks = await qc.fetchQuery<ReadonlyArray<BlockDTO>>({
     queryKey: key,
     queryFn: async ({ signal }) => {
-      const res = await pagesAdminApi.getPageBlocks(pid, state, {
+      const res = await pagesStudioApi.getPageBlocks(pageIdKey, state, {
         signal: opts?.signal ?? signal,
       });
-      return res.blocks; // ✅ flatten
+
+      return res.blocks;
     },
   });
 

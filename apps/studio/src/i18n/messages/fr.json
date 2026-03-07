@@ -1,14 +1,4 @@
 {
-  "gate": {
-    "title": "Compoz Studio",
-    "tagline": "Le studio pour composer, gérer et publier vos sites efficacement.",
-    "actions": {
-      "public": "Accèder au site public",
-      "admin": "Accèder à l’admin"
-    },
-    "ariaLabel": "Accueil Compoz Studio"
-  },
-
   "common": {
     "save": "Enregistrer",
     "saving": "Enregistrement…",
@@ -268,7 +258,7 @@
     "fileTooLarge": "Le fichier sélectionné est trop volumineux. La taille maximale autorisée est de {max}"
   },
 
-  "admin": {
+  "studio": {
     "shared": {
       "visualize": {
         "draft": "Brouillon",

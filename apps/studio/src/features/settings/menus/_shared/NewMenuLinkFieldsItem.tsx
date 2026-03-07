@@ -2,15 +2,16 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/_shared/NewMenuLinkFieldsItem.tsx
- * @layer ui/molecules
+ * @layer ui/studio/molecules
  *
  * @description
  * Wrapper RHF de `LinkFieldsItem` (éditeur de lien controlled).
  */
 
+import type { ControllerRenderProps, FieldValues } from "react-hook-form";
+
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
 import { LinkFieldsItem } from "@compoz/studio/features/settings/menus/_shared/LinkFieldsItem";
-import type { ControllerRenderProps, FieldValues } from "react-hook-form";
 
 type RHFField = ControllerRenderProps<FieldValues>;
 
@@ -66,6 +67,7 @@ export function NewMenuLinkFieldsItem({
           hrefField.onBlur();
           newTabField.onBlur?.();
         }
+
         onValidateNow?.(markTouched);
       }}
     />

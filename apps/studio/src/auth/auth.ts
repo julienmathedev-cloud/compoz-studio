@@ -1,17 +1,19 @@
 /**
  * @file apps/studio/src/auth/auth.ts
- * @layer app/auth
+ * @layer studio/auth
+ *
  * @description
  * Configuration Auth.js (NextAuth) pour le Studio.
  *
- * - Provider Credentials (email/password) contre KV via UsersRepository (KvUsersRepository).
+ * Responsabilités :
+ * - Provider Credentials (email/password) via `KvUsersRepository` (Studio users SoT).
  * - Session JWT (pas d’adapter DB).
- * - Injecte RBAC + tenantIds + defaultTenantId dans le token + session.
+ * - Injection RBAC + tenantIds + defaultTenantId dans le token + la session.
  *
  * @remarks
  * ✅ SoT unique "Studio users" :
  * - Auth et CRUD admin lisent/écrivent au même endroit.
- * - On supprime le double store `compoz:auth:*`.
+ * - Suppression du double store `compoz:auth:*`.
  */
 
 import type { NextAuthOptions, User } from "next-auth";
@@ -19,7 +21,6 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 
-// ✅ On utilise le repo Studio users comme SoT unique.
 import { KvUsersRepository } from "@compoz/infra/users/kv-users-repository";
 
 const CredentialsSchema = z.object({
@@ -45,21 +46,20 @@ export const authOptions: NextAuthOptions = {
 
         const { email, password } = parsed.data;
 
+        // ✅ SoT unique : repo Studio users.
         const repo = new KvUsersRepository();
 
-        // ✅ SoT user = repo Studio users
         const user = await repo.readByEmail(email);
         if (!user) {
           throw new Error("EMAIL_NOT_FOUND");
         }
 
-        // ✅ Password check via le même repo
         const ok = await repo.verifyPassword(user.id, password);
         if (!ok) {
           throw new Error("INVALID_PASSWORD");
         }
 
-        // ✅ RBAC est stocké dans l'entité User (SoT unique)
+        // ✅ RBAC est stocké dans l'entité User (SoT unique).
         const rbac = user.rbac;
         if (
           !rbac ||
@@ -90,10 +90,12 @@ export const authOptions: NextAuthOptions = {
         token.tenantIds = user.tenantIds;
         token.defaultTenantId = user.defaultTenantId;
       }
-      // ✅ fallback : NextAuth met souvent token.sub = user.id
+
+      // ✅ fallback : NextAuth renseigne souvent `token.sub = user.id`.
       if (!token.userId && token.sub) {
         token.userId = token.sub;
       }
+
       return token;
     },
 
@@ -111,5 +113,4 @@ export const authOptions: NextAuthOptions = {
   },
 };
 
-// (optionnel) export du handler, utile si tu veux le réutiliser ailleurs
 export default NextAuth(authOptions);

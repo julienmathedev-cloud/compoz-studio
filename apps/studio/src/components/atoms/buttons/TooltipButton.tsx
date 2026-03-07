@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/components/atoms/buttons/TooltipButton.tsx
- * @layer ui/atoms
+ * @layer studio/atoms
  *
  * @description
- * Bouton avec tooltip pour l’interface d’administration.
+ * Bouton avec tooltip pour l’interface Studio.
  *
  * @remarks
  * - Atome UI : aucune logique métier.
@@ -39,7 +39,12 @@ export type TooltipButtonProps = ComponentProps<typeof Button> &
   }>;
 
 /**
- * Bouton standardisé avec tooltip (admin).
+ * Bouton standardisé avec tooltip (Studio).
+ *
+ * @remarks
+ * - Si `tooltip` est falsy, rend directement `<Button />`.
+ * - Si `disabled`, enveloppe le bouton dans un `<span tabIndex={0}>` pour
+ *   permettre l’affichage du tooltip (pattern Radix/ShadCN).
  */
 export function TooltipButton({
   tooltip,

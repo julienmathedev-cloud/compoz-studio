@@ -1,21 +1,23 @@
 /**
  * @file packages/ui/src/site/skins/default/footer.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
- * Skin UI — footer public (thème Default).
+ * Skin UI — footer site (thème Default).
  */
 
-import type { PublicFooterUi } from "@compoz/ui/site/public-ui.types";
+import type { SiteFooterUi } from "@compoz/ui/site/site-ui.types";
 import { defaultLegalMenuUi } from "@compoz/ui/site/skins/default/legal-menu.ui";
 
-export const defaultFooterUi: PublicFooterUi = {
+export const defaultFooterUi: SiteFooterUi = {
   footer: "w-full border-t border-border bg-background",
+
   footerContainer:
     "mx-auto max-w-screen-xl px-3 md:px-4 lg:px-6 py-6 grid grid-cols-1 lg:[grid-template-columns:1fr_auto_1fr] items-center gap-4 text-sm",
 
   // Centré sur desktop
   copyright:
     "lg:col-start-2 justify-self-center text-center text-muted-foreground",
+
   legalMenu: defaultLegalMenuUi,
 };

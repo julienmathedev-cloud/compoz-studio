@@ -5,6 +5,10 @@
  * Définit les types d’URLs brandées du domaine et les fonctions de dérivation associées.
  * Ce module se limite au typage et au branding Domain ; toute validation de format
  * ou de sécurité est supposée traitée en amont.
+ *
+ * @remarks
+ * - Runtime injecté : aucune dépendance à `process.env` dans ce module.
+ * - En prod, on évite les assertions coûteuses (on suppose les entrées déjà validées en amont).
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -14,6 +18,39 @@ import {
   isRelativeUrl,
 } from "@compoz/core/domain/urls/guards";
 import { isMailtoHref } from "@compoz/core/domain/urls/mailto";
+
+/* -------------------------------------------------------------------------- */
+/* Runtime                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Options runtime pour contrôler les assertions "dev".
+ *
+ * @remarks
+ * - `isProd=true` => pas d'assertions (supposé validé par schemas/validators).
+ * - `isProd=false` => assertions strictes pour détecter les erreurs tôt.
+ */
+export type UrlRuntime = Readonly<{
+  isProd: boolean;
+}>;
+
+/** Runtime par défaut (dev-friendly). À overrider via `setUrlRuntime`. */
+let _runtime: UrlRuntime = { isProd: false };
+
+/**
+ * Configure le runtime du module (à appeler au boot côté infra/app).
+ *
+ * @example
+ * setUrlRuntime({ isProd: runtime.isProd })
+ */
+export function setUrlRuntime(next: UrlRuntime): void {
+  _runtime = next;
+}
+
+/** Lecture interne du runtime (encapsulé pour centraliser la règle). */
+function isProd(): boolean {
+  return _runtime.isProd;
+}
 
 /* -------------------------------------------------------------------------- */
 /* Branding                                                                    */
@@ -34,7 +71,7 @@ export type BrandedHref = RelativeUrl | AbsoluteHttpUrl | MailtoUrl;
 /* -------------------------------------------------------------------------- */
 
 export function rel(s: string): RelativeUrl {
-  if (process.env.NODE_ENV !== "production") {
+  if (!isProd()) {
     if (!isRelativeUrl(s)) {
       throw new DomainError({
         code: EC.HREF_RELATIVE_INVALID,
@@ -52,7 +89,7 @@ export function rel(s: string): RelativeUrl {
 /* -------------------------------------------------------------------------- */
 
 export function abs(s: string): AbsoluteHttpUrl {
-  if (process.env.NODE_ENV !== "production") {
+  if (!isProd()) {
     try {
       const u = new URL(s);
 
@@ -81,7 +118,7 @@ export function abs(s: string): AbsoluteHttpUrl {
 /* -------------------------------------------------------------------------- */
 
 function mail(s: string): MailtoUrl {
-  if (process.env.NODE_ENV !== "production") {
+  if (!isProd()) {
     if (!isMailtoHref(s)) {
       throw new DomainError({
         code: EC.HREF_MAILTO_INVALID,
@@ -176,4 +213,33 @@ export function isAbsoluteAssetUrl(u: AssetUrl): u is AbsoluteHttpUrl {
 
 export function isRelativeAssetUrl(u: AssetUrl): u is RelativeUrl {
   return u.startsWith("/");
+}
+
+function isHttpAbsoluteUrl(s: string): boolean {
+  const v = s.trim().toLowerCase();
+  return v.startsWith("http://") || v.startsWith("https://");
+}
+
+/**
+ * Convertit une string **déjà validée** en `AssetUrl`.
+ * - http(s) => abs()
+ * - sinon   => rel()
+ */
+export function asAssetUrl(input: string): AssetUrl {
+  const s = input.trim();
+  return isHttpAbsoluteUrl(s) ? abs(s) : rel(s);
+}
+
+/**
+ * Variante tolérante (optionnels) :
+ * - null/undefined/"" => null
+ * - sinon => asAssetUrl
+ */
+export function asAssetUrlOrNull(
+  input: string | null | undefined,
+): AssetUrlOrNull {
+  if (input == null) return null;
+  const s = input.trim();
+  if (s === "") return null;
+  return isHttpAbsoluteUrl(s) ? abs(s) : rel(s);
 }

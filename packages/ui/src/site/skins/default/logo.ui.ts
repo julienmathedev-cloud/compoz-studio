@@ -1,14 +1,14 @@
 /**
  * @file packages/ui/src/site/skins/default/logo.ui.ts
- * @module components/public/skins/default
+ * @layer ui/site/skins
  *
  * @description
- * Style par défaut du logo.
+ * Skin UI — logo site (thème Default).
  */
 
-import type { PublicLogoUi } from "@compoz/ui/site/public-ui.types";
+import type { SiteLogoUi } from "@compoz/ui/site/site-ui.types";
 
-export const defaultLogoUi: PublicLogoUi = {
+export const defaultLogoUi: SiteLogoUi = {
   // Focus ring cohérent + target propre.
   link: "inline-flex rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
 

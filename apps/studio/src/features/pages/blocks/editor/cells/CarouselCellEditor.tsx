@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/editor/cells/CarouselCellEditor.tsx
- * @layer ui/organisms
+ * @layer ui/studio/pages/blocks/editor/cells
  *
  * @description
  * Éditeur UI d’une CarouselCell (liste d’images) avec ajout/suppression/réordonnancement.
@@ -11,7 +11,7 @@
  * - UI-only : aucune logique métier.
  * - Modèle contrôlé : `images` + `onImagesChange`.
  * - Reorder simple via boutons (↑ ↓), pas de drag&drop.
- * - Réutilise `GalleryImageItemEditor` (actions + ImageFields).
+ * - Réutilise `ImageListEditor` (actions + ImageFields).
  */
 
 import { useMemo } from "react";

@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * @file packages/validation/src/site/settings/menus/primary-menu/primary-menu-form.ts
  * @layer schemas
@@ -15,7 +13,7 @@
  *   - `href` optionnel (peut être "")
  */
 
-import { MENU } from "@compoz/core/constants/limits/menu";
+import { MENU_ITEM, MENU_LABEL } from "@compoz/core/constants/limits/menu";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { AssetUrlSchema } from "@compoz/validation/common/url-fragments";
 import { z } from "zod";
@@ -24,18 +22,24 @@ import { z } from "zod";
 /*                                  Child (UI)                                */
 /* -------------------------------------------------------------------------- */
 
+const isValidAssetUrl = (href: string): boolean =>
+  AssetUrlSchema.safeParse(href).success;
+
 export const PrimaryMenuChildFormSchema = z
   .object({
     label: z
       .string()
       .trim()
-      .max(MENU.LABEL_MAX, ERROR_CODES.PRIMARY_MENU_LABEL_TOO_LONG),
+      .max(MENU_LABEL.MAX, ERROR_CODES.PRIMARY_MENU_LABEL_TOO_LONG),
     href: z.string().trim(),
     newTab: z.boolean(),
   })
+  .strict()
   .superRefine((val, ctx) => {
     const label = val.label.trim();
-    if (label.length < MENU.LABEL_MIN) {
+    const href = val.href.trim();
+
+    if (label.length < MENU_LABEL.MIN) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["label"],
@@ -43,7 +47,6 @@ export const PrimaryMenuChildFormSchema = z
       });
     }
 
-    const href = val.href.trim();
     if (href.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -53,19 +56,17 @@ export const PrimaryMenuChildFormSchema = z
       return;
     }
 
-    const ok = AssetUrlSchema.safeParse(href).success;
-    if (!ok) {
+    if (!isValidAssetUrl(href)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["href"],
         message: ERROR_CODES.PRIMARY_MENU_HREF_INVALID,
       });
     }
-  })
-  .strict();
+  });
 
 /* -------------------------------------------------------------------------- */
-/*                               Parent/Leaf (UI)                              */
+/*                               Parent/Leaf (UI)                             */
 /* -------------------------------------------------------------------------- */
 
 export const PrimaryMenuItemFormSchema = z
@@ -73,22 +74,24 @@ export const PrimaryMenuItemFormSchema = z
     label: z
       .string()
       .trim()
-      .max(MENU.LABEL_MAX, ERROR_CODES.PRIMARY_MENU_LABEL_TOO_LONG),
+      .max(MENU_LABEL.MAX, ERROR_CODES.PRIMARY_MENU_LABEL_TOO_LONG),
     href: z.string().trim(),
     newTab: z.boolean(),
     children: z.array(PrimaryMenuChildFormSchema).optional(),
   })
+  .strict()
   .superRefine((val, ctx) => {
     const label = val.label.trim();
-    if (label.length < MENU.LABEL_MIN) {
+    const href = val.href.trim();
+    const hasChildren = Array.isArray(val.children) && val.children.length > 0;
+
+    if (label.length < MENU_LABEL.MIN) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["label"],
         message: ERROR_CODES.PRIMARY_MENU_LABEL_REQUIRED,
       });
     }
-
-    const hasChildren = Array.isArray(val.children) && val.children.length > 0;
 
     // Parent (avec children)
     if (hasChildren) {
@@ -102,23 +105,18 @@ export const PrimaryMenuItemFormSchema = z
       }
 
       // href optionnel : si présent, il doit être valide.
-      const href = val.href.trim();
-      if (href.length > 0) {
-        const ok = AssetUrlSchema.safeParse(href).success;
-        if (!ok) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["href"],
-            message: ERROR_CODES.PRIMARY_MENU_HREF_INVALID,
-          });
-        }
+      if (href.length > 0 && !isValidAssetUrl(href)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["href"],
+          message: ERROR_CODES.PRIMARY_MENU_HREF_INVALID,
+        });
       }
 
       return;
     }
 
     // Leaf : href requis + format
-    const href = val.href.trim();
     if (href.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -128,16 +126,14 @@ export const PrimaryMenuItemFormSchema = z
       return;
     }
 
-    const ok = AssetUrlSchema.safeParse(href).success;
-    if (!ok) {
+    if (!isValidAssetUrl(href)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["href"],
         message: ERROR_CODES.PRIMARY_MENU_HREF_INVALID,
       });
     }
-  })
-  .strict();
+  });
 
 /* -------------------------------------------------------------------------- */
 /*                                  Settings (UI)                              */
@@ -145,7 +141,7 @@ export const PrimaryMenuItemFormSchema = z
 
 export const PrimaryMenuFormSchema = z
   .object({
-    items: z.array(PrimaryMenuItemFormSchema).max(MENU.ITEM_MAX, {
+    items: z.array(PrimaryMenuItemFormSchema).max(MENU_ITEM.MAX, {
       message: ERROR_CODES.PRIMARY_MENU_TOO_MANY_ITEMS,
     }),
   })

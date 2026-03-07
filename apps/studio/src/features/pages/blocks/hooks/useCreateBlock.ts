@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/hooks/useCreateBlock.ts
- * @layer hooks/admin/pages/blocks
+ * @layer hooks/studio/pages/blocks
  *
  * @description
- * Hook admin React Query pour ajouter un block (draft) à une page via l’API.
+ * Hook studio React Query pour ajouter un block draft à une page via l’API.
  *
  * @remarks
  * - Orchestration UI-only (mutation, logs, notifications).
@@ -16,15 +16,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-import { pagesAdminApi } from "@compoz/infra/http/studio/pages.client";
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log } from "@compoz/infra/lib/log";
-import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
+import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
 import { syncBlocksFromPageCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
 import { toCreateLayoutSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
 import {
+  invalidateBlockStatusViews,
   invalidateSiteStatus,
-  invalidateSiteStatusDetails,
 } from "@compoz/studio/features/site/status/invalidate";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { notifyCreated } from "@compoz/studio/lib/ui/notify-presets";
@@ -49,14 +49,21 @@ const lg = log.child({ ns: "hook", name: "useCreateBlock" });
 export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
   const t = useTranslations();
   const qc = useQueryClient();
-  const entityLabel = t("admin.shared.entities.blocks");
   const tenantId = useTenantId();
+  const entityLabel = t("studio.shared.entities.blocks");
 
   const mutation = useMutation({
-    mutationKey: ["t", tenantId, "admin", "pages", "blocks", "create"] as const,
+    mutationKey: [
+      "t",
+      tenantId,
+      "studio",
+      "pages",
+      "blocks",
+      "create",
+    ] as const,
 
     mutationFn: async (args: CreateBlockArgs) => {
-      const pageId = (args.pageId ?? "").trim();
+      const pageId = String(args.pageId ?? "").trim();
 
       const payload = toCreateLayoutSectionBlockIntentDTOFromFormValues({
         values: args.values,
@@ -65,22 +72,22 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
 
       const fields = Object.keys(payload ?? {});
 
-      const res = await withSaveLogs(
+      const response = await withSaveLogs(
         "useCreateBlock",
-        WRITE_CONTENT_STATE,
-        () => pagesAdminApi.addBlock(pageId, payload),
-        { entity: entityLabel, fields, pageId },
+        DEFAULT_CONTENT_STATE,
+        () => pagesStudioApi.addBlock(pageId, payload),
+        { entity: entityLabel, fields, pageId, tenantId },
       );
 
-      // ✅ flatten (selon ta route : { page } ou { block } etc.)
-      // Ici j’assume que la route renvoie { page: PageDTO } (pattern similaire à reorderBlocks)
-      const page = res.page;
-
-      return { pageId, fields, page } as const;
+      return {
+        pageId,
+        fields,
+        page: response.page,
+      } as const;
     },
 
     onSuccess: async ({ pageId, fields, page }, variables) => {
-      const pid = (pageId ?? "").trim();
+      const pageIdKey = String(pageId ?? "").trim();
 
       const label =
         variables?.label ??
@@ -94,20 +101,25 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
         }),
       );
 
-      // ✅ 1) push cache (page + blocks)
-      // if (pid) await invalidateBlocksBadgesForPage(qc, tenantId, pid);
-      if (pid && page)
-        syncBlocksFromPageCache(qc, tenantId, pid, page, WRITE_CONTENT_STATE);
+      if (pageIdKey && page) {
+        syncBlocksFromPageCache(
+          qc,
+          tenantId,
+          pageIdKey,
+          page,
+          DEFAULT_CONTENT_STATE,
+        );
+      }
 
       await Promise.all([
         invalidateSiteStatus(qc, tenantId),
-        invalidateSiteStatusDetails(qc, tenantId),
+        invalidateBlockStatusViews(qc, tenantId, pageIdKey),
       ]);
 
       lg.info("create.ok", {
+        tenantId,
         pageId,
         fields,
-        // Si tu veux tracer un peu plus :
         returnedPageId: page?.id,
         returnedPageSlug: page?.slug,
       });
@@ -115,10 +127,12 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
       onSuccess?.();
     },
 
-    onError: (e: unknown) => {
-      notify.fromError(e, UiError.unexpectedSave);
-      lg.error("create.failed", { msg: String(e) });
+    onError: (error: unknown) => {
+      notify.fromError(error, UiError.unexpectedSave);
+      lg.error("create.failed", { tenantId, msg: String(error) });
     },
+
+    retry: false,
   });
 
   return {
@@ -128,3 +142,5 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
     isCreating: mutation.isPending,
   } as const;
 }
+
+useCreateBlock.displayName = "useCreateBlock";

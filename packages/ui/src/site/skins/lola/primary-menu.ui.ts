@@ -1,18 +1,18 @@
 /**
  * @file packages/ui/src/site/skins/lola/primary-menu.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
- * Skin UI — menu principal public (thème Lola).
+ * Skin UI — menu principal site (thème Lola).
  *
  * @remarks
  * - Fournit uniquement des classes Tailwind (aucune logique).
- * - Consommé par `PublicPrimaryMenu` via la prop `ui`.
+ * - Consommé par `SitePrimaryMenu` via la prop `ui`.
  */
 
-import type { PublicPrimaryMenuUiOverride } from "@compoz/ui/site/public-ui.types";
+import type { SitePrimaryMenuUiOverride } from "@compoz/ui/site/site-ui.types";
 
-export const lolaPrimaryMenuUi: PublicPrimaryMenuUiOverride = {
+export const lolaPrimaryMenuUi: SitePrimaryMenuUiOverride = {
   // List.
   list: "m-0 p-0 list-none flex flex-wrap items-center gap-4 md:gap-7 lg:gap-10",
 

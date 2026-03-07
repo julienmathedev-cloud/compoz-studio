@@ -7,7 +7,7 @@
  * dérivations (ex. liens externes) sont traitées dans le domaine.
  */
 
-import { MENU } from "@compoz/core/constants/limits/menu";
+import { MENU_ITEM, MENU_LABEL } from "@compoz/core/constants/limits/menu";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { AssetUrlSchema } from "@compoz/validation/common/url-fragments";
 import { z } from "zod";
@@ -25,8 +25,8 @@ export const LegalMenuItemSchema = z
     label: z
       .string()
       .trim()
-      .min(MENU.LABEL_MIN, ERROR_CODES.LEGAL_MENU_LABEL_REQUIRED)
-      .max(MENU.LABEL_MAX, ERROR_CODES.LEGAL_MENU_LABEL_TOO_LONG),
+      .min(MENU_LABEL.MIN, ERROR_CODES.LEGAL_MENU_LABEL_REQUIRED)
+      .max(MENU_LABEL.MAX, ERROR_CODES.LEGAL_MENU_LABEL_TOO_LONG),
 
     /**
      * URL / chemin.
@@ -45,7 +45,7 @@ export const LegalMenuItemSchema = z
 
 export const LegalMenuSettingsSchema = z
   .object({
-    items: z.array(LegalMenuItemSchema).max(MENU.ITEM_MAX, {
+    items: z.array(LegalMenuItemSchema).max(MENU_ITEM.MAX, {
       message: ERROR_CODES.LEGAL_MENU_TOO_MANY_ITEMS,
     }),
   })

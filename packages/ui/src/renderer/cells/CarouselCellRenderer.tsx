@@ -1,19 +1,21 @@
 /**
  * @file packages/ui/src/renderer/cells/CarouselCellRenderer.tsx
- * @layer ui/public/cells
+ * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer public/preview : rendu d’un carrousel d’images (V0.5).
+ * Cell renderer site/preview : rendu d’un carrousel d’images (V0.5).
  *
  * @remarks
  * - ✅ Le style vient du skin via `ui`.
- * - ✅ Le composant PublicCarousel ne possède aucun style par défaut.
+ * - ✅ Le composant `SiteCarousel` ne possède aucun style par défaut.
  */
-import { normalizeString } from "@compoz/ui/lib/normalize";
-import type { PublicImage } from "@compoz/ui/site/components/atoms/PublicAppImage";
-import { PublicCarousel } from "@compoz/ui/site/components/organisms/PublicCarousel";
-import type { PublicCarouselUi } from "@compoz/ui/site/public-ui.types";
+
 import type { ImageEditorShape } from "@compoz/validation/pages/blocks/cells/cell";
+
+import { normalizeString } from "@compoz/ui/lib/normalize";
+import type { SiteImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
+import { SiteCarousel } from "@compoz/ui/site/components/organisms/SiteCarousel";
+import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -21,7 +23,7 @@ import type { ImageEditorShape } from "@compoz/validation/pages/blocks/cells/cel
 
 export type CarouselCellRendererProps = Readonly<{
   images?: ReadonlyArray<ImageEditorShape> | null;
-  ui: PublicCarouselUi;
+  ui: SiteCarouselUi;
   isFullBleed?: boolean;
   priority?: boolean;
 }>;
@@ -29,6 +31,7 @@ export type CarouselCellRendererProps = Readonly<{
 /* -------------------------------------------------------------------------- */
 /* Component                                                                  */
 /* -------------------------------------------------------------------------- */
+
 export function CarouselCellRenderer({
   images,
   ui,
@@ -43,7 +46,7 @@ export function CarouselCellRenderer({
 
   if (normalized.length === 0) return null;
 
-  const items: PublicImage[] = normalized.map((img) => ({
+  const items: SiteImage[] = normalized.map((img) => ({
     src: img.src,
     alt: img.alt,
   }));
@@ -51,7 +54,7 @@ export function CarouselCellRenderer({
   const containerClassName = isFullBleed ? ui.containerFill : ui.containerRatio;
 
   return (
-    <PublicCarousel
+    <SiteCarousel
       images={items}
       containerClassName={containerClassName}
       imageClassName={ui.image}
@@ -69,7 +72,6 @@ CarouselCellRenderer.displayName = "CarouselCellRenderer";
 
 function __normalizeImage(img: ImageEditorShape) {
   return {
-    id: normalizeString(img.id, ""),
     src: normalizeString(img.src, ""),
     alt: normalizeString(img.alt, ""),
     caption: typeof img.caption === "string" ? img.caption.trim() : undefined,

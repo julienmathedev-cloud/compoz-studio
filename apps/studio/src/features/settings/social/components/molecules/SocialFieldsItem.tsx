@@ -18,6 +18,12 @@
  */
 
 import { SOCIAL_KIND_EMAIL } from "@compoz/core/constants/social/social-kinds";
+import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
+import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
+import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
+import { StudioButtonGroup } from "@compoz/studio/components/molecules/controls/StudioButtonGroup";
+import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
+import { NewSocialLinkField } from "@compoz/studio/features/settings/social/components/molecules/NewSocialLinkField";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import {
   buildSocialKindSelectItems,
@@ -25,12 +31,6 @@ import {
 } from "@compoz/ui/lib/social/social-kind-icons";
 import { cn } from "@compoz/ui/lib/utils";
 import { MENU_ITEM_LAYOUT, ROW_END } from "@compoz/ui/styles/studio/layout";
-import { AdminIcon } from "@compoz/studio/components/atoms/AdminIcon";
-import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
-import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
-import { AdminButtonGroup } from "@compoz/studio/components/molecules/controls/AdminButtonGroup";
-import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
-import { NewSocialLinkField } from "@compoz/studio/features/settings/social/components/molecules/NewSocialLinkField";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
@@ -170,7 +170,7 @@ export function SocialFieldsItem({
       {/* Col 1 — plateforme */}
       <SelectField
         ids={kindIds}
-        label={t("admin.socialFieldsItem.kind.label")}
+        label={t("studio.socialFieldsItem.kind.label")}
         value={kindValue}
         onChange={(v) => {
           const prevKind = kindValue;
@@ -187,11 +187,11 @@ export function SocialFieldsItem({
           }
         }}
         items={selectItems}
-        placeholder={t("admin.socialFieldsItem.kind.placeholder")}
+        placeholder={t("studio.socialFieldsItem.kind.placeholder")}
         disabled={disabled}
         invalid={invalid?.kind}
         error={error?.kind}
-        help={t("admin.socialFieldsItem.kind.help")}
+        help={t("studio.socialFieldsItem.kind.help")}
       />
 
       {/* Col 2 — lien social (avec help + erreurs) */}
@@ -206,16 +206,16 @@ export function SocialFieldsItem({
         invalid={invalid?.href}
         error={error?.href}
         disabled={disabled}
-        placeholderEmail={t("admin.socialFieldsItem.href.placeholderEmail")}
-        placeholderUrl={t("admin.socialFieldsItem.href.placeholderUrl")}
-        helpEmail={t("admin.socialFieldsItem.href.helpEmail")}
-        helpUrl={t("admin.socialFieldsItem.href.helpUrl")}
+        placeholderEmail={t("studio.socialFieldsItem.href.placeholderEmail")}
+        placeholderUrl={t("studio.socialFieldsItem.href.placeholderUrl")}
+        helpEmail={t("studio.socialFieldsItem.href.helpEmail")}
+        helpUrl={t("studio.socialFieldsItem.href.helpUrl")}
       />
 
       {/* Col 3 — actions (icon-only, même sizing que MenuFieldsItem) */}
       <div className={cn(ROW_END)}>
         <div className="mt-[1.6rem] flex h-9 items-center">
-          <AdminButtonGroup className="shrink-0">
+          <StudioButtonGroup className="shrink-0">
             <TooltipButton
               type="button"
               variant="ghost"
@@ -231,7 +231,7 @@ export function SocialFieldsItem({
                   : t("common.moveUp")
               }
             >
-              <AdminIcon icon={ChevronUp} />
+              <StudioIcon icon={ChevronUp} />
             </TooltipButton>
 
             <TooltipButton
@@ -249,7 +249,7 @@ export function SocialFieldsItem({
                   : t("common.moveDown")
               }
             >
-              <AdminIcon icon={ChevronDown} />
+              <StudioIcon icon={ChevronDown} />
             </TooltipButton>
 
             <DeleteButton
@@ -257,13 +257,13 @@ export function SocialFieldsItem({
               disabled={disabled}
               onConfirmDelete={onRemove}
               confirm={{
-                title: t("admin.socialFieldsItem.confirmDelete.title"),
+                title: t("studio.socialFieldsItem.confirmDelete.title"),
                 description: t(
-                  "admin.socialFieldsItem.confirmDelete.description",
+                  "studio.socialFieldsItem.confirmDelete.description",
                 ),
               }}
             />
-          </AdminButtonGroup>
+          </StudioButtonGroup>
         </div>
       </div>
     </div>

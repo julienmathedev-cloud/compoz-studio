@@ -3,14 +3,12 @@
  * @layer infra/site
  * @description
  * Implémentation du SiteRepository basé sur une base KV (Upstash/Vercel KV).
- *
- * @remarks
- * - Dépendance Redis isolée dans `packages/infra`.
- * - Télémétrie DEV via `kvCmd` (pas de log de keys complètes).
- * - Fallbacks identiques à l’impl FS : index vide, settings = defaults merge.
  */
 
-import type { ContentState } from "@compoz/core/constants/common/content-state";
+import {
+  CONTENT_STATE,
+  type ContentState,
+} from "@compoz/core/constants/common/content-state";
 
 import { DEFAULT_FOOTER_SETTINGS } from "@compoz/core/domain/site/defaults/footer";
 import { DEFAULT_HEADER_SETTINGS } from "@compoz/core/domain/site/defaults/header";
@@ -24,66 +22,21 @@ import type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 
+import { getUpstashRedis, parseRedisJson } from "@compoz/infra/kv/kv-redis";
 import { kvCmd } from "@compoz/infra/kv/kv-telemetry";
-import { Redis } from "@upstash/redis";
+import { normalizeTenantId } from "@compoz/infra/lib/normalize-tenant-id";
 
 /* -------------------------------------------------------------------------- */
 /* Options                                                                    */
 /* -------------------------------------------------------------------------- */
 
 type KvSiteRepositoryOptions = {
-  /** Tenant cible (siteId). Fallback: "default". */
   tenantId?: string;
 };
-
-function normalizeTenantId(input: unknown): string {
-  const t = String(input ?? "").trim();
-  return t.length > 0 ? t : "default";
-}
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
-
-let _redisSingleton: Redis | null = null;
-
-function getUpstashRedis(): Redis {
-  if (_redisSingleton) return _redisSingleton;
-
-  const url =
-    process.env["KV_REST_API_URL"] ?? process.env["UPSTASH_REDIS_REST_URL"];
-  const token =
-    process.env["KV_REST_API_TOKEN"] ?? process.env["UPSTASH_REDIS_REST_TOKEN"];
-
-  if (!url || !token) {
-    throw new Error(
-      "KvSiteRepository: missing Redis env. Expected KV_REST_API_URL/KV_REST_API_TOKEN (or UPSTASH_REDIS_REST_URL/UPSTASH_REDIS_REST_TOKEN).",
-    );
-  }
-
-  _redisSingleton = new Redis({ url, token });
-  return _redisSingleton;
-}
-
-/**
- * Upstash peut renvoyer une string JSON OU directement un objet (auto-deserialization).
- * Contrat : retourne un objet JSON exploitable ou `null`.
- */
-function parseRedisJson<T>(raw: unknown): T | null {
-  if (raw == null) return null;
-
-  if (typeof raw === "object") {
-    return raw as T;
-  }
-
-  if (typeof raw === "string") {
-    const s = raw.trim();
-    if (!s) return null;
-    return JSON.parse(s) as T;
-  }
-
-  return JSON.parse(String(raw)) as T;
-}
 
 function indexKey(tenant: string, state: ContentState): string {
   return `compoz:${tenant}:${state}:site:index`;
@@ -91,6 +44,12 @@ function indexKey(tenant: string, state: ContentState): string {
 
 function settingsKey(tenant: string, state: ContentState): string {
   return `compoz:${tenant}:${state}:site:settings`;
+}
+
+function defaultIndex(state: ContentState): SiteIndex {
+  return state === CONTENT_STATE.DRAFT
+    ? { pages: [], updatedAt: new Date().toISOString() }
+    : { pages: [], updatedAt: "" };
 }
 
 function defaultSettings(): SiteSettings {
@@ -105,10 +64,6 @@ function defaultSettings(): SiteSettings {
   };
 }
 
-/**
- * Context télémétrie KV "stable".
- * Note : on ne loggue pas les keys complètes (pas de PII / pas d’id dans le context).
- */
 function kvCtx(base: string, state: ContentState): string {
   return `site.${base}.${state}`;
 }
@@ -118,16 +73,15 @@ function kvCtx(base: string, state: ContentState): string {
 /* -------------------------------------------------------------------------- */
 
 export class KvSiteRepository implements SiteRepository {
-  private readonly redis: Redis;
+  private readonly redis = getUpstashRedis();
   private readonly tenantId: string;
 
   constructor(opts: KvSiteRepositoryOptions = {}) {
-    this.redis = getUpstashRedis();
     this.tenantId = normalizeTenantId(opts.tenantId);
   }
 
   async ensureBase(): Promise<void> {
-    // no-op (KV)
+    // no-op
   }
 
   async readIndex(state: ContentState): Promise<SiteIndex> {
@@ -137,20 +91,13 @@ export class KvSiteRepository implements SiteRepository {
 
     const json = parseRedisJson<SiteIndex>(raw);
 
-    if (!json) {
-      // Fallback aligné FS repo :
-      // - draft : updatedAt "now" (utile côté admin)
-      // - published : updatedAt "" (aucune donnée publiée)
-      return state === "draft"
-        ? { pages: [], updatedAt: new Date().toISOString() }
-        : { pages: [], updatedAt: "" };
-    }
+    if (!json) return defaultIndex(state);
 
     return json;
   }
 
-  async writeIndex(state: ContentState, index: SiteIndex): Promise<void> {
-    await kvCmd(kvCtx("writeIndex.set", state), "set", () =>
+  async putIndex(state: ContentState, index: SiteIndex): Promise<void> {
+    await kvCmd(kvCtx("putIndex.set", state), "set", () =>
       this.redis.set(indexKey(this.tenantId, state), JSON.stringify(index)),
     );
   }
@@ -162,13 +109,10 @@ export class KvSiteRepository implements SiteRepository {
 
     const json = parseRedisJson<Partial<SiteSettings>>(raw);
 
-    if (!json) {
-      return defaultSettings();
-    }
+    if (!json) return defaultSettings();
 
     const d = defaultSettings();
 
-    // Merge "defaults + overrides" (robuste si KV ne contient qu’un sous-ensemble)
     return {
       header: json.header ?? d.header,
       footer: json.footer ?? d.footer,
@@ -180,11 +124,11 @@ export class KvSiteRepository implements SiteRepository {
     };
   }
 
-  async writeSettings(
+  async putSettings(
     state: ContentState,
     settings: SiteSettings,
   ): Promise<void> {
-    await kvCmd(kvCtx("writeSettings.set", state), "set", () =>
+    await kvCmd(kvCtx("putSettings.set", state), "set", () =>
       this.redis.set(
         settingsKey(this.tenantId, state),
         JSON.stringify(settings),

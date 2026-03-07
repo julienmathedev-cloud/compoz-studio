@@ -24,7 +24,23 @@ type AriaHiddenProps = {
 /* -------------------------------------------------------------------------- */
 
 /**
+ * Retourne `true` si la valeur de `aria-hidden` indique explicitement
+ * que l’élément (et donc ses children) ne doit pas être considéré comme visible.
+ */
+function isAriaHidden(value: AriaHiddenProps["aria-hidden"]): boolean {
+  if (value === true) return true;
+  if (typeof value === "string") return value.toLowerCase() === "true";
+  return false;
+}
+
+/**
  * Extraire le texte **réellement visible** depuis des children React.
+ *
+ * Notes :
+ * - ignore `null` / `undefined` / `boolean`
+ * - convertit `string` / `number` en texte normalisé
+ * - ignore les sous-arbres `aria-hidden`
+ * - traite `<br />` comme un séparateur d’espace
  */
 export function getVisibleText(children: ReactNode): string {
   if (
@@ -40,21 +56,20 @@ export function getVisibleText(children: ReactNode): string {
   }
 
   if (Array.isArray(children)) {
-    return normalizeVisibleText(children.map(getVisibleText).join(" "));
+    // Évite de concaténer des segments vides et réduit le bruit (espaces multiples).
+    const parts = children
+      .map(getVisibleText)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    return normalizeVisibleText(parts.join(" "));
   }
 
   if (isValidElement(children)) {
     if (children.type === "br") return " ";
 
     const el = children as ReactElement<AriaHiddenProps>;
-    const ariaHidden = el.props["aria-hidden"];
-
-    if (
-      ariaHidden === true ||
-      (typeof ariaHidden === "string" && ariaHidden.toLowerCase() === "true")
-    ) {
-      return "";
-    }
+    if (isAriaHidden(el.props["aria-hidden"])) return "";
 
     return getVisibleText(el.props.children);
   }
@@ -68,6 +83,12 @@ export function getVisibleText(children: ReactNode): string {
 
 /**
  * Calculer un `aria-label` pour les éléments interactifs.
+ *
+ * Règles :
+ * - si `ariaLabel` est fourni et différent du texte visible → on le garde
+ * - si `ariaLabel` est fourni mais identique au texte visible → on l’omet (évite la redondance)
+ * - si le texte visible existe → pas besoin d’aria-label
+ * - sinon on utilise `fallback` si présent
  */
 export function getAriaLabel(
   ariaLabel: string | undefined,

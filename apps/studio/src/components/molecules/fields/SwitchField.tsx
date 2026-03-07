@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/components/molecules/fields/SwitchField.tsx
- * @layer ui/molecules
+ * @layer studio/molecules
  *
  * @description
  * Champ Switch contrôlé (label, aide, switch) basé sur les primitives ShadCN.
@@ -16,6 +16,7 @@
  */
 
 import { HelpText } from "@compoz/studio/components/atoms/typography/HelpText";
+
 import {
   Field,
   FieldDescription,
@@ -47,7 +48,7 @@ type SwitchFieldProps = Readonly<{
 }>;
 
 /**
- * Champ Switch contrôlé standardisé pour l’admin.
+ * Champ Switch contrôlé standardisé pour le Studio.
  */
 export function SwitchField({
   ids,

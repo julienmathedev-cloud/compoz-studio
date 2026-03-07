@@ -1,12 +1,12 @@
 /**
  * @file packages/core/src/domain/pages/entities/cell.ts
- * @layer core/domain
+ * @layer core/domain/pages
  * @description
  * Entités métier représentant les cells contenues dans un block de page.
  *
  * Les cells sont des unités de contenu persistées au sein d’un block (V0.5 : LayoutSectionBlock).
  * - Pas de logique métier ici (voir use-cases).
- * - Pas de validation runtime ici (voir `validation/cell.validation.ts`).
+ * - Pas de validation runtime ici (voir validators du domaine / schémas de validation).
  */
 
 /**
@@ -22,29 +22,25 @@ export type CellKind = "richText" | "image" | "gallery" | "carousel";
  */
 export type RichTextCell = {
   kind: "richText";
-
-  /** Contenu HTML. */
+  /** Contenu HTML (peut être vide). */
   content: string;
 };
 
 /**
- * Image dans l'éditeur d’une cellule.
+ * Image manipulée dans l’éditeur (sous-structure réutilisée par plusieurs cells).
  */
 export type ImageEditor = {
   /** Identifiant stable de l’image dans la cell. */
   id: string;
-
   /** Source de l’image (obligatoire). */
   src: string;
-
   /** Texte alternatif (peut être vide si décoratif). */
   alt: string;
-
   /** Légende optionnelle. */
   caption?: string;
-
+  /** Lien optionnel (ex: image cliquable). */
   href?: string | null;
-
+  /** Dimensions (px). */
   width: number;
   height: number;
 };
@@ -57,21 +53,19 @@ export type ImageRatio = "default" | "wide" | "portrait" | "square";
 export type ImageCell = {
   kind: "image";
   image: ImageEditor;
+  /** Variante d’affichage (si non défini : ratio par défaut). */
   variant?: ImageRatio;
 };
 
 export type GalleryMaxColumns = 1 | 2 | 3 | 4 | 5;
+
 /**
  * Cell "Gallery".
  */
 export type GalleryCell = {
   kind: "gallery";
-
   linksEnabled: boolean;
-
   maxColumns: GalleryMaxColumns;
-
-  /** Liste d’images (invariant : au moins 1). */
   images: ReadonlyArray<ImageEditor>;
 };
 
@@ -80,8 +74,6 @@ export type GalleryCell = {
  */
 export type CarouselCell = {
   kind: "carousel";
-
-  /** Liste d’images (invariant : au moins 1). */
   images: ReadonlyArray<ImageEditor>;
 };
 

@@ -1,6 +1,6 @@
 /**
  * @file apps/studio/src/app/draft/[slug]/page.tsx
- * @layer app/studio/draft
+ * @layer studio/app
  *
  * @description
  * Route publique "/draft/[slug]" : rendu DRAFT-only (preview).
@@ -9,13 +9,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { resolvePublicUi } from "@compoz/ui/site/skins/resolvePublicUi";
-
-import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
-import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
-
-import type { Page } from "@compoz/core/domain/pages/entities/page";
-import type { SiteIndex } from "@compoz/core/domain/site/entities";
+import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import {
   getDraftIndex,
   getDraftPageBySlug,
@@ -23,48 +17,25 @@ import {
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
-function __hrefForSlug(slug: string) {
-  return slug === "home" ? "/draft" : `/draft/${slug}`;
-}
-
-function __computePager(args: {
-  page: Pick<Page, "id" | "parentId" | "paginationEnabled"> & {
-    title?: string;
-    slug?: string;
-  };
-  index: SiteIndex;
-}) {
-  const { page, index } = args;
-
-  const enabled = Boolean(page.paginationEnabled);
-  if (!enabled) return { enabled: false, prev: null, next: null };
-
-  const siblings = (index.pages ?? []).filter(
-    (p) => p.parentId === page.parentId,
-  );
-
-  if (siblings.length <= 1) return { enabled: true, prev: null, next: null };
-
-  const i = siblings.findIndex((p) => p.id === page.id);
-  if (i < 0) return { enabled: true, prev: null, next: null };
-
-  const prev = i > 0 ? siblings[i - 1] : null;
-  const next = i < siblings.length - 1 ? siblings[i + 1] : null;
-
-  return {
-    enabled: true,
-    prev: prev ? { href: __hrefForSlug(prev.slug), label: prev.title } : null,
-    next: next ? { href: __hrefForSlug(next.slug), label: next.title } : null,
-  };
-}
+import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
+import { toSlug } from "@compoz/ui/lib/routing/slug";
+import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
+import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
+import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 
 type PageParams = Readonly<{
   params: Promise<Readonly<{ slug: string }>>;
 }>;
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function hrefForDraftSlug(slug: string): string {
+  const s = toSlug(slug);
+  if (!s || s === HOME_SLUG) return "/draft";
+  return `/draft/${encodeURIComponent(s)}`;
+}
 
 /* -------------------------------------------------------------------------- */
 /* Metadata                                                                   */
@@ -75,9 +46,10 @@ export async function generateMetadata({
 }: PageParams): Promise<Metadata> {
   const { slug } = await unwrapParams(params);
 
-  if (slug === "home") return {};
+  const s = toSlug(slug);
+  if (!s || s === HOME_SLUG) return {};
 
-  const page = await getDraftPageBySlug(slug);
+  const page = await getDraftPageBySlug(s);
   if (!page) return {};
 
   return { title: page.title };
@@ -90,23 +62,28 @@ export async function generateMetadata({
 export default async function DraftPage({ params }: PageParams) {
   const { slug } = await unwrapParams(params);
 
-  if (slug === "home") redirect("/draft");
+  const s = toSlug(slug);
+  if (!s || s === HOME_SLUG) redirect("/draft");
 
   const index = await getDraftIndex();
   if (!index) notFound();
 
-  const page = await getDraftPageBySlug(slug);
+  const page = await getDraftPageBySlug(s);
   if (!page) notFound();
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
     .map(toBlockShapeFromDTO)
     .filter((b): b is BlockShape => Boolean(b));
 
-  const pager = __computePager({ page, index });
+  const pager = computeSitePager({
+    page,
+    index,
+    hrefForSlug: hrefForDraftSlug,
+  });
 
   return (
     <SitePageRenderer
-      ui={resolvePublicUi()}
+      ui={resolveSiteUi()}
       pageTitle={page.title}
       blocks={blocks}
       pager={pager}

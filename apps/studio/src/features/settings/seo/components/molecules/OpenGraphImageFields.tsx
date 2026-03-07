@@ -1,15 +1,11 @@
 "use client";
 
-import { SEO } from "@compoz/core/constants/limits/seo";
-import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
-import { cn } from "@compoz/ui/lib/utils";
-import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 /**
  * @file apps/studio/src/features/settings/seo/components/molecules/OpenGraphImageFields.tsx
- * @layer ui/molecules
+ * @layer ui/studio/molecules
  *
  * @description
- * Champs OpenGraph image (URL via upload + alt) avec preview, compatible RHF (admin).
+ * Champs OpenGraph image (URL via upload + alt) avec preview, compatible RHF (studio).
  *
  * @remarks
  * - Molecule UI : compose `ImageSelector` et `InputField`.
@@ -18,13 +14,18 @@ import { STACK_MD } from "@compoz/ui/styles/studio/layout";
  * - Strictement UI-only.
  */
 
-import type { SeoFormValues } from "@compoz/validation/site/settings/seo/seo-form";
-import { ImageSelector } from "@compoz/studio/components/molecules/fields/ImageSelector";
-import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
-import { MAX_IMAGE_UPLOAD_BYTES } from "@compoz/studio/lib/config/uploads";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { ControllerRenderProps } from "react-hook-form";
+
+import { SEO } from "@compoz/core/constants/limits/seo";
+import { ImageSelector } from "@compoz/studio/components/molecules/fields/ImageSelector";
+import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
+import { MAX_IMAGE_UPLOAD_BYTES } from "@compoz/studio/lib/config/uploads";
+import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
+import { cn } from "@compoz/ui/lib/utils";
+import { STACK_MD } from "@compoz/ui/styles/studio/layout";
+import type { SeoFormValues } from "@compoz/validation/site/settings/seo/seo-form";
 
 type UploadedRasterImage = Readonly<{
   url: string;
@@ -34,22 +35,16 @@ type UploadedRasterImage = Readonly<{
 
 type OpenGraphImageFieldsProps = Readonly<{
   idPrefix: string;
-
   imageUrlField: ControllerRenderProps<
     SeoFormValues,
     "openGraph.defaultImageUrl"
   >;
-
   imageAltField: ControllerRenderProps<SeoFormValues, "openGraph.imageAlt">;
-
   disabled?: boolean;
-
   invalidUrl?: boolean;
   urlErrorMessage?: string;
-
   invalidAlt?: boolean;
   altErrorMessage?: string;
-
   onUploadOgImage?: (file: File) => Promise<UploadedRasterImage>;
 }>;
 
@@ -77,14 +72,12 @@ export function OpenGraphImageFields({
 
   const alt = useMemo(
     () =>
-      currentAlt || t("admin.seoForm.openGraph.defaultImageUrl.altFallback"),
+      currentAlt || t("studio.seoForm.openGraph.defaultImageUrl.altFallback"),
     [currentAlt, t],
   );
 
   const OG_ACCEPT = "image/jpeg,image/png,image/webp";
   const PREFERRED_OG = ["image/jpeg", "image/png", "image/webp"] as const;
-
-  const maxBytes = MAX_IMAGE_UPLOAD_BYTES;
 
   return (
     <div
@@ -94,7 +87,7 @@ export function OpenGraphImageFields({
     >
       <ImageSelector
         ids={imageUrlIds}
-        label={t("admin.seoForm.openGraph.defaultImageUrl.label")}
+        label={t("studio.seoForm.openGraph.defaultImageUrl.label")}
         url={currentUrl}
         onUrlChange={(v) => {
           const nextUrl = String(v ?? "");
@@ -106,29 +99,29 @@ export function OpenGraphImageFields({
         }}
         disabled={isBusy}
         previewAlt={alt}
-        help={t("admin.seoForm.openGraph.defaultImageUrl.help")}
+        help={t("studio.seoForm.openGraph.defaultImageUrl.help")}
         accept={OG_ACCEPT}
         onFileSelect={onUploadOgImage}
         preferredTypes={PREFERRED_OG}
         preferredTypeHint={t(
-          "admin.seoForm.openGraph.defaultImageUrl.preferredTypeHint",
+          "studio.seoForm.openGraph.defaultImageUrl.preferredTypeHint",
         )}
-        maxBytes={maxBytes}
+        maxBytes={MAX_IMAGE_UPLOAD_BYTES}
         invalid={invalidUrl}
         errorMessage={urlErrorMessage}
       />
 
       <InputField
         ids={imageAltIds}
-        label={t("admin.seoForm.openGraph.imageAlt.label")}
+        label={t("studio.seoForm.openGraph.imageAlt.label")}
         value={currentAlt}
         onChange={(v) => imageAltField.onChange(String(v ?? ""))}
         onBlur={imageAltField.onBlur}
-        placeholder={t("admin.seoForm.openGraph.imageAlt.placeholder")}
-        help={t("admin.seoForm.openGraph.imageAlt.help")}
+        placeholder={t("studio.seoForm.openGraph.imageAlt.placeholder")}
+        help={t("studio.seoForm.openGraph.imageAlt.help")}
         disabled={isBusy}
         showCount
-        maxLength={SEO.IMAGE_ALT_MAX}
+        maxLength={SEO.IMAGE_ALT.MAX}
         autoCapitalize="sentences"
         autoCorrect="on"
         invalid={invalidAlt}

@@ -1,6 +1,6 @@
 /**
  * @file packages/core/src/domain/pages/entities/block.ts
- * @layer core/domain
+ * @layer core/domain/pages
  * @description
  * Entités métier représentant les blocks qui composent une page.
  *
@@ -32,7 +32,7 @@ export type LayoutSectionLayout = {
 };
 
 /**
- * Titre optionnel d’une section.
+ * Titre d’une section (présent même si désactivé).
  */
 export type LayoutSectionBlockTitle = {
   /** Texte du titre. */
@@ -42,6 +42,9 @@ export type LayoutSectionBlockTitle = {
   display: "visible" | "sr-only";
 };
 
+/**
+ * Mode de container appliqué à la section (impacte le layout global).
+ */
 export type LayoutSectionContainerMode = "contained" | "fullBleed";
 
 /**
@@ -64,11 +67,13 @@ export type LayoutSectionBlock = {
   /** Mode de container de la section (layout global). */
   containerMode: LayoutSectionContainerMode;
 
+  /** Active/désactive l’affichage du titre (le champ `title` reste présent). */
   titleEnabled: boolean;
 
   /** Titre de la section (toujours présent). L’affichage est piloté par `titleEnabled`. */
   title: LayoutSectionBlockTitle;
 
+  /** Indique si ce block doit être traité en priorité LCP (signal UX/perf). */
   lcpPriority: boolean;
 
   /**

@@ -2,13 +2,13 @@
 
 /**
  * @file apps/studio/src/app/[locale]/(dashboard)/(legal)/cookies/page.tsx
- * @layer app/studio
+ * @layer studio/app
  *
  * @description
- * Page « Cookies » (admin) — politique relative aux cookies pour Compoz Studio.
+ * Page « Cookies » (Studio) — politique relative aux cookies pour Compoz Studio.
  *
  * @remarks
- * - H1 SR-only (convention admin : un seul H1 global).
+ * - H1 SR-only (convention Studio : un seul H1 global).
  * - Structure via `SettingsSection`.
  * - Contenu statique i18n.
  * - Aucun tracking actuellement (V0.5 : zéro cookies marketing / analytics).
@@ -21,25 +21,27 @@ import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
 
 import { cn } from "@compoz/ui/lib/utils";
-import { ADMIN_SECTION } from "@compoz/ui/styles/studio/layout";
+import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
+
+const CONTACT_EMAIL = "julien.mathe.dev@gmail.com" as const;
 
 /**
- * Page Cookies (admin).
+ * Page Cookies (Studio).
  */
 export default function CookiesPage() {
   const t = useTranslations();
 
   return (
-    <div className={cn(ADMIN_SECTION)}>
+    <div className={cn(STUDIO_SECTION)}>
       {/* H1 global SR-only */}
       <Heading as="h1" className="sr-only">
-        {t("admin.legal.cookies.h1")}
+        {t("studio.legal.cookies.h1")}
       </Heading>
 
       <SettingsSection
         id="legal-cookies"
-        title={t("admin.legal.cookies.title")}
-        description={t("admin.legal.cookies.description")}
+        title={t("studio.legal.cookies.title")}
+        description={t("studio.legal.cookies.description")}
         showStatusBadge={false}
       >
         <div className="space-y-6">
@@ -48,10 +50,10 @@ export default function CookiesPage() {
           {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
-              {t("admin.legal.cookies.sections.intro.title")}
+              {t("studio.legal.cookies.sections.intro.title")}
             </Heading>
 
-            <Text as="p">{t("admin.legal.cookies.sections.intro.p1")}</Text>
+            <Text as="p">{t("studio.legal.cookies.sections.intro.p1")}</Text>
           </div>
 
           {/* ------------------------------------------------------------------ */}
@@ -59,12 +61,12 @@ export default function CookiesPage() {
           {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
-              {t("admin.legal.cookies.sections.usage.title")}
+              {t("studio.legal.cookies.sections.usage.title")}
             </Heading>
 
-            <Text as="p">{t("admin.legal.cookies.sections.usage.p1")}</Text>
+            <Text as="p">{t("studio.legal.cookies.sections.usage.p1")}</Text>
 
-            <Text as="p">{t("admin.legal.cookies.sections.usage.p2")}</Text>
+            <Text as="p">{t("studio.legal.cookies.sections.usage.p2")}</Text>
           </div>
 
           {/* ------------------------------------------------------------------ */}
@@ -72,13 +74,15 @@ export default function CookiesPage() {
           {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
-              {t("admin.legal.cookies.sections.technical.title")}
+              {t("studio.legal.cookies.sections.technical.title")}
             </Heading>
 
-            <Text as="p">{t("admin.legal.cookies.sections.technical.p1")}</Text>
+            <Text as="p">
+              {t("studio.legal.cookies.sections.technical.p1")}
+            </Text>
 
             <Text as="p" variant="muted">
-              {t("admin.legal.cookies.sections.technical.p2")}
+              {t("studio.legal.cookies.sections.technical.p2")}
             </Text>
           </div>
 
@@ -87,10 +91,10 @@ export default function CookiesPage() {
           {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
-              {t("admin.legal.cookies.sections.future.title")}
+              {t("studio.legal.cookies.sections.future.title")}
             </Heading>
 
-            <Text as="p">{t("admin.legal.cookies.sections.future.p1")}</Text>
+            <Text as="p">{t("studio.legal.cookies.sections.future.p1")}</Text>
           </div>
 
           {/* ------------------------------------------------------------------ */}
@@ -98,15 +102,15 @@ export default function CookiesPage() {
           {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
-              {t("admin.legal.cookies.sections.contact.title")}
+              {t("studio.legal.cookies.sections.contact.title")}
             </Heading>
 
             <Text as="p" variant="muted">
-              {t.rich("admin.legal.cookies.sections.contact.p1", {
-                emailAddress: "julien.mathe.dev@gmail.com",
+              {t.rich("studio.legal.cookies.sections.contact.p1", {
+                emailAddress: CONTACT_EMAIL,
                 email: (chunks) => (
                   <a
-                    href="mailto:julien.mathe.dev@gmail.com"
+                    href={`mailto:${CONTACT_EMAIL}`}
                     className="underline underline-offset-4 hover:no-underline"
                   >
                     {chunks}

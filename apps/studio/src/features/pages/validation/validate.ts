@@ -1,14 +1,14 @@
 /**
  * @file apps/studio/src/features/pages/validation/validate.ts
- * @layer hooks/admin/pages
+ * @layer hooks/studio/pages
  *
  * @description
- * Helpers et hooks de validation UI pour les pages (erreurs légères et warnings).
+ * Helpers et hooks de validation UI pour les pages (warnings UX légers).
  *
  * @remarks
  * - Validation métier assurée par le domaine (Zod + use-cases serveur).
  * - Ici : UX uniquement (warnings, détection de doublons, incohérences mineures).
- * - Source UI : PageFormValues (schéma RHF).
+ * - Source UI : `PageFormValues` (schéma RHF).
  */
 
 import { useMemo } from "react";
@@ -18,40 +18,48 @@ import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 import { normalizeSlug } from "@compoz/core/domain/slug/utils";
 import type { PageFormValues } from "@compoz/validation/pages/page-form";
 
-/* ─────────────────────────── Types ─────────────────────────── */
+/* -------------------------------------------------------------------------- */
+/* Types                                                                      */
+/* -------------------------------------------------------------------------- */
 
 export type PageWarningKey = "slugNotNormalized" | "titleLooksThin";
 
-/* ─────────────────────────── Warnings (PURE + hook) ─────────────────────────── */
+/* -------------------------------------------------------------------------- */
+/* Warnings UI                                                                */
+/* -------------------------------------------------------------------------- */
 
 /**
  * Calcule les warnings UI associés aux valeurs du formulaire Page.
  */
 export function computePageWarnings(values: PageFormValues): PageWarningKey[] {
-  const out = new Set<PageWarningKey>();
+  const warnings = new Set<PageWarningKey>();
 
-  const title = (values.title ?? "").trim();
-  const slug = (values.slug ?? "").trim();
+  const title = String(values.title ?? "").trim();
+  const slug = String(values.slug ?? "").trim();
 
-  const normalized = normalizeSlug(slug);
-  if (normalized && normalized !== slug) out.add("slugNotNormalized");
-
-  // UX : warning “titre un peu léger” (le form garantit déjà min/max)
-  if (title && title.length <= Math.max(4, PAGE_TITLE.MIN)) {
-    out.add("titleLooksThin");
+  const normalizedSlug = normalizeSlug(slug);
+  if (normalizedSlug && normalizedSlug !== slug) {
+    warnings.add("slugNotNormalized");
   }
 
-  return Array.from(out);
+  // UX : warning “titre un peu léger” (le form garantit déjà min / max).
+  if (title && title.length <= Math.max(4, PAGE_TITLE.MIN)) {
+    warnings.add("titleLooksThin");
+  }
+
+  return Array.from(warnings);
 }
 
 /**
- * Hook retournant les warnings UI d’une page à partir des valeurs courantes (form).
+ * Hook retournant les warnings UI d’une page à partir des valeurs courantes du form.
  */
 export function usePageUiWarnings(values: PageFormValues): PageWarningKey[] {
   return useMemo(() => computePageWarnings(values), [values]);
 }
 
-/* ───────────────────────────── Helper doublons (Set) ───────────────────────────── */
+/* -------------------------------------------------------------------------- */
+/* Helper slugs                                                               */
+/* -------------------------------------------------------------------------- */
 
 /**
  * Construit un ensemble de slugs existants pour la détection de doublons.
@@ -64,15 +72,19 @@ export function buildSlugSet(
   index: SiteIndexDTO | null | undefined,
   currentPageId?: string,
 ): ReadonlySet<string> {
-  const set = new Set<string>();
-  if (!index) return set;
+  const slugs = new Set<string>();
+  if (!index) return slugs;
 
-  for (const p of index.pages) {
-    if (currentPageId && p.id === currentPageId) continue;
-    if (p.slug) set.add(p.slug);
+  for (const page of index.pages) {
+    if (currentPageId && page.id === currentPageId) continue;
+
+    const slug = String(page.slug ?? "").trim();
+    if (!slug) continue;
+
+    slugs.add(slug);
   }
 
-  return set;
+  return slugs;
 }
 
 /**

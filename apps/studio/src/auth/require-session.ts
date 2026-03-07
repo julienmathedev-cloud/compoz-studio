@@ -1,6 +1,7 @@
 /**
  * @file apps/studio/src/auth/require-session.ts
- * @layer app/auth
+ * @layer studio/auth
+ *
  * @description
  * Helpers d'auth pour les routes API Studio :
  * - centralise `auth()`
@@ -35,7 +36,7 @@ type SessionUserLite = Readonly<{
 
 export type SessionTenantResult = Readonly<{
   tenantId: string;
-  role?: string;
+  role: string;
   tenantIds?: string[];
   defaultTenantId?: string;
 

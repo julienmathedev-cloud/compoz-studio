@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/site/skins/default/blocks/carousel-block.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
  * Skin UI — carousel block (Default).
@@ -14,9 +14,9 @@
  *   - object-fit
  */
 
-import type { PublicCarouselUi } from "@compoz/ui/site/public-ui.types";
+import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
 
-export const defaultCarouselUi: PublicCarouselUi = {
+export const defaultCarouselUi: SiteCarouselUi = {
   // ✅ Mode ratio : structure + ratio
   containerRatio: "relative w-full overflow-hidden aspect-video",
 

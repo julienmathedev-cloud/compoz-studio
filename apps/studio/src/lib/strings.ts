@@ -1,8 +1,12 @@
 /**
  * @file apps/studio/src/lib/strings.ts
- * @layer app/studio/lib
+ * @layer studio/lib
  * @description
- * Helpers de trimming pour adapters studio (UI/admin).
+ * Helpers de trimming utilisés par les adapters UI du Studio (admin).
+ *
+ * @remarks
+ * Utiles pour normaliser les champs de formulaires tout en conservant
+ * certains comportements UI (ex: champs clearable).
  */
 
 /**
@@ -22,6 +26,7 @@ export const trimOrKeep = (v: string): string => {
  */
 export const trimClearableOrUndef = (v: unknown): string | undefined => {
   if (typeof v !== "string") return undefined;
+
   const t = v.trim();
   return t.length === 0 ? undefined : t;
 };

@@ -2,23 +2,24 @@
 
 /**
  * @file apps/studio/src/components/molecules/fields/FieldMetaBar.tsx
- * @layer ui/molecules
+ * @layer studio/molecules
  *
  * @description
  * Barre méta affichée sous un champ (texte à gauche, compteur à droite).
  *
  * @remarks
- * - Molecule UI : compose l’atome `Text`.
+ * - Molecule UI : compose l’atome `HelpText`.
  * - Utilisée pour afficher des informations contextuelles non bloquantes.
  * - Le compteur est purement informatif (`aria-hidden`).
  * - Ne rend rien si aucun contenu n’est fourni.
  * - Strictement UI-only : aucune logique métier.
  */
 
+import type { ReactNode } from "react";
+
 import { HelpText } from "@compoz/studio/components/atoms/typography/HelpText";
 import { cn } from "@compoz/ui/lib/utils";
 import { ROW_BETWEEN } from "@compoz/ui/styles/studio/layout";
-import type { ReactNode } from "react";
 
 /**
  * Props du composant `FieldMetaBar`.
@@ -36,7 +37,7 @@ export type FieldMetaBarProps = Readonly<{
 }>;
 
 /**
- * Affiche une barre méta sous un champ de formulaire (admin).
+ * Affiche une barre méta sous un champ de formulaire (Studio).
  */
 export function FieldMetaBar({ text, textId, count, max }: FieldMetaBarProps) {
   const hasCounter = typeof count === "number";

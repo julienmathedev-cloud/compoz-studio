@@ -1,6 +1,6 @@
 /**
  * @file apps/site/src/app/api/revalidate/route.ts
- * @layer site/api
+ * @layer site/app/api
  * @description
  * Webhook de revalidation (appelé par Studio après publication).
  *
@@ -10,7 +10,7 @@
  * Payload :
  * - { tenantId: string; slugs: string[] }
  *
- * Remarques :
+ * @remarks
  * - On revalide :
  *   - le mode "host-based" (/) si tu utilises lvh.me / domaines mappés
  *   - ET le fallback vercel "/t/:tenant" (toujours safe, et pratique)
@@ -23,28 +23,13 @@ import { revalidatePath } from "next/cache";
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { throwHttp } from "@compoz/http/http-error";
-
 import { handleRoute } from "@compoz/site/lib/api/handle-route";
-import { jsonOk } from "@compoz/site/lib/api/responses";
+import { toSlugsList } from "@compoz/ui/lib/routing/slug";
+import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
-
-function normalizeTenantId(input: unknown): string {
-  return String(input ?? "")
-    .trim()
-    .toLowerCase();
-}
-
-function normalizeSlugs(input: unknown): string[] {
-  if (!Array.isArray(input)) return [];
-  return input
-    .map((x) => String(x ?? "").trim())
-    .filter(Boolean)
-    .filter((s) => s !== "home"); // home = "/"
-}
-
 function revalidatePublishedForTenant(params: {
   tenantId: string;
   slugs: ReadonlyArray<string>;
@@ -104,10 +89,8 @@ export async function POST(req: Request) {
       });
     }
 
-    const tenantId = normalizeTenantId(
-      (body as Record<string, unknown>)?.tenantId,
-    );
-    const slugs = normalizeSlugs((body as Record<string, unknown>)?.slugs);
+    const tenantId = toTenantId((body as Record<string, unknown>)?.tenantId);
+    const slugs = toSlugsList((body as Record<string, unknown>)?.slugs);
 
     if (!tenantId) {
       throwHttp(400, {
@@ -119,26 +102,24 @@ export async function POST(req: Request) {
 
     revalidatePublishedForTenant({ tenantId, slugs });
 
-    return jsonOk(
-      {
-        ok: true,
-        tenantId,
-        revalidated: {
-          hostBased: {
-            home: true,
-            pages: slugs.length,
-            sitemap: true,
-            robots: true,
-          },
-          fallback: {
-            tenantHome: true,
-            pages: slugs.length,
-            sitemap: true,
-            robots: true,
-          },
+    // IMPORTANT: handleRoute enveloppe déjà en jsonOk()
+    return {
+      ok: true,
+      tenantId,
+      revalidated: {
+        hostBased: {
+          home: true,
+          pages: slugs.length,
+          sitemap: true,
+          robots: true,
+        },
+        fallback: {
+          tenantHome: true,
+          pages: slugs.length,
+          sitemap: true,
+          robots: true,
         },
       },
-      200,
-    );
+    };
   });
 }

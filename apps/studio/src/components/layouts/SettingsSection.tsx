@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/components/layouts/SettingsSection.tsx
- * @layer ui/layouts
+ * @layer studio/layouts
  *
  * @description
- * Wrapper standard pour une section de réglages (admin).
+ * Wrapper standard pour une section de réglages (studio).
  *
  * @remarks
  * - Encapsule une structure accessible : `<section>` + ARIA (label/description/busy).
@@ -19,8 +19,6 @@
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 
-import { cn } from "@compoz/ui/lib/utils";
-import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 import {
   SectionFormStatusBadge,
   type SectionFormStatusKind,
@@ -28,6 +26,8 @@ import {
 import { Heading } from "@compoz/studio/components/atoms/typography/Heading";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { SectionLoader } from "@compoz/studio/components/loading/SectionLoader";
+import { cn } from "@compoz/ui/lib/utils";
+import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 import { useTranslations } from "next-intl";
 
 /**
@@ -74,7 +74,7 @@ type SettingsSectionProps = Readonly<{
 }>;
 
 /**
- * Section de réglages standardisée (admin).
+ * Section de réglages standardisée (studio).
  */
 export function SettingsSection({
   id,
@@ -98,7 +98,7 @@ export function SettingsSection({
 
   const loaderLabel =
     loadingLabel ??
-    t("admin.shared.loading.section", { title: title.toLowerCase() });
+    t("studio.shared.loading.section", { title: title.toLowerCase() });
 
   const statusKind: SectionFormStatusKind =
     useMemo((): SectionFormStatusKind => {

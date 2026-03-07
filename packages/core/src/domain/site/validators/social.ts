@@ -33,12 +33,13 @@ import { isMailtoHref } from "@compoz/core/domain/urls/mailto";
  * - `EC.SOCIAL_ABSOLUTE_REQUIRED`
  */
 function assertSocialItem(it: SocialItem, index: number): void {
-  const { kind, href } = it;
+  const kind = it.kind;
+  const href = String(it.href ?? "").trim();
+
   const pathBase = ["social", "items", index, "href"] as const;
 
   // Invariant : plateforme "email" ⇒ mailto: obligatoire
   if (kind === SOCIAL_KIND_EMAIL) {
-    // email -> mailto: obligatoire
     if (!isMailtoHref(href)) {
       throw new DomainError({
         code: EC.SOCIAL_INVALID_FOR_PLATFORM,
@@ -76,20 +77,18 @@ function assertSocialItem(it: SocialItem, index: number): void {
  * - (peut lever les erreurs de `assertSocialItem`)
  */
 export function assertSocialSettings(s: SocialSettings): void {
-  const seen = new Set<string>();
+  const seen = new Set<SocialItem["kind"]>();
 
   s.items.forEach((it, i) => {
-    // Unicité de la plateforme (kind) dans la liste
     if (seen.has(it.kind)) {
       throw new DomainError({
         code: EC.SOCIAL_DUPLICATE_KIND,
         message: EC.SOCIAL_DUPLICATE_KIND,
-        details: { path: ["social", "items", i], kind: it.kind },
+        details: { path: ["social", "items", i, "kind"], kind: it.kind },
       });
     }
     seen.add(it.kind);
 
-    // Vérification des invariants par item
     assertSocialItem(it, i);
   });
 }

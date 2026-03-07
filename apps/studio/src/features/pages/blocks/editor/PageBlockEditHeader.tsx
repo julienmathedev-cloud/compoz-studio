@@ -2,17 +2,25 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/editor/PageBlockEditHeader.tsx
- * @layer ui/organisms
+ * @layer ui/studio/pages/blocks/editor
+ *
+ * @description
+ * Header d’édition d’un block de page : titre, colonnes, mode container et priorité LCP.
+ *
+ * @remarks
+ * - UI-only.
+ * - Ne contient aucune logique métier.
+ * - Reçoit un modèle contrôlé et délègue toutes les mutations au parent.
  */
 
-import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
-import { cn } from "@compoz/ui/lib/utils";
-import { STACK_MD } from "@compoz/ui/styles/studio/layout";
+import { useTranslations } from "next-intl";
+
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
-
-import { useTranslations } from "next-intl";
+import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
+import { cn } from "@compoz/ui/lib/utils";
+import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 
 type TitleValue = Readonly<{ text: string; display: "visible" | "sr-only" }>;
 
@@ -80,17 +88,17 @@ export function PageBlockEditHeader({
   const columnsOptions = [
     {
       value: "1",
-      label: t("admin.pageBlockEditHeader.columns.options.1"),
+      label: t("studio.pageBlockEditHeader.columns.options.1"),
       textLabel: "1",
     },
     {
       value: "2",
-      label: t("admin.pageBlockEditHeader.columns.options.2"),
+      label: t("studio.pageBlockEditHeader.columns.options.2"),
       textLabel: "2",
     },
     {
       value: "3",
-      label: t("admin.pageBlockEditHeader.columns.options.3"),
+      label: t("studio.pageBlockEditHeader.columns.options.3"),
       textLabel: "3",
     },
   ] as const;
@@ -98,12 +106,12 @@ export function PageBlockEditHeader({
   const displayOptions = [
     {
       value: "visible",
-      label: t("admin.pageBlockEditHeader.blockTitle.visible"),
+      label: t("studio.pageBlockEditHeader.blockTitle.visible"),
       textLabel: "visible",
     },
     {
       value: "sr-only",
-      label: t("admin.pageBlockEditHeader.blockTitle.srOnly"),
+      label: t("studio.pageBlockEditHeader.blockTitle.srOnly"),
       textLabel: "sr-only",
     },
   ] as const;
@@ -121,7 +129,7 @@ export function PageBlockEditHeader({
       >
         <InputField
           ids={titleTextIds}
-          label={t("admin.pageBlockEditHeader.blockTitle.label")}
+          label={t("studio.pageBlockEditHeader.blockTitle.label")}
           value={currentText}
           onChange={(val) => {
             if (!titleEnabled) return;
@@ -131,8 +139,8 @@ export function PageBlockEditHeader({
             if (!titleEnabled) return;
             onTitleTextBlur();
           }}
-          placeholder={t("admin.pageBlockEditHeader.blockTitle.placeholder")}
-          help={t("admin.pageBlockEditHeader.blockTitle.help")}
+          placeholder={t("studio.pageBlockEditHeader.blockTitle.placeholder")}
+          help={t("studio.pageBlockEditHeader.blockTitle.help")}
           disabled={titleFieldsDisabled}
           invalid={titleEnabled ? titleTextInvalid : false}
           error={titleEnabled ? titleTextError : undefined}
@@ -140,26 +148,26 @@ export function PageBlockEditHeader({
 
         <SelectField
           ids={titleDisplayIds}
-          label={t("admin.pageBlockEditHeader.blockTitle.displayLabel")}
+          label={t("studio.pageBlockEditHeader.blockTitle.displayLabel")}
           value={currentDisplay}
           onChange={(val) => {
             if (!titleEnabled) return;
             onTitleDisplayChange(val === "visible" ? "visible" : "sr-only");
           }}
           items={displayOptions}
-          help={t("admin.pageBlockEditHeader.blockTitle.displayHelp")}
+          help={t("studio.pageBlockEditHeader.blockTitle.displayHelp")}
           disabled={titleFieldsDisabled || !canChangeDisplay}
         />
 
         {/* petit alignement comme tes menus : switch “posée” */}
-        <div className="flex h-full justify-center items-center">
+        <div className="flex h-full items-center justify-center">
           <SwitchField
             ids={titleEnabledIds}
-            label={t("admin.pageBlockEditHeader.blockTitle.switchLabel")}
+            label={t("studio.pageBlockEditHeader.blockTitle.switchLabel")}
             help={
               titleEnabled
-                ? t("admin.pageBlockEditHeader.blockTitle.switchHelp")
-                : t("admin.pageBlockEditHeader.blockTitle.none")
+                ? t("studio.pageBlockEditHeader.blockTitle.switchHelp")
+                : t("studio.pageBlockEditHeader.blockTitle.none")
             }
             checked={titleEnabled}
             disabled={disabled}
@@ -182,24 +190,25 @@ export function PageBlockEditHeader({
       >
         <SelectField
           ids={columnsIds}
-          label={t("admin.pageBlockEditHeader.columns.label")}
+          label={t("studio.pageBlockEditHeader.columns.label")}
           value={String(columns)}
           onChange={(val) => {
             const n = Number(val);
             onColumnsChange(n === 1 ? 1 : n === 3 ? 3 : 2);
           }}
           items={columnsOptions}
-          help={t("admin.pageBlockEditHeader.columns.hint")}
+          help={t("studio.pageBlockEditHeader.columns.hint")}
           disabled={disabled}
         />
-        <div className="flex h-full justify-center items-center">
+
+        <div className="flex h-full items-center justify-center">
           <SwitchField
             ids={containerModeIds}
-            label={t("admin.pageBlockEditHeader.containerMode.label")}
+            label={t("studio.pageBlockEditHeader.containerMode.label")}
             help={
               isFullBleed
-                ? t("admin.pageBlockEditHeader.containerMode.helpFullBleed")
-                : t("admin.pageBlockEditHeader.containerMode.helpContained")
+                ? t("studio.pageBlockEditHeader.containerMode.helpFullBleed")
+                : t("studio.pageBlockEditHeader.containerMode.helpContained")
             }
             checked={isFullBleed}
             disabled={disabled}
@@ -210,15 +219,14 @@ export function PageBlockEditHeader({
           />
         </div>
 
-        <div className="flex h-full justify-center items-center">
-          {/* ✅ NEW : LCP PRIORITY */}
+        <div className="flex h-full items-center justify-center">
           <SwitchField
             ids={lcpPriorityIds}
-            label={t("admin.pageBlockEditHeader.lcpPriority.label")}
+            label={t("studio.pageBlockEditHeader.lcpPriority.label")}
             help={
               lcpPriority
-                ? t("admin.pageBlockEditHeader.lcpPriority.helpEnabled")
-                : t("admin.pageBlockEditHeader.lcpPriority.helpDisabled")
+                ? t("studio.pageBlockEditHeader.lcpPriority.helpEnabled")
+                : t("studio.pageBlockEditHeader.lcpPriority.helpDisabled")
             }
             checked={lcpPriority}
             disabled={disabled}

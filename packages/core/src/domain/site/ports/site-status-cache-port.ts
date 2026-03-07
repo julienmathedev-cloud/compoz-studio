@@ -7,21 +7,25 @@
  *
  * Objectif : réduire au minimum les READ sur les endpoints status / statusDetails
  * via des snapshots lazy (read-through cache) + invalidation côté WRITE.
+ *
+ * @remarks
+ * - Type canonique côté core = read-model "entities" (`SiteStatus`, `SiteStatusDetails`).
+ * - La sérialisation JSON (KV) est une responsabilité infra.
  */
 
+import type { SiteStatus } from "@compoz/core/domain/site/entities/site-status";
 import type {
-  SiteStatusDTO,
-  SiteStatusDetailsDTO,
-} from "@compoz/core/domain/site/dto";
-import type { SiteStatusDetailsQuery } from "@compoz/core/domain/site/entities/site-status-details";
+  SiteStatusDetails,
+  SiteStatusDetailsQuery,
+} from "@compoz/core/domain/site/entities/site-status-details";
 
 export interface SiteStatusCachePort {
   /* ------------------------------------------------------------------------ */
   /* Status snapshot (overview)                                               */
   /* ------------------------------------------------------------------------ */
 
-  readStatusSnapshot(): Promise<SiteStatusDTO | null>;
-  writeStatusSnapshot(status: SiteStatusDTO): Promise<void>;
+  readStatusSnapshot(): Promise<SiteStatus | null>;
+  putStatusSnapshot(status: SiteStatus): Promise<void>;
 
   /* ------------------------------------------------------------------------ */
   /* StatusDetails snapshots (lazy table)                                     */
@@ -29,11 +33,11 @@ export interface SiteStatusCachePort {
 
   readStatusDetailsSnapshot(
     query: SiteStatusDetailsQuery,
-  ): Promise<SiteStatusDetailsDTO | null>;
+  ): Promise<SiteStatusDetails | null>;
 
-  writeStatusDetailsSnapshot(
+  putStatusDetailsSnapshot(
     query: SiteStatusDetailsQuery,
-    details: SiteStatusDetailsDTO,
+    details: SiteStatusDetails,
   ): Promise<void>;
 
   /* ------------------------------------------------------------------------ */

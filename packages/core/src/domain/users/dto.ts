@@ -1,5 +1,5 @@
 /**
- * @file src/core/domain/users/dto.ts
+ * @file packages/core/src/domain/users/dto.ts
  * @layer core/domain
  * @description
  * DTOs de lecture pour le module Users, alignés sur les entités du domaine.

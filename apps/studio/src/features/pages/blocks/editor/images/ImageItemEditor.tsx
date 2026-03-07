@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/editor/images/ImageItemEditor.tsx
- * @layer ui/organisms
+ * @layer ui/studio/pages/blocks/editor/images
  *
  * @description
  * Item editor pour une image de galerie : src/alt + actions (move / delete).
@@ -12,20 +12,20 @@
  * - Réutilise `ImageFields`.
  */
 
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { AdminIcon } from "@compoz/studio/components/atoms/AdminIcon";
+import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
 import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
 import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
-import { AdminButtonGroup } from "@compoz/studio/components/molecules/controls/AdminButtonGroup";
-import { ImageFields } from "@compoz/studio/features/_shared/ui/molecules/fields/ImageFields";
+import { StudioButtonGroup } from "@compoz/studio/components/molecules/controls/StudioButtonGroup";
+import { ImageFields } from "@compoz/studio/features/_shared/components/ImageFields";
 
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
 import { Card, CardContent } from "@compoz/ui/components/ui/card";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 import type { ImageEditorFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
-import { ChevronDown, ChevronUp } from "lucide-react";
 
 type UploadedRasterImage = Readonly<{
   url: string;
@@ -107,7 +107,7 @@ export function ImageItemEditor({
       <CardContent>
         {/* Header + actions */}
         <div className="absolute right-2 top-2 z-10">
-          <AdminButtonGroup className="shrink-0">
+          <StudioButtonGroup className="shrink-0">
             <TooltipButton
               type="button"
               variant="secondary"
@@ -125,7 +125,7 @@ export function ImageItemEditor({
                   : t("common.moveUp")
               }
             >
-              <AdminIcon icon={ChevronUp} />
+              <StudioIcon icon={ChevronUp} />
             </TooltipButton>
 
             <TooltipButton
@@ -145,7 +145,7 @@ export function ImageItemEditor({
                   : t("common.moveDown")
               }
             >
-              <AdminIcon icon={ChevronDown} />
+              <StudioIcon icon={ChevronDown} />
             </TooltipButton>
 
             <DeleteButton
@@ -154,7 +154,7 @@ export function ImageItemEditor({
               ariaLabel={t("common.delete")}
               title={t("common.delete")}
             />
-          </AdminButtonGroup>
+          </StudioButtonGroup>
         </div>
 
         {/* Image fields */}
@@ -175,18 +175,18 @@ export function ImageItemEditor({
             accept="image/jpeg,image/png,image/webp,image/avif"
             preferredTypes={["image/webp", "image/avif"]}
             preferredTypeHint={t(
-              "admin.imageSelector.hints.notRecommendedType",
+              "studio.imageSelector.hints.notRecommendedType",
               {
                 types: "WEBP, AVIF",
               },
             )}
             labels={{
-              image: t("admin.cellEditorTabs.image.srcLabel"),
-              alt: t("admin.cellEditorTabs.image.altLabel"),
+              image: t("studio.cellEditorTabs.image.srcLabel"),
+              alt: t("studio.cellEditorTabs.image.altLabel"),
             }}
             help={{
-              image: t("admin.cellEditorTabs.image.srcHelp"),
-              alt: t("admin.cellEditorTabs.image.altPlaceholder"),
+              image: t("studio.cellEditorTabs.image.srcHelp"),
+              alt: t("studio.cellEditorTabs.image.altPlaceholder"),
             }}
             srcField={{
               value: value.src,

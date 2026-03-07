@@ -21,7 +21,7 @@ export const BlockIdSchema = z
   .min(1, ERROR_CODES.BLOCK_ID_REQUIRED);
 
 export const LayoutSectionColumnsSchema = z.union(
-  [z.literal(1), z.literal(2), z.literal(3)],
+  [z.literal(1), z.literal(2), z.literal(3)] as const,
   { message: ERROR_CODES.LAYOUT_SECTION_COLUMNS_INVALID },
 );
 
@@ -46,7 +46,7 @@ export const LayoutSectionContainerModeSchema = z.enum(
 );
 
 /* -------------------------------------------------------------------------- */
-/*                                   Blocks                                  */
+/*                                   Blocks                                   */
 /* -------------------------------------------------------------------------- */
 
 export const LayoutSectionBlockSchema = z
@@ -62,7 +62,10 @@ export const LayoutSectionBlockSchema = z
   })
   .strict();
 
-export const BlockSchema = z.union([LayoutSectionBlockSchema]);
+// Prépare l’évolution : plusieurs blocks à terme.
+export const BlockSchema = z.discriminatedUnion("type", [
+  LayoutSectionBlockSchema,
+]);
 
 export type BlockShape = z.infer<typeof BlockSchema>;
 export type LayoutSectionBlockShape = z.infer<typeof LayoutSectionBlockSchema>;

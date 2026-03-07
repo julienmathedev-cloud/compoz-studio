@@ -1,9 +1,9 @@
 /**
- * @file packages/core/src/core/domain/pages/use-cases/blocks/update-layout-section-block.types.ts
- * @layer core/domain
+ * @file packages/core/src/domain/pages/use-cases/blocks/update-layout-section-block.types.ts
+ * @layer core/domain/pages/use-cases/blocks
  * @description
  * Types du use-case de mise à jour d’un block `LayoutSection`.
- * Définit le contrat **sans logique** (implémentation dans `updateLayoutSectionBlock.ts`).
+ * Définit le contrat **sans logique** (implémentation dans `update-layout-section-block.ts`).
  */
 
 import type {
@@ -20,6 +20,9 @@ import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repo
 // Dépendances du use-case.
 export interface UpdateLayoutSectionBlockDeps {
   pages: PagesRepository;
+
+  /** Horloge ISO optionnelle (défaut : new Date().toISOString()). */
+  nowIso?: () => string;
 }
 
 // Patch contrôlé d’un LayoutSectionBlock (champs absents = inchangés).

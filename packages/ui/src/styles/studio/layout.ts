@@ -1,22 +1,22 @@
 /**
  * @file packages/ui/src/styles/studio/layout.ts
- * @layer styles/admin
+ * @layer styles/studio
  * @description
- * Constantes utilitaires pour la mise en page de l’admin : containers, panels,
+ * Constantes utilitaires pour la mise en page du Studio : containers, panels,
  * stacks (rythmes verticaux), rows, grilles et utilitaires communs.
  *
  * Objectif :
  * - imposer un rythme visuel cohérent
  * - éviter les espacements “au feeling”
- * - servir de socle à toutes les pages admin (V0.5)
+ * - servir de socle à toutes les pages Studio (V0.5)
  */
 
 /* ---------------------------------------------------------------------------
  * CONTAINERS & PAGE LAYOUT
  * ------------------------------------------------------------------------- */
 
-/** Container principal des pages admin */
-export const ADMIN_CONTAINER = [
+/** Container principal des pages Studio */
+export const STUDIO_CONTAINER = [
   "mx-auto",
   "w-full",
   "max-w-screen-2xl",
@@ -25,8 +25,8 @@ export const ADMIN_CONTAINER = [
   "lg:px-6",
 ] as const;
 
-/** Wrapper de page admin (rythme vertical global) */
-export const ADMIN_PAGE = [
+/** Wrapper de page Studio (rythme vertical global) */
+export const STUDIO_PAGE = [
   "flex",
   "flex-col",
   "py-6",
@@ -35,19 +35,19 @@ export const ADMIN_PAGE = [
 ] as const;
 
 /** Section logique dans une page (groupement de panels) */
-export const ADMIN_SECTION = ["flex", "flex-col", "space-y-6"] as const;
+export const STUDIO_SECTION = ["flex", "flex-col", "space-y-6"] as const;
 
 /* ---------------------------------------------------------------------------
  * PANELS / CARDS (SURFACES)
  * ------------------------------------------------------------------------- */
 
-export const ADMIN_SHADOW_PANEL = ["shadow-sm"] as const;
+export const STUDIO_SHADOW_PANEL = ["shadow-sm"] as const;
 
-export const ADMIN_BORDER_PANEL = [
+export const STUDIO_BORDER_PANEL = [
   "rounded-xl",
   "border",
   "border-border",
-  ...ADMIN_SHADOW_PANEL,
+  ...STUDIO_SHADOW_PANEL,
 ] as const;
 
 /* ---------------------------------------------------------------------------

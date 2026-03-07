@@ -11,9 +11,13 @@ import "server-only";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { throwHttp } from "@compoz/http/http-error";
 
+/**
+ * Représentation minimale d’un objet JSON.
+ * Utilisé pour les PATCH partiels où l’on attend un record clé → valeur.
+ */
 type JsonObject = Record<string, unknown>;
 
-function throwInvalidJson400(message: string = EC.JSON_INVALID): never {
+function throwJson400(message: string = EC.JSON_INVALID): never {
   throwHttp(400, {
     code: EC.VALIDATION_ERROR,
     message,
@@ -31,8 +35,11 @@ function isJsonObject(value: unknown): value is JsonObject {
 }
 
 /**
- * Lit le body JSON d'une requête, en renvoyant une erreur 400
- * si le contenu n'est pas un JSON valide.
+ * Lit le body JSON d'une requête.
+ *
+ * @remarks
+ * Cette fonction valide uniquement que le body est un JSON valide.
+ * La validation métier/structurelle doit être faite ensuite (ex: Zod).
  *
  * @throws HttpError 400 si le JSON est invalide.
  */
@@ -40,7 +47,7 @@ export async function readJsonOr400(req: Request): Promise<unknown> {
   try {
     return await req.json();
   } catch {
-    throwInvalidJson400();
+    throwJson400();
   }
 }
 
@@ -65,12 +72,12 @@ export async function readJsonOptionalOrEmpty(
   try {
     parsed = JSON.parse(raw);
   } catch {
-    throwInvalidJson400();
+    throwJson400();
   }
 
   // Contrat : pour un PATCH partiel, on attend un objet JSON.
   if (!isJsonObject(parsed)) {
-    throwInvalidJson400(EC.JSON_OBJECT_EXPECTED);
+    throwJson400(EC.JSON_OBJECT_EXPECTED);
   }
 
   return parsed;

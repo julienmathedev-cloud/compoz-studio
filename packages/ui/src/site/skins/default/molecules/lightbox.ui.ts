@@ -1,14 +1,14 @@
 /**
  * @file packages/ui/src/site/skins/default/molecules/lightbox.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
- * Skin UI — lightbox public (thème Default).
+ * Skin UI — lightbox site (thème Default).
  */
 
-import type { PublicLightboxUi } from "@compoz/ui/site/public-ui.types";
+import type { SiteLightboxUi } from "@compoz/ui/site/site-ui.types";
 
-export const defaultLightboxUi: PublicLightboxUi = {
+export const defaultLightboxUi: SiteLightboxUi = {
   overlay: "",
   panel: "",
   panelEnter: "",

@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/settings/mappers/footer-shape.ts
- * @layer ui-mappers/site
+ * @layer ui/settings/mappers
  *
  * @description
  * Mapper "shared runtime" Footer :
@@ -19,6 +19,6 @@ export function toFooterSettingsShapeFromDTO(
 ): FooterSettingsShape {
   return {
     copyright: dto?.copyright ?? "",
-    showYear: Boolean(dto?.showYear),
+    showYear: typeof dto?.showYear === "boolean" ? dto.showYear : false,
   };
 }

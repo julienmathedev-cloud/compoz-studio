@@ -1,9 +1,9 @@
 /**
  * @file apps/site/src/app/sitemap.ts
- * @layer app/metadata
+ * @layer site/app/metadata
  *
  * @description
- * Route metadata `sitemap` (public) — génère le sitemap à partir de l’index publié.
+ * Route metadata `sitemap` (site) — génère le sitemap à partir de l’index publié.
  *
  * ✅ Multi-tenant
  * - Host-based : lvh.me (subdomain) + mapping env
@@ -16,18 +16,16 @@ import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { getSiteRepository } from "@compoz/infra/site";
-import { resolveTenantFromHost } from "@compoz/site/lib/tenant/resolve-public-tenant";
+import { resolveTenantFromHost } from "@compoz/site/lib/tenant/resolve-site-tenant";
 import {
   canonicalFromBase,
   stripTrailingSlashes,
 } from "@compoz/ui/lib/urls/formats";
 
-function isVercelHost(host: string): boolean {
-  return host.endsWith(".vercel.app");
-}
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // ✅ compat: selon ta version Next, headers() peut être sync ou async
   const h = await headers();
   const hostRaw = h.get("x-forwarded-host") ?? h.get("host") ?? "";
 
@@ -38,11 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   });
 
   const tenantId = resolved.tenantId;
-
-  const host = String(resolved.host ?? "")
-    .trim()
-    .toLowerCase();
-  const usePathTenantFallback = host ? isVercelHost(host) : true;
+  const usePathTenantFallback = resolved.kind === "fallback";
 
   const siteRepo = getSiteRepository({ tenantId });
   await siteRepo.ensureBase();
@@ -66,13 +60,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       : new Date();
 
   return pages.map((ref) => {
-    const slugPath = ref.slug === "home" ? "" : `/${ref.slug}`;
+    const slugRaw = String(ref.slug ?? "").trim();
+    const slug = slugRaw ? slugRaw : HOME_SLUG;
+
+    const slugPath = slug === HOME_SLUG ? "" : `/${encodeURIComponent(slug)}`;
 
     const finalPath = usePathTenantFallback
-      ? ref.slug === "home"
-        ? `/t/${tenantId}`
-        : `/t/${tenantId}${slugPath}`
-      : ref.slug === "home"
+      ? slug === HOME_SLUG
+        ? `/t/${encodeURIComponent(tenantId)}`
+        : `/t/${encodeURIComponent(tenantId)}${slugPath}`
+      : slug === HOME_SLUG
         ? "/"
         : slugPath;
 
@@ -84,7 +81,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url,
       lastModified,
       changeFrequency: "weekly",
-      priority: 0.7,
+      priority: slug === HOME_SLUG ? 1 : 0.7,
     };
   });
 }

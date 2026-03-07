@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/editor/images/ImageListEditor.tsx
- * @layer ui/organisms
+ * @layer ui/studio/pages/blocks/editor/images
  *
  * @description
  * Éditeur UI générique : liste d’images (add/remove/reorder) pour Gallery/Carousel (V0.5).
@@ -11,9 +11,9 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
 
-import { moveItem, setAt } from "@compoz/ui/lib/array";
 import { AddEmptyCardButton } from "@compoz/studio/components/molecules/controls/AddEmptyCardButton";
 import { ImageItemEditor } from "@compoz/studio/features/pages/blocks/editor/images/ImageItemEditor";
+import { moveItem, setAt } from "@compoz/ui/lib/array";
 
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
 import { cn } from "@compoz/ui/lib/utils";

@@ -11,7 +11,7 @@
  * - `repo.ensureBase()` prépare la persistance (pré-requis infra).
  */
 
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { shallowMergeWithChangedKeys } from "@compoz/core/domain/site/_shared/merge";
 import type { IdentitySettings } from "@compoz/core/domain/site/entities/identity";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
@@ -34,7 +34,7 @@ export function updateIdentitySettings({ repo }: UpdateIdentitySettingsDeps) {
 
     await repo.ensureBase();
 
-    const current = await repo.readSettings(WRITE_CONTENT_STATE);
+    const current = await repo.readSettings(DEFAULT_CONTENT_STATE);
 
     const { next: identityNext, changedKeys } =
       shallowMergeWithChangedKeys<IdentitySettings>(current.identity, patch);
@@ -45,7 +45,7 @@ export function updateIdentitySettings({ repo }: UpdateIdentitySettingsDeps) {
 
     const next: SiteSettings = { ...current, identity: identityNext };
 
-    await repo.writeSettings(WRITE_CONTENT_STATE, next);
+    await repo.putSettings(DEFAULT_CONTENT_STATE, next);
     return { settings: next };
   };
 }

@@ -1,5 +1,6 @@
 /**
  * @file packages/core/src/constants/seo/seo.ts
+ * @layer core/constants/seo
  * @description Constantes SEO (twitter cards, placeholder template).
  */
 

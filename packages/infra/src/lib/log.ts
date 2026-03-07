@@ -11,17 +11,27 @@
 
 import { isAbortError } from "@compoz/infra/http/abort-error";
 
-type Level = "debug" | "info" | "warn" | "error";
+export type LogLevel = "debug" | "info" | "warn" | "error";
+export type LogCtx = Record<string, unknown>;
+
+export type Logger = Readonly<{
+  debug: (msg: string, ctx?: LogCtx) => void;
+  info: (msg: string, ctx?: LogCtx) => void;
+  warn: (msg: string, ctx?: LogCtx) => void;
+  error: (msg: string, ctx?: LogCtx) => void;
+  child: (extra: LogCtx) => Logger;
+}>;
+
 const LEVELS = ["debug", "info", "warn", "error"] as const;
 
 /** Détecte l’environnement d’exécution une seule fois (évite le coût dans emit). */
 const IS_SERVER = typeof window === "undefined";
 
-function isLevel(value: string): value is Level {
-  return LEVELS.includes(value as Level);
+function isLevel(value: string): value is LogLevel {
+  return LEVELS.includes(value as LogLevel);
 }
 
-function levelIndex(lvl: Level): number {
+function levelIndex(lvl: LogLevel): number {
   return LEVELS.indexOf(lvl);
 }
 
@@ -33,11 +43,11 @@ const ENV_LEVEL = String(
   process.env["NEXT_PUBLIC_LOG_LEVEL"] ?? "info",
 ).toLowerCase();
 
-const MIN: Level = isLevel(ENV_LEVEL) ? ENV_LEVEL : "info";
+const MIN: LogLevel = isLevel(ENV_LEVEL) ? ENV_LEVEL : "info";
 const MIN_IDX = levelIndex(MIN);
 
 /** Contexte global léger ajouté à chaque log (ex: app, version, env). */
-let baseCtx: Record<string, unknown> = {};
+let baseCtx: LogCtx = {};
 
 /** Clés qui seront masquées si présentes dans un contexte (comparaison case-insensitive). */
 const SENSITIVE_KEY_LIST = [
@@ -54,21 +64,19 @@ const SENSITIVE_KEYS = new Set<string>(SENSITIVE_KEY_LIST);
  *
  * - Non destructif sur l’objet : utilise une nouvelle référence à chaque fois.
  * - Les nouvelles clés écrasent les anciennes si elles ont le même nom.
- *
- * @param ctx Contexte à fusionner (optionnel).
  */
-function setLogContext(ctx?: Record<string, unknown>): void {
+function setLogContext(ctx?: LogCtx): void {
   if (!ctx) return;
   baseCtx = { ...baseCtx, ...ctx };
 }
 
-function shouldLog(lvl: Level): boolean {
+function shouldLog(lvl: LogLevel): boolean {
   return levelIndex(lvl) >= MIN_IDX;
 }
 
-function redact(obj?: Record<string, unknown>) {
+function redact(obj?: LogCtx): LogCtx | undefined {
   if (!obj) return obj;
-  return redactValue(obj, new WeakSet<object>()) as Record<string, unknown>;
+  return redactValue(obj, new WeakSet<object>()) as LogCtx;
 }
 
 function redactValue(value: unknown, seen: WeakSet<object>): unknown {
@@ -112,7 +120,7 @@ function serializeError(err: unknown): Record<string, unknown> {
   return { value: String(err) };
 }
 
-function emit(lvl: Level, msg: string, ctx?: Record<string, unknown>): void {
+function emit(lvl: LogLevel, msg: string, ctx?: LogCtx): void {
   if (!shouldLog(lvl)) return;
 
   const mergedCtx = { ...redact(baseCtx), ...redact(ctx) };
@@ -162,32 +170,38 @@ function emit(lvl: Level, msg: string, ctx?: Record<string, unknown>): void {
   }
 }
 
-function child(extra: Record<string, unknown>) {
-  const merge = (c?: Record<string, unknown>) => ({ ...extra, ...(c ?? {}) });
+function child(extra: LogCtx): Logger {
+  const merge = (c?: LogCtx): LogCtx => ({ ...extra, ...(c ?? {}) });
 
   return {
-    debug: (m: string, c?: Record<string, unknown>) =>
-      emit("debug", m, merge(c)),
-    info: (m: string, c?: Record<string, unknown>) => emit("info", m, merge(c)),
-    warn: (m: string, c?: Record<string, unknown>) => emit("warn", m, merge(c)),
-    error: (m: string, c?: Record<string, unknown>) =>
-      emit("error", m, merge(c)),
-    child: (more: Record<string, unknown>) => child({ ...extra, ...more }),
+    debug: (m, c) => emit("debug", m, merge(c)),
+    info: (m, c) => emit("info", m, merge(c)),
+    warn: (m, c) => emit("warn", m, merge(c)),
+    error: (m, c) => emit("error", m, merge(c)),
+    child: (more) => child({ ...extra, ...more }),
   };
 }
 
-export const log = {
-  debug: (m: string, c?: Record<string, unknown>) => emit("debug", m, c),
-  info: (m: string, c?: Record<string, unknown>) => emit("info", m, c),
-  warn: (m: string, c?: Record<string, unknown>) => emit("warn", m, c),
-  error: (m: string, c?: Record<string, unknown>) => emit("error", m, c),
+export const log: Logger & Readonly<{ setContext: (ctx?: LogCtx) => void }> = {
+  debug: (m, c) => emit("debug", m, c),
+  info: (m, c) => emit("info", m, c),
+  warn: (m, c) => emit("warn", m, c),
+  error: (m, c) => emit("error", m, c),
   child,
   setContext: setLogContext,
 } as const;
 
+/**
+ * Instrumente une opération avec start/end (+ durée) et logs d'erreur.
+ *
+ * @remarks
+ * Convention recommandée pour `name` :
+ * - `compoz:<surface>:<layer>:<module>` (ex: `compoz:studio:svc:users`)
+ * Le helper émettra : `${name}.start|.end|.abort|.error`
+ */
 export async function logSpan<T>(
   name: string,
-  ctx: Record<string, unknown> | undefined,
+  ctx: LogCtx | undefined,
   fn: () => Promise<T> | T,
 ): Promise<T> {
   const started = Date.now();
@@ -195,17 +209,21 @@ export async function logSpan<T>(
 
   try {
     const result = await fn();
-    log.debug(`${name}.end`, { ...ctx, ms: Date.now() - started });
+    log.debug(`${name}.end`, { ...(ctx ?? {}), ms: Date.now() - started });
     return result;
   } catch (err: unknown) {
     const ms = Date.now() - started;
 
     if (isAbortError(err)) {
-      log.debug(`${name}.abort`, { ...ctx, ms });
+      log.debug(`${name}.abort`, { ...(ctx ?? {}), ms });
       throw err;
     }
 
-    log.error(`${name}.error`, { ...ctx, ms, err: serializeError(err) });
+    log.error(`${name}.error`, {
+      ...(ctx ?? {}),
+      ms,
+      err: serializeError(err),
+    });
     throw err;
   }
 }

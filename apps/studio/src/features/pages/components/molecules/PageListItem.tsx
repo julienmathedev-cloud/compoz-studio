@@ -2,31 +2,31 @@
 
 /**
  * @file apps/studio/src/features/pages/components/molecules/PageListItem.tsx
- * @layer ui/molecules
+ * @layer ui/studio/pages/molecules
  *
  * @description
  * Ligne compacte pour afficher une page (titre + slug) avec des actions rapides.
  *
  * @remarks
- * - Molecule UI : compose `Text`, `TooltipButton`, `DeleteButton`, `AdminButtonGroup`.
- * - Les callbacks sont fournis par le parent (orchestration via hooks/sections).
+ * - Molecule UI : compose `Text`, `TooltipButton`, `DeleteButton`, `StudioButtonGroup`.
+ * - Les callbacks sont fournis par le parent (orchestration via hooks / sections).
  * - Supporte un état occupé local (`isDeleting`) : ARIA + désactivation cohérente.
  * - Strictement UI-only : aucune logique métier.
  */
 
+import { FileText, Settings } from "lucide-react";
+import { useTranslations } from "next-intl";
+
 import type { PageSummaryDTO } from "@compoz/core/domain/pages/dto";
 import type { SiteDiffKindDTO } from "@compoz/core/domain/site/dto";
-import { cn } from "@compoz/ui/lib/utils";
-import { AdminIcon } from "@compoz/studio/components/atoms/AdminIcon";
-
 import { DiffStatusBadge } from "@compoz/studio/components/atoms/badges/DiffStatusBadge";
 import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
 import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
+import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
-import { AdminButtonGroup } from "@compoz/studio/components/molecules/controls/AdminButtonGroup";
+import { StudioButtonGroup } from "@compoz/studio/components/molecules/controls/StudioButtonGroup";
 import { formatPagePath } from "@compoz/studio/lib/ui/pages";
-import { FileText, Settings } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { cn } from "@compoz/ui/lib/utils";
 
 /**
  * Props du composant `PageListItem`.
@@ -35,7 +35,7 @@ type PageListItemProps = Readonly<{
   /** Référence minimaliste de la page (titre + slug). */
   page: PageSummaryDTO;
 
-  /** Status draft vs published (clean/new/dirty/deleted). */
+  /** Statut draft vs published (clean / new / dirty / deleted). */
   statusKind?: SiteDiffKindDTO;
 
   /** Action : éditer les métadonnées (id). */
@@ -55,7 +55,7 @@ type PageListItemProps = Readonly<{
 }>;
 
 /**
- * Ligne UI d’une page dans la liste (admin).
+ * Ligne UI d’une page dans la liste (studio).
  *
  * @remarks
  * Ne rend pas de `<li>` : le conteneur parent gère la sémantique de liste.
@@ -75,29 +75,30 @@ export function PageListItem({
   const baseDisabled = disabled || isBusy;
 
   const canEditMeta = Boolean(onEditMeta) && !baseDisabled;
-  const canEditContent = Boolean(onEditContent) && !disabled; // reste dispo si pas de verrou global
+  const canEditContent = Boolean(onEditContent) && !disabled;
   const canDelete = Boolean(onDelete) && !baseDisabled;
+
+  const editMetaLabel = t("studio.pageListItem.editMeta");
+  const editContentLabel = t("studio.pageListItem.editContent");
+  const deletePageLabel = t("studio.pageListItem.deletePage");
 
   return (
     <div
       className={cn(
-        "grid items-center gap-3",
-        "grid-cols-[max-content_auto_1fr_auto]",
+        "grid grid-cols-[max-content_auto_1fr_auto] items-center gap-3",
       )}
       aria-busy={isBusy || undefined}
       aria-disabled={baseDisabled || undefined}
     >
-      {/* Col 1 — Texte (taille au contenu) */}
       <div className="flex min-w-[12ch] items-center justify-center">
         {statusKind ? (
           <DiffStatusBadge
             kind={statusKind}
-            publishedLabel={t("common.upToDate")}
+            publishedLabel={t("common.published")}
           />
         ) : null}
       </div>
 
-      {/* Col 2 — Badge (proche du titre) */}
       <div>
         <Text as="p" truncate className="mb-0!">
           {page.title}
@@ -108,23 +109,20 @@ export function PageListItem({
         </Text>
       </div>
 
-      {/* Col 4 — Actions (à droite) */}
       <div className="shrink-0 justify-self-end">
-        <AdminButtonGroup className="shrink-0">
+        <StudioButtonGroup className="shrink-0">
           <TooltipButton
             type="button"
             variant="ghost"
             size="icon"
             onClick={() => onEditMeta?.(page.id)}
             disabled={!canEditMeta}
-            aria-label={t("admin.pageListItem.editMeta")}
+            aria-label={editMetaLabel}
             tooltip={
-              !canEditMeta
-                ? t("common.actionUnavailable")
-                : t("admin.pageListItem.editMeta")
+              !canEditMeta ? t("common.actionUnavailable") : editMetaLabel
             }
           >
-            <AdminIcon icon={Settings} />
+            <StudioIcon icon={Settings} />
           </TooltipButton>
 
           <TooltipButton
@@ -132,14 +130,12 @@ export function PageListItem({
             size="icon"
             onClick={() => onEditContent?.(page.id)}
             disabled={!canEditContent}
-            aria-label={t("admin.pageListItem.editContent")}
+            aria-label={editContentLabel}
             tooltip={
-              !canEditContent
-                ? t("common.actionUnavailable")
-                : t("admin.pageListItem.editContent")
+              !canEditContent ? t("common.actionUnavailable") : editContentLabel
             }
           >
-            <AdminIcon icon={FileText} />
+            <StudioIcon icon={FileText} />
           </TooltipButton>
 
           <DeleteButton
@@ -147,10 +143,10 @@ export function PageListItem({
             disabled={!canDelete}
             isDeleting={isDeleting}
             onConfirmDelete={async () => onDelete?.()}
-            ariaLabel={t("admin.pageListItem.deletePage")}
-            title={t("admin.pageListItem.deletePage")}
+            ariaLabel={deletePageLabel}
+            title={deletePageLabel}
           />
-        </AdminButtonGroup>
+        </StudioButtonGroup>
       </div>
     </div>
   );

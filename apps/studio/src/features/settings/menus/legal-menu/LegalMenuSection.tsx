@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/features/settings/legal-menu/LegalMenuSection.tsx
- * @layer ui/sections
+ * @layer ui/studio/sections
  *
  * @description
- * Section d’administration dédiée au menu légal : chargement (shell), édition (form), warnings UI et preview.
+ * Section Studio dédiée au menu légal : chargement (shell), édition (form), warnings UI et preview.
  *
  * @remarks
  * - Le chargement initial est géré par `SettingsSection` (shell).
@@ -15,15 +15,15 @@
  * - Strictement UI-only : aucune logique métier.
  */
 
-import type { LegalMenuSettingsShape } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu";
-import type { LegalMenuFormValues } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-form";
-import { ExpandableLayout } from "@compoz/studio/components/layouts/ExpandableLayout";
+import { useTranslations } from "next-intl";
+import { useCallback, useMemo, useState } from "react";
+
 import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
-import { HintList } from "@compoz/studio/components/molecules/feedback/HintList";
-import { useConfirmList } from "@compoz/studio/features/confirm/useConfirmList";
+import { StudioWarningsPanel } from "@compoz/studio/features/_shared/components/StudioWarningsPanel";
+import { useStudioSaveDespiteWarningsConfirm } from "@compoz/studio/features/_shared/hooks/useStudioSaveDespiteWarningsConfirm";
 import { useInternalPageOptions } from "@compoz/studio/features/pages/hooks/useInternalPageOptions";
-import { useAdminPreview } from "@compoz/studio/features/preview/hooks/useAdminPreview";
 import { PreviewFrame } from "@compoz/studio/features/preview/PreviewFrame";
+import { useStudioPreview } from "@compoz/studio/features/preview/hooks/useStudioPreview";
 import { toLegalMenuSettingsShapeFromFormValues } from "@compoz/studio/features/settings/mappers/legal-menu-form";
 import { LegalMenuForm } from "@compoz/studio/features/settings/menus/legal-menu/components/organisms/LegalMenuForm";
 import { useLegalMenuSettings } from "@compoz/studio/features/settings/menus/legal-menu/useLegalMenuSettings";
@@ -31,8 +31,8 @@ import {
   computeLegalMenuWarnings,
   type LegalMenuWarningKey,
 } from "@compoz/studio/features/settings/menus/legal-menu/validate";
-import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
+import type { LegalMenuSettingsShape } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu";
+import type { LegalMenuFormValues } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-form";
 
 type LegalMenuSectionProps = Readonly<{
   /** Remonte l’état dirty (guard / navigation) au parent (Tab/Dashboard). */
@@ -40,8 +40,8 @@ type LegalMenuSectionProps = Readonly<{
 }>;
 
 export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
-  const confirmList = useConfirmList();
   const t = useTranslations();
+  const { confirmSaveDespiteWarnings } = useStudioSaveDespiteWarningsConfirm();
 
   const [isDirty, setIsDirty] = useState(false);
 
@@ -52,7 +52,7 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
     "baseline",
   );
 
-  // ✅ Options internes (picker) — centralisées via hook (SoT = SiteIndex).
+  // Options internes (picker) — centralisées via hook (SoT = SiteIndex).
   const { options: internalPageOptions, isLoading: isIndexLoading } =
     useInternalPageOptions();
 
@@ -65,20 +65,19 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
   );
 
   const { ready, frame, setBaseline, setDraft, iframeRef } =
-    useAdminPreview<LegalMenuSettingsShape>("legalMenu", baselinePreview);
+    useStudioPreview<LegalMenuSettingsShape>("legalMenu", baselinePreview);
 
   /**
-   * ✅ Empty state (dans l’iframe) :
+   * Empty state (dans l’iframe) :
    * - On ne l’active qu’une fois les chargements data terminés.
    * - Si la baseline est absente => empty preview au lieu d’un écran blanc.
    */
-  // Preview empty/loader
   const dataReady = !isLoading && !isIndexLoading && baseline != null;
 
-  // ✅ Empty = baseline chargée mais aucun item
+  // Empty = baseline chargée mais aucun item.
   const isEmpty = dataReady && (baseline?.items?.length ?? 0) === 0;
 
-  const emptyLabel = t("admin.emptyPreview.legalMenu");
+  const emptyLabel = t("studio.emptyPreview.legalMenu");
 
   // Preview loading : si empty => pas de loader
   const isPreviewLoading =
@@ -98,14 +97,16 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
     setPreviewMode("baseline");
   }, [frame]);
 
-  // ✅ Ensemble des href internes connus (warnings UI).
+  // Ensemble des href internes connus (warnings UI).
   // On se base sur les options (déjà normalisées via formatPagePath dans le hook).
   const hrefSet = useMemo(() => {
     const set = new Set<string>();
     set.add("/");
 
     for (const opt of internalPageOptions ?? []) {
-      if (opt?.value) set.add(String(opt.value));
+      if (opt?.value) {
+        set.add(String(opt.value));
+      }
     }
 
     return set;
@@ -115,11 +116,6 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
 
   // Warnings live dérivés des valeurs RHF (affichage uniquement).
   const [warningKeys, setWarningKeys] = useState<LegalMenuWarningKey[]>([]);
-
-  const warningHints = useMemo(
-    () => warningKeys.map((k) => t(`admin.legalMenuSection.warnings.${k}`)),
-    [warningKeys, t],
-  );
 
   const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
 
@@ -134,27 +130,13 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
         hrefSet,
       });
 
-      const warningHintsNow = warningKeysNow.map((k) =>
-        t(`admin.legalMenuSection.warnings.${k}`),
+      // 2) Confirmation si warnings.
+      const ok = await confirmSaveDespiteWarnings(
+        warningKeysNow,
+        "studio.legalMenuSection.warnings",
       );
 
-      // 2) Confirmation si warnings.
-      if (warningHintsNow.length > 0) {
-        const ok = await confirmList({
-          title: t("admin.shared.confirm.saveDespiteWarnings.title"),
-          intro: t("admin.shared.confirm.saveDespiteWarnings.intro"),
-          items: warningHintsNow,
-          confirmLabel: t(
-            "admin.shared.confirm.saveDespiteWarnings.confirmLabel",
-          ),
-          cancelLabel: t("common.cancel"),
-          requireAckLabel: t(
-            "admin.shared.confirm.saveDespiteWarnings.requireAckLabel",
-          ),
-          tone: "default",
-        });
-        if (!ok) return;
-      }
+      if (!ok) return;
 
       // 3) Save.
       await save(values);
@@ -166,7 +148,7 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
       onDirtyChange?.(false);
     },
     [
-      confirmList,
+      confirmSaveDespiteWarnings,
       hrefSet,
       isLoading,
       isSaving,
@@ -174,18 +156,15 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
       onDirtyChange,
       setBaseline,
       frame,
-      t,
     ],
   );
 
-  // Render.
-
-  const description = t("admin.legalMenuSection.section.description");
+  const description = t("studio.legalMenuSection.section.description");
 
   return (
     <SettingsSection
       id="legal-menu"
-      title={t("admin.legalMenuSection.section.title")}
+      title={t("studio.legalMenuSection.section.title")}
       headingLevel="h2"
       description={description}
       isBusy={isSaving}
@@ -193,26 +172,11 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
       isDirty={isDirty}
       blockingErrorsCount={blockingErrorsCount}
     >
-      <ExpandableLayout
+      <StudioWarningsPanel
         id="legal-menu-warnings"
-        label={
-          warningHints.length > 0
-            ? t("admin.shared.warningsPanel.labelWithCount", {
-                count: warningHints.length,
-              })
-            : t("admin.shared.warningsPanel.label")
-        }
-        defaultOpen={false}
-        disabled={warningHints.length === 0}
-      >
-        {warningHints.length > 0 ? (
-          <HintList
-            title={t("admin.shared.warningsPanel.title")}
-            hints={warningHints}
-            variant="warning"
-          />
-        ) : null}
-      </ExpandableLayout>
+        warningKeys={warningKeys}
+        warningMessageKeyPrefix="studio.legalMenuSection.warnings"
+      />
 
       <LegalMenuForm
         initialValues={baseline}
@@ -238,8 +202,8 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
       />
 
       <PreviewFrame
-        title={t("admin.shared.preview.title", {
-          entity: t("admin.shared.entities.legalMenu"),
+        title={t("studio.shared.preview.title", {
+          entity: t("studio.shared.entities.legalMenu"),
         })}
         src="/preview/legal-menu"
         iframeRef={iframeRef}
@@ -253,10 +217,10 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
         heightClassName="h-[80px]"
         info={
           isEmpty
-            ? t("admin.emptyPreview.legalMenu")
+            ? t("studio.emptyPreview.legalMenu")
             : previewMode === "override"
-              ? t("admin.shared.preview.infoOverride")
-              : t("admin.shared.preview.infoBaseline")
+              ? t("studio.shared.preview.infoOverride")
+              : t("studio.shared.preview.infoBaseline")
         }
       />
     </SettingsSection>

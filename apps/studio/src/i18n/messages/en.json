@@ -1,13 +1,4 @@
 {
-  "gate": {
-    "title": "Compoz Studio",
-    "tagline": "The studio to compose, manage and publish your sites efficiently.",
-    "actions": {
-      "public": "Go to public site",
-      "admin": "Go to admin"
-    },
-    "ariaLabel": "Compoz Studio home"
-  },
   "common": {
     "save": "Save",
     "saving": "Saving…",
@@ -266,7 +257,7 @@
     "fileTooLarge": "The selected file is too large. The maximum size is {max}."
   },
 
-  "admin": {
+  "studio": {
     "shared": {
       "visualize": {
         "draft": "Draft",

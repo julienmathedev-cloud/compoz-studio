@@ -1,5 +1,5 @@
 /**
- * @file src/core/domain/pages/dto.ts
+ * @file packages/core/src/domain/pages/dto.ts
  * @layer core/domain
  * @description
  * DTOs de lecture pour le module Pages, alignés sur les entités du domaine.

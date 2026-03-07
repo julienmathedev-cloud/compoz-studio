@@ -23,7 +23,7 @@ import { CellSchema } from "@compoz/validation/pages/blocks/cells/cell";
 /* -------------------------------------------------------------------------- */
 
 // ordered ids (reorder) : non vides ; unicité/permutation vérifiées côté domaine.
-const OrderedBlockIdsSchema = z
+const OrderedBlockIdsIntentSchema = z
   .array(BlockIdSchema)
   .min(1, ERROR_CODES.BLOCKS_INVALID);
 
@@ -33,10 +33,10 @@ const LayoutSectionBlockPatchSchema = z
     columns: LayoutSectionColumnsSchema.optional(),
     containerMode: LayoutSectionContainerModeSchema.optional(),
 
-    // ✅ Nouveau : toggle title (présence de clé = patch)
+    // toggle title (présence de clé = patch)
     titleEnabled: z.boolean().optional(),
 
-    // ✅ Nouveau contrat : title toujours un objet (plus de null)
+    // contrat : title toujours un objet (plus de null)
     // undefined: inchangé | objet: remplacé
     title: LayoutSectionTitleSchema.optional(),
     lcpPriority: z.boolean().optional(),
@@ -55,10 +55,10 @@ export const CreateLayoutSectionBlockIntentSchema = z
     containerMode: LayoutSectionContainerModeSchema,
     insertAt: z.number().int().min(0).optional(),
 
-    // ✅ Nouveau : le toggle est explicite
+    // le toggle est explicite
     titleEnabled: z.boolean(),
 
-    // ✅ Nouveau contrat : title toujours présent
+    // contrat : title toujours présent
     title: LayoutSectionTitleSchema,
     lcpPriority: z.boolean(),
     cells: z.array(CellSchema),
@@ -93,7 +93,7 @@ export type DeleteBlockIntentDTO = z.infer<typeof DeleteBlockIntentSchema>;
 /** Intention de réordonnancement des blocks d’une page (draft). */
 export const ReorderBlocksIntentSchema = z
   .object({
-    orderedBlockIds: OrderedBlockIdsSchema,
+    orderedBlockIds: OrderedBlockIdsIntentSchema,
   })
   .strict();
 

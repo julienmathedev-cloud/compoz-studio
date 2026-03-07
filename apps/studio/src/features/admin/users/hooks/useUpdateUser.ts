@@ -3,23 +3,38 @@
 /**
  * @file apps/studio/src/features/admin/users/hooks/useUpdateUser.ts
  * @layer hooks/admin/users
+ *
+ * @description
+ * Hook Studio React Query pour mettre à jour un user (Studio) via l’API.
+ *
+ * @remarks
+ * - Orchestration UI-only (mutation + logs + notifications).
+ * - Users = données Studio globales (pas de draft/published).
+ * - `password: ""` = "no change" => on n’envoie pas.
+ * - Patch construit via shallow diff (baseline -> next).
  */
+
+import { useCallback, useMemo, useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import type { UserDTO } from "@compoz/core/domain/users/dto";
-import { usersAdminApi } from "@compoz/infra/http/studio/users.client";
+import { adminUsersStudioApi } from "@compoz/infra/http/studio/users.client";
 import { log } from "@compoz/infra/lib/log";
-import { userByIdKey } from "@compoz/studio/features/admin/users/cache/keys";
+
+import {
+  userByIdKey,
+  usersListKey,
+} from "@compoz/studio/features/admin/users/cache/keys";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import {
   notifyNoChanges,
   notifyUpdated,
 } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
+
 import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
 import type { UserFormValues } from "@compoz/validation/users/user-form";
 import type { UpdateUserIntentDTO } from "@compoz/validation/users/user-intents";
@@ -56,8 +71,7 @@ const lg = log.child({ ns: "hook", name: "useUpdateUser" });
  * Construit un patch API à partir d’un patch UI (shallow diff).
  *
  * @remarks
- * - Users = pas de state draft/published.
- * - `password: ""` = "no change" => on n'envoie pas.
+ * - `password: ""` => pas envoyé.
  */
 function toUpdateUserIntentDTOFromFormPatch(
   p: Partial<UserFormValues>,
@@ -82,19 +96,19 @@ function toUpdateUserIntentDTOFromFormPatch(
 export function useUpdateUser(onSuccess?: () => void): UseUpdateUserResult {
   const t = useTranslations();
   const qc = useQueryClient();
-  const entityLabel = t("admin.shared.entities.users");
+  const entityLabel = t("studio.shared.entities.user");
 
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationKey: ["admin", "users", "update"] as const,
+    mutationKey: ["studio", "users", "update"] as const,
 
     mutationFn: async (
       args: UpdateUserArgs,
     ): Promise<UpdateUserMutationResult> => {
       const { userId, payload, fields } = args;
 
-      const res = await usersAdminApi.update(userId, payload);
+      const res = await adminUsersStudioApi.update(userId, payload);
 
       // ✅ flatten route response
       const user = res.user;
@@ -111,8 +125,8 @@ export function useUpdateUser(onSuccess?: () => void): UseUpdateUserResult {
       // ✅ seed/patch cache user-by-id
       qc.setQueryData(userByIdKey(userId), user);
 
-      // ✅ si tu as une liste users en cache, on invalide large (sans dépendre d’une key dédiée)
-      await qc.invalidateQueries({ queryKey: ["admin", "users"] });
+      // ✅ refresh list users (SoT)
+      await qc.invalidateQueries({ queryKey: usersListKey() });
 
       lg.info("update.ok", { userId, fields });
       onSuccess?.();

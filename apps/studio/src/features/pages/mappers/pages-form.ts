@@ -1,24 +1,24 @@
 /**
  * @file apps/studio/src/features/pages/mappers/pages-form.ts
- * @layer ui-mappers/pages
+ * @layer ui/studio/pages/mappers
  *
  * @description
- * Mappers "forms admin" dashboard pour les pages :
- * - normalisations UI (trim/coercitions simples)
- * - construction des Intent DTO pour l’API admin
+ * Mappers de formulaires studio pour les pages :
+ * - normalisations UI (trim / coercitions simples)
+ * - construction des Intent DTO pour l’API studio
  *
  * @remarks
  * - Pour DTO -> valeurs UI, on s’appuie sur le mapper shared `toPageShapeFromDTO`.
  */
 
 import type { PageDTO } from "@compoz/core/domain/pages/dto";
+import { toSlugIntentInput } from "@compoz/ui/lib/routing/slug";
+import { toPageShapeFromDTO } from "@compoz/ui/pages/mappers/page-shape";
 import type { PageFormValues } from "@compoz/validation/pages/page-form";
 import type {
   CreatePageIntentDTO,
   UpdatePageIntentDTO,
 } from "@compoz/validation/pages/page-intents";
-
-import { toPageShapeFromDTO } from "@compoz/ui/pages/mappers/page-shape";
 
 /* -------------------------------------------------------------------------- */
 /* Defaults UI                                                                */
@@ -35,10 +35,10 @@ const DEFAULT_SITEMAP: NonNullable<PageFormValues["sitemap"]> = {
 /* -------------------------------------------------------------------------- */
 
 /**
- * DTO -> FormValues (studio).
+ * Convertit un DTO page en `PageFormValues` studio.
  *
  * @remarks
- * Delegue au mapper shared, puis laisse le caller décider s’il veut re-normaliser.
+ * Délègue au mapper shared ; le caller peut ensuite re-normaliser si besoin.
  */
 export function toPageFormValuesFromDTO(
   page: PageDTO | null | undefined,
@@ -55,9 +55,9 @@ export function normalizePageFormValues(
   values: PageFormValues,
 ): PageFormValues {
   return {
-    title: (values.title ?? "").trim(),
+    title: String(values.title ?? "").trim(),
     parentId: values.parentId ?? null,
-    slug: (values.slug ?? "").trim(),
+    slug: String(values.slug ?? "").trim(),
     sitemap: {
       include: values.sitemap?.include ?? DEFAULT_SITEMAP.include,
       priority: values.sitemap?.priority ?? DEFAULT_SITEMAP.priority,
@@ -76,73 +76,78 @@ function toPageSitemapIntentDTOFromFormValues(
 ): CreatePageIntentDTO["sitemap"] | undefined {
   if (!values) return undefined;
 
-  if (!values.include) return { include: false };
+  if (!values.include) {
+    return { include: false };
+  }
 
-  const out: CreatePageIntentDTO["sitemap"] = { include: true };
+  const output: CreatePageIntentDTO["sitemap"] = { include: true };
 
-  if (values.changefreq) out.changefreq = values.changefreq;
-  if (typeof values.priority === "number") out.priority = values.priority;
+  if (values.changefreq) {
+    output.changefreq = values.changefreq;
+  }
 
-  return out;
-}
+  if (typeof values.priority === "number") {
+    output.priority = values.priority;
+  }
 
-function normalizeSlugInputForIntent(raw: string | null | undefined): string {
-  const s = String(raw ?? "").trim();
-  if (!s) return "";
-
-  // "/" = home (cas spécial)
-  if (s === "/") return "/";
-
-  // ignore leading slashes: "/contact" => "contact"
-  return s.replace(/^\/+/, "");
+  return output;
 }
 
 /* -------------------------------------------------------------------------- */
-/* UI -> INTENTS (API admin)                                                  */
+/* UI -> INTENTS (API studio)                                                 */
 /* -------------------------------------------------------------------------- */
 
 export function toCreatePageIntentDTOFromFormValues(
   values: PageFormValues,
 ): CreatePageIntentDTO {
-  const v = normalizePageFormValues(values);
+  const normalizedValues = normalizePageFormValues(values);
+  const slug = toSlugIntentInput(normalizedValues.slug);
 
-  const slug = normalizeSlugInputForIntent(v.slug);
-
-  const out: CreatePageIntentDTO = {
-    title: v.title,
-    parentId: v.parentId,
-    paginationEnabled: v.paginationEnabled,
+  const output: CreatePageIntentDTO = {
+    title: normalizedValues.title,
+    parentId: normalizedValues.parentId,
+    paginationEnabled: normalizedValues.paginationEnabled,
     ...(slug ? { slug } : {}),
   };
 
-  const sitemap = toPageSitemapIntentDTOFromFormValues(v.sitemap);
-  if (sitemap !== undefined) out.sitemap = sitemap;
+  const sitemap = toPageSitemapIntentDTOFromFormValues(
+    normalizedValues.sitemap,
+  );
 
-  return out;
+  if (sitemap !== undefined) {
+    output.sitemap = sitemap;
+  }
+
+  return output;
 }
 
 export function toUpdatePageIntentDTOFromFormValues(
-  p: Partial<PageFormValues>,
+  patch: Partial<PageFormValues>,
 ): UpdatePageIntentDTO {
-  const out: UpdatePageIntentDTO = {};
+  const output: UpdatePageIntentDTO = {};
 
-  if ("title" in p && p.title !== undefined) out.title = (p.title ?? "").trim();
-
-  if ("slug" in p && p.slug !== undefined) {
-    const normalized = normalizeSlugInputForIntent(p.slug);
-    out.slug = normalized; // "" = reset (et "/" = home)
+  if ("title" in patch && patch.title !== undefined) {
+    output.title = String(patch.title ?? "").trim();
   }
 
-  if ("parentId" in p) out.parentId = p.parentId ?? null;
-
-  if ("paginationEnabled" in p) {
-    out.paginationEnabled = Boolean(p.paginationEnabled);
+  if ("slug" in patch && patch.slug !== undefined) {
+    output.slug = toSlugIntentInput(patch.slug);
   }
 
-  if ("sitemap" in p) {
-    const sitemap = toPageSitemapIntentDTOFromFormValues(p.sitemap);
-    if (sitemap !== undefined) out.sitemap = sitemap;
+  if ("parentId" in patch) {
+    output.parentId = patch.parentId ?? null;
   }
 
-  return out;
+  if ("paginationEnabled" in patch) {
+    output.paginationEnabled = Boolean(patch.paginationEnabled);
+  }
+
+  if ("sitemap" in patch) {
+    const sitemap = toPageSitemapIntentDTOFromFormValues(patch.sitemap);
+    if (sitemap !== undefined) {
+      output.sitemap = sitemap;
+    }
+  }
+
+  return output;
 }

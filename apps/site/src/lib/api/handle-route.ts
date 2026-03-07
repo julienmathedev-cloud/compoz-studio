@@ -11,22 +11,18 @@
  * - Pas d’audit KV ici : inutile et ça évite du bruit.
  */
 
+import type { NextResponse } from "next/server";
+
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { toHttpError } from "@compoz/infra/http/error-adapter";
 import { log, logSpan } from "@compoz/infra/lib/log";
-
 import { jsonHttpError, jsonOk } from "@compoz/site/lib/api/responses";
-import type { NextResponse } from "next/server";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
 /* -------------------------------------------------------------------------- */
 
-type HandlerProps = {
-  req: Request;
-};
-
-type ApiHandler<T> = (props: HandlerProps) => Promise<T>;
+type ApiHandler<T> = (req: Request) => Promise<T>;
 
 /* -------------------------------------------------------------------------- */
 /* Main wrapper                                                                */
@@ -38,11 +34,11 @@ export async function handleRoute<T>(
   handler: ApiHandler<T>,
 ): Promise<NextResponse> {
   const lg = log.child({ ns });
-  const { pathname: path } = new URL(req.url);
+  const { pathname } = new URL(req.url);
 
-  return logSpan(ns, { ns, method: req.method, path }, async () => {
+  return logSpan(ns, { ns, method: req.method, path: pathname }, async () => {
     try {
-      const data = await handler({ req });
+      const data = await handler(req);
       return jsonOk<T>(data);
     } catch (err: unknown) {
       const dom = toHttpError(err);

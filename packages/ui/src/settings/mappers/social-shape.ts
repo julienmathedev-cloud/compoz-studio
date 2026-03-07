@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/site/mappers/social-shape.ts
- * @layer ui-mappers/site
+ * @layer ui/site/mappers
  *
  * @description
  * Mapper "shared runtime" Social :
@@ -24,11 +24,16 @@ import type {
 
 import { trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 
+function toHrefString(v: unknown): string {
+  // DTO attendu string | null | undefined. Si jamais "dirty", on force une string best-effort.
+  return typeof v === "string" ? v : String(v ?? "");
+}
+
 /** DTO -> Shape : item (renderer). */
 function toSocialSettingsItemShapeFromDTO(it: SocialItemDTO): SocialItemShape {
   return {
     kind: it.kind,
-    href: trimKeepEmpty(String(it.href ?? "")),
+    href: trimKeepEmpty(toHrefString(it.href)),
   };
 }
 

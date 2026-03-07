@@ -1,8 +1,9 @@
 /**
  * @file apps/studio/src/app/api/admin/users/[userId]/route.ts
- * @layer api/routes
+ * @layer studio/app/api
+ *
  * @description
- * Route API Admin pour la lecture, la suppression et la mise à jour d’un user (Studio) par ID.
+ * Route API Studio (admin) pour la lecture, la suppression et la mise à jour d’un user par ID.
  *
  * Responsabilités :
  * - GET    : retourne un user complet par ID.
@@ -16,46 +17,36 @@
 
 import "server-only";
 
-import { throwHttp } from "@compoz/http/http-error";
-import { readJsonOr400 } from "@compoz/infra/http/read-json";
-import { log, logSpan } from "@compoz/infra/lib/log";
-import { handleRoute } from "@compoz/studio/lib/api/handle-route";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
-
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
-
-import { getUsersRepository } from "@compoz/infra/users";
-
 import type { UserDTO } from "@compoz/core/domain/users/dto";
 import { deleteUser } from "@compoz/core/domain/users/use-cases/delete-user";
 import { updateUser } from "@compoz/core/domain/users/use-cases/update-user";
-
-import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
-
+import { throwHttp } from "@compoz/http/http-error";
+import { readJsonOr400 } from "@compoz/infra/http/read-json";
+import type {
+  DeleteUserResponse,
+  GetUserByIdResponse,
+  UpdateUserResponse,
+} from "@compoz/infra/http/studio/users.types";
+import { log, logSpan } from "@compoz/infra/lib/log";
+import { getUsersRepository } from "@compoz/infra/users";
+import { adaptUpdateUserPayload } from "@compoz/studio/app/api/_adapters/users/users";
 import { requireAdminSession } from "@compoz/studio/auth/require-session";
-
+import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { UserIdParamSchema } from "@compoz/validation/users/user";
 import {
   UpdateUserIntentSchema,
   type UpdateUserIntentDTO,
 } from "@compoz/validation/users/user-intents";
 
-import { adaptUpdateUserPayload } from "@compoz/studio/app/api/_adapters/users/users";
-
-/* -------------------------------------------------------------------------- */
-/* Types response (local SoT)                                                 */
-/* -------------------------------------------------------------------------- */
-
-type GetUserByIdResponse = Readonly<{ user: UserDTO }>;
-type UpdateUserResponse = Readonly<{ user: UserDTO }>;
-type DeleteUserResponse = Readonly<{ ok: true }>;
-
 // -------------------------------------------------
 // GET /api/admin/users/:userId → read user
 // -------------------------------------------------
 
 export async function GET(req: Request, ctx: { params: unknown }) {
-  const NS = "api.admin.users.id.GET" as const;
+  const NS = "api.studio.admin.users.id.GET" as const;
 
   return handleRoute(NS, req, async () => {
     await requireAdminSession();
@@ -65,7 +56,7 @@ export async function GET(req: Request, ctx: { params: unknown }) {
 
       const { userId } = parseDTOOrHttp(UserIdParamSchema, params, {
         message: EC.INVALID_ARGUMENT,
-        extras: { where: "api.admin.users.id.GET.params" },
+        extras: { where: "api.studio.admin.users.id.GET.params" },
       });
 
       const usersRepo = getUsersRepository();
@@ -88,7 +79,7 @@ export async function GET(req: Request, ctx: { params: unknown }) {
 // -------------------------------------------------
 
 export async function DELETE(req: Request, ctx: { params: unknown }) {
-  const NS = "api.admin.users.id.DELETE" as const;
+  const NS = "api.studio.admin.users.id.DELETE" as const;
 
   return handleRoute(NS, req, async () => {
     await requireAdminSession();
@@ -100,7 +91,7 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
 
       const { userId } = parseDTOOrHttp(UserIdParamSchema, params, {
         message: EC.INVALID_ARGUMENT,
-        extras: { where: "api.admin.users.id.DELETE.params" },
+        extras: { where: "api.studio.admin.users.id.DELETE.params" },
       });
 
       const usersRepo = getUsersRepository();
@@ -111,7 +102,7 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
 
       lg.debug("route.user.deleted", { userId });
 
-      const res: DeleteUserResponse = { ok: true };
+      const res: DeleteUserResponse = { ok: true, userId };
       return res;
     });
   });
@@ -122,7 +113,7 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
 // -------------------------------------------------
 
 export async function PATCH(req: Request, ctx: { params: unknown }) {
-  const NS = "api.admin.users.id.PATCH" as const;
+  const NS = "api.studio.admin.users.id.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
     await requireAdminSession();
@@ -134,7 +125,7 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
 
       const { userId } = parseDTOOrHttp(UserIdParamSchema, params, {
         message: EC.INVALID_ARGUMENT,
-        extras: { where: "api.admin.users.id.PATCH.params" },
+        extras: { where: "api.studio.admin.users.id.PATCH.params" },
       });
 
       const body = await readJsonOr400(req);
@@ -144,7 +135,7 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
         body,
         {
           message: EC.VALIDATION_ERROR,
-          extras: { where: "api.admin.users.id.PATCH.payload" },
+          extras: { where: "api.studio.admin.users.id.PATCH.payload" },
         },
       );
 

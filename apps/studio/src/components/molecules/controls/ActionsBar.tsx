@@ -2,27 +2,29 @@
 
 /**
  * @file apps/studio/src/components/molecules/controls/ActionsBar.tsx
- * @layer ui/molecules
+ * @layer studio/molecules
  *
  * @description
- * Barre d’actions (admin) pour formulaires : Reset / Add / Submit, avec états et tooltips.
+ * Barre d’actions (Studio) pour formulaires : Reset / Add / Submit, avec états et tooltips.
  *
  * @remarks
- * - Molecule UI : compose des atoms (`TooltipButton`, `LoadingStatus`, `AdminIcon`) et des layouts (`AdminButtonGroup`).
+ * - Molecule UI : compose des atoms (`TooltipButton`, `LoadingStatus`, `StudioIcon`) et des layouts (`StudioButtonGroup`).
  * - Centralise le calcul des états `disabled` à partir de `isSaving`, `disabled` et `isDirty`.
  * - Peut fonctionner en mode `<form onSubmit>` (`submitType="submit"`) ou via callback (`submitType="button"`).
  * - Strictement UI-only : aucune logique métier.
  */
 
-import { AdminIcon } from "@compoz/studio/components/atoms/AdminIcon";
-import { LoadingStatus } from "@compoz/studio/components/atoms/LoadingStatus";
-import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
-import { AdminButtonGroup } from "@compoz/studio/components/molecules/controls/AdminButtonGroup";
+import { Plus, RotateCcw, Save } from "lucide-react";
+import { useTranslations } from "next-intl";
+
 import { Spinner } from "@compoz/ui/components/ui/spinner";
 import { cn } from "@compoz/ui/lib/utils";
 import { ROW_BETWEEN, ROW_END } from "@compoz/ui/styles/studio/layout";
-import { Plus, RotateCcw, Save } from "lucide-react";
-import { useTranslations } from "next-intl";
+
+import { LoadingStatus } from "@compoz/studio/components/atoms/LoadingStatus";
+import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
+import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
+import { StudioButtonGroup } from "@compoz/studio/components/molecules/controls/StudioButtonGroup";
 
 /**
  * Variantes d’affichage de la barre d’actions.
@@ -78,7 +80,7 @@ type ActionsBarProps = Readonly<{
 }>;
 
 /**
- * Barre d’actions standardisée pour formulaires (admin).
+ * Barre d’actions standardisée pour formulaires (Studio).
  */
 export function ActionsBar({
   variant = "resetSubmit",
@@ -134,13 +136,13 @@ export function ActionsBar({
   const submitDisabledTooltip = isSaving
     ? t("common.saving")
     : isDirty === false
-      ? t("admin.actionsBar.noChangesToSave")
+      ? t("studio.actionsBar.noChangesToSave")
       : t("common.actionUnavailable");
 
   const resetDisabledTooltip = isSaving
     ? t("common.saving")
     : isDirty === false
-      ? t("admin.actionsBar.noChangesToReset")
+      ? t("studio.actionsBar.noChangesToReset")
       : t("common.actionUnavailable");
 
   const addDisabledTooltip = isSaving
@@ -178,7 +180,7 @@ export function ActionsBar({
             <Plus />
           </TooltipButton>
 
-          <AdminButtonGroup className="flex">
+          <StudioButtonGroup className="flex">
             <TooltipButton
               type="button"
               variant="ghost"
@@ -211,7 +213,7 @@ export function ActionsBar({
               aria-label={submitText}
             >
               {isSaving ? (
-                <AdminIcon
+                <StudioIcon
                   icon={Spinner}
                   className="motion-safe:animate-spin"
                 />
@@ -219,7 +221,7 @@ export function ActionsBar({
                 <Save />
               )}
             </TooltipButton>
-          </AdminButtonGroup>
+          </StudioButtonGroup>
         </div>
       ) : variant === "submitOnly" ? (
         // Variante : uniquement le bouton Submit (ex: modale simple)
@@ -235,7 +237,7 @@ export function ActionsBar({
             aria-label={submitText}
           >
             {isSaving ? (
-              <AdminIcon icon={Spinner} className="motion-safe:animate-spin" />
+              <StudioIcon icon={Spinner} className="motion-safe:animate-spin" />
             ) : (
               <Save />
             )}
@@ -244,7 +246,7 @@ export function ActionsBar({
       ) : (
         // Variante par défaut : Reset + Submit groupés à droite
         <div className={cn(ROW_END)}>
-          <AdminButtonGroup>
+          <StudioButtonGroup>
             <TooltipButton
               type="button"
               variant="ghost"
@@ -276,7 +278,7 @@ export function ActionsBar({
               aria-label={submitText}
             >
               {isSaving ? (
-                <AdminIcon
+                <StudioIcon
                   icon={Spinner}
                   className="motion-safe:animate-spin"
                 />
@@ -284,7 +286,7 @@ export function ActionsBar({
                 <Save />
               )}
             </TooltipButton>
-          </AdminButtonGroup>
+          </StudioButtonGroup>
         </div>
       )}
     </div>

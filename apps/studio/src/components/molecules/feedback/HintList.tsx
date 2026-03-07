@@ -2,27 +2,30 @@
 
 /**
  * @file apps/studio/src/components/molecules/feedback/HintList.tsx
- * @layer ui/molecules
+ * @layer studio/molecules
  *
  * @description
- * Liste de messages d’aide (info, warning, success, error) basée sur l’Alert ShadCN.
+ * Liste de messages d’aide (info, warning, success, error) basée sur les primitives UI (Card) et des icônes.
  *
  * @remarks
- * - Molecule UI : compose `Alert` (ShadCN) et des atoms (`AdminIcon`, `Text`).
+ * - Molecule UI : compose des primitives UI (`Card`) et des atoms (`StudioIcon`, `Text`).
  * - Le variant `warning` est stylé localement (ShadCN ne le fournit pas).
  * - Accessibilité : `role` / `aria-live` adaptés selon la variante (override possible).
  * - Ne rend rien si `hints` est vide.
  * - Strictement UI-only : aucune logique métier.
  */
 
+import type { LucideIcon } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
+import type { ReactNode } from "react";
+import { useId } from "react";
+
+import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
+import { Text } from "@compoz/studio/components/atoms/typography/Text";
+
 import { Card, CardContent, CardHeader } from "@compoz/ui/components/ui/card";
 import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { cn } from "@compoz/ui/lib/utils";
-import { AdminIcon } from "@compoz/studio/components/atoms/AdminIcon";
-import { Text } from "@compoz/studio/components/atoms/typography/Text";
-import type { LucideIcon } from "lucide-react";
-import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
-import { useId, type ReactNode } from "react";
 
 /**
  * Variantes disponibles pour les messages.
@@ -74,7 +77,7 @@ function alertToneClasses(variant: Variant) {
 }
 
 /**
- * Affiche une liste de hints standardisée (admin).
+ * Affiche une liste de hints standardisée (Studio).
  */
 export function HintList({
   hints = [],
@@ -102,15 +105,18 @@ export function HintList({
       className={cn(alertToneClasses(variant), className, "gap-2")}
       aria-live={live}
       role={computedRole}
+      aria-labelledby={title ? titleId : undefined}
+      aria-describedby={listId}
     >
       {title && (
         <CardHeader id={titleId} className="flex items-center gap-2">
-          <AdminIcon icon={Icon} className="h-4 w-4" />
+          <StudioIcon icon={Icon} className="h-4 w-4" />
           <Text as="p" variant="base">
             {title}
           </Text>
         </CardHeader>
       )}
+
       <CardContent id={listId}>
         <ul className="list-disc pl-3">
           {hints.map((h, i) => {
@@ -118,6 +124,7 @@ export function HintList({
               typeof h === "string"
                 ? `hint-${toStableUiKey({ label: h }, i)}`
                 : `hint-${i}`;
+
             return (
               <li key={key}>
                 <Text as="span" variant="meta">

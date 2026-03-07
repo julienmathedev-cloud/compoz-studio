@@ -2,50 +2,49 @@
 
 /**
  * @file apps/studio/src/features/pages/hooks/useReorderPageChildren.ts
- * @layer hooks/admin/pages
+ * @layer hooks/studio/pages
  *
  * @description
- * Hook admin React Query : reorder des enfants d’un parent (index-only).
+ * Hook studio React Query : réordonnancement des enfants d’un parent (index-only).
  *
  * @remarks
- * - Draft-only par défaut (WRITE_CONTENT_STATE).
- * - Orchestration UI-only (mutation + cache update + invalidation + logs + notifications).
- * - Aucune logique métier : la défense du set/order est côté route (reorderChildrenByParentId).
+ * - Draft-only par défaut (`DEFAULT_CONTENT_STATE`).
+ * - Orchestration UI-only (mutation + cache update + logs + notifications).
+ * - Aucune logique métier : la défense du set / order est côté route.
  *
  * @why cache update
- * Pour que l'UI (et la preview qui consomme `useReadSiteIndex`) reflète immédiatement
+ * Pour que l’UI (et la preview qui consomme `useReadSiteIndex`) reflète immédiatement
  * le nouvel ordre après un reorder, on pousse `index` dans le cache React Query via `setQueryData`.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
-  WRITE_CONTENT_STATE,
+  DEFAULT_CONTENT_STATE,
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
-
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
-import { pagesAdminApi } from "@compoz/infra/http/studio/pages.client";
+import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log, logSpan } from "@compoz/infra/lib/log";
-import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
+import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
 import { setSiteIndexCache } from "@compoz/studio/features/site-index/cache";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
-
-type UseReorderPageChildrenResult = Readonly<{
-  reorderChildren: (parentId: string, childIds: string[]) => Promise<void>;
-  isReordering: boolean;
-}>;
 
 type ReorderChildrenArgs = Readonly<{
   parentId: string;
   childIds: string[];
 }>;
 
+type UseReorderPageChildrenResult = Readonly<{
+  reorderChildren: (parentId: string, childIds: string[]) => Promise<void>;
+  isReordering: boolean;
+}>;
+
 const lg = log.child({ ns: "hook", name: "useReorderPageChildren" });
 
 export function useReorderPageChildren(
-  state: ContentState = WRITE_CONTENT_STATE,
+  state: ContentState = DEFAULT_CONTENT_STATE,
 ): UseReorderPageChildrenResult {
   const qc = useQueryClient();
   const tenantId = useTenantId();
@@ -54,7 +53,7 @@ export function useReorderPageChildren(
     mutationKey: [
       "t",
       tenantId,
-      "admin",
+      "studio",
       "pages",
       "children",
       "reorder",
@@ -62,21 +61,19 @@ export function useReorderPageChildren(
     ] as const,
 
     mutationFn: async ({ parentId, childIds }) => {
-      const pid = String(parentId ?? "").trim();
-      const ids = childIds ?? [];
+      const parentIdKey = String(parentId ?? "").trim();
+      const orderedChildIds = childIds ?? [];
 
-      const res = await logSpan(
+      const response = await logSpan(
         "ui.pages.children.reorder",
-        { state, parentId: pid, count: ids.length },
-        () => pagesAdminApi.reorderChildren(pid, ids),
+        { state, parentId: parentIdKey, count: orderedChildIds.length },
+        () => pagesStudioApi.reorderChildren(parentIdKey, orderedChildIds),
       );
 
-      // ✅ index-only
-      return res.index;
+      return response.index;
     },
 
     onSuccess: async (nextIndex, variables) => {
-      // ✅ 1) push immédiat dans le cache (SoT helper)
       setSiteIndexCache(qc, tenantId, state, nextIndex);
 
       lg.info("reorder.ok", {
@@ -86,9 +83,9 @@ export function useReorderPageChildren(
       });
     },
 
-    onError: (e: unknown) => {
-      notify.fromError(e, UiError.unexpectedSave);
-      lg.error("reorder.failed", { state, msg: String(e) });
+    onError: (error: unknown) => {
+      notify.fromError(error, UiError.unexpectedSave);
+      lg.error("reorder.failed", { state, msg: String(error) });
     },
 
     retry: false,

@@ -1,5 +1,5 @@
 /**
- * @file src/core/domain/site/use-cases/footer/update-footer-settings.types.ts
+ * @file packages/core/src/domain/site/use-cases/footer/update-footer-settings.types.ts
  * @layer core/domain
  * @description
  * Types du use-case `updateFooterSettings` : dépendances, entrée (patch + state)

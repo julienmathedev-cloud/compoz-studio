@@ -1,15 +1,14 @@
 /**
  * @file apps/studio/app/page.tsx
- * @layer app/studio/page
+ * @layer studio/app
  *
  * @description
- * Root studio : redirection vers la locale par défaut.
+ * Root Studio : redirige vers la locale par défaut définie dans le routing i18n.
  */
 
+import { routing } from "@compoz/studio/i18n/routing";
 import { redirect } from "next/navigation";
 
-const DEFAULT_LOCALE = "fr" as const;
-
 export default function StudioRootPage() {
-  redirect(`/${DEFAULT_LOCALE}`);
+  redirect(`/${routing.defaultLocale}`);
 }

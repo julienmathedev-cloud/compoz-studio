@@ -1,17 +1,21 @@
 /**
  * @file apps/studio/src/app/[locale]/signin/page.tsx
- * @layer app/auth
+ * @layer studio/app
  * @description
- * Page de connexion Studio (Server):
- * - Résout locale + traductions
+ * Page de connexion Studio (Server) :
+ * - Résout la locale (segment `[locale]`)
  * - Sanitize `next` depuis l’URL
  * - Rend le formulaire client
+ *
+ * @remarks
+ * - Les messages i18n sont chargés via `next-intl` côté server.
  */
+
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
 
 import { SignInForm } from "@compoz/studio/auth/SignInForm";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
 
 type LocaleSignInPageProps = Readonly<{
   params: Promise<
@@ -23,7 +27,14 @@ type LocaleSignInPageProps = Readonly<{
 }>;
 
 function sanitizeNextPath(nextRaw: unknown): string {
-  const n = typeof nextRaw === "string" ? nextRaw.trim() : "";
+  const raw =
+    typeof nextRaw === "string"
+      ? nextRaw
+      : Array.isArray(nextRaw)
+        ? (nextRaw[0] ?? "")
+        : "";
+
+  const n = raw.trim();
   if (!n) return "/";
   if (!n.startsWith("/")) return "/";
   // défense simple contre //evil.com

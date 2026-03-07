@@ -1,13 +1,15 @@
 /**
  * @file apps/studio/src/app/[locale]/(dashboard)/layout.tsx
- * @layer app/layout
+ * @layer studio/app
  *
  * @description
- * Layout localisé i18n : fournit le contexte `NextIntlClientProvider` et initialise la locale.
+ * Layout localisé i18n (Dashboard Studio) :
+ * - initialise la locale (`setRequestLocale`)
+ * - fournit `NextIntlClientProvider`
+ * - monte les providers client globaux (React Query, thème, sidebar, toasts, etc.)
  *
  * @remarks
- * - Ne contient pas <html> / <body> (réservés au root `app/layout.tsx`).
- * - Inclut le provider React Query.
+ * - Ne contient pas `<html>` / `<body>` (réservés au root `app/layout.tsx`).
  * - Génère les params statiques `[locale]` pour Next.js.
  */
 
@@ -16,22 +18,23 @@ import type { ReactNode } from "react";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { Toaster } from "sonner";
 
-import { AdminClientProviders } from "@compoz/studio/app/[locale]/AdminClientProviders";
+import { StudioClientProviders } from "@compoz/studio/app/[locale]/StudioClientProviders";
 import {
   isAdminRole,
   requireSessionWithTenant,
 } from "@compoz/studio/auth/require-session";
-import { AdminSidebar } from "@compoz/studio/components/organisms/AdminSidebar";
-import { AdminShell } from "@compoz/studio/features/shell/components/AdminShell";
+import { StudioSidebar } from "@compoz/studio/components/organisms/StudioSidebar";
 import { Header } from "@compoz/studio/features/shell/components/Header";
+import { StudioShell } from "@compoz/studio/features/shell/components/StudioShell";
 import { routing } from "@compoz/studio/i18n/routing";
 import { ReactQueryProvider } from "@compoz/studio/lib/react-query/ReactQueryProvider";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import { SidebarInset } from "@compoz/ui/components/ui/sidebar";
+import { toTenantId } from "@compoz/ui/lib/tenant-id";
 import { cn } from "@compoz/ui/lib/utils";
-import { ADMIN_CONTAINER, ADMIN_PAGE } from "@compoz/ui/styles/studio/layout";
-import { Toaster } from "sonner";
+import { STUDIO_CONTAINER, STUDIO_PAGE } from "@compoz/ui/styles/studio/layout";
 
 type Locale = (typeof routing.locales)[number];
 
@@ -63,51 +66,49 @@ export default async function LocaleLayout({
     notFound();
   }
 
+  setRequestLocale(locale);
+  const messages = await getMessages();
+
   const session = await requireSessionWithTenant();
   // session.tenantId = tenant actif (cookie admin si présent) OU defaultTenantId
-  const tenantId = String(session.tenantId ?? "")
-    .trim()
-    .toLowerCase();
+  const tenantId = toTenantId(session.tenantId);
+  if (!tenantId) notFound();
 
   const isAdmin = isAdminRole(session.role);
-
-  setRequestLocale(locale);
-
-  const messages = await getMessages();
 
   return (
     <ReactQueryProvider>
       <NextIntlClientProvider messages={messages}>
         <div className="flex h-dvh min-h-0 min-w-0">
-          <AdminClientProviders tenantId={tenantId}>
-            {/* AdminShell : protège les composants sensibles côté client (RHF, Radix Tabs, Dialog, useId, etc.). */}
-            <AdminShell>
+          <StudioClientProviders tenantId={tenantId}>
+            {/* StudioShell : protège les composants sensibles côté client (RHF, Radix Tabs, Dialog, useId, etc.). */}
+            <StudioShell>
               {/* Colonne gauche */}
               <aside className="shrink-0">
-                <AdminSidebar locale={locale} isAdmin={isAdmin} />
+                <StudioSidebar locale={locale} isAdmin={isAdmin} />
               </aside>
 
               {/* Colonne droite = tout le contenu “inset” */}
               <SidebarInset className="bg-sidebar flex flex-col min-w-0 min-h-0 h-full">
-                {/* Header admin : navigation + skip-link. */}
+                {/* Header Studio : navigation + skip-link. */}
                 <Header />
 
-                {/* Zone principale : contenu des pages tabs. */}
+                {/* Zone principale : contenu des pages dashboard. */}
                 <main
                   id="main"
                   className="flex-1 border border-primary/10 bg-background rounded-sm ml-2 md:ml-0 mb-2 mr-2 overflow-y-auto"
                   tabIndex={-1}
                 >
-                  <div className={cn(ADMIN_CONTAINER)}>
-                    <div className={cn(ADMIN_PAGE)}>{children}</div>
+                  <div className={cn(STUDIO_CONTAINER)}>
+                    <div className={cn(STUDIO_PAGE)}>{children}</div>
                   </div>
                 </main>
 
-                {/* Toaster local admin. */}
+                {/* Toaster local Studio. */}
                 <Toaster />
               </SidebarInset>
-            </AdminShell>
-          </AdminClientProviders>
+            </StudioShell>
+          </StudioClientProviders>
         </div>
       </NextIntlClientProvider>
     </ReactQueryProvider>

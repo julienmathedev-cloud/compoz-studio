@@ -37,6 +37,29 @@ type Store = Readonly<{
   slugToId: Map<string, string>;
 }>;
 
+/**
+ * Normalise une entrée string (trim + fallback).
+ * Contrat : retourne toujours une string.
+ */
+function norm(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
+/**
+ * Clone défensif d’une Page pour éviter les mutations croisées.
+ *
+ * @remarks
+ * - Utilise `structuredClone` si disponible (Node 17+/browsers modernes).
+ * - Fallback JSON sinon (suffisant pour nos entités sérialisables).
+ */
+function clonePage(page: Page): Page {
+  const sc = (globalThis as { structuredClone?: unknown }).structuredClone;
+  if (typeof sc === "function") {
+    return (sc as (v: Page) => Page)(page);
+  }
+  return JSON.parse(JSON.stringify(page)) as Page;
+}
+
 export class InMemoryPagesRepository implements PagesRepository {
   private draft: Store = { byId: new Map(), slugToId: new Map() };
   private published: Store = { byId: new Map(), slugToId: new Map() };
@@ -54,15 +77,15 @@ export class InMemoryPagesRepository implements PagesRepository {
   /* -------------------------------------------------------------------------- */
 
   async readById(state: ContentState, pageId: string): Promise<Page | null> {
-    const id = (pageId ?? "").trim();
+    const id = norm(pageId);
     if (!id) return null;
 
     const p = this.getStore(state).byId.get(id);
-    return p ? structuredClone(p) : null;
+    return p ? clonePage(p) : null;
   }
 
   async readBySlug(state: ContentState, slug: string): Promise<Page | null> {
-    const s = (slug ?? "").trim();
+    const s = norm(slug);
     if (!s) return null;
 
     const store = this.getStore(state);
@@ -70,7 +93,7 @@ export class InMemoryPagesRepository implements PagesRepository {
     if (!id) return null;
 
     const p = store.byId.get(id);
-    return p ? structuredClone(p) : null;
+    return p ? clonePage(p) : null;
   }
 
   /* -------------------------------------------------------------------------- */
@@ -80,8 +103,8 @@ export class InMemoryPagesRepository implements PagesRepository {
   async put(state: ContentState, page: Page): Promise<void> {
     const store = this.getStore(state);
 
-    const id = String(page?.id ?? "").trim();
-    const slug = String(page?.slug ?? "").trim();
+    const id = norm(page?.id);
+    const slug = norm(page?.slug);
 
     // Contrat infra minimal : on ne persiste pas d’entrée sans id/slug.
     if (!id || !slug) return;
@@ -96,7 +119,7 @@ export class InMemoryPagesRepository implements PagesRepository {
     // (si un autre id utilisait ce slug, l’ancien mapping est remplacé).
     store.slugToId.set(slug, id);
 
-    store.byId.set(id, structuredClone(page));
+    store.byId.set(id, clonePage(page));
   }
 
   async putMany(
@@ -115,7 +138,7 @@ export class InMemoryPagesRepository implements PagesRepository {
   /* -------------------------------------------------------------------------- */
 
   async deleteById(state: ContentState, pageId: string): Promise<void> {
-    const id = (pageId ?? "").trim();
+    const id = norm(pageId);
     if (!id) return;
 
     const store = this.getStore(state);
@@ -131,7 +154,7 @@ export class InMemoryPagesRepository implements PagesRepository {
   }
 
   async deleteBySlug(state: ContentState, slug: string): Promise<void> {
-    const s = (slug ?? "").trim();
+    const s = norm(slug);
     if (!s) return;
 
     const store = this.getStore(state);
@@ -146,13 +169,13 @@ export class InMemoryPagesRepository implements PagesRepository {
   /* -------------------------------------------------------------------------- */
 
   async existsById(state: ContentState, pageId: string): Promise<boolean> {
-    const id = (pageId ?? "").trim();
+    const id = norm(pageId);
     if (!id) return false;
     return this.getStore(state).byId.has(id);
   }
 
   async existsBySlug(state: ContentState, slug: string): Promise<boolean> {
-    const s = (slug ?? "").trim();
+    const s = norm(slug);
     if (!s) return false;
     return this.getStore(state).slugToId.has(s);
   }
@@ -168,11 +191,11 @@ export class InMemoryPagesRepository implements PagesRepository {
     const store = this.getStore(state);
 
     return pageIds.map((pageId) => {
-      const id = String(pageId ?? "").trim();
+      const id = norm(pageId);
       if (!id) return null;
 
       const p = store.byId.get(id);
-      return p ? structuredClone(p) : null;
+      return p ? clonePage(p) : null;
     });
   }
 

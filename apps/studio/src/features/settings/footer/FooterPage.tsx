@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/features/settings/footer/FooterPage.tsx
- * @layer ui/pages
+ * @layer ui/studio/pages
  *
  * @description
- * Page « Footer » (admin) — pilote le H1 global et affiche la section Footer.
+ * Page « Footer » (studio) — pilote le H1 global et affiche la section Footer.
  *
  * @remarks
  * - Le H1 est rendu en `sr-only` pour garantir une hiérarchie sémantique propre.
@@ -14,20 +14,19 @@
  */
 
 import { cn } from "@compoz/ui/lib/utils";
-import { ADMIN_SECTION } from "@compoz/ui/styles/studio/layout";
+import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 import { Heading } from "@compoz/studio/components/atoms/typography/Heading";
-import { useTranslations } from "next-intl";
-
 import { FooterSection } from "@compoz/studio/features/settings/footer/FooterSection";
+import { useTranslations } from "next-intl";
 
 export function FooterPage() {
   const t = useTranslations();
 
   return (
-    <div className={cn(ADMIN_SECTION)}>
-      {/* H1 global de la page (accessibilité / SEO interne admin) */}
+    <div className={cn(STUDIO_SECTION)}>
+      {/* H1 global de la page (accessibilité / SEO interne studio) */}
       <Heading as="h1" className="sr-only">
-        {t("admin.shared.entities.footer")}
+        {t("studio.shared.entities.footer")}
       </Heading>
 
       {/* Section principale */}

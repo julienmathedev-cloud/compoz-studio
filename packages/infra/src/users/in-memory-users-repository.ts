@@ -20,13 +20,15 @@
 import bcrypt from "bcryptjs";
 
 import type {
-  CreateUserRecord,
-  UsersRepository,
-} from "@compoz/core/domain/users/ports/users-repository";
-import type {
   User,
   UserSummary,
 } from "@compoz/core/domain/users/entities/user";
+import type { UsersRepository } from "@compoz/core/domain/users/ports/users-repository";
+
+/**
+ * Type d’entrée de `create` déduit depuis le port (SoT = domain).
+ */
+type CreateUserInput = Parameters<UsersRepository["create"]>[0];
 
 /**
  * Store interne :
@@ -44,10 +46,6 @@ function normalizeEmail(input: unknown): string {
   return String(input ?? "")
     .trim()
     .toLowerCase();
-}
-
-function nowIso(): string {
-  return new Date().toISOString();
 }
 
 export class InMemoryUsersRepository implements UsersRepository {
@@ -87,64 +85,57 @@ export class InMemoryUsersRepository implements UsersRepository {
   /* Writes                                                                     */
   /* -------------------------------------------------------------------------- */
 
-  async create(input: CreateUserRecord): Promise<User> {
-    const id = String(input?.id ?? "").trim();
-    const email = normalizeEmail(input?.email);
-    const name = String(input?.name ?? "").trim();
+  async create(input: CreateUserInput): Promise<User> {
+    const user = input?.user;
     const password = String(input?.password ?? "").trim();
 
-    // Contrat infra minimal : si pas d'id/email/password => on refuse.
-    if (!id || !email || !password) {
+    const id = String(user?.id ?? "").trim();
+    const emailLower = normalizeEmail(user?.email);
+
+    // Contrat infra minimal
+    if (!id || !emailLower || !password) {
       throw new Error("InMemoryUsersRepository.create: invalid input.");
     }
 
-    const at = nowIso();
-
-    const user: User = {
-      id,
-      email,
-      name: name || undefined,
-      status: "active",
-      rbac: structuredClone(input.rbac),
-      meta: { createdAt: at, updatedAt: at },
-    };
+    // On stocke l'email canonique (lower-case) côté infra
+    const toStore: User = { ...user, email: emailLower };
 
     // Nettoyage index si même id existait déjà avec un autre email
     const prev = this.store.byId.get(id);
-    if (prev?.email && prev.email !== email) {
+    if (prev?.email && prev.email !== emailLower) {
       const mapped = this.store.emailToId.get(prev.email);
       if (mapped === id) this.store.emailToId.delete(prev.email);
     }
 
     // Index email -> id (si un autre id utilisait cet email, on remplace le mapping)
-    this.store.emailToId.set(email, id);
+    this.store.emailToId.set(emailLower, id);
 
     // Password hash (infra)
     const hash = await bcrypt.hash(password, 10);
     this.store.pwdById.set(id, hash);
 
     // Stockage user
-    this.store.byId.set(id, structuredClone(user));
+    this.store.byId.set(id, structuredClone(toStore));
 
-    return structuredClone(user);
+    return structuredClone(toStore);
   }
 
   async put(user: User): Promise<void> {
     const id = String(user?.id ?? "").trim();
-    const email = normalizeEmail(user?.email);
+    const emailLower = normalizeEmail(user?.email);
 
-    if (!id || !email) return;
+    if (!id || !emailLower) return;
 
     const prev = this.store.byId.get(id);
 
     // Si changement d'email, on nettoie l'ancien index.
-    if (prev?.email && prev.email !== email) {
+    if (prev?.email && prev.email !== emailLower) {
       const mapped = this.store.emailToId.get(prev.email);
       if (mapped === id) this.store.emailToId.delete(prev.email);
     }
 
-    this.store.emailToId.set(email, id);
-    this.store.byId.set(id, structuredClone({ ...user, email }));
+    this.store.emailToId.set(emailLower, id);
+    this.store.byId.set(id, structuredClone({ ...user, email: emailLower }));
   }
 
   async putMany(users: ReadonlyArray<User>): Promise<void> {

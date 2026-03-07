@@ -1,14 +1,14 @@
 /**
  * @file packages/ui/src/site/skins/default/social-menu.ui.ts
- * @module components/public/skins/default
+ * @layer ui/site/skins
  *
  * @description
- * Style par défaut du menu social.
+ * Skin UI — menu social site (thème Default).
  */
 
-import type { PublicSocialMenuUi } from "@compoz/ui/site/public-ui.types";
+import type { SiteSocialMenuUi } from "@compoz/ui/site/site-ui.types";
 
-export const defaultSocialMenuUi: PublicSocialMenuUi = {
+export const defaultSocialMenuUi: SiteSocialMenuUi = {
   list: "m-0 p-0 list-none flex flex-wrap items-center gap-3 md:gap-4",
 
   item: "shrink-0",

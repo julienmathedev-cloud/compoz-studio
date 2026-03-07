@@ -2,9 +2,18 @@
 
 /**
  * @file apps/studio/src/features/settings/seo/useSeoSettings.ts
- * @layer hooks/admin/site/seo
+ * @layer hooks/studio/site/seo
+ *
+ * @description
+ * Hook studio spécialisé pour gérer les réglages SEO via l’API.
  *
  * @remarks
+ * - Basé sur le pattern **Settings RHF-first** (`useSettingsResource`).
+ * - Travaille exclusivement sur le modèle **UI** (`SeoFormValues`).
+ * - Draft-only.
+ * - Orchestration UI-only : defaults, load, diff minimal, save, notifications.
+ * - Aucune logique métier ni validation domaine.
+ *
  * Option B (bundle read) :
  * - READ : provient du bundle global (React Query).
  * - WRITE : reste slice-by-slice (PATCH seo).
@@ -12,10 +21,10 @@
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_SEO_SETTINGS } from "@compoz/core/domain/site/defaults/seo";
-import { settingsAdminApi } from "@compoz/infra/http/studio/site-settings.client";
-import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
+import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
+import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import type { SettingsHookResult } from "@compoz/studio/features/settings/hooks/useSettingsResource";
@@ -43,8 +52,9 @@ type UseSeoSettingsResult = SettingsHookResult<SeoFormValues>;
 export function useSeoSettings(): UseSeoSettingsResult {
   const t = useTranslations();
   const qc = useQueryClient();
-  const entityLabel = t("admin.shared.entities.seo");
   const tenantId = useTenantId();
+
+  const entityLabel = t("studio.shared.entities.seo");
 
   const resource = useSettingsResource<SeoFormValues>({
     entityLabel,
@@ -60,9 +70,9 @@ export function useSeoSettings(): UseSeoSettingsResult {
     /** WRITE (slice PATCH, draft-only) + patch bundle cache. */
     save: async (next, opts) => {
       const patch = toUpdateSeoIntentDTOFromFormValues(next);
-      const dto = await settingsAdminApi.seo.patch(patch, opts);
+      const dto = await settingsStudioApi.seo.patch(patch, opts);
 
-      patchSettingsBundleCache(qc, tenantId, WRITE_CONTENT_STATE, (prev) => ({
+      patchSettingsBundleCache(qc, tenantId, DEFAULT_CONTENT_STATE, (prev) => ({
         ...prev,
         seo: dto.settings,
       }));

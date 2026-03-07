@@ -2,7 +2,7 @@
  * @file packages/infra/src/http/internal.ts
  * @layer infra/http
  * @description
- * Helpers HTTP pour le client admin : gestion du query `state`, encodage des slugs,
+ * Helpers HTTP pour le client Studio : gestion du query `state`, encodage des slugs,
  * et options standardisées pour les fetchers.
  *
  * Responsabilités : construction de routes, URL-safe, préparation d’options fetch.
@@ -10,7 +10,7 @@
  */
 
 import {
-  WRITE_CONTENT_STATE,
+  DEFAULT_CONTENT_STATE,
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
 
@@ -19,13 +19,13 @@ import {
  * Contrat : renvoie une URL correcte sans doublons.
  */
 export function withState(path: string, state: ContentState): string {
-  if (state === WRITE_CONTENT_STATE) return path;
+  if (state === DEFAULT_CONTENT_STATE) return path;
   const sep = path.includes("?") ? "&" : "?";
   return `${path}${sep}state=${state}`;
 }
 
 /**
- * Options génériques pour les fetchers du client admin.
+ * Options génériques pour les fetchers du client Studio.
  * Contrat : `signal` optionnel pour annuler la requête.
  */
 export type HttpOpts = Readonly<{ signal?: AbortSignal }>;
@@ -36,4 +36,14 @@ export type HttpOpts = Readonly<{ signal?: AbortSignal }>;
  */
 export function encodeSegment(value: string): string {
   return encodeURIComponent(value.trim());
+}
+
+/**
+ * @description Assert runtime : ces endpoints doivent retourner du JSON en cas de succès.
+ */
+export function assertJsonResponse<T>(res: T | null, errorMessage: string): T {
+  if (!res) {
+    throw new Error(errorMessage);
+  }
+  return res;
 }

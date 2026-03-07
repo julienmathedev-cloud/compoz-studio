@@ -1,6 +1,6 @@
 /**
- * @file src/core/domain/pages/use-cases/update-page.types.ts
- * @layer core/domain
+ * @file packages/core/src/domain/pages/use-cases/update-page.types.ts
+ * @layer core/domain/pages/use-cases
  * @description
  * Types du use-case de mise à jour d’une page : entrées, sorties et dépendances.
  * Définit le contrat **sans logique** (implémentation dans `update-page.ts`).
@@ -15,11 +15,6 @@ import type { SiteRepository } from "@compoz/core/domain/site/ports/site-reposit
 
 /**
  * Entrée du use-case `updatePage`.
- *
- * @property pageId - Identifiant de la page à modifier (clé stable).
- * @property title  - Nouveau titre éventuel (validé si présent).
- * @property slug   - Nouveau slug éventuel (unicité vérifiée côté use-case).
- * @property sitemap - Patch partiel du sitemap.
  */
 export type UpdatePageInput = {
   pageId: string;
@@ -36,6 +31,17 @@ export interface UpdatePageResult {
 
 export interface UpdatePageDeps {
   pages: PagesRepository;
+
+  /**
+   * Dépôt site optionnel : si fourni, permet de mettre à jour certains href
+   * (menus) lors d’un rename de slug.
+   */
   site?: SiteRepository;
+
   nowIso?: () => string;
 }
+
+export type ChangedKey = keyof Pick<
+  Page,
+  "title" | "slug" | "parentId" | "sitemap" | "paginationEnabled"
+>;

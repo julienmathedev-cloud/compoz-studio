@@ -2,9 +2,21 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/components/molecules/BlockCellsDescription.tsx
- * @layer ui/molecules
+ * @layer ui/studio/pages/blocks/molecules
+ *
+ * @description
+ * Résumé UI des cells d’un block :
+ * - titre seul
+ * - badges seuls
+ * - titre + badges
+ *
+ * @remarks
+ * - Strictement UI-only.
+ * - Supporte principalement `layoutSection`.
+ * - Fournit un fallback lisible pour les autres types de blocks.
  */
 
+import type { BlockDTO, CellDTO } from "@compoz/core/domain/pages/dto";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { Badge } from "@compoz/ui/components/ui/badge";
 import {
@@ -13,7 +25,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@compoz/ui/components/ui/tooltip";
-import type { BlockDTO, CellDTO } from "@compoz/core/domain/pages/dto";
 import { cn } from "@compoz/ui/lib/utils";
 import {
   GalleryHorizontal,
@@ -34,6 +45,7 @@ type BlockCellsDescriptionProps = Readonly<{
 
 function getCellKind(value: BlockDTO["cells"][number]): CellDTO["kind"] | null {
   if (!value || typeof value !== "object") return null;
+
   const kind = (value as { kind?: unknown }).kind;
 
   if (
@@ -44,6 +56,7 @@ function getCellKind(value: BlockDTO["cells"][number]): CellDTO["kind"] | null {
   ) {
     return kind;
   }
+
   return null;
 }
 
@@ -64,9 +77,7 @@ export function BlockCellsDescription({
 
   const title =
     block.title?.text ??
-    `${t("admin.shared.entities.blocks")}${
-      index != null ? ` ${index + 1}` : ""
-    }`;
+    `${t("studio.shared.entities.blocks")}${index != null ? ` ${index + 1}` : ""}`;
 
   if (mode === "title") {
     return (
@@ -78,15 +89,15 @@ export function BlockCellsDescription({
     );
   }
 
-  // Fallback autres types
   if (block.type !== "layoutSection") {
     return (
       <div className={cn("min-w-0", className)}>
         <Text as="p" truncate>
           {title}
         </Text>
+
         <Text as="p" variant="meta" truncate>
-          {t("admin.pageBlocksListSection.bloc.fallbackSummary", {
+          {t("studio.pageBlocksListSection.bloc.fallbackSummary", {
             type: block.type,
           })}
         </Text>
@@ -96,38 +107,37 @@ export function BlockCellsDescription({
 
   const cells = Array.isArray(block.cells) ? block.cells : [];
 
-  // ✅ Un badge par colonne (permet le tooltip "Colonne X : Kind")
   const columnBadges = cells
-    .map((cell, i) => {
+    .map((cell, cellIndex) => {
       const kind = getCellKind(cell);
       if (!kind) return null;
 
       const Icon = getKindIcon(kind);
-      const kindLabel = t(`admin.cellEditorTabs.kinds.${kind}`, {
+      const kindLabel = t(`studio.cellEditorTabs.kinds.${kind}`, {
         default: kind,
       });
 
       return {
-        key: `${i}:${kind}`,
-        col: i + 1,
+        key: `${cellIndex}:${kind}`,
+        column: cellIndex + 1,
         kind,
         kindLabel,
         Icon,
       };
     })
-    .filter((x): x is NonNullable<typeof x> => Boolean(x));
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   const badges = (
     <TooltipProvider>
       <div className={cn("flex flex-wrap items-center gap-1.5", className)}>
         {columnBadges.length > 0 ? (
-          columnBadges.map(({ key, col, kind, kindLabel, Icon }) => (
+          columnBadges.map(({ key, column, kind, kindLabel, Icon }) => (
             <Tooltip key={key}>
               <TooltipTrigger asChild>
                 <Badge
                   variant="outline"
                   className="h-8 w-8"
-                  aria-label={`${kindLabel} (colonne ${col})`}
+                  aria-label={`${kindLabel} (colonne ${column})`}
                   tabIndex={0}
                 >
                   <Icon aria-hidden="true" className="h-4 w-4" />
@@ -136,28 +146,29 @@ export function BlockCellsDescription({
               </TooltipTrigger>
 
               <TooltipContent>
-                {`${t("admin.cellEditorTabs.tabs", {
-                  number: col,
+                {`${t("studio.cellEditorTabs.tabs", {
+                  number: column,
                 })} : ${kindLabel}`}
               </TooltipContent>
             </Tooltip>
           ))
         ) : (
           <Badge variant="info">
-            {t("admin.pageBlocksListSection.bloc.empty")}
+            {t("studio.pageBlocksListSection.bloc.empty")}
           </Badge>
         )}
       </div>
     </TooltipProvider>
   );
 
-  if (mode === "badges") return badges;
+  if (mode === "badges") {
+    return badges;
+  }
 
   return (
     <div
       className={cn(
         "grid items-center gap-3",
-        // ⬇️ zone titre fixe + zone badges alignée
         "grid-cols-[minmax(4rem,10rem)_1fr]",
         className,
       )}

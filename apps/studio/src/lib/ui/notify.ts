@@ -2,9 +2,9 @@
 
 /**
  * @file apps/studio/src/lib/ui/notify.ts
- * @layer lib/ui
+ * @layer studio/lib/ui
  * @description
- * Façade de notifications (Sonner) pour l’studio.
+ * Façade de notifications (Sonner) pour le Studio.
  *
  * Contrat i18n :
  * - Les erreurs UI utilisent `uiErrors.<token>` (camelCase).
@@ -14,6 +14,11 @@
 
 import { isAbortError } from "@compoz/infra/http/abort-error";
 import { isHttpError } from "@compoz/infra/lib/api-fetch";
+import {
+  isTokenLike,
+  resolveMessage,
+  type ResolveKey,
+} from "@compoz/studio/lib/ui/resolve-ui-message";
 import type { UiErrorToken } from "@compoz/studio/lib/ui/uiError";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 import { toast as sonner, type ExternalToast } from "sonner";
@@ -28,46 +33,24 @@ const DEFAULTS = { duration: 3500 } as const;
  * Resolver global (optionnel) configuré par un Provider.
  * Permet de traduire les tokens sans modifier tous les appels.
  */
-let globalResolve: ((key: string) => string) | undefined;
+let globalResolve: ResolveKey | undefined;
 
 function withDefaults(opts?: ExternalToast): ExternalToast {
   return { ...DEFAULTS, ...(opts ?? {}) };
 }
 
 /* -------------------------------------------------------------------------- */
-/*                              Token detection                               */
-/* -------------------------------------------------------------------------- */
-
-function isUiToken(input: string): boolean {
-  // ex: networkError, http404, validationSave
-  return /^[a-z][a-zA-Z0-9]*$/.test(input);
-}
-
-function isDomainToken(input: string): boolean {
-  // ex: SLUG_REQUIRED, SEO_TITLE_REQUIRED
-  return /^[A-Z0-9_]+$/.test(input);
-}
-
-function isTokenLike(input: string): boolean {
-  return isUiToken(input) || isDomainToken(input);
-}
-
-/* -------------------------------------------------------------------------- */
 /*                              Message resolving                              */
 /* -------------------------------------------------------------------------- */
 
-function resolveUiMessage(
-  input: string,
-  resolve?: (key: string) => string,
-): string {
+function resolveUiMessage(input: string, resolve?: ResolveKey): string {
   const r = resolve ?? globalResolve;
   if (!r) return input;
 
   if (isTokenLike(input)) {
-    const key = isUiToken(input) ? "uiErrors." + input : "errors." + input;
-
-    const out = r(key);
-    if (out && out !== key) return out;
+    const out = resolveMessage(input, r);
+    // Si le resolver ne sait pas traduire, `resolveMessage` retourne `input`.
+    if (out !== input) return out;
 
     // Fallback stable UI
     const fallbackKey = "uiErrors." + UiError.errorGeneric;
@@ -145,9 +128,7 @@ function statusToDescToken(status: number): UiErrorToken {
 type NotifyFromErrorLabels = Readonly<{
   abortTitle?: string;
   abortDescription?: string;
-  networkTitle?: string;
   errorTitle?: string;
-  serverTitle?: string;
 }>;
 
 /* -------------------------------------------------------------------------- */
@@ -159,7 +140,7 @@ export const notify = {
    * Configure le resolver global (i18n).
    * À appeler une seule fois côté client (via un Provider).
    */
-  configure: (opts: { resolve?: (key: string) => string }) => {
+  configure: (opts: { resolve?: ResolveKey }) => {
     globalResolve = opts.resolve;
   },
 
@@ -187,7 +168,7 @@ export const notify = {
     error: unknown,
     fallback: UiErrorToken = UiError.errorGeneric,
     labels?: NotifyFromErrorLabels,
-    resolve?: (key: string) => string,
+    resolve?: ResolveKey,
     opts?: ExternalToast,
   ) {
     const titleAbort = resolveUiMessage(
@@ -216,7 +197,7 @@ export const notify = {
     if (isHttpError(error)) {
       const title = resolveUiMessage(statusToTitleToken(error.status), resolve);
 
-      const raw = pickMessage(error, fallback).trim();
+      const raw = pickMessage(error, String(fallback)).trim();
       const hasRaw = raw.length > 0;
 
       // Si le message est générique, on préfère une desc stable par status (http404, etc.)
@@ -230,7 +211,10 @@ export const notify = {
     }
 
     if (error instanceof Error || typeof error === "string") {
-      const desc = resolveUiMessage(pickMessage(error, fallback), resolve);
+      const desc = resolveUiMessage(
+        pickMessage(error, String(fallback)),
+        resolve,
+      );
       return sonner.error(titleError, {
         description: desc,
         ...withDefaults(opts),

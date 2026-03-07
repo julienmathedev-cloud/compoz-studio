@@ -1,5 +1,5 @@
 /**
- * @file packages/validation/src/site/primary-menu/primary-menu.ts
+ * @file packages/validation/src/site/settings/menus/primary-menu/primary-menu.ts
  * @layer schemas
  * @description
  * Définit le schéma Zod décrivant la forme frontière des réglages du menu principal.
@@ -7,7 +7,7 @@
  * Les règles UX draft-friendly appartiennent au schéma de formulaire.
  */
 
-import { MENU } from "@compoz/core/constants/limits/menu";
+import { MENU_LABEL, MENU_ITEM } from "@compoz/core/constants/limits/menu";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { AssetUrlSchema } from "@compoz/validation/common/url-fragments";
 import { z } from "zod";
@@ -22,8 +22,8 @@ export const PrimaryMenuChildSchema = z
     label: z
       .string()
       .trim()
-      .min(MENU.LABEL_MIN, ERROR_CODES.PRIMARY_MENU_LABEL_REQUIRED)
-      .max(MENU.LABEL_MAX, ERROR_CODES.PRIMARY_MENU_LABEL_TOO_LONG),
+      .min(MENU_LABEL.MIN, ERROR_CODES.PRIMARY_MENU_LABEL_REQUIRED)
+      .max(MENU_LABEL.MAX, ERROR_CODES.PRIMARY_MENU_LABEL_TOO_LONG),
 
     /** Href canonique : asset URL (abs/rel) requise. */
     href: AssetUrlSchema,
@@ -39,26 +39,16 @@ export const PrimaryMenuChildSchema = z
 
 export const PrimaryMenuItemSchema = z
   .object({
-    /** Libellé canonique : requis (min/max). */
     label: z
       .string()
       .trim()
-      .min(MENU.LABEL_MIN, ERROR_CODES.PRIMARY_MENU_LABEL_REQUIRED)
-      .max(MENU.LABEL_MAX, ERROR_CODES.PRIMARY_MENU_LABEL_TOO_LONG),
-
-    /**
-     * Href canonique :
-     * - item feuille : requis (asset URL)
-     * - item parent (avec children) : optionnel (certains parents sont “ouvrants” uniquement)
-     */
+      .min(MENU_LABEL.MIN, ERROR_CODES.PRIMARY_MENU_LABEL_REQUIRED)
+      .max(MENU_LABEL.MAX, ERROR_CODES.PRIMARY_MENU_LABEL_TOO_LONG),
     href: AssetUrlSchema.optional(),
-
-    /** Ouverture nouvel onglet (interdit si parent avec children). */
     newTab: z.boolean(),
-
-    /** Enfants (max 2 niveaux géré côté UI/renderer). */
     children: z.array(PrimaryMenuChildSchema).optional(),
   })
+  .strict()
   .superRefine((val, ctx) => {
     const hasChildren = Array.isArray(val.children) && val.children.length > 0;
 
@@ -79,8 +69,7 @@ export const PrimaryMenuItemSchema = z
         message: ERROR_CODES.PRIMARY_MENU_HREF_REQUIRED,
       });
     }
-  })
-  .strict();
+  });
 
 /* -------------------------------------------------------------------------- */
 /*                                  Settings                                  */
@@ -88,7 +77,7 @@ export const PrimaryMenuItemSchema = z
 
 export const PrimaryMenuSettingsSchema = z
   .object({
-    items: z.array(PrimaryMenuItemSchema).max(MENU.ITEM_MAX, {
+    items: z.array(PrimaryMenuItemSchema).max(MENU_ITEM.MAX, {
       message: ERROR_CODES.PRIMARY_MENU_TOO_MANY_ITEMS,
     }),
   })

@@ -2,29 +2,31 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/components/molecules/LinkFieldsItem.tsx
- * @layer ui/molecules
+ * @layer ui/studio/molecules
  *
  * @description
  * Éditeur de lien (href contrôlé) avec options internes et bascule interne/externe.
  *
  * @remarks
  * - Controlled (sans RHF).
- * - UI-only : normalisation d'édition via `toExternalDraft` / `toInternalDraft`.
- * - S'appuie sur `resolveLinkFlags` pour dériver le mode externe depuis la valeur affichée.
+ * - UI-only : normalisation d’édition via `toExternalDraft` / `toInternalDraft`.
+ * - S’appuie sur `resolveLinkFlags` pour dériver le mode externe depuis la valeur affichée.
  * - Peut être utilisé par Menu, GalleryMenu (href sur image), etc.
  */
+
+import { useTranslations } from "next-intl";
+
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
-import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
-import { resolveLinkFlags } from "@compoz/ui/lib/links/helpers";
-import { toExternalDraft, toInternalDraft } from "@compoz/ui/lib/normalize";
-import { cn } from "@compoz/ui/lib/utils";
-import { ROW_CENTER, STACK_MD } from "@compoz/ui/styles/studio/layout";
 import { ExpandableLayout } from "@compoz/studio/components/layouts/ExpandableLayout";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
 import { MenuBadges } from "@compoz/studio/features/settings/menus/_shared/MenuBadges";
-import { useTranslations } from "next-intl";
+import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
+import { resolveLinkFlags } from "@compoz/ui/lib/links/helpers";
+import { toExternalDraft, toInternalDraft } from "@compoz/ui/lib/normalize";
+import { cn } from "@compoz/ui/lib/utils";
+import { ROW_CENTER, STACK_MD } from "@compoz/ui/styles/studio/layout";
 
 type LinkFieldsItemProps = Readonly<{
   /** Préfixe stable pour générer les IDs ARIA. */
@@ -85,16 +87,16 @@ export function LinkFieldsItem({
     ? createFieldIds(idPrefix, "internalPicker")
     : undefined;
 
-  // Valeur source (vue) : si parentHasChildren, on force interne en draft
+  // Valeur source (vue) : si parentHasChildren, on force interne en draft.
   const hrefRaw = !parentHasChildren
     ? String(href ?? "")
     : toInternalDraft(String(href ?? ""));
 
-  // Mode externe dérivé
+  // Mode externe dérivé.
   const flags = resolveLinkFlags(hrefRaw);
   const isExternal = flags.rawExternal;
 
-  // Valeur affichée (draft) cohérente avec le mode
+  // Valeur affichée (draft) cohérente avec le mode.
   const hrefDraft = isExternal
     ? toExternalDraft(hrefRaw)
     : toInternalDraft(hrefRaw);
@@ -115,54 +117,55 @@ export function LinkFieldsItem({
   return (
     <ExpandableLayout
       id={idPrefix}
-      label={t("admin.menuLink.expandableLabel")}
+      label={t("studio.menuLink.expandableLabel")}
       defaultOpen={false}
       disabled={isBusy}
       summary={
         <InputField
           ids={hrefIds}
-          label={t("admin.menuLink.href.label")}
+          label={t("studio.menuLink.href.label")}
           value={hrefDraft}
-          onChange={(v) => {
+          onChange={(value) => {
             // On garde le mode courant (interne/externe), on ne le “devine” pas au milieu d’une saisie.
             const normalized = isExternal
-              ? toExternalDraft(v)
-              : toInternalDraft(v);
+              ? toExternalDraft(value)
+              : toInternalDraft(value);
+
             onHrefChange(normalized);
           }}
           onBlur={() => {
             onValidateNow?.(true);
           }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
               onValidateNow?.(true);
             }
           }}
-          placeholder={t("admin.menuLink.href.placeholder")}
+          placeholder={t("studio.menuLink.href.placeholder")}
           disabled={disabledHref}
           invalid={invalid}
           error={error}
           help={
             parentHasChildren
-              ? t("admin.menuLink.hasChildrenHelp")
-              : t("admin.menuLink.defaultHelp")
+              ? t("studio.menuLink.hasChildrenHelp")
+              : t("studio.menuLink.defaultHelp")
           }
         />
       }
     >
       <div className={cn(STACK_MD)}>
-        {canShowInternalPicker && (
+        {canShowInternalPicker ? (
           <SelectField
             ids={internalPickerIds!}
-            label={t("admin.menuLink.internalPicker.label")}
+            label={t("studio.menuLink.internalPicker.label")}
             value=""
-            onChange={(val) => {
-              if (!val) return;
+            onChange={(value) => {
+              if (!value) return;
 
-              onHrefChange(String(val));
+              onHrefChange(String(value));
 
-              // UX : sur un lien interne, on coupe newTab si dispo
+              // UX : sur un lien interne, on coupe newTab si dispo.
               if (canShowNewTab) onNewTabChange(false);
 
               onValidateNow?.(false);
@@ -171,16 +174,16 @@ export function LinkFieldsItem({
               value: opt.value,
               label: opt.label,
             }))}
-            placeholder={t("admin.menuLink.internalPicker.placeholder")}
+            placeholder={t("studio.menuLink.internalPicker.placeholder")}
             disabled={disabledHref}
           />
-        )}
+        ) : null}
 
         <div className={cn(ROW_CENTER)}>
           <SwitchField
             ids={linkTypeIds}
-            label={t("admin.menuLink.externalSwitch.label")}
-            help={t("admin.menuLink.externalSwitch.help")}
+            label={t("studio.menuLink.externalSwitch.label")}
+            help={t("studio.menuLink.externalSwitch.help")}
             checked={parentHasChildren ? false : isExternal}
             onCheckedChange={(checked) => {
               if (parentHasChildren) return;
@@ -191,8 +194,8 @@ export function LinkFieldsItem({
                 ? toExternalDraft(hrefDraft)
                 : toInternalDraft(hrefDraft);
 
-              // UX : externe => newTab true par défaut (si dispo)
-              if (canShowNewTab) onNewTabChange(checked);
+              // UX : externe => newTab true par défaut (si dispo).
+              if (canShowNewTab) onNewTabChange(checked === true);
 
               onHrefChange(normalized);
               onValidateNow?.(false);
@@ -208,12 +211,12 @@ export function LinkFieldsItem({
         {canShowNewTab ? (
           <SwitchField
             ids={newTabIds}
-            label={t("admin.menuLink.newTabSwitch.label")}
-            help={t("admin.menuLink.newTabSwitch.help")}
+            label={t("studio.menuLink.newTabSwitch.label")}
+            help={t("studio.menuLink.newTabSwitch.help")}
             checked={parentHasChildren ? false : Boolean(newTab)}
-            onCheckedChange={(v) => {
+            onCheckedChange={(value) => {
               if (parentHasChildren) return;
-              onNewTabChange(Boolean(v));
+              onNewTabChange(value === true);
             }}
             disabled={disabledNewTab}
           />

@@ -2,27 +2,27 @@
 
 /**
  * @file apps/studio/src/features/settings/seo/SeoSection.tsx
- * @layer ui/sections
+ * @layer ui/studio/sections
  *
  * @description
- * Section d’administration dédiée au SEO : chargement (shell), édition (form), warnings UI et confirmation au submit.
+ * Section Studio dédiée au SEO : chargement (shell), édition (form), warnings UI et confirmation au submit.
  *
  * @remarks
  * - Le chargement initial est géré par `SettingsSection` (shell).
  * - Monte `useSeoSettings` (baseline + save) et câble `SeoForm`.
- * - Affiche les warnings non bloquants en `HintList` (dérivés du form).
+ * - Affiche les warnings non bloquants via `StudioWarningsPanel` (dérivés du form).
  * - Au submit : recalcule les warnings, demande confirmation, puis sauvegarde.
  * - Strictement UI-only : aucune logique métier.
  */
 
+import { useTranslations } from "next-intl";
+import { useCallback, useState } from "react";
+
 import { uploadImage } from "@compoz/infra/http/studio/media.client";
-import { formatBytes } from "@compoz/ui/lib/format-bytes";
-import type { SeoFormValues } from "@compoz/validation/site/settings/seo/seo-form";
-import { ExpandableLayout } from "@compoz/studio/components/layouts/ExpandableLayout";
 import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
-import { HintList } from "@compoz/studio/components/molecules/feedback/HintList";
-import { useConfirmList } from "@compoz/studio/features/confirm/useConfirmList";
-import { useAdminDirtyGuard } from "@compoz/studio/features/dirty-guard/useAdminDirtyGuard";
+import { StudioWarningsPanel } from "@compoz/studio/features/_shared/components/StudioWarningsPanel";
+import { useStudioSaveDespiteWarningsConfirm } from "@compoz/studio/features/_shared/hooks/useStudioSaveDespiteWarningsConfirm";
+import { useStudioDirtyGuard } from "@compoz/studio/features/dirty-guard/useStudioDirtyGuard";
 import { SeoForm } from "@compoz/studio/features/settings/seo/components/organisms/SeoForm";
 import { useSeoSettings } from "@compoz/studio/features/settings/seo/useSeoSettings";
 import {
@@ -30,8 +30,8 @@ import {
   type SeoWarningKey,
 } from "@compoz/studio/features/settings/seo/validate";
 import { notify } from "@compoz/studio/lib/ui/notify";
-import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
+import { formatBytes } from "@compoz/ui/lib/format-bytes";
+import type { SeoFormValues } from "@compoz/validation/site/settings/seo/seo-form";
 
 type UploadedRasterImage = Readonly<{
   url: string;
@@ -40,10 +40,10 @@ type UploadedRasterImage = Readonly<{
 }>;
 
 export function SeoSection() {
-  const confirmList = useConfirmList();
   const t = useTranslations();
+  const { confirmSaveDespiteWarnings } = useStudioSaveDespiteWarningsConfirm();
 
-  const dirtyGuard = useAdminDirtyGuard();
+  const dirtyGuard = useStudioDirtyGuard();
 
   // Hook settings : modèle UI (RHF).
   const { baseline, isLoading, isSaving, save } = useSeoSettings();
@@ -51,12 +51,7 @@ export function SeoSection() {
   // Warnings UI (non bloquants).
   const [warningKeys, setWarningKeys] = useState<SeoWarningKey[]>([]);
 
-  const warningHints = useMemo(
-    () => warningKeys.map((k) => t(`admin.seoSection.warnings.${k}`)),
-    [warningKeys, t],
-  );
-
-  // ✅ Erreurs bloquantes (near-field) : count remonté par le form.
+  // Erreurs bloquantes (near-field) : count remonté par le form.
   const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
 
   /**
@@ -68,7 +63,7 @@ export function SeoSection() {
 
       if (res.wasResized || res.wasCompressed) {
         notify.info(
-          t("admin.shared.upload.optimized", {
+          t("studio.shared.upload.optimized", {
             from: formatBytes(res.originalSize),
             to: formatBytes(res.optimizedSize),
           }),
@@ -91,66 +86,37 @@ export function SeoSection() {
 
       // 1) Warnings recalculés au submit (source de vérité).
       const warningKeysNow = computeSeoWarnings(values);
-      const warningHintsNow = warningKeysNow.map((k) =>
-        t(`admin.seoSection.warnings.${k}`),
-      );
 
       // 2) Confirmation si warnings.
-      if (warningHintsNow.length > 0) {
-        const ok = await confirmList({
-          title: t("admin.shared.confirm.saveDespiteWarnings.title"),
-          intro: t("admin.shared.confirm.saveDespiteWarnings.intro"),
-          items: warningHintsNow,
-          confirmLabel: t(
-            "admin.shared.confirm.saveDespiteWarnings.confirmLabel",
-          ),
-          cancelLabel: t("common.cancel"),
-          requireAckLabel: t(
-            "admin.shared.confirm.saveDespiteWarnings.requireAckLabel",
-          ),
-          tone: "default",
-        });
-        if (!ok) return;
-      }
+      const ok = await confirmSaveDespiteWarnings(
+        warningKeysNow,
+        "studio.seoSection.warnings",
+      );
+
+      if (!ok) return;
 
       // 3) Save.
       await save(values);
-
       dirtyGuard.setDirty(false);
     },
-    [confirmList, isLoading, isSaving, dirtyGuard, save, t],
+    [confirmSaveDespiteWarnings, isLoading, isSaving, dirtyGuard, save],
   );
 
   return (
     <SettingsSection
       id="seo"
-      title={t("admin.seoSection.section.title")}
-      description={t("admin.seoSection.section.description")}
+      title={t("studio.seoSection.section.title")}
+      description={t("studio.seoSection.section.description")}
       isBusy={isSaving}
       isLoading={isLoading}
       isDirty={dirtyGuard.isDirty}
       blockingErrorsCount={blockingErrorsCount}
     >
-      <ExpandableLayout
+      <StudioWarningsPanel
         id="seo-warnings"
-        label={
-          warningHints.length > 0
-            ? t("admin.shared.warningsPanel.labelWithCount", {
-                count: warningHints.length,
-              })
-            : t("admin.shared.warningsPanel.label")
-        }
-        defaultOpen={false}
-        disabled={warningHints.length === 0}
-      >
-        {!isLoading && warningHints.length > 0 ? (
-          <HintList
-            variant="warning"
-            title={t("admin.shared.warningsPanel.title")}
-            hints={warningHints}
-          />
-        ) : null}
-      </ExpandableLayout>
+        warningKeys={warningKeys}
+        warningMessageKeyPrefix="studio.seoSection.warnings"
+      />
 
       <SeoForm
         initialValues={baseline}

@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/settings/social/components/molecules/NewSocialLinkField.tsx
- * @layer ui/molecules
+ * @layer ui/studio/molecules
  *
  * @description
  * Champ texte contrôlé pour lien social (email / URL) avec préfixe figé via `InputGroup`.
@@ -14,8 +14,7 @@
  * - Sur Enter, le composant évite le submit et déclenche `onBlur` (point de validation).
  * - UI-only : aucune logique métier.
  */
-import { ErrorText } from "@compoz/studio/components/atoms/typography/ErrorText";
-import { FieldMetaBar } from "@compoz/studio/components/molecules/fields/FieldMetaBar";
+
 import { useTranslations } from "next-intl";
 import type {
   HTMLInputTypeAttribute,
@@ -23,17 +22,23 @@ import type {
   KeyboardEvent,
 } from "react";
 
+import { ErrorText } from "@compoz/studio/components/atoms/typography/ErrorText";
+import { FieldMetaBar } from "@compoz/studio/components/molecules/fields/FieldMetaBar";
+
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldLabel,
 } from "@compoz/ui/components/ui/field";
+
 import { Input } from "@compoz/ui/components/ui/input";
+
 import {
   InputGroup,
   InputGroupText,
 } from "@compoz/ui/components/ui/input-group";
+
 import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 
 /**
@@ -81,7 +86,7 @@ type NewSocialLinkFieldProps = Readonly<{
 }>;
 
 /**
- * Champ de saisie d’un lien social avec préfixe figé (admin).
+ * Champ de saisie d’un lien social avec préfixe figé (studio).
  */
 export function NewSocialLinkField({
   ids,
@@ -99,11 +104,13 @@ export function NewSocialLinkField({
   helpUrl,
 }: NewSocialLinkFieldProps) {
   const t = useTranslations();
+
   const { fieldId, helpId, errorId } = ids;
 
   const prefix = isEmail ? "mailto:" : "https://";
 
   const inputType: HTMLInputTypeAttribute = isEmail ? "email" : "url";
+
   const inputMode: InputHTMLAttributes<HTMLInputElement>["inputMode"] = isEmail
     ? "email"
     : "url";
@@ -115,6 +122,7 @@ export function NewSocialLinkField({
 
   // aria-describedby = help + error (si présents)
   const describedByIds: string[] = [];
+
   if (help && helpId) describedByIds.push(helpId);
   if (error && errorId) describedByIds.push(errorId);
 
@@ -123,9 +131,9 @@ export function NewSocialLinkField({
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
-      // Par défaut : on évite de soumettre le form parent sur Enter
+      // On évite le submit du form parent et on déclenche le blur
       e.preventDefault();
-      onBlur?.(); // on déclenche le même “point de validation” que blur
+      onBlur?.();
     }
 
     onKeyDown?.(e);
@@ -134,7 +142,7 @@ export function NewSocialLinkField({
   return (
     <Field data-invalid={isInvalid || undefined} className="min-w-0">
       <FieldLabel htmlFor={fieldId}>
-        {t("admin.socialLinkField.label")}
+        {t("studio.socialLinkField.label")}
       </FieldLabel>
 
       <InputGroup className="pl-2">

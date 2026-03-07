@@ -1,6 +1,6 @@
 /**
- * @file src/core/domain/pages/validators/blocks.ts
- * @layer core/domain
+ * @file packages/core/src/domain/pages/validators/blocks.ts
+ * @layer core/domain/pages/validators
  * @description
  * Invariants métier **bloquants** applicables aux blocks d’une page (V0.5).
  *
@@ -20,7 +20,7 @@ import { assertCell } from "@compoz/core/domain/pages/validators/cells";
  *
  * @throws DomainError
  */
-export function assertBlocks(blocks: Block[]): void {
+export function assertBlocks(blocks: ReadonlyArray<Block>): void {
   if (!Array.isArray(blocks)) {
     throw new DomainError({
       code: EC.BLOCKS_INVALID,
@@ -35,9 +35,7 @@ export function assertBlocks(blocks: Block[]): void {
   for (let i = 0; i < blocks.length; i += 1) {
     const block = blocks[i];
 
-    // ---------------------------------------------------------------------
-    // invariants génériques
-    // ---------------------------------------------------------------------
+    /* --------------------------- invariants génériques -------------------------- */
 
     const id = block.id?.trim?.() ?? "";
     if (!id) {
@@ -69,9 +67,7 @@ export function assertBlocks(blocks: Block[]): void {
       }
     }
 
-    // ---------------------------------------------------------------------
-    // invariants spécifiques V0.5 : LayoutSectionBlock uniquement
-    // ---------------------------------------------------------------------
+    /* ---------------------- invariants spécifiques (V0.5) ---------------------- */
 
     if (block.type !== "layoutSection") {
       throw new DomainError({
@@ -121,9 +117,7 @@ export function assertBlocks(blocks: Block[]): void {
       });
     }
 
-    // ---------------------------------------------------------------------
-    // title (V0.5) — désormais ALWAYS present + toggled via titleEnabled
-    // ---------------------------------------------------------------------
+    /* ------------------------------ title (V0.5) ------------------------------ */
 
     if (typeof block.titleEnabled !== "boolean") {
       throw new DomainError({
@@ -134,7 +128,6 @@ export function assertBlocks(blocks: Block[]): void {
     }
 
     const title = block.title;
-
     if (!title || typeof title !== "object") {
       throw new DomainError({
         code: EC.LAYOUT_SECTION_TITLE_REQUIRED,
@@ -143,10 +136,8 @@ export function assertBlocks(blocks: Block[]): void {
       });
     }
 
-    const titleObj = title;
-
-    const text = typeof titleObj.text === "string" ? titleObj.text : "";
-    const display = titleObj.display;
+    const text = typeof title.text === "string" ? title.text : "";
+    const display = title.display;
 
     if (display !== "visible" && display !== "sr-only") {
       throw new DomainError({
@@ -168,5 +159,81 @@ export function assertBlocks(blocks: Block[]): void {
     for (let j = 0; j < cells.length; j += 1) {
       assertCell(cells[j], ["blocks", i, "cells", j]);
     }
+  }
+}
+
+type AssertInsertAtProps = {
+  insertAt: number;
+  size: number;
+};
+
+export function assertInsertAt({ insertAt, size }: AssertInsertAtProps): void {
+  if (insertAt < 0 || insertAt > size) {
+    throw new DomainError({
+      code: EC.BLOCKS_INVALID,
+      message: EC.BLOCKS_INVALID,
+      details: { path: ["insertAt"], meta: { insertAt, size } },
+    });
+  }
+}
+
+type AssertPermutationProps = {
+  ordered: ReadonlyArray<string>;
+  current: ReadonlyArray<string>;
+};
+
+export function assertPermutation({
+  ordered,
+  current,
+}: AssertPermutationProps): void {
+  if (!Array.isArray(ordered)) {
+    throw new DomainError({
+      code: EC.BLOCKS_INVALID,
+      message: EC.BLOCKS_INVALID,
+      details: { path: ["orderedBlockIds"] },
+    });
+  }
+
+  const currentSet = new Set(current.map((id) => String(id ?? "").trim()));
+  const seen = new Set<string>();
+
+  for (let i = 0; i < ordered.length; i += 1) {
+    const id = ordered[i]?.trim?.() ?? "";
+
+    if (!id) {
+      throw new DomainError({
+        code: EC.BLOCK_ID_REQUIRED,
+        message: EC.BLOCK_ID_REQUIRED,
+        details: { path: ["orderedBlockIds", i] },
+      });
+    }
+
+    if (seen.has(id)) {
+      throw new DomainError({
+        code: EC.BLOCK_ID_DUPLICATE,
+        message: EC.BLOCK_ID_DUPLICATE,
+        details: { path: ["orderedBlockIds", i], meta: { id } },
+      });
+    }
+    seen.add(id);
+
+    if (!currentSet.has(id)) {
+      throw new DomainError({
+        code: EC.BLOCK_NOT_FOUND,
+        message: EC.BLOCK_NOT_FOUND,
+        details: { path: ["orderedBlockIds", i], meta: { id } },
+      });
+    }
+  }
+
+  if (ordered.length !== current.length) {
+    throw new DomainError({
+      code: EC.BLOCKS_INVALID,
+      message: EC.BLOCKS_INVALID,
+      details: {
+        path: ["orderedBlockIds"],
+        meta: { expected: current.length, actual: ordered.length },
+      },
+    });
   }
 }

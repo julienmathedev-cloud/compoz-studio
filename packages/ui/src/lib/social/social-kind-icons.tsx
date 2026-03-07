@@ -1,8 +1,6 @@
-"use client";
-
 /**
  * @file packages/ui/src/lib/social/social-kind-icons.tsx
- * @layer lib/social
+ * @layer ui/lib/social
  * @description
  * Source de vérité UI pour les réseaux sociaux :
  * - kinds supportés (ordre),
@@ -77,20 +75,20 @@ export type SocialKindOption = Readonly<{
  * NB : le fallback FR reste défini dans `SOCIAL_KIND_LABEL` pour les usages non i18n.
  */
 export const SOCIAL_KIND_LABEL_KEYS = {
-  website: "admin.social.kind.website",
-  email: "admin.social.kind.email",
-  phone: "admin.social.kind.phone",
-  custom: "admin.social.kind.custom",
-  whatsapp: "admin.social.kind.whatsapp",
-  github: "admin.social.kind.github",
-  linkedin: "admin.social.kind.linkedin",
-  instagram: "admin.social.kind.instagram",
-  x: "admin.social.kind.x",
-  youtube: "admin.social.kind.youtube",
-  tiktok: "admin.social.kind.tiktok",
-  facebook: "admin.social.kind.facebook",
-  behance: "admin.social.kind.behance",
-  dribbble: "admin.social.kind.dribbble",
+  website: "studio.social.kind.website",
+  email: "studio.social.kind.email",
+  phone: "studio.social.kind.phone",
+  custom: "studio.social.kind.custom",
+  whatsapp: "studio.social.kind.whatsapp",
+  github: "studio.social.kind.github",
+  linkedin: "studio.social.kind.linkedin",
+  instagram: "studio.social.kind.instagram",
+  x: "studio.social.kind.x",
+  youtube: "studio.social.kind.youtube",
+  tiktok: "studio.social.kind.tiktok",
+  facebook: "studio.social.kind.facebook",
+  behance: "studio.social.kind.behance",
+  dribbble: "studio.social.kind.dribbble",
 } as const satisfies Readonly<Record<SocialKind, string>>;
 
 /**
@@ -109,16 +107,18 @@ export type SocialKindTranslator = (key: SocialKindLabelKey) => string;
 /*                           Simple Icons renderer                             */
 /* -------------------------------------------------------------------------- */
 
+type SimpleBrandIconProps = { icon: SimpleIcon } & SVGProps<SVGSVGElement>;
+
 /**
  * Rend une icône `simple-icons` en SVG React.
  * - Couleur = `currentColor` (hérite du texte)
- * - `aria-hidden` par défaut (dans un Select, l'icône est décorative)
+ * - Décoratif par défaut (`aria-hidden`)
  */
 function SimpleBrandIcon({
   icon,
   className,
   ...svgProps
-}: { icon: SimpleIcon } & SVGProps<SVGSVGElement>) {
+}: SimpleBrandIconProps) {
   const viewBox = icon.viewBox ?? "0 0 24 24";
 
   return (
@@ -126,8 +126,8 @@ function SimpleBrandIcon({
       viewBox={viewBox}
       fill="currentColor"
       xmlns="http://www.w3.org/2000/svg"
-      role="img"
-      aria-hidden
+      aria-hidden="true"
+      focusable="false"
       className={className}
       {...svgProps}
     >
@@ -216,7 +216,9 @@ const DEFAULT_ICON_CLASS = "h-4 w-4 flex-none overflow-visible";
  * - `twitter` (legacy dataset) → `x`
  */
 export function normalizeSocialKind(kind: string): string {
-  const k = kind.trim().toLowerCase();
+  const k = String(kind ?? "")
+    .trim()
+    .toLowerCase();
   return k === "twitter" ? "x" : k;
 }
 

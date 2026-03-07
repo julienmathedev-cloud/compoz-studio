@@ -29,12 +29,25 @@ export interface PublicRevalidator {
   revalidatePublished(params: { slugs: ReadonlyArray<string> }): Promise<void>;
 }
 
+/**
+ * Contexte runtime injecté par l’application (pas de `process.env` dans le domain).
+ */
+export interface PublishSiteRuntime {
+  /** True si l’exécution se fait en environnement production. */
+  isProd: boolean;
+}
+
 /** Dépendances injectées pour la publication du site. */
 export interface PublishSiteDeps {
   /** Dépôt “site” (index + settings). */
   site: SiteRepository;
+
   /** Dépôt “pages” (CRUD pages). */
   pages: PagesRepository;
+
+  /** Contexte runtime (env) injecté. */
+  runtime: PublishSiteRuntime;
+
   /**
    * Revalidation côté infra (Next ISR) déclenchée après publish.
    * Optionnel pour éviter le couplage domain ↔ framework.
@@ -56,7 +69,7 @@ export interface PublishSiteInput {
 
   /**
    * Option de nettoyage des pages cibles orphelines (non listées dans l’index).
-   * Actuellement non implémenté : ce flag est ignoré.
+   * V0.5 : implémenté via l’index cible (SoT)`.
    */
   cleanOrphans?: boolean;
 }

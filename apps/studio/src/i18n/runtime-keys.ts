@@ -1,6 +1,6 @@
 /**
  * @file apps/studio/src/i18n/runtime-keys.ts
- * @layer i18n
+ * @layer studio/i18n
  * @description
  * Registre des clés i18n **non détectables statiquement** (i18n Ally / scans)
  * car construites dynamiquement au runtime (template strings, concat, mapping).
@@ -13,24 +13,27 @@
  * - Ce fichier contient uniquement des **clés i18n** (strings).
  * - Pas de textes traduits.
  * - Pas de logique.
+ *
+ * @remarks
+ * - Consommé par `scripts/check-i18n.ts` pour valider que toutes les clés existent.
  */
 
 export const I18N_RUNTIME_KEYS = {
   /**
    * MenuBadges.tsx
-   * - t(`admin.menuBadges.kinds.${k}`)
+   * - t(`studio.menuBadges.kinds.${k}`)
    * - k ∈ ("group" | "external" | "internal")
    */
   menuBadges: {
     kinds: [
-      "admin.menuBadges.kinds.group",
-      "admin.menuBadges.kinds.external",
-      "admin.menuBadges.kinds.internal",
+      "studio.menuBadges.kinds.group",
+      "studio.menuBadges.kinds.external",
+      "studio.menuBadges.kinds.internal",
     ] as const,
   },
 
   /**
-   * Social kinds (admin)
+   * Social kinds (studio)
    * Utilisés via mapping (Select options) et parfois i18n runtime.
    *
    * Note :
@@ -40,136 +43,136 @@ export const I18N_RUNTIME_KEYS = {
    */
   socialKinds: {
     labels: [
-      "admin.social.kind.website",
-      "admin.social.kind.email",
-      "admin.social.kind.phone",
-      "admin.social.kind.custom",
-      "admin.social.kind.whatsapp",
-      "admin.social.kind.github",
-      "admin.social.kind.linkedin",
-      "admin.social.kind.instagram",
-      "admin.social.kind.x",
-      "admin.social.kind.youtube",
-      "admin.social.kind.tiktok",
-      "admin.social.kind.facebook",
-      "admin.social.kind.behance",
-      "admin.social.kind.dribbble",
+      "studio.social.kind.website",
+      "studio.social.kind.email",
+      "studio.social.kind.phone",
+      "studio.social.kind.custom",
+      "studio.social.kind.whatsapp",
+      "studio.social.kind.github",
+      "studio.social.kind.linkedin",
+      "studio.social.kind.instagram",
+      "studio.social.kind.x",
+      "studio.social.kind.youtube",
+      "studio.social.kind.tiktok",
+      "studio.social.kind.facebook",
+      "studio.social.kind.behance",
+      "studio.social.kind.dribbble",
     ] as const,
   },
 
   /**
    * Tabs / Onglets (si tu génères les clés via template string)
    * Exemple :
-   * - t(`admin.dashboard.tabs.${tabId}`)
+   * - t(`studio.dashboard.tabs.${tabId}`)
    *
    * 👉 Ajoute ici les clés exactes quand tu confirmes la liste.
    */
   dashboardTabs: {
     labels: [
-      "admin.dashboard.tabs.overview",
-      "admin.dashboard.tabs.identity",
-      "admin.dashboard.tabs.menu",
-      "admin.dashboard.tabs.social",
-      "admin.dashboard.tabs.header",
-      "admin.dashboard.tabs.footer",
-      "admin.dashboard.tabs.pages",
-      "admin.dashboard.tabs.blocks",
-      "admin.dashboard.tabs.seo",
+      "studio.dashboard.tabs.overview",
+      "studio.dashboard.tabs.identity",
+      "studio.dashboard.tabs.menu",
+      "studio.dashboard.tabs.social",
+      "studio.dashboard.tabs.header",
+      "studio.dashboard.tabs.footer",
+      "studio.dashboard.tabs.pages",
+      "studio.dashboard.tabs.blocks",
+      "studio.dashboard.tabs.seo",
     ] as const,
   },
 
   previewFrame: {
     devices: [
-      "admin.previewFrame.devices.mobile",
-      "admin.previewFrame.devices.tablet",
-      "admin.previewFrame.devices.laptop",
-      "admin.previewFrame.devices.desktop",
-      "admin.previewFrame.devices.wqhd",
-      "admin.previewFrame.devices.uhd",
+      "studio.previewFrame.devices.mobile",
+      "studio.previewFrame.devices.tablet",
+      "studio.previewFrame.devices.laptop",
+      "studio.previewFrame.devices.desktop",
+      "studio.previewFrame.devices.wqhd",
+      "studio.previewFrame.devices.uhd",
     ] as const,
   },
 
   footerSection: {
     warnings: [
-      "admin.footerSection.warnings.copyrightEmpty",
-      "admin.footerSection.warnings.footerLooksEmpty",
+      "studio.footerSection.warnings.copyrightEmpty",
+      "studio.footerSection.warnings.footerLooksEmpty",
     ] as const,
   },
 
   headerSection: {
-    warnings: ["admin.headerSection.warnings.noBranding"] as const,
+    warnings: ["studio.headerSection.warnings.noBranding"] as const,
   },
 
   identitySection: {
     warnings: [
-      "admin.identitySection.warnings.logoMissing",
-      "admin.identitySection.warnings.faviconMissing",
-      "admin.identitySection.warnings.logoAndFaviconMissing",
+      "studio.identitySection.warnings.logoMissing",
+      "studio.identitySection.warnings.faviconMissing",
+      "studio.identitySection.warnings.logoAndFaviconMissing",
     ] as const,
   },
 
   legalMenuSection: {
     warnings: [
-      "admin.legalMenuSection.warnings.legalMenuEmpty",
-      "admin.legalMenuSection.warnings.dupLabelsTop",
-      "admin.legalMenuSection.warnings.dupLinksTop",
-      "admin.legalMenuSection.warnings.externalNoNewTab",
-      "admin.legalMenuSection.warnings.externalPrefixOnly",
-      "admin.legalMenuSection.warnings.internalHrefNotFound",
+      "studio.legalMenuSection.warnings.legalMenuEmpty",
+      "studio.legalMenuSection.warnings.dupLabelsTop",
+      "studio.legalMenuSection.warnings.dupLinksTop",
+      "studio.legalMenuSection.warnings.externalNoNewTab",
+      "studio.legalMenuSection.warnings.externalPrefixOnly",
+      "studio.legalMenuSection.warnings.internalHrefNotFound",
     ] as const,
   },
 
   pageEditSection: {
     warnings: [
-      "admin.pageEditSection.warnings.slugNotNormalized",
-      "admin.pageEditSection.warnings.titleLooksThin",
+      "studio.pageEditSection.warnings.slugNotNormalized",
+      "studio.pageEditSection.warnings.titleLooksThin",
     ] as const,
   },
 
   primaryMenuSection: {
     warnings: [
-      "admin.primaryMenuSection.warnings.primaryMenuEmpty",
-      "admin.primaryMenuSection.warnings.dupLabelsTop",
-      "admin.primaryMenuSection.warnings.dupLinksTop",
-      "admin.primaryMenuSection.warnings.dupLabelsChildren",
-      "admin.primaryMenuSection.warnings.dupLinksChildren",
-      "admin.primaryMenuSection.warnings.externalNoNewTab",
-      "admin.primaryMenuSection.warnings.externalPrefixOnly",
-      "admin.primaryMenuSection.warnings.internalHrefNotFound",
+      "studio.primaryMenuSection.warnings.primaryMenuEmpty",
+      "studio.primaryMenuSection.warnings.dupLabelsTop",
+      "studio.primaryMenuSection.warnings.dupLinksTop",
+      "studio.primaryMenuSection.warnings.dupLabelsChildren",
+      "studio.primaryMenuSection.warnings.dupLinksChildren",
+      "studio.primaryMenuSection.warnings.externalNoNewTab",
+      "studio.primaryMenuSection.warnings.externalPrefixOnly",
+      "studio.primaryMenuSection.warnings.internalHrefNotFound",
     ] as const,
   },
 
   seoSection: {
     warnings: [
-      "admin.seoSection.warnings.description.length",
-      "admin.seoSection.warnings.titleTemplate.placeholderMissing",
-      "admin.seoSection.warnings.robots.noindex",
-      "admin.seoSection.warnings.openGraph.image.missing",
+      "studio.seoSection.warnings.description.length",
+      "studio.seoSection.warnings.titleTemplate.placeholderMissing",
+      "studio.seoSection.warnings.robots.noindex",
+      "studio.seoSection.warnings.openGraph.image.missing",
     ] as const,
   },
 
   socialSection: {
     warnings: [
-      "admin.socialSection.warnings.socialEmpty",
-      "admin.socialSection.warnings.dupLinks",
+      "studio.socialSection.warnings.socialEmpty",
+      "studio.socialSection.warnings.dupLinks",
     ] as const,
   },
 
   cellEditorTabs: {
     kinds: [
-      "admin.cellEditorTabs.kinds.richText",
-      "admin.cellEditorTabs.kinds.image",
-      "admin.cellEditorTabs.kinds.gallery",
-      "admin.cellEditorTabs.kinds.carousel",
+      "studio.cellEditorTabs.kinds.richText",
+      "studio.cellEditorTabs.kinds.image",
+      "studio.cellEditorTabs.kinds.gallery",
+      "studio.cellEditorTabs.kinds.carousel",
     ] as const,
   },
 
   imageCellEditor: {
     variants: [
-      "admin.cellEditorTabs.imageCellEditor.variants.default",
-      "admin.cellEditorTabs.imageCellEditor.variants.wide",
-      "admin.cellEditorTabs.imageCellEditor.variants.portrait",
-      "admin.cellEditorTabs.imageCellEditor.variants.square",
+      "studio.cellEditorTabs.imageCellEditor.variants.default",
+      "studio.cellEditorTabs.imageCellEditor.variants.wide",
+      "studio.cellEditorTabs.imageCellEditor.variants.portrait",
+      "studio.cellEditorTabs.imageCellEditor.variants.square",
     ] as const,
   },
 } as const;

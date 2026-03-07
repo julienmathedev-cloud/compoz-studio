@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/settings/mappers/identity-shape.ts
- * @layer ui-mappers/site
+ * @layer ui/settings/mappers
  *
  * @description
  * Mapper "shared runtime" Identity :
@@ -28,6 +28,7 @@ export function toIdentitySettingsShapeFromDTO(
   return {
     siteName: trimKeepEmpty(dto?.siteName), // peut être ""
     tagline: emptyToUndef(dto?.tagline),
+    // assetUiToSettings accepte `string | null | undefined` (DTO ou FormValues)
     logoUrl: assetUiToSettings(dto?.logoUrl),
     logoAlt: emptyToUndef(dto?.logoAlt),
     faviconUrl: assetUiToSettings(dto?.faviconUrl),

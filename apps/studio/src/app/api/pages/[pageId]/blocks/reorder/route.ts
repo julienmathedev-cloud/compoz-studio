@@ -1,8 +1,8 @@
 /**
  * @file apps/studio/src/app/api/pages/[pageId]/blocks/reorder/route.ts
- * @layer api/routes
+ * @layer studio/app/api
  * @description
- * Route API Admin (V0.5) — réordonne les blocks d’une page (draft-only).
+ * Route API Studio (V0.5) — réordonne les blocks d’une page (draft-only).
  *
  * Responsabilités :
  * - POST : réordonne les blocks via le use-case `reorderBlocks` (draft-only).
@@ -10,36 +10,33 @@
  * - Invalidation statusCache (KV snapshots) après mutation.
  */
 
-import { readJsonOr400 } from "@compoz/infra/http/read-json";
-import { log, logSpan } from "@compoz/infra/lib/log";
-import { handleRoute } from "@compoz/studio/lib/api/handle-route";
-import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
+import "server-only";
 
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
+import type { PageDTO } from "@compoz/core/domain/pages/dto";
+import { reorderBlocks } from "@compoz/core/domain/pages/use-cases/blocks/reorder-blocks";
+import { readJsonOr400 } from "@compoz/infra/http/read-json";
+import type { ReorderBlocksResponse } from "@compoz/infra/http/studio/pages.types";
+import { log, logSpan } from "@compoz/infra/lib/log";
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteStatusCache } from "@compoz/infra/site";
-
-import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
-import { reorderBlocks } from "@compoz/core/domain/pages/use-cases/blocks/reorder-blocks";
-
-import type { PageDTO } from "@compoz/core/domain/pages/dto";
-
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-import type { ReorderBlocksResponse } from "@compoz/infra/http/studio/pages.types";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
+import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { ReorderBlocksIntentSchema } from "@compoz/validation/pages/blocks/block-intents";
 import { PageIdParamSchema } from "@compoz/validation/pages/page";
 
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
-
 export async function POST(req: Request, ctx: { params: unknown }) {
-  const NS = "api.admin.pages.id.blocks.reorder.POST" as const;
+  const NS = "api.studio.pages.id.blocks.reorder.POST" as const;
 
   return handleRoute(NS, req, async () => {
     const { tenantId } = await requireSessionWithTenant();
 
     return logSpan(
       NS,
-      { ns: NS, method: "POST", state: WRITE_CONTENT_STATE, tenantId },
+      { ns: NS, method: "POST", state: DEFAULT_CONTENT_STATE, tenantId },
       async () => {
         const lg = log.child({ ns: NS });
 
@@ -47,14 +44,14 @@ export async function POST(req: Request, ctx: { params: unknown }) {
 
         const { pageId } = parseDTOOrHttp(PageIdParamSchema, params, {
           message: EC.INVALID_ARGUMENT,
-          extras: { where: "api.admin.pages.id.blocks.reorder.POST.params" },
+          extras: { where: "api.studio.pages.id.blocks.reorder.POST.params" },
         });
 
         const body = await readJsonOr400(req);
 
         const dto = parseDTOOrHttp(ReorderBlocksIntentSchema, body, {
           message: EC.VALIDATION_ERROR,
-          extras: { where: "api.admin.pages.id.blocks.reorder.POST.payload" },
+          extras: { where: "api.studio.pages.id.blocks.reorder.POST.payload" },
         });
 
         const pagesRepo = getPagesRepository({ tenantId });
@@ -69,7 +66,10 @@ export async function POST(req: Request, ctx: { params: unknown }) {
         // ✅ Invalidation KV snapshots (best-effort)
         try {
           lg.info?.("route.statusCache.invalidateAll.start", {});
-          await statusCache.invalidateAll();
+          await Promise.all([
+            statusCache.invalidateStatus(),
+            statusCache.invalidateStatusDetails(),
+          ]);
           lg.info?.("route.statusCache.invalidateAll.done", {});
         } catch (e) {
           lg.error?.("route.statusCache.invalidateAll.failed", {

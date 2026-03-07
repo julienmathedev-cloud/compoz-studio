@@ -1,10 +1,12 @@
 /**
  * @file apps/studio/src/app/api/media/upload/image/route.ts
- * @layer api/routes
+ * @layer studio/app/api
  * @description
  * Upload images raster (png/jpg/webp/gif/ico) vers public/uploads/YYYY/MM
  * avec optimisation automatique via Sharp.
  */
+
+import "server-only";
 
 import { join } from "node:path";
 
@@ -44,6 +46,15 @@ const ALLOWED_MIMES = new Set([
 
 type UploadKind = "content" | "og" | "logo" | "favicon";
 
+function isUploadKind(input: string | null): input is UploadKind {
+  return (
+    input === "content" ||
+    input === "og" ||
+    input === "logo" ||
+    input === "favicon"
+  );
+}
+
 function sanitizeFilename(name: string): string {
   const base = name.normalize("NFKC").toLowerCase().replace(/\s+/g, "-");
 
@@ -59,7 +70,7 @@ function nowParts(d = new Date()) {
 }
 
 export async function POST(req: Request) {
-  const NS = "api.admin.media.upload.image.POST" as const;
+  const NS = "api.studio.media.upload.image.POST" as const;
 
   return handleRoute(NS, req, async () => {
     const lg = log.child({ ns: NS });
@@ -84,7 +95,7 @@ export async function POST(req: Request) {
         }
 
         const contentType = String(file.type || "");
-        const size = Number(file.size || 0);
+        const originalSize = Number(file.size || 0);
 
         if (!contentType.startsWith(IMAGE_MIME_PREFIX)) {
           throwHttp(415, {
@@ -108,28 +119,28 @@ export async function POST(req: Request) {
           });
         }
 
-        if (size <= 0) {
+        if (originalSize <= 0) {
           throwHttp(400, {
             code: EC.INVALID_ARGUMENT,
             message: EC.UPLOAD_EMPTY_FILE,
           });
         }
 
-        if (size > MAX_IMAGE_UPLOAD_BYTES) {
+        if (originalSize > MAX_IMAGE_UPLOAD_BYTES) {
           throwHttp(413, {
             code: EC.PAYLOAD_TOO_LARGE,
             message: EC.UPLOAD_FILE_TOO_LARGE,
             details: {
               maxBytes: MAX_IMAGE_UPLOAD_BYTES,
-              receivedBytes: size,
+              receivedBytes: originalSize,
             },
           });
         }
 
-        // 🔥 lecture kind via query param
+        // 🔥 lecture kind via query param (whitelist runtime)
         const urlObj = new URL(req.url);
-        const kind =
-          (urlObj.searchParams.get("kind") as UploadKind) ?? "content";
+        const rawKind = urlObj.searchParams.get("kind");
+        const kind: UploadKind = isUploadKind(rawKind) ? rawKind : "content";
 
         const inputBuffer = Buffer.from(await file.arrayBuffer());
 
@@ -159,29 +170,31 @@ export async function POST(req: Request) {
 
             const urls: Record<number, string> = {};
 
-            for (const size of FAVICON_SIZES) {
-              const filename = `${baseName}-${size}.png`;
+            for (const px of FAVICON_SIZES) {
+              const filename = `${baseName}-${px}.png`;
               const absPath = join(UPLOADS_ROOT, y, m, filename);
 
               await ensureDirForFile(absPath);
-              await writeFileAtomic(absPath, favicons[size].buffer);
+              await writeFileAtomic(absPath, favicons[px].buffer);
 
-              urls[size] = `/uploads/${y}/${m}/${filename}`;
+              urls[px] = `/uploads/${y}/${m}/${filename}`;
             }
 
             // On retourne la 32px comme "primary"
-            return {
+            const res: UploadImageResponse = {
               url: urls[32],
               filename: `${baseName}-32.png`,
               size: favicons[32].buffer.length,
               width: 32,
               height: 32,
               contentType: "image/png",
-              originalSize: size,
+              originalSize,
               optimizedSize: favicons[32].buffer.length,
               wasResized: true,
               wasCompressed: true,
             };
+
+            return res;
           }
 
           default:
@@ -202,7 +215,6 @@ export async function POST(req: Request) {
           });
         }
 
-        const originalSize = size;
         const optimizedSize = optimized.buffer.length;
 
         const wasCompressed = optimizedSize < originalSize;
@@ -225,15 +237,15 @@ export async function POST(req: Request) {
 
         lg.debug("upload.ok", {
           kind,
-          originalSize: size,
-          optimizedSize: optimized.buffer.length,
+          originalSize,
+          optimizedSize,
           url,
         });
 
         const res: UploadImageResponse = {
           url,
           filename,
-          size: optimized.buffer.length,
+          size: optimizedSize,
           width,
           height,
           contentType: optimized.mime,

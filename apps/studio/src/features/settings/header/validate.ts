@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/settings/header/validate.ts
- * @layer hooks/admin/site/header
+ * @layer hooks/studio/site/header
  *
  * @description
  * Helpers et hooks de validation UI non bloquante pour le header.
@@ -33,8 +33,11 @@ export function computeHeaderWarnings(
 ): HeaderWarningKey[] {
   const out = new Set<HeaderWarningKey>();
 
+  const showsLogo = Boolean(s.showLogo);
+  const showsSiteName = Boolean(s.showSiteName);
+
   // Aucun branding visible → header potentiellement vide / peu lisible
-  if (!Boolean(s.showLogo) && !Boolean(s.showSiteName)) {
+  if (!showsLogo && !showsSiteName) {
     out.add("noBranding");
   }
 
@@ -55,3 +58,5 @@ export function useHeaderUiWarnings(
     [showLogo, showSiteName],
   );
 }
+
+useHeaderUiWarnings.displayName = "useHeaderUiWarnings";

@@ -3,7 +3,7 @@
  * @layer core/domain
  * @description
  * Génération des avertissements non bloquants lors de la publication du site,
- * basés uniquement sur l’`SiteIndex`.
+ * “Index-only + warnings optionnels dépendants des settings (si fournis)”.
  *
  * @remarks
  * - Ces warnings n’empêchent pas la publication.
@@ -12,9 +12,20 @@
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
+import {
+  DomainError,
+  isDomainErrorLike,
+} from "@compoz/core/domain/errors/domain-error";
 import type { UiWarning } from "@compoz/core/domain/errors/issue.types";
+import type {
+  IdentitySettings,
+  SeoSettings,
+} from "@compoz/core/domain/site/entities";
 import type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
+import { assertIdentitySettings } from "@compoz/core/domain/site/validators/identity";
+import { assertSeoSettings } from "@compoz/core/domain/site/validators/seo";
+import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 
 /** Codes d’avertissements possibles lors d’une publication. */
 export type PublishWarningCode =
@@ -59,7 +70,7 @@ export function publishWarnings(
   }
 
   /* --- home absente de l’index --- */
-  const hasHome = index.pages.some((p) => p.slug === "home");
+  const hasHome = index.pages.some((p) => p.slug === HOME_SLUG);
   if (!hasHome) {
     warnings.push({ code: EC.PUBLISH_HOME_MISSING, path: ["pages", "home"] });
   }
@@ -123,7 +134,8 @@ export function publishWarnings(
 
     const baseUrl = (settings.seo?.baseUrl ?? "").trim();
 
-    // 1) baseUrl manquante -> warning (source canonique recommandée)
+    // baseUrl manquante -> warning (source canonique recommandée)
+    // (l’invariant bloquant est seulement : si renseignée, elle doit être valide)
     if (!baseUrl) {
       warnings.push({
         code: EC.PUBLISH_SEO_BASEURL_MISSING,
@@ -133,4 +145,37 @@ export function publishWarnings(
   }
 
   return warnings;
+}
+
+/**
+ * Invariants bloquants : `IdentitySettings` + `SeoSettings`.
+ *
+ * @remarks
+ * - Injection `isProd` pour délier les validateurs du runtime (pas de `process.env` dans le domaine).
+ */
+export function assertPublishInvariantsOrThrowValidationError(input: {
+  identity: unknown;
+  seo: unknown;
+  isProd: boolean;
+}) {
+  try {
+    assertIdentitySettings(input.identity as IdentitySettings);
+    assertSeoSettings(input.seo as SeoSettings, { isProd: input.isProd });
+  } catch (e) {
+    if (isDomainErrorLike(e)) {
+      throw new DomainError({
+        code: EC.VALIDATION_ERROR,
+        message: e.code,
+        details: {
+          issues: [
+            {
+              code: e.code,
+            },
+          ],
+        },
+        cause: e,
+      });
+    }
+    throw e;
+  }
 }

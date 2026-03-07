@@ -1,8 +1,9 @@
 /**
  * @file apps/studio/src/app/api/_adapters/header.ts
- * @layer api/adapters
+ * @layer studio/app/api/adapters
+ *
  * @description
- * Adaptateur API Admin pour le Header :
+ * Adaptateur API Studio pour le Header :
  * convertit le DTO d’intention en input domaine pour le use-case.
  *
  * Responsabilités :
@@ -23,7 +24,7 @@ export function adaptUpdateHeaderIntent(
 ): UpdateHeaderSettingsInput {
   const started = Date.now();
 
-  log.debug("admin.adapter.header.patch.start", {
+  log.debug("studio.adapter.header.patch.start", {
     hasShowLogo: typeof dto.showLogo === "boolean",
     hasShowSiteName: typeof dto.showSiteName === "boolean",
     hasSticky: typeof dto.sticky === "boolean",
@@ -43,7 +44,7 @@ export function adaptUpdateHeaderIntent(
     patch.swapPrimaryAndSocial = dto.swapPrimaryAndSocial;
   }
 
-  log.debug("admin.adapter.header.patch.end", {
+  log.debug("studio.adapter.header.patch.end", {
     ms: Date.now() - started,
     outKeys: Object.keys(patch),
   });

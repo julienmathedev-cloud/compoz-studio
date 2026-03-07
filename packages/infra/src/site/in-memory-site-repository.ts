@@ -4,8 +4,10 @@
  * @description
  * Implémentation InMemory du SiteRepository pour tests unitaires et e2e.
  *
- * Responsabilités : stockage en mémoire des SiteIndex et SiteSettings pour les espaces `draft` et `published`,
- * clonage structuré pour éviter les mutations externes, aucune I/O disque.
+ * @remarks
+ * - Mono-tenant : ce repository stocke un seul "site" en mémoire (pas de scope tenantId).
+ * - Responsabilités : stockage en mémoire des SiteIndex et SiteSettings pour `draft` et `published`,
+ *   clonage structuré pour éviter les mutations externes, aucune I/O.
  */
 
 import {
@@ -121,7 +123,7 @@ export class InMemorySiteRepository implements SiteRepository {
    * Écrit l’index pour un espace donné.
    * Contrat : stocke une copie pour isoler l’état interne.
    */
-  async writeIndex(state: ContentState, index: SiteIndex): Promise<void> {
+  async putIndex(state: ContentState, index: SiteIndex): Promise<void> {
     this.setIndex(state, structuredClone(index));
   }
 
@@ -137,7 +139,7 @@ export class InMemorySiteRepository implements SiteRepository {
    * Écrit les settings pour un espace donné.
    * Contrat : stocke une copie pour isoler l’état interne.
    */
-  async writeSettings(
+  async putSettings(
     state: ContentState,
     settings: SiteSettings,
   ): Promise<void> {

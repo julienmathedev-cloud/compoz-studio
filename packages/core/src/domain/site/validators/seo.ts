@@ -16,7 +16,24 @@ import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
 
 /**
+ * Options d'exécution pour la validation.
+ *
+ * @remarks
+ * - Injection `isProd` : le domaine ne dépend pas de `process.env`.
+ * - En prod, on exige `https:` si `baseUrl` est renseignée.
+ */
+export type AssertSeoSettingsOptions = Readonly<{
+  /** Indique si l'environnement courant doit appliquer les contraintes "prod". */
+  isProd: boolean;
+}>;
+
+/**
  * Vérifie les invariants SEO bloquants côté domaine.
+ *
+ * @remarks
+ * - `baseUrl` est optionnelle (warning si absente géré ailleurs).
+ * - Si `baseUrl` est renseignée : doit être une URL absolue valide.
+ * - En prod (`opts.isProd=true`) : si `baseUrl` est renseignée, elle doit être en HTTPS.
  *
  * @throws DomainError
  * - `EC.SEO_TITLE_REQUIRED`
@@ -24,7 +41,10 @@ import type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
  * - `EC.SEO_BASEURL_INVALID`
  * - `EC.SEO_BASEURL_HTTPS_REQUIRED`
  */
-export function assertSeoSettings(seo: SeoSettings): void {
+export function assertSeoSettings(
+  seo: SeoSettings,
+  opts: AssertSeoSettingsOptions = { isProd: false },
+): void {
   // Invariant : `defaultTitle` requis
   const defaultTitle = seo.defaultTitle?.trim() ?? "";
   if (defaultTitle.length === 0) {
@@ -45,7 +65,8 @@ export function assertSeoSettings(seo: SeoSettings): void {
     });
   }
 
-  // Invariant : si `baseUrl` est défini (non vide), URL absolue valide (+ https en prod)
+  // Invariant : si `baseUrl` est définie (non vide), URL absolue valide
+  // (+ https en prod selon `opts.isProd`)
   const baseUrl = (seo.baseUrl ?? "").trim();
 
   if (baseUrl) {
@@ -60,8 +81,7 @@ export function assertSeoSettings(seo: SeoSettings): void {
       });
     }
 
-    const isProd = process.env.NODE_ENV === "production";
-    if (isProd && u.protocol !== "https:") {
+    if (opts.isProd && u.protocol !== "https:") {
       throw new DomainError({
         code: EC.SEO_BASEURL_HTTPS_REQUIRED,
         message: EC.SEO_BASEURL_HTTPS_REQUIRED,

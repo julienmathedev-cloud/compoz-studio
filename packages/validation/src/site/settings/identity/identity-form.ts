@@ -9,8 +9,8 @@
 
 import {
   IDENTITY_LOGOALT,
-  IDENTITY_TAGLINE,
   IDENTITY_SITENAME,
+  IDENTITY_TAGLINE,
 } from "@compoz/core/constants/limits/identity";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
@@ -34,9 +34,14 @@ export const IdentityFormSchema = z
       .max(IDENTITY_LOGOALT.MAX, ERROR_CODES.IDENTITY_LOGO_ALT_TOO_LONG),
     faviconUrl: z.string().trim(),
   })
+  .strict()
   .superRefine((val, ctx) => {
+    const siteName = val.siteName.trim();
+    const logoUrl = val.logoUrl.trim();
+    const logoAlt = val.logoAlt.trim();
+
     // siteName requis
-    if (val.siteName.trim().length < IDENTITY_SITENAME.MIN) {
+    if (siteName.length < IDENTITY_SITENAME.MIN) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["siteName"],
@@ -45,15 +50,14 @@ export const IdentityFormSchema = z
     }
 
     // logoAlt requis si logoUrl non vide
-    const hasLogo = val.logoUrl.trim().length > 0;
-    if (hasLogo && val.logoAlt.trim().length < IDENTITY_LOGOALT.MIN) {
+    const hasLogo = logoUrl.length > 0;
+    if (hasLogo && logoAlt.length < IDENTITY_LOGOALT.MIN) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["logoAlt"],
         message: ERROR_CODES.IDENTITY_LOGO_ALT_REQUIRED,
       });
     }
-  })
-  .strict();
+  });
 
 export type IdentityFormValues = z.infer<typeof IdentityFormSchema>;

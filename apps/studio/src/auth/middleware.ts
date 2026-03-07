@@ -1,6 +1,7 @@
 /**
  * @file apps/studio/src/middleware.ts
- * @layer app/middleware
+ * @layer studio/auth
+ *
  * @description
  * Middleware d’authentification Studio (NextAuth v4) :
  * - Protège toutes les routes du Studio
@@ -9,7 +10,7 @@
  *   - /[locale]/signin
  *   - assets Next (_next, favicon, etc.)
  *
- * Notes:
+ * @remarks
  * - Pour les routes API (hors /api/auth), on renvoie 401 JSON (pas de redirect)
  *   sinon le client reçoit un HTML de redirection et ça casse les handlers.
  */

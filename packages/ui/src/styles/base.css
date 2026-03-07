@@ -17,7 +17,7 @@
 
 /* ---------------------------------------------------------------------------
  * Theme tokens (shadcn style tokens → Tailwind inline theme mapping)
- * ⚠️ Ne met PAS de mapping :root/.dark/.theme-public ici.
+ * ⚠️ Ne met PAS de mapping :root/.dark/.theme-site ici.
  * Ici on déclare uniquement les "aliases" attendus par Tailwind/shadcn.
  * ------------------------------------------------------------------------- */
 @theme inline {
@@ -64,7 +64,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
-  /* Admin semantic colors (OK de laisser exposés même si public n’en a pas besoin) */
+  /* Studio semantic colors (OK de laisser exposés même si le site n’en a pas besoin) */
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);

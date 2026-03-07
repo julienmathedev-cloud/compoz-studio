@@ -1,19 +1,19 @@
 /**
  * @file apps/studio/src/app/[locale]/(dashboard)/(pages)/pages/page.tsx
- * @layer app/studio
+ * @layer studio/app
  *
  * @description
- * Page admin “Pages” (V0.5).
+ * Page “Pages” (Dashboard Studio) — V0.5.
  *
  * @remarks
  * - Route : /[locale]/pages
- * - Délègue l’interactivité (client) à `PagesPage`.
+ * - Délègue l’interactivité (client) au composant `PagesPage`.
  */
 
 import { PagesPage } from "@compoz/studio/features/pages/pages/PagesPage";
 
-export default function AdminPagesPage() {
+export default function StudioPagesPage() {
   return <PagesPage />;
 }
 
-AdminPagesPage.displayName = "AdminPagesPage";
+StudioPagesPage.displayName = "StudioPagesPage";

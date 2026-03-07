@@ -2,28 +2,30 @@
 
 /**
  * @file apps/studio/src/app/preview/header/page.tsx
- * @layer app/preview
+ * @layer studio/app
  *
  * @description
- * Page de preview pour le Header public.
+ * Page de preview (iframe) pour le Header du site.
  *
  * @remarks
  * - Lit les données via `usePreviewOverride` pour header, identity, primaryMenu et social.
- * - Gating strict : on n’affiche rien tant que toutes les baselines nécessaires ne sont pas disponibles.
- * - `header` : override possible (Sync), les autres : baseline only.
+ * - Gating strict : ne rend rien tant que toutes les baselines nécessaires ne sont pas disponibles
+ *   (l’empty state est géré par le wrapper preview).
+ * - `header` : override possible (sync), les autres : baseline only.
  */
 
-import { log } from "@compoz/infra/lib/log";
 import { useEffect } from "react";
 
-import { PublicHeader } from "@compoz/ui/site/components/layouts/PublicHeader";
-import { resolvePublicUi } from "@compoz/ui/site/skins/resolvePublicUi";
+import { log } from "@compoz/infra/lib/log";
+
+import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePreviewOverride";
 import type { HeaderSettingsShape } from "@compoz/validation/site/settings/header/header";
 import type { IdentitySettingsShape } from "@compoz/validation/site/settings/identity/identity";
 import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 import type { SocialSettingsShape } from "@compoz/validation/site/settings/social/social";
 
-import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePreviewOverride";
+import { SiteHeader } from "@compoz/ui/site/components/layouts/SiteHeader";
+import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 
 /* -------------------------------------------------------------------------- */
 /* Logger                                                                     */
@@ -42,14 +44,10 @@ export default function HeaderPreviewPage() {
     usePreviewOverride<PrimaryMenuSettingsShape>("primaryMenu");
   const social = usePreviewOverride<SocialSettingsShape>("social");
 
-  // Debug preview (logger central)
   useEffect(() => {
-    lg.debug("render", {
-      header,
-      identity,
-      primaryMenu,
-      social,
-    });
+    if (process.env.NODE_ENV !== "production") {
+      lg.debug("render", { header, identity, primaryMenu, social });
+    }
   }, [header, identity, primaryMenu, social]);
 
   // Règles de résolution : header override > baseline, autres baselines only.
@@ -58,7 +56,7 @@ export default function HeaderPreviewPage() {
   const visiblePrimaryMenu = primaryMenu.baseline;
   const visibleSocial = social.baseline;
 
-  // ✅ Empty preview au lieu de `return null`
+  // Empty state géré par le wrapper preview
   if (
     !visibleHeader ||
     !visibleIdentity ||
@@ -68,10 +66,10 @@ export default function HeaderPreviewPage() {
     return null;
   }
 
-  const ui = resolvePublicUi();
+  const ui = resolveSiteUi();
 
   return (
-    <PublicHeader
+    <SiteHeader
       header={visibleHeader}
       identity={visibleIdentity}
       primaryMenu={visiblePrimaryMenu}

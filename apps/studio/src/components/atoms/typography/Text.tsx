@@ -1,25 +1,24 @@
-"use client";
-
 /**
  * @file apps/studio/src/components/atoms/typography/Text.tsx
- * @layer ui/atoms
+ * @layer studio/atoms
  *
  * @description
- * Texte générique (paragraphe / inline) avec variantes typographiques pour l’admin.
+ * Texte générique (paragraphe / inline) avec variantes typographiques pour le Studio.
  *
  * @remarks
  * - Atome UI : aucune logique métier.
- * - Unifie les styles typographiques via les tokens admin.
+ * - Unifie les styles typographiques via les tokens Studio.
  * - Supporte l’accessibilité (texte masqué visuellement).
  * - Supporte la troncature sur une ligne.
  */
+
+import type { HTMLAttributes, ReactNode } from "react";
 
 import { cn } from "@compoz/ui/lib/utils";
 import {
   TEXT_VARIANT_STYLES,
   type TextVariant,
 } from "@compoz/ui/styles/studio/typography";
-import type { HTMLAttributes, ReactNode } from "react";
 
 /**
  * Balises HTML supportées pour le composant `Text`.
@@ -40,7 +39,7 @@ export type TextProps = Omit<HTMLAttributes<HTMLElement>, "className"> &
   }>;
 
 /**
- * Texte typographique standardisé pour l’interface d’administration.
+ * Texte typographique standardisé pour l’interface Studio.
  */
 export function Text({
   as = "p",

@@ -1,18 +1,18 @@
 /**
  * @file packages/ui/src/site/skins/lola/legal-menu.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
- * Skin UI — menu légal public (thème Lola).
+ * Skin UI — menu légal site (thème Lola).
  *
  * @remarks
  * - Fournit uniquement des classes Tailwind (aucune logique).
- * - Consommé par `PublicLegalMenu` via la prop `ui`.
+ * - Consommé par `SiteLegalMenu` via la prop `ui`.
  */
 
-import type { PublicLegalMenuUiOverride } from "@compoz/ui/site/public-ui.types";
+import type { SiteLegalMenuUiOverride } from "@compoz/ui/site/site-ui.types";
 
-export const lolaLegalMenuUi: PublicLegalMenuUiOverride = {
+export const lolaLegalMenuUi: SiteLegalMenuUiOverride = {
   nav: "justify-self-center lg:col-start-3 lg:justify-self-end",
 
   list: "m-0 p-0 list-none flex flex-wrap gap-6 lg:gap-4",

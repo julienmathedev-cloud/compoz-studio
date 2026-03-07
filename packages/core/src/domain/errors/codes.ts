@@ -1,6 +1,6 @@
 /**
  * @file packages/core/src/domain/errors/codes.ts
- * @layer core/domain
+ * @layer core/domain/errors
  * @description
  * Source de vérité des codes d’erreur métier (stables) utilisés par le domaine.
  * Ces codes peuvent être mappés vers HTTP, Zod et l’UI (messages conditionnels).
@@ -36,7 +36,7 @@ export const ERROR_CODES = {
   JSON_OBJECT_EXPECTED: "JSON_OBJECT_EXPECTED",
 
   /* ------------------------------------------------------------------------ */
-  /*                              HTTP / Domain                               */
+  /*                              HTTP / Adapters                             */
   /* ------------------------------------------------------------------------ */
 
   UNSUPPORTED_MEDIA_TYPE: "UNSUPPORTED_MEDIA_TYPE",
@@ -235,7 +235,7 @@ export const ERROR_CODES = {
   URL_RELATIVE_REQUIRED: "URL_RELATIVE_REQUIRED",
 
   /* ------------------------------------------------------------------------ */
-  /*                                   USERS                                   */
+  /*                                   USERS                                  */
   /* ------------------------------------------------------------------------ */
 
   USER_ID_REQUIRED: "USER_ID_REQUIRED",
@@ -263,6 +263,9 @@ export const ERROR_CODES = {
  */
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
 
+/** Valeurs autorisées (dérivées de la source de vérité) pour des checks robustes. */
+const ERROR_CODE_VALUES = Object.values(ERROR_CODES) as ErrorCode[];
+
 /**
  * Garde de type permettant de vérifier si une valeur inconnue
  * correspond à un code d’erreur métier valide.
@@ -273,8 +276,5 @@ export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
  * - les helpers UI (affichage conditionnel d’erreurs).
  */
 export function isErrorCode(v: unknown): v is ErrorCode {
-  return (
-    typeof v === "string" &&
-    (Object.values(ERROR_CODES) as readonly string[]).includes(v)
-  );
+  return typeof v === "string" && ERROR_CODE_VALUES.includes(v as ErrorCode);
 }

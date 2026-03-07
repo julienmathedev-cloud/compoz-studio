@@ -12,10 +12,6 @@ import type { LegalMenuSettings } from "@compoz/core/domain/site/entities/legal-
 
 /**
  * Valeur par défaut pour un menu légal vide.
- *
- * @example
- * - `items: []` → aucun élément initial. Les pages légales doivent être
- *   ajoutées explicitement par l’utilisateur ou par un script d’initialisation.
  */
 export const DEFAULT_LEGAL_MENU_SETTINGS: LegalMenuSettings = {
   items: [],

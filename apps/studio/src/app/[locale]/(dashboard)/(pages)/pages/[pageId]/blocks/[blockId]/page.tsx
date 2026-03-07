@@ -1,19 +1,25 @@
 /**
  * @file apps/studio/src/app/[locale]/(dashboard)/(pages)/pages/[pageId]/blocks/[blockId]/page.tsx
- * @layer app/studio
+ * @layer studio/app
+ *
+ * @description
+ * Page d’édition d’un bloc d’une page (Dashboard Studio).
+ *
+ * @remarks
+ * - Résout le tenant via la session.
+ * - Charge la page (state par défaut) puis rend la section d’édition du bloc.
+ * - 404 si `pageId`/`blockId` manquants ou page introuvable.
  */
 
 import { notFound } from "next/navigation";
 
-import { PageBlockEditSection } from "@compoz/studio/features/pages/sections/PageBlockEditSection";
-
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { getPagesRepository } from "@compoz/infra/pages";
 import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
-
+import { PageBlockEditSection } from "@compoz/studio/features/pages/sections/PageBlockEditSection";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 
-type AdminPageBlockEditPageProps = Readonly<{
+type StudioPageBlockEditPageProps = Readonly<{
   params: Promise<
     Readonly<{
       locale: string;
@@ -23,17 +29,18 @@ type AdminPageBlockEditPageProps = Readonly<{
   >;
 }>;
 
-export default async function AdminPageBlockEditPage({
+export default async function StudioPageBlockEditPage({
   params,
-}: AdminPageBlockEditPageProps) {
+}: StudioPageBlockEditPageProps) {
   const { tenantId } = await requireSessionWithTenant();
+  if (!tenantId) notFound();
 
   const { pageId, blockId } = await unwrapParams(params);
   if (!pageId || !blockId) notFound();
 
   const pagesRepo = getPagesRepository({ tenantId });
 
-  const page = await pagesRepo.readById(WRITE_CONTENT_STATE, pageId);
+  const page = await pagesRepo.readById(DEFAULT_CONTENT_STATE, pageId);
   if (!page) notFound();
 
   return (
@@ -41,4 +48,4 @@ export default async function AdminPageBlockEditPage({
   );
 }
 
-AdminPageBlockEditPage.displayName = "AdminPageBlockEditPage";
+StudioPageBlockEditPage.displayName = "StudioPageBlockEditPage";

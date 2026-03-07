@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/users/mappers/user-shape.ts
- * @layer ui-mappers/users
+ * @layer ui/users/mappers
  *
  * @description
  * Mapper "shared runtime" pour les users :
@@ -26,6 +26,32 @@ const DEFAULT_RBAC: UserFormValues["rbac"] = {
   defaultTenantId: "",
 };
 
+function toTrimmedString(v: unknown): string {
+  return String(v ?? "").trim();
+}
+
+function toOptionalId(v: unknown): string | undefined {
+  const s = toTrimmedString(v);
+  return s.length > 0 ? s : undefined;
+}
+
+function toLowerEmail(v: unknown): string {
+  return toTrimmedString(v).toLowerCase();
+}
+
+function toRbacRole(v: unknown): UserFormValues["rbac"]["role"] {
+  // On reste strict sur le type (string), et on fallback sur le rôle default.
+  // Si le DTO est "dirty" avec une valeur inattendue, on retombe sur DEFAULT_RBAC.role.
+  if (typeof v !== "string") return DEFAULT_RBAC.role;
+  const role = v.trim();
+  return (role || DEFAULT_RBAC.role) as UserFormValues["rbac"]["role"];
+}
+
+function toTenantIds(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return v.map((t) => toTrimmedString(t)).filter(Boolean);
+}
+
 /* -------------------------------------------------------------------------- */
 /* Domain (DTO) -> Shape frontière (safe)                                      */
 /* -------------------------------------------------------------------------- */
@@ -47,27 +73,25 @@ export function toUserShapeFromDTO(
       email: "",
       name: "",
       password: "",
-      rbac: DEFAULT_RBAC,
+      rbac: {
+        ...DEFAULT_RBAC,
+        tenantIds: [],
+      },
     };
   }
 
   return {
-    id: String(user.id ?? "").trim(),
-    email: String(user.email ?? "")
-      .trim()
-      .toLowerCase(),
-    name: String(user.name ?? "").trim(),
+    id: toOptionalId(user.id),
+    email: toLowerEmail(user.email),
+    name: toTrimmedString(user.name),
     password: "",
 
     rbac: {
-      role: (user.rbac?.role ??
-        DEFAULT_RBAC.role) as UserFormValues["rbac"]["role"],
-      tenantIds: Array.isArray(user.rbac?.tenantIds)
-        ? user.rbac.tenantIds.map((t) => String(t ?? "").trim()).filter(Boolean)
-        : DEFAULT_RBAC.tenantIds,
-      defaultTenantId: String(
+      role: toRbacRole(user.rbac?.role),
+      tenantIds: toTenantIds(user.rbac?.tenantIds),
+      defaultTenantId: toTrimmedString(
         user.rbac?.defaultTenantId ?? DEFAULT_RBAC.defaultTenantId,
-      ).trim(),
+      ),
     },
   };
 }

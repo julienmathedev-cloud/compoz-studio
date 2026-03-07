@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/components/molecules/controls/AddEmptyCardButton.tsx
- * @layer ui/molecules
+ * @layer studio/molecules
  *
  * @description
  * Bouton “Empty card” générique pour déclencher une action d’ajout (Plus) avec tooltip.
@@ -13,14 +13,14 @@
  * - UI-only.
  */
 
-import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
-import { EmptyState } from "@compoz/studio/components/molecules/feedback/EmptyState";
+import type { LucideIcon } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { cn } from "@compoz/ui/lib/utils";
 import { EMPTY_CARD } from "@compoz/ui/styles/studio/layout";
 
-import type { LucideIcon } from "lucide-react";
-import { Plus } from "lucide-react";
+import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
+import { EmptyState } from "@compoz/studio/components/molecules/feedback/EmptyState";
 
 export type AddEmptyCardButtonProps = Readonly<{
   /** Callback d’action (ex: ajouter un bloc / ajouter un sous-lien). */

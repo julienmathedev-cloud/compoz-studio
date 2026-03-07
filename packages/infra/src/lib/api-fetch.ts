@@ -2,7 +2,7 @@
  * @file packages/infra/src/lib/api-fetch.ts
  * @layer infra/lib/http
  * @description
- * Fetch JSON standardisé pour l’admin : cache désactivé (`no-store`),
+ * Fetch JSON standardisé pour le client Studio : cache désactivé (`no-store`),
  * normalisation des erreurs HTTP via `HttpError`, et parsing JSON défensif.
  *
  * @remarks
@@ -49,8 +49,11 @@ export class HttpError extends Error {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Envelope d’erreur standard émise par nos API Next :
- * { error: string | { code?: string; message?: string } }
+ * Envelope d’erreur standard émise par nos API Next.
+ *
+ * @remarks
+ * - Format canonique : `{ error: { code?: string; message?: string; ... } }`
+ * - Compat : certains endpoints peuvent renvoyer `{ error: string }`
  */
 type ErrorEnvelope = {
   error: string | { code?: string; message?: string };
@@ -109,7 +112,7 @@ function isJsonResponse(res: Response): boolean {
 /* -------------------------------------------------------------------------- */
 
 /**
- * `apiFetch` — Fetch JSON standardisé pour l’admin.
+ * `apiFetch` — Fetch JSON standardisé pour le client Studio.
  *
  * Logique :
  * - Gère automatiquement les cas où un `Content-Type` JSON doit être ajouté.
@@ -131,7 +134,7 @@ export async function apiFetch<T>(
     ? { "Content-Type": "application/json", ...(init?.headers ?? {}) }
     : (init?.headers ?? {});
 
-  // On s'assure que chaque requête admin ne soit jamais servie depuis un cache
+  // On s'assure que chaque requête Studio ne soit jamais servie depuis un cache
   const res = await fetch(input, {
     cache: "no-store",
     credentials: "same-origin",
@@ -166,7 +169,7 @@ export async function apiFetch<T>(
           const e = body.error;
 
           if (typeof e === "string") {
-            // Texte humain (Cat C) ou clé i18n prête (Cat D).
+            // Texte humain ou token prêt.
             message = e;
           } else {
             if (typeof e.code === "string") code = e.code;
@@ -199,7 +202,6 @@ export async function apiFetch<T>(
   /* ------------------------------- Corps vide ------------------------------- */
 
   if (res.status === 204) {
-    // API REST standard : 204 = no content
     return null;
   }
 
@@ -209,7 +211,6 @@ export async function apiFetch<T>(
     if (!isJsonResponse(res)) return null;
     return (await res.json()) as T;
   } catch {
-    // JSON vide ou non parsable → on retourne null
     return null;
   }
 }
@@ -219,8 +220,6 @@ export async function apiFetch<T>(
 /* -------------------------------------------------------------------------- */
 
 function shouldAddJsonContentTypeHeader(init?: RequestInit): boolean {
-  // Détection du type de corps afin de ne pas ajouter un Content-Type JSON
-  // quand ce n'est pas approprié.
   const hasBody = !!(init && "body" in init && init.body != null);
   const isFormData =
     typeof FormData !== "undefined" && init?.body instanceof FormData;
@@ -239,7 +238,7 @@ function shouldAddJsonContentTypeHeader(init?: RequestInit): boolean {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                         Guards réutilisables (UI)                           */
+/*                         Guards réutilisables (client)                       */
 /* -------------------------------------------------------------------------- */
 
 /**

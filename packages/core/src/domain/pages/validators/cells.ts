@@ -1,8 +1,8 @@
 /**
- * @file src/core/domain/pages/validators/cells.ts
- * @layer core/domain
+ * @file packages/core/src/domain/pages/validators/cells.ts
+ * @layer core/domain/pages/validators
  * @description
- * Validations métier **pure** pour les cellules d’une page (V0.5).
+ * Validations métier **pures** pour les cellules d’une page (V0.5).
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -12,7 +12,9 @@ import type {
   ImageEditor,
 } from "@compoz/core/domain/pages/entities/cell";
 
-type Path = Array<string | number>;
+type Path = ReadonlyArray<string | number>;
+
+const IMAGE_RATIOS = ["default", "wide", "square", "portrait"] as const;
 
 export function assertCell(cell: Cell, path: Path): void {
   if (!cell || typeof cell !== "object") {
@@ -49,7 +51,7 @@ export function assertCell(cell: Cell, path: Path): void {
       throw new DomainError({
         code: EC.CELL_KIND_UNSUPPORTED,
         message: EC.CELL_KIND_UNSUPPORTED,
-        details: { path: [...path, "kind"], meta: { kind: kind } },
+        details: { path: [...path, "kind"], meta: { kind } },
       });
   }
 }
@@ -88,13 +90,7 @@ function assertSingleImageCell(
 
   const { variant } = cell;
 
-  if (
-    typeof variant !== "undefined" &&
-    variant !== "default" &&
-    variant !== "wide" &&
-    variant !== "square" &&
-    variant !== "portrait"
-  ) {
+  if (typeof variant !== "undefined" && !IMAGE_RATIOS.includes(variant)) {
     throw new DomainError({
       code: EC.IMAGE_VARIANT_INVALID,
       message: EC.IMAGE_VARIANT_INVALID,
@@ -120,7 +116,6 @@ function assertGalleryMaxColumns(maxColumns: unknown, path: Path) {
     maxColumns > 5
   ) {
     throw new DomainError({
-      // ✅ Idéalement un code dédié (voir note ci-dessous)
       code: EC.GALLERY_MAX_COLUMNS_INVALID,
       message: EC.GALLERY_MAX_COLUMNS_INVALID,
       details: { path: [...path, "maxColumns"], meta: { maxColumns } },

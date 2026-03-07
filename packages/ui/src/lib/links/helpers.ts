@@ -1,15 +1,17 @@
 /**
  * @file packages/ui/src/lib/links/helpers.ts
- * @layer lib/links
+ * @layer ui/lib/links
  * @description
  * Helpers **purs** de gestion des liens (href, sécurité, active link), sans UI ni dépendance Next.
- * Utilisés par les composants publics, l’admin (preview) et le rendu du site publié.
+ * Utilisés par les composants publics, le Studio (preview) et le rendu du site publié.
  *
  * Invariants sécurité :
  * - Refuse les schémas dangereux (`javascript:`, `vbscript:`, `data:`, `file:`, `about:`, `chrome:`)
  *   y compris sous forme obfusquée/encodée (ex. `javascript%3A`).
  * - `mailto:` et `tel:` sont externes mais “spéciaux” (traitement dédié).
  */
+
+import { SITE_PATH, STUDIO_PATH } from "@compoz/core/constants/web/paths";
 
 /* -------------------------------------------------------------------------- */
 /*                                    Types                                   */
@@ -44,7 +46,7 @@ export type LinkFlags = Readonly<{
 /**
  * Vrai si `href` est une URL http(s) **absolue** (avec protocole ou protocole relatif `//`).
  */
-export function isAbsoluteUrl(href: string): boolean {
+function isAbsoluteUrl(href: string): boolean {
   return /^(https?:)?\/\//i.test(href);
 }
 
@@ -69,7 +71,7 @@ type UnsafeHrefResult = Readonly<{
 /**
  * Vrai si `href` commence par un protocole spécial (ex. `mailto:` ou `tel:`).
  */
-export function isSpecialProtocol(
+function isSpecialProtocol(
   href?: string | null,
   list: readonly string[] = SPECIAL_PROTOCOLS,
 ): boolean {
@@ -84,8 +86,12 @@ export function isSpecialProtocol(
 
 /**
  * Fabrique un slug simple à partir d’un libellé (usage UI).
+ *
+ * @remarks
+ * - retire les accents (NFD)
+ * - convertit en kebab-case
  */
-export function slugifyPath(input: string) {
+export function slugifyPath(input: string): string {
   return input
     .trim()
     .toLowerCase()
@@ -158,7 +164,7 @@ function normalizeUnsafeCandidate(href: string): string {
 /**
  * Détecter les **protocoles non sûrs** pour `<a href=...>` (XSS, schémas interdits).
  */
-export function isUnsafeHref(href?: string | null): UnsafeHrefResult {
+function isUnsafeHref(href?: string | null): UnsafeHrefResult {
   if (typeof href !== "string") return { unsafe: false };
 
   const cleaned = normalizeUnsafeCandidate(href);
@@ -189,14 +195,15 @@ export function isUnsafeHref(href?: string | null): UnsafeHrefResult {
 /**
  * Résoudre les **flags de lien** (externe, spécial, non sûr…).
  *
- * @param href Href à analyser (idéalement déjà normalisé via `normalizeString`)
+ * @param href Href à analyser (idéalement déjà normalisé via un normalize string UI)
  */
 export function resolveLinkFlags(href: string): LinkFlags {
-  const { unsafe, reason } = isUnsafeHref(href);
+  const raw = String(href ?? "").trim();
+  const { unsafe, reason } = isUnsafeHref(raw);
 
   // External “brut” = URL absolue http(s) OU protocole spécial (mailto/tel)
-  const special = isSpecialProtocol(href);
-  const rawExternal = isAbsoluteUrl(href) || special;
+  const special = isSpecialProtocol(raw);
+  const rawExternal = isAbsoluteUrl(raw) || special;
 
   // External “classique” = rawExternal mais pas special
   const external = rawExternal && !special;
@@ -210,35 +217,51 @@ export function resolveLinkFlags(href: string): LinkFlags {
   };
 }
 
+/* -------------------------------------------------------------------------- */
+/*                          Mount / preview helpers                            */
+/* -------------------------------------------------------------------------- */
+
+export type SiteMountBase = "/preview" | "/draft" | "/site" | "/";
+
 /**
- * Détecte si l'on est en mode preview admin.
- * Basé sur la présence de "/preview" dans le pathname.
+ * Helper interne : vrai si `path` est exactement `mount` ou sous-chemin de `mount`.
  */
-export function isPreviewPath(path: string): boolean {
+function isMountPath(
+  path: string,
+  mount: Exclude<SiteMountBase, "/">,
+): boolean {
+  return path === mount || path.startsWith(mount + "/");
+}
+
+/**
+ * Détecte si l'on est en mode preview Studio.
+ *
+ * @remarks
+ * - "preview" est un concept UI (ok côté UI)
+ * - côté domaine, l'état canonique reste `draft`
+ */
+function isPreviewPath(path: string): boolean {
   const current = normalizePath(path);
-  return current === "/preview" || current.startsWith("/preview/");
+  return isMountPath(current, "/preview");
 }
 
 export function shouldDisableLinksInPreview(currentPath: string): boolean {
   return isPreviewPath(currentPath);
 }
-export type PublicMountBase = "/preview" | "/draft" | "/site" | "/";
 
 /**
- * Résout la base de mount public selon le chemin courant.
+ * Résout la base de mount site selon le chemin courant.
  * - /preview/* => /preview
  * - /draft/*   => /draft
- * - /site/*    => /site
  * - sinon      => /
  */
-export function resolvePublicMountBase(currentPath: string): PublicMountBase {
+export function resolveSiteMountBase(currentPath: string): SiteMountBase {
   const p = normalizePath(currentPath || "/");
 
-  if (p === "/preview" || p.startsWith("/preview/")) return "/preview";
-  if (p === "/draft" || p.startsWith("/draft/")) return "/draft";
-  if (p === "/site" || p.startsWith("/site/")) return "/site";
+  if (isMountPath(p, STUDIO_PATH.preview)) return STUDIO_PATH.preview;
+  if (isMountPath(p, STUDIO_PATH.draft)) return STUDIO_PATH.draft;
 
-  return "/";
+  return SITE_PATH.home;
 }
 
 /**
@@ -258,11 +281,11 @@ export function resolveInternalHref(currentPath: string, href: string): string {
   if (!raw) return raw;
 
   const flags = resolveLinkFlags(raw);
-  if (flags.rawExternal || flags.unsafe) return raw; // ✅ suffit
+  if (flags.rawExternal || flags.unsafe) return raw;
 
   if (!raw.startsWith("/")) return raw;
 
-  const base = resolvePublicMountBase(currentPath);
+  const base = resolveSiteMountBase(currentPath);
   if (base === "/") return normalizePath(raw);
 
   const target = normalizePath(raw);

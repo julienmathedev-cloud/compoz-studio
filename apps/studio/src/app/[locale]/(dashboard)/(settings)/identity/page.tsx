@@ -1,14 +1,15 @@
 /**
  * @file apps/studio/src/app/[locale]/(dashboard)/(settings)/identity/page.tsx
- * @layer app/studio/pages
+ * @layer studio/app
  *
  * @description
- * Page admin “Identity” (V0.5) : affiche la section Identity.
+ * Page « Identity » (Studio) — route du dashboard.
  */
+
 import { IdentityPage } from "@compoz/studio/features/settings/identity/IdentityPage";
 
-export default function AdminIdentityPage() {
+export default function StudioIdentityPage() {
   return <IdentityPage />;
 }
 
-AdminIdentityPage.displayName = "AdminIdentityPage";
+StudioIdentityPage.displayName = "StudioIdentityPage";

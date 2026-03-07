@@ -3,16 +3,23 @@
  * @layer core/domain/pages/helpers
  *
  * @description
- * Helpers purs
+ * Helper pur : résout l’id d’une page à partir d’un index (id/slug),
+ * en normalisant le slug d’entrée ("/" => "home", suppression des slashes).
  */
 
-function normalizePublicSlug(input: string): string {
+import { SITE_PATH } from "@compoz/core/constants/web/paths";
+import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
+
+function normalizeSiteSlug(input: string): string {
   const raw = String(input ?? "").trim();
   if (!raw) return "";
-  if (raw === "/") return "home";
+
+  // "/" => "home"
+  if (raw === SITE_PATH.home) return HOME_SLUG;
+
+  // "/about" => "about"
   const s = raw.replace(/^\/+/, "");
-  if (s === "home") return "home";
-  return s;
+  return s || "";
 }
 
 export function resolvePageIdFromIndex(args: {
@@ -22,10 +29,10 @@ export function resolvePageIdFromIndex(args: {
     | null
     | undefined;
 }): string | null {
-  const slug = normalizePublicSlug(args.slug);
-  if (!slug) return null;
+  const normalizedSlug = normalizeSiteSlug(args.slug);
+  if (!normalizedSlug) return null;
 
   const pages = args.index?.pages ?? [];
-  const match = pages.find((p) => p.slug === slug);
+  const match = pages.find((p) => p.slug === normalizedSlug);
   return match?.id ?? null;
 }

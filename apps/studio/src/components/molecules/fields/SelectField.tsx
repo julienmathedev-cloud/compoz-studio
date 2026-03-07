@@ -2,13 +2,13 @@
 
 /**
  * @file apps/studio/src/components/molecules/fields/SelectField.tsx
- * @layer ui/molecules
+ * @layer studio/molecules
  *
  * @description
  * Champ Select contrôlé (label, aide, erreur, placeholder) basé sur le Select ShadCN.
  *
  * @remarks
- * - Molecule UI : compose `Field`, `Select` et des atoms (`HelpText`, `ErrorText`).
+ * - Molecule UI : compose `Field`, `Select` et des atoms (`FieldMetaBar`, `ErrorText`).
  * - Contrôle via `value` / `onChange` fournis par le parent.
  * - L’invalidité est pilotée via `error` et/ou `invalid` (ARIA + styles).
  * - Le chargement est géré au niveau Form / Section (ce composant ne gère que `disabled`).
@@ -16,8 +16,12 @@
  * - Strictement UI-only : aucune logique métier.
  */
 
+import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
+
 import { ErrorText } from "@compoz/studio/components/atoms/typography/ErrorText";
 import { FieldMetaBar } from "@compoz/studio/components/molecules/fields/FieldMetaBar";
+
 import {
   Field,
   FieldDescription,
@@ -32,8 +36,6 @@ import {
   SelectValue,
 } from "@compoz/ui/components/ui/select";
 import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
-import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
 
 /**
  * Option d’un `SelectField`.
@@ -75,7 +77,7 @@ type SelectFieldProps = Readonly<{
 }>;
 
 /**
- * Champ Select contrôlé standardisé pour l’admin.
+ * Champ Select contrôlé standardisé pour le Studio.
  */
 export function SelectField({
   ids,

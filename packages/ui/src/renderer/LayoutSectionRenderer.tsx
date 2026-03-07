@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/renderer/LayoutSectionRenderer.tsx
- * @layer ui/public/renderer
+ * @layer ui/renderer
  *
  * @description
- * Renderer public/preview : block LayoutSection (V0.5).
+ * Renderer site/preview : block LayoutSection (V0.5).
  *
  * @remarks
  * - Consomme `LayoutSectionBlockShape` (frontière Zod).
@@ -12,20 +12,22 @@
  * - La logique métier "cells.length === columns" reste côté domaine/validators.
  */
 
+import type { ReactNode } from "react";
+
 import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { cn } from "@compoz/ui/lib/utils";
 import { CarouselCellRenderer } from "@compoz/ui/renderer/cells/CarouselCellRenderer";
 import { GalleryCellRenderer } from "@compoz/ui/renderer/cells/GalleryCellRenderer";
 import { ImageCellRenderer } from "@compoz/ui/renderer/cells/ImageCellRenderer";
 import { RichTextCellRenderer } from "@compoz/ui/renderer/cells/RichTextCellRenderer";
-import { PublicHeading } from "@compoz/ui/site/components/atoms/PublicHeading";
+import { SiteHeading } from "@compoz/ui/site/components/atoms/SiteHeading";
 import type {
-  PublicBlocksUi,
-  PublicLayoutSectionUi,
-} from "@compoz/ui/site/public-ui.types";
+  SiteBlocksUi,
+  SiteLayoutSectionUi,
+} from "@compoz/ui/site/site-ui.types";
 import type { LayoutSectionBlockShape } from "@compoz/validation/pages/blocks/block";
 import type { CellShape } from "@compoz/validation/pages/blocks/cells/cell";
-import type { ReactNode } from "react";
+
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
 /* -------------------------------------------------------------------------- */
@@ -34,14 +36,14 @@ export type LayoutSectionRendererProps = Readonly<{
   block: LayoutSectionBlockShape;
 
   /** Variant rendu (public/preview). */
-  variant?: "public" | "preview";
+  variant?: "site" | "preview";
 
   /** Classes skin/template (wrapper section). */
   className?: string;
 
   /** UI fine. */
-  layoutUi: PublicLayoutSectionUi;
-  blocksUi: PublicBlocksUi;
+  layoutUi: SiteLayoutSectionUi;
+  blocksUi: SiteBlocksUi;
 }>;
 
 /* -------------------------------------------------------------------------- */
@@ -50,7 +52,7 @@ export type LayoutSectionRendererProps = Readonly<{
 
 export function LayoutSectionRenderer({
   block,
-  variant = "public",
+  variant = "site",
   className,
   layoutUi,
   blocksUi,
@@ -96,9 +98,9 @@ export function LayoutSectionRenderer({
     >
       {shouldRenderTitle ? (
         <header>
-          <PublicHeading level={2} visuallyHidden={titleHidden}>
+          <SiteHeading level={2} visuallyHidden={titleHidden}>
             {titleText}
-          </PublicHeading>
+          </SiteHeading>
         </header>
       ) : null}
 
@@ -137,7 +139,7 @@ function __cellKey(cell: CellShape, index: number) {
 function renderCell(
   cell: CellShape,
   isFull: boolean,
-  blocksUi: PublicBlocksUi,
+  blocksUi: SiteBlocksUi,
   isLcpMedia: boolean,
 ): ReactNode {
   switch (cell.kind) {

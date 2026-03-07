@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/components/molecules/media/ImageUploader.tsx
- * @layer ui/molecules
+ * @layer studio/molecules
  *
  * @description
  * Sélecteur d’image contrôlé (input file + preview locale + upload optionnel).
@@ -27,6 +27,7 @@ import { ErrorText } from "@compoz/studio/components/atoms/typography/ErrorText"
 import { HelpText } from "@compoz/studio/components/atoms/typography/HelpText";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { EmptyState } from "@compoz/studio/components/molecules/feedback/EmptyState";
+
 import {
   Field,
   FieldDescription,
@@ -84,10 +85,6 @@ type ImageSelectorProps = Readonly<{
 
   /**
    * Erreur externe (ex: Zod/RHF : src requis).
-   *
-   * @remarks
-   * - `fileError` (local) est prioritaire si présent.
-   * - Sinon, on affiche l’erreur externe si `invalid` est true.
    */
   invalid?: boolean;
   errorMessage?: string;
@@ -248,7 +245,7 @@ export function ImageSelector({
         if (!preferredTypes.includes(file.type)) {
           setTypeHint(
             preferredTypeHint ??
-              t("admin.imageSelector.hints.notRecommendedType", { types: "" }),
+              t("studio.imageSelector.hints.notRecommendedType", { types: "" }),
           );
         } else {
           setTypeHint(undefined);
@@ -317,7 +314,7 @@ export function ImageSelector({
       {/* Statut a11y uniquement (pas de layout shift) */}
       {uploading && (
         <LoadingStatus
-          label={t("admin.imageSelector.uploadingSr")}
+          label={t("studio.imageSelector.uploadingSr")}
           withSpinner={false}
           className="sr-only"
         />
@@ -360,7 +357,7 @@ export function ImageSelector({
             isBusy && "cursor-not-allowed opacity-70",
           )}
           style={{ minHeight: PREVIEW_MIN_HEIGHT }}
-          aria-label={t("admin.imageSelector.previewAria")}
+          aria-label={t("studio.imageSelector.previewAria")}
         >
           <div
             className={cn("relative h-full w-full items-center justify-center")}
@@ -388,7 +385,7 @@ export function ImageSelector({
                 />
               )
             ) : (
-              <EmptyState text={t("admin.imageSelector.chooseFile")} />
+              <EmptyState text={t("studio.imageSelector.chooseFile")} />
             )}
           </div>
         </TooltipButton>
@@ -399,13 +396,13 @@ export function ImageSelector({
             disabled={isDeleteDisabled}
             disabledTooltip={
               isBusy
-                ? t("admin.imageSelector.tooltips.disabledWhileUploading")
-                : t("admin.imageSelector.tooltips.nothingToDelete")
+                ? t("studio.imageSelector.tooltips.disabledWhileUploading")
+                : t("studio.imageSelector.tooltips.nothingToDelete")
             }
             onConfirmDelete={clearAll}
             confirm={{
-              title: t("admin.imageSelector.confirm.title"),
-              description: t("admin.imageSelector.confirm.description"),
+              title: t("studio.imageSelector.confirm.title"),
+              description: t("studio.imageSelector.confirm.description"),
             }}
           />
         </div>

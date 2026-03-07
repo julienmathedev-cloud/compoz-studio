@@ -2,40 +2,40 @@
 
 /**
  * @file apps/studio/src/features/preview/PreviewShell.tsx
- * @layer ui/preview
+ * @layer ui/studio/preview
  *
  * @description
- * Shell Preview (iframe admin) : injecte le chrome public (Header/Footer)
+ * Shell Preview (iframe studio) : injecte le chrome public (Header/Footer)
  * + le skin UI public, en se basant sur les baselines preview (React Query + postMessage).
  *
  * @remarks
  * - Obligatoirement client : dépend de `usePreviewOverride()`.
- * - Source de vérité : baselines "header/identity/menus/social/footer/legalMenu".
- * - Ne gère pas la page en elle-même : rend uniquement `{children}` dans le <main>.
- * - Scalable multi-skins : tu changes `resolvePreviewUi()` plus tard.
+ * - Source de vérité : baselines `header` / `identity` / `primaryMenu` / `social` / `footer` / `legalMenu`.
+ * - Ne gère pas la page en elle-même : rend uniquement `{children}` dans le `<main>`.
+ * - Scalable multi-skins : il suffira de faire évoluer `resolveSiteUi()`.
  */
 
+import type { ReactNode } from "react";
+
+import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePreviewOverride";
 import { cn } from "@compoz/ui/lib/utils";
-import { PublicFooter } from "@compoz/ui/site/components/layouts/PublicFooter";
-import { PublicHeader } from "@compoz/ui/site/components/layouts/PublicHeader";
-import { PublicUiProvider } from "@compoz/ui/site/providers/PublicUiProvider";
-import { resolvePublicUi } from "@compoz/ui/site/skins/resolvePublicUi";
-import { PUBLIC_APP_COLUMN, PUBLIC_MAIN } from "@compoz/ui/styles/site/layout";
+import { SiteFooter } from "@compoz/ui/site/components/layouts/SiteFooter";
+import { SiteHeader } from "@compoz/ui/site/components/layouts/SiteHeader";
+import { SiteUiProvider } from "@compoz/ui/site/providers/SiteUiProvider";
+import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
+import { SITE_APP_COLUMN, SITE_MAIN } from "@compoz/ui/styles/site/layout";
 import type { FooterSettingsShape } from "@compoz/validation/site/settings/footer/footer";
 import type { HeaderSettingsShape } from "@compoz/validation/site/settings/header/header";
 import type { IdentitySettingsShape } from "@compoz/validation/site/settings/identity/identity";
 import type { LegalMenuSettingsShape } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu";
 import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 import type { SocialSettingsShape } from "@compoz/validation/site/settings/social/social";
-import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePreviewOverride";
-import type { ReactNode } from "react";
 
 export type PreviewShellProps = Readonly<{
   children: ReactNode;
 }>;
 
 export function PreviewShell({ children }: PreviewShellProps) {
-  // Baselines settings (read-only) : identique à ton PagePreviewClient.
   const header = usePreviewOverride<HeaderSettingsShape>("header");
   const identity = usePreviewOverride<IdentitySettingsShape>("identity");
   const primaryMenu =
@@ -51,10 +51,8 @@ export function PreviewShell({ children }: PreviewShellProps) {
   const visibleFooter = footer.baseline;
   const visibleLegalMenu = legalMenu.baseline;
 
-  const ui = resolvePublicUi();
+  const ui = resolveSiteUi();
 
-  // Gating strict : pas de “shell” tant que les baselines ne sont pas là.
-  // (Même philosophie que ton overview/page preview.)
   if (
     !visibleHeader ||
     !visibleIdentity ||
@@ -67,27 +65,25 @@ export function PreviewShell({ children }: PreviewShellProps) {
   }
 
   return (
-    <>
-      <PublicUiProvider ui={ui}>
-        <div className={cn(PUBLIC_APP_COLUMN)}>
-          <PublicHeader
-            header={visibleHeader}
-            identity={visibleIdentity}
-            primaryMenu={visiblePrimaryMenu}
-            social={visibleSocial}
-            ui={ui.header}
-          />
+    <SiteUiProvider ui={ui}>
+      <div className={cn(SITE_APP_COLUMN)}>
+        <SiteHeader
+          header={visibleHeader}
+          identity={visibleIdentity}
+          primaryMenu={visiblePrimaryMenu}
+          social={visibleSocial}
+          ui={ui.header}
+        />
 
-          <main className={cn(PUBLIC_MAIN)}>{children}</main>
+        <main className={cn(SITE_MAIN)}>{children}</main>
 
-          <PublicFooter
-            footer={visibleFooter}
-            legalMenu={visibleLegalMenu}
-            ui={ui.footer}
-          />
-        </div>
-      </PublicUiProvider>
-    </>
+        <SiteFooter
+          footer={visibleFooter}
+          legalMenu={visibleLegalMenu}
+          ui={ui.footer}
+        />
+      </div>
+    </SiteUiProvider>
   );
 }
 

@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/features/shell/components/Header.tsx
- * @layer ui/layouts
+ * @layer ui/studio/layouts
  *
  * @description
- * En-tête persistant de l’interface d’administration.
+ * En-tête persistant de l’interface Studio.
  *
  * @remarks
  * - UI-only : aucune logique métier.
@@ -13,23 +13,24 @@
  * - Inclut un skip link pour l’accessibilité clavier.
  * - Version actuelle sans navigation dynamique.
  */
+
+import { SignOutButton } from "@compoz/studio/components/atoms/buttons/SignOutButton";
+import { ThemeToggle } from "@compoz/studio/components/atoms/buttons/ThemeToggle";
+import { LocaleSwitch } from "@compoz/studio/features/shell/components/LocaleSwitch";
 import { SidebarTrigger } from "@compoz/ui/components/ui/sidebar";
 import { cn } from "@compoz/ui/lib/utils";
 import { ROW_BETWEEN } from "@compoz/ui/styles/studio/layout";
-import { AdminThemeToggle } from "@compoz/studio/components/atoms/buttons/AdminThemeToggle";
-import { AdminLocaleSwitch } from "@compoz/studio/features/shell/components/AdminLocaleSwitch";
 import { useTranslations } from "next-intl";
-import { AdminSignOutButton } from "@compoz/studio/components/atoms/buttons/AdminSignOutButton";
 
 /**
- * Header principal de l’interface d’administration.
+ * Header principal de l’interface Studio.
  */
 export function Header() {
   const t = useTranslations();
 
   return (
     <header
-      aria-label={t("admin.header.ariaLabel")}
+      aria-label={t("studio.header.ariaLabel")}
       className="sticky top-0 z-40 w-full bg-sidebar backdrop-blur supports-backdrop-filter:bg-sidebar items-center h-10"
     >
       {/* Skip link : rendu visible uniquement au focus */}
@@ -48,7 +49,7 @@ export function Header() {
           "outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-0",
         )}
       >
-        {t("admin.header.skipToContent")}
+        {t("studio.header.skipToContent")}
       </a>
 
       {/* Contenu principal du header */}
@@ -57,10 +58,9 @@ export function Header() {
 
         {/* Espace actions — bouton placeholder pour V0.5 */}
         <div className={cn("flex items-center gap-0.5", "mr-2")}>
-          <AdminThemeToggle />
-          <AdminLocaleSwitch />
-
-          <AdminSignOutButton />
+          <ThemeToggle />
+          <LocaleSwitch />
+          <SignOutButton />
         </div>
       </div>
     </header>

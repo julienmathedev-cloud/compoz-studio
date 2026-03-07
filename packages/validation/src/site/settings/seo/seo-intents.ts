@@ -21,7 +21,7 @@ import { SeoSettingsObjectSchema } from "@compoz/validation/site/settings/seo/se
 import { z } from "zod";
 
 /* -------------------------------------------------------------------------- */
-/*                           Helpers clearables                                */
+/*                           Helpers clearables                               */
 /* -------------------------------------------------------------------------- */
 
 const ClearableStringSchema = z.union([z.string(), z.literal("")]);
@@ -91,22 +91,32 @@ const UpdateSeoSettingsIntentObjectSchema = SeoSettingsObjectSchema.partial()
 /* -------------------------------------------------------------------------- */
 /*                                    Zod                                     */
 /* -------------------------------------------------------------------------- */
-const REQUIRE_BASEURL_HTTPS = process.env.NODE_ENV === "production";
+
+export type SeoIntentValidationOptions = {
+  /**
+   * Si `true`, baseUrl (si fournie dans le patch) doit être en https.
+   * Cette règle est runtime-dependent et doit être injectée depuis l'appelant (ex: route).
+   */
+  requireBaseUrlHttps?: boolean;
+};
+
 type UpdateSeoIntentShape = z.infer<typeof UpdateSeoSettingsIntentObjectSchema>;
+
 /**
  * Validation "patch-aware" :
  * - n'applique les règles que si les champs concernés sont présents dans le payload.
  *
  * @remarks
- * On réutilise la validation full (`validateSeoSettingsValues`) en construisant un objet
- * complet avec des valeurs par défaut, puis en y injectant le patch.
+ * On reconstruit un objet "complet" minimal, puis on y injecte le patch.
  */
 export function validateSeoSettingsPatchValues(
   patch: UpdateSeoIntentShape,
   ctx: z.RefinementCtx,
+  opts?: SeoIntentValidationOptions,
 ) {
-  // On reconstruit un objet "complet" minimal qui satisfait les types attendus
-  // par validateSeoSettingsValues, puis on injecte le patch.
+  const requireBaseUrlHttps = opts?.requireBaseUrlHttps ?? false;
+
+  // Base minimale (évite de dépendre de defaults côté domaine).
   const base: z.infer<typeof SeoSettingsObjectSchema> = {
     baseUrl: "",
     canonicalUrl: "",
@@ -133,13 +143,16 @@ export function validateSeoSettingsPatchValues(
     }
   }
 
-  // 2) baseUrl https requis en prod uniquement si patch le contient
+  // 2) baseUrl : si patch le contient et est non vide => doit être une URL valide.
+  //    Si option requireBaseUrlHttps = true => https requis.
   if (Object.prototype.hasOwnProperty.call(patch, "baseUrl")) {
     const baseUrl = (merged.baseUrl ?? "").trim();
-    if (baseUrl.length > 0 && REQUIRE_BASEURL_HTTPS) {
+
+    if (baseUrl.length > 0) {
       try {
         const { protocol } = new URL(baseUrl);
-        if (protocol !== "https:") {
+
+        if (requireBaseUrlHttps && protocol !== "https:") {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ["baseUrl"],
@@ -191,22 +204,27 @@ export function validateSeoSettingsPatchValues(
 }
 
 /**
- * Intention de mise à jour des réglages SEO.
- * Contrat : payload partiel aligné sur la forme des settings, avec état optionnel
- * et clearabilité des champs acceptée.
+ * Factory : schéma d’intention SEO configurable via options runtime.
+ */
+export function createUpdateSeoSettingsIntentSchema(
+  opts?: SeoIntentValidationOptions,
+) {
+  return UpdateSeoSettingsIntentObjectSchema.superRefine((patch, ctx) =>
+    validateSeoSettingsPatchValues(patch, ctx, opts),
+  );
+}
+
+/**
+ * Intention de mise à jour des réglages SEO (neutre, sans dépendance runtime).
  */
 export const UpdateSeoSettingsIntentSchema =
-  UpdateSeoSettingsIntentObjectSchema.superRefine(
-    validateSeoSettingsPatchValues,
-  );
+  createUpdateSeoSettingsIntentSchema();
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
 /* -------------------------------------------------------------------------- */
 
-/**
- * DTO d’intention : résultat typé du parsing du payload SEO.
- */
+/** DTO d’intention : résultat typé du parsing du payload SEO. */
 export type UpdateSeoSettingsIntentDTO = z.infer<
   typeof UpdateSeoSettingsIntentSchema
 >;

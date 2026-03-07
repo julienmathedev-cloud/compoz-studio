@@ -1,8 +1,9 @@
 /**
  * @file apps/studio/src/app/api/_adapters/pages/blocks.ts
- * @layer api/adapters
+ * @layer studio/app/api/adapters
+ *
  * @description
- * Adaptateurs API Admin pour les blocks de pages :
+ * Adaptateurs API Studio pour les blocks de pages :
  * convertit les Intent DTOs (API) en inputs domaine (use-cases).
  *
  * Responsabilités :
@@ -12,6 +13,7 @@
  * - pas de gestion de state (draft-only, géré par la route)
  * - pas de gestion de `pageId` (SoT = params route)
  */
+
 import { log } from "@compoz/infra/lib/log";
 import { sanitizeRichTextHtml } from "@compoz/infra/lib/sanitize-rich-text";
 import { trimOrKeep } from "@compoz/studio/lib/strings";
@@ -32,7 +34,7 @@ import type {
   RichTextCell,
 } from "@compoz/core/domain/pages/entities/cell";
 
-import type { AddLayoutSectionBlockPatchInput } from "@compoz/core/domain/pages/use-cases/blocks/add-layout-section-block.types";
+import type { CreateLayoutSectionBlockPatchInput } from "@compoz/core/domain/pages/use-cases/blocks/create-layout-section-block.types";
 import type { DeleteBlockPatchInput } from "@compoz/core/domain/pages/use-cases/blocks/delete-block.types";
 import type { ReorderBlocksPatchInput } from "@compoz/core/domain/pages/use-cases/blocks/reorder-blocks.types";
 import type {
@@ -55,10 +57,10 @@ import type {
 
 export function adaptCreateLayoutSectionBlockIntent(
   dto: CreateLayoutSectionBlockIntentDTO,
-): AddLayoutSectionBlockPatchInput {
+): CreateLayoutSectionBlockPatchInput {
   const started = Date.now();
 
-  const out: AddLayoutSectionBlockPatchInput = {
+  const out: CreateLayoutSectionBlockPatchInput = {
     columns: dto.columns,
     containerMode: dto.containerMode,
     cells: adaptCells(dto.cells),
@@ -67,14 +69,14 @@ export function adaptCreateLayoutSectionBlockIntent(
     lcpPriority: Boolean(dto.lcpPriority),
 
     title: {
-      text: (dto.title?.text ?? "").trim(),
+      text: trimOrKeep(dto.title?.text ?? ""),
       display: dto.title?.display === "sr-only" ? "sr-only" : "visible",
     },
   };
 
   if ("insertAt" in dto) out.insertAt = dto.insertAt;
 
-  log.debug("admin.adapter.pagesBlocks.create.end", {
+  log.debug("studio.adapter.pagesBlocks.create.end", {
     ms: Date.now() - started,
   });
 
@@ -96,7 +98,7 @@ export function adaptUpdateLayoutSectionBlockIntent(
 
   if ("title" in dto.patch && dto.patch.title) {
     patch.title = {
-      text: dto.patch.title.text.trim(),
+      text: trimOrKeep(dto.patch.title.text),
       display: dto.patch.title.display,
     };
   }
@@ -110,7 +112,7 @@ export function adaptUpdateLayoutSectionBlockIntent(
     patch,
   };
 
-  log.debug("admin.adapter.pagesBlocks.update.end", {
+  log.debug("studio.adapter.pagesBlocks.update.end", {
     ms: Date.now() - started,
   });
 
@@ -129,7 +131,7 @@ export function adaptReorderBlocksIntent(
   dto: ReorderBlocksIntentDTO,
 ): ReorderBlocksPatchInput {
   return {
-    orderedBlockIds: dto.orderedBlockIds,
+    orderedBlockIds: dto.orderedBlockIds.map(trimOrKeep),
   };
 }
 
@@ -198,11 +200,14 @@ function adaptRichTextCell(dto: RichTextCellIntentDTO): RichTextCell {
 
 function adaptImage(dto: ImageEditorIntentDTO): ImageEditor {
   return {
-    id: dto.id,
-    src: dto.src,
-    alt: dto.alt,
-    caption: dto.caption,
-    href: dto.href,
+    id: trimOrKeep(dto.id),
+    src: trimOrKeep(dto.src),
+
+    alt: typeof dto.alt === "string" ? trimOrKeep(dto.alt) : dto.alt,
+    caption:
+      typeof dto.caption === "string" ? trimOrKeep(dto.caption) : dto.caption,
+    href: typeof dto.href === "string" ? trimOrKeep(dto.href) : dto.href,
+
     width: dto.width ?? 0,
     height: dto.height ?? 0,
   };

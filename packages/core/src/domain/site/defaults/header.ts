@@ -12,13 +12,6 @@ import type { HeaderSettings } from "@compoz/core/domain/site/entities/header";
 
 /**
  * Valeurs par défaut d’un header minimal.
- *
- * @example
- * - `showLogo: true`  → affichage du logo s’il existe
- * - `showSiteName: true` → fallback lisible si pas de logo
- * - `sticky: true`    → expérience moderne (header collant)
- * - `blur: true`      → effet visuel léger compatible dark/light
- * - `swapPrimaryAndSocial: false` → ordre classique : menu principal avant social
  */
 export const DEFAULT_HEADER_SETTINGS: HeaderSettings = {
   showLogo: true,

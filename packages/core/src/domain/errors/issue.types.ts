@@ -1,6 +1,6 @@
 /**
- * @file src/core/domain/errors/issue.types.ts
- * @layer core/domain
+ * @file packages/core/src/domain/errors/issue.types.ts
+ * @layer core/domain/errors
  * @description
  * Types légers pour représenter des avertissements métier **non bloquants**
  * destinés à l’UI (qualité, conseils, alertes douces).

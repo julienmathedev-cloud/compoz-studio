@@ -10,35 +10,17 @@
 import { z } from "zod";
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
+import {
+  TenantIdSchema,
+  TenantIdsSchema,
+  UserEmailSchema,
+  UserIdParamSchema,
+  UserRoleSchema,
+} from "@compoz/validation/users/user";
 
 /* -------------------------------------------------------------------------- */
-/*                               Schémas atomiques                            */
+/*                               Champs intent                                */
 /* -------------------------------------------------------------------------- */
-
-/**
- * Id technique d'un User.
- */
-export const UserIdSchema = z
-  .string()
-  .trim()
-  .min(1, ERROR_CODES.USER_ID_REQUIRED);
-
-export const UserIdParamSchema = z.object({ userId: UserIdSchema }).strict();
-
-/**
- * Email (forme frontière) :
- * - trim
- * - requis
- * - format email basique
- *
- * @remarks
- * Le domaine refait une normalisation/validation (lower-case + règles).
- */
-export const UserEmailSchema = z
-  .string()
-  .trim()
-  .min(1, ERROR_CODES.USER_EMAIL_REQUIRED)
-  .email(ERROR_CODES.USER_EMAIL_INVALID_FORMAT);
 
 /**
  * Name (forme frontière) :
@@ -64,31 +46,17 @@ export const UserPasswordSchema = z.preprocess(
 );
 
 /**
- * Role RBAC minimal (V0.5).
- */
-export const UserRoleSchema = z.enum(["admin", "editor"], {
-  message: ERROR_CODES.USER_ROLE_INVALID,
-});
-
-/**
- * RBAC (forme frontière).
+ * RBAC (forme frontière intent).
  *
  * @remarks
- * - tenantIds : array non vide
- * - defaultTenantId : string non vide
- * - La règle "defaultTenantId ∈ tenantIds (sauf wildcard)" est surtout domaine,
- *   mais on garde une structure stricte ici.
+ * On réutilise les schémas canonique (normalisation + contraintes minimales).
+ * Les règles métier avancées (permissions, transitions, etc.) restent dans le domaine.
  */
 export const UserRbacIntentSchema = z
   .object({
     role: UserRoleSchema,
-    tenantIds: z
-      .array(z.string().trim().min(1))
-      .min(1, ERROR_CODES.USER_TENANT_IDS_REQUIRED),
-    defaultTenantId: z
-      .string()
-      .trim()
-      .min(1, ERROR_CODES.USER_DEFAULT_TENANT_REQUIRED),
+    tenantIds: TenantIdsSchema,
+    defaultTenantId: TenantIdSchema,
   })
   .strict();
 
@@ -96,9 +64,6 @@ export const UserRbacIntentSchema = z
 /*                            Intentions HTTP API                             */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Intention de création d’un user.
- */
 export const CreateUserIntentSchema = z
   .object({
     email: UserEmailSchema,
@@ -110,13 +75,6 @@ export const CreateUserIntentSchema = z
 
 export type CreateUserIntentDTO = z.infer<typeof CreateUserIntentSchema>;
 
-/**
- * Intention de mise à jour d’un user (patch partiel).
- *
- * @remarks
- * - Si `password` est présent, il doit être non vide.
- * - Le domaine gère l’unicité email, la validation RBAC et le no-op.
- */
 export const UpdateUserIntentSchema = z
   .object({
     email: UserEmailSchema.optional(),
@@ -129,8 +87,13 @@ export const UpdateUserIntentSchema = z
 export type UpdateUserIntentDTO = z.infer<typeof UpdateUserIntentSchema>;
 
 /**
- * Intention pour un listing (optionnel si tu ajoutes des filtres plus tard).
- * (Pour l’instant, placeholder : pas de payload)
+ * Intention pour un listing (placeholder : pas de payload).
  */
 export const ListUsersIntentSchema = z.object({}).strict();
 export type ListUsersIntentDTO = z.infer<typeof ListUsersIntentSchema>;
+
+/* -------------------------------------------------------------------------- */
+/*                                  Params                                    */
+/* -------------------------------------------------------------------------- */
+
+export { UserIdParamSchema };

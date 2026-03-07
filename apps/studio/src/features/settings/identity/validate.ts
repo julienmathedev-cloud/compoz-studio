@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/settings/identity/validate.ts
- * @layer hooks/admin/site/identity
+ * @layer hooks/studio/site/identity
  *
  * @description
  * Helpers et hooks de validation UI non bloquante pour l’identité du site.

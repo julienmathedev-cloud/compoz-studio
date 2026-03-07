@@ -12,7 +12,7 @@
  */
 
 import { cn } from "@compoz/ui/lib/utils";
-import { PUBLIC_APP_SHELL } from "@compoz/ui/styles/site/layout";
+import { SITE_APP_SHELL } from "@compoz/ui/styles/site/layout";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import type { ReactNode } from "react";
@@ -27,7 +27,7 @@ export default async function PreviewLayout({ children }: PreviewLayoutProps) {
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <div className={cn(PUBLIC_APP_SHELL)}>{children}</div>
+      <div className={cn(SITE_APP_SHELL)}>{children}</div>
     </NextIntlClientProvider>
   );
 }

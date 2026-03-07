@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/site/status/useSiteStatusDetails.ts
- * @layer ui/hooks
+ * @layer hooks/studio/site/status
  *
  * @description
  * Hook React Query (lazy) : détail pages/blocs (draft vs published) pour l’Overview.
@@ -21,8 +21,9 @@ import type {
   SiteStatusDetailsDTO,
   SiteStatusDetailsScopeDTO,
 } from "@compoz/core/domain/site/dto";
-import { siteAdminApi } from "@compoz/infra/http/studio/site.client";
-import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
+import { siteStudioApi } from "@compoz/infra/http/studio/site.client";
+import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { siteStatusDetailsKey } from "@compoz/studio/features/site/status/keys";
 
 type UseSiteStatusDetailsParams = Readonly<{
   enabled: boolean;
@@ -31,38 +32,16 @@ type UseSiteStatusDetailsParams = Readonly<{
   pageId?: string | null;
 }>;
 
-function siteStatusDetailsKey(args: {
-  tenantId: string;
-  scope: SiteStatusDetailsScopeDTO;
-  includeBlocks: boolean;
-  pageId: string | null;
-}) {
-  const tid = String(args.tenantId ?? "")
-    .trim()
-    .toLowerCase();
-
-  const pageId = (args.pageId ?? "").trim() || null;
-
-  return [
-    "t",
-    tid,
-    "admin",
-    "site",
-    "statusDetails",
-    args.scope,
-    args.includeBlocks,
-    pageId,
-  ] as const;
-}
-
 export function useSiteStatusDetails({
   enabled,
   scope = "dirty",
   includeBlocks = false,
   pageId,
 }: UseSiteStatusDetailsParams) {
-  const pId = (pageId ?? "").trim() || null;
   const tenantId = useTenantId();
+
+  const pid = (pageId ?? "").trim();
+  const pId = pid ? pid : null;
 
   const isEnabled = Boolean(enabled) && Boolean(String(tenantId ?? "").trim());
 
@@ -75,7 +54,7 @@ export function useSiteStatusDetails({
     }),
 
     queryFn: async (): Promise<SiteStatusDetailsDTO> => {
-      const res = await siteAdminApi.statusDetails({
+      const res = await siteStudioApi.statusDetails({
         scope,
         includeBlocks,
         pageId,
@@ -87,11 +66,9 @@ export function useSiteStatusDetails({
 
     // ✅ garde l'ancienne data quand la key change
     placeholderData: keepPreviousData,
-
-    // ✅ V0.5 perf : évite les refetch “bruit KV”
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
   } as const;
 
-  return useQuery(options);
+  return useQuery<SiteStatusDetailsDTO>(options);
 }
+
+useSiteStatusDetails.displayName = "useSiteStatusDetails";

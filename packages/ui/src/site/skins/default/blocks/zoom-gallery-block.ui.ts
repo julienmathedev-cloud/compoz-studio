@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/site/skins/default/blocks/zoom-gallery-block.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
  * Skin UI — zoom gallery block (Default).
@@ -10,9 +10,9 @@
  * - Full style vit ici (aucun fallback dans le composant).
  */
 
-import { defaultLightboxUi } from "@compoz/ui/site/skins/default/molecules/lightbox.ui";
-import type { PublicZoomGalleryUi } from "@compoz/ui/site/public-ui.types";
 import type { GalleryMaxColumns } from "@compoz/core/domain/pages/entities/cell";
+import type { SiteZoomGalleryUi } from "@compoz/ui/site/site-ui.types";
+import { defaultLightboxUi } from "@compoz/ui/site/skins/default/molecules/lightbox.ui";
 
 const DEFAULT_COLUMNS: Readonly<Record<GalleryMaxColumns, string>> = {
   1: "grid-cols-1",
@@ -22,7 +22,7 @@ const DEFAULT_COLUMNS: Readonly<Record<GalleryMaxColumns, string>> = {
   5: "grid-cols-1 sm:grid-cols-3 lg:grid-cols-5",
 } as const;
 
-export const defaultZoomGalleryUi: PublicZoomGalleryUi = {
+export const defaultZoomGalleryUi: SiteZoomGalleryUi = {
   // Grid sobre (les colonnes viennent de `columns`)
   list: "grid gap-6",
   columns: DEFAULT_COLUMNS,

@@ -1,5 +1,5 @@
 /**
- * @file packages/validation/src/site/social/social.ts
+ * @file packages/validation/src/site/settings/social/social.ts
  * @layer schemas
  * @description
  * Définit les schémas Zod décrivant la forme frontière des réglages et items sociaux.
@@ -7,14 +7,14 @@
  * les valeurs draft-friendly ("" pendant la saisie) sont gérées côté form schema.
  */
 
-import { AbsoluteHttpUrlSchema } from "@compoz/validation/common/url-fragments";
-import { SOCIAL } from "@compoz/core/constants/limits/social";
+import { SOCIAL_ITEM } from "@compoz/core/constants/limits/social";
 import {
   SOCIAL_KIND_EMAIL,
   SOCIAL_KINDS,
 } from "@compoz/core/constants/social/social-kinds";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { isMailtoHref } from "@compoz/core/domain/urls/mailto";
+import { AbsoluteHttpUrlSchema } from "@compoz/validation/common/url-fragments";
 import { z } from "zod";
 
 /** Kind (strict enum). */
@@ -36,16 +36,15 @@ export const SocialItemSchema = z
     kind: SocialKindSchema,
     href: z.string().trim().min(1, ERROR_CODES.SOCIAL_HREF_REQUIRED),
   })
+  .strict()
   .superRefine((val, ctx) => {
-    const kind = val.kind;
     const href = val.href.trim();
 
-    const isMailtoOk = MailtoHrefSchema.safeParse(href).success;
-    const isAbsOk = AbsoluteHttpUrlSchema.safeParse(href).success;
+    const isMailto = MailtoHrefSchema.safeParse(href).success;
 
     // email → mailto obligatoire
-    if (kind === SOCIAL_KIND_EMAIL) {
-      if (!isMailtoOk) {
+    if (val.kind === SOCIAL_KIND_EMAIL) {
+      if (!isMailto) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["href"],
@@ -56,7 +55,7 @@ export const SocialItemSchema = z
     }
 
     // autres → mailto interdit
-    if (isMailtoOk) {
+    if (isMailto) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["href"],
@@ -66,22 +65,22 @@ export const SocialItemSchema = z
     }
 
     // autres → http(s) absolu requis
-    if (!isAbsOk) {
+    const isAbs = AbsoluteHttpUrlSchema.safeParse(href).success;
+    if (!isAbs) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["href"],
         message: ERROR_CODES.SOCIAL_ABSOLUTE_REQUIRED,
       });
     }
-  })
-  .strict();
+  });
 
 /** Settings social (liste ordonnée). */
 export const SocialSettingsSchema = z
   .object({
     items: z
       .array(SocialItemSchema)
-      .max(SOCIAL.ITEM_MAX, ERROR_CODES.SOCIAL_TOO_MANY_ITEMS),
+      .max(SOCIAL_ITEM.MAX, ERROR_CODES.SOCIAL_TOO_MANY_ITEMS),
   })
   .strict();
 

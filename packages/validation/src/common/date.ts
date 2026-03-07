@@ -19,7 +19,6 @@ const ISO_UTC_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
  * @returns `true` si la forme est correcte et parsable par `Date.parse`.
  */
 function isIsoUtc(value: string): boolean {
-  if (typeof value !== "string") return false;
   if (value.trim() !== value) return false; // interdit les espaces autour
   if (!ISO_UTC_PATTERN.test(value)) return false;
 

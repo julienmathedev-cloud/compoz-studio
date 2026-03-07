@@ -1,6 +1,6 @@
 /**
  * @file apps/site/src/app/t/[tenantId]/robots.ts
- * @layer app/metadata
+ * @layer site/app/metadata
  *
  * @description
  * Route metadata `robots` pour le fallback multi-tenant /t/:tenant.
@@ -14,7 +14,9 @@
 import "server-only";
 
 import type { MetadataRoute } from "next";
+
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
+import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 type Params = Readonly<{
   params: Promise<Readonly<{ tenantId: string }>>;
@@ -25,9 +27,7 @@ export default async function robots({
 }: Params): Promise<MetadataRoute.Robots> {
   const { tenantId } = await unwrapParams(params);
 
-  const t = String(tenantId ?? "")
-    .trim()
-    .toLowerCase();
+  const t = toTenantId(tenantId);
 
   return {
     rules: [

@@ -1,10 +1,14 @@
 /**
- * @file apps/studio/src/lib/api/response.ts
- * @layer lib/api
+ * @file apps/studio/src/lib/api/responses.ts
+ * @layer studio/lib/api
  * @description
  * Helpers standardisés pour produire des réponses JSON dans l’App Router :
- * succès (`jsonOk`) et erreurs normalisées (`jsonHttpError`, `serverError`),
+ * succès (`jsonOk`) et erreurs normalisées (`jsonHttpError`),
  * avec cache désactivé via `Cache-Control: no-store`.
+ *
+ * @remarks
+ * - Ces helpers sont pensés pour être utilisés dans les routes (App Router) et dans `handleRoute()`.
+ * - Le format d’erreur suit l’enveloppe `ApiErrorEnvelope` (@compoz/http).
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -36,8 +40,9 @@ export function jsonOk<T>(data: T, status = 200): NextResponse<T> {
 
 /**
  * Génère une réponse JSON d'erreur normalisée.
- * Non exporté directement : utilisé par les helpers publics `serverError`
- * et `jsonHttpError`.
+ *
+ * @remarks
+ * Helper interne, utilisé par `jsonHttpError()`.
  *
  * @param code    Code d’erreur métier stable.
  * @param message Message lisible (obligatoire côté appelant).
@@ -57,36 +62,11 @@ function jsonError(
 }
 
 /**
- * Helper pour produire une erreur serveur (500).
- *
- * - En production : message générique ("Internal server error.").
- * - En développement : détail du message réel (+ cause optionnelle).
- *
- * @param err Erreur brute (Error / string / inconnu).
- */
-export function serverError(err: unknown): NextResponse<ApiErrorEnvelope> {
-  const isProd = process.env.NODE_ENV === "production";
-
-  const detailed =
-    err instanceof Error ? err.message : err ? String(err) : "Unknown error";
-
-  const message = isProd ? "Internal server error." : detailed;
-
-  // En dev, on peut exposer un petit contexte (sans stack énorme) pour debug.
-  const extras = isProd
-    ? undefined
-    : {
-        cause: err instanceof Error ? err.name : typeof err,
-      };
-
-  return jsonError(EC.INTERNAL, message, 500, extras);
-}
-
-/**
  * Conversion générique “status + HttpErrorBody” → réponse d’erreur JSON.
  *
- * Utilisé principalement par `handleRoute` pour transformer des erreurs HTTP
- * structurées (issues de Zod, DomainError, etc.) en réponse JSON cohérente.
+ * @remarks
+ * Utilisé principalement par `handleRoute()` pour transformer des erreurs HTTP
+ * structurées (Zod, DomainError, etc.) en réponse JSON cohérente.
  */
 export function jsonHttpError(
   status: number,

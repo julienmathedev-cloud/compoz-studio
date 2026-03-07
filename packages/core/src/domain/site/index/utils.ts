@@ -85,11 +85,21 @@ export function upsertPageRef(
     const prev = index.pages[i];
 
     // Rien ne change → no-op
-    if (prev.slug === ref.slug && prev.title === ref.title) return index;
+    if (
+      prev.slug === ref.slug &&
+      prev.title === ref.title &&
+      prev.parentId === ref.parentId
+    )
+      return index;
 
     // Sinon, on met à jour uniquement cette entrée
     const pages = index.pages.slice();
-    pages[i] = { ...prev, slug: ref.slug, title: ref.title };
+    pages[i] = {
+      ...prev,
+      slug: ref.slug,
+      title: ref.title,
+      parentId: ref.parentId ?? null,
+    };
     return { ...index, pages };
   }
 

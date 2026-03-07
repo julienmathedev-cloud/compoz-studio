@@ -1,6 +1,6 @@
 /**
  * @file apps/studio/src/features/settings/bundle/cache.ts
- * @layer hooks/admin/site/settings-bundle
+ * @layer hooks/studio/site/settings-bundle
  *
  * @description
  * Helpers de cache React Query pour le bundle de settings.
@@ -29,3 +29,5 @@ export function patchSettingsBundleCache(
     },
   );
 }
+
+patchSettingsBundleCache.displayName = "patchSettingsBundleCache";

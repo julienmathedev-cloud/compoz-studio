@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/site/skins/default/blocks/nav-gallery-block.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
  * Skin UI — gallery block (Default).
@@ -11,7 +11,7 @@
  */
 
 import type { GalleryMaxColumns } from "@compoz/core/domain/pages/entities/cell";
-import type { PublicNavGalleryUi } from "@compoz/ui/site/public-ui.types";
+import type { SiteNavGalleryUi } from "@compoz/ui/site/site-ui.types";
 
 const DEFAULT_COLUMNS: Readonly<Record<GalleryMaxColumns, string>> = {
   1: "grid-cols-1",
@@ -21,7 +21,7 @@ const DEFAULT_COLUMNS: Readonly<Record<GalleryMaxColumns, string>> = {
   5: "grid-cols-1 sm:grid-cols-3 lg:grid-cols-5",
 } as const;
 
-export const defaultNavGalleryUi: PublicNavGalleryUi = {
+export const defaultNavGalleryUi: SiteNavGalleryUi = {
   // Grid sobre (les colonnes viennent de `columns`)
   list: "grid gap-6",
   columns: DEFAULT_COLUMNS,

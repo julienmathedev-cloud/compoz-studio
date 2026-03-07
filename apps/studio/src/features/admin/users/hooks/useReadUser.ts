@@ -5,7 +5,7 @@
  * @layer hooks/admin/users
  *
  * @description
- * Hook admin React Query pour lire un user via l’API.
+ * Hook Studio React Query pour lire un user via l’API.
  *
  * @remarks
  * - Orchestration UI-only (query, logs, notifications).
@@ -13,15 +13,16 @@
  * - Aucune notion de state (users = données Studio globales).
  */
 
-import { log } from "@compoz/infra/lib/log";
-import { notify } from "@compoz/studio/lib/ui/notify";
-import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 
-import { usersAdminApi } from "@compoz/infra/http/studio/users.client";
-import { userByIdKey } from "@compoz/studio/features/admin/users/cache/keys";
+import { useQuery } from "@tanstack/react-query";
 
 import type { UserDTO } from "@compoz/core/domain/users/dto";
+import { adminUsersStudioApi } from "@compoz/infra/http/studio/users.client";
+import { log } from "@compoz/infra/lib/log";
+
+import { userByIdKey } from "@compoz/studio/features/admin/users/cache/keys";
+import { notify } from "@compoz/studio/lib/ui/notify";
 
 type UseReadUserResult = Readonly<{
   user: UserDTO | null;
@@ -39,7 +40,7 @@ export function useReadUser(userId: string): UseReadUserResult {
     enabled,
 
     queryFn: async ({ signal }: { signal: AbortSignal }): Promise<UserDTO> => {
-      const res = await usersAdminApi.getById(userIdKey, { signal });
+      const res = await adminUsersStudioApi.getById(userIdKey, { signal });
 
       // ✅ flatten route response
       return res.user;
@@ -52,6 +53,7 @@ export function useReadUser(userId: string): UseReadUserResult {
 
   useEffect(() => {
     if (!query.error) return;
+
     notify.fromError(query.error);
     lg.error("read.failed", {
       userId: userIdKey,

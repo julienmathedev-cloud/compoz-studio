@@ -1,9 +1,44 @@
 /**
  * @file packages/core/src/constants/web/paths.ts
- * @description Paths internes par défaut (routes “web”).
+ * @layer core/constants/web
+ * @description
+ * Paths internes utilisés dans l'application Studio.
+ * Centralise les routes de navigation (sidebar / sections / pages système).
  */
+/**
+ * Routes liées à l'administration des utilisateurs dans Studio.
+ * (gestion comptes / rôles / accès).
+ */
+const ADMIN_PATH = {
+  root: "/admin",
+  users: "/admin/users",
+} as const;
 
-export const DEFAULT_MENU_PATH = "/" as const;
+/**
+ * Routes principales du Studio (navigation sidebar).
+ */
+export const STUDIO_PATH = {
+  overview: "/",
+  identity: "/identity",
+  menu: "/menu",
+  social: "/social",
+  header: "/header",
+  footer: "/footer",
+  pages: "/pages",
+  blocks: "/blocks",
+  seo: "/seo",
+  adminPath: ADMIN_PATH,
+  mentionsLegales: "/mentions-legales",
+  confidentialite: "/confidentialite",
+  cookies: "/cookies",
 
-export const DEFAULT_LEGAL_MENTIONS_PATH = "/mentions-legales" as const;
-export const DEFAULT_LEGAL_COOKIES_PATH = "/cookies" as const;
+  preview: "/preview",
+  draft: "/draft",
+} as const;
+
+/**
+ * Chemins du site (surface "site", non-Studio).
+ */
+export const SITE_PATH = {
+  home: "/",
+} as const;

@@ -1,6 +1,6 @@
 /**
  * @file apps/studio/src/lib/config/uploads.ts
- * @layer lib/config
+ * @layer studio/lib/config
  *
  * @description
  * Configuration publique liée aux uploads de médias côté client.
@@ -8,8 +8,9 @@
  * Source de vérité UI :
  * - Taille max des fichiers uploadés (doit matcher la config serveur).
  *
- * ⚠️ Ce fichier est volontairement simple (V0.5).
- * Toute logique métier reste côté API.
+ * @remarks
+ * - V0.5 : volontairement simple, sans logique métier (elle reste côté API).
+ * - Pensé pour être consommé par les composants UI / hooks client.
  */
 
 /**

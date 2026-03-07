@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/editor/CellEditorTabs.tsx
- * @layer ui/organisms
+ * @layer ui/studio/pages/blocks/editor
  *
  * @description
  * Éditeur de cells par colonne via tabs (V0.5).
@@ -12,6 +12,17 @@
  * - Le parent fournit `cells` et récupère `onCellsChange`.
  * - V0.5 : édition inline, pas de navigation dédiée par cell.
  */
+
+import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
+
+import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
+import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
+import { CarouselCellEditor } from "@compoz/studio/features/pages/blocks/editor/cells/CarouselCellEditor";
+import { GalleryCellEditor } from "@compoz/studio/features/pages/blocks/editor/cells/GalleryCellEditor";
+import { ImageCellEditor } from "@compoz/studio/features/pages/blocks/editor/cells/ImageCellEditor";
+import { RichTextCellEditor } from "@compoz/studio/features/pages/blocks/editor/cells/RichTextCellEditor";
+import { ensureCellsLength } from "@compoz/studio/features/pages/mappers/cells-form";
 import {
   Tabs,
   TabsContent,
@@ -26,15 +37,6 @@ import {
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 import type { CellFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
-import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
-import { CarouselCellEditor } from "@compoz/studio/features/pages/blocks/editor/cells/CarouselCellEditor";
-import { GalleryCellEditor } from "@compoz/studio/features/pages/blocks/editor/cells/GalleryCellEditor";
-import { ImageCellEditor } from "@compoz/studio/features/pages/blocks/editor/cells/ImageCellEditor";
-import { RichTextCellEditor } from "@compoz/studio/features/pages/blocks/editor/cells/RichTextCellEditor";
-import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
-import { ensureCellsLength } from "@compoz/studio/features/pages/mappers/cells-form";
-import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
 
 export type CellErrorByIndex = Record<
   number,
@@ -97,7 +99,7 @@ export function CellEditorTabs({
     () =>
       Array.from({ length: columns }, (_, i) => ({
         index: i,
-        label: t("admin.cellEditorTabs.tabs", { number: i + 1 }),
+        label: t("studio.cellEditorTabs.tabs", { number: i + 1 }),
       })),
     [columns, t],
   );
@@ -175,7 +177,7 @@ export function CellEditorTabs({
         <TabsContent value={activeTabValue} className={cn(STACK_MD)}>
           <SelectField
             ids={kindIds}
-            label={t("admin.cellEditorTabs.kindLabel")}
+            label={t("studio.cellEditorTabs.kindLabel")}
             value={kind}
             onChange={(val) => {
               const nextKind = val as CellFormValues["kind"];
@@ -184,23 +186,23 @@ export function CellEditorTabs({
             items={[
               {
                 value: "richText",
-                label: t("admin.cellEditorTabs.kinds.richText"),
+                label: t("studio.cellEditorTabs.kinds.richText"),
               },
               {
                 value: "image",
-                label: t("admin.cellEditorTabs.kinds.image"),
+                label: t("studio.cellEditorTabs.kinds.image"),
               },
               {
                 value: "gallery",
-                label: t("admin.cellEditorTabs.kinds.gallery"),
+                label: t("studio.cellEditorTabs.kinds.gallery"),
               },
               {
                 value: "carousel",
-                label: t("admin.cellEditorTabs.kinds.carousel"),
+                label: t("studio.cellEditorTabs.kinds.carousel"),
               },
             ]}
             disabled={disabled}
-            help={t("admin.cellEditorTabs.kindHelp")}
+            help={t("studio.cellEditorTabs.kindHelp")}
           />
 
           {/* Editor */}

@@ -1,14 +1,14 @@
 /**
  * @file packages/infra/src/http/studio/site.types.ts
- * @layer infra/http
+ * @layer infra/http/studio
  * @description
- * DTO SoT du module "site" (admin) : publish + status + statusDetails.
+ * DTO SoT du module "site" (Studio) : publish + status + statusDetails.
  *
  * @remarks
- * - Source of truth alignée sur les routes Next :
- *   - /api/site/publish
- *   - /api/site/status
- *   - /api/site/status/details
+ * - Source of truth alignée sur les routes Next côté Studio (préfixées via ENDPOINTS) :
+ *   - /api/.../site/publish
+ *   - /api/.../site/status
+ *   - /api/.../site/status/details
  * - Évite d'importer des types depuis `app/api/.../route.ts`
  *   (dépendance framework) dans un package partagé.
  */
@@ -24,14 +24,13 @@ import type {
 /* Publish                                                                    */
 /* -------------------------------------------------------------------------- */
 
-/** Payload optionnel accepté par POST /api/site/publish. */
+/** Payload optionnel accepté par POST publish. */
 export type PublishParams = Readonly<{
   from?: ContentState;
   to?: ContentState;
   cleanOrphans?: boolean;
 }>;
 
-/** Réponse SoT publish (remplace `PublishSiteResponse`). */
 export type PublishSiteResponse = Readonly<{
   publishResult: PublishSiteResultDTO;
 }>;
@@ -40,14 +39,12 @@ export type PublishSiteResponse = Readonly<{
 /* Status                                                                     */
 /* -------------------------------------------------------------------------- */
 
-/** Réponse SoT status (remplace `GetSiteStatusResponse`). */
 export type GetSiteStatusResponse = Readonly<{ status: SiteStatusDTO }>;
 
 /* -------------------------------------------------------------------------- */
 /* Status details                                                             */
 /* -------------------------------------------------------------------------- */
 
-/** Réponse SoT status/details (remplace `GetSiteStatusDetailsResponse`). */
 export type GetSiteStatusDetailsResponse = Readonly<{
   details: SiteStatusDetailsDTO;
 }>;

@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/site/mappers/seo-shape.ts
- * @layer ui-mappers/site
+ * @layer ui/site/mappers
  *
  * @description
  * Mapper "shared runtime" SEO :
@@ -15,10 +15,10 @@
 import { TWITTER_CARD_TYPES } from "@compoz/core/constants/seo/seo";
 import type { SeoSettingsDTO } from "@compoz/core/domain/site/dto";
 
-import type { SeoSettingsShape } from "@compoz/validation/site/settings/seo/seo";
 import { trimKeepEmpty } from "@compoz/ui/lib/form-utils";
+import type { SeoSettingsShape } from "@compoz/validation/site/settings/seo/seo";
 
-const DEFAULT_TWITTER_CARD = TWITTER_CARD_TYPES[1];
+const DEFAULT_TWITTER_CARD = TWITTER_CARD_TYPES[1] ?? TWITTER_CARD_TYPES[0];
 
 /**
  * Domaine (DTO) -> Renderer (Shape)
@@ -27,36 +27,30 @@ const DEFAULT_TWITTER_CARD = TWITTER_CARD_TYPES[1];
 export function toSeoSettingsShapeFromDTO(
   dto: SeoSettingsDTO | null | undefined,
 ): SeoSettingsShape {
-  const d = dto ?? ({} as SeoSettingsDTO);
-
   return {
-    baseUrl: trimKeepEmpty(d.baseUrl),
-    defaultTitle: trimKeepEmpty(d.defaultTitle),
-    defaultDescription: trimKeepEmpty(d.defaultDescription),
-    titleTemplate: trimKeepEmpty(d.titleTemplate),
-    canonicalUrl: trimKeepEmpty(d.canonicalUrl),
-    robots: trimKeepEmpty(d.robots),
+    baseUrl: trimKeepEmpty(dto?.baseUrl),
+    defaultTitle: trimKeepEmpty(dto?.defaultTitle),
+    defaultDescription: trimKeepEmpty(dto?.defaultDescription),
+    titleTemplate: trimKeepEmpty(dto?.titleTemplate),
+    canonicalUrl: trimKeepEmpty(dto?.canonicalUrl),
+    robots: trimKeepEmpty(dto?.robots),
 
     structuredDataEnabled:
-      typeof d.structuredDataEnabled === "boolean"
-        ? d.structuredDataEnabled
+      typeof dto?.structuredDataEnabled === "boolean"
+        ? dto.structuredDataEnabled
         : true,
 
     openGraph: {
-      title: trimKeepEmpty(d.openGraph?.title),
-      description: trimKeepEmpty(d.openGraph?.description),
-      defaultImageUrl: trimKeepEmpty(
-        typeof d.openGraph?.defaultImageUrl === "string"
-          ? d.openGraph.defaultImageUrl
-          : "",
-      ),
-      imageAlt: trimKeepEmpty(d.openGraph?.imageAlt),
+      title: trimKeepEmpty(dto?.openGraph?.title),
+      description: trimKeepEmpty(dto?.openGraph?.description),
+      defaultImageUrl: trimKeepEmpty(dto?.openGraph?.defaultImageUrl),
+      imageAlt: trimKeepEmpty(dto?.openGraph?.imageAlt),
     },
 
     twitter: {
-      card: d.twitter?.card ?? DEFAULT_TWITTER_CARD,
-      site: trimKeepEmpty(d.twitter?.site),
-      creator: trimKeepEmpty(d.twitter?.creator),
+      card: dto?.twitter?.card ?? DEFAULT_TWITTER_CARD,
+      site: trimKeepEmpty(dto?.twitter?.site),
+      creator: trimKeepEmpty(dto?.twitter?.creator),
     },
   } satisfies SeoSettingsShape;
 }

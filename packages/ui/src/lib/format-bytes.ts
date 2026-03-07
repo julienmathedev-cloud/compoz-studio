@@ -1,18 +1,26 @@
 /**
  * @file packages/ui/src/lib/format-bytes.ts
+ * @layer ui/lib/format
  * @description
- * Formattage de taille de fichier (bytes) en Ko/Mo/Go.
+ * Formatage d'une taille de fichier (bytes) en unités lisibles (B / KB / MB / GB).
+ *
+ * @remarks
+ * - Base 1024 (IEC-like) mais avec labels "KB/MB/GB" pour l'affichage UI.
+ * - Arrondis :
+ *   - KB : 1 décimale
+ *   - MB/GB : 2 décimales
  */
-
 export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
+  const value = Number.isFinite(bytes) && bytes > 0 ? bytes : 0;
+
+  if (value < 1024) return `${value} B`;
 
   const kb = 1024;
   const mb = kb * 1024;
   const gb = mb * 1024;
 
-  if (bytes < mb) return `${(bytes / kb).toFixed(1)} KB`;
-  if (bytes < gb) return `${(bytes / mb).toFixed(2)} MB`;
+  if (value < mb) return `${(value / kb).toFixed(1)} KB`;
+  if (value < gb) return `${(value / mb).toFixed(2)} MB`;
 
-  return `${(bytes / gb).toFixed(2)} GB`;
+  return `${(value / gb).toFixed(2)} GB`;
 }

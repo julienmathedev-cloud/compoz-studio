@@ -79,9 +79,11 @@ export const UpdatePageIntentSchema = z
 
 export type UpdatePageIntentDTO = z.infer<typeof UpdatePageIntentSchema>;
 
-export const ReorderChildrenIntentSchema = z.object({
-  childIds: z.array(z.string().min(1)),
-});
+export const ReorderChildrenIntentSchema = z
+  .object({
+    childIds: z.array(PageIdSchema).min(1),
+  })
+  .strict();
 
 export type ReorderChildrenIntentDTO = z.infer<
   typeof ReorderChildrenIntentSchema

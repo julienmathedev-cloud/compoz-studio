@@ -7,27 +7,19 @@
  * et règles de cohérence sont traités dans le domaine.
  */
 
-import { SocialItemSchema } from "@compoz/validation/site/settings/social/social";
-import { z } from "zod";
+import { SocialSettingsSchema } from "@compoz/validation/site/settings/social/social";
+import type { z } from "zod";
 
 /**
  * Intention de mise à jour des réglages Social (draft-only).
  *
- * Note Zod :
- * `.partial()` n'est pas utilisable lorsque l'objet contient des schémas avec refinements
- * (ex. `SocialItemSchema.superRefine(...)`).
  *
  * On définit donc explicitement le payload patchable : `{ items?: ... }`.
  */
-export const UpdateSocialSettingsIntentSchema = z
-  .object({
-    items: z.array(SocialItemSchema).optional(),
-  })
-  .strict();
 
-/**
- * DTO d’intention : résultat typé du parsing du payload Social.
- */
+export const UpdateSocialSettingsIntentSchema =
+  SocialSettingsSchema.partial().strict();
+
 export type UpdateSocialSettingsIntentDTO = z.infer<
   typeof UpdateSocialSettingsIntentSchema
 >;

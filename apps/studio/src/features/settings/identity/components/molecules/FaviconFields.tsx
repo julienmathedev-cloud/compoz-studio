@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/settings/identity/components/molecules/FaviconFields.tsx
- * @layer ui/molecules
+ * @layer ui/studio/settings/identity/molecules
  *
  * @description
  * Champs favicon (unique) : sélection d’image + preview, compatible RHF.
@@ -19,7 +19,6 @@ import type { ControllerRenderProps } from "react-hook-form";
 
 import { ImageSelector } from "@compoz/studio/components/molecules/fields/ImageSelector";
 import { MAX_IMAGE_UPLOAD_BYTES } from "@compoz/studio/lib/config/uploads";
-
 import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import type { IdentityFormValues } from "@compoz/validation/site/settings/identity/identity-form";
 
@@ -48,7 +47,21 @@ type FaviconFieldsProps = Readonly<{
 }>;
 
 /**
- * Champs favicon standardisés (admin).
+ * Types MIME acceptés pour les favicons.
+ */
+const FAVICON_ACCEPT = "image/x-icon,image/vnd.microsoft.icon,image/png";
+
+/**
+ * Types MIME préférés pour le hint d’upload favicon.
+ */
+const FAVICON_PREFERRED_TYPES = [
+  "image/x-icon",
+  "image/vnd.microsoft.icon",
+  "image/png",
+] as const;
+
+/**
+ * Champs favicon standardisés (studio).
  */
 export function FaviconFields({
   siteName,
@@ -59,31 +72,24 @@ export function FaviconFields({
   onUploadFavicon,
 }: FaviconFieldsProps) {
   const t = useTranslations();
-  const alt = logoAlt || siteName || t("admin.favicon.altFallback");
-
-  // Types MIME acceptés pour les favicons.
-  const FAVICON_ACCEPT = "image/x-icon,image/vnd.microsoft.icon,image/png";
-  const maxBytes = MAX_IMAGE_UPLOAD_BYTES;
+  const alt = logoAlt || siteName || t("studio.favicon.altFallback");
 
   return (
     <ImageSelector
       ids={faviconIds}
-      label={t("admin.favicon.label")}
+      label={t("studio.favicon.label")}
       url={String(faviconUrlField.value ?? "")}
-      onUrlChange={(v) => faviconUrlField.onChange(String(v ?? ""))}
+      onUrlChange={(value) => faviconUrlField.onChange(String(value ?? ""))}
       disabled={disabled}
       previewAlt={alt}
-      help={t("admin.favicon.help")}
+      help={t("studio.favicon.help")}
       accept={FAVICON_ACCEPT}
       onFileSelect={onUploadFavicon}
-      preferredTypes={["image/x-icon", "image/vnd.microsoft.icon", "image/png"]}
-      preferredTypeHint={t("admin.favicon.preferredTypeHint")}
-      maxBytes={maxBytes}
-      // ✅ favicon : preview en "icône" (évite l’agrandissement pixelisé)
+      preferredTypes={FAVICON_PREFERRED_TYPES}
+      preferredTypeHint={t("studio.favicon.preferredTypeHint")}
+      maxBytes={MAX_IMAGE_UPLOAD_BYTES}
       previewMode="icon"
       previewSize={128}
     />
   );
 }
-
-FaviconFields.displayName = "FaviconFields";

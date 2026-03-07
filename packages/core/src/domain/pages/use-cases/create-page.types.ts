@@ -1,6 +1,6 @@
 /**
- * @file packages/core/src/core/domain/pages/use-cases/create-page.types.ts
- * @layer core/domain
+ * @file packages/core/src/domain/pages/use-cases/create-page.types.ts
+ * @layer core/domain/pages/use-cases
  * @description
  * Types du use-case de création de page : entrées, sorties et dépendances.
  * Définit le contrat **sans logique** (implémentation dans `create-page.ts`).
@@ -12,14 +12,17 @@ import type {
 } from "@compoz/core/domain/pages/entities/page";
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
 import type { IdGenerator } from "@compoz/core/domain/ports/id-generator";
+
 /**
  * Dépendances nécessaires à l’exécution du use-case.
  * - `pages` : accès CRUD aux pages (draft/published).
+ * - `idGenerator` : générateur d’ID stable (injectable, testable).
  * - `nowIso` : horloge injectable (tests, déterminisme).
  */
 export interface CreatePageDeps {
   pages: PagesRepository;
   idGenerator: IdGenerator;
+
   /** Horloge ISO optionnelle (défaut : new Date().toISOString()). */
   nowIso?: () => string;
 }

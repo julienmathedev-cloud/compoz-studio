@@ -2,30 +2,29 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/components/molecules/PageBlockListItem.tsx
- * @layer ui/molecules
+ * @layer ui/studio/pages/blocks/molecules
  *
  * @description
  * Ligne compacte pour afficher un block (type + résumé) avec des actions rapides :
  * déplacer ↑/↓, éditer, supprimer.
  *
  * @remarks
- * - Molecule UI : compose `Text`, `TooltipButton`, `DeleteButton`, `AdminButtonGroup`.
- * - Les callbacks sont fournis par le parent (orchestration via hooks/sections).
- * - Supporte un état occupé local (`isBusy`) : ARIA + désactivation cohérente.
+ * - Molecule UI : compose `BlockCellsDescription`, `TooltipButton`, `DeleteButton`,
+ *   `StudioButtonGroup` et `DiffStatusBadge`.
+ * - Les callbacks sont fournis par le parent (orchestration via hooks / sections).
+ * - Supporte un état occupé local (`isDeleting`) : ARIA + désactivation cohérente.
  * - Strictement UI-only : aucune logique métier.
  */
 
-import { AdminIcon } from "@compoz/studio/components/atoms/AdminIcon";
-import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
-import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
-import { AdminButtonGroup } from "@compoz/studio/components/molecules/controls/AdminButtonGroup";
-
 import type { BlockDTO } from "@compoz/core/domain/pages/dto";
 import type { SiteDiffKindDTO } from "@compoz/core/domain/site/dto";
-import { cn } from "@compoz/ui/lib/utils";
-
 import { DiffStatusBadge } from "@compoz/studio/components/atoms/badges/DiffStatusBadge";
+import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
+import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
+import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
+import { StudioButtonGroup } from "@compoz/studio/components/molecules/controls/StudioButtonGroup";
 import { BlockCellsDescription } from "@compoz/studio/features/pages/blocks/components/molecules/BlockCellsDescription";
+import { cn } from "@compoz/ui/lib/utils";
 import { ChevronDown, ChevronUp, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -36,7 +35,7 @@ type PageBlockListItemProps = Readonly<{
   /** Block affiché (DTO). */
   block: BlockDTO;
 
-  /** Status draft vs published (clean/new/dirty/deleted). */
+  /** Status draft vs published (published / new / modified / deleted). */
   statusKind?: SiteDiffKindDTO;
 
   /** Action : déplacement vers le haut. */
@@ -68,7 +67,7 @@ type PageBlockListItemProps = Readonly<{
 }>;
 
 /**
- * Ligne UI d’un block dans la liste (admin).
+ * Ligne UI d’un block dans la liste (studio).
  *
  * @remarks
  * Ne rend pas de `<li>` : le conteneur parent gère la sémantique de liste.
@@ -93,19 +92,13 @@ export function PageBlockListItem({
 
   const canMoveUp = Boolean(onMoveUp) && !baseDisabled && !isFirst;
   const canMoveDown = Boolean(onMoveDown) && !baseDisabled && !isLast;
-
-  // UX : on autorise l’edit même si "busy delete" n’est pas actif,
-  // mais on respecte un verrou global.
   const canEdit = Boolean(onEdit) && !disabled;
-
   const canDelete = Boolean(onDelete) && !baseDisabled;
 
   return (
     <div
       className={cn(
-        "grid items-center gap-3",
-        "grid-cols-[max-content_auto_1fr_auto]",
-        "min-w-0",
+        "grid min-w-0 grid-cols-[max-content_auto_1fr_auto] items-center gap-3",
       )}
       aria-busy={isBusy || undefined}
       aria-disabled={baseDisabled || undefined}
@@ -121,9 +114,8 @@ export function PageBlockListItem({
 
       <BlockCellsDescription block={block} index={index} />
 
-      {/* Bloc droit : actions groupées */}
       <div className="shrink-0 justify-self-end">
-        <AdminButtonGroup className="shrink-0">
+        <StudioButtonGroup className="shrink-0">
           <TooltipButton
             type="button"
             variant="ghost"
@@ -141,7 +133,7 @@ export function PageBlockListItem({
                 : t("common.moveUp")
             }
           >
-            <AdminIcon icon={ChevronUp} />
+            <StudioIcon icon={ChevronUp} />
           </TooltipButton>
 
           <TooltipButton
@@ -161,7 +153,7 @@ export function PageBlockListItem({
                 : t("common.moveDown")
             }
           >
-            <AdminIcon icon={ChevronDown} />
+            <StudioIcon icon={ChevronDown} />
           </TooltipButton>
 
           <TooltipButton
@@ -169,25 +161,25 @@ export function PageBlockListItem({
             size="icon"
             onClick={onEdit}
             disabled={!canEdit}
-            aria-label={t("admin.pageBlocksListSection.bloc.edit")}
+            aria-label={t("studio.pageBlocksListSection.bloc.edit")}
             tooltip={
               !canEdit
                 ? t("common.actionUnavailable")
-                : t("admin.pageBlocksListSection.bloc.edit")
+                : t("studio.pageBlocksListSection.bloc.edit")
             }
           >
-            <AdminIcon icon={Pencil} />
+            <StudioIcon icon={Pencil} />
           </TooltipButton>
 
           <DeleteButton
+            size="icon"
             disabled={!canDelete}
             isDeleting={isDeleting}
-            size="icon"
             onConfirmDelete={async () => onDelete?.()}
-            ariaLabel={t("admin.pageBlocksListSection.bloc.delete")}
-            title={t("admin.pageBlocksListSection.bloc.delete")}
+            ariaLabel={t("studio.pageBlocksListSection.bloc.delete")}
+            title={t("studio.pageBlocksListSection.bloc.delete")}
           />
-        </AdminButtonGroup>
+        </StudioButtonGroup>
       </div>
     </div>
   );

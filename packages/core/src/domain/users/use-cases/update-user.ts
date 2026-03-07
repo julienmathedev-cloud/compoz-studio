@@ -32,6 +32,8 @@ import {
 
 type ChangedKey = keyof Pick<User, "email" | "name" | "rbac" | "status">;
 
+type Mutable<T> = { -readonly [K in keyof T]: T[K] };
+
 export function updateUser({
   users,
   nowIso = () => new Date().toISOString(),
@@ -57,7 +59,7 @@ export function updateUser({
       });
     }
 
-    const next: User = { ...existing };
+    const next = { ...existing } as Mutable<User>;
     const changed: ChangedKey[] = [];
 
     /* ---------------------------------------------------------------------- */
@@ -88,7 +90,7 @@ export function updateUser({
 
     if (typeof input.name === "string") {
       const name = assertUserName(input.name, ["name"]);
-      if (name !== (existing.name ?? "")) {
+      if (name !== existing.name) {
         next.name = name;
         changed.push("name");
       }
@@ -117,7 +119,8 @@ export function updateUser({
       const same =
         existing.rbac.role === rbac.role &&
         existing.rbac.defaultTenantId === rbac.defaultTenantId &&
-        existing.rbac.tenantIds.join("|") === rbac.tenantIds.join("|");
+        existing.rbac.tenantIds.length === rbac.tenantIds.length &&
+        existing.rbac.tenantIds.every((t, i) => t === rbac.tenantIds[i]);
 
       if (!same) {
         next.rbac = rbac;

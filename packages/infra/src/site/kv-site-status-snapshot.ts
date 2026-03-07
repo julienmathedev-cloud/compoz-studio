@@ -14,68 +14,25 @@
  * - TTL sur les snapshots "details" pour éviter l’accumulation de clés après bump de version.
  */
 
+import type { SiteStatus } from "@compoz/core/domain/site/entities/site-status";
 import type {
-  SiteStatusDTO,
-  SiteStatusDetailsDTO,
-} from "@compoz/core/domain/site/dto";
-import type { SiteStatusDetailsQuery } from "@compoz/core/domain/site/entities/site-status-details";
+  SiteStatusDetails,
+  SiteStatusDetailsQuery,
+} from "@compoz/core/domain/site/entities/site-status-details";
 import type { SiteStatusCachePort } from "@compoz/core/domain/site/ports/site-status-cache-port";
 
+import { getUpstashRedis, parseRedisJson } from "@compoz/infra/kv/kv-redis";
 import { kvCmd } from "@compoz/infra/kv/kv-telemetry";
-import { Redis } from "@upstash/redis";
+import { normalizeTenantId } from "@compoz/infra/lib/normalize-tenant-id";
 
 /* -------------------------------------------------------------------------- */
 /* Options                                                                    */
 /* -------------------------------------------------------------------------- */
 
 type KvSiteStatusSnapshotOptions = {
-  /** Tenant cible (siteId). Fallback: "default". */
+  /** Tenant cible. Fallback: "default". */
   tenantId?: string;
 };
-
-function normalizeTenantId(input: unknown): string {
-  const t = String(input ?? "").trim();
-  return t.length > 0 ? t : "default";
-}
-
-/* -------------------------------------------------------------------------- */
-/* Redis                                                                      */
-/* -------------------------------------------------------------------------- */
-
-let _redisSingleton: Redis | null = null;
-
-function getUpstashRedis(): Redis {
-  if (_redisSingleton) return _redisSingleton;
-
-  const url =
-    process.env["KV_REST_API_URL"] ?? process.env["UPSTASH_REDIS_REST_URL"];
-  const token =
-    process.env["KV_REST_API_TOKEN"] ?? process.env["UPSTASH_REDIS_REST_TOKEN"];
-
-  if (!url || !token) {
-    throw new Error(
-      "KvSiteStatusSnapshot: missing Redis env. Expected KV_REST_API_URL/KV_REST_API_TOKEN (or UPSTASH_REDIS_REST_URL/UPSTASH_REDIS_REST_TOKEN).",
-    );
-  }
-
-  _redisSingleton = new Redis({ url, token });
-  return _redisSingleton;
-}
-
-function parseRedisJson<T>(raw: unknown): T | null {
-  if (raw == null) return null;
-
-  // Upstash peut renvoyer un objet (JSON déjà parsé)
-  if (typeof raw === "object") return raw as T;
-
-  if (typeof raw === "string") {
-    const s = raw.trim();
-    if (!s) return null;
-    return JSON.parse(s) as T;
-  }
-
-  return JSON.parse(String(raw)) as T;
-}
 
 /* -------------------------------------------------------------------------- */
 /* Config                                                                      */
@@ -131,7 +88,7 @@ function kvCtx(base: string): string {
 /* -------------------------------------------------------------------------- */
 
 export class KvSiteStatusSnapshot implements SiteStatusCachePort {
-  private readonly redis: Redis;
+  private readonly redis = getUpstashRedis();
   private readonly tenantId: string;
 
   /**
@@ -169,16 +126,17 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
     this.detailsVersionMemo = next;
   }
 
-  async readStatusSnapshot(): Promise<SiteStatusDTO | null> {
+  async readStatusSnapshot(): Promise<SiteStatus | null> {
     const key = statusSnapshotKey(this.tenantId);
 
     const raw = await kvCmd(kvCtx("status.get"), "get", () =>
       this.redis.get(key),
     );
-    return parseRedisJson<SiteStatusDTO>(raw);
+
+    return parseRedisJson<SiteStatus>(raw);
   }
 
-  async writeStatusSnapshot(status: SiteStatusDTO): Promise<void> {
+  async putStatusSnapshot(status: SiteStatus): Promise<void> {
     const key = statusSnapshotKey(this.tenantId);
 
     await kvCmd(kvCtx("status.set"), "set", () =>
@@ -188,19 +146,20 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
 
   async readStatusDetailsSnapshot(
     query: SiteStatusDetailsQuery,
-  ): Promise<SiteStatusDetailsDTO | null> {
+  ): Promise<SiteStatusDetails | null> {
     const version = await this.getDetailsVersion();
     const key = statusDetailsSnapshotKey(this.tenantId, version, query);
 
     const raw = await kvCmd(kvCtx("details.get"), "get", () =>
       this.redis.get(key),
     );
-    return parseRedisJson<SiteStatusDetailsDTO>(raw);
+
+    return parseRedisJson<SiteStatusDetails>(raw);
   }
 
-  async writeStatusDetailsSnapshot(
+  async putStatusDetailsSnapshot(
     query: SiteStatusDetailsQuery,
-    details: SiteStatusDetailsDTO,
+    details: SiteStatusDetails,
   ): Promise<void> {
     const version = await this.getDetailsVersion();
     const key = statusDetailsSnapshotKey(this.tenantId, version, query);

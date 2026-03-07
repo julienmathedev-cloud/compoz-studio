@@ -1,16 +1,17 @@
 /**
  * @file packages/infra/src/http/studio/pages.types.ts
- * @layer infra/http
+ * @layer infra/http/studio
  * @description
- * DTO SoT des réponses pages (admin).
+ * DTO SoT des réponses pages (Studio).
  *
  * @remarks
- * - Aligné sur les routes Next :
- *   - /api/pages
- *   - /api/pages/[pageId]
- *   - /api/pages/[pageId]/blocks
+ * - Aligné sur les routes Next (préfixées via ENDPOINTS) :
+ *   - /api/.../pages
+ *   - /api/.../pages/[pageId]
+ *   - /api/.../pages/[pageId]/blocks
  * - Aucun import depuis `app/api/...`
  */
+
 import type { BlockDTO, PageDTO } from "@compoz/core/domain/pages/dto";
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 
@@ -18,18 +19,21 @@ import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 /* Pages index                                                                */
 /* -------------------------------------------------------------------------- */
 
-export type GetPagesIndexResponse = { index: SiteIndexDTO };
+export type GetPagesIndexResponse = Readonly<{ index: SiteIndexDTO }>;
 
-export type CreatePageResponse = { page: PageDTO; index: SiteIndexDTO };
-
-export type GetPageByIdResponse = { page: PageDTO };
-
-export type UpdatePageResponse = {
+export type CreatePageResponse = Readonly<{
   page: PageDTO;
   index: SiteIndexDTO;
-};
+}>;
 
-export type DeletePageResponse = { index: SiteIndexDTO };
+export type GetPageByIdResponse = Readonly<{ page: PageDTO }>;
+
+export type UpdatePageResponse = Readonly<{
+  page: PageDTO;
+  index: SiteIndexDTO;
+}>;
+
+export type DeletePageResponse = Readonly<{ index: SiteIndexDTO }>;
 
 /* -------------------------------------------------------------------------- */
 /* Blocks                                                                     */

@@ -1,9 +1,9 @@
 /**
  * @file apps/studio/src/app/draft/not-found.tsx
- * @layer app/studio/draft
+ * @layer studio/app
  *
  * @description
- * Page 404 pour le segment public "/draft" (Server Component).
+ * Page 404 pour la route "/draft" (preview DRAFT dans l’app Studio).
  *
  * @remarks
  * - `not-found.tsx` doit rester server (pas de "use client").
@@ -11,7 +11,7 @@
  * - Convention V0.5 : draft preview = "/draft".
  */
 
-import { StudioNotFoundClient } from "@compoz/studio/components/system/StudioNotFoundClient";
+import { StudioNotFoundClient } from "@compoz/studio/components/not-found/StudioNotFoundClient";
 
 export default function DraftNotFound() {
   return <StudioNotFoundClient />;

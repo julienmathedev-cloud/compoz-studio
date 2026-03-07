@@ -2,28 +2,31 @@
 
 /**
  * @file apps/studio/src/features/pages/components/molecules/ChildPageListItem.tsx
- * @layer ui/molecules
+ * @layer ui/studio/pages/molecules
  *
  * @description
- * Ligne compacte pour afficher une page enfant (titre + slug) avec des actions de réordonnancement.
+ * Ligne compacte pour afficher une page enfant (titre + slug) avec des actions
+ * de réordonnancement.
  *
  * @remarks
- * - Molecule UI : calquée sur `PageListItem` pour conserver le même rythme visuel (grid/colonnes/espacements).
- * - Les callbacks sont fournis par le parent (orchestration via hooks/sections).
+ * - Molecule UI : calquée sur `PageListItem` pour conserver le même rythme visuel
+ *   (grid / colonnes / espacements).
+ * - Les callbacks sont fournis par le parent (orchestration via hooks / sections).
  * - Supporte un état occupé local (`isReordering`) : ARIA + désactivation cohérente.
  * - Strictement UI-only : aucune logique métier.
  */
-import { cn } from "@compoz/ui/lib/utils";
-import { DiffStatusBadge } from "@compoz/studio/components/atoms/badges/DiffStatusBadge";
-import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
-import { Text } from "@compoz/studio/components/atoms/typography/Text";
-import { AdminButtonGroup } from "@compoz/studio/components/molecules/controls/AdminButtonGroup";
-import { formatPagePath } from "@compoz/studio/lib/ui/pages";
+
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { PageSummaryDTO } from "@compoz/core/domain/pages/dto";
 import type { SiteDiffKindDTO } from "@compoz/core/domain/site/dto";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { DiffStatusBadge } from "@compoz/studio/components/atoms/badges/DiffStatusBadge";
+import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
+import { Text } from "@compoz/studio/components/atoms/typography/Text";
+import { StudioButtonGroup } from "@compoz/studio/components/molecules/controls/StudioButtonGroup";
+import { formatPagePath } from "@compoz/studio/lib/ui/pages";
+import { cn } from "@compoz/ui/lib/utils";
 
 /**
  * Props du composant `ChildPageListItem`.
@@ -32,13 +35,13 @@ type ChildPageListItemProps = Readonly<{
   /** Référence minimaliste de la page enfant (titre + slug). */
   page: PageSummaryDTO;
 
-  /** Status draft vs published (optionnel, pour conserver la cohérence UI si tu veux l’afficher). */
+  /** Statut draft vs published (optionnel). */
   statusKind?: SiteDiffKindDTO;
 
   /** Index courant de l’item dans la liste. */
   index: number;
 
-  /** Taille totale de la liste (sert aux limites haut/bas). */
+  /** Taille totale de la liste (sert aux limites haut / bas). */
   total: number;
 
   /** Action : monter l’item (réordonnancement). */
@@ -55,7 +58,7 @@ type ChildPageListItemProps = Readonly<{
 }>;
 
 /**
- * Ligne UI d’une page enfant dans la liste (admin).
+ * Ligne UI d’une page enfant dans la liste (studio).
  *
  * @remarks
  * Ne rend pas de `<li>` : le conteneur parent gère la sémantique de liste.
@@ -75,33 +78,37 @@ export function ChildPageListItem({
   const isBusy = isReordering;
   const baseDisabled = disabled || isBusy;
 
-  // Limites de réordonnancement (UX)
   const isFirst = index <= 0;
   const isLast = index >= total - 1;
 
   const canMoveUp = Boolean(onMoveUp) && !baseDisabled && !isFirst;
   const canMoveDown = Boolean(onMoveDown) && !baseDisabled && !isLast;
 
+  const moveUpTooltip = !canMoveUp
+    ? t("common.actionUnavailable")
+    : t("common.moveUp");
+
+  const moveDownTooltip = !canMoveDown
+    ? t("common.actionUnavailable")
+    : t("common.moveDown");
+
   return (
     <div
       className={cn(
-        "grid items-center gap-3",
-        "grid-cols-[max-content_auto_1fr_auto]",
+        "grid grid-cols-[max-content_auto_1fr_auto] items-center gap-3",
       )}
       aria-busy={isBusy || undefined}
       aria-disabled={baseDisabled || undefined}
     >
-      {/* Col 1 — Badge (taille au contenu) */}
       <div className="flex min-w-[12ch] items-center justify-center">
         {statusKind ? (
           <DiffStatusBadge
             kind={statusKind}
-            publishedLabel={t("common.upToDate")}
+            publishedLabel={t("common.published")}
           />
         ) : null}
       </div>
 
-      {/* Col 2 — Texte (titre + slug) */}
       <div>
         <Text as="p" truncate className="mb-0!">
           {page.title}
@@ -112,9 +119,8 @@ export function ChildPageListItem({
         </Text>
       </div>
 
-      {/* Col 4 — Actions (à droite) */}
       <div className="shrink-0 justify-self-end">
-        <AdminButtonGroup className="shrink-0">
+        <StudioButtonGroup className="shrink-0">
           <TooltipButton
             type="button"
             variant="ghost"
@@ -122,9 +128,7 @@ export function ChildPageListItem({
             onClick={() => onMoveUp?.()}
             disabled={!canMoveUp}
             aria-label={t("common.moveUp")}
-            tooltip={
-              !canMoveUp ? t("common.actionUnavailable") : t("common.moveUp")
-            }
+            tooltip={moveUpTooltip}
           >
             <ChevronUp />
           </TooltipButton>
@@ -136,15 +140,11 @@ export function ChildPageListItem({
             onClick={() => onMoveDown?.()}
             disabled={!canMoveDown}
             aria-label={t("common.moveDown")}
-            tooltip={
-              !canMoveDown
-                ? t("common.actionUnavailable")
-                : t("common.moveDown")
-            }
+            tooltip={moveDownTooltip}
           >
             <ChevronDown />
           </TooltipButton>
-        </AdminButtonGroup>
+        </StudioButtonGroup>
       </div>
     </div>
   );

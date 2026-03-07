@@ -12,12 +12,6 @@ import type { IdentitySettings } from "@compoz/core/domain/site/entities/identit
 
 /**
  * Valeurs par défaut pour l'identité d’un site.
- *
- * @example
- * - `siteName: ""`      → le titre doit être renseigné par l’utilisateur
- * - `logoAlt: ""`    → alt neutre (accessibilité) avant saisie
- * - `logoUrl: null`  → pas de logo par défaut
- * - `faviconUrl: null` → pas de favicon par défaut
  */
 export const DEFAULT_IDENTITY_SETTINGS: IdentitySettings = {
   siteName: "Compoz",

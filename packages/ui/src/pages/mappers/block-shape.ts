@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/pages/mappers/block-shape.ts
- * @layer ui-mappers/pages
+ * @layer ui/pages/mappers
  *
  * @description
  * Mappers "shared runtime" pour les blocks :
@@ -8,7 +8,7 @@
  * - FormValues (admin) -> Shape (pour pousser le draft au preview)
  *
  * Responsabilités :
- * - coercition/trim UI simple (via normalize*)
+ * - coercition/trim UI simple
  * - aucune logique métier
  * - aucune gestion du state (draft/published)
  *
@@ -28,6 +28,20 @@ import type { LayoutSectionBlockFormValues } from "@compoz/validation/pages/bloc
 /* Normalisations shared                                                      */
 /* -------------------------------------------------------------------------- */
 
+type ContainerMode = "contained" | "fullBleed";
+
+function normalizeContainerMode(input: unknown): ContainerMode {
+  return input === "fullBleed" ? "fullBleed" : "contained";
+}
+
+function normalizeTitle(
+  title: LayoutSectionBlockFormValues["title"],
+): LayoutSectionBlockFormValues["title"] {
+  const text = typeof title?.text === "string" ? title.text.trim() : "";
+  const display = title?.display === "sr-only" ? "sr-only" : "visible";
+  return { text, display };
+}
+
 /**
  * Normalise des FormValues UI d'un LayoutSectionBlock.
  *
@@ -45,22 +59,13 @@ export function normalizeLayoutSectionBlockFormValuesShallow(
 ): LayoutSectionBlockFormValues {
   return {
     ...values,
-    containerMode:
-      values.containerMode === "fullBleed" ? "fullBleed" : "contained",
+    containerMode: normalizeContainerMode(values.containerMode),
     titleEnabled: Boolean(values.titleEnabled),
     title: normalizeTitle(values.title),
     lcpPriority: Boolean(values.lcpPriority),
     // cells: laissé tel quel (forms concern)
     cells: values.cells ?? [],
   };
-}
-
-function normalizeTitle(
-  title: LayoutSectionBlockFormValues["title"],
-): LayoutSectionBlockFormValues["title"] {
-  const text = typeof title?.text === "string" ? title.text.trim() : "";
-  const display = title?.display === "sr-only" ? "sr-only" : "visible";
-  return { text, display };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -105,14 +110,13 @@ export function toLayoutSectionBlockShapeFromDTO(
     id: block.id,
     type: "layoutSection",
     layout: { columns: block.layout?.columns ?? 1 },
-    containerMode:
-      block.containerMode === "fullBleed" ? "fullBleed" : "contained",
+    containerMode: normalizeContainerMode(block.containerMode),
     titleEnabled:
       typeof block.titleEnabled === "boolean" ? block.titleEnabled : false,
-    title: {
+    title: normalizeTitle({
       text: typeof block.title?.text === "string" ? block.title.text : "",
       display: block.title?.display === "sr-only" ? "sr-only" : "visible",
-    },
+    }),
     lcpPriority:
       typeof block.lcpPriority === "boolean" ? block.lcpPriority : false,
     cells: Array.isArray(block.cells)

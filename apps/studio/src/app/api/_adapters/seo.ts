@@ -1,8 +1,9 @@
 /**
  * @file apps/studio/src/app/api/_adapters/seo.ts
- * @layer api/adapters
+ * @layer studio/app/api/adapters
+ *
  * @description
- * Adaptateur API Admin pour les réglages SEO : convertit un intent DTO reçu
+ * Adaptateur API Studio pour les réglages SEO : convertit un intent DTO reçu
  * en patch partiel domaine (`Partial<SeoSettings>`).
  *
  * Responsabilités :
@@ -17,9 +18,9 @@
 
 import type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
 import type { UpdateSeoSettingsInput } from "@compoz/core/domain/site/use-cases/seo/update-seo-settings.types";
-import { asAssetUrlOrNull } from "@compoz/core/domain/urls/derive";
+import { asAssetUrlOrNull } from "@compoz/core/domain/urls/href";
 import { log } from "@compoz/infra/lib/log";
-import { trimClearableOrUndef } from "@compoz/studio/lib/strings";
+import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type {
   OpenGraphPatchDTO,
@@ -45,10 +46,14 @@ export function adaptUpdateSeoIntent(
 ): UpdateSeoSettingsInput {
   const started = Date.now();
 
-  log.debug("admin.adapter.seo.patch.start", {
+  log.debug("studio.adapter.seo.patch.start", {
     hasBaseUrl: "baseUrl" in dto,
     hasDefaultTitle: "defaultTitle" in dto,
     hasDefaultDescription: "defaultDescription" in dto,
+    hasTitleTemplate: "titleTemplate" in dto,
+    hasCanonicalUrl: "canonicalUrl" in dto,
+    hasRobots: "robots" in dto,
+    hasStructuredDataEnabled: "structuredDataEnabled" in dto,
     hasOpenGraph: "openGraph" in dto,
     hasTwitter: "twitter" in dto,
   });
@@ -124,7 +129,7 @@ export function adaptUpdateSeoIntent(
         if (raw === null) {
           ogOut.defaultImageUrl = null;
         } else if (typeof raw === "string") {
-          const t = raw.trim();
+          const t = trimOrKeep(raw);
           ogOut.defaultImageUrl = t.length === 0 ? null : asAssetUrlOrNull(t);
         }
       }
@@ -162,7 +167,7 @@ export function adaptUpdateSeoIntent(
     }
   }
 
-  log.debug("admin.adapter.seo.patch.end", {
+  log.debug("studio.adapter.seo.patch.end", {
     ms: Date.now() - started,
     outKeys: Object.keys(patch),
   });

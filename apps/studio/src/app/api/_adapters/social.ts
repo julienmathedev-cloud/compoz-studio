@@ -1,8 +1,9 @@
 /**
  * @file apps/studio/src/app/api/_adapters/social.ts
- * @layer api/adapters
+ * @layer studio/app/api/adapters
+ *
  * @description
- * Adaptateur API Admin pour les Social settings : transforme un intent DTO en patch partiel domaine.
+ * Adaptateur API Studio pour les Social settings : transforme un intent DTO en patch partiel domaine.
  *
  * Responsabilités :
  * - adaptation des items SocialItem
@@ -17,6 +18,7 @@ import type {
 import type { UpdateSocialSettingsInput } from "@compoz/core/domain/site/use-cases/social/update-social-settings.types";
 import { asBrandedHref } from "@compoz/core/domain/urls/href";
 import { log } from "@compoz/infra/lib/log";
+import { trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type { UpdateSocialSettingsIntentDTO } from "@compoz/validation/site/settings/social/social-intents";
 
@@ -33,7 +35,7 @@ function adaptSocialItem(dto: {
 }): SocialItem {
   return {
     kind: dto.kind,
-    href: asBrandedHref(dto.href.trim()),
+    href: asBrandedHref(trimOrKeep(dto.href)),
   };
 }
 
@@ -49,7 +51,7 @@ export function adaptUpdateSocialIntent(
 ): UpdateSocialSettingsInput {
   const started = Date.now();
 
-  log.debug("admin.adapter.social.patch.start", {
+  log.debug("studio.adapter.social.patch.start", {
     hasItems: Array.isArray(dto.items),
     itemsCount: Array.isArray(dto.items) ? dto.items.length : undefined,
   });
@@ -60,7 +62,7 @@ export function adaptUpdateSocialIntent(
     patch.items = dto.items.map(adaptSocialItem);
   }
 
-  log.debug("admin.adapter.social.patch.end", {
+  log.debug("studio.adapter.social.patch.end", {
     ms: Date.now() - started,
     outKeys: Object.keys(patch),
   });

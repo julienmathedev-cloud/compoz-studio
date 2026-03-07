@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/hooks/instrumentation.ts
- * @layer hooks/shared
+ * @layer ui/hooks
  *
  * @description
  * Helpers utilitaires partagés pour les hooks (logs homogènes load/save,
@@ -9,16 +9,82 @@
  * @remarks
  * - Centralise l’instrumentation des opérations `load` et `save`.
  * - Fournit des wrappers compatibles avec des fonctions acceptant ou non un `AbortSignal`.
+ * - UI-only : pas de dépendance vers `@compoz/infra`.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
-import { isAbortError } from "@compoz/infra/http/abort-error";
-import { log, logSpan } from "@compoz/infra/lib/log";
 
-const lg = log.child({ ns: "hooks" });
+const NS = "compoz:shared:ui:hooks";
 
 type FnOpts = Readonly<{ signal?: AbortSignal }>;
 type MaybeSignalFn<T> = ((opts: FnOpts) => Promise<T>) | (() => Promise<T>);
+
+function writeLog(
+  level: "debug" | "info" | "warn" | "error",
+  event: string,
+  meta?: Record<string, unknown>,
+): void {
+  try {
+    const payload = meta ? { ns: NS, event, ...meta } : { ns: NS, event };
+
+    if (level === "debug") {
+      console.debug(payload);
+      return;
+    }
+
+    if (level === "info") {
+      console.info(payload);
+      return;
+    }
+
+    if (level === "warn") {
+      console.warn(payload);
+      return;
+    }
+
+    console.error(payload);
+  } catch {
+    // noop
+  }
+}
+
+async function logSpan<T>(
+  name: string,
+  meta: Record<string, unknown>,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const start = Date.now();
+  writeLog("debug", `${name}.start`, meta);
+
+  try {
+    const result = await fn();
+    writeLog("debug", `${name}.ok`, { ...meta, ms: Date.now() - start });
+    return result;
+  } catch (e) {
+    writeLog("error", `${name}.error`, {
+      ...meta,
+      ms: Date.now() - start,
+      error: errorMessage(e),
+    });
+    throw e;
+  }
+}
+
+function isAbortError(e: unknown, signal?: AbortSignal): boolean {
+  if (signal?.aborted) return true;
+
+  // DOMException("AbortError") dans certains environnements
+  if (typeof DOMException !== "undefined" && e instanceof DOMException) {
+    return e.name === "AbortError";
+  }
+
+  if (e instanceof Error) {
+    // fetch abort (node/undici/browsers) varie selon runtime
+    return e.name === "AbortError" || /aborted|abort/i.test(e.message);
+  }
+
+  return false;
+}
 
 /**
  * Convertit une erreur inconnue en message lisible et sûr.
@@ -62,8 +128,8 @@ export async function withLoadLogs<T>(
       try {
         return await runMaybeSignalFn(fn, opts);
       } catch (e: unknown) {
-        if (isAbortError(e)) {
-          lg.debug("load.abort", {
+        if (isAbortError(e, opts.signal)) {
+          writeLog("debug", "load.abort", {
             scope,
             op: "load",
             state,
@@ -99,8 +165,8 @@ export async function withSaveLogs<T>(
       try {
         return await runMaybeSignalFn(fn, opts);
       } catch (e: unknown) {
-        if (isAbortError(e)) {
-          lg.debug("save.abort", {
+        if (isAbortError(e, opts.signal)) {
+          writeLog("debug", "save.abort", {
             scope,
             op: "save",
             state,

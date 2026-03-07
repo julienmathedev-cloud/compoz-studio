@@ -43,6 +43,7 @@ export async function writeFileAtomic(
 ): Promise<void> {
   await ensureDirForFile(filePath);
 
+  // Nom temporaire stable et explicite (même principe, lisibilité ↑)
   const tmp = `${filePath}.tmp-${process.pid}-${Date.now()}`;
   const fh = await fs.open(tmp, "w");
 
@@ -97,7 +98,7 @@ export class InvalidJsonFileError extends Error {
   constructor(path: string, cause?: unknown) {
     super(
       `Invalid JSON at ${path}`,
-      cause instanceof Error ? { cause } : undefined,
+      cause !== undefined ? { cause } : undefined,
     );
     this.name = "InvalidJsonFileError";
     this.path = path;
@@ -111,7 +112,7 @@ export class InvalidJsonFileError extends Error {
 export async function readJsonFile<T = unknown>(filePath: string): Promise<T> {
   const raw = await fs.readFile(filePath, "utf-8");
 
-  // Strip BOM éventuel
+  // Strip BOM éventuel (UTF-8)
   const text =
     raw.length > 0 && raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
 

@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/settings/mappers/legal-menu-shape.ts
- * @layer ui-mappers/site
+ * @layer ui/settings/mappers
  *
  * @description
  * Mapper "shared runtime" LegalMenu :
@@ -23,14 +23,17 @@ import type {
   LegalMenuSettingsShape,
 } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu";
 
-import { asBool, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
+import { trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 
 /** DTO -> Shape : item (renderer). */
 function toLegalMenuItemShapeFromDTO(it: LegalMenuItemDTO): LegalMenuItemShape {
   return {
     label: trimKeepEmpty(it.label),
-    href: trimKeepEmpty(String(it.href ?? "")),
-    newTab: asBool(it.newTab),
+    // DTO attendu string | null | undefined. Si jamais "dirty", on force string de façon best-effort.
+    href: trimKeepEmpty(
+      typeof it.href === "string" ? it.href : String(it.href ?? ""),
+    ),
+    newTab: typeof it.newTab === "boolean" ? it.newTab : false,
   };
 }
 

@@ -18,7 +18,6 @@ import {
   AssetUrlSchema,
 } from "@compoz/validation/common/url-fragments";
 
-const REQUIRE_BASEURL_HTTPS = process.env.NODE_ENV === "production";
 
 /* -------------------------------------------------------------------------- */
 /*                         Helpers draft ("" accepté)                         */
@@ -55,7 +54,7 @@ export const OpenGraphSettingsSchema = z
     imageAlt: z
       .string()
       .trim()
-      .max(SEO.IMAGE_ALT_MAX, ERROR_CODES.SEO_OPEN_GRAPH_IMAGE_ALT_TOO_LONG)
+      .max(SEO.IMAGE_ALT.MAX, ERROR_CODES.SEO_OPEN_GRAPH_IMAGE_ALT_TOO_LONG)
       .optional(),
   })
   .strict();
@@ -91,10 +90,15 @@ export type TwitterSettingsShape = z.infer<typeof TwitterSettingsSchema>;
 /*                               Inline validation                            */
 /* -------------------------------------------------------------------------- */
 
+type SeoSettingsDraft = z.infer<typeof SeoSettingsObjectSchema>;
+
 export function validateSeoSettingsValues(
-  val: z.infer<typeof SeoSettingsObjectSchema>,
+  val: SeoSettingsDraft,
   ctx: z.RefinementCtx,
+  opts?: { requireBaseUrlHttps?: boolean },
 ) {
+  const requireBaseUrlHttps = opts?.requireBaseUrlHttps ?? false;
+
   // defaultTitle requis
   const title = val.defaultTitle.trim();
   if (title.length < SEO.TITLE.MIN) {
@@ -105,12 +109,12 @@ export function validateSeoSettingsValues(
     });
   }
 
-  // baseUrl https requis en prod
+  // baseUrl : si renseignée => doit être valide ; https requis selon option
   const baseUrl = (val.baseUrl ?? "").trim();
-  if (baseUrl.length > 0 && REQUIRE_BASEURL_HTTPS) {
+  if (baseUrl.length > 0) {
     try {
       const { protocol } = new URL(baseUrl);
-      if (protocol !== "https:") {
+      if (requireBaseUrlHttps && protocol !== "https:") {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["baseUrl"],
@@ -163,41 +167,36 @@ export function validateSeoSettingsValues(
 export const SeoSettingsObjectSchema = z
   .object({
     baseUrl: OptionalAbsoluteHttpUrlDraftSchema,
-
     defaultTitle: z
       .string()
       .trim()
       .max(SEO.TITLE.MAX, ERROR_CODES.SEO_TITLE_TOO_LONG),
-
     defaultDescription: z
       .string()
       .trim()
       .max(SEO.DESCRIPTION.MAX, ERROR_CODES.SEO_DESCRIPTION_TOO_LONG)
       .optional(),
-
     titleTemplate: z
       .string()
       .trim()
       .max(SEO.TITLE_TEMPLATE.MAX, ERROR_CODES.SEO_TITLE_TEMPLATE_TOO_LONG)
       .optional(),
-
     canonicalUrl: OptionalAbsoluteHttpUrlDraftSchema,
-
     robots: z
       .string()
       .trim()
       .max(SEO.ROBOTS.MAX, ERROR_CODES.SEO_ROBOTS_TOO_LONG)
       .optional(),
-
     openGraph: OpenGraphSettingsSchema.optional(),
     twitter: TwitterSettingsSchema.optional(),
-
     structuredDataEnabled: z.boolean().optional(),
   })
   .strict();
 
+// Par défaut, pas de dépendance runtime.
+// Le “https only en prod” doit être appliqué plus haut (route/use-case) via option.
 export const SeoSettingsSchema = SeoSettingsObjectSchema.superRefine(
-  validateSeoSettingsValues,
+  (val, ctx) => validateSeoSettingsValues(val, ctx),
 );
 
 export type SeoSettingsShape = z.infer<typeof SeoSettingsSchema>;

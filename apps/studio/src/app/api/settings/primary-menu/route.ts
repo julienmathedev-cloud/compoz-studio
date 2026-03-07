@@ -1,8 +1,8 @@
 /**
  * @file apps/studio/src/app/api/settings/primary-menu/route.ts
- * @layer api/routes
+ * @layer studio/app/api
  * @description
- * Route API Admin pour la lecture et la mise à jour du menu principal (PrimaryMenu).
+ * Route API Studio pour la lecture et la mise à jour du menu principal (PrimaryMenu).
  *
  * Responsabilités :
  * - GET   : retourne les settings PrimaryMenu selon le state (draft/published).
@@ -11,23 +11,25 @@
  * - Le repository merge avec les defaults pour assurer la cohérence.
  */
 
+import "server-only";
+
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { updatePrimaryMenuSettings } from "@compoz/core/domain/site/use-cases/primary-menu/update-primary-menu-settings";
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
-import { log, logSpan } from "@compoz/infra/lib/log";
-import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 import type {
   GetPrimaryMenuResponse,
   PatchPrimaryMenuResponse,
 } from "@compoz/infra/http/studio/site-settings.types";
+import { log, logSpan } from "@compoz/infra/lib/log";
+import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
+import { adaptUpdatePrimaryMenuIntent } from "@compoz/studio/app/api/_adapters/menus";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { UpdatePrimaryMenuSettingsIntentSchema } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-intents";
-import { adaptUpdatePrimaryMenuIntent } from "@compoz/studio/app/api/_adapters/menus";
-import { handleRoute } from "@compoz/studio/lib/api/handle-route";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 
 export async function GET(req: Request) {
-  const NS = "api.admin.site.primary-menu.GET" as const;
+  const NS = "api.studio.site.primaryMenu.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
     const { tenantId } = await requireSessionWithTenant();
@@ -43,15 +45,17 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const NS = "api.admin.site.primary-menu.PATCH" as const;
+  const NS = "api.studio.site.primaryMenu.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
     const { tenantId } = await requireSessionWithTenant();
 
     return logSpan(NS, { ns: NS, method: "PATCH", tenantId }, async () => {
+      const lg = log.child({ ns: NS });
+
       const raw = await readJsonOr400(req);
 
-      log.info?.("PRIMARY_MENU.PATCH.start", {
+      lg.info?.("route.primaryMenu.patch.start", {
         tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
@@ -63,7 +67,7 @@ export async function PATCH(req: Request) {
 
       const dto = parseDTOOrHttp(UpdatePrimaryMenuSettingsIntentSchema, raw, {
         message: EC.VALIDATION_ERROR,
-        extras: { where: "api.admin.site.primary-menu.PATCH.payload" },
+        extras: { where: "api.studio.site.primaryMenu.PATCH.payload" },
       });
 
       const input = adaptUpdatePrimaryMenuIntent(dto);
@@ -74,7 +78,7 @@ export async function PATCH(req: Request) {
       const run = updatePrimaryMenuSettings({ repo });
       const { settings } = await run(input);
 
-      log.info?.("PRIMARY_MENU.PATCH.afterWrite", {
+      lg.info?.("route.primaryMenu.patch.afterWrite", {
         tenantId,
         primaryMenuKeys: settings?.primaryMenu
           ? Object.keys(settings.primaryMenu)
@@ -82,11 +86,11 @@ export async function PATCH(req: Request) {
       });
 
       try {
-        log.info?.("PRIMARY_MENU.PATCH.invalidate.start", { tenantId });
+        lg.info?.("route.primaryMenu.patch.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        log.info?.("PRIMARY_MENU.PATCH.invalidate.done", { tenantId });
+        lg.info?.("route.primaryMenu.patch.invalidate.done", { tenantId });
       } catch (e) {
-        log.error?.("PRIMARY_MENU.PATCH.invalidate.failed", {
+        lg.error?.("route.primaryMenu.patch.invalidate.failed", {
           tenantId,
           err: String(e),
         });

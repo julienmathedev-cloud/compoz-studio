@@ -1,13 +1,19 @@
 /**
  * @file packages/ui/src/lib/build-shallow-diff.ts
- * @layer lib
+ * @layer ui/lib/object
+ *
  * @description
- * Helpers pour construire des diffs minimaux (shallow) entre deux objets afin de produire
+ * Helper pour construire un diff minimal (shallow) entre deux objets afin de produire
  * des patchs partiels (ex: requêtes PATCH) sans renvoyer de données inchangées.
+ *
+ * Conçu pour :
+ * - minimiser les payloads PATCH côté UI
+ * - éviter l'envoi de champs inchangés
  *
  * Limites assumées :
  * - Diff **shallow** (1 niveau).
- * - Pas de gestion des suppressions : seules les clés présentes dans `next` peuvent apparaître.
+ * - Pas de gestion des suppressions : seules les clés présentes dans `next`
+ *   peuvent apparaître dans le patch.
  */
 
 /**
@@ -23,7 +29,8 @@
  *
  * @param prev Objet précédent (référence initiale, lecture seule)
  * @param next Objet suivant (valeurs à comparer, lecture seule)
- * @returns    Un patch partiel ou `null` si aucune modification détectée
+ *
+ * @returns Un patch partiel (`Partial<T>`) ou `null` si aucune modification détectée
  */
 export function buildShallowDiff<T extends Record<string, unknown>>(
   prev: Readonly<T>,
@@ -32,7 +39,9 @@ export function buildShallowDiff<T extends Record<string, unknown>>(
   const out: Partial<T> = {};
   let changed = false;
 
-  for (const k of Object.keys(next) as Array<keyof T>) {
+  const keys = Object.keys(next) as (keyof T)[];
+
+  for (const k of keys) {
     // Object.is gère correctement NaN, -0, etc.
     if (!Object.is(prev[k], next[k])) {
       out[k] = next[k];

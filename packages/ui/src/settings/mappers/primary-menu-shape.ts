@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/site/mappers/primary-menu-shape.ts
- * @layer ui-mappers/site
+ * @layer ui/site/mappers
  *
  * @description
  * Mapper "shared runtime" PrimaryMenu :
@@ -17,7 +17,7 @@ import type { PrimaryMenuSettingsDTO } from "@compoz/core/domain/site/dto";
 
 import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 
-import { asBool, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
+import { trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 
 /* -------------------------------------------------------------------------- */
 /*                         DTO item types (source de vérité)                  */
@@ -33,14 +33,23 @@ type PrimaryMenuShapeChild = NonNullable<
   PrimaryMenuShapeItem["children"]
 >[number];
 
+function toStrictBool(v: unknown): boolean {
+  return typeof v === "boolean" ? v : false;
+}
+
+function toHrefString(v: unknown): string {
+  // DTO attendu string | null | undefined. Si jamais "dirty", on force une string best-effort.
+  return typeof v === "string" ? v : String(v ?? "");
+}
+
 /** DTO -> Shape : child (renderer). */
 function toPrimaryMenuSettingsShapeChildFromDTO(
   it: PrimaryMenuDTOChild,
 ): PrimaryMenuShapeChild {
   return {
     label: trimKeepEmpty(it.label),
-    href: trimKeepEmpty(String(it.href ?? "")),
-    newTab: asBool(it.newTab),
+    href: trimKeepEmpty(toHrefString(it.href)),
+    newTab: toStrictBool(it.newTab),
   };
 }
 
@@ -55,14 +64,14 @@ function toPrimaryMenuSettingsShapeItemFromDTO(
     ? childrenRaw.map(toPrimaryMenuSettingsShapeChildFromDTO)
     : undefined;
 
-  const hrefRaw = trimKeepEmpty(String(it.href ?? ""));
+  const hrefRaw = trimKeepEmpty(toHrefString(it.href));
   const href = hrefRaw.length > 0 ? hrefRaw : undefined;
 
   return {
     label: trimKeepEmpty(it.label),
     href,
     // Parent avec children => jamais newTab (contrat schema)
-    newTab: hasChildren ? false : asBool(it.newTab),
+    newTab: hasChildren ? false : toStrictBool(it.newTab),
     ...(hasChildren ? { children } : {}),
   };
 }

@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/settings/bundle/getSettingsBundle.ts
- * @layer hooks/admin/site/settings-bundle
+ * @layer hooks/studio/site/settings-bundle
  *
  * @description
  * Helper "cache-first" pour obtenir le bundle SiteSettings.
@@ -15,10 +15,12 @@
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
-import { settingsAdminApi } from "@compoz/infra/http/studio/site-settings.client";
+import type { HttpOpts } from "@compoz/infra/http/internal";
+import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
 import type { QueryClient } from "@tanstack/react-query";
 
-import type { HttpOpts } from "@compoz/infra/http/internal";
+import { requireTenantId } from "@compoz/ui/lib/tenant-id";
+
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
 
 export async function getSettingsBundle(
@@ -27,9 +29,7 @@ export async function getSettingsBundle(
   state: ContentState,
   opts?: HttpOpts,
 ): Promise<SiteSettings> {
-  const tid = String(tenantId ?? "")
-    .trim()
-    .toLowerCase();
+  const tid = requireTenantId(tenantId);
 
   const key = settingsBundleKey(tid, state);
 
@@ -39,7 +39,7 @@ export async function getSettingsBundle(
   const bundle = await qc.fetchQuery<SiteSettings>({
     queryKey: key,
     queryFn: async ({ signal }) => {
-      const dto = await settingsAdminApi.bundle.get(state, {
+      const dto = await settingsStudioApi.bundle.get(state, {
         signal: opts?.signal ?? signal,
       });
 
@@ -53,3 +53,5 @@ export async function getSettingsBundle(
 
   return bundle;
 }
+
+getSettingsBundle.displayName = "getSettingsBundle";

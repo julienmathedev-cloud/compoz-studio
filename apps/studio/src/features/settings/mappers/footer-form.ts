@@ -1,11 +1,11 @@
 /**
  * @file apps/studio/src/features/settings/mappers/footer-form.ts
- * @layer ui-mappers/site
+ * @layer ui-mappers/studio/site
  * @description
  * Mappers UI Footer (studio forms) :
  * - DTO -> valeurs de formulaire RHF
  * - normalisation UI
- * - PATCH intent DTO pour l’API admin
+ * - PATCH intent DTO pour l’API studio
  *
  * @remarks
  * - Pour la shape runtime (site/preview), utiliser le mapper shared

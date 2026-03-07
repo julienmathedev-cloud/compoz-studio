@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/editor/RichTextCellEditor.tsx
- * @layer ui/organisms
+ * @layer ui/studio/pages/blocks/editor
  *
  * @description
  * Éditeur Rich Text (Tiptap) — V0.5.
@@ -13,8 +13,11 @@
  * - Pas de logique métier : UI only.
  */
 
+import { Extension } from "@tiptap/core";
 import Heading from "@tiptap/extension-heading";
 import Link from "@tiptap/extension-link";
+import Subscript from "@tiptap/extension-subscript";
+import Superscript from "@tiptap/extension-superscript";
 import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
@@ -45,8 +48,10 @@ import {
   Underline as UnderlineIcon,
   Undo2,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
+import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { Button } from "@compoz/ui/components/ui/button";
 import {
   DropdownMenu,
@@ -74,15 +79,8 @@ import {
   ToggleGroupItem,
 } from "@compoz/ui/components/ui/toggle-group";
 import { cn } from "@compoz/ui/lib/utils";
-import { ADMIN_BORDER_PANEL, STACK_MD } from "@compoz/ui/styles/studio/layout";
-import { Text } from "@compoz/studio/components/atoms/typography/Text";
-import Subscript from "@tiptap/extension-subscript";
-import Superscript from "@tiptap/extension-superscript";
-import { useTranslations } from "next-intl";
-
-// ✅ AJOUT : extension utilitaire pour gérer Tab / Shift+Tab
 import { PROSE_CLASSNAME } from "@compoz/ui/styles/shared/typography";
-import { Extension } from "@tiptap/core";
+import { STACK_MD, STUDIO_BORDER_PANEL } from "@compoz/ui/styles/studio/layout";
 
 type RichTextCellEditorProps = Readonly<{
   /** HTML du contenu (source de vérité V0.5). */
@@ -235,31 +233,31 @@ export function RichTextCellEditor({
   const t = useTranslations();
   const labels = useMemo(
     () => ({
-      undo: t("admin.cellEditorTabs.richText.undo"),
-      redo: t("admin.cellEditorTabs.richText.redo"),
-      heading: t("admin.cellEditorTabs.richText.heading"),
-      heading2: t("admin.cellEditorTabs.richText.heading2"),
-      heading3: t("admin.cellEditorTabs.richText.heading3"),
-      heading4: t("admin.cellEditorTabs.richText.heading4"),
-      heading5: t("admin.cellEditorTabs.richText.heading5"),
-      heading6: t("admin.cellEditorTabs.richText.heading6"),
-      list: t("admin.cellEditorTabs.richText.list"),
-      bulletList: t("admin.cellEditorTabs.richText.bulletList"),
-      orderedList: t("admin.cellEditorTabs.richText.orderedList"),
-      quote: t("admin.cellEditorTabs.richText.quote"),
-      bold: t("admin.cellEditorTabs.richText.bold"),
-      italic: t("admin.cellEditorTabs.richText.italic"),
-      underline: t("admin.cellEditorTabs.richText.underline"),
-      strike: t("admin.cellEditorTabs.richText.strike"),
-      link: t("admin.cellEditorTabs.richText.link"),
-      applyLink: t("admin.cellEditorTabs.richText.applyLink"),
-      removeLink: t("admin.cellEditorTabs.richText.removeLink"),
-      superScript: t("admin.cellEditorTabs.richText.superScript"),
-      subScript: t("admin.cellEditorTabs.richText.subScript"),
-      alignLeft: t("admin.cellEditorTabs.richText.alignLeft"),
-      alignCenter: t("admin.cellEditorTabs.richText.alignCenter"),
-      alignRight: t("admin.cellEditorTabs.richText.alignRight"),
-      alignJustify: t("admin.cellEditorTabs.richText.alignJustify"),
+      undo: t("studio.cellEditorTabs.richText.undo"),
+      redo: t("studio.cellEditorTabs.richText.redo"),
+      heading: t("studio.cellEditorTabs.richText.heading"),
+      heading2: t("studio.cellEditorTabs.richText.heading2"),
+      heading3: t("studio.cellEditorTabs.richText.heading3"),
+      heading4: t("studio.cellEditorTabs.richText.heading4"),
+      heading5: t("studio.cellEditorTabs.richText.heading5"),
+      heading6: t("studio.cellEditorTabs.richText.heading6"),
+      list: t("studio.cellEditorTabs.richText.list"),
+      bulletList: t("studio.cellEditorTabs.richText.bulletList"),
+      orderedList: t("studio.cellEditorTabs.richText.orderedList"),
+      quote: t("studio.cellEditorTabs.richText.quote"),
+      bold: t("studio.cellEditorTabs.richText.bold"),
+      italic: t("studio.cellEditorTabs.richText.italic"),
+      underline: t("studio.cellEditorTabs.richText.underline"),
+      strike: t("studio.cellEditorTabs.richText.strike"),
+      link: t("studio.cellEditorTabs.richText.link"),
+      applyLink: t("studio.cellEditorTabs.richText.applyLink"),
+      removeLink: t("studio.cellEditorTabs.richText.removeLink"),
+      superScript: t("studio.cellEditorTabs.richText.superScript"),
+      subScript: t("studio.cellEditorTabs.richText.subScript"),
+      alignLeft: t("studio.cellEditorTabs.richText.alignLeft"),
+      alignCenter: t("studio.cellEditorTabs.richText.alignCenter"),
+      alignRight: t("studio.cellEditorTabs.richText.alignRight"),
+      alignJustify: t("studio.cellEditorTabs.richText.alignJustify"),
     }),
     [t],
   );
@@ -330,8 +328,8 @@ export function RichTextCellEditor({
   if (!editor) {
     return (
       <div className={cn("space-y-2", className)}>
-        <div className="h-10 w-full motion-safe:animate-pulse rounded-md border bg-muted/40" />
-        <div className="min-h-[180px] w-full motion-safe:animate-pulse rounded-md border bg-muted/40" />
+        <div className="h-10 w-full rounded-md border bg-muted/40 motion-safe:animate-pulse" />
+        <div className="min-h-[180px] w-full rounded-md border bg-muted/40 motion-safe:animate-pulse" />
       </div>
     );
   }
@@ -391,6 +389,8 @@ export function RichTextCellEditor({
   };
 
   const applyList = (next: "none" | "bulletList" | "orderedList") => {
+    if (disabled) return;
+
     // Désactivation : on enlève les listes
     if (next === "none") {
       const chain = editor.chain().focus();
@@ -406,11 +406,15 @@ export function RichTextCellEditor({
   };
 
   const applyQuote = () => {
+    if (disabled) return;
+
     const chain = clearBlockConflicts(editor, "blockquote");
     chain.toggleBlockquote().run();
   };
 
   const applyAlign = (next: string) => {
+    if (disabled) return;
+
     const chain = editor.chain().focus();
     if (next === "left") return chain.setTextAlign("left").run();
     if (next === "center") return chain.setTextAlign("center").run();
@@ -419,6 +423,8 @@ export function RichTextCellEditor({
   };
 
   const applyLink = () => {
+    if (disabled) return;
+
     const href = linkDraft.trim();
 
     if (!href) {
@@ -438,6 +444,8 @@ export function RichTextCellEditor({
   };
 
   const removeLink = () => {
+    if (disabled) return;
+
     editor.chain().focus().unsetLink().run();
     setLinkOpen(false);
   };
@@ -450,7 +458,7 @@ export function RichTextCellEditor({
   return (
     <div
       className={cn(
-        ADMIN_BORDER_PANEL,
+        STUDIO_BORDER_PANEL,
         STACK_MD,
         "shadow-accent p-2",
         className,
@@ -487,7 +495,7 @@ export function RichTextCellEditor({
           </Button>
         </div>
 
-        <Separator orientation="vertical" className="h-6 my-1" />
+        <Separator orientation="vertical" className="my-1 h-6" />
 
         {/* ✅ Headings dropdown (style TipTap-like) */}
         <DropdownMenu>
@@ -663,7 +671,7 @@ export function RichTextCellEditor({
           <TextQuote />
         </Toggle>
 
-        <Separator orientation="vertical" className="h-6 my-1" />
+        <Separator orientation="vertical" className="my-1 h-6" />
 
         {/* Marks: bold/italic/underline/strike + link */}
         <ToggleGroup
@@ -793,7 +801,7 @@ export function RichTextCellEditor({
           </Popover>
         </ToggleGroup>
 
-        <Separator orientation="vertical" className="h-6 my-1" />
+        <Separator orientation="vertical" className="my-1 h-6" />
 
         <ToggleGroup
           type="single"
@@ -818,7 +826,7 @@ export function RichTextCellEditor({
               editor.chain().focus().toggleSuperscript().run();
             }}
           >
-            <span className="text-base font-semibold -mr-1">x²</span>
+            <span className="-mr-1 text-base font-semibold">x²</span>
           </ToggleGroupItem>
 
           <ToggleGroupItem
@@ -833,11 +841,11 @@ export function RichTextCellEditor({
               editor.chain().focus().toggleSubscript().run();
             }}
           >
-            <span className="text-base font-semibold -mr-1 -mt-1">x₂</span>
+            <span className="-mr-1 -mt-1 text-base font-semibold">x₂</span>
           </ToggleGroupItem>
         </ToggleGroup>
 
-        <Separator orientation="vertical" className="h-6 my-1" />
+        <Separator orientation="vertical" className="my-1 h-6" />
 
         {/* Align */}
         <ToggleGroup

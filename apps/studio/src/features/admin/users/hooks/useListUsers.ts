@@ -5,7 +5,7 @@
  * @layer hooks/admin/users
  *
  * @description
- * Hook admin React Query pour charger la liste des users Studio.
+ * Hook Studio React Query pour charger la liste des users (Studio).
  *
  * @remarks
  * - Orchestration UI-only (query + logs + notifications).
@@ -13,13 +13,16 @@
  * - Aucune logique métier.
  */
 
-import { log } from "@compoz/infra/lib/log";
-import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
+import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
+
 import type { UserSummaryDTO } from "@compoz/core/domain/users/dto";
-import { usersAdminApi } from "@compoz/infra/http/studio/users.client";
+import { adminUsersStudioApi } from "@compoz/infra/http/studio/users.client";
+import { log } from "@compoz/infra/lib/log";
+
+import { usersListKey } from "@compoz/studio/features/admin/users/cache/keys";
 import { notify } from "@compoz/studio/lib/ui/notify";
 
 type UseListUsersResult = Readonly<{
@@ -31,19 +34,18 @@ const lg = log.child({ ns: "hook", name: "useListUsers" });
 
 export function useListUsers(): UseListUsersResult {
   const t = useTranslations();
-  const entityLabel = t("admin.shared.entities.users");
+  const entityLabel = t("studio.shared.entities.users");
 
   const query = useQuery({
-    queryKey: ["admin", "users", "list"] as const,
+    queryKey: usersListKey(),
 
     queryFn: async ({ signal }): Promise<ReadonlyArray<UserSummaryDTO>> => {
-      const res = await usersAdminApi.list({ signal });
+      const res = await adminUsersStudioApi.list({ signal });
 
-      const users = res.users; // ✅ flatten route response
+      // ✅ flatten route response
+      const users = res.users;
 
-      lg.debug("list.ok", {
-        count: users.length,
-      });
+      lg.debug("list.ok", { count: users.length });
 
       return users;
     },

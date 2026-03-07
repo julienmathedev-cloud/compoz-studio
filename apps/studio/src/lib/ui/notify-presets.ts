@@ -2,10 +2,15 @@
 
 /**
  * @file apps/studio/src/lib/ui/notify-presets.ts
- * @layer lib/ui
+ * @layer studio/lib/ui
+ *
  * @description
- * Presets de notifications pour l’admin.
+ * Presets de notifications pour le Studio (admin).
  * Les messages (title/description) doivent être fournis **déjà traduits** par l’appelant.
+ *
+ * @remarks
+ * - Fournit des helpers sémantiques pour éviter de répéter le type de notification.
+ * - Wrap les appels vers `notify`.
  */
 
 import { notify } from "@compoz/studio/lib/ui/notify";
@@ -16,9 +21,6 @@ import { notify } from "@compoz/studio/lib/ui/notify";
 
 /**
  * Notification lors de la création d’un nouvel élément.
- *
- * @param title       Titre traduit de la notification
- * @param description Description traduite de la notification
  */
 export function notifyCreated(title: string, description: string): void {
   notify.success(title, description);
@@ -26,9 +28,6 @@ export function notifyCreated(title: string, description: string): void {
 
 /**
  * Notification de suppression d’un élément.
- *
- * @param title       Titre traduit de la notification
- * @param description Description traduite de la notification
  */
 export function notifyDeleted(title: string, description: string): void {
   notify.success(title, description);
@@ -36,9 +35,6 @@ export function notifyDeleted(title: string, description: string): void {
 
 /**
  * Notification de mise à jour d’un élément.
- *
- * @param title       Titre traduit de la notification
- * @param description Description traduite de la notification
  */
 export function notifyUpdated(title: string, description: string): void {
   notify.success(title, description);
@@ -47,9 +43,6 @@ export function notifyUpdated(title: string, description: string): void {
 /**
  * Notification utilisée lorsque l'utilisateur tente d'enregistrer
  * un formulaire sans aucune modification.
- *
- * @param title       Titre traduit de la notification
- * @param description Description traduite de la notification
  */
 export function notifyNoChanges(title: string, description: string): void {
   notify.info(title, description);
@@ -61,9 +54,6 @@ export function notifyNoChanges(title: string, description: string): void {
 
 /**
  * Notification d’erreur “métier/UI” (ex: action impossible, validation, publish…).
- *
- * @param title       Titre traduit de la notification
- * @param description Description traduite de la notification
  */
 export function notifyValidationError(
   title: string,

@@ -1,26 +1,26 @@
 /**
  * @file packages/ui/src/styles/studio/typography.ts
- * @layer styles/admin
+ * @layer styles/studio
  * @description
- * Tokens typographiques pour l’admin : titres H1 → H6, variantes de texte (base, muted, error, meta),
+ * Tokens typographiques pour le Studio : titres H1 → H6, variantes de texte (base, muted, error, meta),
  * et mapping utilisé par les composants <Heading /> et <Text />.
  *
  * Responsabilités :
- * - Fournir des classes Tailwind réutilisables pour tous les titres et textes de l’admin.
+ * - Fournir des classes Tailwind réutilisables pour tous les titres et textes du Studio.
  * - Assurer la cohérence visuelle et hiérarchique.
  * - Exposer des mappings HEADINGS et TEXT_VARIANT_STYLES pour usage dans les composants UI.
  */
 
 /* ---------------------------------------------------------------------------
  * TITRES (H1 → H6)
- * Styles hiérarchiques utilisés dans tout l’admin via <Heading>.
+ * Styles hiérarchiques utilisés dans tout le Studio via <Heading>.
  * ------------------------------------------------------------------------- */
 
 export const TITLE_LOGO = [
   "text-lg",
   "md:text-xl",
   "font-bold",
-  "font-leading-tight",
+  "leading-tight",
 ] as const;
 
 export const TITLE_H1 = [
@@ -53,7 +53,7 @@ export const TITLE_H6 = [
   "font-semibold",
   "text-foreground",
   "uppercase",
-  "tracking-wide", // donne un aspect “label” très lisible en admin
+  "tracking-wide", // donne un aspect “label” très lisible en Studio
 ] as const;
 
 /* ---------------------------------------------------------------------------
@@ -89,7 +89,7 @@ export const TEXT_ERROR = [
 export const TEXT_META = ["text-xs", "text-muted-foreground"] as const;
 
 /**
- * Variantes typographiques disponibles pour le texte admin.
+ * Variantes typographiques disponibles pour le texte Studio.
  * - `base`  : texte standard.
  * - `muted` : texte secondaire (descriptions, hints).
  * - `error` : texte d’erreur (validation, messages bloquants).

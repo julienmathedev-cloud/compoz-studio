@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/primary-menu/validate.ts
- * @layer hooks/admin/site/primary-menu
+ * @layer hooks/studio/site/primary-menu
  *
  * @description
  * Helpers et hooks de validation UI non bloquante pour le menu principal.

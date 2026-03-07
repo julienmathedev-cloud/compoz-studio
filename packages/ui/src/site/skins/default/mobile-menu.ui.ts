@@ -1,13 +1,14 @@
 /**
  * @file packages/ui/src/site/skins/default/mobile-menu.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
+ *
  * @description
- * Skin UI par defaut pour styler l’en-tête du site public (thème Default).
+ * Skin UI par défaut pour le menu mobile du site (thème Default).
  */
 
-import type { PublicMobileMenuUi } from "@compoz/ui/site/public-ui.types";
+import type { SiteMobileMenuUi } from "@compoz/ui/site/site-ui.types";
 
-export const defaultMobileMenuUi: PublicMobileMenuUi = {
+export const defaultMobileMenuUi: SiteMobileMenuUi = {
   triggerButton: "inline-flex items-center justify-center rounded-md p-2",
   triggerIcon: "text-foreground",
 
@@ -35,13 +36,17 @@ export const defaultMobileMenuUi: PublicMobileMenuUi = {
   details: "w-full",
   summary:
     "w-full flex items-center justify-between rounded-md px-3 py-3 hover:bg-muted",
+
   dropdownList: "mt-1 pl-2 flex flex-col gap-1",
   childItem: "w-full",
   childInteractive: "w-full",
+
   socialsRow:
     "mt-4 flex items-center justify-center gap-2 border-t border-border pt-4",
+
   socialLink: "rounded-md p-2 hover:bg-muted",
   socialIcon: "h-5 w-5",
+
   focusRing:
     "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background",
 

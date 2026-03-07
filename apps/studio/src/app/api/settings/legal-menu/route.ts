@@ -1,8 +1,8 @@
 /**
  * @file apps/studio/src/app/api/settings/legal-menu/route.ts
- * @layer api/routes
+ * @layer studio/app/api
  * @description
- * Route API Admin pour la lecture et la mise à jour du menu légal.
+ * Route API Studio pour la lecture et la mise à jour du menu légal.
  *
  * Responsabilités :
  * - GET   : retourne les settings LegalMenu selon le state (draft/published).
@@ -10,6 +10,8 @@
  *           adaptation en patch domaine, et exécution du use-case `updateLegalMenuSettings`.
  * - Le repository merge avec les defaults pour assurer la cohérence.
  */
+
+import "server-only";
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { updateLegalMenuSettings } from "@compoz/core/domain/site/use-cases/legal-menu/update-legal-menu-settings";
@@ -27,7 +29,7 @@ import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { UpdateLegalMenuSettingsIntentSchema } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-intents";
 
 export async function GET(req: Request) {
-  const NS = "api.admin.site.legal-menu.GET" as const;
+  const NS = "api.studio.site.legalMenu.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
     const { tenantId } = await requireSessionWithTenant();
@@ -43,15 +45,17 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const NS = "api.admin.site.legal-menu.PATCH" as const;
+  const NS = "api.studio.site.legalMenu.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
     const { tenantId } = await requireSessionWithTenant();
 
     return logSpan(NS, { ns: NS, method: "PATCH", tenantId }, async () => {
+      const lg = log.child({ ns: NS });
+
       const raw = await readJsonOr400(req);
 
-      log.info?.("LEGAL_MENU.PATCH.start", {
+      lg.info?.("route.legalMenu.patch.start", {
         tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
@@ -63,7 +67,7 @@ export async function PATCH(req: Request) {
 
       const dto = parseDTOOrHttp(UpdateLegalMenuSettingsIntentSchema, raw, {
         message: EC.VALIDATION_ERROR,
-        extras: { where: "api.admin.site.legal-menu.PATCH.payload" },
+        extras: { where: "api.studio.site.legalMenu.PATCH.payload" },
       });
 
       const input = adaptUpdateLegalMenuIntent(dto);
@@ -74,7 +78,7 @@ export async function PATCH(req: Request) {
       const run = updateLegalMenuSettings({ repo });
       const { settings } = await run(input);
 
-      log.info?.("LEGAL_MENU.PATCH.afterWrite", {
+      lg.info?.("route.legalMenu.patch.afterWrite", {
         tenantId,
         legalMenuKeys: settings?.legalMenu
           ? Object.keys(settings.legalMenu)
@@ -82,11 +86,11 @@ export async function PATCH(req: Request) {
       });
 
       try {
-        log.info?.("LEGAL_MENU.PATCH.invalidate.start", { tenantId });
+        lg.info?.("route.legalMenu.patch.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        log.info?.("LEGAL_MENU.PATCH.invalidate.done", { tenantId });
+        lg.info?.("route.legalMenu.patch.invalidate.done", { tenantId });
       } catch (e) {
-        log.error?.("LEGAL_MENU.PATCH.invalidate.failed", {
+        lg.error?.("route.legalMenu.patch.invalidate.failed", {
           tenantId,
           err: String(e),
         });

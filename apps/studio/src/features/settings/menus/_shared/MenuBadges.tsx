@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/_shared/MenuBadges.tsx
- * @layer ui/molecules
+ * @layer ui/studio/molecules
  *
  * @description
  * Badges (type + icône) décrivant un item de menu (groupe, externe, interne).
@@ -14,14 +14,15 @@
  * - Strictement UI-only : aucune logique métier.
  */
 
+import { ExternalLink, FolderTree, Link } from "lucide-react";
+import { useTranslations } from "next-intl";
+import type { ComponentType, SVGProps } from "react";
+
+import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
 import { Badge } from "@compoz/ui/components/ui/badge";
 import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { resolveLinkFlags } from "@compoz/ui/lib/links/helpers";
 import { cn } from "@compoz/ui/lib/utils";
-import { AdminIcon } from "@compoz/studio/components/atoms/AdminIcon";
-import { ExternalLink, FolderTree, Link } from "lucide-react";
-import { useTranslations } from "next-intl";
-import type { ComponentType, SVGProps } from "react";
 
 /**
  * Modèle minimal attendu pour déterminer les badges.
@@ -53,6 +54,7 @@ function detectKind(href: string, hasChildren: boolean): Kind[] {
   }
 
   const flags = resolveLinkFlags(href);
+
   if (flags.rawExternal) {
     kinds.push("external");
   } else {
@@ -62,7 +64,7 @@ function detectKind(href: string, hasChildren: boolean): Kind[] {
   return kinds;
 }
 
-/** Mapping `Kind` → icône (Lucide) rendue via `AdminIcon`. */
+/** Mapping `Kind` → icône (Lucide) rendue via `StudioIcon`. */
 const ICONS: Record<Kind, ComponentType<SVGProps<SVGSVGElement>>> = {
   group: FolderTree,
   external: ExternalLink,
@@ -80,7 +82,7 @@ type MenuBadgesProps = Readonly<{
 }>;
 
 /**
- * Affiche des badges décrivant la nature d’un item de menu (admin).
+ * Affiche des badges décrivant la nature d’un item de menu (studio).
  */
 export function MenuBadges({ item, className }: MenuBadgesProps) {
   const t = useTranslations();
@@ -90,7 +92,7 @@ export function MenuBadges({ item, className }: MenuBadgesProps) {
     (Array.isArray(item.children) && item.children.length > 0);
 
   const kinds = detectKind(hrefStr, hasChildren);
-  const labels = kinds.map((k) => t(`admin.menuBadges.kinds.${k}`));
+  const labels = kinds.map((kind) => t(`studio.menuBadges.kinds.${kind}`));
   const labelJoined = labels.join(", ");
 
   if (kinds.length === 0) return null;
@@ -98,15 +100,15 @@ export function MenuBadges({ item, className }: MenuBadgesProps) {
   return (
     <div
       className={cn("flex flex-wrap gap-1", className)}
-      aria-label={t("admin.menuBadges.ariaLabel", { types: labelJoined })}
+      aria-label={t("studio.menuBadges.ariaLabel", { types: labelJoined })}
     >
-      {kinds.map((k, i) => {
-        const Icon = ICONS[k];
+      {kinds.map((kind, index) => {
+        const Icon = ICONS[kind];
 
         return (
-          <Badge key={toStableUiKey({ label: k }, i)} variant="info">
-            <AdminIcon icon={Icon} />
-            <span>{t(`admin.menuBadges.kinds.${k}`)}</span>
+          <Badge key={toStableUiKey({ label: kind }, index)} variant="info">
+            <StudioIcon icon={Icon} />
+            <span>{t(`studio.menuBadges.kinds.${kind}`)}</span>
           </Badge>
         );
       })}

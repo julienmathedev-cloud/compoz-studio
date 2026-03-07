@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/pages/mappers/page-shape.ts
- * @layer ui-mappers/pages
+ * @layer ui/pages/mappers
  *
  * @description
  * Mapper "shared runtime" pour les pages :
@@ -24,6 +24,11 @@ const DEFAULT_SITEMAP: NonNullable<PageFormValues["sitemap"]> = {
   changefreq: null,
 };
 
+function normalizePageSlug(input: string): string {
+  const slug = (input ?? "").trim();
+  return slug === "home" ? "/" : slug;
+}
+
 /* -------------------------------------------------------------------------- */
 /* Domain (DTO) -> Shape frontière (safe)                                      */
 /* -------------------------------------------------------------------------- */
@@ -40,22 +45,24 @@ export function toPageShapeFromDTO(
   page: PageDTO | null | undefined,
   slugFallback?: string,
 ): PageFormValues {
+  const fallbackSlug = normalizePageSlug(slugFallback ?? "");
+
   if (!page) {
     return {
       title: "",
       parentId: null,
-      slug: (slugFallback ?? "").trim(),
-      sitemap: DEFAULT_SITEMAP,
+      slug: fallbackSlug,
+      sitemap: { ...DEFAULT_SITEMAP },
       paginationEnabled: false,
     };
   }
 
-  const slug = (page.slug ?? slugFallback ?? "").trim();
+  const slug = normalizePageSlug(page.slug ?? fallbackSlug);
 
   return {
     title: page.title ?? "",
     parentId: page.parentId ?? null,
-    slug: slug === "home" ? "/" : slug,
+    slug,
     sitemap: {
       include: page.sitemap?.include ?? DEFAULT_SITEMAP.include,
       priority: page.sitemap?.priority ?? DEFAULT_SITEMAP.priority,

@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/validate.ts
- * @layer hooks/admin/pages/blocks
+ * @layer hooks/studio/pages/blocks
  *
  * @description
  * Helpers et hooks de validation UI pour les blocks (warnings légers).
@@ -23,22 +23,25 @@ export type BlockWarningKey = "titleMissing" | "titleLooksThin" | "titleSrOnly";
 
 /* ─────────────────────────── Warnings (PURE + hook) ─────────────────────────── */
 
+/**
+ * Calcule les warnings UI pour un LayoutSectionBlock.
+ */
 export function computeLayoutSectionBlockWarnings(
   values: LayoutSectionBlockFormValues,
 ): BlockWarningKey[] {
-  const out = new Set<BlockWarningKey>();
+  const warnings = new Set<BlockWarningKey>();
 
   const title = values.title;
 
   if (title) {
-    const text = (title.text ?? "").trim();
+    const text = String(title.text ?? "").trim();
 
-    if (!text) out.add("titleMissing");
-    if (text.length > 0 && text.length <= 4) out.add("titleLooksThin");
-    if (title.display === "sr-only") out.add("titleSrOnly");
+    if (!text) warnings.add("titleMissing");
+    if (text.length > 0 && text.length <= 4) warnings.add("titleLooksThin");
+    if (title.display === "sr-only") warnings.add("titleSrOnly");
   }
 
-  return Array.from(out);
+  return Array.from(warnings);
 }
 
 /**

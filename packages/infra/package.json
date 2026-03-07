@@ -14,14 +14,10 @@
     "sharp": "^0.34.5",
     "uuid": "^13.0.0"
   },
-   "exports": {
+  "exports": {
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
-    },
-    "./auth/kv-auth-users-repository": {
-      "types": "./src/auth/kv-auth-users-repository.ts",
-      "default": "./src/auth/kv-auth-users-repository.ts"
     },
     "./kv/kv-telemetry": {
       "types": "./src/kv/kv-telemetry.ts",

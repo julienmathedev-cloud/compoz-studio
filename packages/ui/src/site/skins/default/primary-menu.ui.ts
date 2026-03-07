@@ -1,14 +1,14 @@
 /**
  * @file packages/ui/src/site/skins/default/primary-menu.ui.ts
- * @module components/public/skins/default
+ * @layer ui/site/skins
  *
  * @description
- * Style par défaut du menu principal.
+ * Skin UI — menu principal site (thème Default).
  */
 
-import type { PublicPrimaryMenuUi } from "@compoz/ui/site/public-ui.types";
+import type { SitePrimaryMenuUi } from "@compoz/ui/site/site-ui.types";
 
-export const defaultPrimaryMenuUi: PublicPrimaryMenuUi = {
+export const defaultPrimaryMenuUi: SitePrimaryMenuUi = {
   list: "m-0 p-0 list-none flex flex-wrap items-center gap-4 md:gap-6",
 
   item: "shrink-0",

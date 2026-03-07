@@ -1,18 +1,18 @@
 /**
  * @file apps/site/src/app/loading.tsx
- * @layer app/site
+ * @layer site/app
  *
  * @description
- * Loading UI pour le segment public.
+ * Loading UI pour le segment site.
  *
  * @remarks
- * - Rendu skinnable via `PublicUiProvider` (ui.systemLoading).
+ * - Rendu skinnable via `SiteUiProvider` (ui.systemLoading).
  */
 
-import { PublicSystemLoading } from "@compoz/ui/site/components/system/PublicSystemLoading";
+import { SiteSystemLoading } from "@compoz/ui/site/components/system/SiteSystemLoading";
 
-export default function PublicLoading() {
-  return <PublicSystemLoading />;
+export default function SiteLoading() {
+  return <SiteSystemLoading />;
 }
 
-PublicLoading.displayName = "PublicLoading";
+SiteLoading.displayName = "SiteLoading";

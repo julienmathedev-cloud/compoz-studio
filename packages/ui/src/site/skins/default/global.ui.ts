@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/global.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
- * Skin UI — site public (thème Default).
+ * Skin UI — site (thème Default).
  *
  * @remarks
  * - Compose header/footer/systemPage.
@@ -11,6 +11,7 @@
  * - Fournit uniquement des classes Tailwind (aucune logique).
  */
 
+import type { SiteGlobalUi } from "@compoz/ui/site/site-ui.types";
 import { defaultCarouselUi } from "@compoz/ui/site/skins/default/blocks/carousel-block.ui";
 import { defaultImageUi } from "@compoz/ui/site/skins/default/blocks/image-block.ui";
 import { defaultNavGalleryUi } from "@compoz/ui/site/skins/default/blocks/nav-gallery-block.ui";
@@ -22,9 +23,8 @@ import { defaultLayoutSectionUi } from "@compoz/ui/site/skins/default/layout-sec
 import { defaultPagerUi } from "@compoz/ui/site/skins/default/pager.ui";
 import { defaultSystemLoadingUi } from "@compoz/ui/site/skins/default/system-loading.ui";
 import { defaultSystemPageUi } from "@compoz/ui/site/skins/default/system-page.ui";
-import type { PublicGlobalUi } from "@compoz/ui/site/public-ui.types";
 
-export const defaultGlobalUi: PublicGlobalUi = {
+export const defaultGlobalUi: SiteGlobalUi = {
   header: defaultHeaderUi,
   footer: defaultFooterUi,
 
@@ -38,6 +38,7 @@ export const defaultGlobalUi: PublicGlobalUi = {
     paddingTop: "pt-10",
     paddingBottom: "pb-10",
   },
+
   blocks: {
     richText: defaultRichTextUi,
     image: defaultImageUi,
@@ -45,6 +46,7 @@ export const defaultGlobalUi: PublicGlobalUi = {
     navGallery: defaultNavGalleryUi,
     zoomGallery: defaultZoomGalleryUi,
   },
+
   pager: defaultPagerUi,
   layoutSection: defaultLayoutSectionUi,
   systemPage: defaultSystemPageUi,

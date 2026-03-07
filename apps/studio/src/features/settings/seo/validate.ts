@@ -2,12 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/seo/validate.ts
- * @intro Validation + Warnings UI (front-only) — SEO
- * @layer ui/hooks (feature)
+ * @layer hooks/studio/site/seo
+ *
+ * @description
+ * Validation + warnings UI (front-only) pour le SEO.
  *
  * @remarks
  * - Pas d’erreurs UI bloquantes en V0.5 : la validation principale reste gérée par Zod côté API.
- * - Ce module fournit uniquement des *warnings UX* non bloquants.
+ * - Ce module fournit uniquement des warnings UX non bloquants.
  * - Pattern : warnings calculés sur le modèle **UI** (FormValues RHF).
  */
 
@@ -67,7 +69,8 @@ export function computeSeoWarnings(i: SeoFormValues): SeoWarningKey[] {
 
 /**
  * Hook UI — mémoïse le résultat des warnings SEO.
- * @param values Valeurs RHF (FormValues)
+ *
+ * @param values Valeurs RHF (FormValues).
  */
 export function useSeoUiWarnings(values: SeoFormValues): SeoWarningKey[] {
   return useMemo(() => computeSeoWarnings(values), [values]);
@@ -75,7 +78,7 @@ export function useSeoUiWarnings(values: SeoFormValues): SeoWarningKey[] {
 
 /**
  * Variante “par champs” (optionnelle) si tu veux éviter de passer tout l’objet.
- * ✅ Sans cast, car on reconstruit un `SeoFormValues` complet (shape RHF stable).
+ * Sans cast, car on reconstruit un `SeoFormValues` complet (shape RHF stable).
  */
 export function useSeoUiWarningsFromFields(
   defaultDescription: SeoFormValues["defaultDescription"],
@@ -105,7 +108,7 @@ export function useSeoUiWarningsFromFields(
 
         // Twitter
         twitter: {
-          // la card est hors scope warnings ici, mais il faut une valeur stable
+          // La card est hors scope warnings ici, mais il faut une valeur stable.
           card: "summary_large_image" as SeoFormValues["twitter"]["card"],
           site: "",
           creator: "",

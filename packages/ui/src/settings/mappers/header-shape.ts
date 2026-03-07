@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/settings/mappers/header-shape.ts
- * @layer ui-mappers/site
+ * @layer ui/settings/mappers
  *
  * @description
  * Mapper "shared runtime" Header :
@@ -18,10 +18,14 @@ export function toHeaderSettingsShapeFromDTO(
   dto: HeaderSettingsDTO | null | undefined,
 ): HeaderSettingsShape {
   return {
-    showLogo: Boolean(dto?.showLogo),
-    showSiteName: Boolean(dto?.showSiteName),
-    sticky: Boolean(dto?.sticky),
-    blur: Boolean(dto?.blur),
-    swapPrimaryAndSocial: Boolean(dto?.swapPrimaryAndSocial),
+    showLogo: typeof dto?.showLogo === "boolean" ? dto.showLogo : false,
+    showSiteName:
+      typeof dto?.showSiteName === "boolean" ? dto.showSiteName : false,
+    sticky: typeof dto?.sticky === "boolean" ? dto.sticky : false,
+    blur: typeof dto?.blur === "boolean" ? dto.blur : false,
+    swapPrimaryAndSocial:
+      typeof dto?.swapPrimaryAndSocial === "boolean"
+        ? dto.swapPrimaryAndSocial
+        : false,
   };
 }

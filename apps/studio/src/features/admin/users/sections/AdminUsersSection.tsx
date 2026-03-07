@@ -1,14 +1,25 @@
 "use client";
 
+/**
+ * @file apps/studio/src/features/admin/users/sections/AdminUsersSection.tsx
+ * @layer ui/sections
+ *
+ * @description
+ * Section Users (Studio) :
+ * - header (tenant + user select)
+ * - form create/edit
+ *
+ * @remarks
+ * - Container/orchestrateur : state UI + wiring hooks + submit/delete.
+ * - UI-only : aucune logique métier.
+ */
+
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { cn } from "@compoz/ui/lib/utils";
-import { STACK_LG } from "@compoz/ui/styles/studio/layout";
-
 import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
-import { UserAdminHeader } from "@compoz/studio/features/admin/users/components/molecules/UserAdminHeader";
-import { UserForm } from "@compoz/studio/features/admin/users/components/organisms/UserForm";
+import { AdminUsersForm } from "@compoz/studio/features/admin/users/components/forms/AdminUsersForm";
+import { AdminUsersHeader } from "@compoz/studio/features/admin/users/components/molecules/AdminUsersHeader";
 
 import { useCreateUser } from "@compoz/studio/features/admin/users/hooks/useCreateUser";
 import { useDeleteUser } from "@compoz/studio/features/admin/users/hooks/useDeleteUser";
@@ -20,6 +31,10 @@ import {
   normalizeUserFormValues,
   toUserFormValuesFromDTO,
 } from "@compoz/studio/features/admin/users/mappers/users-form";
+
+import { toTenantId } from "@compoz/ui/lib/tenant-id";
+import { cn } from "@compoz/ui/lib/utils";
+import { STACK_LG } from "@compoz/ui/styles/studio/layout";
 
 import type { UserFormValues } from "@compoz/validation/users/user-form";
 
@@ -40,6 +55,51 @@ type AdminUsersSectionProps = Readonly<{
   currentUser: CurrentUser;
 }>;
 
+function toUserSelectOptions(
+  users: ReadonlyArray<{ id?: unknown; name?: unknown; email?: unknown }>,
+): ReadonlyArray<SelectOption> {
+  return users
+    .map((u) => {
+      const id = String(u.id ?? "").trim();
+      if (!id) return null;
+
+      const name = String(u.name ?? "").trim();
+      const email = String(u.email ?? "").trim();
+      const label = name ? `${name} — ${email}` : email;
+
+      return { value: id, label } as const;
+    })
+    .filter((x): x is SelectOption => Boolean(x));
+}
+
+function canDeleteUser(args: {
+  mode: "create" | "edit";
+  selectedUserId: string | null;
+  currentUser: CurrentUser;
+  targetEmail?: string | null | undefined;
+}): boolean {
+  const { mode, selectedUserId, currentUser, targetEmail } = args;
+
+  if (mode !== "edit") return false;
+
+  const targetId = String(selectedUserId ?? "").trim();
+  if (!targetId) return false;
+
+  const meId = String(currentUser.id ?? "").trim();
+  if (meId && targetId === meId) return false;
+
+  // fallback : comparaison email (si jamais l’id session est absent / différent)
+  const target = String(targetEmail ?? "")
+    .trim()
+    .toLowerCase();
+  const me = String(currentUser.email ?? "")
+    .trim()
+    .toLowerCase();
+  if (target && me && target === me) return false;
+
+  return true;
+}
+
 export function AdminUsersSection({
   currentTenantId,
   tenantOptions,
@@ -55,18 +115,7 @@ export function AdminUsersSection({
   const { users, isLoading: isLoadingUsers } = useListUsers();
 
   const userOptions: ReadonlyArray<SelectOption> = useMemo(() => {
-    return users
-      .map((u) => {
-        const id = String(u.id ?? "").trim();
-        if (!id) return null;
-
-        const name = String(u.name ?? "").trim();
-        const email = String(u.email ?? "").trim();
-        const label = name ? `${name} — ${email}` : email;
-
-        return { value: id, label } as const;
-      })
-      .filter((x): x is SelectOption => Boolean(x));
+    return toUserSelectOptions(users);
   }, [users]);
 
   // ---------------------------------------------------------------------------
@@ -98,9 +147,7 @@ export function AdminUsersSection({
   // ---------------------------------------------------------------------------
   const handleSiteChange = useCallback(
     async (siteId: string) => {
-      const next = String(siteId ?? "")
-        .trim()
-        .toLowerCase();
+      const next = toTenantId(siteId);
       if (!next) return;
 
       setSelectedSiteId(next);
@@ -158,26 +205,13 @@ export function AdminUsersSection({
   // Delete (edit only) + guard self-delete
   // ---------------------------------------------------------------------------
   const canDelete = useMemo(() => {
-    if (mode !== "edit") return false;
-
-    const targetId = String(selectedUserId ?? "").trim();
-    if (!targetId) return false;
-
-    const meId = String(currentUser.id ?? "").trim();
-    if (meId && targetId === meId) return false;
-
-    // fallback (si jamais id absent côté session)
-    const targetEmail = String(user?.email ?? "")
-      .trim()
-      .toLowerCase();
-    const meEmail = String(currentUser.email ?? "")
-      .trim()
-      .toLowerCase();
-
-    if (targetEmail && meEmail && targetEmail === meEmail) return false;
-
-    return true;
-  }, [mode, selectedUserId, currentUser.id, currentUser.email, user?.email]);
+    return canDeleteUser({
+      mode,
+      selectedUserId,
+      currentUser,
+      targetEmail: user?.email,
+    });
+  }, [mode, selectedUserId, currentUser, user?.email]);
 
   const handleDelete = useCallback(async () => {
     if (!canDelete) return;
@@ -229,15 +263,15 @@ export function AdminUsersSection({
   // ---------------------------------------------------------------------------
   const title =
     mode === "edit"
-      ? t("admin.users.section.titleEdit", {
+      ? t("studio.users.section.titleEdit", {
           email: user?.email ?? selectedUserId ?? "",
         })
-      : t("admin.users.section.titleCreate");
+      : t("studio.users.section.titleCreate");
 
   const description =
     mode === "edit"
-      ? t("admin.users.section.descriptionEdit")
-      : t("admin.users.section.descriptionCreate");
+      ? t("studio.users.section.descriptionEdit")
+      : t("studio.users.section.descriptionCreate");
 
   const sectionLoading = Boolean(
     isLoadingUsers || (mode === "edit" && isLoadingUser),
@@ -247,11 +281,11 @@ export function AdminUsersSection({
     <div className={cn(STACK_LG)}>
       <SettingsSection
         id="admin-users"
-        title={t("admin.users.section.title")}
-        description={t("admin.users.section.description")}
+        title={t("studio.users.section.title")}
+        description={t("studio.users.section.description")}
         isLoading={Boolean(isLoadingUsers)}
       >
-        <UserAdminHeader
+        <AdminUsersHeader
           siteId={selectedSiteId}
           userId={selectedUserId}
           siteOptions={tenantOptions}
@@ -271,7 +305,7 @@ export function AdminUsersSection({
         isDirty={isDirtyLocal}
         blockingErrorsCount={blockingErrorsCount}
       >
-        <UserForm
+        <AdminUsersForm
           key={formKey}
           initialValues={initialValues}
           isSaving={isSaving}

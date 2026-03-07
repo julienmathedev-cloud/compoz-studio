@@ -16,10 +16,6 @@ export const EPOCH_ISO = "1970-01-01T00:00:00.000Z" as const;
 
 /**
  * Valeur par défaut pour un index de site minimal.
- *
- * @example
- * - `pages: []`      → aucune page encore définie
- * - `updatedAt`      → timestamp sentinelle (jamais mis à jour)
  */
 export const DEFAULT_SITE_INDEX: SiteIndex = {
   pages: [],

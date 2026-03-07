@@ -1,72 +1,62 @@
 /**
  * @file packages/infra/src/http/studio/pages.client.ts
- * @layer infra/http
+ * @layer infra/http/studio
  * @description
- * Client HTTP Admin pour la gestion des pages : index, CRUD et blocks.
+ * Client HTTP Studio pour la gestion des pages : index, CRUD et blocks.
  *
  * Responsabilités : construction des requêtes HTTP, encodage des segments,
  * gestion optionnelle de `state`, typage des réponses via DTOs domaine.
  */
 
 import {
-  WRITE_CONTENT_STATE,
+  DEFAULT_CONTENT_STATE,
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
-import type {
-  CreatePageIntentDTO,
-  UpdatePageIntentDTO,
-} from "@compoz/validation/pages/page-intents";
-import { ENDPOINTS } from "@compoz/infra/http/endpoints";
-import {
-  encodeSegment,
-  withState,
-  type HttpOpts,
-} from "@compoz/infra/http/internal";
-import { apiFetch } from "@compoz/infra/lib/api-fetch";
-
-import type {
-  CreatePageResponse,
-  DeletePageResponse,
-  GetPageByIdResponse,
-  GetPagesIndexResponse,
-  ReorderChildrenResponse,
-  UpdatePageResponse,
-} from "@compoz/infra/http/studio/pages.types";
-
-import type {
-  AddLayoutSectionBlockResponse,
-  DeleteBlockResponse,
-  ListPageBlocksResponse,
-  ReorderBlocksResponse,
-  UpdateLayoutSectionBlockResponse,
-} from "@compoz/infra/http/studio/pages.types";
-
 import type {
   CreateLayoutSectionBlockIntentDTO,
   ReorderBlocksIntentDTO,
   UpdateLayoutSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
+import type {
+  CreatePageIntentDTO,
+  UpdatePageIntentDTO,
+} from "@compoz/validation/pages/page-intents";
+
+import { ENDPOINTS } from "@compoz/infra/http/endpoints";
+import {
+  assertJsonResponse,
+  encodeSegment,
+  withState,
+  type HttpOpts,
+} from "@compoz/infra/http/internal";
+import { apiFetch } from "@compoz/infra/lib/api-fetch";
 import { logSpan } from "@compoz/infra/lib/log";
 
-function assertJsonResponse<T>(res: T | null, errorMessage: string): T {
-  // Contract: this endpoint returns JSON on success.
-  if (!res) {
-    throw new Error(errorMessage);
-  }
-  return res;
-}
+import type {
+  AddLayoutSectionBlockResponse,
+  CreatePageResponse,
+  DeleteBlockResponse,
+  DeletePageResponse,
+  GetPageByIdResponse,
+  GetPagesIndexResponse,
+  ListPageBlocksResponse,
+  ReorderBlocksResponse,
+  ReorderChildrenResponse,
+  UpdateLayoutSectionBlockResponse,
+  UpdatePageResponse,
+} from "@compoz/infra/http/studio/pages.types";
 
 /* -------------------------------------------------------------------------- */
-/*                               Client HTTP Admin                            */
+/*                               Client HTTP Studio                           */
 /* -------------------------------------------------------------------------- */
 
-export const pagesAdminApi = {
+export const pagesStudioApi = {
   async getIndex(
-    state: ContentState = WRITE_CONTENT_STATE,
+    state: ContentState = DEFAULT_CONTENT_STATE,
     opts?: HttpOpts,
   ): Promise<GetPagesIndexResponse> {
     return logSpan(
-      "infra.http.admin.pages.getIndex",
+      "compoz:studio:svc:pages",
       { endpoint: ENDPOINTS.STUDIO.PAGES.base, method: "GET", state },
       async () => {
         const res = await apiFetch<GetPagesIndexResponse>(
@@ -76,7 +66,7 @@ export const pagesAdminApi = {
 
         return assertJsonResponse(
           res,
-          "pagesAdminApi.getIndex: expected JSON response, received null.",
+          "pagesStudioApi.getIndex: expected JSON response, received null.",
         );
       },
     );
@@ -84,11 +74,11 @@ export const pagesAdminApi = {
 
   async getById(
     pageId: string,
-    state: ContentState = WRITE_CONTENT_STATE,
+    state: ContentState = DEFAULT_CONTENT_STATE,
     opts?: HttpOpts,
   ): Promise<GetPageByIdResponse> {
     return logSpan(
-      "infra.http.admin.pages.getById",
+      "compoz:studio:svc:pages",
       {
         endpoint: ENDPOINTS.STUDIO.PAGES.byId("<pageId>"),
         method: "GET",
@@ -102,7 +92,7 @@ export const pagesAdminApi = {
 
         return assertJsonResponse(
           res,
-          "pagesAdminApi.getById: expected JSON response, received null.",
+          "pagesStudioApi.getById: expected JSON response, received null.",
         );
       },
     );
@@ -114,14 +104,14 @@ export const pagesAdminApi = {
 
   async getPageBlocks(
     pageId: string,
-    state: ContentState = WRITE_CONTENT_STATE,
+    state: ContentState = DEFAULT_CONTENT_STATE,
     opts?: HttpOpts,
   ): Promise<ListPageBlocksResponse> {
     const encoded = encodeSegment(pageId);
     const url = ENDPOINTS.STUDIO.PAGES.blocksById(encoded);
 
     return logSpan(
-      "infra.http.admin.pages.blocks.list",
+      "compoz:studio:svc:pages-blocks",
       {
         endpoint: ENDPOINTS.STUDIO.PAGES.blocksById("<pageId>"),
         method: "GET",
@@ -130,12 +120,15 @@ export const pagesAdminApi = {
       async () => {
         const res = await apiFetch<ListPageBlocksResponse>(
           withState(url, state),
-          { method: "GET", ...(opts ?? {}) },
+          {
+            method: "GET",
+            ...(opts ?? {}),
+          },
         );
 
         return assertJsonResponse(
           res,
-          "pagesAdminApi.getPageBlocks: expected JSON response, received null.",
+          "pagesStudioApi.getPageBlocks: expected JSON response, received null.",
         );
       },
     );
@@ -150,7 +143,7 @@ export const pagesAdminApi = {
     const url = ENDPOINTS.STUDIO.PAGES.blocksById(encoded);
 
     return logSpan(
-      "infra.http.admin.pages.blocks.add",
+      "compoz:studio:svc:pages-blocks",
       {
         endpoint: ENDPOINTS.STUDIO.PAGES.blocksById("<pageId>"),
         method: "POST",
@@ -164,7 +157,7 @@ export const pagesAdminApi = {
 
         return assertJsonResponse(
           res,
-          "pagesAdminApi.addBlock: expected JSON response, received null.",
+          "pagesStudioApi.addBlock: expected JSON response, received null.",
         );
       },
     );
@@ -178,12 +171,10 @@ export const pagesAdminApi = {
   ): Promise<UpdateLayoutSectionBlockResponse> {
     const encodedPageId = encodeSegment(pageId);
     const encodedBlockId = encodeSegment(blockId);
-    const url = `${ENDPOINTS.STUDIO.PAGES.blocksById(
-      encodedPageId,
-    )}/${encodedBlockId}`;
+    const url = `${ENDPOINTS.STUDIO.PAGES.blocksById(encodedPageId)}/${encodedBlockId}`;
 
     return logSpan(
-      "infra.http.admin.pages.blocks.update",
+      "compoz:studio:svc:pages-blocks",
       {
         endpoint: `${ENDPOINTS.STUDIO.PAGES.blocksById("<pageId>")}/<blockId>`,
         method: "PATCH",
@@ -197,7 +188,7 @@ export const pagesAdminApi = {
 
         return assertJsonResponse(
           res,
-          "pagesAdminApi.updateBlock: expected JSON response, received null.",
+          "pagesStudioApi.updateBlock: expected JSON response, received null.",
         );
       },
     );
@@ -210,12 +201,10 @@ export const pagesAdminApi = {
   ): Promise<DeleteBlockResponse> {
     const encodedPageId = encodeSegment(pageId);
     const encodedBlockId = encodeSegment(blockId);
-    const url = `${ENDPOINTS.STUDIO.PAGES.blocksById(
-      encodedPageId,
-    )}/${encodedBlockId}`;
+    const url = `${ENDPOINTS.STUDIO.PAGES.blocksById(encodedPageId)}/${encodedBlockId}`;
 
     return logSpan(
-      "infra.http.admin.pages.blocks.delete",
+      "compoz:studio:svc:pages-blocks",
       {
         endpoint: `${ENDPOINTS.STUDIO.PAGES.blocksById("<pageId>")}/<blockId>`,
         method: "DELETE",
@@ -228,7 +217,7 @@ export const pagesAdminApi = {
 
         return assertJsonResponse(
           res,
-          "pagesAdminApi.deleteBlock: expected JSON response, received null.",
+          "pagesStudioApi.deleteBlock: expected JSON response, received null.",
         );
       },
     );
@@ -243,7 +232,7 @@ export const pagesAdminApi = {
     const url = `${ENDPOINTS.STUDIO.PAGES.blocksById(encoded)}/reorder`;
 
     return logSpan(
-      "infra.http.admin.pages.blocks.reorder",
+      "compoz:studio:svc:pages-blocks",
       {
         endpoint: `${ENDPOINTS.STUDIO.PAGES.blocksById("<pageId>")}/reorder`,
         method: "POST",
@@ -257,7 +246,7 @@ export const pagesAdminApi = {
 
         return assertJsonResponse(
           res,
-          "pagesAdminApi.reorderBlocks: expected JSON response, received null.",
+          "pagesStudioApi.reorderBlocks: expected JSON response, received null.",
         );
       },
     );
@@ -272,17 +261,21 @@ export const pagesAdminApi = {
     opts?: HttpOpts,
   ): Promise<CreatePageResponse> {
     return logSpan(
-      "infra.http.admin.pages.create",
+      "compoz:studio:svc:pages",
       { endpoint: ENDPOINTS.STUDIO.PAGES.base, method: "POST" },
       async () => {
         const res = await apiFetch<CreatePageResponse>(
           ENDPOINTS.STUDIO.PAGES.base,
-          { method: "POST", body: JSON.stringify(payload), ...(opts ?? {}) },
+          {
+            method: "POST",
+            body: JSON.stringify(payload),
+            ...(opts ?? {}),
+          },
         );
 
         return assertJsonResponse(
           res,
-          "pagesAdminApi.create: expected JSON response, received null.",
+          "pagesStudioApi.create: expected JSON response, received null.",
         );
       },
     );
@@ -294,7 +287,7 @@ export const pagesAdminApi = {
     opts?: HttpOpts,
   ): Promise<UpdatePageResponse> {
     return logSpan(
-      "infra.http.admin.pages.update",
+      "compoz:studio:svc:pages",
       { endpoint: ENDPOINTS.STUDIO.PAGES.byId("<pageId>"), method: "PATCH" },
       async () => {
         const res = await apiFetch<UpdatePageResponse>(
@@ -304,7 +297,7 @@ export const pagesAdminApi = {
 
         return assertJsonResponse(
           res,
-          "pagesAdminApi.update: expected JSON response, received null.",
+          "pagesStudioApi.update: expected JSON response, received null.",
         );
       },
     );
@@ -312,7 +305,7 @@ export const pagesAdminApi = {
 
   async remove(pageId: string, opts?: HttpOpts): Promise<DeletePageResponse> {
     return logSpan(
-      "infra.http.admin.pages.remove",
+      "compoz:studio:svc:pages",
       { endpoint: ENDPOINTS.STUDIO.PAGES.byId("<pageId>"), method: "DELETE" },
       async () => {
         const res = await apiFetch<DeletePageResponse>(
@@ -322,7 +315,7 @@ export const pagesAdminApi = {
 
         return assertJsonResponse(
           res,
-          "pagesAdminApi.remove: expected JSON response, received null.",
+          "pagesStudioApi.remove: expected JSON response, received null.",
         );
       },
     );
@@ -338,7 +331,7 @@ export const pagesAdminApi = {
     )}/children/reorder`;
 
     return logSpan(
-      "infra.http.admin.pages.reorderChildren",
+      "compoz:studio:svc:pages",
       {
         endpoint: `${ENDPOINTS.STUDIO.PAGES.byId("<pageId>")}/children/reorder`,
         method: "POST",
@@ -352,7 +345,7 @@ export const pagesAdminApi = {
 
         return assertJsonResponse(
           res,
-          "pagesAdminApi.reorderChildren: expected JSON response, received null.",
+          "pagesStudioApi.reorderChildren: expected JSON response, received null.",
         );
       },
     );

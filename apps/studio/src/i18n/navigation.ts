@@ -1,8 +1,10 @@
 /**
  * @file apps/studio/src/i18n/navigation.ts
- * @layer i18n
+ * @layer studio/i18n
  * @description
- * Helpers de navigation i18n (Link, redirect, hooks) pré-configurés avec le routing
+ * Helpers de navigation i18n pour le Studio.
+ *
+ * Wrappers de `next-intl/navigation` préconfigurés avec le routing du Studio
  * afin de conserver automatiquement la locale lors de la navigation.
  */
 

@@ -2,7 +2,7 @@
 
 /**
  * @file packages/ui/src/hooks/useStableOnValuesChange.ts
- * @layer hooks/shared
+ * @layer ui/hooks
  *
  * @description
  * Hook utilitaire limitant les appels à `onChange` en détectant
@@ -17,19 +17,24 @@ import { useEffect, useRef } from "react";
 
 type Serialize<T> = (values: T) => string;
 
+function fallbackObjectSignature(values: object): string {
+  // Fallback minimal : évite de throw si valeurs circulaires.
+  // Signature stable “best-effort” : clés triées + type des valeurs (shallow).
+  const entries = Object.entries(values as Record<string, unknown>)
+    .map(([k, v]) => `${k}:${typeof v}`)
+    .sort();
+
+  return `__unstringifiable_object__:${entries.length}:${entries.join(",")}`;
+}
+
 function safeStringify<T>(values: T): string {
   try {
     return JSON.stringify(values ?? ({} as T));
   } catch {
-    // Fallback minimal : évite de throw si valeurs circulaires.
-    // On garde une signature stable “à peu près” (type + taille de clés si objet).
     if (values && typeof values === "object") {
-      const keys = Object.keys(values as Record<string, unknown>);
-      return `__unstringifiable_object__:${keys.length}:${keys
-        .sort()
-        .join(",")}`;
+      return fallbackObjectSignature(values as object);
     }
-    return `__unstringifiable__:${String(values)}`;
+    return `__unstringifiable__:${typeof values}:${String(values)}`;
   }
 }
 
@@ -37,7 +42,7 @@ export function useStableOnValuesChange<T>(
   values: T,
   onChange?: (values: T) => void,
   serialize: Serialize<T> = safeStringify,
-) {
+): void {
   const lastSigRef = useRef<string>("");
 
   useEffect(() => {

@@ -2,21 +2,29 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/editor/PageBlockEditSection.tsx
- * @layer ui/sections
+ * @layer ui/studio/pages/sections
+ *
+ * @description
+ * Section studio d’édition d’un bloc de page.
  */
 
+import { ArrowLeft } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
+import { uploadImage } from "@compoz/infra/http/studio/media.client";
 import { Button } from "@compoz/ui/components/ui/button";
 import { formatBytes } from "@compoz/ui/lib/format-bytes";
-import { toLayoutSectionBlockShapeFromFormValues } from "@compoz/ui/pages/mappers/block-shape";
 import type {
   BlockShape,
   LayoutSectionBlockShape,
 } from "@compoz/validation/pages/blocks/block";
 import type { LayoutSectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
+
 import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
 import { EmptyState } from "@compoz/studio/components/molecules/feedback/EmptyState";
-import { useAdminDirtyGuard } from "@compoz/studio/features/dirty-guard/useAdminDirtyGuard";
+import { useStudioDirtyGuard } from "@compoz/studio/features/dirty-guard/useStudioDirtyGuard";
 import { LayoutSectionBlockEditorForm } from "@compoz/studio/features/pages/blocks/components/organisms/LayoutSectionBlockEditorForm";
 import { useListPageBlocks } from "@compoz/studio/features/pages/blocks/hooks/useListPageBlocks";
 import { useUpdateBlock } from "@compoz/studio/features/pages/blocks/hooks/useUpdateBlock";
@@ -25,13 +33,10 @@ import {
   normalizeLayoutSectionBlockFormValues,
   toLayoutSectionBlockFormValuesFromDTO,
 } from "@compoz/studio/features/pages/mappers/blocks-form";
-import { useAdminPreview } from "@compoz/studio/features/preview/hooks/useAdminPreview";
+import { useStudioPreview } from "@compoz/studio/features/preview/hooks/useStudioPreview";
 import { PreviewFrame } from "@compoz/studio/features/preview/PreviewFrame";
 import { notify } from "@compoz/studio/lib/ui/notify";
-import { uploadImage } from "@compoz/infra/http/studio/media.client";
-import { ArrowLeft } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toLayoutSectionBlockShapeFromFormValues } from "@compoz/ui/pages/mappers/block-shape";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -50,6 +55,19 @@ type UploadedRasterImage = Readonly<{
 }>;
 
 /* -------------------------------------------------------------------------- */
+/* Constants                                                                   */
+/* -------------------------------------------------------------------------- */
+
+const FALLBACK_INITIAL_VALUES: LayoutSectionBlockFormValues = {
+  columns: 1,
+  containerMode: "contained",
+  titleEnabled: true,
+  title: { text: "", display: "visible" },
+  lcpPriority: false,
+  cells: [{ kind: "richText", content: "" }],
+};
+
+/* -------------------------------------------------------------------------- */
 /* Component                                                                  */
 /* -------------------------------------------------------------------------- */
 
@@ -63,115 +81,81 @@ export function PageBlockEditSection({
 
   const { blocks, isLoading } = useListPageBlocks(pageId);
   const { update, isUpdating, updatingBlockId } = useUpdateBlock();
+  const { options: internalPageOptions } = useInternalPageOptions();
 
-  // ✅ Dirty state (navigation guard)
-  const dirtyGuard = useAdminDirtyGuard();
-
+  const dirtyGuard = useStudioDirtyGuard();
   const backHref = `/${locale}/pages/${pageId}/blocks`;
 
   const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
+  const [previewMode, setPreviewMode] = useState<"baseline" | "override">(
+    "baseline",
+  );
+  const [liveValues, setLiveValues] =
+    useState<LayoutSectionBlockFormValues | null>(null);
 
-  // Anti double-confirm (clics rapides)
   const isConfirmingRef = useRef(false);
+  const baselineRef = useRef<LayoutSectionBlockFormValues | null>(null);
+  const prevBaselineSigRef = useRef<string | null>(null);
 
-  const onUploadImage = useCallback(
+  const handleUploadImage = useCallback(
     async (file: File): Promise<UploadedRasterImage> => {
-      const res = await uploadImage(file, "content");
+      const result = await uploadImage(file, "content");
 
-      if (res.wasResized || res.wasCompressed) {
+      if (result.wasResized || result.wasCompressed) {
         notify.info(
-          t("admin.shared.upload.optimized", {
-            from: formatBytes(res.originalSize),
-            to: formatBytes(res.optimizedSize),
+          t("studio.shared.upload.optimized", {
+            from: formatBytes(result.originalSize),
+            to: formatBytes(result.optimizedSize),
           }),
         );
       }
 
       return {
-        url: res.url,
-        width: res.width,
-        height: res.height,
+        url: result.url,
+        width: result.width,
+        height: result.height,
       };
     },
     [t],
   );
 
   const block = useMemo(
-    () => (blocks ?? []).find((b) => b.id === blockId) ?? null,
+    () => (blocks ?? []).find((item) => item.id === blockId) ?? null,
     [blocks, blockId],
   );
 
-  /**
-   * ✅ internalPageOptions : via hook SoT (plus de mapping local depuis useReadSiteIndex)
-   */
-  const { options: internalPageOptions } = useInternalPageOptions();
-
-  /**
-   * Ref = uniquement pour le patch/diff (pas de lecture pendant render).
-   */
-  const baselineRef = useRef<LayoutSectionBlockFormValues | null>(null);
-
-  const [previewMode, setPreviewMode] = useState<"baseline" | "override">(
-    "baseline",
-  );
-
-  /**
-   * Live values (preview) : piloté par onValuesChange du form.
-   */
-  const [liveValues, setLiveValues] =
-    useState<LayoutSectionBlockFormValues | null>(null);
-
-  /**
-   * Baseline (form) calculée (pure) à partir du block.
-   */
   const baseline = useMemo<LayoutSectionBlockFormValues | null>(() => {
-    if (!block) return null;
-    if (block.type !== "layoutSection") return null;
+    if (!block || block.type !== "layoutSection") return null;
 
-    const d = toLayoutSectionBlockFormValuesFromDTO(block);
-    return normalizeLayoutSectionBlockFormValues(d);
+    const dto = toLayoutSectionBlockFormValuesFromDTO(block);
+    return normalizeLayoutSectionBlockFormValues(dto);
   }, [block]);
 
-  /**
-   * Signature (valeur) de la baseline pour éviter les resets "dirty"
-   * lorsque la baseline change uniquement de référence (refetch/remap).
-   *
-   * Note : pour V0.5, JSON.stringify est acceptable (baseline généralement petite).
-   */
   const baselineSig = useMemo(() => {
     return baseline ? JSON.stringify(baseline) : "null";
   }, [baseline]);
 
-  const prevBaselineSigRef = useRef<string | null>(null);
-
-  /**
-   * Sync du ref vers la baseline calculée.
-   * On ne reset le dirty que si la baseline a réellement changé en contenu.
-   */
   useEffect(() => {
     baselineRef.current = baseline;
 
-    const prev = prevBaselineSigRef.current;
+    const previousSig = prevBaselineSigRef.current;
     prevBaselineSigRef.current = baselineSig;
 
-    // 1er passage : on initialise proprement
-    if (prev == null) {
+    if (previousSig == null) {
       dirtyGuard.setDirty(false);
       setBlockingErrorsCount(0);
       return;
     }
 
-    // Baseline inchangée en contenu => ne touche pas au dirty
-    if (prev === baselineSig) return;
+    if (previousSig === baselineSig) return;
 
-    // Baseline réellement différente (ex: invalidation après save / autre block)
     dirtyGuard.setDirty(false);
     setBlockingErrorsCount(0);
   }, [baseline, baselineSig, dirtyGuard]);
 
-  const isThisBusy = updatingBlockId === blockId;
+  const isUpdatingThisBlock = updatingBlockId === blockId;
 
-  const headingTitle = t("admin.pageBlockEditSection.section.title", {
+  const headingTitle = t("studio.pageBlockEditSection.section.title", {
     title:
       block?.type === "layoutSection"
         ? block.title.text.trim() || blockId
@@ -179,11 +163,11 @@ export function PageBlockEditSection({
     slug,
   });
 
-  const description = t("admin.pageBlockEditSection.section.description");
+  const description = t("studio.pageBlockEditSection.section.description");
 
-  // ✅ Back avec dirty guard
   const handleBack = useCallback(async () => {
     if (isConfirmingRef.current) return;
+
     isConfirmingRef.current = true;
 
     try {
@@ -193,27 +177,11 @@ export function PageBlockEditSection({
     }
   }, [backHref, dirtyGuard]);
 
-  /**
-   * Form fallback (UI-only)
-   */
-  const fallbackInitialValues = useMemo<LayoutSectionBlockFormValues>(
-    () => ({
-      columns: 1,
-      containerMode: "contained",
-
-      // ✅ NEW
-      titleEnabled: true,
-      title: { text: "", display: "visible" },
-      lcpPriority: false,
-      cells: [{ kind: "richText", content: "" }],
-    }),
-    [],
-  );
-
   /* ----------------------------- Preview wiring ---------------------------- */
 
   const baselinePreview = useMemo<LayoutSectionBlockShape | null>(() => {
     if (!baseline) return null;
+
     return toLayoutSectionBlockShapeFromFormValues({
       blockId,
       values: baseline,
@@ -226,24 +194,17 @@ export function PageBlockEditSection({
   );
 
   const { setBaseline, ready, frame, iframeRef, setDraft } =
-    useAdminPreview<BlockShape | null>(previewScope, baselinePreview);
+    useStudioPreview<BlockShape | null>(previewScope, baselinePreview);
 
-  /**
-   * ✅ Empty preview (iframe) :
-   * - On ne l’active qu’une fois les données chargées.
-   * - Si la baseline est absente => l’iframe affiche un empty state.
-   */
   const dataReady = !isLoading;
   const isEmpty = dataReady && baseline == null;
-  const emptyLabel = t("admin.emptyPreview.blocks");
+  const emptyLabel = t("studio.emptyPreview.blocks");
 
-  // ✅ si empty => pas de loader bloquant
   const isPreviewLoading =
     !isEmpty && (isLoading || baseline == null || !ready.isReady(previewScope));
 
   useEffect(() => {
-    if (!baselinePreview) return;
-    if (!ready.isReady(previewScope)) return;
+    if (!baselinePreview || !ready.isReady(previewScope)) return;
 
     setBaseline(previewScope, baselinePreview);
     setPreviewMode("baseline");
@@ -263,22 +224,22 @@ export function PageBlockEditSection({
 
   const handleSave = useCallback(
     async (values: LayoutSectionBlockFormValues) => {
-      const pageIdKey = (pageId ?? "").trim();
-      const blockIdKey = (blockId ?? "").trim();
-      if (!pageIdKey || !blockIdKey) return;
-      if (isUpdating) return;
+      const pageIdKey = String(pageId ?? "").trim();
+      const blockIdKey = String(blockId ?? "").trim();
+
+      if (!pageIdKey || !blockIdKey || isUpdating) return;
 
       const baselineForPatch = baselineRef.current;
       if (!baselineForPatch) return;
 
       const normalizedNext = normalizeLayoutSectionBlockFormValues(values);
-      const hasOtherLcpPriority = (blocks ?? []).some((b) => {
-        if (!b || b.id === blockId) return false;
-        if (b.type !== "layoutSection") return false;
 
-        // ✅ lit la valeur via ton mapper (SoT DTO -> form values)
-        const fv = toLayoutSectionBlockFormValuesFromDTO(b);
-        return fv.lcpPriority === true;
+      const hasOtherLcpPriority = (blocks ?? []).some((item) => {
+        if (!item || item.id === blockId) return false;
+        if (item.type !== "layoutSection") return false;
+
+        const formValues = toLayoutSectionBlockFormValuesFromDTO(item);
+        return formValues.lcpPriority === true;
       });
 
       try {
@@ -290,17 +251,18 @@ export function PageBlockEditSection({
           hasOtherLcpPriority,
         );
 
-        // ✅ On ne met "propre" qu’après succès
         dirtyGuard.setDirty(false);
+
         const nextBaselinePreview = toLayoutSectionBlockShapeFromFormValues({
           blockId,
           values: normalizedNext,
         });
+
         setBaseline<LayoutSectionBlockShape>(previewScope, nextBaselinePreview);
         frame.onReset();
         setPreviewMode("baseline");
       } catch {
-        // ✅ on laisse le state tel quel si erreur (notify déjà géré dans le hook)
+        // no-op: notifications already handled by the hook
       }
     },
     [
@@ -336,10 +298,10 @@ export function PageBlockEditSection({
           className="gap-2"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          {t("admin.pageBlockEditSection.section.back")}
+          {t("studio.pageBlockEditSection.section.back")}
         </Button>
 
-        <EmptyState text={t("admin.pageBlockEditSection.section.notFound")} />
+        <EmptyState text={t("studio.pageBlockEditSection.section.notFound")} />
       </SettingsSection>
     );
   }
@@ -354,7 +316,7 @@ export function PageBlockEditSection({
       id="page-block-edit"
       title={headingTitle}
       description={description}
-      isBusy={isThisBusy}
+      isBusy={isUpdatingThisBlock}
       isLoading={Boolean(isLoading)}
       isDirty={dirtyGuard.isDirty}
       blockingErrorsCount={blockingErrorsCount}
@@ -367,22 +329,25 @@ export function PageBlockEditSection({
         onClick={() => void handleBack()}
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        {t("admin.pageBlockEditSection.section.back")}
+        {t("studio.pageBlockEditSection.section.back")}
       </Button>
 
       <LayoutSectionBlockEditorForm
-        initialValues={baseline ?? fallbackInitialValues}
-        isSaving={isThisBusy}
+        initialValues={baseline ?? FALLBACK_INITIAL_VALUES}
+        isSaving={isUpdatingThisBlock}
         onSubmit={handleSave}
         onReset={() => {
           setLiveValues(null);
           dirtyGuard.setDirty(false);
 
-          if (baselinePreview) setDraft(baselinePreview);
+          if (baselinePreview) {
+            setDraft(baselinePreview);
+          }
+
           handlePreviewReset();
         }}
-        onValuesChange={(v) => {
-          const next = normalizeLayoutSectionBlockFormValues(v);
+        onValuesChange={(values) => {
+          const next = normalizeLayoutSectionBlockFormValues(values);
           setLiveValues(next);
 
           setDraft(
@@ -393,15 +358,15 @@ export function PageBlockEditSection({
           dirtyGuard.setDirty(Boolean(isDirty));
         }}
         onBlockingErrorsCountChange={setBlockingErrorsCount}
-        onUploadImage={onUploadImage}
+        onUploadImage={handleUploadImage}
         internalPageOptions={
           internalPageOptions as ReadonlyArray<InternalPageOptionDTO>
         }
       />
 
       <PreviewFrame
-        title={t("admin.shared.preview.title", {
-          entity: t("admin.shared.entities.blocks"),
+        title={t("studio.shared.preview.title", {
+          entity: t("studio.shared.entities.blocks"),
         })}
         src={`/preview/pages/${slug}/blocks/${blockId}`}
         iframeRef={iframeRef}
@@ -415,10 +380,10 @@ export function PageBlockEditSection({
         heightClassName="h-[420px]"
         info={
           isEmpty
-            ? t("admin.emptyPreview.blocks")
+            ? t("studio.emptyPreview.blocks")
             : previewMode === "override"
-              ? t("admin.shared.preview.infoOverride")
-              : t("admin.shared.preview.infoBaseline")
+              ? t("studio.shared.preview.infoOverride")
+              : t("studio.shared.preview.infoBaseline")
         }
       />
     </SettingsSection>

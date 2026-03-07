@@ -2,24 +2,17 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/primary-menu/components/molecules/PrimaryMenuItemRow.tsx
- * @layer ui/molecules
+ * @layer ui/studio/molecules
  * @description
- * Composant représentant une ligne d'item dans le formulaire du menu principal.
- * Il gère les champs label, href et newTab en utilisant react-hook-form.
+ * Composant représentant une ligne d’item dans le formulaire du menu principal.
+ * Il gère les champs `label`, `href` et `newTab` en utilisant react-hook-form.
  *
  * @remarks
  * - Utilise `useController` pour connecter les champs au formulaire RHF.
- * - Gère la validation et l'affichage des erreurs pour chaque champ.
- * - Permet la validation immédiate du champ href lors de changements programmatiques.
+ * - Gère la validation et l’affichage des erreurs pour chaque champ.
+ * - Permet la validation immédiate du champ `href` lors de changements programmatiques.
  */
-import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
-import { Card, CardContent } from "@compoz/ui/components/ui/card";
-import { Separator } from "@compoz/ui/components/ui/separator";
-import { resolveLinkFlags, slugifyPath } from "@compoz/ui/lib/links/helpers";
-import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-form";
-import { ExpandableLayout } from "@compoz/studio/components/layouts/ExpandableLayout";
-import { AddEmptyCardButton } from "@compoz/studio/components/molecules/controls/AddEmptyCardButton";
-import { MenuFieldsItem } from "@compoz/studio/features/settings/menus/_shared/MenuFieldsItem";
+
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import type {
@@ -28,6 +21,15 @@ import type {
   UseFormTrigger,
 } from "react-hook-form";
 import { useController, useWatch } from "react-hook-form";
+
+import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
+import { ExpandableLayout } from "@compoz/studio/components/layouts/ExpandableLayout";
+import { AddEmptyCardButton } from "@compoz/studio/components/molecules/controls/AddEmptyCardButton";
+import { MenuFieldsItem } from "@compoz/studio/features/settings/menus/_shared/MenuFieldsItem";
+import { Card, CardContent } from "@compoz/ui/components/ui/card";
+import { Separator } from "@compoz/ui/components/ui/separator";
+import { resolveLinkFlags, slugifyPath } from "@compoz/ui/lib/links/helpers";
+import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-form";
 
 // Types UI locaux (erreurs / invalid par champ).
 type RowErrorMessages = Partial<Record<"label" | "href", string | undefined>>;
@@ -197,7 +199,6 @@ export function PrimaryMenuParentRow({
             `items.${number}.newTab`
           >
         }
-        // Pas de `isExternalField` : le mode est dérivé depuis `href`.
         invalid={invalid}
         error={error}
         onHrefValidateNow={validateHrefNow}
@@ -207,10 +208,10 @@ export function PrimaryMenuParentRow({
         id={`${parentIdPrefix}-children`}
         label={
           childrenCount > 0
-            ? t("admin.primaryMenuForm.children.labelWithCount", {
+            ? t("studio.primaryMenuForm.children.labelWithCount", {
                 count: childrenCount,
               })
-            : t("admin.primaryMenuForm.children.label")
+            : t("studio.primaryMenuForm.children.label")
         }
         disabled={disabled}
       >
@@ -222,7 +223,7 @@ export function PrimaryMenuParentRow({
               ariaLabel={t("common.addSubLink")}
               tooltip={t("common.addSubLink")}
               disabledTooltip={t(
-                "admin.primaryMenuForm.children.tooltips.unavailableWhileBusy",
+                "studio.primaryMenuForm.children.tooltips.unavailableWhileBusy",
               )}
               compact
             />
@@ -236,14 +237,13 @@ export function PrimaryMenuParentRow({
 
                 <Separator />
 
-                {/* ✅ Toujours le dernier item : "Ajouter un sous-lien" */}
                 <AddEmptyCardButton
                   onClick={onAddChild}
                   disabled={addChildDisabled}
                   ariaLabel={t("common.addSubLink")}
                   tooltip={t("common.addSubLink")}
                   disabledTooltip={t(
-                    "admin.primaryMenuForm.children.tooltips.unavailableWhileBusy",
+                    "studio.primaryMenuForm.children.tooltips.unavailableWhileBusy",
                   )}
                   compact
                 />

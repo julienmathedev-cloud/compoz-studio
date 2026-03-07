@@ -2,23 +2,24 @@
 
 /**
  * @file apps/studio/src/app/[locale]/signin/SignInForm.tsx
- * @layer app/auth
+ * @layer studio/app
+ *
  * @description
- * Formulaire de connexion (Client):
+ * Formulaire de connexion (client) :
  * - state email/password
- * - appel Auth.js via signIn("credentials")
- * - redirection vers nextPath
+ * - appel Auth.js via `signIn("credentials")`
+ * - redirection vers `nextPath`
  */
 
 import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
+import { ErrorText } from "@compoz/studio/components/atoms/typography/ErrorText";
 import { Heading } from "@compoz/studio/components/atoms/typography/Heading";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 
-import { ErrorText } from "@compoz/studio/components/atoms/typography/ErrorText";
 import { Button } from "@compoz/ui/components/ui/button";
 import { Card, CardContent } from "@compoz/ui/components/ui/card";
 import {
@@ -26,7 +27,7 @@ import {
   useIdPrefix,
 } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
-import { ADMIN_CONTAINER, ADMIN_PAGE } from "@compoz/ui/styles/studio/layout";
+import { STUDIO_CONTAINER, STUDIO_PAGE } from "@compoz/ui/styles/studio/layout";
 
 type SignInFormProps = Readonly<{
   locale: string;
@@ -39,7 +40,7 @@ type FieldErrors = {
   form?: string;
 };
 
-export function SignInForm({ nextPath }: SignInFormProps) {
+export function SignInForm({ locale: _locale, nextPath }: SignInFormProps) {
   const t = useTranslations();
 
   const idPrefix = useIdPrefix("signin-form");
@@ -54,10 +55,21 @@ export function SignInForm({ nextPath }: SignInFormProps) {
 
   function validate(): FieldErrors {
     const nextErrors: FieldErrors = {};
-    if (!email.trim()) nextErrors.email = t("admin.login.errors.emailRequired");
-    if (!password.trim())
-      nextErrors.password = t("admin.login.errors.passwordRequired");
+    if (!email.trim())
+      nextErrors.email = t("studio.login.errors.emailRequired");
+    if (!password.trim()) {
+      nextErrors.password = t("studio.login.errors.passwordRequired");
+    }
     return nextErrors;
+  }
+
+  function clearFieldAndFormErrors(
+    field: keyof Pick<FieldErrors, "email" | "password">,
+  ) {
+    setErrors((prev) => {
+      if (!prev[field] && !prev.form) return prev;
+      return { ...prev, [field]: undefined, form: undefined };
+    });
   }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -80,7 +92,7 @@ export function SignInForm({ nextPath }: SignInFormProps) {
       });
 
       if (!res) {
-        setErrors({ form: t("admin.login.errors.unexpected") });
+        setErrors({ form: t("studio.login.errors.unexpected") });
         return;
       }
 
@@ -88,17 +100,17 @@ export function SignInForm({ nextPath }: SignInFormProps) {
         const code = String(res.error);
 
         if (code.includes("EMAIL_NOT_FOUND")) {
-          setErrors({ email: t("admin.login.errors.emailNotFound") });
+          setErrors({ email: t("studio.login.errors.emailNotFound") });
           return;
         }
 
         if (code.includes("INVALID_PASSWORD")) {
-          setErrors({ password: t("admin.login.errors.invalidPassword") });
+          setErrors({ password: t("studio.login.errors.invalidPassword") });
           return;
         }
 
         // fallback si NextAuth renvoie "CredentialsSignin"
-        setErrors({ form: t("admin.login.errors.invalidCredentials") });
+        setErrors({ form: t("studio.login.errors.invalidCredentials") });
         return;
       }
 
@@ -107,38 +119,32 @@ export function SignInForm({ nextPath }: SignInFormProps) {
   }
 
   return (
-    <main className={cn("min-h-dvh", ADMIN_CONTAINER, ADMIN_PAGE)}>
+    <main className={cn("min-h-dvh", STUDIO_CONTAINER, STUDIO_PAGE)}>
       <section
-        aria-label={t("admin.login.ariaLabel")}
+        aria-label={t("studio.login.ariaLabel")}
         className={cn("flex flex-1 mx-auto items-center justify-center")}
       >
         <Card variant="panel" className={cn("w-[420px]")}>
           <CardContent className={cn("space-y-8")}>
             <Heading as="h1" className="text-center">
-              {t("admin.login.title")}
+              {t("studio.login.title")}
             </Heading>
 
             <Text variant="muted" className="text-center">
-              {t("admin.login.tagline")}
+              {t("studio.login.tagline")}
             </Text>
 
             <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>
               <InputField
                 ids={emailIds}
-                label={t("admin.login.email")}
+                label={t("studio.login.email")}
                 type="email"
                 autoComplete="email"
                 required
                 value={email}
                 onChange={(v) => {
                   setEmail(v);
-                  if (errors.email || errors.form) {
-                    setErrors((prev) => ({
-                      ...prev,
-                      email: undefined,
-                      form: undefined,
-                    }));
-                  }
+                  clearFieldAndFormErrors("email");
                 }}
                 error={errors.email}
                 invalid={Boolean(errors.email)}
@@ -146,20 +152,14 @@ export function SignInForm({ nextPath }: SignInFormProps) {
 
               <InputField
                 ids={passwordIds}
-                label={t("admin.login.password")}
+                label={t("studio.login.password")}
                 type="password"
                 autoComplete="current-password"
                 required
                 value={password}
                 onChange={(v) => {
                   setPassword(v);
-                  if (errors.password || errors.form) {
-                    setErrors((prev) => ({
-                      ...prev,
-                      password: undefined,
-                      form: undefined,
-                    }));
-                  }
+                  clearFieldAndFormErrors("password");
                 }}
                 error={errors.password}
                 invalid={Boolean(errors.password)}
@@ -168,7 +168,7 @@ export function SignInForm({ nextPath }: SignInFormProps) {
               {errors.form ? <ErrorText error={errors.form} /> : null}
 
               <Button type="submit" disabled={isPending} className="w-full">
-                {isPending ? t("admin.login.pending") : t("admin.login.signin")}
+                {isPending ? t("studio.login.pending") : t("studio.login.signin")}
               </Button>
             </form>
           </CardContent>

@@ -2,6 +2,7 @@
 
 /**
  * @file apps/studio/src/features/pages/hooks/useInternalPageOptions.ts
+ * @layer hooks/studio/pages
  *
  * @description
  * Construit des options de pages internes (picker) à partir du SiteIndex.
@@ -44,26 +45,28 @@ export function useInternalPageOptions(args?: UseInternalPageOptionsArgs) {
 
   const options = useMemo<ReadonlyArray<InternalPageOptionDTO>>(() => {
     const pages = index?.pages ?? [];
-    const excluded = String(excludePageId ?? "").trim();
+    const excludedId = String(excludePageId ?? "").trim();
 
     return pages
-      .filter((p) => {
-        if (!p?.id) return false;
-        if (excluded && p.id === excluded) return false;
-        if (rootsOnly && p.parentId !== null) return false;
+      .filter((page) => {
+        if (!page?.id) return false;
+        if (excludedId && page.id === excludedId) return false;
+        if (rootsOnly && page.parentId !== null) return false;
         return true;
       })
-      .map((p) => {
-        const slug = p.slug ?? "";
+      .map((page) => {
+        const slug = page.slug ?? "";
         const href = formatPagePath(slug);
 
         return {
           slug,
-          value: valueMode === "id" ? p.id : href,
-          label: `${p.title}${slug ? ` — ${href}` : ""}`,
+          value: valueMode === "id" ? page.id : href,
+          label: `${page.title}${slug ? ` — ${href}` : ""}`,
         };
       });
   }, [index, excludePageId, rootsOnly, valueMode]);
 
-  return { options, isLoading, index };
+  return { options, isLoading, index } as const;
 }
+
+useInternalPageOptions.displayName = "useInternalPageOptions";

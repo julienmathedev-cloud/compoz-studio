@@ -21,7 +21,7 @@ export const ImageEditorIdSchema = z
 export const ImageEditorSchema = z
   .object({
     id: ImageEditorIdSchema,
-    src: z.string().trim(),
+    src: z.string().trim().min(1, ERROR_CODES.CELL_IMAGE_SRC_REQUIRED),
     alt: z.string(),
     caption: z.string().optional(),
     href: z
@@ -97,7 +97,7 @@ export const GalleryCellSchema = z
   .object({
     kind: z.literal("gallery"),
     linksEnabled: z.boolean(),
-    maxColumns: GalleryMaxColumnsSchema, // ✅ NEW
+    maxColumns: GalleryMaxColumnsSchema,
     images: z.array(ImageEditorSchema).min(1, ERROR_CODES.CELL_IMAGES_MIN_1),
   })
   .strict();

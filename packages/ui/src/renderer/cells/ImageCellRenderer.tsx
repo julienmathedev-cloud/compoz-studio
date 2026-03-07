@@ -1,26 +1,28 @@
 /**
  * @file packages/ui/src/renderer/cells/ImageCellRenderer.tsx
- * @layer ui/public/cells
+ * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer public/preview : rendu d’une image via `PublicAppImage`.
+ * Cell renderer site/preview : rendu d’une image via `SiteAppImage`.
  *
  * @remarks
  * - UI-only : consomme une shape déjà validée (schema).
- * - Délègue A11y + perf à `PublicAppImage`.
+ * - Délègue A11y + perf à `SiteAppImage`.
  * - Style piloté par le skin via `ui`.
  * - Reveal : activé par défaut (V0.5).
  */
+
+import type { ImageCellShape } from "@compoz/validation/pages/blocks/cells/cell";
+
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
-import { PublicAppImage } from "@compoz/ui/site/components/atoms/PublicAppImage";
-import { PublicReveal } from "@compoz/ui/site/components/atoms/PublicReveal";
-import type { PublicImageUi } from "@compoz/ui/site/public-ui.types";
-import type { ImageCellShape } from "@compoz/validation/pages/blocks/cells/cell";
+import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
+import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
+import type { SiteImageUi } from "@compoz/ui/site/site-ui.types";
 
 export type ImageCellRendererProps = Readonly<{
   cell?: ImageCellShape | null;
-  ui: PublicImageUi;
+  ui: SiteImageUi;
   priority?: boolean;
 }>;
 
@@ -38,8 +40,8 @@ export function ImageCellRenderer({
   const variant = cell.variant ?? "default";
   const { frameClass, sizes, mode } = resolveImageVariant(variant);
 
-  const Image = (
-    <PublicAppImage
+  const imageNode = (
+    <SiteAppImage
       image={{
         src,
         alt,
@@ -56,19 +58,29 @@ export function ImageCellRenderer({
     />
   );
 
-  const Content =
+  const content =
     mode === "default" ? (
-      Image
+      imageNode
     ) : (
-      <div className={cn(frameClass, ui.container)}>{Image}</div>
+      <div className={cn(frameClass, ui.container)}>{imageNode}</div>
     );
 
-  return <PublicReveal>{Content}</PublicReveal>;
+  return <SiteReveal>{content}</SiteReveal>;
 }
 
 ImageCellRenderer.displayName = "ImageCellRenderer";
 
-function resolveImageVariant(variant: unknown) {
+/* -------------------------------------------------------------------------- */
+/* Internals                                                                  */
+/* -------------------------------------------------------------------------- */
+
+type ResolvedImageVariant = Readonly<{
+  mode: "default" | "cover";
+  frameClass: string;
+  sizes: string;
+}>;
+
+function resolveImageVariant(variant: unknown): ResolvedImageVariant {
   const v = typeof variant === "string" ? variant : "default";
 
   switch (v) {
@@ -77,27 +89,27 @@ function resolveImageVariant(variant: unknown) {
         mode: "cover",
         frameClass: "w-full aspect-[16/9]",
         sizes: "(max-width: 1024px) 100vw, 1024px",
-      } as const;
+      };
 
     case "square":
       return {
         mode: "cover",
         frameClass: "w-full aspect-square",
         sizes: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
-      } as const;
+      };
 
     case "portrait":
       return {
         mode: "cover",
         frameClass: "w-full aspect-[4/5]",
         sizes: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
-      } as const;
+      };
 
     default:
       return {
         mode: "default",
         frameClass: "",
         sizes: "(max-width: 1024px) 100vw, 1024px",
-      } as const;
+      };
   }
 }

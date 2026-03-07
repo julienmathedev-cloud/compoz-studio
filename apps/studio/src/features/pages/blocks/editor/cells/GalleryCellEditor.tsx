@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/editor/cells/GalleryCellEditor.tsx
- * @layer ui/organisms
+ * @layer ui/studio/pages/blocks/editor/cells
  *
  * @description
  * Éditeur UI d’une GalleryCell (liste d’images) avec ajout/suppression/réordonnancement.
@@ -17,21 +17,19 @@
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 
-import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
-// ✅ adapte l'import selon ton projet (SelectField / SelectNativeField / etc.)
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
+import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
 
-import { ImageListEditor } from "@compoz/studio/features/pages/blocks/editor/images/ImageListEditor";
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
+import { ImageListEditor } from "@compoz/studio/features/pages/blocks/editor/images/ImageListEditor";
 import { createEmptyImageEditor } from "@compoz/studio/features/pages/mappers/cells-form";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
-import type { GalleryCellFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 import { STACK_SM } from "@compoz/ui/styles/studio/layout";
+import type { GalleryCellFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 
-// ✅ si ton FormGrid est ailleurs, adapte l'import
-import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 import type { GalleryMaxColumns } from "@compoz/core/domain/pages/entities/cell";
+import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 
 type UploadedRasterImage = Readonly<{
   url: string;
@@ -125,8 +123,8 @@ export function GalleryCellEditor({
       <FormGrid>
         <SelectField
           ids={maxColumnsIds}
-          label={t("admin.galleryCellEditor.maxColumns.label")}
-          help={t("admin.galleryCellEditor.maxColumns.help")}
+          label={t("studio.galleryCellEditor.maxColumns.label")}
+          help={t("studio.galleryCellEditor.maxColumns.help")}
           disabled={disabled}
           value={maxColumnsSelectValue}
           items={MAX_COLUMNS_ITEMS}
@@ -144,8 +142,8 @@ export function GalleryCellEditor({
 
         <SwitchField
           ids={linksEnabledIds}
-          label={t("admin.galleryCellEditor.linksEnabled.label")}
-          help={t("admin.galleryCellEditor.linksEnabled.help")}
+          label={t("studio.galleryCellEditor.linksEnabled.label")}
+          help={t("studio.galleryCellEditor.linksEnabled.help")}
           checked={linksEnabled}
           disabled={disabled}
           onCheckedChange={(checked) => {

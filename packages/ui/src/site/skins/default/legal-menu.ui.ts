@@ -1,14 +1,14 @@
 /**
  * @file packages/ui/src/site/skins/default/legal-menu.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
- * Skin UI — menu légal public (thème Default).
+ * Skin UI — menu légal site (thème Default).
  */
 
-import type { PublicLegalMenuUi } from "@compoz/ui/site/public-ui.types";
+import type { SiteLegalMenuUi } from "@compoz/ui/site/site-ui.types";
 
-export const defaultLegalMenuUi: PublicLegalMenuUi = {
+export const defaultLegalMenuUi: SiteLegalMenuUi = {
   nav: "justify-self-center lg:col-start-3 lg:justify-self-end",
 
   list: "m-0 p-0 list-none flex flex-wrap gap-4 md:gap-6",

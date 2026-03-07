@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/site/skins/default/layout-section.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
  * Skin UI — layout sections (thème Default).
@@ -10,9 +10,9 @@
  * - Fournit uniquement des classes Tailwind (aucune logique).
  */
 
-import type { PublicLayoutSectionUi } from "@compoz/ui/site/public-ui.types";
+import type { SiteLayoutSectionUi } from "@compoz/ui/site/site-ui.types";
 
-export const defaultLayoutSectionUi: PublicLayoutSectionUi = {
+export const defaultLayoutSectionUi: SiteLayoutSectionUi = {
   // ✅ Canonique : même cadre que header/footer
   containerContained: "w-full mx-auto max-w-screen-xl px-3 md:px-4 lg:px-6",
 

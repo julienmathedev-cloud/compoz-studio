@@ -1,6 +1,6 @@
 /**
- * @file src/infrastructure/id/index.ts
- * @layer infrastructure
+ * @file packages/infra/src/id/index.ts
+ * @layer infra/id
  *
  * @description
  * Factory d’accès aux services infra liés aux IDs.

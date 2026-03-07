@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/settings/seo/SeoForm.tsx
- * @layer ui/organisms
+ * @layer ui/studio/organisms
  *
  * @description
  * Formulaire de configuration SEO global (base, indexation, Open Graph, Twitter).
@@ -15,12 +15,30 @@
  * - UX : focus/scroll sur le premier champ invalide au submit (IDs stables, sans ref).
  */
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
+import { useEffect, useMemo } from "react";
+import type { FieldErrors } from "react-hook-form";
+import { Controller, useWatch } from "react-hook-form";
+
 import { SEO } from "@compoz/core/constants/limits/seo";
 import { TWITTER_CARD_TYPES } from "@compoz/core/constants/seo/seo";
+import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
+import { ActionsBar } from "@compoz/studio/components/molecules/controls/ActionsBar";
+import { HelperChips } from "@compoz/studio/components/molecules/controls/HelperChips";
+import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
+import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
+import { useSettingsSectionForm } from "@compoz/studio/features/settings/_shared/useSettingsSectionForm";
+import { useStableWarningKeys } from "@compoz/studio/features/settings/_shared/useStableWarningKeys";
+import { SeoIndexationFields } from "@compoz/studio/features/settings/seo/components/molecules/SeoIndexationFields";
+import { SeoOpenGraphFields } from "@compoz/studio/features/settings/seo/components/molecules/SeoOpenGraphFields";
+import { SeoTwitterFields } from "@compoz/studio/features/settings/seo/components/molecules/SeoTwitterFields";
+import type { SeoWarningKey } from "@compoz/studio/features/settings/seo/validate";
+import { useSeoUiWarnings } from "@compoz/studio/features/settings/seo/validate";
+import { focusByFieldId } from "@compoz/ui/lib/focus";
+import { notify } from "@compoz/studio/lib/ui/notify";
 import { Card, CardContent, CardFooter } from "@compoz/ui/components/ui/card";
 import { Separator } from "@compoz/ui/components/ui/separator";
-import { useStableOnValuesChange } from "@compoz/ui/hooks/useStableOnValuesChange";
-import { focusByFieldId } from "@compoz/ui/lib/focus";
 import {
   createFieldIds,
   useIdPrefix,
@@ -31,22 +49,6 @@ import {
   SeoFormSchema,
   type SeoFormValues,
 } from "@compoz/validation/site/settings/seo/seo-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
-import { ActionsBar } from "@compoz/studio/components/molecules/controls/ActionsBar";
-import { HelperChips } from "@compoz/studio/components/molecules/controls/HelperChips";
-import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
-import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
-import { SeoIndexationFields } from "@compoz/studio/features/settings/seo/components/molecules/SeoIndexationFields";
-import { SeoOpenGraphFields } from "@compoz/studio/features/settings/seo/components/molecules/SeoOpenGraphFields";
-import { SeoTwitterFields } from "@compoz/studio/features/settings/seo/components/molecules/SeoTwitterFields";
-import type { SeoWarningKey } from "@compoz/studio/features/settings/seo/validate";
-import { useSeoUiWarnings } from "@compoz/studio/features/settings/seo/validate";
-import { notify } from "@compoz/studio/lib/ui/notify";
-import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef } from "react";
-import type { FieldErrors } from "react-hook-form";
-import { Controller, useForm, useFormState, useWatch } from "react-hook-form";
 
 type UploadedRasterImage = Readonly<{
   url: string;
@@ -72,16 +74,14 @@ type SeoFormProps = Readonly<{
   onValuesChange?: (values: SeoFormValues) => void;
   /** Handler optionnel : remonte l’état dirty (guard / navigation). */
   onDirtyChange?: (dirty: boolean) => void;
-
   /** Handler optionnel : remonte le nombre d’erreurs bloquantes (badges section). */
   onBlockingErrorsCountChange?: (count: number) => void;
-
   /** Upload optionnel OG image : reçoit un fichier et retourne une URL publique. */
   onUploadOgImage?: (file: File) => Promise<UploadedRasterImage>;
 }>;
 
 /**
- * Formulaire de configuration SEO (admin).
+ * Formulaire de configuration SEO (studio).
  */
 export function SeoForm({
   initialValues,
@@ -102,6 +102,7 @@ export function SeoForm({
   // RHF defaults robustes : évite les `undefined` (ex. twitter.card).
   const rhfDefaults = useMemo((): SeoFormValues => {
     const twitter = initialValues.twitter ?? { card: fallbackCard };
+
     return {
       ...initialValues,
       twitter: {
@@ -114,25 +115,22 @@ export function SeoForm({
   const {
     control,
     handleSubmit,
-    reset: rhfReset,
     setValue,
-  } = useForm<SeoFormValues>({
+    resetToInitialValues,
+    isDirty,
+    isSubmitting,
+    isBusy,
+    disabledControls,
+    errors,
+    touchedFields,
+    submitCount,
+  } = useSettingsSectionForm<SeoFormValues>({
     resolver: zodResolver(SeoFormSchema),
-    defaultValues: rhfDefaults,
-    mode: "onBlur",
-    reValidateMode: "onChange",
-    shouldFocusError: false,
+    initialValues: rhfDefaults,
+    isSaving,
+    onValuesChange,
+    onDirtyChange,
   });
-
-  const { isDirty, isSubmitting, submitCount, touchedFields, errors } =
-    useFormState({ control });
-
-  const isBusy = Boolean(isSaving || isSubmitting);
-
-  // Dirty signal vers le parent (guard / navigation).
-  useEffect(() => {
-    onDirtyChange?.(Boolean(isDirty));
-  }, [isDirty, onDirtyChange]);
 
   // Préfixe d’ID stable pour ce formulaire.
   const idPrefix = useIdPrefix("seo-form");
@@ -146,15 +144,6 @@ export function SeoForm({
 
   // Indexation
   const baseUrlIds = createFieldIds(idPrefix, "baseUrl");
-
-  // Resynchronisation RHF lorsque `initialValues` change (reload côté section).
-  useEffect(() => {
-    rhfReset(rhfDefaults, {
-      keepDirty: false,
-      keepTouched: false,
-      keepErrors: false,
-    });
-  }, [rhfDefaults, rhfReset]);
 
   // Sécurité `twitter.card` : force un fallback si le setting est incomplet.
   const watchedTwitter = useWatch({ control, name: "twitter" });
@@ -172,20 +161,14 @@ export function SeoForm({
   // Preview draft (valeurs live) — remonte le modèle UI.
   const watchedAll = useWatch({ control }) as SeoFormValues | undefined;
   const values = watchedAll ?? rhfDefaults;
-  useStableOnValuesChange(values, onValuesChange);
 
   // Warnings UI (non bloquants).
   const warningKeys = useSeoUiWarnings(values);
 
-  const lastWarningsSigRef = useRef<string>("");
-
-  useEffect(() => {
-    if (!onWarningKeysChange) return;
-    const sig = warningKeys.join("|");
-    if (sig === lastWarningsSigRef.current) return;
-    lastWarningsSigRef.current = sig;
-    onWarningKeysChange(warningKeys);
-  }, [warningKeys, onWarningKeysChange]);
+  useStableWarningKeys({
+    warningKeys,
+    onWarningKeysChange,
+  });
 
   // Erreurs near-field (affichées au plus près des champs).
   const showError = submitCount > 0;
@@ -246,7 +229,7 @@ export function SeoForm({
     (showError || !!touchedFields.robots) &&
     Boolean(errors.robots?.message ?? errors.robots);
 
-  // ✅ Badges section : compteur d’erreurs bloquantes (simple & stable)
+  // Badges section : compteur d’erreurs bloquantes (simple & stable)
   const blockingErrorsCount = useMemo(() => {
     const invalids = [
       invalidDefaultTitle,
@@ -258,6 +241,7 @@ export function SeoForm({
       // NB: les erreurs “nested” (twitter/openGraph/indexation) restent gérées localement
       // par leurs sous-composants ; si un jour tu veux les compter, on peut ajouter un comptage deep.
     ];
+
     return invalids.filter(Boolean).length;
   }, [
     invalidDefaultTitle,
@@ -282,7 +266,7 @@ export function SeoForm({
         (formErrors: FieldErrors<SeoFormValues>) => {
           notify.error(t("uiErrors.formHasErrors"));
 
-          const FIELD_PRIORITY: Array<
+          const fieldPriority: Array<
             | "defaultTitle"
             | "titleTemplate"
             | "defaultDescription"
@@ -298,19 +282,32 @@ export function SeoForm({
             "robots",
           ];
 
-          const first = FIELD_PRIORITY.find((k) => !!formErrors[k]);
+          const first = fieldPriority.find((key) => !!formErrors[key]);
           if (!first) return;
 
-          if (first === "defaultTitle")
+          if (first === "defaultTitle") {
             return focusByFieldId(defaultTitleIds.fieldId);
-          if (first === "titleTemplate")
+          }
+
+          if (first === "titleTemplate") {
             return focusByFieldId(titleTemplateIds.fieldId);
-          if (first === "defaultDescription")
+          }
+
+          if (first === "defaultDescription") {
             return focusByFieldId(defaultDescriptionIds.fieldId);
-          if (first === "baseUrl") return focusByFieldId(baseUrlIds.fieldId);
-          if (first === "canonicalUrl")
+          }
+
+          if (first === "baseUrl") {
+            return focusByFieldId(baseUrlIds.fieldId);
+          }
+
+          if (first === "canonicalUrl") {
             return focusByFieldId(canonicalUrlIds.fieldId);
-          if (first === "robots") return focusByFieldId(robotsIds.fieldId);
+          }
+
+          if (first === "robots") {
+            return focusByFieldId(robotsIds.fieldId);
+          }
         },
       )}
       noValidate
@@ -326,15 +323,15 @@ export function SeoForm({
                 render={({ field }) => (
                   <InputField
                     ids={defaultTitleIds}
-                    label={t("admin.seoForm.base.defaultTitle.label")}
+                    label={t("studio.seoForm.base.defaultTitle.label")}
                     value={field.value ?? ""}
                     onChange={(v) => field.onChange(v)}
                     onBlur={field.onBlur}
                     placeholder={t(
-                      "admin.seoForm.base.defaultTitle.placeholder",
+                      "studio.seoForm.base.defaultTitle.placeholder",
                     )}
-                    help={t("admin.seoForm.base.defaultTitle.help")}
-                    disabled={isBusy}
+                    help={t("studio.seoForm.base.defaultTitle.help")}
+                    disabled={disabledControls}
                     invalid={invalidDefaultTitle}
                     error={defaultTitleError}
                   />
@@ -348,15 +345,15 @@ export function SeoForm({
                   <div className={cn(STACK_MD)}>
                     <InputField
                       ids={titleTemplateIds}
-                      label={t("admin.seoForm.base.titleTemplate.label")}
+                      label={t("studio.seoForm.base.titleTemplate.label")}
                       value={field.value ?? ""}
                       onChange={(v) => field.onChange(v)}
                       onBlur={field.onBlur}
                       placeholder={t(
-                        "admin.seoForm.base.titleTemplate.placeholder",
+                        "studio.seoForm.base.titleTemplate.placeholder",
                       )}
-                      help={t("admin.seoForm.base.titleTemplate.help")}
-                      disabled={isBusy}
+                      help={t("studio.seoForm.base.titleTemplate.help")}
+                      disabled={disabledControls}
                       invalid={invalidTitleTemplate}
                       error={titleTemplateError}
                     />
@@ -377,16 +374,16 @@ export function SeoForm({
                 render={({ field }) => (
                   <TextareaField
                     ids={defaultDescriptionIds}
-                    label={t("admin.seoForm.base.defaultDescription.label")}
+                    label={t("studio.seoForm.base.defaultDescription.label")}
                     value={field.value ?? ""}
                     onChange={(v) => field.onChange(v)}
                     onBlur={field.onBlur}
                     placeholder={t(
-                      "admin.seoForm.base.defaultDescription.placeholder",
+                      "studio.seoForm.base.defaultDescription.placeholder",
                     )}
                     rows={6}
-                    disabled={isBusy}
-                    help={t("admin.seoForm.base.defaultDescription.help")}
+                    disabled={disabledControls}
+                    help={t("studio.seoForm.base.defaultDescription.help")}
                     showCount
                     maxLength={SEO.DESCRIPTION.MAX}
                     invalid={invalidDefaultDescription}
@@ -447,13 +444,7 @@ export function SeoForm({
             isSaving={isSaving || isSubmitting}
             isDirty={isDirty}
             onReset={() => {
-              // Reset UI immédiat (RHF).
-              rhfReset(rhfDefaults, {
-                keepDirty: false,
-                keepTouched: false,
-                keepErrors: false,
-              });
-              // Puis notification côté parent (si besoin).
+              resetToInitialValues();
               onReset?.();
             }}
           />

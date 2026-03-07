@@ -1,12 +1,10 @@
 "use client";
 
-import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
 /**
  * @file apps/studio/src/features/settings/legal-menu/components/organisms/LegalMenuForm.tsx
- * @layer ui/organisms
- *
+ * @layer ui/studio/organisms
  * @description
- * Formulaire d’édition du menu légal (admin) — RHF + Zod comme source de vérité UI.
+ * Formulaire d’édition du menu légal (studio) — RHF + Zod comme source de vérité UI.
  *
  * @remarks
  * - Contrôlé : le parent fournit `initialValues` et reçoit `onSubmit`.
@@ -16,14 +14,28 @@ import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
  * - Le focus/scroll sur la première erreur au submit est géré localement.
  */
 
+import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
+import { Fragment, useEffect, useState } from "react";
+import type { FieldErrors } from "react-hook-form";
+import { useFieldArray, useFormState, useWatch } from "react-hook-form";
+
+import { ActionsBar } from "@compoz/studio/components/molecules/controls/ActionsBar";
+import { EmptyState } from "@compoz/studio/components/molecules/feedback/EmptyState";
+import { focusFirstArrayFieldError } from "@compoz/studio/features/settings/_shared/focusFirstArrayFieldError";
+import { useSettingsSectionForm } from "@compoz/studio/features/settings/_shared/useSettingsSectionForm";
+import { useStableWarningKeys } from "@compoz/studio/features/settings/_shared/useStableWarningKeys";
+import { LegalMenuItemRow } from "@compoz/studio/features/settings/menus/legal-menu/components/molecules/LegalMenuItemRow";
+import type { LegalMenuWarningKey } from "@compoz/studio/features/settings/menus/legal-menu/validate";
+import { useLegalMenuUiWarnings } from "@compoz/studio/features/settings/menus/legal-menu/validate";
+import { notify } from "@compoz/studio/lib/ui/notify";
 import { Card, CardContent, CardFooter } from "@compoz/ui/components/ui/card";
 import { Separator } from "@compoz/ui/components/ui/separator";
-import { useStableOnValuesChange } from "@compoz/ui/hooks/useStableOnValuesChange";
 import {
   createFieldIds,
   useIdPrefix,
 } from "@compoz/ui/lib/forms/use-id-prefix";
-import { getScrollBehavior } from "@compoz/ui/lib/getScrollBehavior";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 import type {
@@ -31,29 +43,13 @@ import type {
   LegalMenuItemFormValues,
 } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-form";
 import { LegalMenuFormSchema } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ActionsBar } from "@compoz/studio/components/molecules/controls/ActionsBar";
-import { EmptyState } from "@compoz/studio/components/molecules/feedback/EmptyState";
-import { LegalMenuItemRow } from "@compoz/studio/features/settings/menus/legal-menu/components/molecules/LegalMenuItemRow";
-import type { LegalMenuWarningKey } from "@compoz/studio/features/settings/menus/legal-menu/validate";
-import { useLegalMenuUiWarnings } from "@compoz/studio/features/settings/menus/legal-menu/validate";
-import { notify } from "@compoz/studio/lib/ui/notify";
-import { useTranslations } from "next-intl";
-import { Fragment, useEffect, useRef, useState } from "react";
-import type { FieldErrors } from "react-hook-form";
-import {
-  useFieldArray,
-  useForm,
-  useFormState,
-  useWatch,
-} from "react-hook-form";
 
 /**
  * Compte le nombre d’erreurs “leaf” dans un objet `errors` RHF.
  *
  * @remarks
  * - Une leaf est un objet contenant une propriété `message` (erreur RHF).
- * - Les arrays/objets sont parcourus récursivement.
+ * - Les arrays / objets sont parcourus récursivement.
  * - Couvre naturellement : structures imbriquées + field arrays.
  */
 function countBlockingErrors(value: unknown): number {
@@ -66,15 +62,16 @@ function countBlockingErrors(value: unknown): number {
   if (typeof value === "object") {
     const obj = value as Record<string, unknown>;
 
-    // “Leaf” RHF typique : { type, message, ref }
     if (typeof obj.message === "string" && obj.message.trim().length > 0) {
       return 1;
     }
 
     let total = 0;
-    for (const k of Object.keys(obj)) {
-      total += countBlockingErrors(obj[k]);
+
+    for (const key of Object.keys(obj)) {
+      total += countBlockingErrors(obj[key]);
     }
+
     return total;
   }
 
@@ -85,32 +82,20 @@ function countBlockingErrors(value: unknown): number {
  * Props du composant `LegalMenuForm`.
  */
 type LegalMenuFormProps = Readonly<{
-  /** Valeurs initiales (baseline) fournies par la section. */
   initialValues: LegalMenuFormValues;
-  /** Indique qu’une sauvegarde côté parent est en cours. */
   isSaving?: boolean;
-  /** Callback appelé avec des valeurs validées par Zod (`LegalMenuFormSchema`). */
   onSubmit: (values: LegalMenuFormValues) => void | Promise<void>;
-  /** Handler optionnel : permet au parent de réagir à un reset UI. */
   onReset?: () => void;
-  /** Options de pages internes disponibles (picker). */
   internalPageOptions?: ReadonlyArray<InternalPageOptionDTO>;
-  /** Ensemble des href internes connus (warnings). */
   hrefSet: ReadonlySet<string>;
-  /** Handler optionnel : remonte les warnings UI (non bloquants). */
   onWarningKeysChange?: (keys: LegalMenuWarningKey[]) => void;
-  /** Handler optionnel : remonte les valeurs live (preview draft). */
   onValuesChange?: (values: LegalMenuFormValues) => void;
-
-  /** Handler optionnel : remonte le nombre d’erreurs bloquantes (badge). */
   onBlockingErrorsCountChange?: (count: number) => void;
-
-  /** Handler optionnel : remonte l’état dirty (guard / navigation). */
   onDirtyChange?: (dirty: boolean) => void;
 }>;
 
 /**
- * Formulaire de configuration du menu légal (admin).
+ * Formulaire de configuration du menu légal (studio).
  */
 export function LegalMenuForm({
   initialValues,
@@ -127,29 +112,20 @@ export function LegalMenuForm({
   const {
     control,
     handleSubmit,
-    reset: rhfReset,
     trigger,
-  } = useForm<LegalMenuFormValues>({
+    resetToInitialValues,
+    isDirty,
+    isSubmitting,
+    isBusy,
+    submitCount,
+    isSubmitted,
+  } = useSettingsSectionForm<LegalMenuFormValues>({
     resolver: zodResolver(LegalMenuFormSchema),
-    defaultValues: initialValues,
-    mode: "onBlur",
-    reValidateMode: "onChange",
-    shouldFocusError: false, // on gère le focus nous-mêmes comme Identity
+    initialValues,
+    isSaving,
+    onValuesChange,
+    onDirtyChange,
   });
-
-  // ✅ Important : s’abonner à l’état global utile pour rerender (dirty/submitting/submitCount)
-  // + l’état des items (errors/touched) de manière fiable.
-  const { isDirty, isSubmitting, submitCount, isSubmitted } = useFormState({
-    control,
-  });
-
-  const [hasSubmittedOnce, setHasSubmittedOnce] = useState(false);
-
-  // Le chargement initial est géré par la section.
-  const isBusy = Boolean(isSaving || isSubmitting);
-
-  // Sous-état RHF pour les items (errors/touched/etc).
-  const itemsState = useFormState({ control, name: "items" });
 
   const t = useTranslations();
 
@@ -158,102 +134,53 @@ export function LegalMenuForm({
     name: "items",
   });
 
-  // Préfixe d’ID stable pour ce formulaire (base des IDs de rows).
+  const itemsState = useFormState({ control, name: "items" });
+  const [hasSubmittedOnce, setHasSubmittedOnce] = useState(false);
+
   const formIdPrefix = useIdPrefix("legal-menu-form");
 
-  // Resynchronisation RHF lorsque `initialValues` change (reload côté section).
-  useEffect(() => {
-    rhfReset(initialValues, {
-      keepDirty: false,
-      keepTouched: false,
-      keepErrors: false,
-    });
-  }, [initialValues, rhfReset]);
-
-  // Dirty signal vers le parent (guard / navigation).
-  useEffect(() => {
-    onDirtyChange?.(Boolean(isDirty));
-  }, [isDirty, onDirtyChange]);
-
-  // Valeurs RHF live (warnings + preview draft).
   const watched = useWatch({ control }) as LegalMenuFormValues | undefined;
   const values = watched ?? initialValues;
 
-  // Preview draft (valeurs live) — remonte le modèle UI.
-  useStableOnValuesChange(values, onValuesChange);
-
-  // Warnings UI (non bloquants).
   const warningKeys = useLegalMenuUiWarnings(values.items ?? [], hrefSet);
 
-  // Anti-spam : évite de renvoyer des warnings identiques.
-  const lastWarningsSigRef = useRef<string>("");
-
-  useEffect(() => {
-    if (!onWarningKeysChange) return;
-    const sig = warningKeys.join("|");
-    if (sig === lastWarningsSigRef.current) return;
-    lastWarningsSigRef.current = sig;
-    onWarningKeysChange(warningKeys);
-  }, [warningKeys, onWarningKeysChange]);
-
-  // Fabrique un nouvel item vide pour “Ajouter un lien”.
-  const createEmptyItem = (): LegalMenuItemFormValues => ({
-    label: "",
-    href: "/",
-    newTab: false,
+  useStableWarningKeys({
+    warningKeys,
+    onWarningKeysChange,
   });
 
-  // ✅ même logique que PrimaryMenu : une fois qu’on a submit, on affiche les invalids globalement
   const showError = hasSubmittedOnce || isSubmitted || submitCount > 0;
-
-  /**
-   * ✅ Compteur d'erreurs bloquantes (badge).
-   *
-   * PATCH: harmonisation — on compte depuis `formState.errors` (ici `itemsState.errors`)
-   * plutôt que de recalculer via `getFieldState`/touched.
-   *
-   * @remarks
-   * - Les erreurs n’existent que si RHF/Zod a réellement validé (onBlur / trigger / submit).
-   * - Compatible field arrays (même si “sparse”) grâce au parcours récursif.
-   */
   const blockingErrorsCount = countBlockingErrors(itemsState.errors);
 
   useEffect(() => {
     onBlockingErrorsCountChange?.(blockingErrorsCount);
   }, [blockingErrorsCount, onBlockingErrorsCountChange]);
 
+  function createEmptyItem(): LegalMenuItemFormValues {
+    return {
+      label: "",
+      href: "/",
+      newTab: false,
+    };
+  }
+
   function handleSubmitErrors(formErrors: FieldErrors<LegalMenuFormValues>) {
     setHasSubmittedOnce(true);
     notify.error(t("uiErrors.formHasErrors"));
 
-    // 1) On cible le premier index d’item qui a une erreur (label/href)
-    const itemErrors = formErrors.items;
-    if (!Array.isArray(itemErrors) || itemErrors.length === 0) return;
+    focusFirstArrayFieldError<"label" | "href">({
+      itemErrors: formErrors.items,
+      fieldPriority: ["label", "href"],
+      getFieldId: (index, field) => {
+        const rowIdPrefix = `${formIdPrefix}-item-${index}`;
 
-    const firstIndex = itemErrors.findIndex((e) => !!e?.label || !!e?.href);
-    if (firstIndex < 0) return;
+        if (field === "label") {
+          return createFieldIds(rowIdPrefix, "label").fieldId;
+        }
 
-    // 2) Priorité champ : label puis href
-    const fieldPriority: Array<"label" | "href"> = ["label", "href"];
-    const firstField = fieldPriority.find((k) => !!itemErrors[firstIndex]?.[k]);
-    if (!firstField) return;
-
-    // 3) Reconstitue l’ID exact du champ (aligné avec MenuFieldsItem)
-    const rowIdPrefix = `${formIdPrefix}-item-${firstIndex}`;
-    const linkIdPrefix = `${rowIdPrefix}-link`;
-
-    const targetId =
-      firstField === "label"
-        ? createFieldIds(rowIdPrefix, "label").fieldId
-        : createFieldIds(linkIdPrefix, "href").fieldId;
-
-    const el = document.getElementById(targetId);
-    if (!el) return;
-
-    el.scrollIntoView({ behavior: getScrollBehavior(), block: "center" });
-    setTimeout(() => {
-      (el as HTMLElement).focus?.();
-    }, 50);
+        return createFieldIds(`${rowIdPrefix}-link`, "href").fieldId;
+      },
+    });
   }
 
   return (
@@ -268,7 +195,7 @@ export function LegalMenuForm({
       <Card variant="panel">
         <CardContent className={cn(STACK_MD)}>
           {fields.length === 0 ? (
-            <EmptyState text={t("admin.legalMenuForm.empty")} />
+            <EmptyState text={t("studio.legalMenuForm.empty")} />
           ) : (
             fields.map((field, index) => {
               const rowIdPrefix = `${formIdPrefix}-item-${index}`;
@@ -293,6 +220,7 @@ export function LegalMenuForm({
                       }
                     />
                   </div>
+
                   {index < fields.length - 1 ? <Separator /> : null}
                 </Fragment>
               );
@@ -307,13 +235,7 @@ export function LegalMenuForm({
             isDirty={isDirty}
             onAdd={() => append(createEmptyItem())}
             onReset={() => {
-              // Reset UI immédiat (RHF).
-              rhfReset(initialValues, {
-                keepDirty: false,
-                keepTouched: false,
-                keepErrors: false,
-              });
-              // Puis notification côté parent (si besoin).
+              resetToInitialValues();
               onReset?.();
             }}
             addLabel={t("common.addLink")}

@@ -10,7 +10,7 @@
  *   pour accepter les valeurs draft (`""`) pendant la saisie.
  */
 
-import { MENU } from "@compoz/core/constants/limits/menu";
+import { MENU_ITEM, MENU_LABEL } from "@compoz/core/constants/limits/menu";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { AssetUrlSchema } from "@compoz/validation/common/url-fragments";
 import { z } from "zod";
@@ -21,29 +21,20 @@ import { z } from "zod";
 
 export const LegalMenuItemFormSchema = z
   .object({
-    /**
-     * Libellé du lien.
-     * - Draft-friendly : autorise "" en saisie, mais requis via superRefine.
-     */
     label: z
       .string()
       .trim()
-      .max(MENU.LABEL_MAX, ERROR_CODES.LEGAL_MENU_LABEL_TOO_LONG),
-
-    /**
-     * URL / chemin.
-     * - Draft-friendly : string contrôlée.
-     * - Validation de format via AssetUrlSchema en superRefine pour message dédié.
-     */
+      .max(MENU_LABEL.MAX, ERROR_CODES.LEGAL_MENU_LABEL_TOO_LONG),
     href: z.string().trim(),
-
-    /** Ouverture dans un nouvel onglet. */
     newTab: z.boolean(),
   })
+  .strict()
   .superRefine((val, ctx) => {
-    // label requis
     const label = val.label.trim();
-    if (label.length < MENU.LABEL_MIN) {
+    const href = val.href.trim();
+
+    // label requis
+    if (label.length < MENU_LABEL.MIN) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["label"],
@@ -52,7 +43,6 @@ export const LegalMenuItemFormSchema = z
     }
 
     // href requis + format
-    const href = val.href.trim();
     if (href.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -62,16 +52,14 @@ export const LegalMenuItemFormSchema = z
       return;
     }
 
-    const ok = AssetUrlSchema.safeParse(href).success;
-    if (!ok) {
+    if (!AssetUrlSchema.safeParse(href).success) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["href"],
         message: ERROR_CODES.LEGAL_MENU_HREF_INVALID,
       });
     }
-  })
-  .strict();
+  });
 
 /* -------------------------------------------------------------------------- */
 /*                             Settings (UI)                                  */
@@ -79,7 +67,7 @@ export const LegalMenuItemFormSchema = z
 
 export const LegalMenuFormSchema = z
   .object({
-    items: z.array(LegalMenuItemFormSchema).max(MENU.ITEM_MAX, {
+    items: z.array(LegalMenuItemFormSchema).max(MENU_ITEM.MAX, {
       message: ERROR_CODES.LEGAL_MENU_TOO_MANY_ITEMS,
     }),
   })

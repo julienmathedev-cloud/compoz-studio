@@ -1,8 +1,8 @@
 /**
  * @file packages/infra/src/http/studio/site.client.ts
- * @layer infra/http
+ * @layer infra/http/studio
  * @description
- * Client HTTP Admin pour la publication du site (draft → published) + status.
+ * Client HTTP Studio pour la publication (draft → published) + status.
  *
  * @remarks
  * - Client HTTP pur (infra-only)
@@ -11,6 +11,7 @@
  */
 
 import { ENDPOINTS } from "@compoz/infra/http/endpoints";
+import { assertJsonResponse } from "@compoz/infra/http/internal";
 import { apiFetch } from "@compoz/infra/lib/api-fetch";
 import { logSpan } from "@compoz/infra/lib/log";
 
@@ -22,13 +23,6 @@ import type {
 } from "@compoz/infra/http/studio/site.types";
 
 import type { SiteStatusDetailsQueryDTO } from "@compoz/core/domain/site/dto";
-
-function assertJsonResponse<T>(res: T | null, ctx: string): T {
-  if (!res) {
-    throw new Error(`${ctx}: expected JSON response, received null.`);
-  }
-  return res;
-}
 
 function buildQueryString(query?: SiteStatusDetailsQueryDTO): string {
   const scope = query?.scope ?? "dirty";
@@ -51,12 +45,12 @@ function buildQueryString(query?: SiteStatusDetailsQueryDTO): string {
 /*                                   API                                      */
 /* -------------------------------------------------------------------------- */
 
-export const siteAdminApi = {
+export const siteStudioApi = {
   async publish(params?: PublishParams): Promise<PublishSiteResponse> {
     const hasBody = !!(params && Object.keys(params).length > 0);
 
     return logSpan(
-      "infra.http.admin.site.publish",
+      "compoz:studio:svc:publish",
       {
         endpoint: ENDPOINTS.STUDIO.SITE.publish,
         method: "POST",
@@ -71,14 +65,14 @@ export const siteAdminApi = {
           },
         );
 
-        return assertJsonResponse(res, "siteAdminApi.publish");
+        return assertJsonResponse(res, "siteStudioApi.publish");
       },
     );
   },
 
   async status(): Promise<GetSiteStatusResponse> {
     return logSpan(
-      "infra.http.admin.site.status.get",
+      "compoz:studio:svc:site-status",
       { endpoint: ENDPOINTS.STUDIO.SITE.status, method: "GET" },
       async () => {
         const res = await apiFetch<GetSiteStatusResponse>(
@@ -86,7 +80,7 @@ export const siteAdminApi = {
           { method: "GET" },
         );
 
-        return assertJsonResponse(res, "siteAdminApi.status");
+        return assertJsonResponse(res, "siteStudioApi.status");
       },
     );
   },
@@ -98,14 +92,14 @@ export const siteAdminApi = {
     const endpoint = `${ENDPOINTS.STUDIO.SITE.statusDetails}${qs}`;
 
     return logSpan(
-      "infra.http.admin.site.statusDetails.get",
+      "compoz:studio:svc:site-status-details",
       { endpoint, method: "GET" },
       async () => {
         const res = await apiFetch<GetSiteStatusDetailsResponse>(endpoint, {
           method: "GET",
         });
 
-        return assertJsonResponse(res, "siteAdminApi.statusDetails");
+        return assertJsonResponse(res, "siteStudioApi.statusDetails");
       },
     );
   },

@@ -9,10 +9,16 @@
  * côté production.
  */
 
-import { ERROR_CODES, type ErrorCode } from "@compoz/core/domain/errors/codes";
+import {
+  ERROR_CODES,
+  isErrorCode,
+  type ErrorCode,
+} from "@compoz/core/domain/errors/codes";
 import { isStrictDomainError } from "@compoz/core/domain/errors/domain-error";
 import type { HttpErrorBody } from "@compoz/http/http-error";
 import { zodToHttp } from "@compoz/validation/http/zod-to-http";
+
+type HttpErrorResponse = Readonly<{ status: number; body: HttpErrorBody }>;
 
 /**
  * Mapping explicite ErrorCode → status HTTP.
@@ -31,22 +37,22 @@ const EXPLICIT_STATUS: Partial<Record<ErrorCode, number>> = {
   [ERROR_CODES.UNKNOWN]: 500,
 };
 
-const INFRA_PREFIXES_500 = [/^REPO_/, /^FS_/, /^DB_/, /^STORAGE_/] as const;
+const INFRA_CODE_PREFIXES_500 = [
+  /^REPO_/,
+  /^FS_/,
+  /^DB_/,
+  /^STORAGE_/,
+] as const;
 
 /**
  * Détermine si le message d’erreur métier peut être exposé au client.
- * Contrat : en dev, toujours true ; en prod, restreint via EXPOSE_MESSAGE_WHEN_PROD.
+ *
+ * Contrat :
+ * - en dev : true
+ * - en prod : false (on n'expose pas les messages techniques)
  */
 function shouldExposeMessage(): boolean {
   return process.env.NODE_ENV !== "production";
-}
-
-/**
- * Type-guard : vérifie qu’un code runtime fait bien partie de notre enum ErrorCode.
- * (utile car HttpErrorBody.code est `ErrorCode | string`)
- */
-function isKnownErrorCode(code: string): code is ErrorCode {
-  return (Object.values(ERROR_CODES) as string[]).includes(code);
 }
 
 /**
@@ -59,19 +65,19 @@ function isKnownErrorCode(code: string): code is ErrorCode {
  * - code inconnu → 500 (safe fallback)
  */
 export function statusFromCode(code: string): number {
-  if (!isKnownErrorCode(code)) return 500;
+  if (!isErrorCode(code)) return 500;
 
   const explicit = EXPLICIT_STATUS[code];
   if (explicit !== undefined) return explicit;
 
-  if (INFRA_PREFIXES_500.some((re) => re.test(code))) return 500;
+  if (INFRA_CODE_PREFIXES_500.some((re) => re.test(code))) return 500;
 
   return 400;
 }
 
 /**
  * Transforme une erreur inconnue ou DomainError en HttpErrorBody.
- * Contrat : expose code et message si autorisé par shouldExposeMessage.
+ * Contrat : expose le message uniquement si autorisé par shouldExposeMessage.
  */
 function toHttpErrorBody(err: unknown): HttpErrorBody {
   if (!isStrictDomainError(err)) {
@@ -91,9 +97,7 @@ function toHttpErrorBody(err: unknown): HttpErrorBody {
  * Transforme une erreur en réponse HTTP typée.
  * Contrat : retourne { status, body } utilisable directement dans les route handlers.
  */
-export function toHttpError(
-  err: unknown,
-): Readonly<{ status: number; body: HttpErrorBody }> {
+export function toHttpError(err: unknown): HttpErrorResponse {
   // ✅ 1️⃣ Validation & throwHttp (validation package)
   const z = zodToHttp(err);
   if (z) return z;

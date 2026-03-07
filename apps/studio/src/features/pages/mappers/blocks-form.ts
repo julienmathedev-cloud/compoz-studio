@@ -1,22 +1,27 @@
 /**
  * @file apps/studio/src/features/pages/mappers/blocks-form.ts
- * @layer ui-mappers/pages
+ * @layer ui/studio/pages/mappers
  *
  * @description
- * Mappers "forms admin" dashboard pour les blocks :
+ * Mappers de formulaires studio pour les blocks :
  * - DTO domaine -> FormValues RHF
- * - Normalisations UI (coercitions + cohérence cells/columns)
- * - FormValues -> Intent DTO (API admin)
- * - Factories UI (createEmpty*)
+ * - normalisations UI (coercitions + cohérence cells / columns)
+ * - FormValues -> Intent DTO (API studio)
+ * - factories UI (`createEmpty*`)
  *
- * Responsabilités :
- * - trimming / coercition UI
- * - cohérence de structure pour RHF
- * - aucune logique métier
- * - aucune gestion du state (draft/published)
+ * @remarks
+ * - Gère uniquement la forme UI et les coercitions légères.
+ * - Aucune logique métier.
+ * - Aucune gestion de state (draft / published).
  */
 
 import type { BlockDTO } from "@compoz/core/domain/pages/dto";
+import type { LayoutSectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
+import type {
+  CreateLayoutSectionBlockIntentDTO,
+  ReorderBlocksIntentDTO,
+  UpdateLayoutSectionBlockIntentDTO,
+} from "@compoz/validation/pages/blocks/block-intents";
 
 import {
   createEmptyCell,
@@ -24,12 +29,24 @@ import {
   toCellFormValuesFromDTO,
 } from "@compoz/studio/features/pages/mappers/cells-form";
 
-import type { LayoutSectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
-import type {
-  CreateLayoutSectionBlockIntentDTO,
-  ReorderBlocksIntentDTO,
-  UpdateLayoutSectionBlockIntentDTO,
-} from "@compoz/validation/pages/blocks/block-intents";
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function normalizeContainerMode(
+  containerMode: LayoutSectionBlockFormValues["containerMode"] | undefined,
+): LayoutSectionBlockFormValues["containerMode"] {
+  return containerMode === "fullBleed" ? "fullBleed" : "contained";
+}
+
+function normalizeTitle(
+  title: LayoutSectionBlockFormValues["title"] | undefined,
+): LayoutSectionBlockFormValues["title"] {
+  const text = typeof title?.text === "string" ? title.text.trim() : "";
+  const display = title?.display === "sr-only" ? "sr-only" : "visible";
+
+  return { text, display };
+}
 
 /* -------------------------------------------------------------------------- */
 /* Domaine (DTO) -> UI (form values)                                          */
@@ -41,7 +58,7 @@ import type {
  * @remarks
  * - Si le block n’est pas `layoutSection`, retourne une forme minimale safe.
  * - `cells` est toujours un array côté UI.
- * - V0.5 : `title` est ALWAYS present, `titleEnabled` pilote l’affichage uniquement.
+ * - V0.5 : `title` est toujours présent ; `titleEnabled` pilote l’affichage.
  */
 export function toLayoutSectionBlockFormValuesFromDTO(
   block: BlockDTO,
@@ -52,30 +69,18 @@ export function toLayoutSectionBlockFormValuesFromDTO(
 
   const columns = block.layout?.columns ?? 1;
 
-  const containerMode =
-    block.containerMode === "fullBleed" ? "fullBleed" : "contained";
-
   const cells = Array.isArray(block.cells)
     ? block.cells.map(toCellFormValuesFromDTO)
     : [];
 
-  const titleEnabled =
-    typeof block.titleEnabled === "boolean" ? block.titleEnabled : false;
-
-  const title = {
-    text: typeof block.title?.text === "string" ? block.title.text : "",
-    display: block.title?.display === "sr-only" ? "sr-only" : "visible",
-  } as const;
-
-  const lcpPriority =
-    typeof block.lcpPriority === "boolean" ? block.lcpPriority : false;
-
   return {
     columns,
-    containerMode,
-    titleEnabled,
-    title,
-    lcpPriority,
+    containerMode: normalizeContainerMode(block.containerMode),
+    titleEnabled:
+      typeof block.titleEnabled === "boolean" ? block.titleEnabled : false,
+    title: normalizeTitle(block.title),
+    lcpPriority:
+      typeof block.lcpPriority === "boolean" ? block.lcpPriority : false,
     cells: ensureCellsLength(cells, columns),
   };
 }
@@ -89,21 +94,12 @@ export function normalizeLayoutSectionBlockFormValues(
 ): LayoutSectionBlockFormValues {
   return {
     ...values,
-    containerMode:
-      values.containerMode === "fullBleed" ? "fullBleed" : "contained",
+    containerMode: normalizeContainerMode(values.containerMode),
     titleEnabled: Boolean(values.titleEnabled),
     title: normalizeTitle(values.title),
     lcpPriority: Boolean(values.lcpPriority),
     cells: ensureCellsLength(values.cells ?? [], values.columns),
   };
-}
-
-function normalizeTitle(
-  title: LayoutSectionBlockFormValues["title"],
-): LayoutSectionBlockFormValues["title"] {
-  const text = typeof title?.text === "string" ? title.text.trim() : "";
-  const display = title?.display === "sr-only" ? "sr-only" : "visible";
-  return { text, display };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -133,34 +129,39 @@ export function toCreateLayoutSectionBlockIntentDTOFromFormValues(args: {
 }
 
 function toLayoutSectionBlockPatch(
-  p: Partial<LayoutSectionBlockFormValues>,
+  patch: Partial<LayoutSectionBlockFormValues>,
 ): UpdateLayoutSectionBlockIntentDTO["patch"] {
-  const out: UpdateLayoutSectionBlockIntentDTO["patch"] = {};
+  const output: UpdateLayoutSectionBlockIntentDTO["patch"] = {};
 
-  if ("columns" in p && p.columns !== undefined) out.columns = p.columns;
-
-  if ("titleEnabled" in p && p.titleEnabled !== undefined) {
-    out.titleEnabled = Boolean(p.titleEnabled);
-  }
-  if ("title" in p && p.title !== undefined) {
-    out.title = normalizeTitle(p.title);
+  if ("columns" in patch && patch.columns !== undefined) {
+    output.columns = patch.columns;
   }
 
-  if ("containerMode" in p && p.containerMode !== undefined) {
-    out.containerMode = p.containerMode;
+  if ("titleEnabled" in patch && patch.titleEnabled !== undefined) {
+    output.titleEnabled = Boolean(patch.titleEnabled);
   }
 
-  if ("lcpPriority" in p && p.lcpPriority !== undefined) {
-    out.lcpPriority = Boolean(p.lcpPriority);
+  if ("title" in patch && patch.title !== undefined) {
+    output.title = normalizeTitle(patch.title);
   }
 
-  if ("cells" in p && p.cells !== undefined) out.cells = p.cells;
+  if ("containerMode" in patch && patch.containerMode !== undefined) {
+    output.containerMode = normalizeContainerMode(patch.containerMode);
+  }
 
-  return out;
+  if ("lcpPriority" in patch && patch.lcpPriority !== undefined) {
+    output.lcpPriority = Boolean(patch.lcpPriority);
+  }
+
+  if ("cells" in patch && patch.cells !== undefined) {
+    output.cells = patch.cells;
+  }
+
+  return output;
 }
 
 /**
- * Construit l’intent de mise à jour d’un LayoutSectionBlock.
+ * Construit l’intent de mise à jour d’un `LayoutSectionBlock`.
  */
 export function toUpdateLayoutSectionBlockIntentDTOFromFormValues(args: {
   blockId: string;
@@ -175,9 +176,9 @@ export function toUpdateLayoutSectionBlockIntentDTOFromFormValues(args: {
 }
 
 /**
- * Prépare l’intent de reorder des blocks.
+ * Prépare l’intent de réordonnancement des blocks.
  */
-export function normalizedReorderBlocksIntentDTO(
+export function normalizeReorderBlocksIntentDTO(
   values: ReorderBlocksIntentDTO,
 ): ReorderBlocksIntentDTO {
   return {
@@ -190,7 +191,7 @@ export function normalizedReorderBlocksIntentDTO(
 /* -------------------------------------------------------------------------- */
 
 /**
- * Permet de créer un bloc LayoutSection vide (UI form).
+ * Crée un bloc `LayoutSection` vide côté UI form.
  */
 export function createEmptyLayoutSectionBlock(args?: {
   columns?: 1 | 2 | 3;
@@ -200,17 +201,13 @@ export function createEmptyLayoutSectionBlock(args?: {
   containerMode?: LayoutSectionBlockFormValues["containerMode"];
 }): LayoutSectionBlockFormValues {
   const columns = args?.columns ?? 1;
-
   const cells = ensureCellsLength([createEmptyCell("richText")], columns);
 
   return {
     columns,
-    containerMode: args?.containerMode ?? "contained",
+    containerMode: normalizeContainerMode(args?.containerMode),
     titleEnabled: args?.titleEnabled ?? false,
-    title: {
-      text: args?.title?.text?.trim?.() ?? "",
-      display: args?.title?.display === "sr-only" ? "sr-only" : "visible",
-    },
+    title: normalizeTitle(args?.title),
     lcpPriority: args?.lcpPriority ?? false,
     cells,
   };

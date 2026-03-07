@@ -1,17 +1,11 @@
 "use client";
 
-import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
-import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-form";
-import { ExpandableLayout } from "@compoz/studio/components/layouts/ExpandableLayout";
-import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
-import { HintList } from "@compoz/studio/components/molecules/feedback/HintList";
-import { useConfirmList } from "@compoz/studio/features/confirm/useConfirmList";
 /**
  * @file apps/studio/src/features/settings/menus/primary-menu/PrimaryMenuSection.tsx
- * @layer ui/sections
+ * @layer ui/studio/sections
  *
  * @description
- * Section d’administration dédiée au menu principal : chargement (shell), édition (form), warnings UI et preview.
+ * Section Studio dédiée au menu principal : chargement (shell), édition (form), warnings UI et preview.
  *
  * @remarks
  * - Le chargement initial est géré par `SettingsSection` (shell).
@@ -21,16 +15,22 @@ import { useConfirmList } from "@compoz/studio/features/confirm/useConfirmList";
  * - Strictement UI-only : aucune logique métier.
  */
 
+import { useTranslations } from "next-intl";
+import { useCallback, useMemo, useState } from "react";
+
+import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
+import { StudioWarningsPanel } from "@compoz/studio/features/_shared/components/StudioWarningsPanel";
+import { useStudioSaveDespiteWarningsConfirm } from "@compoz/studio/features/_shared/hooks/useStudioSaveDespiteWarningsConfirm";
 import { useInternalPageOptions } from "@compoz/studio/features/pages/hooks/useInternalPageOptions";
-import { useAdminPreview } from "@compoz/studio/features/preview/hooks/useAdminPreview";
 import { PreviewFrame } from "@compoz/studio/features/preview/PreviewFrame";
+import { useStudioPreview } from "@compoz/studio/features/preview/hooks/useStudioPreview";
 import { toPrimaryMenuSettingsShapeFromFormValues } from "@compoz/studio/features/settings/mappers/primary-menu-form";
 import { PrimaryMenuForm } from "@compoz/studio/features/settings/menus/primary-menu/components/organisms/PrimaryMenuForm";
 import { usePrimaryMenuSettings } from "@compoz/studio/features/settings/menus/primary-menu/usePrimaryMenuSettings";
 import type { PrimaryMenuWarningKey } from "@compoz/studio/features/settings/menus/primary-menu/validate";
 import { computePrimaryMenuWarnings } from "@compoz/studio/features/settings/menus/primary-menu/validate";
-import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
+import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
+import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-form";
 
 type PrimaryMenuSectionProps = Readonly<{
   /** Remonte l’état dirty (guard / navigation) au parent (Tab/Dashboard). */
@@ -38,8 +38,8 @@ type PrimaryMenuSectionProps = Readonly<{
 }>;
 
 export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
-  const confirmList = useConfirmList();
   const t = useTranslations();
+  const { confirmSaveDespiteWarnings } = useStudioSaveDespiteWarningsConfirm();
 
   const [isDirty, setIsDirty] = useState(false);
 
@@ -57,15 +57,15 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
   );
 
   const { ready, frame, setBaseline, setDraft, iframeRef } =
-    useAdminPreview<PrimaryMenuSettingsShape>("primaryMenu", baselinePreview);
+    useStudioPreview<PrimaryMenuSettingsShape>("primaryMenu", baselinePreview);
 
   /**
-   * ✅ internalPageOptions : via hook SoT (plus de mapping local depuis useReadSiteIndex)
+   * internalPageOptions : via hook SoT (plus de mapping local depuis useReadSiteIndex)
    */
   const { options: internalPageOptions } = useInternalPageOptions();
 
   /**
-   * ✅ hrefSet : inchangé (même source), mais basé sur les options (déjà normalisées)
+   * hrefSet : inchangé, mais basé sur les options (déjà normalisées)
    * Important : on garde exactement la même intention fonctionnelle : set de href internes connus.
    */
   const hrefSet = useMemo(() => {
@@ -81,25 +81,17 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
   }, [internalPageOptions]);
 
   // Warnings UI (non bloquants).
-
-  // Warnings live dérivés des valeurs RHF (affichage uniquement).
   const [warningKeys, setWarningKeys] = useState<PrimaryMenuWarningKey[]>([]);
-
-  const warningHints = useMemo(
-    () => warningKeys.map((k) => t(`admin.primaryMenuSection.warnings.${k}`)),
-    [warningKeys, t],
-  );
-
   const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
 
   // Preview empty/loader
   const dataReady = !isLoading && baseline != null;
   const isEmpty = dataReady && (baseline?.items?.length ?? 0) === 0;
 
-  const emptyLabel = t("admin.emptyPreview.primaryMenu");
+  const emptyLabel = t("studio.emptyPreview.primaryMenu");
 
   // Preview loading : on attend la baseline primaryMenu + le handshake du scope principal.
-  // ⚠️ si empty => pas de loader (sinon impression de bug)
+  // si empty => pas de loader
   const isPreviewLoading =
     !isEmpty &&
     (isLoading || baseline == null || !ready.isReady("primaryMenu"));
@@ -107,12 +99,12 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
   const handlePreviewSync = useCallback(() => {
     frame.onSync();
     setPreviewMode("override");
-  }, [frame, setPreviewMode]);
+  }, [frame]);
 
   const handlePreviewReset = useCallback(() => {
     frame.onReset();
     setPreviewMode("baseline");
-  }, [frame, setPreviewMode]);
+  }, [frame]);
 
   // Submit : confirmation si warnings + save.
   const handleSubmit = useCallback(
@@ -125,28 +117,13 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
         hrefSet,
       });
 
-      const warningHintsNow = warningKeysNow.map((k) =>
-        t(`admin.primaryMenuSection.warnings.${k}`),
+      // 2) Confirmation si warnings.
+      const ok = await confirmSaveDespiteWarnings(
+        warningKeysNow,
+        "studio.primaryMenuSection.warnings",
       );
 
-      // 2) Confirmation si warnings.
-      if (warningHintsNow.length > 0) {
-        const ok = await confirmList({
-          title: t("admin.shared.confirm.saveDespiteWarnings.title"),
-          intro: t("admin.shared.confirm.saveDespiteWarnings.intro"),
-          items: warningHintsNow,
-          confirmLabel: t(
-            "admin.shared.confirm.saveDespiteWarnings.confirmLabel",
-          ),
-          cancelLabel: t("common.cancel"),
-          requireAckLabel: t(
-            "admin.shared.confirm.saveDespiteWarnings.requireAckLabel",
-          ),
-          tone: "default",
-        });
-
-        if (!ok) return;
-      }
+      if (!ok) return;
 
       // 3) Save.
       await save(values);
@@ -158,7 +135,7 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
       onDirtyChange?.(false);
     },
     [
-      confirmList,
+      confirmSaveDespiteWarnings,
       isLoading,
       isSaving,
       hrefSet,
@@ -166,18 +143,15 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
       onDirtyChange,
       frame,
       setBaseline,
-      t,
     ],
   );
 
-  // Render.
-
-  const description = t("admin.primaryMenuSection.section.description");
+  const description = t("studio.primaryMenuSection.section.description");
 
   return (
     <SettingsSection
       id="primary-menu"
-      title={t("admin.primaryMenuSection.section.title")}
+      title={t("studio.primaryMenuSection.section.title")}
       headingLevel="h2"
       description={description}
       isBusy={isSaving}
@@ -185,26 +159,11 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
       isDirty={isDirty}
       blockingErrorsCount={blockingErrorsCount}
     >
-      <ExpandableLayout
+      <StudioWarningsPanel
         id="primary-menu-warnings"
-        label={
-          warningHints.length > 0
-            ? t("admin.shared.warningsPanel.labelWithCount", {
-                count: warningHints.length,
-              })
-            : t("admin.shared.warningsPanel.label")
-        }
-        defaultOpen={false}
-        disabled={warningHints.length === 0}
-      >
-        {warningHints.length > 0 ? (
-          <HintList
-            title={t("admin.shared.warningsPanel.title")}
-            hints={warningHints}
-            variant="warning"
-          />
-        ) : null}
-      </ExpandableLayout>
+        warningKeys={warningKeys}
+        warningMessageKeyPrefix="studio.primaryMenuSection.warnings"
+      />
 
       <PrimaryMenuForm
         initialValues={baseline}
@@ -231,8 +190,8 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
       />
 
       <PreviewFrame
-        title={t("admin.shared.preview.title", {
-          entity: t("admin.shared.entities.primaryMenu"),
+        title={t("studio.shared.preview.title", {
+          entity: t("studio.shared.entities.primaryMenu"),
         })}
         src="/preview/primary-menu"
         iframeRef={iframeRef}
@@ -246,10 +205,10 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
         heightClassName="h-[250px]"
         info={
           isEmpty
-            ? t("admin.emptyPreview.primaryMenu")
+            ? t("studio.emptyPreview.primaryMenu")
             : previewMode === "override"
-              ? t("admin.shared.preview.infoOverride")
-              : t("admin.shared.preview.infoBaseline")
+              ? t("studio.shared.preview.infoOverride")
+              : t("studio.shared.preview.infoBaseline")
         }
       />
     </SettingsSection>

@@ -1,6 +1,6 @@
 /**
  * @file apps/studio/src/features/settings/mappers/legal-menu-form.ts
- * @layer ui-mappers/site
+ * @layer ui-mappers/studio/site
  * @description
  * Mappers UI LegalMenu (studio forms) :
  * - DTO -> valeurs de formulaire RHF
@@ -10,7 +10,7 @@
  *
  * @remarks
  * - DTO -> Shape runtime (shared, renderer) : `toLegalMenuSettingsShapeFromDTO` (package ui).
- * - Ici, la normalisation `href` est "draft-friendly" (internal/external) pour l’admin.
+ * - Ici, la normalisation `href` est "draft-friendly" (internal/external) pour le studio.
  */
 
 import type {
@@ -28,7 +28,6 @@ import type { UpdateLegalMenuSettingsIntentDTO } from "@compoz/validation/site/s
 import { asBool, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 import { resolveLinkFlags } from "@compoz/ui/lib/links/helpers";
 import { toExternalDraft, toInternalDraft } from "@compoz/ui/lib/normalize";
-
 import { toLegalMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/legal-menu-shape";
 
 function normalizeHrefDraft(href: string): string {
@@ -82,13 +81,13 @@ export function toLegalMenuFormValuesFromDTO(
   return { items: items.map(toLegalMenuItemFormValuesFromDTO) };
 }
 
-/* ------------------- Admin (RHF) -> Preview/Public (SettingsShape) ----------- */
+/* ------------------- Studio (RHF) -> Preview/Public (SettingsShape) ----------- */
 
 /**
  * Transforme les valeurs du formulaire LegalMenu en shape Settings canonique.
  *
  * @remarks
- * - Utilisé par la preview admin (draft).
+ * - Utilisé par la preview studio (draft).
  * - Retourne une shape "frontière" (strings), sans dérivations métier.
  * - Normalise `href` en "draft-friendly".
  */

@@ -18,30 +18,28 @@
  */
 
 import {
-  WRITE_CONTENT_STATE,
+  DEFAULT_CONTENT_STATE,
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
+import { SITE_PATH } from "@compoz/core/constants/web/paths";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type { Page } from "@compoz/core/domain/pages/entities/page";
+import {
+  applyPaginationEnabledPatch,
+  applyParentIdPatch,
+  applySitemapPatch,
+  applySlugPatch,
+  applyTitlePatch,
+} from "@compoz/core/domain/pages/use-cases/helpers/apply-page-patch";
 import type {
+  ChangedKey,
   UpdatePageDeps,
   UpdatePageInput,
   UpdatePageResult,
 } from "@compoz/core/domain/pages/use-cases/update-page.types";
-import {
-  applySitemapDefaults,
-  assertPageSlug,
-  assertPaginationEnabled,
-  assertParentId,
-  assertPriority,
-  assertTitleRequired,
-} from "@compoz/core/domain/pages/validators/pages";
-
-type ChangedKey = keyof Pick<
-  Page,
-  "title" | "slug" | "parentId" | "sitemap" | "paginationEnabled"
->;
+import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
+import { toInternalPathFromSlug } from "@compoz/core/domain/slug/utils";
 
 export function updatePage({
   pages,
@@ -61,7 +59,7 @@ export function updatePage({
 
     const existing = await readExistingPageById({
       pages,
-      state: WRITE_CONTENT_STATE,
+      state: DEFAULT_CONTENT_STATE,
       pageId,
     });
 
@@ -76,7 +74,7 @@ export function updatePage({
       changed,
       input,
       pages,
-      state: WRITE_CONTENT_STATE,
+      state: DEFAULT_CONTENT_STATE,
     });
 
     applyParentIdPatch({ existing, next, changed, input });
@@ -86,12 +84,12 @@ export function updatePage({
     if (changed.length === 0) return { page: existing };
 
     next.meta = { ...existing.meta, updatedAt: nowIso() };
-    await pages.put(WRITE_CONTENT_STATE, next);
+    await pages.put(DEFAULT_CONTENT_STATE, next);
 
     if (slugChange && site) {
       await tryUpdateMenusForSlugRename({
         site,
-        state: WRITE_CONTENT_STATE,
+        state: DEFAULT_CONTENT_STATE,
         fromSlug: slugChange.from,
         toSlug: slugChange.to,
       });
@@ -126,195 +124,6 @@ async function readExistingPageById({
   }
 
   return existing;
-}
-
-function applyTitlePatch({
-  existing,
-  next,
-  changed,
-  input,
-}: {
-  existing: Page;
-  next: Page;
-  changed: ChangedKey[];
-  input: UpdatePageInput;
-}): void {
-  if (typeof input.title !== "string") return;
-
-  const t = assertTitleRequired(input.title);
-  if (t !== existing.title) {
-    next.title = t;
-    changed.push("title");
-  }
-}
-
-type SlugChange = Readonly<{ from: string; to: string }>;
-
-async function applySlugPatch({
-  existing,
-  next,
-  changed,
-  input,
-  pages,
-  state,
-}: {
-  existing: Page;
-  next: Page;
-  changed: ChangedKey[];
-  input: UpdatePageInput;
-  pages: UpdatePageDeps["pages"];
-  state: ContentState;
-}): Promise<SlugChange | null> {
-  if (typeof input.slug !== "string") return null;
-
-  const rawSlug = String(input.slug ?? "").trim();
-
-  // Reset : slug vidé => on dérive depuis le titre courant (next.title si modifié)
-  const baseSource =
-    rawSlug.length === 0 ? next.title : normalizeSlugInput(rawSlug);
-
-  const candidate = assertPageSlug(baseSource);
-
-  if (candidate === existing.slug) return null;
-
-  const other = await pages.readBySlug(state, candidate);
-  if (other && other.id !== existing.id) {
-    throw new DomainError({
-      code: EC.PAGE_SLUG_CONFLICT,
-      message: EC.PAGE_SLUG_CONFLICT,
-    });
-  }
-
-  const from = existing.slug;
-  next.slug = candidate;
-  changed.push("slug");
-
-  return { from, to: candidate };
-}
-
-function normalizeSlugInput(input: string): string {
-  const raw = String(input ?? "").trim();
-  if (!raw) return "";
-
-  if (raw === "/") return "home";
-
-  const stripped = raw.replace(/^\/+/, "").replace(/\/+$/, "");
-  if (!stripped) return "home";
-  if (stripped === "home") return "home";
-
-  return stripped;
-}
-
-function toInternalPathFromSlug(slug: string): string {
-  const s = String(slug ?? "").trim();
-  if (!s || s === "home") return "/";
-  return `/${s.replace(/^\/+/, "")}`;
-}
-
-function applySitemapPatch({
-  existing,
-  next,
-  changed,
-  input,
-}: {
-  existing: Page;
-  next: Page;
-  changed: ChangedKey[];
-  input: UpdatePageInput;
-}): void {
-  if (typeof input.sitemap !== "object" || input.sitemap === null) return;
-
-  const prev = existing.sitemap ?? applySitemapDefaults();
-
-  const nextChangefreq =
-    "changefreq" in input.sitemap
-      ? input.sitemap.changefreq === null
-        ? undefined
-        : input.sitemap.changefreq
-      : prev.changefreq;
-
-  const nextPriority =
-    "priority" in input.sitemap
-      ? input.sitemap.priority === null
-        ? undefined
-        : input.sitemap.priority
-      : prev.priority;
-
-  const sNext = {
-    include: input.sitemap.include ?? prev.include ?? true,
-    changefreq: nextChangefreq,
-    priority: nextPriority,
-  };
-
-  assertPriority(sNext.priority);
-
-  const changedSitemap =
-    sNext.include !== (prev.include ?? true) ||
-    sNext.changefreq !== prev.changefreq ||
-    sNext.priority !== prev.priority;
-
-  if (changedSitemap) {
-    next.sitemap = sNext;
-    changed.push("sitemap");
-  }
-}
-
-function applyParentIdPatch({
-  existing,
-  next,
-  changed,
-  input,
-}: {
-  existing: Page;
-  next: Page;
-  changed: ChangedKey[];
-  input: UpdatePageInput;
-}): void {
-  if (!("parentId" in input)) return;
-
-  const pid = assertParentId(input.parentId, ["parentId"]);
-
-  if (pid !== existing.parentId) {
-    if (pid !== null && pid === existing.id) {
-      throw new DomainError({
-        code: EC.INVALID_ARGUMENT,
-        message: EC.INVALID_ARGUMENT,
-        details: { path: ["parentId"], meta: { reason: "self_parent" } },
-      });
-    }
-
-    next.parentId = pid;
-    changed.push("parentId");
-  }
-}
-
-function applyPaginationEnabledPatch({
-  existing,
-  next,
-  changed,
-  input,
-}: {
-  existing: Page;
-  next: Page;
-  changed: ChangedKey[];
-  input: UpdatePageInput;
-}): void {
-  if (!("paginationEnabled" in input)) return;
-
-  const isRoot = next.parentId === null;
-
-  const value = isRoot
-    ? false
-    : assertPaginationEnabled({
-        parentId: next.parentId,
-        paginationEnabled: input.paginationEnabled,
-        path: ["paginationEnabled"],
-      });
-
-  if (value !== existing.paginationEnabled) {
-    next.paginationEnabled = value;
-    changed.push("paginationEnabled");
-  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -353,9 +162,12 @@ async function tryUpdateMenusForSlugRename(args: {
           return { ...it, href: toPath };
         }
 
-        if (fromSlug === "home" && (href === "/home" || href === "home")) {
+        if (
+          fromSlug === HOME_SLUG &&
+          (href === `/${HOME_SLUG}` || href === HOME_SLUG)
+        ) {
           changed = true;
-          return { ...it, href: "/" };
+          return { ...it, href: SITE_PATH.home };
         }
 
         return it;
@@ -381,7 +193,7 @@ async function tryUpdateMenusForSlugRename(args: {
         : settings.legalMenu,
     };
 
-    await site.writeSettings(state, nextSettings);
+    await site.putSettings(state, nextSettings);
   } catch {
     return;
   }

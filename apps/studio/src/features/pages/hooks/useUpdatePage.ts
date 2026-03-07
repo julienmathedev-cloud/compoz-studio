@@ -2,25 +2,36 @@
 
 /**
  * @file apps/studio/src/features/pages/hooks/useUpdatePage.ts
- * @layer hooks/admin/pages
+ * @layer hooks/studio/pages
+ *
+ * @description
+ * Hook studio React Query pour mettre à jour une page draft via l’API.
+ *
+ * @remarks
+ * - Tenant-scoped cache : toutes les query keys incluent `tenantId`.
+ * - Orchestration UI-only (mutation, cache update, notifications, logs).
+ * - Aucune logique métier ni validation domaine.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import type { PageDTO } from "@compoz/core/domain/pages/dto";
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
-import { pagesAdminApi } from "@compoz/infra/http/studio/pages.client";
+import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import type { UpdatePageResponse } from "@compoz/infra/http/studio/pages.types";
 import { log } from "@compoz/infra/lib/log";
-import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
+import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
 import { toUpdatePageIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/pages-form";
 import { setSiteIndexCache } from "@compoz/studio/features/site-index/cache";
-import { invalidatePageStatusDetails } from "@compoz/studio/features/site/status/invalidate";
+import {
+  invalidatePageStatusViews,
+  invalidateSiteStatus,
+} from "@compoz/studio/features/site/status/invalidate";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import {
   notifyNoChanges,
@@ -31,16 +42,6 @@ import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
 import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
 import type { PageFormValues } from "@compoz/validation/pages/page-form";
 import type { UpdatePageIntentDTO } from "@compoz/validation/pages/page-intents";
-
-type UseUpdatePageResult = Readonly<{
-  update: (
-    pageId: string,
-    baseline: PageFormValues,
-    next: PageFormValues,
-  ) => Promise<void>;
-  updatingPageId: string | null;
-  isUpdating: boolean;
-}>;
 
 type UpdatePageArgs = Readonly<{
   pageId: string;
@@ -56,42 +57,51 @@ type UpdatePageMutationResult = Readonly<{
   index?: SiteIndexDTO;
 }>;
 
+type UseUpdatePageResult = Readonly<{
+  update: (
+    pageId: string,
+    baseline: PageFormValues,
+    next: PageFormValues,
+  ) => Promise<void>;
+  updatingPageId: string | null;
+  isUpdating: boolean;
+}>;
+
 const lg = log.child({ ns: "hook", name: "useUpdatePage" });
 
 export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
   const t = useTranslations();
   const qc = useQueryClient();
-  const entityLabel = t("admin.shared.entities.page");
   const tenantId = useTenantId();
+  const entityLabel = t("studio.shared.entities.page");
 
   const [updatingPageId, setUpdatingPageId] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationKey: [tenantId, "admin", "pages", "update"] as const,
+    mutationKey: ["t", tenantId, "studio", "pages", "update"] as const,
 
     mutationFn: async (
       args: UpdatePageArgs,
     ): Promise<UpdatePageMutationResult> => {
       const { pageId, payload, fields } = args;
 
-      const res = await withSaveLogs(
+      const response = await withSaveLogs(
         "useUpdatePage",
-        WRITE_CONTENT_STATE,
+        DEFAULT_CONTENT_STATE,
         async () => {
-          const r: UpdatePageResponse = await pagesAdminApi.update(
+          const result: UpdatePageResponse = await pagesStudioApi.update(
             pageId,
             payload,
           );
-          return r;
+          return result;
         },
-        { entity: entityLabel, fields, pageId },
+        { entity: entityLabel, fields, pageId, tenantId },
       );
 
-      // ✅ flatten route response
-      const page = res.page;
-      const index = (res as Partial<UpdatePageResponse>).index;
-
+      const page = response.page;
+      const index = (response as Partial<UpdatePageResponse>).index;
       const nextSlug = String(payload.slug ?? "").trim();
+
       return { pageId, nextSlug, fields, page, index } as const;
     },
 
@@ -101,24 +111,27 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
         t("notifications.updated.description", { fields: fields.join(", ") }),
       );
 
-      // ✅ 1) push siteIndex si fourni par la route (zéro read)
       if (index) {
-        setSiteIndexCache(qc, tenantId, WRITE_CONTENT_STATE, index);
+        setSiteIndexCache(qc, tenantId, DEFAULT_CONTENT_STATE, index);
       }
 
-      // ✅ 2) seed/patch cache page-by-id (évite un GET + UI cohérente)
-      qc.setQueryData(pageByIdKey(tenantId, pageId, WRITE_CONTENT_STATE), page);
+      qc.setQueryData(
+        pageByIdKey(tenantId, pageId, DEFAULT_CONTENT_STATE),
+        page,
+      );
 
-      // ✅ 3) status snapshot (par page)
-      await invalidatePageStatusDetails(qc, tenantId, pageId);
+      await Promise.all([
+        invalidateSiteStatus(qc, tenantId),
+        invalidatePageStatusViews(qc, tenantId),
+      ]);
 
-      lg.info("update.ok", { pageId, nextSlug, fields });
+      lg.info("update.ok", { tenantId, pageId, nextSlug, fields });
       onSuccess?.();
     },
 
-    onError: (e: unknown) => {
-      notify.fromError(e, UiError.unexpectedSave);
-      lg.error("update.failed", { msg: String(e) });
+    onError: (error: unknown) => {
+      notify.fromError(error, UiError.unexpectedSave);
+      lg.error("update.failed", { tenantId, msg: String(error) });
     },
 
     onSettled: () => {
@@ -138,7 +151,7 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
           t("uiErrors.errorGeneric"),
           t(ERROR_CODES.PAGE_ID_REQUIRED),
         );
-        lg.error("update.invalidPageId", { pageId });
+        lg.error("update.invalidPageId", { tenantId, pageId });
         return;
       }
 
@@ -173,7 +186,7 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
         fields,
       });
     },
-    [mutation, updatingPageId, t, entityLabel],
+    [entityLabel, mutation, t, tenantId, updatingPageId],
   );
 
   return useMemo(

@@ -1,16 +1,23 @@
 /**
  * @file apps/studio/src/app/api/admin/tenant/active/route.ts
- * @layer api/routes
- * @description
- * Définit le tenant "actif" pour un admin via cookie httpOnly.
+ * @layer studio/app/api
  *
- * Payload: { tenantId: string }
+ * @description
+ * Définit le tenant "actif" dans Studio via cookie httpOnly.
+ *
+ * Payload: { tenantId?: string }
  *
  * Sécurité :
  * - nécessite session
  * - nécessite role=admin
  * - le tenant doit être dans session.user.tenantIds
+ *
+ * @remarks
+ * - Cette route retourne une `NextResponse` afin de pouvoir définir un cookie httpOnly.
+ * - Elle n'utilise pas `handleRoute()` (qui construit directement la réponse) tant que celui-ci
+ *   ne permet pas d'enrichir la réponse (cookies/headers).
  */
+
 import "server-only";
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -18,6 +25,7 @@ import { throwHttp } from "@compoz/http/http-error";
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import { requireAdminSession } from "@compoz/studio/auth/require-session";
 import { jsonOk } from "@compoz/studio/lib/api/responses";
+import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 const ACTIVE_TENANT_COOKIE = "compoz_active_tenant" as const;
 
@@ -29,29 +37,26 @@ export async function POST(req: Request) {
 
   const body = (await readJsonOr400(req)) as Payload;
 
-  const tenantId = String(body.tenantId ?? "")
-    .trim()
-    .toLowerCase();
+  const tenantId = toTenantId(body.tenantId);
   if (!tenantId) {
     throwHttp(422, {
       code: EC.VALIDATION_ERROR,
       message: "Missing tenantId",
-      where: "api.admin.tenant.active.payload.tenantId",
+      where: "api.studio.tenant.active.payload.tenantId",
     });
   }
 
-  const allowed = (tenantIds ?? []).map((t) =>
-    String(t ?? "")
-      .trim()
-      .toLowerCase(),
-  );
+  const allowed = (tenantIds ?? [])
+    .map(toTenantId)
+    .filter((x): x is string => typeof x === "string" && x.length > 0);
+
   const hasWildcard = allowed.includes("*");
 
   if (!hasWildcard && !allowed.includes(tenantId)) {
     throwHttp(403, {
       code: EC.FORBIDDEN,
       message: "Tenant not allowed",
-      where: "api.admin.tenant.active.tenantId",
+      where: "api.studio.tenant.active.tenantId",
       tenantId,
     });
   }
@@ -60,9 +65,7 @@ export async function POST(req: Request) {
     {
       ok: true,
       tenantId,
-      defaultTenantId: String(defaultTenantId ?? "")
-        .trim()
-        .toLowerCase(),
+      defaultTenantId: toTenantId(defaultTenantId),
     },
     200,
   );

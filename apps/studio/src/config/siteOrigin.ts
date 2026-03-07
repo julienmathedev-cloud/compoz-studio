@@ -1,18 +1,19 @@
 /**
  * @file apps/studio/src/config/siteOrigin.ts
- * @layer app/studio
+ * @layer studio/config
  *
  * @description
  * Origine du site (ex: https://studio.compoz.studio).
  */
 
-export function getPublicSiteOrigin() {
+export function getSiteOrigin(): string {
   const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN;
 
   if (!origin) {
-    // fallback dev “safe” (évite un crash si tu oublies la variable)
+    // fallback dev “safe” (évite un crash si la variable est absente)
     return "http://localhost:3001";
   }
 
-  return origin.replace(/\/$/, ""); // enlève le trailing slash
+  // supprime les trailing slashes éventuels
+  return origin.replace(/\/+$/, "");
 }

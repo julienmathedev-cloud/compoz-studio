@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/features/preview/hooks/usePreviewBridge.ts
- * @layer hooks/admin/preview
+ * @layer hooks/studio/preview
  *
  * @description
- * Hook admin fournissant un bridge de communication entre l’admin et la preview
+ * Hook studio fournissant un bridge de communication entre le studio et la preview
  * via `postMessage` (iframe).
  *
  * @remarks
@@ -88,6 +88,7 @@ function getMessageMeta(message: unknown): {
   scope?: unknown;
 } {
   if (!isPreviewMessageLike(message)) return {};
+
   return {
     type: message["type"],
     scope: message["scope"],
@@ -129,7 +130,7 @@ export function usePreviewBridge(
       const win = iframeRef.current?.contentWindow;
       const meta = getMessageMeta(message);
 
-      log.debug("admin.previewBridge.post", {
+      log.debug("studio.previewBridge.post", {
         hasWin: Boolean(win),
         targetOrigin,
         messageType: meta.type,
@@ -149,6 +150,7 @@ export function usePreviewBridge(
         scope,
         payload,
       };
+
       post(msg);
     },
     [post],
@@ -160,6 +162,7 @@ export function usePreviewBridge(
         type: "compoz.preview.reset",
         scope,
       };
+
       post(msg);
     },
     [post],
@@ -172,12 +175,12 @@ export function usePreviewBridge(
         scope,
         payload,
       };
+
       post(msg);
     },
     [post],
   );
 
-  // ✅ objet stable
   return useMemo(
     () => ({ sync, reset, setBaseline }) as const,
     [sync, reset, setBaseline],

@@ -6,20 +6,21 @@
  * et composition `base + path` sans double slash.
  *
  * ⚠️ Volontairement minimal : pas de validation, pas de parsing avancé.
+ * ⚠️ Le terme "canonical" ici est un abus de langage : ce helper **compose** une URL,
+ *    il ne produit pas une URL canonique SEO.
  */
 
 /**
  * Supprime les slashes terminaux d'une URL ou d'un chemin.
- *
- * Exemples :
- * - "https://site.com///" → "https://site.com"
- * - "/blog/" → "/blog"
- *
  * Cas particulier :
  * - "/" reste "/" (on évite de produire une string vide pour une racine).
  *
  * Si `u` est `undefined`, on renvoie `undefined`.
  */
+
+// Surcharges TS pour un typing plus précis.
+export function stripTrailingSlashes(u: string): string;
+export function stripTrailingSlashes(u?: string): string | undefined;
 export function stripTrailingSlashes(u?: string): string | undefined {
   if (u == null) return undefined;
   if (u === "/") return "/";
@@ -34,9 +35,6 @@ export function stripTrailingSlashes(u?: string): string | undefined {
  * - Retire les slashes finaux de la base.
  * - Retire les slashes initiaux du path.
  * - Assemble par un unique slash.
- *
- * Exemple :
- *   canonicalFromBase("https://site.com/", "/blog") → "https://site.com/blog"
  *
  * @param base URL de base (peut être `undefined`)
  * @param path Chemin à ajouter

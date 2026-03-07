@@ -1,13 +1,11 @@
 /**
  * @file packages/infra/src/http/studio/users.types.ts
- * @layer infra/http
+ * @layer infra/http/studio
  * @description
- * DTO SoT des réponses users (admin).
+ * DTO SoT des réponses users (Studio).
  *
  * @remarks
- * - Aligné sur les routes Next :
- *   - /api/users
- *   - /api/users/[userId]
+ * - Aligné sur les routes Next côté Studio (préfixées via ENDPOINTS).
  * - Aucun import depuis `app/api/...`
  */
 
@@ -35,4 +33,5 @@ export type UpdateUserResponse = Readonly<{
 
 export type DeleteUserResponse = Readonly<{
   ok: true;
+  userId: string;
 }>;

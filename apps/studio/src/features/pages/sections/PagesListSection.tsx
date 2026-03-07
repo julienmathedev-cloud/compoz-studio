@@ -2,11 +2,11 @@
 
 /**
  * @file apps/studio/src/features/pages/pages/PagesListSection.tsx
- * @layer ui/sections
+ * @layer ui/studio/pages/sections
  *
  * @description
- * Section “Pages” (listing) : affiche les pages depuis `SiteIndexDTO` et expose les actions UI
- * (éditer métadonnées, éditer contenu, supprimer).
+ * Section “Pages” (listing) : affiche les pages depuis `SiteIndexDTO` et expose
+ * les actions UI (éditer métadonnées, éditer contenu, supprimer).
  *
  * @remarks
  * - La suppression est orchestrée via `useDeletePage`.
@@ -24,16 +24,16 @@ import type {
   SiteDiffKindDTO,
   SiteIndexDTO,
 } from "@compoz/core/domain/site/dto";
-import { Card, CardContent } from "@compoz/ui/components/ui/card";
-import { Separator } from "@compoz/ui/components/ui/separator";
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
-import { cn } from "@compoz/ui/lib/utils";
-import { EMPTY_CARD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 import { ExpandableLayout } from "@compoz/studio/components/layouts/ExpandableLayout";
 import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
 import { EmptyState } from "@compoz/studio/components/molecules/feedback/EmptyState";
 import { PageListItem } from "@compoz/studio/features/pages/components/molecules/PageListItem";
 import { useDeletePage } from "@compoz/studio/features/pages/hooks/useDeletePage";
+import { Card, CardContent } from "@compoz/ui/components/ui/card";
+import { Separator } from "@compoz/ui/components/ui/separator";
+import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
+import { cn } from "@compoz/ui/lib/utils";
+import { EMPTY_CARD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 
 type PagesListSectionProps = Readonly<{
   /** Titre de la section (défaut i18n). */
@@ -47,7 +47,7 @@ type PagesListSectionProps = Readonly<{
   /** Indique un chargement de l’index côté parent (shell). */
   isLoadingIndex?: boolean;
 
-  /** Ouvre l’édition des métadonnées (title/slug) d’une page. */
+  /** Ouvre l’édition des métadonnées (title / slug) d’une page. */
   onEditMeta?: (pageId: string) => void;
 
   /** Ouvre l’édition du contenu d’une page. */
@@ -69,12 +69,13 @@ export function PagesListSection({
 }: PagesListSectionProps) {
   const t = useTranslations();
 
-  const pages: ReadonlyArray<PageSummaryDTO> = useMemo(
+  const pages = useMemo<ReadonlyArray<PageSummaryDTO>>(
     () => (index?.pages ?? []) as ReadonlyArray<PageSummaryDTO>,
     [index],
   );
 
   const { remove, isDeleting, deletingPageId } = useDeletePage();
+
   const handleDelete = useCallback(
     async (page: PageSummaryDTO) => {
       await remove({ pageId: page.id, label: page.title });
@@ -82,48 +83,48 @@ export function PagesListSection({
     [remove],
   );
 
-  const description = t("admin.pagesListSection.section.description");
-  const headingTitle = title ?? t("admin.pagesListSection.section.title");
-
-  // Busy local : suppression en cours (le shell est géré par `SettingsSection`).
+  const headingTitle = title ?? t("studio.pagesListSection.section.title");
+  const description = t("studio.pagesListSection.section.description");
   const isBusy = Boolean(isDeleting);
 
   /**
    * Grouping UI-only :
-   * - on préserve l’ordre du SoT `index.pages`
-   * - 1 niveau (parents + enfants)
+   * - préserve l’ordre du SoT `index.pages`
+   * - profondeur 1 (parents + enfants)
    */
   const groups = useMemo<PageGroups>(() => {
     const parents: PageSummaryDTO[] = [];
     const childrenByParentId: Record<string, PageSummaryDTO[]> = {};
-    const byId = new Map<string, PageSummaryDTO>();
 
-    for (const p of pages) byId.set(p.id, p);
+    for (const page of pages) {
+      const parentId = page.parentId;
 
-    for (const p of pages) {
-      const pid = p.parentId;
-      if (!pid) {
-        parents.push(p);
+      if (!parentId) {
+        parents.push(page);
         continue;
       }
-      if (!childrenByParentId[pid]) childrenByParentId[pid] = [];
-      childrenByParentId[pid].push(p);
+
+      if (!childrenByParentId[parentId]) {
+        childrenByParentId[parentId] = [];
+      }
+
+      childrenByParentId[parentId].push(page);
     }
 
-    return { parents, childrenByParentId } as const;
+    return { parents, childrenByParentId };
   }, [pages]);
 
   const renderRow = useCallback(
-    (p: PageSummaryDTO) => {
-      const isDeletingRow = deletingPageId === p.id;
+    (page: PageSummaryDTO) => {
+      const isDeletingRow = deletingPageId === page.id;
 
       return (
         <PageListItem
-          page={p}
-          statusKind={statusByPageId?.[p.id]}
+          page={page}
+          statusKind={statusByPageId?.[page.id]}
           onEditMeta={onEditMeta}
           onEditContent={onEditContent}
-          onDelete={() => handleDelete(p)}
+          onDelete={() => handleDelete(page)}
           isDeleting={isDeletingRow}
         />
       );
@@ -142,14 +143,14 @@ export function PagesListSection({
     >
       {pages.length === 0 ? (
         <EmptyState
-          text={t("admin.pagesListSection.empty")}
+          text={t("studio.pagesListSection.empty")}
           className={cn(EMPTY_CARD)}
         />
       ) : (
         <Card variant="panel">
           <CardContent>
             <ul className={cn(STACK_SM)}>
-              {groups.parents.map((parent, i) => {
+              {groups.parents.map((parent, parentIndex) => {
                 const children = groups.childrenByParentId[parent.id] ?? [];
                 const hasChildren = children.length > 0;
 
@@ -157,7 +158,7 @@ export function PagesListSection({
                   <li
                     key={toStableUiKey(
                       { id: parent.id, label: parent.slug },
-                      i,
+                      parentIndex,
                     )}
                     className={cn(STACK_SM)}
                   >
@@ -168,7 +169,7 @@ export function PagesListSection({
                         <ExpandableLayout
                           id={`pages-children-${parent.id}`}
                           label={t(
-                            "admin.pagesListSection.childrenExpandableLabel",
+                            "studio.pagesListSection.childrenExpandableLabel",
                             { count: children.length },
                           )}
                           defaultOpen={false}
@@ -180,16 +181,16 @@ export function PagesListSection({
                           >
                             <CardContent className="flex flex-col">
                               <ul className={cn(STACK_SM)}>
-                                {children.map((child, j) => (
+                                {children.map((child, childIndex) => (
                                   <li
                                     key={toStableUiKey(
                                       { id: child.id, label: child.slug },
-                                      j,
+                                      childIndex,
                                     )}
                                     className={cn(STACK_SM)}
                                   >
                                     {renderRow(child)}
-                                    {j < children.length - 1 ? (
+                                    {childIndex < children.length - 1 ? (
                                       <Separator />
                                     ) : null}
                                   </li>
@@ -200,7 +201,10 @@ export function PagesListSection({
                         </ExpandableLayout>
                       </div>
                     ) : null}
-                    {i < groups.parents.length - 1 ? <Separator /> : null}
+
+                    {parentIndex < groups.parents.length - 1 ? (
+                      <Separator />
+                    ) : null}
                   </li>
                 );
               })}

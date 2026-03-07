@@ -61,7 +61,6 @@ export const IdentitySettingsBaseSchema = z
 /* -------------------------------------------------------------------------- */
 /*                                Canonique (full)                            */
 /* -------------------------------------------------------------------------- */
-
 export const IdentitySettingsSchema = IdentitySettingsBaseSchema.superRefine(
   (val, ctx) => {
     // --- siteName requis ---
@@ -75,8 +74,7 @@ export const IdentitySettingsSchema = IdentitySettingsBaseSchema.superRefine(
     }
 
     // --- logoAlt requis si logo ---
-    const hasLogo =
-      typeof val.logoUrl === "string" && val.logoUrl.trim() !== "";
+    const hasLogo = typeof val.logoUrl === "string";
     if (!hasLogo) return;
 
     const alt = typeof val.logoAlt === "string" ? val.logoAlt.trim() : "";

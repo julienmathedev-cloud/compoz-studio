@@ -11,7 +11,7 @@
  * - `repo.ensureBase()` prépare la persistance (pré-requis infra).
  */
 
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { shallowMergeWithChangedKeys } from "@compoz/core/domain/site/_shared/merge";
 import type { LegalMenuSettings } from "@compoz/core/domain/site/entities/legal-menu";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
@@ -29,7 +29,7 @@ export function updateLegalMenuSettings({ repo }: UpdateLegalMenuSettingsDeps) {
 
     await repo.ensureBase();
 
-    const current = await repo.readSettings(WRITE_CONTENT_STATE);
+    const current = await repo.readSettings(DEFAULT_CONTENT_STATE);
 
     const { next: legalMenuNext, changedKeys } =
       shallowMergeWithChangedKeys<LegalMenuSettings>(current.legalMenu, patch);
@@ -40,7 +40,7 @@ export function updateLegalMenuSettings({ repo }: UpdateLegalMenuSettingsDeps) {
 
     const next: SiteSettings = { ...current, legalMenu: legalMenuNext };
 
-    await repo.writeSettings(WRITE_CONTENT_STATE, next);
+    await repo.putSettings(DEFAULT_CONTENT_STATE, next);
 
     // ✅ Domaine pur : aucune invalidation cache ici.
     return { settings: next };

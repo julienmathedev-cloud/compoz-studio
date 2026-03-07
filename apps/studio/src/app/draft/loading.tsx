@@ -1,19 +1,19 @@
 /**
  * @file apps/studio/src/app/draft/loading.tsx
- * @layer app/public
+ * @layer studio/app
  *
  * @description
- * Loading UI pour le segment public "/draft".
+ * Loading UI pour la route "/draft" (preview DRAFT dans l’app Studio).
  *
  * @remarks
- * - Rendu skinnable via `PublicUiProvider` (ui.systemLoading).
+ * - Rendu skinnable via `SiteUiProvider` (ui.systemLoading).
  * - Convention V0.5 : draft preview = "/draft".
  */
 
-import { PublicSystemLoading } from "@compoz/ui/site/components/system/PublicSystemLoading";
+import { SiteSystemLoading } from "@compoz/ui/site/components/system/SiteSystemLoading";
 
 export default function DraftLoading() {
-  return <PublicSystemLoading />;
+  return <SiteSystemLoading />;
 }
 
 DraftLoading.displayName = "DraftLoading";

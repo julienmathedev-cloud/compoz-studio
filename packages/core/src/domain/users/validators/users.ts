@@ -1,5 +1,5 @@
 /**
- * @file src/core/domain/users/validators/users.ts
+ * @file packages/core/src/domain/users/validators/users.ts
  * @layer core/domain
  * @description
  * Invariants métier des users (Studio) : validation email/name/rbac.
@@ -69,11 +69,13 @@ export function assertUserEmail(
   raw: unknown,
   path: (string | number)[] = ["email"],
 ): string {
-  const emailLower = assertNonEmptyString({
-    value: raw,
-    code: EC.USER_EMAIL_REQUIRED,
-    path,
-  }).toLowerCase();
+  const emailLower = normalizeLower(
+    assertNonEmptyString({
+      value: raw,
+      code: EC.USER_EMAIL_REQUIRED,
+      path,
+    }),
+  );
 
   assertEmailFormat(emailLower, path);
   return emailLower;

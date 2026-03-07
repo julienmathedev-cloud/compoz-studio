@@ -1,15 +1,15 @@
 /**
  * @file apps/studio/src/app/[locale]/(dashboard)/(settings)/footer/page.tsx
- * @layer app/studio/pages
+ * @layer studio/app
  *
  * @description
- * Page « Footer » (admin) — routing.
+ * Page « Footer » (Studio) — route du dashboard.
  */
 
 import { FooterPage } from "@compoz/studio/features/settings/footer/FooterPage";
 
-export default function AdminFooterPage() {
+export default function StudioFooterPage() {
   return <FooterPage />;
 }
 
-AdminFooterPage.displayName = "AdminFooterPage";
+StudioFooterPage.displayName = "StudioFooterPage";

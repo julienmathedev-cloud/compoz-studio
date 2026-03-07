@@ -1,14 +1,14 @@
 /**
  * @file packages/ui/src/site/skins/default/system-loading.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
- * Skin UI — loading public (thème Default).
+ * Skin UI — loading site (thème Default).
  */
 
-import type { PublicSystemLoadingUi } from "@compoz/ui/site/public-ui.types";
+import type { SiteSystemLoadingUi } from "@compoz/ui/site/site-ui.types";
 
-export const defaultSystemLoadingUi: PublicSystemLoadingUi = {
+export const defaultSystemLoadingUi: SiteSystemLoadingUi = {
   container: "flex flex-1 items-center justify-center",
   spinner: "size-10 text-muted-foreground",
 } as const;

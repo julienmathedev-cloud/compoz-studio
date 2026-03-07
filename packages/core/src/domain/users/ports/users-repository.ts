@@ -1,20 +1,24 @@
+// packages/core/src/domain/users/ports/users-repository.ts
+
 /**
- * @file src/core/domain/users/ports/users-repository.ts
+ * @file packages/core/src/domain/users/ports/users-repository.ts
  * @layer core/domain
  */
 
 import type {
   User,
-  UserRbac,
   UserSummary,
 } from "@compoz/core/domain/users/entities/user";
 
+/**
+ * Record de création pour la persistance (repo).
+ * @remarks
+ * - `password` est un concern infra (hash + storage).
+ * - `id` est fourni par le domaine (idGenerator) pour garder le contrôle.
+ */
 export type CreateUserRecord = Readonly<{
-  id: string;
-  email: string;
-  name: string;
-  password: string; // ✅ input brut (hash infra)
-  rbac: UserRbac;
+  user: User; // canonique (inclut meta)
+  password: string; // infra-only
 }>;
 
 export interface UsersRepository {
@@ -23,12 +27,9 @@ export interface UsersRepository {
   readById(userId: string): Promise<User | null>;
   readByEmail(email: string): Promise<User | null>;
 
-  /** ✅ Création (avec password brut), hashé/storé côté infra */
   create(input: CreateUserRecord): Promise<User>;
 
-  /** ✅ Update “profil” (sans password) */
   put(user: User): Promise<void>;
-
   putMany(users: ReadonlyArray<User>): Promise<void>;
 
   setPassword(userId: string, password: string): Promise<void>;

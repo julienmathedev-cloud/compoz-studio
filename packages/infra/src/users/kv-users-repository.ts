@@ -8,54 +8,35 @@
  * - user doc : compoz:studio:users:user:<userId> (JSON)
  * - index email -> userId : compoz:studio:users:userByEmail:<emailLower>
  * - password hash : compoz:studio:users:pwd:<userId>
- *
- * Notes :
- * - Le password brut ne sort jamais du domaine/use-case : il est hashé ici.
- * - Le RBAC est stocké dans l'entité User (pas de clé séparée).
  */
 
-import type {
-  CreateUserRecord,
-  UsersRepository,
-} from "@compoz/core/domain/users/ports/users-repository";
+import bcrypt from "bcryptjs";
+
 import type {
   User,
   UserSummary,
 } from "@compoz/core/domain/users/entities/user";
+import type { UsersRepository } from "@compoz/core/domain/users/ports/users-repository";
 
+import { getUpstashRedis, parseRedisJson } from "@compoz/infra/kv/kv-redis";
 import { kvCmd } from "@compoz/infra/kv/kv-telemetry";
+import { log } from "@compoz/infra/lib/log";
 
-import { Redis } from "@upstash/redis";
-import bcrypt from "bcryptjs";
-
-// ⛳️ NOTE: idéalement ces schémas vivent dans @compoz/core (boundary validation),
-// pour que @compoz/infra ne dépende pas d’un import "app".
+// ⛳️ NOTE: idéalement ces schémas vivent dans @compoz/core (boundary validation)
 import type { UserShape } from "@compoz/validation/users/user";
 import { UserSchema } from "@compoz/validation/users/user";
 
+/**
+ * Namespace standard (SoT) :
+ * compoz:<surface>:<layer>:<module>
+ */
+const lg = log.child({ ns: "compoz:studio:repo:users", kind: "kv" });
+
 /* -------------------------------------------------------------------------- */
-/* Redis singleton                                                            */
+/* Types (SoT = port)                                                         */
 /* -------------------------------------------------------------------------- */
 
-let _redisSingleton: Redis | null = null;
-
-function getUpstashRedis(): Redis {
-  if (_redisSingleton) return _redisSingleton;
-
-  const url =
-    process.env["KV_REST_API_URL"] ?? process.env["UPSTASH_REDIS_REST_URL"];
-  const token =
-    process.env["KV_REST_API_TOKEN"] ?? process.env["UPSTASH_REDIS_REST_TOKEN"];
-
-  if (!url || !token) {
-    throw new Error(
-      "KvUsersRepository: missing Redis env. Expected KV_REST_API_URL/KV_REST_API_TOKEN (or UPSTASH_REDIS_REST_URL/UPSTASH_REDIS_REST_TOKEN).",
-    );
-  }
-
-  _redisSingleton = new Redis({ url, token });
-  return _redisSingleton;
-}
+type CreateUserInput = Parameters<UsersRepository["create"]>[0];
 
 /* -------------------------------------------------------------------------- */
 /* Keys                                                                       */
@@ -63,15 +44,15 @@ function getUpstashRedis(): Redis {
 
 const USERS_NS = "compoz:studio:users" as const;
 
-function userKey(userId: string) {
+function userKey(userId: string): string {
   return `${USERS_NS}:user:${userId}`;
 }
 
-function emailIndexKey(emailLower: string) {
+function emailIndexKey(emailLower: string): string {
   return `${USERS_NS}:userByEmail:${emailLower}`;
 }
 
-function pwdKey(userId: string) {
+function pwdKey(userId: string): string {
   return `${USERS_NS}:pwd:${userId}`;
 }
 
@@ -89,47 +70,22 @@ function userIdFromKey(key: string): string | null {
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Upstash peut renvoyer directement un objet (auto-deserialization),
- * ou une string JSON, selon la config / le contenu.
- *
- * Contrat : retourne un objet JSON exploitable ou `null`.
- */
-function parseRedisJson<T>(raw: unknown): T | null {
-  if (raw == null) return null;
-
-  if (typeof raw === "object") return raw as T;
-
-  if (typeof raw === "string") {
-    const s = raw.trim();
-    if (!s) return null;
-    return JSON.parse(s) as T;
-  }
-
-  return JSON.parse(String(raw)) as T;
-}
-
 function normalizeEmail(email: unknown): string {
   return String(email ?? "")
     .trim()
     .toLowerCase();
 }
 
-/**
- * Construit un context "stable" pour la télémétrie KV.
- * Note : on ne loggue pas la key complète (pas de PII / pas d’id dans le context).
- */
 function kvCtx(base: string): string {
+  // ctx stable, sans key ni id
   return `users.${base}`;
 }
 
 function toDomainUser(u: UserShape): User {
-  // Boundary validation => la forme retournée est déjà “domain-friendly”.
-  // On garde un mapping explicite pour rester maître de la shape.
   return {
     id: u.id,
     email: u.email,
-    name: u.name ?? undefined,
+    name: u.name,
     status: u.status,
     rbac: u.rbac,
     meta: u.meta,
@@ -141,11 +97,7 @@ function toDomainUser(u: UserShape): User {
 /* -------------------------------------------------------------------------- */
 
 export class KvUsersRepository implements UsersRepository {
-  private readonly redis: Redis;
-
-  constructor() {
-    this.redis = getUpstashRedis();
-  }
+  private readonly redis = getUpstashRedis();
 
   async ensureBase(): Promise<void> {
     // no-op (KV)
@@ -180,20 +132,20 @@ export class KvUsersRepository implements UsersRepository {
     return this.readById(id);
   }
 
-  async create(input: CreateUserRecord): Promise<User> {
-    const id = String(input.id ?? "").trim();
-    if (!id) {
-      throw new Error("KvUsersRepository.create: input.id is required.");
-    }
+  async create(input: CreateUserInput): Promise<User> {
+    const user = input?.user;
+    const password = String(input?.password ?? "").trim();
 
-    const emailLower = normalizeEmail(input.email);
+    const id = String(user?.id ?? "").trim();
+    if (!id) throw new Error("KvUsersRepository.create: user.id is required.");
+
+    const emailLower = normalizeEmail(user?.email);
     if (!emailLower) {
-      throw new Error("KvUsersRepository.create: input.email is required.");
+      throw new Error("KvUsersRepository.create: user.email is required.");
     }
 
-    const password = String(input.password ?? "").trim();
     if (!password) {
-      throw new Error("KvUsersRepository.create: input.password is required.");
+      throw new Error("KvUsersRepository.create: password is required.");
     }
 
     // (défense) si index existe déjà, on refuse
@@ -205,24 +157,15 @@ export class KvUsersRepository implements UsersRepository {
       throw new Error("KvUsersRepository.create: email already exists.");
     }
 
-    // On construit l'entité User complète (password stocké à part)
-    const now = new Date().toISOString();
-
-    const user: User = {
-      id,
-      email: emailLower,
-      name: String(input.name ?? "").trim() || undefined,
-      status: "active",
-      rbac: input.rbac,
-      meta: { createdAt: now, updatedAt: now },
-    };
+    // Canonicalisation email côté infra
+    const toStore: User = { ...user, email: emailLower };
 
     // boundary validation
-    UserSchema.parse(user);
+    UserSchema.parse(toStore);
 
     // 1) user doc
     await kvCmd(kvCtx("create.user.set"), "set", () =>
-      this.redis.set(userKey(id), JSON.stringify(user)),
+      this.redis.set(userKey(id), JSON.stringify(toStore)),
     );
 
     // 2) email index
@@ -230,44 +173,54 @@ export class KvUsersRepository implements UsersRepository {
       this.redis.set(emailIndexKey(emailLower), id),
     );
 
-    // 3) password hash
-    await this.setPassword(id, password);
+    // 3) password hash (infra-only)
+    const hash = await bcrypt.hash(password, 10);
 
-    return user;
+    await kvCmd(kvCtx("create.pwd.set"), "set", () =>
+      this.redis.set(pwdKey(id), hash),
+    );
+
+    lg.debug("users.create.ok", { hasId: true });
+
+    return toStore;
   }
 
   async put(user: User): Promise<void> {
     const id = String(user?.id ?? "").trim();
     if (!id) throw new Error("KvUsersRepository.put: user.id is required.");
 
+    const nextEmail = normalizeEmail(user.email);
+    if (!nextEmail) {
+      throw new Error("KvUsersRepository.put: user.email is required.");
+    }
+
+    // Canonicalisation email côté infra
+    const toStore: User = { ...user, email: nextEmail };
+
     // boundary validation
-    UserSchema.parse(user);
+    UserSchema.parse(toStore);
 
     // Si l'email change, on doit maintenir l'index.
     const existing = await this.readById(id);
-
-    const nextEmail = normalizeEmail(user.email);
     const prevEmail = existing ? normalizeEmail(existing.email) : "";
 
-    if (existing && prevEmail && nextEmail && prevEmail !== nextEmail) {
-      // suppression index précédent (best-effort)
+    if (prevEmail && prevEmail !== nextEmail) {
       await kvCmd(kvCtx("put.emailIndex.delOld"), "del", () =>
         this.redis.del(emailIndexKey(prevEmail)),
       );
 
-      // écriture nouvel index
       await kvCmd(kvCtx("put.emailIndex.set"), "set", () =>
         this.redis.set(emailIndexKey(nextEmail), id),
       );
-    } else if (!existing && nextEmail) {
-      // cas “upsert” (rare) : s’assurer que l’index existe
+    } else if (!prevEmail) {
+      // best-effort : assure l'index si doc présent sans index (réparation)
       await kvCmd(kvCtx("put.emailIndex.ensure"), "set", () =>
         this.redis.set(emailIndexKey(nextEmail), id),
       );
     }
 
     await kvCmd(kvCtx("put.user.set"), "set", () =>
-      this.redis.set(userKey(id), JSON.stringify(user)),
+      this.redis.set(userKey(id), JSON.stringify(toStore)),
     );
   }
 
@@ -275,18 +228,38 @@ export class KvUsersRepository implements UsersRepository {
     await this.ensureBase();
     if (users.length === 0) return;
 
-    const record: Record<string, string> = {};
+    // V0.5 pragmatique :
+    // - mset des docs user
+    // - puis (best-effort) on garantit les indexes email -> id
+    // (coûteux si énorme volume, mais OK pour usage admin/seed/tests).
+    const docs: Record<string, string> = {};
+    const indexes: Array<Promise<unknown>> = [];
+
     for (const u of users) {
       const id = String(u?.id ?? "").trim();
       if (!id) continue;
 
-      UserSchema.parse(u);
-      record[userKey(id)] = JSON.stringify(u);
+      const emailLower = normalizeEmail(u.email);
+      if (!emailLower) continue;
+
+      const toStore: User = { ...u, email: emailLower };
+      UserSchema.parse(toStore);
+
+      docs[userKey(id)] = JSON.stringify(toStore);
+
+      indexes.push(
+        kvCmd(kvCtx("putMany.emailIndex.set"), "set", () =>
+          this.redis.set(emailIndexKey(emailLower), id),
+        ),
+      );
     }
 
-    if (Object.keys(record).length === 0) return;
+    if (Object.keys(docs).length === 0) return;
 
-    await kvCmd(kvCtx("putMany.mset"), "other", () => this.redis.mset(record));
+    await kvCmd(kvCtx("putMany.mset"), "other", () => this.redis.mset(docs));
+
+    // best-effort : si un index échoue, on veut quand même les docs users en place
+    await Promise.allSettled(indexes);
   }
 
   async setPassword(userId: string, password: string): Promise<void> {
@@ -294,8 +267,9 @@ export class KvUsersRepository implements UsersRepository {
     if (!id) throw new Error("KvUsersRepository.setPassword: userId required.");
 
     const pwd = String(password ?? "").trim();
-    if (!pwd)
+    if (!pwd) {
       throw new Error("KvUsersRepository.setPassword: password required.");
+    }
 
     const hash = await bcrypt.hash(pwd, 10);
 
@@ -308,7 +282,6 @@ export class KvUsersRepository implements UsersRepository {
     const id = String(userId ?? "").trim();
     if (!id) return;
 
-    // Pour retirer l’index email proprement, on lit le user (best-effort).
     const existing = await this.readById(id);
     const emailLower = existing ? normalizeEmail(existing.email) : "";
 
@@ -360,10 +333,8 @@ export class KvUsersRepository implements UsersRepository {
   }
 
   async list(): Promise<ReadonlyArray<UserSummary>> {
-    const pattern = userKeyPattern();
-
     const keys = await kvCmd(kvCtx("list.keys"), "other", () =>
-      this.redis.keys(pattern),
+      this.redis.keys(userKeyPattern()),
     );
 
     if (!Array.isArray(keys) || keys.length === 0) return [];
@@ -386,7 +357,7 @@ export class KvUsersRepository implements UsersRepository {
         out.push({
           id: parsed.id ?? userIdFromKey(keys[i]) ?? "",
           email: parsed.email,
-          name: parsed.name ?? undefined,
+          name: parsed.name,
           status: parsed.status,
         });
       } catch {
@@ -394,7 +365,6 @@ export class KvUsersRepository implements UsersRepository {
       }
     }
 
-    // tri stable (UX admin)
     return out
       .filter((u) => Boolean(String(u.id ?? "").trim()))
       .sort((a, b) => a.email.localeCompare(b.email));
@@ -434,15 +404,6 @@ export class KvUsersRepository implements UsersRepository {
     return out;
   }
 
-  /**
-   * Vérifie un mot de passe (hash stocké en KV).
-   *
-   * ⚠️ Ce n'est pas dans le port UsersRepository actuellement.
-   * Tu peux :
-   * - soit garder cette méthode uniquement pour l’auth infra,
-   * - soit définir un port AuthUsersRepository séparé (comme aujourd’hui),
-   * - soit étendre le port UsersRepository plus tard.
-   */
   async verifyPassword(userId: string, password: string): Promise<boolean> {
     const id = String(userId ?? "").trim();
     if (!id) return false;

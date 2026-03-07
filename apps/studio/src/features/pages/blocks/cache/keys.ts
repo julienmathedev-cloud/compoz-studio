@@ -1,6 +1,6 @@
 /**
  * @file apps/studio/src/features/pages/blocks/cache/keys.ts
- * @layer hooks/admin/pages/blocks
+ * @layer hooks/studio/pages/blocks
  *
  * @description
  * Helpers pour construire des query keys React Query liées aux blocks.
@@ -11,20 +11,24 @@
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
-
-function normalizeTenantId(tenantId: string): string {
-  return String(tenantId ?? "")
-    .trim()
-    .toLowerCase();
-}
+import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 export function pageBlocksKey(
   tenantId: string,
   pageId: string,
   state: ContentState,
 ) {
-  const t = normalizeTenantId(tenantId);
-  const id = String(pageId ?? "").trim();
+  const t = toTenantId(tenantId);
+  const pageIdKey = String(pageId ?? "").trim();
 
-  return ["t", t, "admin", "pages", "blocks", "byId", id, state] as const;
+  return [
+    "t",
+    t,
+    "studio",
+    "pages",
+    "blocks",
+    "byId",
+    pageIdKey,
+    state,
+  ] as const;
 }

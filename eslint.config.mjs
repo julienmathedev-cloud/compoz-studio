@@ -3,8 +3,8 @@
  * @description ESLint config (monorepo) — règles communes + frontières clean archi.
  */
 
-import tsParser from "@typescript-eslint/parser";
 import tsPlugin from "@typescript-eslint/eslint-plugin";
+import tsParser from "@typescript-eslint/parser";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import { defineConfig } from "eslint/config";
@@ -32,13 +32,7 @@ export default defineConfig([
       "no-restricted-imports": [
         "error",
         {
-          patterns: [
-            {
-              group: ["./**", "../**"],
-              message:
-                "Imports relatifs interdits. Utilise @compoz/studio/*, @compoz/site/*, @compoz/core/*, @compoz/ui/*.",
-            },
-          ],
+          patterns: ["./**", "../**"],
         },
       ],
 
@@ -97,20 +91,6 @@ export default defineConfig([
       "packages/core/src/core/domain/**/*.ts",
     ],
     rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            "^\\.",
-            "@compoz/ui/**",
-            "@compoz/studio/**",
-            "@compoz/site/**",
-            "@compoz/infra/**",
-            "@compoz/http/**",
-            "@compoz/validation/**",
-          ],
-        },
-      ],
       "no-restricted-syntax": [
         "error",
         {

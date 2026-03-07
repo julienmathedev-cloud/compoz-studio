@@ -5,8 +5,8 @@
  * Définit le schéma Zod décrivant la forme frontière des réglages de footer.
  * Ce schéma est aligné sur l’entité domaine associée et ne définit aucun default.
  */
+import { FOOTER_COPYRIGHT } from "@compoz/core/constants/limits/footer";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
-import { FOOTER } from "@compoz/core/constants/limits/footer";
 import { z } from "zod";
 
 /**
@@ -20,7 +20,7 @@ export const FooterSettingsSchema = z
     copyright: z
       .string()
       .trim()
-      .max(FOOTER.COPYRIGHT_MAX, ERROR_CODES.FOOTER_COPYRIGHT_TOO_LONG),
+      .max(FOOTER_COPYRIGHT.MAX, ERROR_CODES.FOOTER_COPYRIGHT_TOO_LONG),
 
     /** Affichage automatique de l’année courante. */
     showYear: z.boolean(),

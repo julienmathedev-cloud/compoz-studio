@@ -2,15 +2,15 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/primary-menu/usePrimaryMenuSettings.ts
- * @layer hooks/admin/site/primary-menu
+ * @layer hooks/studio/site/primary-menu
  *
  * @description
- * Hook admin spécialisé pour gérer les réglages du menu principal via l’API.
+ * Hook studio spécialisé pour gérer les réglages du menu principal via l’API.
  *
  * @remarks
  * - Basé sur le pattern **Settings RHF-first** (`useSettingsResource`).
  * - Travaille exclusivement sur le modèle **UI** (`PrimaryMenuFormValues`).
- * - Draft-only (comme Footer/LegalMenu).
+ * - Draft-only (comme Footer / LegalMenu).
  * - Orchestration UI-only : defaults, load, diff minimal, save, notifications.
  * - Aucune logique métier ni validation domaine.
  *
@@ -21,8 +21,10 @@
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_PRIMARY_MENU_SETTINGS } from "@compoz/core/domain/site/defaults/primary-menu";
-import { settingsAdminApi } from "@compoz/infra/http/studio/site-settings.client";
+import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
+import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import type { SettingsHookResult } from "@compoz/studio/features/settings/hooks/useSettingsResource";
@@ -36,21 +38,20 @@ import {
   toUpdatePrimaryMenuIntentDTOFromFormValues,
 } from "@compoz/studio/features/settings/mappers/primary-menu-form";
 import { invalidateSiteStatus } from "@compoz/studio/features/site/status/invalidate";
-import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
-import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
+import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
+import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-form";
 
 type UsePrimaryMenuSettingsResult = SettingsHookResult<PrimaryMenuFormValues>;
 
 export function usePrimaryMenuSettings(): UsePrimaryMenuSettingsResult {
   const t = useTranslations();
   const qc = useQueryClient();
-  const entityLabel = t("admin.shared.entities.primaryMenu");
   const tenantId = useTenantId();
+
+  const entityLabel = t("studio.shared.entities.primaryMenu");
 
   const resource = useSettingsResource<PrimaryMenuFormValues>({
     entityLabel,
@@ -76,9 +77,9 @@ export function usePrimaryMenuSettings(): UsePrimaryMenuSettingsResult {
      */
     save: async (next, opts) => {
       const patch = toUpdatePrimaryMenuIntentDTOFromFormValues(next);
-      const dto = await settingsAdminApi.primaryMenu.patch(patch, opts);
+      const dto = await settingsStudioApi.primaryMenu.patch(patch, opts);
 
-      patchSettingsBundleCache(qc, tenantId, WRITE_CONTENT_STATE, (prev) => ({
+      patchSettingsBundleCache(qc, tenantId, DEFAULT_CONTENT_STATE, (prev) => ({
         ...prev,
         primaryMenu: dto.settings,
       }));
@@ -95,10 +96,10 @@ export function usePrimaryMenuSettings(): UsePrimaryMenuSettingsResult {
         normalizePrimaryMenuFormValues(next),
       ) ?? null,
 
-    /** Baseline stable et cohérente à l’entrée/sortie réseau. */
+    /** Baseline stable et cohérente à l’entrée / sortie réseau. */
     onLoaded: normalizePrimaryMenuFormValues,
 
-    /** Normalisation safe avant diff/save. */
+    /** Normalisation safe avant diff / save. */
     beforeSave: normalizePrimaryMenuFormValues,
 
     onSaved: () => {

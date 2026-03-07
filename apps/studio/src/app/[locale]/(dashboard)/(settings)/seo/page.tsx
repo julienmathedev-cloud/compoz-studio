@@ -1,12 +1,15 @@
 /**
  * @file apps/studio/src/app/[locale]/(dashboard)/(settings)/seo/page.tsx
- * @layer app/studio
+ * @layer studio/app
  *
  * @description
- * Page admin “SEO” (V0.5).
+ * Page « SEO » (Studio) — route du dashboard.
  */
+
 import { SeoPage } from "@compoz/studio/features/settings/seo/SeoPage";
 
-export default function AdminSeoPage() {
+export default function StudioSeoPage() {
   return <SeoPage />;
 }
+
+StudioSeoPage.displayName = "StudioSeoPage";

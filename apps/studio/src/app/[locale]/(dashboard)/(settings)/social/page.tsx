@@ -1,12 +1,15 @@
 /**
  * @file apps/studio/src/app/[locale]/(dashboard)/(settings)/social/page.tsx
- * @layer app/studio
+ * @layer studio/app
  *
  * @description
- * Page admin “Social” (V0.5).
+ * Page « Social » (Studio) — route du dashboard.
  */
+
 import { SocialPage } from "@compoz/studio/features/settings/social/SocialPage";
 
-export default function AdminSocialPage() {
+export default function StudioSocialPage() {
   return <SocialPage />;
 }
+
+StudioSocialPage.displayName = "StudioSocialPage";

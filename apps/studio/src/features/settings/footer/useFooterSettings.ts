@@ -1,16 +1,11 @@
 "use client";
 
-import {
-  WRITE_CONTENT_STATE,
-  type ContentState,
-} from "@compoz/core/constants/common/content-state";
-import { DEFAULT_FOOTER_SETTINGS } from "@compoz/core/domain/site/defaults/footer";
 /**
  * @file apps/studio/src/features/settings/footer/useFooterSettings.ts
- * @layer hooks/admin/site/footer
+ * @layer hooks/studio/site/footer
  *
  * @description
- * Hook admin spécialisé pour gérer les réglages du footer via l’API.
+ * Hook Studio spécialisé pour gérer les réglages du footer via l’API.
  *
  * @remarks
  * - Basé sur le pattern **Settings RHF-first** (`useSettingsResource`).
@@ -19,8 +14,13 @@ import { DEFAULT_FOOTER_SETTINGS } from "@compoz/core/domain/site/defaults/foote
  * - Aucune logique métier ni validation domaine.
  */
 
-import { settingsAdminApi } from "@compoz/infra/http/studio/site-settings.client";
-import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
+import {
+  DEFAULT_CONTENT_STATE,
+  type ContentState,
+} from "@compoz/core/constants/common/content-state";
+import { DEFAULT_FOOTER_SETTINGS } from "@compoz/core/domain/site/defaults/footer";
+import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
+import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import type { SettingsHookResult } from "@compoz/studio/features/settings/hooks/useSettingsResource";
@@ -47,7 +47,7 @@ type UseFooterSettingsResult = SettingsHookResult<FooterFormValues>;
 export function useFooterSettings(): UseFooterSettingsResult {
   const t = useTranslations();
   const qc = useQueryClient();
-  const entityLabel = t("admin.shared.entities.footer");
+  const entityLabel = t("studio.shared.entities.footer");
   const tenantId = useTenantId();
 
   const resource = useSettingsResource<FooterFormValues>({
@@ -61,6 +61,7 @@ export function useFooterSettings(): UseFooterSettingsResult {
     /** GET → DTO domaine → UI normalisée. */
     load: async (state: ContentState, opts) => {
       const bundle = await getSettingsBundle(qc, tenantId, state, opts);
+
       return normalizeFooterFormValues(
         toFooterFormValuesFromDTO(bundle.footer),
       );
@@ -68,9 +69,9 @@ export function useFooterSettings(): UseFooterSettingsResult {
 
     save: async (next, opts) => {
       const patch = toUpdateFooterIntentDTOFromFormValues(next);
-      const dto = await settingsAdminApi.footer.patch(patch, opts);
+      const dto = await settingsStudioApi.footer.patch(patch, opts);
 
-      patchSettingsBundleCache(qc, tenantId, WRITE_CONTENT_STATE, (prev) => ({
+      patchSettingsBundleCache(qc, tenantId, DEFAULT_CONTENT_STATE, (prev) => ({
         ...prev,
         footer: dto.settings,
       }));
@@ -110,3 +111,5 @@ export function useFooterSettings(): UseFooterSettingsResult {
     }),
   };
 }
+
+useFooterSettings.displayName = "useFooterSettings";

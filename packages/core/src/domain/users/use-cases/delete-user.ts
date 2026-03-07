@@ -34,6 +34,6 @@ export function deleteUser({ users }: DeleteUserDeps) {
     await users.ensureBase();
     await users.deleteById(userId);
 
-    return { ok: true };
+    return { ok: true, userId };
   };
 }

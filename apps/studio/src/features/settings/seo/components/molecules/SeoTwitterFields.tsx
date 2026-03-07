@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/settings/seo/components/molecules/SeoTwitterFields.tsx
- * @layer ui/molecules
+ * @layer ui/studio/molecules
  *
  * @description
  * Molécule affichant les champs Twitter d’un formulaire SEO.
@@ -14,7 +14,12 @@
  * - Strictement UI + formulaire RHF, aucune logique métier externe.
  */
 
+import type { Control } from "react-hook-form";
+import { Controller } from "react-hook-form";
+
 import { TWITTER_CARD_TYPES } from "@compoz/core/constants/seo/seo";
+import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
+import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD } from "@compoz/ui/styles/studio/layout";
@@ -22,10 +27,6 @@ import type {
   SeoFormValues,
   SeoTwitterFormValues,
 } from "@compoz/validation/site/settings/seo/seo-form";
-import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
-import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
-import type { Control } from "react-hook-form";
-import { Controller } from "react-hook-form";
 
 type SeoTwitterFieldsProps = Readonly<{
   control: Control<SeoFormValues>;
@@ -65,7 +66,7 @@ export function SeoTwitterFields({
           <div className={cn(STACK_MD)}>
             <SelectField
               ids={twitterCardIds}
-              label={t("admin.seoForm.twitter.card.label")}
+              label={t("studio.seoForm.twitter.card.label")}
               value={card}
               onChange={(v) =>
                 field.onChange({
@@ -74,20 +75,20 @@ export function SeoTwitterFields({
                 })
               }
               items={twitterCardItems}
-              placeholder={t("admin.seoForm.twitter.card.placeholder")}
-              help={t("admin.seoForm.twitter.card.help")}
+              placeholder={t("studio.seoForm.twitter.card.placeholder")}
+              help={t("studio.seoForm.twitter.card.help")}
               disabled={isBusy}
             />
 
             <InputField
               ids={twitterSiteIds}
-              label={t("admin.seoForm.twitter.site.label")}
+              label={t("studio.seoForm.twitter.site.label")}
               value={twitter.site ?? ""}
               onChange={(v) =>
                 field.onChange({ ...twitter, site: v || undefined })
               }
-              placeholder={t("admin.seoForm.twitter.site.placeholder")}
-              help={t("admin.seoForm.twitter.site.help")}
+              placeholder={t("studio.seoForm.twitter.site.placeholder")}
+              help={t("studio.seoForm.twitter.site.help")}
               disabled={isBusy}
               autoCapitalize="none"
               autoCorrect="off"
@@ -96,13 +97,13 @@ export function SeoTwitterFields({
 
             <InputField
               ids={twitterCreatorIds}
-              label={t("admin.seoForm.twitter.creator.label")}
+              label={t("studio.seoForm.twitter.creator.label")}
               value={twitter.creator ?? ""}
               onChange={(v) =>
                 field.onChange({ ...twitter, creator: v || undefined })
               }
-              placeholder={t("admin.seoForm.twitter.creator.placeholder")}
-              help={t("admin.seoForm.twitter.creator.help")}
+              placeholder={t("studio.seoForm.twitter.creator.placeholder")}
+              help={t("studio.seoForm.twitter.creator.help")}
               disabled={isBusy}
               autoCapitalize="none"
               autoCorrect="off"
@@ -114,3 +115,5 @@ export function SeoTwitterFields({
     />
   );
 }
+
+SeoTwitterFields.displayName = "SeoTwitterFields";

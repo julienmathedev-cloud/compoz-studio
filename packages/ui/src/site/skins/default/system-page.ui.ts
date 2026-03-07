@@ -1,18 +1,18 @@
 /**
  * @file packages/ui/src/site/skins/default/system-page.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
- * Skin UI — "system page" public (thème Default).
+ * Skin UI — "system page" site (thème Default).
  *
  * @remarks
  * - Base commune utilisée pour `errorPage` et `notFoundPage`.
  * - Si besoin de différencier plus tard : faire un spread + override ciblé.
  */
 
-import type { PublicSystemPageUi } from "@compoz/ui/site/public-ui.types";
+import type { SiteSystemPageUi } from "@compoz/ui/site/site-ui.types";
 
-export const defaultSystemPageUi: PublicSystemPageUi = {
+export const defaultSystemPageUi: SiteSystemPageUi = {
   main: "w-full mx-auto max-w-screen-xl px-3 md:px-4 lg:px-6 py-16 md:py-20 lg:py-24",
 
   prose: "space-y-4",

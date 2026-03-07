@@ -16,6 +16,8 @@
  * - Ne doit pas être importé côté client.
  */
 
+import "server-only";
+
 import sharp from "sharp";
 
 export type OptimizedAsset = Readonly<{
@@ -47,9 +49,33 @@ async function getMeta(
   };
 }
 
-async function hasAlpha(input: Buffer): Promise<boolean> {
+async function getMetaAndAlpha(
+  input: Buffer,
+): Promise<Readonly<{ width: number; height: number; hasAlpha: boolean }>> {
   const meta = await sharp(input).metadata();
-  return Boolean(meta.hasAlpha) || meta.channels === 4;
+  return {
+    width: meta.width ?? 0,
+    height: meta.height ?? 0,
+    hasAlpha: Boolean(meta.hasAlpha) || meta.channels === 4,
+  };
+}
+
+function makeOptimizedAsset(args: {
+  buffer: Buffer;
+  mime: OptimizedAsset["mime"];
+  ext: OptimizedAsset["ext"];
+  original: Readonly<{ width: number; height: number }>;
+  final: Readonly<{ width: number; height: number }>;
+}): OptimizedAsset {
+  return {
+    buffer: args.buffer,
+    mime: args.mime,
+    ext: args.ext,
+    originalWidth: args.original.width,
+    originalHeight: args.original.height,
+    finalWidth: args.final.width,
+    finalHeight: args.final.height,
+  };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -72,15 +98,13 @@ export async function optimizeContentImage(
 
   const final = await getMeta(buffer);
 
-  return {
+  return makeOptimizedAsset({
     buffer,
     mime: "image/jpeg",
     ext: "jpg",
-    originalWidth: original.width,
-    originalHeight: original.height,
-    finalWidth: final.width,
-    finalHeight: final.height,
-  };
+    original,
+    final,
+  });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -103,15 +127,13 @@ export async function optimizeOgImage(
 
   const final = await getMeta(buffer);
 
-  return {
+  return makeOptimizedAsset({
     buffer,
     mime: "image/jpeg",
     ext: "jpg",
-    originalWidth: original.width,
-    originalHeight: original.height,
-    finalWidth: final.width,
-    finalHeight: final.height,
-  };
+    original,
+    final,
+  });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -124,27 +146,24 @@ export async function optimizeLogo(
 ): Promise<OptimizedAsset> {
   // SVG : on garde tel quel
   if (inputMime === "image/svg+xml") {
-    return {
+    return makeOptimizedAsset({
       buffer: input,
       mime: "image/svg+xml",
       ext: "svg",
-      originalWidth: 0,
-      originalHeight: 0,
-      finalWidth: 0,
-      finalHeight: 0,
-    };
+      original: { width: 0, height: 0 },
+      final: { width: 0, height: 0 },
+    });
   }
 
   assertRaster(inputMime);
 
-  const original = await getMeta(input);
-  const alpha = await hasAlpha(input);
+  const originalMeta = await getMetaAndAlpha(input);
 
   let buffer: Buffer;
   let mime: string;
   let ext: "jpg" | "png";
 
-  if (alpha) {
+  if (originalMeta.hasAlpha) {
     buffer = await sharp(input, { failOn: "none" })
       .rotate()
       .resize({ width: 512, withoutEnlargement: true })
@@ -164,15 +183,13 @@ export async function optimizeLogo(
 
   const final = await getMeta(buffer);
 
-  return {
+  return makeOptimizedAsset({
     buffer,
     mime,
     ext,
-    originalWidth: original.width,
-    originalHeight: original.height,
-    finalWidth: final.width,
-    finalHeight: final.height,
-  };
+    original: { width: originalMeta.width, height: originalMeta.height },
+    final,
+  });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -187,27 +204,23 @@ export async function optimizeFavicon(
     inputMime === "image/x-icon" ||
     inputMime === "image/vnd.microsoft.icon"
   ) {
-    return {
+    return makeOptimizedAsset({
       buffer: input,
       mime: inputMime,
       ext: "ico",
-      originalWidth: 0,
-      originalHeight: 0,
-      finalWidth: 0,
-      finalHeight: 0,
-    };
+      original: { width: 0, height: 0 },
+      final: { width: 0, height: 0 },
+    });
   }
 
   if (inputMime === "image/svg+xml") {
-    return {
+    return makeOptimizedAsset({
       buffer: input,
       mime: "image/svg+xml",
       ext: "svg",
-      originalWidth: 0,
-      originalHeight: 0,
-      finalWidth: 0,
-      finalHeight: 0,
-    };
+      original: { width: 0, height: 0 },
+      final: { width: 0, height: 0 },
+    });
   }
 
   assertRaster(inputMime);
@@ -222,15 +235,13 @@ export async function optimizeFavicon(
 
   const final = await getMeta(buffer);
 
-  return {
+  return makeOptimizedAsset({
     buffer,
     mime: "image/png",
     ext: "png",
-    originalWidth: original.width,
-    originalHeight: original.height,
-    finalWidth: final.width,
-    finalHeight: final.height,
-  };
+    original,
+    final,
+  });
 }
 
 /* -------------------------------------------------------------------------- */

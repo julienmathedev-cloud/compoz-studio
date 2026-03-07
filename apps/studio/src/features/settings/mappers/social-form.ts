@@ -1,6 +1,6 @@
 /**
  * @file apps/studio/src/mappers/site/social-form.ts
- * @layer ui-mapper
+ * @layer ui-mapper/studio
  * @description
  * Mappers UI Social (studio forms) :
  * - DTO -> valeurs de formulaire RHF (draft-friendly)

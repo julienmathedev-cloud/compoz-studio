@@ -1,45 +1,71 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/blocks/update-layout-section-block.ts
- * @layer core/domain
+ * @layer core/domain/pages/use-cases/blocks
  * @description
- * Use-case de mise à jour d’un block `LayoutSection` sur une page (édition admin → draft/published selon `state`).
+ * Use-case : mise à jour d’un block `LayoutSection` sur une page (écriture dans l’état par défaut).
  */
 
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
-import type { LayoutSectionBlock } from "@compoz/core/domain/pages/entities/block";
-import { assertBlocks } from "@compoz/core/domain/pages/validators/blocks";
-
+import { applyPatch } from "@compoz/core/domain/pages/use-cases/blocks/helpers/apply-blocks-patch";
 import type {
-  LayoutSectionBlockPatch,
   UpdateLayoutSectionBlockDeps,
   UpdateLayoutSectionBlockInput,
   UpdateLayoutSectionBlockResult,
 } from "@compoz/core/domain/pages/use-cases/blocks/update-layout-section-block.types";
+import { assertBlocks } from "@compoz/core/domain/pages/validators/blocks";
 
 export function updateLayoutSectionBlock({
   pages,
+  nowIso = () => new Date().toISOString(),
 }: UpdateLayoutSectionBlockDeps) {
   return async function run(
     input: UpdateLayoutSectionBlockInput,
   ): Promise<UpdateLayoutSectionBlockResult> {
+    const pageId = String(input.pageId ?? "").trim();
+    const blockId = String(input.blockId ?? "").trim();
+    const patch =
+      input.patch && typeof input.patch === "object" ? input.patch : null;
+
+    if (!pageId) {
+      throw new DomainError({
+        code: EC.INVALID_ARGUMENT,
+        message: EC.INVALID_ARGUMENT,
+        details: { path: ["pageId"] },
+      });
+    }
+    if (!blockId) {
+      throw new DomainError({
+        code: EC.INVALID_ARGUMENT,
+        message: EC.INVALID_ARGUMENT,
+        details: { path: ["blockId"] },
+      });
+    }
+    if (!patch) {
+      throw new DomainError({
+        code: EC.INVALID_ARGUMENT,
+        message: EC.INVALID_ARGUMENT,
+        details: { path: ["patch"] },
+      });
+    }
+
     await pages.ensureBase();
 
-    const page = await pages.readById(WRITE_CONTENT_STATE, input.pageId);
+    const page = await pages.readById(DEFAULT_CONTENT_STATE, pageId);
     if (!page) {
       throw new DomainError({
         code: EC.PAGE_NOT_FOUND,
         message: EC.PAGE_NOT_FOUND,
         details: {
           path: ["pageId"],
-          meta: { pageId: input.pageId, WRITE_CONTENT_STATE },
+          meta: { pageId, state: DEFAULT_CONTENT_STATE },
         },
       });
     }
 
     const currentBlocks = Array.isArray(page.blocks) ? page.blocks : [];
-    const index = currentBlocks.findIndex((b) => b.id === input.blockId);
+    const index = currentBlocks.findIndex((b) => b.id === blockId);
 
     if (index < 0) {
       throw new DomainError({
@@ -47,7 +73,7 @@ export function updateLayoutSectionBlock({
         message: EC.BLOCK_NOT_FOUND,
         details: {
           path: ["blockId"],
-          meta: { blockId: input.blockId, pageId: input.pageId },
+          meta: { blockId, pageId },
         },
       });
     }
@@ -64,18 +90,17 @@ export function updateLayoutSectionBlock({
       });
     }
 
-    const next = applyPatch(current, input.patch);
+    const next = applyPatch(current, patch);
 
     let nextBlocks = [...currentBlocks];
 
     // Si le patch active LCP → désactiver les autres
-    if (input.patch.lcpPriority === true) {
+    if (patch.lcpPriority === true) {
       nextBlocks = nextBlocks.map((b) =>
         b.type === "layoutSection" ? { ...b, lcpPriority: false } : b,
       );
     }
 
-    // Injecter la version mise à jour
     nextBlocks[index] = next;
 
     assertBlocks(nextBlocks);
@@ -83,52 +108,11 @@ export function updateLayoutSectionBlock({
     const nextPage = {
       ...page,
       blocks: nextBlocks,
-      meta: { ...page.meta, updatedAt: new Date().toISOString() },
+      meta: { ...page.meta, updatedAt: nowIso() },
     };
 
-    await pages.put(WRITE_CONTENT_STATE, nextPage);
+    await pages.put(DEFAULT_CONTENT_STATE, nextPage);
 
     return { page: nextPage, block: next, blocks: nextBlocks };
-  };
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Inline helpers                               */
-/* -------------------------------------------------------------------------- */
-function applyPatch(
-  block: LayoutSectionBlock,
-  patch: LayoutSectionBlockPatch,
-): LayoutSectionBlock {
-  const nextColumns =
-    typeof patch.columns === "number" ? patch.columns : block.layout.columns;
-
-  const nextTitle =
-    "title" in patch ? (patch.title ?? block.title) : block.title;
-
-  const nextTitleEnabled =
-    typeof patch.titleEnabled === "boolean"
-      ? patch.titleEnabled
-      : block.titleEnabled;
-
-  const nextLcpPriority =
-    typeof patch.lcpPriority === "boolean"
-      ? patch.lcpPriority
-      : block.lcpPriority;
-
-  const nextContainerMode =
-    "containerMode" in patch && patch.containerMode !== undefined
-      ? patch.containerMode
-      : block.containerMode;
-
-  const cells = Array.isArray(patch.cells) ? patch.cells : block.cells;
-
-  return {
-    ...block,
-    layout: { columns: nextColumns },
-    containerMode: nextContainerMode,
-    titleEnabled: nextTitleEnabled,
-    title: nextTitle,
-    lcpPriority: nextLcpPriority,
-    cells,
   };
 }

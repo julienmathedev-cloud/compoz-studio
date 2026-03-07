@@ -1,6 +1,6 @@
 /**
  * @file apps/studio/src/app/preview/pages/[slug]/page.tsx
- * @layer app/preview
+ * @layer studio/app
  *
  * @description
  * Preview d’une page complète (V0.5) — reçoit baseline/override via postMessage.
@@ -17,7 +17,8 @@ export default async function PagePreviewPage({
   params,
 }: PagePreviewPageProps) {
   const { slug } = await unwrapParams(params);
-  return <PagePreviewClient slug={slug} />;
+
+  return <PagePreviewClient slug={String(slug ?? "").trim()} />;
 }
 
 PagePreviewPage.displayName = "PagePreviewPage";

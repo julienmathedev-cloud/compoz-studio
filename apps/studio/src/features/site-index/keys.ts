@@ -1,23 +1,24 @@
 /**
  * @file apps/studio/src/features/site-index/keys.ts
- * @layer hooks/admin/site
+ * @layer hooks/studio/site-index
  *
  * @description
- * Helpers pour construire des query keys React Query liées aux sites.
+ * Helpers pour construire les query keys React Query du SiteIndex.
  *
  * @remarks
- * - Tenant-scoped : la key inclut tenantId pour éviter le cache cross-tenant.
+ * - Tenant-scoped : la key inclut `tenantId` pour éviter le cache cross-tenant.
+ * - Utilisé par `getSiteIndex`, `setSiteIndexCache`, `patchSiteIndexCache`,
+ *   et `invalidateSiteIndex`.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
+import { requireTenantId } from "@compoz/ui/lib/tenant-id";
 
-function normalizeTenantId(tenantId: unknown): string {
-  return String(tenantId ?? "")
-    .trim()
-    .toLowerCase();
-}
+/**
+ * Query key React Query du SiteIndex.
+ */
+export function siteIndexKey(tenantId: unknown, state: ContentState) {
+  const tid = requireTenantId(tenantId, "siteIndexKey.tenantId");
 
-export function siteIndexKey(tenantId: string, state: ContentState) {
-  const tid = normalizeTenantId(tenantId);
-  return ["t", tid, "admin", "siteIndex", state] as const;
+  return ["t", tid, "studio", "siteIndex", state] as const;
 }

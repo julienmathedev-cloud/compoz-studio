@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/components/layouts/ExpandableLayout.tsx
- * @layer ui/layouts
+ * @layer studio/layouts
  *
  * @description
  * Layout repliable (summary + details) basé sur l’Accordion (ShadCN).
@@ -84,7 +84,7 @@ export function ExpandableLayout({
   const effectiveOpen = isControlled ? open : openState;
 
   const t = useTranslations();
-  const resolvedLabel = label ?? t("admin.expandable.advancedOptions");
+  const resolvedLabel = label ?? t("studio.expandable.advancedOptions");
 
   return (
     <div className={cn(className, "flex flex-col")}>

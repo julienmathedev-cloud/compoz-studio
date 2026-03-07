@@ -7,8 +7,15 @@
 
 import type { ErrorCode } from "@compoz/core/domain/errors/codes";
 
+/**
+ * Code d'erreur retourné par l'API :
+ * - soit un code métier (ErrorCode)
+ * - soit un code libre (string) pour des cas infra/adapters ou erreurs externes
+ */
+export type HttpErrorCode = ErrorCode | (string & {});
+
 export type HttpErrorBody = {
-  code: ErrorCode | string;
+  code: HttpErrorCode;
   issues?: Array<{ path: string; message: string }>;
   message?: string;
   [k: string]: unknown;
@@ -22,11 +29,12 @@ export type HttpErrorPayload = {
 export type WrappedHttpError = { __http__: HttpErrorPayload };
 
 export function throwHttp(status: number, body: HttpErrorBody): never {
-  throw { __http__: { status, body } } as WrappedHttpError;
+  const err: WrappedHttpError = { __http__: { status, body } };
+  throw err;
 }
 
-type UnknownObject = Record<string, unknown>;
+type UnknownRecord = Record<string, unknown>;
 
-export function isUnknownObject(value: unknown): value is UnknownObject {
+export function isUnknownObject(value: unknown): value is UnknownRecord {
   return typeof value === "object" && value !== null;
 }

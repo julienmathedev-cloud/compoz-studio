@@ -4,27 +4,34 @@
  * @description
  * Table centralisée des endpoints HTTP pour l’API Studio.
  *
- * Responsabilités : construction des chemins robustes en normalisant les segments,
- * gestion des préfixes et versions via les variables d’environnement,
- * référence unique des URLs consommées côté client et tests.
+ * Responsabilités :
+ * - construction de chemins robustes (normalisation des segments),
+ * - gestion d’un préfixe/une version via env,
+ * - source unique des URLs consommées côté client et tests.
+ *
+ * @remarks
+ * Variables supportées :
+ * - NEXT_PUBLIC_API_PREFIX (ex: "/api")
+ * - NEXT_PUBLIC_API_VERSION (ex: "v1")
  */
+
+const TRIM_SLASHES_RE = /^\/+|\/+$/g;
 
 function ep(...segs: Array<string | number | null | undefined>): string {
   const parts = segs
     .filter((s): s is string | number => s != null)
-    .map(String)
-    .map((s) => s.replace(/^\/+|\/+$/g, ""))
+    .map((s) => String(s).replace(TRIM_SLASHES_RE, ""))
     .filter(Boolean);
 
   return "/" + parts.join("/");
 }
 
 const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX ?? "/api";
-const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION ?? undefined;
+const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION;
 const VERSION_SEG = API_VERSION ? [API_VERSION] : [];
 
 /**
- * Base API pour l’app Studio (admin).
+ * Base API pour l’app Studio.
  * Exemple: "/api" ou "/api/v1" si versionnée.
  */
 const STUDIO_BASE = ep(API_PREFIX, ...VERSION_SEG);
@@ -48,14 +55,24 @@ export const ENDPOINTS = {
         ep(STUDIO_BASE, "pages", pageId, "blocks"),
     },
 
-    /** Routes de gestion des utilisateurs (admin). */
+    /**
+     * Routes de gestion des users Studio.
+     *
+     * @remarks
+     * Les segments "admin/users" sont conservés tels quels ici (compat / historique).
+     */
     USERS: {
       base: ep(STUDIO_BASE, "admin/users"),
 
       byId: (userId: string | number) => ep(STUDIO_BASE, "admin/users", userId),
     },
 
-    /** Routes de gestion du site (sous-sections paramétrées). */
+    TENANT: {
+      base: ep(STUDIO_BASE, "admin/tenant"),
+      active: ep(STUDIO_BASE, "admin/tenant", "active"),
+    },
+
+    /** Routes de gestion des site settings (sous-sections). */
     SETTINGS: {
       base: SETTINGS_BASE,
       header: ep(SETTINGS_BASE, "header"),

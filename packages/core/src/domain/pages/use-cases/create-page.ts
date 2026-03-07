@@ -1,32 +1,32 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/create-page.ts
- * @layer core/domain
+ * @layer core/domain/pages/use-cases
  * @description
  * Use-case de création d’une page (slug/titre) avec métadonnées et configuration sitemap.
  * Génère un slug unique et applique les défauts métier côté domaine.
  */
 
 import {
-  WRITE_CONTENT_STATE,
+  DEFAULT_CONTENT_STATE,
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
+import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
+import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type { Page } from "@compoz/core/domain/pages/entities/page";
 import type {
   CreatePageDeps,
   CreatePageInput,
   CreatePageResult,
 } from "@compoz/core/domain/pages/use-cases/create-page.types";
+import { applySitemapDefaults } from "@compoz/core/domain/pages/use-cases/helpers/apply-page-defaults";
 import {
-  applySitemapDefaults,
   assertPageSlug,
   assertPaginationEnabled,
   assertParentId,
   assertPriority,
   assertTitleRequired,
 } from "@compoz/core/domain/pages/validators/pages";
-
-import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
-import { DomainError } from "@compoz/core/domain/errors/domain-error";
+import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 
 export function createPage({
   pages,
@@ -34,9 +34,12 @@ export function createPage({
   nowIso = () => new Date().toISOString(),
 }: CreatePageDeps) {
   return async function run(input: CreatePageInput): Promise<CreatePageResult> {
+    // Contrat : la création se fait toujours dans l’état par défaut (draft).
+    const state = DEFAULT_CONTENT_STATE;
+
     const title = assertTitleRequired(input.title);
 
-    const rawSlug =
+    const inputSlug =
       typeof input.slug === "string" ? input.slug.trim() : undefined;
 
     const parentId = assertParentId(input.parentId);
@@ -51,17 +54,17 @@ export function createPage({
           });
 
     const base = assertPageSlug(
-      rawSlug && rawSlug.length > 0 ? rawSlug : title,
+      inputSlug && inputSlug.length > 0 ? inputSlug : title,
     );
 
     // Règle "home" : si "home" existe déjà, on bloque (plutôt que suffixer).
     // ✅ Optimisation : si existingSlugs est fourni, pas de repo call.
     const hasHome =
       input.existingSlugs instanceof Set
-        ? input.existingSlugs.has("home")
-        : await pages.existsBySlug(WRITE_CONTENT_STATE, "home");
+        ? input.existingSlugs.has(HOME_SLUG)
+        : await pages.existsBySlug(state, HOME_SLUG);
 
-    if (base === "home" && hasHome) {
+    if (base === HOME_SLUG && hasHome) {
       throw new DomainError({
         code: EC.PAGE_SLUG_CONFLICT,
         message: EC.PAGE_SLUG_CONFLICT,
@@ -70,7 +73,7 @@ export function createPage({
 
     const slug = await generateUniqueSlug({
       pages,
-      state: WRITE_CONTENT_STATE,
+      state,
       base,
       existingSlugs: input.existingSlugs,
     });
@@ -91,7 +94,7 @@ export function createPage({
     });
 
     await pages.ensureBase();
-    await pages.put(WRITE_CONTENT_STATE, page);
+    await pages.put(state, page);
 
     return { page };
   };
@@ -117,7 +120,7 @@ async function generateUniqueSlug({
   let slug = base;
   let suffix = 2;
 
-  // ✅ Fast path (no KV scans): if we have a local slug index, use it.
+  // ✅ Fast path (sans scans KV) : si on a un index local de slugs, on l’utilise.
   if (existingSlugs instanceof Set) {
     while (existingSlugs.has(slug)) {
       slug = `${base}-${suffix++}`;
@@ -125,7 +128,7 @@ async function generateUniqueSlug({
     return slug;
   }
 
-  // Fallback: repository checks (may be costly on KV impl).
+  // Fallback : checks repository (peut être coûteux sur une impl KV).
   while (await pages.existsBySlug(state, slug)) {
     slug = `${base}-${suffix++}`;
   }
@@ -153,6 +156,7 @@ function buildPageEntity({
   nowIso,
 }: BuildPageEntityProps): Page {
   const at = nowIso();
+
   const base: Page = {
     id,
     parentId,

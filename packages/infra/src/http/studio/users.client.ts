@@ -1,15 +1,22 @@
 /**
  * @file packages/infra/src/http/studio/users.client.ts
- * @layer infra/http
+ * @layer infra/http/studio
  * @description
- * Client HTTP Admin pour la gestion des users : listing, CRUD.
+ * Client HTTP Studio pour la gestion des users : listing, CRUD.
  *
  * Responsabilités : construction des requêtes HTTP, encodage des segments,
  * typage des réponses via DTOs domaine.
+ *
+ * @remarks
+ * Les routes users sont actuellement sous le segment `admin` côté Studio (legacy).
  */
 
 import { ENDPOINTS } from "@compoz/infra/http/endpoints";
-import { encodeSegment, type HttpOpts } from "@compoz/infra/http/internal";
+import {
+  assertJsonResponse,
+  encodeSegment,
+  type HttpOpts,
+} from "@compoz/infra/http/internal";
 import { apiFetch } from "@compoz/infra/lib/api-fetch";
 import { logSpan } from "@compoz/infra/lib/log";
 
@@ -26,22 +33,14 @@ import type {
   UpdateUserIntentDTO,
 } from "@compoz/validation/users/user-intents";
 
-function assertJsonResponse<T>(res: T | null, errorMessage: string): T {
-  // Contract: this endpoint returns JSON on success.
-  if (!res) {
-    throw new Error(errorMessage);
-  }
-  return res;
-}
-
 /* -------------------------------------------------------------------------- */
-/*                               Client HTTP Admin                            */
+/*                               Client HTTP Studio                           */
 /* -------------------------------------------------------------------------- */
 
-export const usersAdminApi = {
+export const adminUsersStudioApi = {
   async list(opts?: HttpOpts): Promise<GetUsersResponse> {
     return logSpan(
-      "infra.http.admin.users.list",
+      "compoz:studio:svc:users",
       { endpoint: ENDPOINTS.STUDIO.USERS.base, method: "GET" },
       async () => {
         const res = await apiFetch<GetUsersResponse>(
@@ -52,17 +51,14 @@ export const usersAdminApi = {
           },
         );
 
-        return assertJsonResponse(
-          res,
-          "usersAdminApi.list: expected JSON response, received null.",
-        );
+        return assertJsonResponse(res, "adminUsersStudioApi.list");
       },
     );
   },
 
   async getById(userId: string, opts?: HttpOpts): Promise<GetUserByIdResponse> {
     return logSpan(
-      "infra.http.admin.users.getById",
+      "compoz:studio:svc:users",
       { endpoint: ENDPOINTS.STUDIO.USERS.byId("<userId>"), method: "GET" },
       async () => {
         const res = await apiFetch<GetUserByIdResponse>(
@@ -70,10 +66,7 @@ export const usersAdminApi = {
           { method: "GET", ...(opts ?? {}) },
         );
 
-        return assertJsonResponse(
-          res,
-          "usersAdminApi.getById: expected JSON response, received null.",
-        );
+        return assertJsonResponse(res, "adminUsersStudioApi.getById");
       },
     );
   },
@@ -83,7 +76,7 @@ export const usersAdminApi = {
     opts?: HttpOpts,
   ): Promise<CreateUserResponse> {
     return logSpan(
-      "infra.http.admin.users.create",
+      "compoz:studio:svc:users",
       { endpoint: ENDPOINTS.STUDIO.USERS.base, method: "POST" },
       async () => {
         const res = await apiFetch<CreateUserResponse>(
@@ -95,10 +88,7 @@ export const usersAdminApi = {
           },
         );
 
-        return assertJsonResponse(
-          res,
-          "usersAdminApi.create: expected JSON response, received null.",
-        );
+        return assertJsonResponse(res, "adminUsersStudioApi.create");
       },
     );
   },
@@ -109,7 +99,7 @@ export const usersAdminApi = {
     opts?: HttpOpts,
   ): Promise<UpdateUserResponse> {
     return logSpan(
-      "infra.http.admin.users.update",
+      "compoz:studio:svc:users",
       { endpoint: ENDPOINTS.STUDIO.USERS.byId("<userId>"), method: "PATCH" },
       async () => {
         const res = await apiFetch<UpdateUserResponse>(
@@ -117,17 +107,14 @@ export const usersAdminApi = {
           { method: "PATCH", body: JSON.stringify(payload), ...(opts ?? {}) },
         );
 
-        return assertJsonResponse(
-          res,
-          "usersAdminApi.update: expected JSON response, received null.",
-        );
+        return assertJsonResponse(res, "adminUsersStudioApi.update");
       },
     );
   },
 
   async remove(userId: string, opts?: HttpOpts): Promise<DeleteUserResponse> {
     return logSpan(
-      "infra.http.admin.users.remove",
+      "compoz:studio:svc:users",
       { endpoint: ENDPOINTS.STUDIO.USERS.byId("<userId>"), method: "DELETE" },
       async () => {
         const res = await apiFetch<DeleteUserResponse>(
@@ -135,11 +122,8 @@ export const usersAdminApi = {
           { method: "DELETE", ...(opts ?? {}) },
         );
 
-        return assertJsonResponse(
-          res,
-          "usersAdminApi.remove: expected JSON response, received null.",
-        );
+        return assertJsonResponse(res, "adminUsersStudioApi.remove");
       },
     );
   },
-};
+} as const;

@@ -1,6 +1,6 @@
 /**
  * @file apps/studio/src/features/settings/mappers/primary-menu-form.ts
- * @layer ui-mappers/site
+ * @layer ui-mappers/studio/site
  * @description
  * Mappers UI PrimaryMenu (studio forms) :
  * - DTO -> valeurs de formulaire RHF
@@ -10,7 +10,7 @@
  *
  * @remarks
  * - DTO -> Shape runtime (shared, renderer) : `toPrimaryMenuSettingsShapeFromDTO` (package ui).
- * - Ici, la normalisation `href` est "draft-friendly" (internal/external) pour l’admin.
+ * - Ici, la normalisation `href` est "draft-friendly" (internal/external) pour le studio.
  */
 
 import type { PrimaryMenuSettingsDTO } from "@compoz/core/domain/site/dto";

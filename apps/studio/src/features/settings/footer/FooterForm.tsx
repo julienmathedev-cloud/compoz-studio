@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/features/settings/footer/FooterForm.tsx
- * @layer ui/organisms
+ * @layer ui/studio/organisms
  *
  * @description
- * Formulaire d’édition du footer (admin) — RHF + Zod comme source de vérité UI.
+ * Formulaire d’édition du footer (studio) — RHF + Zod comme source de vérité UI.
  *
  * @remarks
  * - Contrôlé : le parent fournit `initialValues` et reçoit `onSubmit`.
@@ -15,16 +15,19 @@
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useRef } from "react";
-import {
-  useController,
-  useForm,
-  useFormState,
-  useWatch,
-} from "react-hook-form";
+import { useTranslations } from "next-intl";
+import { useEffect, useMemo } from "react";
+import { useController, useWatch } from "react-hook-form";
 
+import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
+import { ActionsBar } from "@compoz/studio/components/molecules/controls/ActionsBar";
+import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
+import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
+import type { FooterWarningKey } from "@compoz/studio/features/settings/footer/validate";
+import { useFooterUiWarnings } from "@compoz/studio/features/settings/footer/validate";
+import { useSettingsSectionForm } from "@compoz/studio/features/settings/_shared/useSettingsSectionForm";
+import { useStableWarningKeys } from "@compoz/studio/features/settings/_shared/useStableWarningKeys";
 import { Card, CardContent, CardFooter } from "@compoz/ui/components/ui/card";
-import { useStableOnValuesChange } from "@compoz/ui/hooks/useStableOnValuesChange";
 import {
   createFieldIds,
   useIdPrefix,
@@ -33,13 +36,6 @@ import {
   FooterFormSchema,
   type FooterFormValues,
 } from "@compoz/validation/site/settings/footer/footer-form";
-import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
-import { ActionsBar } from "@compoz/studio/components/molecules/controls/ActionsBar";
-import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
-import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
-import type { FooterWarningKey } from "@compoz/studio/features/settings/footer/validate";
-import { useFooterUiWarnings } from "@compoz/studio/features/settings/footer/validate";
-import { useTranslations } from "next-intl";
 
 /**
  * Props du composant `FooterForm`.
@@ -71,7 +67,7 @@ type FooterFormProps = Readonly<{
 }>;
 
 /**
- * Formulaire de configuration du pied de page (admin).
+ * Formulaire de configuration du pied de page (studio).
  */
 export function FooterForm({
   initialValues,
@@ -86,34 +82,24 @@ export function FooterForm({
   const {
     control,
     handleSubmit,
-    reset: rhfReset,
-  } = useForm<FooterFormValues>({
-    resolver: zodResolver(FooterFormSchema),
-    defaultValues: initialValues,
-    mode: "onBlur",
-    reValidateMode: "onChange",
-    shouldFocusError: false,
-  });
-
-  // ✅ Source fiable pour rerender sur errors/touched/submit.
-  const {
+    resetToInitialValues,
     isDirty,
     isSubmitting,
+    isBusy,
+    disabledControls,
     errors,
     touchedFields,
     submitCount,
     isSubmitted,
-  } = useFormState({ control });
-
-  const isBusy = Boolean(isSaving || isSubmitting);
-  const disabledControls = isBusy;
+  } = useSettingsSectionForm<FooterFormValues>({
+    resolver: zodResolver(FooterFormSchema),
+    initialValues,
+    isSaving,
+    onValuesChange,
+    onDirtyChange,
+  });
 
   const t = useTranslations();
-
-  // Dirty signal vers le parent (guard / navigation).
-  useEffect(() => {
-    onDirtyChange?.(Boolean(isDirty));
-  }, [isDirty, onDirtyChange]);
 
   // Préfixe d’ID stable pour ce formulaire
   const idPrefix = useIdPrefix("footer-form");
@@ -121,17 +107,6 @@ export function FooterForm({
   // IDs de champs dérivés du préfixe
   const showYearIds = createFieldIds(idPrefix, "showYear");
   const copyrightIds = createFieldIds(idPrefix, "copyright");
-
-  /**
-   * Resync RHF quand la baseline parent change.
-   */
-  useEffect(() => {
-    rhfReset(initialValues, {
-      keepDirty: false,
-      keepTouched: false,
-      keepErrors: false,
-    });
-  }, [initialValues, rhfReset]);
 
   /**
    * RHF controllers (Identity-style).
@@ -147,25 +122,15 @@ export function FooterForm({
     name: ["showYear", "copyright"],
   });
 
-  // Preview draft (valeurs live).
-  const watched = useWatch({ control }) as FooterFormValues | undefined;
-  const values = watched ?? initialValues;
-  useStableOnValuesChange(values, onValuesChange);
-
   const warningKeys = useFooterUiWarnings(
     copyrightWatch,
     Boolean(showYearWatch),
   );
 
-  const lastWarningsSigRef = useRef<string>("");
-
-  useEffect(() => {
-    if (!onWarningKeysChange) return;
-    const sig = warningKeys.join("|");
-    if (sig === lastWarningsSigRef.current) return;
-    lastWarningsSigRef.current = sig;
-    onWarningKeysChange(warningKeys);
-  }, [warningKeys, onWarningKeysChange]);
+  useStableWarningKeys({
+    warningKeys,
+    onWarningKeysChange,
+  });
 
   /**
    * Affichage d’erreur UX : Identity-style.
@@ -206,12 +171,12 @@ export function FooterForm({
           <FormGrid>
             <InputField
               ids={copyrightIds}
-              label={t("admin.footerForm.copyright.label")}
-              help={t("admin.footerForm.copyright.help")}
+              label={t("studio.footerForm.copyright.label")}
+              help={t("studio.footerForm.copyright.help")}
               value={String(copyrightCtrl.field.value ?? "")}
               onChange={(v) => copyrightCtrl.field.onChange(v)}
               onBlur={copyrightCtrl.field.onBlur}
-              placeholder={t("admin.footerForm.copyright.placeholder")}
+              placeholder={t("studio.footerForm.copyright.placeholder")}
               disabled={disabledControls}
               autoCapitalize="sentences"
               autoCorrect="on"
@@ -221,8 +186,8 @@ export function FooterForm({
 
             <SwitchField
               ids={showYearIds}
-              label={t("admin.footerForm.showYear.label")}
-              help={t("admin.footerForm.showYear.help")}
+              label={t("studio.footerForm.showYear.label")}
+              help={t("studio.footerForm.showYear.help")}
               checked={Boolean(showYearCtrl.field.value)}
               onCheckedChange={(v) => showYearCtrl.field.onChange(toBool(v))}
               disabled={disabledControls}
@@ -236,11 +201,7 @@ export function FooterForm({
             isSaving={isSaving || isSubmitting}
             isDirty={isDirty}
             onReset={() => {
-              rhfReset(initialValues, {
-                keepDirty: false,
-                keepTouched: false,
-                keepErrors: false,
-              });
+              resetToInitialValues();
               onReset?.();
             }}
           />

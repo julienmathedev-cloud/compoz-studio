@@ -1,5 +1,5 @@
 /**
- * @file packages/core/src/core/domain/slug/validator.ts
+ * @file packages/core/src/domain/slug/validator.ts
  * @layer core/domain
  * @description
  * Frontière Domain :

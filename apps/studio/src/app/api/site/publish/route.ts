@@ -1,8 +1,8 @@
 /**
  * @file apps/studio/src/app/api/site/publish/route.ts
- * @layer api/routes
+ * @layer studio/app/api
  * @description
- * Route API Admin pour publier le site (copie d’un state vers un autre).
+ * Route API Studio pour publier le site (copie d’un state vers un autre).
  *
  * Responsabilités :
  * - POST : déclenche la publication du site.
@@ -15,6 +15,8 @@
  * @remarks
  * - En V0.5, on déclenche une revalidation ISR des routes publiques après publication.
  */
+
+import "server-only";
 
 import {
   CONTENT_STATE,
@@ -31,7 +33,6 @@ import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
-
 import {
   PublishSiteIntentSchema,
   type PublishSiteIntentDTO,
@@ -123,7 +124,7 @@ async function revalidatePublicAfterPublish(params: {
 }
 
 export async function POST(req: Request) {
-  const NS = "api.admin.site.publish.POST" as const;
+  const NS = "api.studio.site.publish.POST" as const;
 
   return handleRoute(NS, req, async () => {
     const { tenantId } = await requireSessionWithTenant();
@@ -148,26 +149,29 @@ export async function POST(req: Request) {
           raw,
           {
             message: EC.VALIDATION_ERROR,
-            extras: { where: "api.admin.site.publish.POST.payload" },
+            extras: { where: "api.studio.site.publish.POST.payload" },
           },
         );
+
+        const isProd = process.env.NODE_ENV === "production";
 
         // ✅ Body > Query > defaults
         const from = resolveStateOr422({
           value: dto.from,
           fallback: qs.from ?? CONTENT_STATE.DRAFT,
-          where: "api.admin.site.publish.POST.from",
+          where: "api.studio.site.publish.POST.from",
         });
 
         const to = resolveStateOr422({
           value: dto.to,
           fallback: qs.to ?? CONTENT_STATE.PUBLISHED,
-          where: "api.admin.site.publish.POST.to",
+          where: "api.studio.site.publish.POST.to",
         });
 
         const run = publishSite({
           site: getSiteRepository({ tenantId }),
           pages: getPagesRepository({ tenantId }),
+          runtime: { isProd },
           revalidator: {
             async revalidatePublished({ slugs }) {
               await revalidatePublicAfterPublish({
@@ -184,7 +188,7 @@ export async function POST(req: Request) {
           cleanOrphans: dto.cleanOrphans,
         });
 
-        lg.info("publish.metrics", {
+        lg.info?.("publish.metrics", {
           tenantId,
           from: result.from,
           to: result.to,

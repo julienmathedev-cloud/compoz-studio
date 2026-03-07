@@ -1,12 +1,14 @@
 /**
  * @file apps/studio/src/app/api/_adapters/users/users.ts
- * @layer api/adapters
+ * @layer studio/app/api/adapters
+ *
  * @description
- * Adaptateurs API Admin pour les users : convertit les payloads de création et de mise à jour
+ * Adaptateurs API Studio pour les users : convertit les payloads de création et de mise à jour
  * (DTOs intents) en données utilisables par le domaine.
  *
  * Responsabilités :
- * - trim / normalisation (email lower-case)
+ * - trimming défensif (ids, strings)
+ * - normalisation légère (email lower-case, tenantIds lower-case)
  * - propagation stricte des champs optionnels (clé présente => propagée)
  * - rbac passé tel quel (déjà validé par Zod), avec normalisation légère des strings
  *
@@ -14,6 +16,8 @@
  */
 
 import { log } from "@compoz/infra/lib/log";
+import { trimOrKeep } from "@compoz/studio/lib/strings";
+import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 import type {
   CreateUserIntentDTO,
@@ -32,25 +36,33 @@ type UpdateUserPatchInput = Omit<UpdateUserInput, "userId">;
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
+function toTrimmedLower(raw: unknown): string {
+  return trimOrKeep(String(raw ?? "")).toLowerCase();
+}
+
 function normalizeEmail(raw: unknown): string {
-  return String(raw ?? "")
-    .trim()
-    .toLowerCase();
+  return toTrimmedLower(raw);
 }
 
 function normalizeName(raw: unknown): string {
-  return String(raw ?? "").trim();
+  return trimOrKeep(String(raw ?? ""));
+}
+
+function normalizePassword(raw: unknown): string {
+  return trimOrKeep(String(raw ?? ""));
 }
 
 function normalizeTenantIds(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
+
   return raw
-    .map((t) =>
-      String(t ?? "")
-        .trim()
-        .toLowerCase(),
-    )
-    .filter(Boolean);
+    .map((t) => toTenantId(t))
+    .filter((x): x is string => typeof x === "string" && x.length > 0);
+}
+
+function normalizeDefaultTenantId(raw: unknown): string {
+  // toTenantId retourne string | null (d’après la convention toX) → on garde "" si vide
+  return toTenantId(raw) ?? "";
 }
 
 function normalizeRbac(
@@ -60,13 +72,9 @@ function normalizeRbac(
 
   return {
     ...rbac,
-    role: String(rbac.role ?? "")
-      .trim()
-      .toLowerCase() as typeof rbac.role,
+    role: toTrimmedLower(rbac.role) as typeof rbac.role,
     tenantIds: normalizeTenantIds(rbac.tenantIds),
-    defaultTenantId: String(rbac.defaultTenantId ?? "")
-      .trim()
-      .toLowerCase(),
+    defaultTenantId: normalizeDefaultTenantId(rbac.defaultTenantId),
   };
 }
 
@@ -86,7 +94,7 @@ export function adaptCreateUserPayload(
 ): CreateUserInput {
   const started = Date.now();
 
-  log.debug("admin.adapter.users.create.start", {
+  log.debug("studio.adapter.users.create.start", {
     hasEmail: "email" in dto,
     hasName: "name" in dto,
     hasPassword: "password" in dto,
@@ -96,11 +104,11 @@ export function adaptCreateUserPayload(
   const out: CreateUserInput = {
     email: normalizeEmail(dto.email),
     name: normalizeName(dto.name),
-    password: String(dto.password ?? "").trim(),
+    password: normalizePassword(dto.password),
     rbac: normalizeRbac(dto.rbac) as CreateUserInput["rbac"],
   };
 
-  log.debug("admin.adapter.users.create.end", {
+  log.debug("studio.adapter.users.create.end", {
     ms: Date.now() - started,
     outKeys: Object.keys(out),
   });
@@ -125,7 +133,7 @@ export function adaptUpdateUserPayload(
 ): UpdateUserPatchInput {
   const started = Date.now();
 
-  log.debug("admin.adapter.users.update.start", {
+  log.debug("studio.adapter.users.update.start", {
     hasEmail: "email" in dto,
     hasName: "name" in dto,
     hasPassword: "password" in dto,
@@ -148,17 +156,16 @@ export function adaptUpdateUserPayload(
 
   if ("password" in dto) {
     if (typeof dto.password === "string") {
-      out.password = dto.password.trim();
+      out.password = normalizePassword(dto.password);
     }
   }
 
   if ("rbac" in dto) {
-    // ✅ important : clé présente => on propage (même si l’objet est “vide” côté UI,
-    // mais Zod devrait empêcher un shape invalide)
+    // ✅ important : clé présente => on propage
     out.rbac = normalizeRbac(dto.rbac) as UpdateUserPatchInput["rbac"];
   }
 
-  log.debug("admin.adapter.users.update.end", {
+  log.debug("studio.adapter.users.update.end", {
     ms: Date.now() - started,
     outKeys: Object.keys(out),
   });

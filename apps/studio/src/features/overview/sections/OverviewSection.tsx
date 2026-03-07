@@ -11,53 +11,45 @@
 import { useTranslations } from "next-intl";
 
 import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
-import { cn } from "@compoz/ui/lib/utils";
 
 import { useSiteStatus } from "@compoz/studio/features/site/status/useSiteStatus";
 
-import { OverviewPreviewCard } from "@compoz/studio/features/overview/OverviewPreviewCard";
-import { OverviewSettingsCard } from "@compoz/studio/features/overview/OverviewSettingsCard";
-import { OverviewStatsRow } from "@compoz/studio/features/overview/OverviewStatsRow";
-import { OverviewStatusDetailsTable } from "@compoz/studio/features/overview/OverviewStatusDetailsTable";
-import { StateAndActionsCard } from "@compoz/studio/features/overview/StateAndActionsCard";
+import { OverviewPreviewCard } from "@compoz/studio/features/overview/components/OverviewPreviewCard";
+import { OverviewPublishCard } from "@compoz/studio/features/overview/components/OverviewPublishCard";
+import { OverviewSettingsCard } from "@compoz/studio/features/overview/components/OverviewSettingsCard";
+import { OverviewStatsRow } from "@compoz/studio/features/overview/components/OverviewStatsRow";
+import { OverviewStatusDetailsTable } from "@compoz/studio/features/overview/components/OverviewStatusDetailsTable";
 
 export function OverviewSection() {
   const t = useTranslations();
-  const siteStatus = useSiteStatus();
-  console.log("status.overview", siteStatus);
+
+  const { data, isError, isLoading, isFetching } = useSiteStatus();
+
   return (
     <SettingsSection
       id="overview"
-      title={t("admin.overviewSection.section.title")}
-      description={t("admin.overviewSection.section.description")}
-      isLoading={siteStatus.isLoading}
-      isBusy={siteStatus.isFetching}
+      title={t("studio.overviewSection.section.title")}
+      description={t("studio.overviewSection.section.description")}
+      isLoading={isLoading}
+      isBusy={isFetching}
     >
-      <StateAndActionsCard
-        data={siteStatus.data}
-        isError={siteStatus.isError}
-      />
+      <OverviewPublishCard data={data} isError={isError} />
 
       {/* Stats + Settings */}
-      <div className={cn("grid gap-4 md:grid-cols-2 lg:grid-cols-4")}>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="md:col-span-2 lg:col-span-2">
-          <OverviewStatsRow
-            data={siteStatus.data}
-            isError={siteStatus.isError}
-          />
+          <OverviewStatsRow data={data} isError={isError} />
         </div>
 
         <div className="md:col-span-2 lg:col-span-2">
-          <OverviewSettingsCard
-            data={siteStatus.data}
-            isError={siteStatus.isError}
-          />
+          <OverviewSettingsCard data={data} isError={isError} />
         </div>
       </div>
 
-      {/* ✅ Table toujours visible, lazy en interne */}
+      {/* Table lazy */}
       <OverviewStatusDetailsTable />
 
+      {/* Preview */}
       <OverviewPreviewCard />
     </SettingsSection>
   );

@@ -1,15 +1,22 @@
 /**
  * @file apps/studio/src/app/api/_adapters/pages/pages.ts
- * @layer api/adapters
+ * @layer studio/app/api/adapters
+ *
  * @description
- * Adaptateurs API Admin pour les pages : convertit les payloads de création et de mise à jour
+ * Adaptateurs API Studio pour les pages : convertit les payloads de création et de mise à jour
  * (DTOs) en données partielles ou complètes utilisables par le domaine.
  *
- * Responsabilités : trim des chaînes, propagation des champs optionnels, passage de sitemap inchangé.
- * Le `state` est géré par la route, pas par l’adapter.
+ * Responsabilités :
+ * - trimming défensif (ids, strings)
+ * - propagation des champs optionnels (sémantique PATCH = présence de clé)
+ * - normalisation sitemap (intents `null` -> domaine `undefined`)
+ * - normalisation slug via SoT UI (`toSlugIntentInput`)
+ * - le `state` est géré par la route, pas par l’adapter
  */
 
 import { log } from "@compoz/infra/lib/log";
+import { trimOrKeep } from "@compoz/studio/lib/strings";
+import { toSlugIntentInput } from "@compoz/ui/lib/routing/slug";
 
 import type {
   CreatePageIntentDTO,
@@ -48,30 +55,31 @@ function normalizeSitemapPatch(
  *
  * Contrat :
  * - `title` toujours trimé et obligatoire.
- * - `slug` optionnel : trimé s’il est fourni, sinon logique fallback côté domaine.
- * - `sitemap` : si la clé est présente, on recopie tel quel (déjà validé par Zod).
+ * - `slug` optionnel : normalisé s’il est fourni, sinon logique fallback côté domaine.
+ * - `sitemap` : si la clé est présente, on propage après normalisation (déjà validé par Zod).
  */
 export function adaptCreatePagePayload(
   dto: CreatePageIntentDTO,
 ): CreatePageInput {
   const started = Date.now();
 
-  log.debug("admin.adapter.pages.create.start", {
+  log.debug("studio.adapter.pages.create.start", {
     hasSlug: typeof dto.slug === "string",
     hasSitemap: "sitemap" in dto,
     hasParentId: "parentId" in dto,
   });
 
   const out: CreatePageInput = {
-    title: dto.title.trim(),
+    title: trimOrKeep(dto.title),
     parentId: dto.parentId,
     paginationEnabled: dto.parentId === null ? false : dto.paginationEnabled,
   };
 
   if ("slug" in dto && typeof dto.slug === "string") {
-    const s = dto.slug.trim();
-    if (s === "/") out.slug = "home";
-    else if (s.length > 0) out.slug = s;
+    const s = toSlugIntentInput(dto.slug);
+
+    // create : si vide, on laisse le domaine appliquer son fallback.
+    if (s.length > 0) out.slug = s;
   }
 
   if ("sitemap" in dto) {
@@ -79,7 +87,7 @@ export function adaptCreatePagePayload(
     if (normalized !== undefined) out.sitemap = normalized;
   }
 
-  log.debug("admin.adapter.pages.create.end", {
+  log.debug("studio.adapter.pages.create.end", {
     ms: Date.now() - started,
     outKeys: Object.keys(out),
   });
@@ -93,14 +101,15 @@ export function adaptCreatePagePayload(
  * Contrat :
  * - Un champ n’est posé que si la clé est présente dans le DTO.
  * - `state` est géré par la route.
- * - `sitemap` recopié tel quel si la clé est présente (y compris `{ include: false }`).
+ * - `sitemap` propagé si la clé est présente (y compris `{ include: false }`).
+ * - `slug` : on garde "" comme signal explicite de reset.
  */
 export function adaptUpdatePagePayload(
   dto: UpdatePageIntentDTO,
 ): UpdatePagePatchInput {
   const started = Date.now();
 
-  log.debug("admin.adapter.pages.update.start", {
+  log.debug("studio.adapter.pages.update.start", {
     hasTitle: "title" in dto,
     hasSlug: "slug" in dto,
     hasSitemap: "sitemap" in dto,
@@ -111,15 +120,17 @@ export function adaptUpdatePagePayload(
 
   if ("title" in dto) {
     if (typeof dto.title === "string") {
-      out.title = dto.title.trim();
+      out.title = trimOrKeep(dto.title);
     }
   }
 
   if ("slug" in dto) {
     if (typeof dto.slug === "string") {
-      const s = dto.slug.trim();
-      // ✅ on garde "" comme signal explicite de reset
-      out.slug = s === "/" ? "home" : s;
+      const s = toSlugIntentInput(dto.slug);
+
+      // ✅ important : en update, "" est un reset explicite
+      // HOME_SLUG est aussi une valeur valide (home)
+      out.slug = s;
     }
   }
 
@@ -128,7 +139,7 @@ export function adaptUpdatePagePayload(
     out.parentId = dto.parentId;
   }
 
-  // ✅ nouveau : propager si la clé est présente
+  // ✅ propager si la clé est présente
   if ("paginationEnabled" in dto) {
     out.paginationEnabled = dto.paginationEnabled;
   }
@@ -138,7 +149,7 @@ export function adaptUpdatePagePayload(
     if (normalized !== undefined) out.sitemap = normalized;
   }
 
-  log.debug("admin.adapter.pages.update.end", {
+  log.debug("studio.adapter.pages.update.end", {
     ms: Date.now() - started,
     outKeys: Object.keys(out),
   });

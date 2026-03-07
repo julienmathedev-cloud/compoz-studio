@@ -6,7 +6,7 @@
 
 @import "@compoz/ui/styles/base.css";
 
-.theme-public {
+.theme-site {
   --background: var(--slate-1);
   --foreground: var(--slate-12);
 

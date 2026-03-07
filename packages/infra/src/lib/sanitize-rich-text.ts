@@ -3,13 +3,17 @@
  * @layer infra/lib
  * @description
  * Fonctions utilitaires HTML (server-only) — sanitization allowlist TipTap.
+ *
+ * @remarks
+ * - Allowlist stricte : seules les balises/attributs nécessaires passent.
+ * - Liens : forçage `target="_blank"` + `rel="noopener noreferrer nofollow"`.
  */
 
 import "server-only";
 
 import sanitizeHtml, { type Attributes, type IOptions } from "sanitize-html";
 
-const RICH_TEXT_SANITIZE_OPTIONS: IOptions = {
+export const RICH_TEXT_SANITIZE_OPTIONS = {
   allowedTags: [
     "p",
     "br",
@@ -53,9 +57,9 @@ const RICH_TEXT_SANITIZE_OPTIONS: IOptions = {
   },
 
   transformTags: {
-    a: (_tagName, attribs) => {
+    a: (_tagName: string, attribs: Attributes) => {
       const href = (attribs.href ?? "").trim();
-      if (!href) return { tagName: "span", attribs: {} as Attributes };
+      if (!href) return { tagName: "span", attribs: {} };
 
       const nextAttrs: Attributes = {
         href,
@@ -69,7 +73,7 @@ const RICH_TEXT_SANITIZE_OPTIONS: IOptions = {
 
   disallowedTagsMode: "discard",
   enforceHtmlBoundary: true,
-};
+} as const satisfies IOptions;
 
 export function sanitizeRichTextHtml(inputHtml: string): string {
   const html = (inputHtml ?? "").trim();

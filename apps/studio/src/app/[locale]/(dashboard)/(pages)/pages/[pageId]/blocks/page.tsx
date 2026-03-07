@@ -1,27 +1,26 @@
 /**
  * @file apps/studio/src/app/[locale]/(dashboard)/(pages)/pages/[pageId]/blocks/page.tsx
- * @layer app/studio
+ * @layer studio/app
  *
  * @description
- * Page admin “Blocks” d’une page (V0.5).
+ * Page “Blocks” d’une page (Dashboard Studio) — V0.5.
  *
  * @remarks
  * - Route : /[locale]/pages/[pageId]/blocks
- * - Server Component : fetch page by id (draft).
+ * - Server Component : charge la page par id (draft).
  * - ✅ Multi-tenant : repo instancié avec `tenantId` depuis la session.
  * - Délègue la logique (query/mutations + action bar) au container.
  */
 
 import { notFound } from "next/navigation";
 
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { getPagesRepository } from "@compoz/infra/pages";
+import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 import { PageBlocksListPage } from "@compoz/studio/features/pages/pages/PageBlocksListPage";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 
-type PageParams = Readonly<{
+type StudioPageBlocksPageProps = Readonly<{
   params: Promise<
     Readonly<{
       locale: string;
@@ -30,7 +29,9 @@ type PageParams = Readonly<{
   >;
 }>;
 
-export default async function AdminPageBlocks({ params }: PageParams) {
+export default async function StudioPageBlocksPage({
+  params,
+}: StudioPageBlocksPageProps) {
   const { tenantId } = await requireSessionWithTenant();
   if (!tenantId) notFound();
 
@@ -39,11 +40,11 @@ export default async function AdminPageBlocks({ params }: PageParams) {
 
   const pagesRepo = getPagesRepository({ tenantId });
 
-  // fetch par ID DIRECTEMENT (draft-only)
-  const page = await pagesRepo.readById(WRITE_CONTENT_STATE, pageId);
+  // Fetch par ID directement (draft-only)
+  const page = await pagesRepo.readById(DEFAULT_CONTENT_STATE, pageId);
   if (!page) notFound();
 
   return <PageBlocksListPage pageId={pageId} slug={page.slug} />;
 }
 
-AdminPageBlocks.displayName = "AdminPageBlocks";
+StudioPageBlocksPage.displayName = "StudioPageBlocksPage";

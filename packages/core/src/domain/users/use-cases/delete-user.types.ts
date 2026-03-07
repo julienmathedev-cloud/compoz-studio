@@ -13,9 +13,14 @@ export interface DeleteUserInput {
   userId: string;
 }
 
-/** Sortie minimale : suppression effectuée (ou déjà effectuée). */
+/**
+ * Sortie :
+ * - `ok` : suppression effectuée (ou déjà effectuée)
+ * - `userId` : identifiant supprimé (utile UI/logs/invalidation)
+ */
 export interface DeleteUserResult {
   ok: true;
+  userId: string;
 }
 
 /** Dépendances nécessaires au use-case. */

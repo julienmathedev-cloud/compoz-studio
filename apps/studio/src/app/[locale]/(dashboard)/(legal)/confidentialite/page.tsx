@@ -2,13 +2,13 @@
 
 /**
  * @file apps/studio/src/app/[locale]/(dashboard)/(legal)/confidentialite/page.tsx
- * @layer app/studio
+ * @layer studio/app
  *
  * @description
- * Page « Confidentialité » (admin) — affiche les informations de confidentialité avec un H1 SR-only.
+ * Page « Confidentialité » (Studio) — affiche les informations de confidentialité avec un H1 SR-only.
  *
  * @remarks
- * - Respecte la convention admin : H1 SR-only porté par la page (un seul H1 global).
+ * - Convention Studio : H1 SR-only porté par la page (un seul H1 global).
  * - Le contenu visible est structuré via `SettingsSection` (H2 visible par défaut).
  * - UI-only : aucun fetch, aucun cookie, aucune logique métier.
  * - Contenu i18n via `next-intl`.
@@ -21,25 +21,27 @@ import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
 
 import { cn } from "@compoz/ui/lib/utils";
-import { ADMIN_SECTION } from "@compoz/ui/styles/studio/layout";
+import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
+
+const CONTACT_EMAIL = "julien.mathe.dev@gmail.com" as const;
 
 /**
- * Page Confidentialité (admin).
+ * Page Confidentialité (Studio).
  */
 export default function ConfidentialitePage() {
   const t = useTranslations();
 
   return (
-    <div className={cn(ADMIN_SECTION)}>
+    <div className={cn(STUDIO_SECTION)}>
       {/* ✅ H1 unique global : SR-only (SEO + accessibilité) */}
       <Heading as="h1" className="sr-only">
-        {t("admin.legal.privacy.h1")}
+        {t("studio.legal.privacy.h1")}
       </Heading>
 
       <SettingsSection
         id="legal-privacy"
-        title={t("admin.legal.privacy.title")}
-        description={t("admin.legal.privacy.description")}
+        title={t("studio.legal.privacy.title")}
+        description={t("studio.legal.privacy.description")}
         // pages légales : pas de badge d’état
         showStatusBadge={false}
       >
@@ -49,12 +51,12 @@ export default function ConfidentialitePage() {
           {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
-              {t("admin.legal.privacy.sections.data.title")}
+              {t("studio.legal.privacy.sections.data.title")}
             </Heading>
 
-            <Text as="p">{t("admin.legal.privacy.sections.data.p1")}</Text>
+            <Text as="p">{t("studio.legal.privacy.sections.data.p1")}</Text>
             <Text as="p" variant="muted">
-              {t("admin.legal.privacy.sections.data.note")}
+              {t("studio.legal.privacy.sections.data.note")}
             </Text>
           </div>
 
@@ -63,13 +65,13 @@ export default function ConfidentialitePage() {
           {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
-              {t("admin.legal.privacy.sections.purposes.title")}
+              {t("studio.legal.privacy.sections.purposes.title")}
             </Heading>
 
             <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
-              <li>{t("admin.legal.privacy.sections.purposes.items.0")}</li>
-              <li>{t("admin.legal.privacy.sections.purposes.items.1")}</li>
-              <li>{t("admin.legal.privacy.sections.purposes.items.2")}</li>
+              <li>{t("studio.legal.privacy.sections.purposes.items.0")}</li>
+              <li>{t("studio.legal.privacy.sections.purposes.items.1")}</li>
+              <li>{t("studio.legal.privacy.sections.purposes.items.2")}</li>
             </ul>
           </div>
 
@@ -78,9 +80,11 @@ export default function ConfidentialitePage() {
           {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
-              {t("admin.legal.privacy.sections.retention.title")}
+              {t("studio.legal.privacy.sections.retention.title")}
             </Heading>
-            <Text as="p">{t("admin.legal.privacy.sections.retention.p1")}</Text>
+            <Text as="p">
+              {t("studio.legal.privacy.sections.retention.p1")}
+            </Text>
           </div>
 
           {/* ------------------------------------------------------------------ */}
@@ -88,16 +92,16 @@ export default function ConfidentialitePage() {
           {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
-              {t("admin.legal.privacy.sections.rights.title")}
+              {t("studio.legal.privacy.sections.rights.title")}
             </Heading>
 
-            <Text as="p">{t("admin.legal.privacy.sections.rights.p1")}</Text>
+            <Text as="p">{t("studio.legal.privacy.sections.rights.p1")}</Text>
 
             <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
-              <li>{t("admin.legal.privacy.sections.rights.items.0")}</li>
-              <li>{t("admin.legal.privacy.sections.rights.items.1")}</li>
-              <li>{t("admin.legal.privacy.sections.rights.items.2")}</li>
-              <li>{t("admin.legal.privacy.sections.rights.items.3")}</li>
+              <li>{t("studio.legal.privacy.sections.rights.items.0")}</li>
+              <li>{t("studio.legal.privacy.sections.rights.items.1")}</li>
+              <li>{t("studio.legal.privacy.sections.rights.items.2")}</li>
+              <li>{t("studio.legal.privacy.sections.rights.items.3")}</li>
             </ul>
           </div>
 
@@ -106,14 +110,14 @@ export default function ConfidentialitePage() {
           {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
-              {t("admin.legal.privacy.sections.contact.title")}
+              {t("studio.legal.privacy.sections.contact.title")}
             </Heading>
             <Text as="p" variant="muted">
-              {t.rich("admin.legal.privacy.sections.contact.p1", {
-                emailAdress: "julien.mathe.dev@gmail.com",
+              {t.rich("studio.legal.privacy.sections.contact.p1", {
+                emailAddress: CONTACT_EMAIL,
                 email: (chunks) => (
                   <a
-                    href="mailto:julien.mathe.dev@gmail.com"
+                    href={`mailto:${CONTACT_EMAIL}`}
                     className="underline underline-offset-4 hover:no-underline"
                   >
                     {chunks}

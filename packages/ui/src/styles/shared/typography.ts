@@ -3,7 +3,7 @@
  * @layer styles/shared
  *
  * @description
- * Tokens typographiques PUBLIC pour le rendu “prose” (rich text + contenus).
+ * Tokens typographiques SITE pour le rendu “prose” (rich text + contenus).
  */
 
 export const PROSE_BASE = [
@@ -44,10 +44,10 @@ export const PROSE = [...PROSE_BASE, ...PROSE_HEADINGS] as const;
 export const PROSE_CLASSNAME = PROSE.join(" ");
 
 /**
- * Styles “orphans” : quand tu rends un <PublicHeading /> hors d’un container `prose`.
+ * Styles “orphans” : quand tu rends un <SiteHeading /> hors d’un container `prose`.
  * On aligne sur les tailles/marges de PROSE_HEADINGS.
  */
-export const PUBLIC_HEADING = {
+export const SITE_HEADING = {
   h1: ["text-4xl", "font-bold", "leading-tight", "mt-3", "mb-2"] as const,
   h2: ["text-3xl", "font-bold", "leading-tight", "mt-3", "mb-2"] as const,
   h3: ["text-2xl", "font-bold", "mt-3", "mb-2"] as const,
@@ -56,4 +56,4 @@ export const PUBLIC_HEADING = {
   h6: ["text-base", "font-semibold", "mt-3", "mb-2"] as const,
 } as const;
 
-export type PublicHeadingTag = keyof typeof PUBLIC_HEADING;
+export type SiteHeadingTag = keyof typeof SITE_HEADING;

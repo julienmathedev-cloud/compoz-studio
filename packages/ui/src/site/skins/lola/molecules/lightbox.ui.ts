@@ -1,14 +1,14 @@
 /**
  * @file packages/ui/src/site/skins/lola/molecules/lightbox.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
- * Skin UI — lightbox public (thème Lola).
+ * Skin UI — lightbox site (thème Lola).
  */
 
-import type { PublicLightboxUiOverride } from "@compoz/ui/site/public-ui.types";
+import type { SiteLightboxUiOverride } from "@compoz/ui/site/site-ui.types";
 
-export const lolaLightboxUi: PublicLightboxUiOverride = {
+export const lolaLightboxUi: SiteLightboxUiOverride = {
   overlay:
     "fixed inset-0 z-[100] grid items-center justify-center bg-black/70 backdrop-blur-sm",
 
@@ -23,13 +23,14 @@ export const lolaLightboxUi: PublicLightboxUiOverride = {
   panelFrom:
     "opacity-0 scale-[0.10] motion-reduce:opacity-100 motion-reduce:scale-100",
 
-  // ✅ cleanup doublons
   closeButton:
     "absolute top-2 right-2 z-20 inline-flex items-center justify-center rounded-md bg-white/90 p-2 shadow hover:bg-white cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500",
 
   closeIcon: "size-4 md:size-5 lg:size-6 pointer-events-none",
+
   imageWrap: "relative w-full min-h-[60vh]",
   image: "absolute inset-0 object-contain z-0",
+
   caption:
     "pointer-events-none text-sm md:text-base font-bold leading-tight text-white text-center",
 };

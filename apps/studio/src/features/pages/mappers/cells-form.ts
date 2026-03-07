@@ -1,11 +1,11 @@
 /**
  * @file apps/studio/src/features/pages/mappers/cells-form.ts
- * @layer ui-mappers/pages
+ * @layer ui/studio/pages/mappers
  *
  * @description
- * Mappers "forms admin" dashboard pour les cells :
- * - factories UI (createEmpty*)
- * - normalisation (ensureCellsLength)
+ * Mappers de formulaires studio pour les cells :
+ * - factories UI (`createEmpty*`)
+ * - normalisation (`ensureCellsLength`)
  * - DTO -> FormValues (en s’appuyant sur le mapper shared runtime)
  */
 
@@ -41,7 +41,9 @@ export function createEmptyImageEditor(): ImageEditorFormValues {
  * Crée une cell vide “safe” pour un kind donné (UI-only).
  */
 export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
-  if (kind === "richText") return { kind: "richText", content: "" };
+  if (kind === "richText") {
+    return { kind: "richText", content: "" };
+  }
 
   if (kind === "image") {
     return { kind: "image", image: createEmptyImageEditor() };
@@ -51,11 +53,10 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return { kind: "carousel", images: [createEmptyImageEditor()] };
   }
 
-  // gallery
   return {
     kind: "gallery",
     linksEnabled: false,
-    maxColumns: 3, // valeur UI par défaut (1..5)
+    maxColumns: 3,
     images: [createEmptyImageEditor()],
   };
 }
@@ -65,11 +66,11 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Convertit une Cell DTO en FormValues dashboard.
+ * Convertit une `CellDTO` en `FormValues` studio.
  *
  * @remarks
- * - On réutilise le mapper shared (`toCellShapeFromDTO`) car la shape frontière
- *   correspond déjà à tes types Zod-driven.
+ * - Réutilise le mapper shared `toCellShapeFromDTO`,
+ *   déjà aligné avec les types Zod-driven.
  */
 export function toCellFormValuesFromDTO(cell: CellDTO): CellFormValues {
   return toCellShapeFromDTO(cell);
@@ -83,7 +84,11 @@ export function ensureCellsLength(
   cells: ReadonlyArray<CellFormValues>,
   columns: 1 | 2 | 3,
 ): CellFormValues[] {
-  const out = Array.from(cells ?? []).slice(0, columns);
-  while (out.length < columns) out.push(createEmptyCell("richText"));
-  return out;
+  const output = Array.from(cells ?? []).slice(0, columns);
+
+  while (output.length < columns) {
+    output.push(createEmptyCell("richText"));
+  }
+
+  return output;
 }

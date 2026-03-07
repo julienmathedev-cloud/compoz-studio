@@ -3,31 +3,40 @@
 /**
  * @file apps/studio/src/features/admin/users/hooks/useDeleteUser.ts
  * @layer hooks/admin/users
+ *
+ * @description
+ * Hook Studio React Query pour supprimer un user via l’API.
+ *
+ * @remarks
+ * - Orchestration UI-only : mutation + notifications + cache.
+ * - Supprime le cache `userById` puis invalide la liste.
+ * - Expose `deletingUserId` pour désactiver la ligne ciblée.
  */
 
-import { log } from "@compoz/infra/lib/log";
-import { notify } from "@compoz/studio/lib/ui/notify";
-import { notifyDeleted } from "@compoz/studio/lib/ui/notify-presets";
-import { UiError } from "@compoz/studio/lib/ui/uiError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 
-import { usersAdminApi } from "@compoz/infra/http/studio/users.client";
+import { adminUsersStudioApi } from "@compoz/infra/http/studio/users.client";
+import { log } from "@compoz/infra/lib/log";
+
 import {
   userByIdKey,
   usersListKey,
 } from "@compoz/studio/features/admin/users/cache/keys";
+import { notify } from "@compoz/studio/lib/ui/notify";
+import { notifyDeleted } from "@compoz/studio/lib/ui/notify-presets";
+import { UiError } from "@compoz/studio/lib/ui/uiError";
+
+type DeleteUserArgs = Readonly<{
+  userId: string;
+  label?: string;
+}>;
 
 type UseDeleteUserResult = Readonly<{
   deletingUserId: string | null;
   isDeleting: boolean;
   remove: (args: DeleteUserArgs) => Promise<void>;
-}>;
-
-type DeleteUserArgs = Readonly<{
-  userId: string;
-  label?: string;
 }>;
 
 const lg = log.child({ ns: "hook", name: "useDeleteUser" });
@@ -36,19 +45,18 @@ export function useDeleteUser(onSuccess?: () => void): UseDeleteUserResult {
   const t = useTranslations();
   const qc = useQueryClient();
 
-  // ✅ on réutilise une clé i18n que tu as déjà montrée (plural)
-  const entityLabel = t("admin.shared.entities.users");
+  const entityLabel = t("studio.shared.entities.users");
 
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationKey: ["admin", "users", "delete"] as const,
+    mutationKey: ["studio", "users", "delete"] as const,
 
     mutationFn: async (args: DeleteUserArgs) => {
       const userId = String(args.userId ?? "").trim();
       const fields = ["userId"] as const;
 
-      await usersAdminApi.remove(userId);
+      await adminUsersStudioApi.remove(userId);
 
       return { ...args, userId, fields } as const;
     },
@@ -62,13 +70,13 @@ export function useDeleteUser(onSuccess?: () => void): UseDeleteUserResult {
         }),
       );
 
-      // ✅ 1) purge cache user-by-id (évite une UI “fantôme”)
+      // 1) purge cache user-by-id (évite une UI “fantôme”)
       qc.removeQueries({
         queryKey: userByIdKey(args.userId),
         exact: true,
       });
 
-      // ✅ 2) refresh liste (simple & safe)
+      // 2) refresh liste (simple & safe)
       await qc.invalidateQueries({ queryKey: usersListKey() });
 
       lg.info("delete.ok", { userId: args.userId, fields: args.fields });

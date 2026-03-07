@@ -2,23 +2,25 @@
 
 /**
  * @file apps/studio/src/components/atoms/LoadingStatus.tsx
- * @layer ui/atoms
+ * @layer studio/atoms
  *
  * @description
- * Statut de chargement accessible pour l’interface d’administration.
+ * Statut de chargement accessible pour l’interface Studio.
  *
  * @remarks
  * - Atome UI : aucune logique métier.
  * - Utilise `role="status"` + `aria-live="polite"` pour l’annonce.
- * - Peut afficher un spinner via `AdminIcon`.
+ * - Peut afficher un spinner via `StudioIcon`.
  * - Le label SR est toujours rendu dans le DOM (à masquer via classes si nécessaire).
  */
 
-import { AdminIcon } from "@compoz/studio/components/atoms/AdminIcon";
-import { Text } from "@compoz/studio/components/atoms/typography/Text";
-import { Spinner } from "@compoz/ui/components/ui/spinner";
 import { useTranslations } from "next-intl";
 import type { HTMLAttributes, ReactNode } from "react";
+
+import { Spinner } from "@compoz/ui/components/ui/spinner";
+
+import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
+import { Text } from "@compoz/studio/components/atoms/typography/Text";
 
 /**
  * Props du composant `LoadingStatus`.
@@ -32,7 +34,7 @@ export type LoadingStatusProps = Readonly<{
   HTMLAttributes<HTMLSpanElement>;
 
 /**
- * Affiche un statut de chargement (admin).
+ * Affiche un statut de chargement (Studio).
  */
 export function LoadingStatus({
   label,
@@ -45,7 +47,7 @@ export function LoadingStatus({
 
   return (
     <span role="status" aria-live="polite" aria-atomic="true" {...rest}>
-      {withSpinner && <AdminIcon icon={Spinner} />}
+      {withSpinner && <StudioIcon icon={Spinner} />}
 
       {children && (
         <Text as="span" variant="muted">

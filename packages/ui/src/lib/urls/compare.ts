@@ -1,12 +1,15 @@
 /**
  * @file packages/ui/src/lib/urls/compare.ts
- * @layer lib/urls
+ * @layer ui/lib/urls
  * @description
  * Génère des clés de comparaison stables pour dédupliquer des `href` et des labels
  * (menus, liens sociaux, etc.).
  *
  * ⚠️ Ces normalisations sont **uniquement** destinées à la comparaison (détection de doublons).
  * Ne pas utiliser pour une URL canonique de persistance.
+ *
+ * @remarks
+ * Dépendances `@compoz/core/domain/urls/*` : helpers "purs" de parsing/guards URL.
  */
 
 import { isAbsoluteHttpProtocol } from "@compoz/core/domain/urls/guards";
@@ -37,6 +40,23 @@ function normalizeRelativePath(input: string): string {
   if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
 
   return p;
+}
+
+/**
+ * Normalise une URL de protocole "spécial" pour comparaison.
+ *
+ * @remarks
+ * - Ne tente pas de "réparer" ou parser le contenu, on veut juste une clé stable.
+ * - Ex: `TEL:+33...` => `tel:+33...`
+ */
+function normalizeSpecialProtocol(href: string): string {
+  const s = (href ?? "").trim();
+  const i = s.indexOf(":");
+  if (i <= 0) return s;
+
+  const proto = s.slice(0, i).toLowerCase();
+  const rest = s.slice(i + 1); // on garde le reste tel quel (numéro, params…)
+  return `${proto}:${rest}`;
 }
 
 /**
@@ -141,7 +161,7 @@ function normalizeMailto(href: string): string | null {
 /**
  * Génère une clé de comparaison stable pour un href.
  *
- * - Détecte le protocole ("mailto:", "http:", "https:")
+ * - Détecte le protocole ("mailto:", "tel:", "http:", "https:")
  * - Sélectionne la normalisation adaptée
  * - Fallback : considère le lien comme chemin relatif (tolérant)
  */
@@ -156,10 +176,14 @@ export function hrefCompareKey(raw: string): string {
 
   const i = s.indexOf(":");
 
-  // Cas protocole explicite : mailto ou http(s)
+  // Cas protocole explicite : mailto/tel ou http(s)
   if (i > 0) {
     const proto = s.slice(0, i + 1).toLowerCase();
+
     if (proto === "mailto:") return normalizeMailto(s) ?? s;
+
+    // `tel:` est un protocole "spécial" : on le normalise seulement sur la casse.
+    if (proto === "tel:") return normalizeSpecialProtocol(s);
 
     const http = normalizeHttpLike(s);
     if (http) return http;

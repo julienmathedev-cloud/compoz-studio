@@ -18,7 +18,7 @@ import { Heading } from "@compoz/studio/components/atoms/typography/Heading";
 import { OverviewSection } from "@compoz/studio/features/overview/sections/OverviewSection";
 
 import { cn } from "@compoz/ui/lib/utils";
-import { ADMIN_SECTION } from "@compoz/ui/styles/studio/layout";
+import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 
 /**
  * Page Overview (admin).
@@ -27,9 +27,9 @@ export function OverviewPage() {
   const t = useTranslations();
 
   return (
-    <div className={cn(ADMIN_SECTION)}>
+    <div className={cn(STUDIO_SECTION)}>
       <Heading as="h1" className="sr-only">
-        {t("admin.shared.entities.overview")}
+        {t("studio.shared.entities.overview")}
       </Heading>
 
       <OverviewSection />

@@ -1,15 +1,19 @@
 /**
  * @file packages/infra/src/id/uuidv7.ts
- * @layer infrastructure
+ * @layer infra/id
  *
  * @description
- * Implémentation infra de génération d’ID via UUID v7.
+ * Implémentation infra du port `IdGenerator` utilisant UUID v7.
  */
+
 import type { IdGenerator } from "@compoz/core/domain/ports/id-generator";
 import { v7 as uuidv7 } from "uuid";
 
+/**
+ * Crée un générateur d'ID basé sur UUID v7.
+ */
 export function createUuidV7IdGenerator(): IdGenerator {
-  return {
-    nextId: () => uuidv7(),
-  };
+  const nextId = () => uuidv7();
+
+  return { nextId };
 }

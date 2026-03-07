@@ -3,6 +3,13 @@
  * @layer infra/pages
  * @description
  * Implémentation du PagesRepository basé sur une base KV (Upstash Redis).
+ *
+ * @remarks
+ * - Stocke les documents pages par `pageId`.
+ * - Maintient un index secondaire `slug -> pageId` pour éviter les scans KV
+ *   dans `readBySlug()` / `existsBySlug()`.
+ * - Maintient aussi un index secondaire `pageId -> slug` pour éviter
+ *   de relire le document complet juste pour retrouver l’ancien slug.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
@@ -12,39 +19,54 @@ import type {
   LayoutSectionBlock,
 } from "@compoz/core/domain/pages/entities/block";
 import type { Cell } from "@compoz/core/domain/pages/entities/cell";
-import type {
-  Page,
-  PageMeta,
-  PageSummary,
-} from "@compoz/core/domain/pages/entities/page";
+import type { Page, PageMeta } from "@compoz/core/domain/pages/entities/page";
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
 
 import { kvCmd } from "@compoz/infra/kv/kv-telemetry";
 
 // ⛳️ NOTE: idéalement ces schémas vivent dans @compoz/core (boundary validation),
 // pour que @compoz/infra ne dépende pas d’un import "app".
-import type { PageShape } from "@compoz/validation/pages/page";
-import { PageSchema } from "@compoz/validation/pages/page";
+import { PageSchema, type PageShape } from "@compoz/validation/pages/page";
 
-import { Redis } from "@upstash/redis";
+import { getUpstashRedis, parseRedisJson } from "@compoz/infra/kv/kv-redis";
+import { normalizeTenantId } from "@compoz/infra/lib/normalize-tenant-id";
+
+/* -------------------------------------------------------------------------- */
+/* Logs / telemetry                                                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Namespace standard (SoT) :
+ * compoz:<surface>:<layer>:<module>
+ *
+ * Ici : dépôt pages en KV, consommé côté Studio.
+ */
+const LOG_NS = "compoz:studio:repo:pages" as const;
+
+/**
+ * Construit un context "stable" pour la télémétrie KV.
+ * Contrat : pas de clé complète (pas de PII / pas d’id dans le context).
+ */
+function kvCtx(op: string, state: ContentState): string {
+  return `${LOG_NS}.${op}.${state}`;
+}
 
 /* -------------------------------------------------------------------------- */
 /* Options                                                                    */
 /* -------------------------------------------------------------------------- */
 
-type KvPagesRepositoryOptions = {
-  /** Tenant cible (siteId). Fallback: "default". */
+type KvPagesRepositoryOptions = Readonly<{
+  /** Tenant cible. Fallback: "default". */
   tenantId?: string;
-};
-
-function normalizeTenantId(input: unknown): string {
-  const t = String(input ?? "").trim();
-  return t.length > 0 ? t : "default";
-}
+}>;
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
+
+function normalizeSlug(slug: unknown): string {
+  return String(slug ?? "").trim();
+}
 
 function toDomainPage(p: PageShape): Page {
   const meta: PageMeta = {
@@ -75,70 +97,24 @@ function toDomainPage(p: PageShape): Page {
   };
 }
 
-/**
- * Upstash peut renvoyer directement un objet (auto-deserialization),
- * ou une string JSON, selon la config / le contenu.
- *
- * Contrat : retourne un objet JSON exploitable ou `null`.
- */
-function parseRedisJson<T>(raw: unknown): T | null {
-  if (raw == null) return null;
-
-  // Cas 1: déjà un objet JSON (Upstash a parsé pour nous)
-  if (typeof raw === "object") return raw as T;
-
-  // Cas 2: string JSON
-  if (typeof raw === "string") {
-    const s = raw.trim();
-    if (!s) return null;
-    return JSON.parse(s) as T;
-  }
-
-  // Cas 3: autre primitive (number/boolean) -> tentative via String()
-  return JSON.parse(String(raw)) as T;
-}
-
-let _redisSingleton: Redis | null = null;
-
-function getUpstashRedis(): Redis {
-  if (_redisSingleton) return _redisSingleton;
-
-  const url =
-    process.env["KV_REST_API_URL"] ?? process.env["UPSTASH_REDIS_REST_URL"];
-  const token =
-    process.env["KV_REST_API_TOKEN"] ?? process.env["UPSTASH_REDIS_REST_TOKEN"];
-
-  if (!url || !token) {
-    throw new Error(
-      "KvPagesRepository: missing Redis env. Expected KV_REST_API_URL/KV_REST_API_TOKEN (or UPSTASH_REDIS_REST_URL/UPSTASH_REDIS_REST_TOKEN).",
-    );
-  }
-
-  _redisSingleton = new Redis({ url, token });
-  return _redisSingleton;
-}
-
 function pageKey(tenant: string, state: ContentState, pageId: string): string {
   return `compoz:${tenant}:${state}:pages:${pageId}`;
 }
 
-function pageKeyPattern(tenant: string, state: ContentState): string {
-  return `compoz:${tenant}:${state}:pages:*`;
+function pageSlugIndexKey(
+  tenant: string,
+  state: ContentState,
+  slug: string,
+): string {
+  return `compoz:${tenant}:${state}:pagesBySlug:${slug}`;
 }
 
-function pageIdFromKey(key: string): string | null {
-  // key = compoz:<tenant>:<state>:pages:<pageId>
-  const parts = String(key ?? "").split(":");
-  const id = parts[parts.length - 1];
-  return id ? id.trim() : null;
-}
-
-/**
- * Construit un context "stable" pour la télémétrie KV.
- * Note : on ne loggue pas la key complète (pas de PII / pas d’id dans le context).
- */
-function kvCtx(base: string, state: ContentState): string {
-  return `pages.${base}.${state}`;
+function pageSlugRefKey(
+  tenant: string,
+  state: ContentState,
+  pageId: string,
+): string {
+  return `compoz:${tenant}:${state}:pageSlugById:${pageId}`;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -146,7 +122,7 @@ function kvCtx(base: string, state: ContentState): string {
 /* -------------------------------------------------------------------------- */
 
 export class KvPagesRepository implements PagesRepository {
-  private readonly redis: Redis;
+  private readonly redis = getUpstashRedis();
   private readonly tenantId: string;
 
   constructor(opts: KvPagesRepositoryOptions = {}) {
@@ -156,6 +132,36 @@ export class KvPagesRepository implements PagesRepository {
 
   async ensureBase(): Promise<void> {
     // no-op (KV)
+  }
+
+  private async readSlugOwnerId(
+    state: ContentState,
+    slug: string,
+  ): Promise<string | null> {
+    const target = normalizeSlug(slug);
+    if (!target) return null;
+
+    const rawPageId = await kvCmd(kvCtx("slugIndex.get", state), "get", () =>
+      this.redis.get(pageSlugIndexKey(this.tenantId, state, target)),
+    );
+
+    const pageId = typeof rawPageId === "string" ? rawPageId.trim() : "";
+    return pageId || null;
+  }
+
+  private async readSlugByPageId(
+    state: ContentState,
+    pageId: string,
+  ): Promise<string | null> {
+    const id = String(pageId ?? "").trim();
+    if (!id) return null;
+
+    const rawSlug = await kvCmd(kvCtx("slugRef.get", state), "get", () =>
+      this.redis.get(pageSlugRefKey(this.tenantId, state, id)),
+    );
+
+    const slug = typeof rawSlug === "string" ? rawSlug.trim() : "";
+    return slug || null;
   }
 
   async readById(state: ContentState, pageId: string): Promise<Page | null> {
@@ -174,14 +180,10 @@ export class KvPagesRepository implements PagesRepository {
   }
 
   async readBySlug(state: ContentState, slug: string): Promise<Page | null> {
-    // V0.5 : scan best-effort (comme ton FS impl)
-    const target = String(slug ?? "").trim();
-    if (!target) return null;
+    const pageId = await this.readSlugOwnerId(state, slug);
+    if (!pageId) return null;
 
-    // ⚠️ coûteux : list (KEYS+MGET) + lecture détaillée par ID
-    const pages = await this.list(state);
-    const match = pages.find((p) => p.slug === target);
-    return match ? this.readById(state, match.id) : null;
+    return this.readById(state, pageId);
   }
 
   async put(state: ContentState, page: Page): Promise<void> {
@@ -190,15 +192,52 @@ export class KvPagesRepository implements PagesRepository {
       throw new Error("KvPagesRepository.put: page.id is required.");
     }
 
-    // Défense/contract : validation frontière
     PageSchema.parse(page);
 
-    // Stockage en string JSON (ok même si Upstash auto-parse au get)
+    const nextSlug = normalizeSlug(page.slug);
+    if (!nextSlug) {
+      throw new Error("KvPagesRepository.put: page.slug is required.");
+    }
+
+    const [rawPrevSlug, rawSlugOwnerId] = await kvCmd(
+      kvCtx("put.indexes.mget", state),
+      "other",
+      () =>
+        this.redis.mget(
+          pageSlugRefKey(this.tenantId, state, pageId),
+          pageSlugIndexKey(this.tenantId, state, nextSlug),
+        ),
+    );
+
+    const prevSlug =
+      typeof rawPrevSlug === "string" ? normalizeSlug(rawPrevSlug) : "";
+
+    const slugOwnerId =
+      typeof rawSlugOwnerId === "string" ? rawSlugOwnerId.trim() : "";
+
+    if (slugOwnerId && slugOwnerId !== pageId) {
+      throw new Error("KvPagesRepository.put: slug already exists.");
+    }
+
     await kvCmd(kvCtx("put.set", state), "set", () =>
       this.redis.set(
         pageKey(this.tenantId, state, pageId),
         JSON.stringify(page),
       ),
+    );
+
+    if (prevSlug && prevSlug !== nextSlug) {
+      await kvCmd(kvCtx("put.slugIndex.delOld", state), "del", () =>
+        this.redis.del(pageSlugIndexKey(this.tenantId, state, prevSlug)),
+      );
+    }
+
+    await kvCmd(kvCtx("put.slugIndex.set", state), "set", () =>
+      this.redis.set(pageSlugIndexKey(this.tenantId, state, nextSlug), pageId),
+    );
+
+    await kvCmd(kvCtx("put.slugRef.set", state), "set", () =>
+      this.redis.set(pageSlugRefKey(this.tenantId, state, pageId), nextSlug),
     );
   }
 
@@ -209,27 +248,127 @@ export class KvPagesRepository implements PagesRepository {
     await this.ensureBase();
     if (pages.length === 0) return;
 
-    // Upstash MSET (object form): mset({ key1: val1, key2: val2, ... })
     const record: Record<string, string> = {};
+    const nextPages: Array<{ id: string; slug: string; page: Page }> = [];
 
     for (const p of pages) {
       const id = String(p?.id ?? "").trim();
       if (!id) continue;
 
       PageSchema.parse(p);
+
+      const slug = normalizeSlug(p.slug);
+      if (!slug) {
+        throw new Error("KvPagesRepository.putMany: page.slug is required.");
+      }
+
       record[pageKey(this.tenantId, state, id)] = JSON.stringify(p);
+      nextPages.push({ id, slug, page: p });
     }
 
-    if (Object.keys(record).length === 0) return;
+    if (nextPages.length === 0) return;
+
+    const seenBatchSlugOwner = new Map<string, string>();
+    for (const item of nextPages) {
+      const currentOwner = seenBatchSlugOwner.get(item.slug);
+      if (currentOwner && currentOwner !== item.id) {
+        throw new Error("KvPagesRepository.putMany: duplicate slug in batch.");
+      }
+      seenBatchSlugOwner.set(item.slug, item.id);
+    }
+
+    const refKeys = nextPages.map((item) =>
+      pageSlugRefKey(this.tenantId, state, item.id),
+    );
+
+    const ownerKeys = nextPages.map((item) =>
+      pageSlugIndexKey(this.tenantId, state, item.slug),
+    );
+
+    const [rawPrevSlugs, rawSlugOwners] = await Promise.all([
+      kvCmd(kvCtx("putMany.slugRefs.mget", state), "other", () =>
+        this.redis.mget(...refKeys),
+      ),
+      kvCmd(kvCtx("putMany.slugOwners.mget", state), "other", () =>
+        this.redis.mget(...ownerKeys),
+      ),
+    ]);
+
+    const prevSlugById = new Map<string, string>();
+    if (Array.isArray(rawPrevSlugs)) {
+      for (let i = 0; i < nextPages.length; i += 1) {
+        const rawPrevSlug = rawPrevSlugs[i];
+        const prevSlug =
+          typeof rawPrevSlug === "string" ? normalizeSlug(rawPrevSlug) : "";
+        if (prevSlug) {
+          prevSlugById.set(nextPages[i].id, prevSlug);
+        }
+      }
+    }
+
+    if (Array.isArray(rawSlugOwners)) {
+      for (let i = 0; i < nextPages.length; i += 1) {
+        const item = nextPages[i];
+        const rawSlugOwnerId = rawSlugOwners[i];
+        const slugOwnerId =
+          typeof rawSlugOwnerId === "string" ? rawSlugOwnerId.trim() : "";
+
+        if (slugOwnerId && slugOwnerId !== item.id) {
+          const prevSlug = prevSlugById.get(item.id) ?? "";
+          if (prevSlug !== item.slug) {
+            throw new Error("KvPagesRepository.putMany: slug already exists.");
+          }
+        }
+      }
+    }
 
     await kvCmd(kvCtx("putMany.mset", state), "other", () =>
       this.redis.mset(record),
     );
+
+    const slugRefRecord: Record<string, string> = {};
+
+    for (const item of nextPages) {
+      const prevSlug = prevSlugById.get(item.id) ?? "";
+
+      if (prevSlug && prevSlug !== item.slug) {
+        await kvCmd(kvCtx("putMany.slugIndex.delOld", state), "del", () =>
+          this.redis.del(pageSlugIndexKey(this.tenantId, state, prevSlug)),
+        );
+      }
+
+      await kvCmd(kvCtx("putMany.slugIndex.set", state), "set", () =>
+        this.redis.set(
+          pageSlugIndexKey(this.tenantId, state, item.slug),
+          item.id,
+        ),
+      );
+
+      slugRefRecord[pageSlugRefKey(this.tenantId, state, item.id)] = item.slug;
+    }
+
+    if (Object.keys(slugRefRecord).length > 0) {
+      await kvCmd(kvCtx("putMany.slugRefs.mset", state), "other", () =>
+        this.redis.mset(slugRefRecord),
+      );
+    }
   }
 
   async deleteById(state: ContentState, pageId: string): Promise<void> {
     const id = String(pageId ?? "").trim();
     if (!id) return;
+
+    const slug = await this.readSlugByPageId(state, id);
+
+    if (slug) {
+      await kvCmd(kvCtx("deleteById.slugIndex.del", state), "del", () =>
+        this.redis.del(pageSlugIndexKey(this.tenantId, state, slug)),
+      );
+    }
+
+    await kvCmd(kvCtx("deleteById.slugRef.del", state), "del", () =>
+      this.redis.del(pageSlugRefKey(this.tenantId, state, id)),
+    );
 
     await kvCmd(kvCtx("deleteById.del", state), "del", () =>
       this.redis.del(pageKey(this.tenantId, state, id)),
@@ -237,13 +376,10 @@ export class KvPagesRepository implements PagesRepository {
   }
 
   async deleteBySlug(state: ContentState, slug: string): Promise<void> {
-    const s = String(slug ?? "").trim();
-    if (!s) return;
+    const pageId = await this.readSlugOwnerId(state, slug);
+    if (!pageId) return;
 
-    const found = await this.readBySlug(state, s);
-    if (!found) return;
-
-    await this.deleteById(state, found.id);
+    await this.deleteById(state, pageId);
   }
 
   async existsById(state: ContentState, pageId: string): Promise<boolean> {
@@ -258,53 +394,8 @@ export class KvPagesRepository implements PagesRepository {
   }
 
   async existsBySlug(state: ContentState, slug: string): Promise<boolean> {
-    const s = String(slug ?? "").trim();
-    if (!s) return false;
-
-    const p = await this.readBySlug(state, s);
-    return Boolean(p?.id);
-  }
-
-  async list(state: ContentState): Promise<Array<PageSummary>> {
-    const pattern = pageKeyPattern(this.tenantId, state);
-
-    // 1) récupérer les keys de pages (V0.5 : KEYS OK, mais O(N))
-    const keys = await kvCmd(kvCtx("list.keys", state), "other", () =>
-      this.redis.keys(pattern),
-    );
-
-    if (!Array.isArray(keys) || keys.length === 0) return [];
-
-    // 2) mget pour limiter les RTT
-    const raws = await kvCmd(kvCtx("list.mget", state), "other", () =>
-      this.redis.mget(...keys),
-    );
-
-    if (!Array.isArray(raws) || raws.length === 0) return [];
-
-    // 3) parse + validate -> PageSummary (si un doc est corrompu, on skip)
-    const out: PageSummary[] = [];
-
-    for (let i = 0; i < raws.length; i += 1) {
-      const raw = raws[i];
-      const json = parseRedisJson<unknown>(raw);
-      if (!json) continue;
-
-      try {
-        const parsed = PageSchema.parse(json);
-
-        out.push({
-          id: parsed.id ?? pageIdFromKey(keys[i]) ?? "",
-          slug: parsed.slug,
-          title: parsed.title,
-          parentId: parsed.parentId ?? null,
-        });
-      } catch {
-        // skip
-      }
-    }
-
-    return out.filter((p) => Boolean(String(p.id ?? "").trim()));
+    const pageId = await this.readSlugOwnerId(state, slug);
+    return Boolean(pageId);
   }
 
   async readManyById(

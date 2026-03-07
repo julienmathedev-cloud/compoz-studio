@@ -3,8 +3,8 @@
  * @layer core/constants/common
  *
  * @description
- * Constantes & types liés aux états de contenu (draft/published).
- * Invariants : valeurs stables (persistées) + type-guard robuste aux frontières.
+ * Constantes & types liés aux états de contenu persistés (draft/published).
+ * Invariants : valeurs stables utilisées dans la persistance et les use-cases.
  */
 
 /* -------------------------------------------------------------------------- */
@@ -23,23 +23,10 @@ export const CONTENT_STATE = {
  * État par défaut pour un contenu nouvellement créé.
  * Utilisé notamment lorsqu’aucun `?state=` n’est précisé.
  */
-export const WRITE_CONTENT_STATE = CONTENT_STATE.DRAFT;
+export const DEFAULT_CONTENT_STATE = CONTENT_STATE.DRAFT;
 
 /**
  * Type TypeScript dérivé de `CONTENT_STATE`.
  * Résultat : `"draft" | "published"`
  */
 export type ContentState = (typeof CONTENT_STATE)[keyof typeof CONTENT_STATE];
-
-/** Valeurs autorisées (dérivées de la source de vérité) pour des checks robustes. */
-const CONTENT_STATE_VALUES = Object.values(CONTENT_STATE) as ContentState[];
-
-/**
- * Garde de type pour vérifier qu’une valeur inconnue correspond à un `ContentState` valide.
- * Utilisé principalement aux frontières (HTTP, parsing de paramètres).
- */
-export function isContentState(v: unknown): v is ContentState {
-  return (
-    typeof v === "string" && CONTENT_STATE_VALUES.includes(v as ContentState)
-  );
-}

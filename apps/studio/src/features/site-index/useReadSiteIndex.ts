@@ -10,7 +10,7 @@
  * @remarks
  * - Orchestration UI-only (query + logs + notifications).
  * - Utilise `AbortSignal` fourni par React Query.
- * - Draft-only par défaut : WRITE_CONTENT_STATE.
+ * - Draft-only par défaut : DEFAULT_CONTENT_STATE.
  * - Aucune logique métier ni validation domaine.
  */
 
@@ -19,14 +19,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
-import { WRITE_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import {
+  DEFAULT_CONTENT_STATE,
+  type ContentState,
+} from "@compoz/core/constants/common/content-state";
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
-import { pagesAdminApi } from "@compoz/infra/http/studio/pages.client";
+import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
+import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
 import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
 import { notify } from "@compoz/studio/lib/ui/notify";
-
-import type { ContentState } from "@compoz/core/constants/common/content-state";
-import { useTenantId } from "@compoz/studio/features/admin/context/TenantContext";
 
 type UseReadSiteIndexResult = Readonly<{
   /** Dernier index chargé (ou `null` tant que rien n’a été récupéré). */
@@ -38,22 +39,25 @@ type UseReadSiteIndexResult = Readonly<{
 const lg = log.child({ ns: "hook", name: "useReadSiteIndex" });
 
 export function useReadSiteIndex(
-  state: ContentState = WRITE_CONTENT_STATE,
+  state: ContentState = DEFAULT_CONTENT_STATE,
 ): UseReadSiteIndexResult {
   const t = useTranslations();
-  const entityLabel = t("admin.shared.entities.siteIndex");
+  const entityLabel = t("studio.shared.entities.siteIndex");
 
   const tenantId = useTenantId();
-
   const enabled = Boolean(tenantId);
 
-  const query = useQuery({
+  const query = useQuery<SiteIndexDTO, Error>({
     queryKey: siteIndexKey(tenantId, state),
     enabled,
 
-    queryFn: async ({ signal }): Promise<SiteIndexDTO> => {
+    queryFn: async ({
+      signal,
+    }: {
+      signal: AbortSignal;
+    }): Promise<SiteIndexDTO> => {
       const res = await logSpan("ui.siteIndex.load", { tenantId, state }, () =>
-        pagesAdminApi.getIndex(state, { signal }),
+        pagesStudioApi.getIndex(state, { signal }),
       );
 
       const index = res.index; // ✅ flatten
@@ -63,8 +67,8 @@ export function useReadSiteIndex(
     },
 
     // évite le flash si le state change / refetch
-    placeholderData: (prev) => prev,
-  } as const);
+    placeholderData: (prev: SiteIndexDTO | undefined) => prev,
+  });
 
   useEffect(() => {
     if (!query.error) return;

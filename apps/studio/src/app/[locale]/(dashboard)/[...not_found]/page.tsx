@@ -1,9 +1,9 @@
 /**
  * @file apps/studio/src/app/[locale]/(dashboard)/[...not_found]/page.tsx
- * @layer app/not-found
+ * @layer studio/app
  *
  * @description
- * Catch-all du scope localisé.
+ * Catch-all du dashboard localisé.
  *
  * @remarks
  * - Force l’utilisation de `src/app/[locale]/not-found.tsx`

@@ -1,8 +1,8 @@
 /**
- * @file src/core/domain/site/validators/status.ts
+ * @file packages/core/src/domain/site/validators/status.ts
  * @layer core/domain
  * @description
- * Validateur de contrat — SiteStatus :
+ * Validateur de contrat — SiteStatus (read-model) :
  * - protège contre les réponses JSON vides / incohérentes
  * - assure une shape minimale exploitable côté UI
  *
@@ -13,44 +13,42 @@
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
-import type { SiteStatusDTO } from "@compoz/core/domain/site/dto";
+import type { SiteStatus } from "@compoz/core/domain/site/entities/site-status";
+
+function isObject(v: unknown): v is Record<string, unknown> {
+  return Boolean(v) && typeof v === "object";
+}
 
 /**
  * Assertion "shape minimale" pour éviter les `{}` silencieux.
  *
- * @throws DomainError(EC.INVALID_DTO) si la réponse ne respecte pas le contrat minimal.
+ * @throws DomainError(EC.INVALID_ARGUMENT) si la réponse ne respecte pas le contrat minimal.
  */
-export function assertSiteStatusDTO(x: unknown): asserts x is SiteStatusDTO {
-  if (!x || typeof x !== "object") {
+export function assertSiteStatus(x: unknown): asserts x is SiteStatus {
+  if (!isObject(x)) {
     throw new DomainError({
       code: EC.INVALID_ARGUMENT,
       message: EC.INVALID_ARGUMENT,
-      details: { ctx: "SiteStatusDTO", rule: "expects_object", value: x },
+      details: { ctx: "SiteStatus", rule: "expects_object", value: x },
     });
   }
 
-  const o = x as Record<string, unknown>;
+  const o = x;
 
-  /**
-   * ✅ Règle minimale :
-   * on exige au moins UN champ “structurant” attendu par l’UI.
-   *
-   * ⚠️ À adapter à TON DTO réel :
-   * - ex: "published" | "dirty" | "dirtyParts" | "counts" | "lastPublishedAt"...
-   */
-  const hasSomeExpectedKey =
-    "published" in o ||
-    "hasChanges" in o ||
-    "counts" in o ||
-    "lastPublishedAt" in o;
+  // Pivots structurants attendus par l’UI (shape minimale)
+  const ok =
+    isObject(o.published) &&
+    isObject(o.hasChanges) &&
+    isObject(o.counts) &&
+    isObject(o.changedSettings);
 
-  if (!hasSomeExpectedKey) {
+  if (!ok) {
     throw new DomainError({
       code: EC.INVALID_ARGUMENT,
       message: EC.INVALID_ARGUMENT,
       details: {
-        ctx: "SiteStatusDTO",
-        rule: "missing_expected_keys",
+        ctx: "SiteStatus",
+        rule: "missing_required_sections",
         keys: Object.keys(o),
       },
     });

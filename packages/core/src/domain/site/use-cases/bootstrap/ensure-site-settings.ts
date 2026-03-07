@@ -1,6 +1,6 @@
 /**
  * @file packages/core/src/domain/site/use-cases/bootstrap/ensure-site-settings.ts
- * @desc Use-cases “ensure” pour les différents sous-ensembles de SiteSettings.
+ * @description Use-cases “ensure” pour les différents sous-ensembles de SiteSettings.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
@@ -23,9 +23,9 @@ async function ensureSubSettings<
   T extends keyof Awaited<ReturnType<SiteRepository["readSettings"]>>,
 >(
   repo: SiteRepository,
+  defaults: Awaited<ReturnType<SiteRepository["readSettings"]>>[T],
   state: ContentState,
   key: T,
-  seed: Awaited<ReturnType<SiteRepository["readSettings"]>>[T],
 ): Promise<Awaited<ReturnType<SiteRepository["readSettings"]>>[T]> {
   await repo.ensureBase();
 
@@ -37,12 +37,12 @@ async function ensureSubSettings<
 
   const next = {
     ...current,
-    [key]: seed,
+    [key]: defaults,
   };
 
-  await repo.writeSettings(state, next);
+  await repo.putSettings(state, next);
 
-  return seed;
+  return defaults;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -51,56 +51,56 @@ async function ensureSubSettings<
 
 export async function ensureIdentitySettings(
   repo: SiteRepository,
-  seed: IdentitySettings,
+  defaults: IdentitySettings,
   state: ContentState,
 ): Promise<IdentitySettings> {
-  return ensureSubSettings(repo, state, "identity", seed);
+  return ensureSubSettings(repo, defaults, state, "identity");
 }
 
 export async function ensureLegalMenuSettings(
   repo: SiteRepository,
-  seed: LegalMenuSettings,
+  defaults: LegalMenuSettings,
   state: ContentState,
 ): Promise<LegalMenuSettings> {
-  return ensureSubSettings(repo, state, "legalMenu", seed);
+  return ensureSubSettings(repo, defaults, state, "legalMenu");
 }
 
 export async function ensurePrimaryMenuSettings(
   repo: SiteRepository,
-  seed: PrimaryMenuSettings,
+  defaults: PrimaryMenuSettings,
   state: ContentState,
 ): Promise<PrimaryMenuSettings> {
-  return ensureSubSettings(repo, state, "primaryMenu", seed);
+  return ensureSubSettings(repo, defaults, state, "primaryMenu");
 }
 
 export async function ensureSocialSettings(
   repo: SiteRepository,
-  seed: SocialSettings,
+  defaults: SocialSettings,
   state: ContentState,
 ): Promise<SocialSettings> {
-  return ensureSubSettings(repo, state, "social", seed);
+  return ensureSubSettings(repo, defaults, state, "social");
 }
 
 export async function ensureHeaderSettings(
   repo: SiteRepository,
-  seed: HeaderSettings,
+  defaults: HeaderSettings,
   state: ContentState,
 ): Promise<HeaderSettings> {
-  return ensureSubSettings(repo, state, "header", seed);
+  return ensureSubSettings(repo, defaults, state, "header");
 }
 
 export async function ensureFooterSettings(
   repo: SiteRepository,
-  seed: FooterSettings,
+  defaults: FooterSettings,
   state: ContentState,
 ): Promise<FooterSettings> {
-  return ensureSubSettings(repo, state, "footer", seed);
+  return ensureSubSettings(repo, defaults, state, "footer");
 }
 
 export async function ensureSeoSettings(
   repo: SiteRepository,
-  seed: SeoSettings,
+  defaults: SeoSettings,
   state: ContentState,
 ): Promise<SeoSettings> {
-  return ensureSubSettings(repo, state, "seo", seed);
+  return ensureSubSettings(repo, defaults, state, "seo");
 }

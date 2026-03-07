@@ -2,7 +2,7 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/editor/LayoutSectionBlockEditorForm.tsx
- * @layer ui/organisms
+ * @layer ui/studio/pages/blocks/editor
  *
  * @description
  * Form RHF+Zod pour éditer un block LayoutSection (header + cells).
@@ -27,8 +27,8 @@ import type { CellErrorByIndex } from "@compoz/studio/features/pages/blocks/edit
 import { CellEditorTabs } from "@compoz/studio/features/pages/blocks/editor/CellEditorTabs";
 import { PageBlockEditHeader } from "@compoz/studio/features/pages/blocks/editor/PageBlockEditHeader";
 
-import { focusByFieldId } from "@compoz/ui/lib/focus";
 import { notify } from "@compoz/studio/lib/ui/notify";
+import { focusByFieldId } from "@compoz/ui/lib/focus";
 import {
   createFieldIds,
   useIdPrefix,
@@ -40,6 +40,7 @@ import { useStableOnValuesChange } from "@compoz/ui/hooks/useStableOnValuesChang
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
 import { createEmptyCell } from "@compoz/studio/features/pages/mappers/cells-form";
 import { cn } from "@compoz/ui/lib/utils";
+import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 import {
   LayoutSectionBlockFormSchema,
   type LayoutSectionBlockFormValues,
@@ -51,7 +52,6 @@ import type {
   ImageCellFormValues,
   RichTextCellFormValues,
 } from "@compoz/validation/pages/blocks/cells/cell-form";
-import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 
 type UploadedRasterImage = Readonly<{
   url: string;
@@ -271,6 +271,19 @@ export function LayoutSectionBlockEditorForm({
   const t = useTranslations();
   const confirmList = useConfirmList();
 
+  const destructiveConfirmLabels = useMemo(
+    () => ({
+      title: t("studio.shared.confirm.destructiveChange.title"),
+      intro: t("studio.shared.confirm.destructiveChange.intro"),
+      confirmLabel: t("studio.shared.confirm.destructiveChange.confirmLabel"),
+      cancelLabel: t("studio.shared.confirm.destructiveChange.cancelLabel"),
+      requireAckLabel: t(
+        "studio.shared.confirm.destructiveChange.requireAckLabel",
+      ),
+    }),
+    [t],
+  );
+
   const normalizedInitialValues = useMemo(() => {
     return withNullableTitle(initialValues);
   }, [initialValues]);
@@ -332,9 +345,9 @@ export function LayoutSectionBlockEditorForm({
   // Champs simples
   const columnsCtrl = useController({ name: "columns", control });
   const cellsCtrl = useController({ name: "cells", control });
-  // ✅ nouveau
   const containerModeCtrl = useController({ name: "containerMode", control });
   const lcpPriorityCtrl = useController({ name: "lcpPriority", control });
+
   // Champs imbriqués (crucial pour touched + errors en mode onBlur)
   const titleEnabledCtrl = useController({ name: "titleEnabled", control });
   const titleCtrl = useController({ name: "title", control });
@@ -352,6 +365,14 @@ export function LayoutSectionBlockEditorForm({
     shouldShowTitleTextError && errors.title?.text?.message
       ? String(errors.title.text.message)
       : undefined;
+
+  const askConfirmDestructiveChange = useCallback(async () => {
+    return confirmList({
+      ...destructiveConfirmLabels,
+      items: [],
+      tone: "default",
+    });
+  }, [confirmList, destructiveConfirmLabels]);
 
   function onSubmitValid(values: LayoutSectionBlockFormValues) {
     return onSubmit(withNullableTitle(values));
@@ -393,20 +414,7 @@ export function LayoutSectionBlockEditorForm({
         });
 
       if (isDestructive) {
-        const ok = await confirmList({
-          title: t("admin.shared.confirm.destructiveChange.title"),
-          intro: t("admin.shared.confirm.destructiveChange.intro"),
-          items: [],
-          confirmLabel: t(
-            "admin.shared.confirm.destructiveChange.confirmLabel",
-          ),
-          cancelLabel: t("admin.shared.confirm.destructiveChange.cancelLabel"),
-          requireAckLabel: t(
-            "admin.shared.confirm.destructiveChange.requireAckLabel",
-          ),
-          tone: "default",
-        });
-
+        const ok = await askConfirmDestructiveChange();
         if (!ok) return;
       }
 
@@ -427,13 +435,12 @@ export function LayoutSectionBlockEditorForm({
       cellsCtrl.field.onChange(nextCells);
     },
     [
+      askConfirmDestructiveChange,
       cellsCtrl.field,
       clearErrors,
       columnsCtrl.field,
-      confirmList,
       isDirty,
       isBusy,
-      t,
     ],
   );
 
@@ -456,20 +463,7 @@ export function LayoutSectionBlockEditorForm({
         });
 
       if (isDestructive) {
-        const ok = await confirmList({
-          title: t("admin.shared.confirm.destructiveChange.title"),
-          intro: t("admin.shared.confirm.destructiveChange.intro"),
-          items: [],
-          confirmLabel: t(
-            "admin.shared.confirm.destructiveChange.confirmLabel",
-          ),
-          cancelLabel: t("admin.shared.confirm.destructiveChange.cancelLabel"),
-          requireAckLabel: t(
-            "admin.shared.confirm.destructiveChange.requireAckLabel",
-          ),
-          tone: "default",
-        });
-
+        const ok = await askConfirmDestructiveChange();
         if (!ok) return;
       }
 
@@ -487,7 +481,14 @@ export function LayoutSectionBlockEditorForm({
         shouldValidate: false, // 👈 clé : évite l’erreur instant
       });
     },
-    [cellsCtrl.field, clearErrors, confirmList, isDirty, isBusy, setValue, t],
+    [
+      askConfirmDestructiveChange,
+      cellsCtrl.field,
+      clearErrors,
+      isDirty,
+      isBusy,
+      setValue,
+    ],
   );
 
   /**

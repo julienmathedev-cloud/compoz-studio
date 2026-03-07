@@ -3,21 +3,22 @@
  * @layer ui/renderer
  *
  * @description
- * Shell public : surface + H1 layout + blocks + pager.
+ * Shell site public : surface + H1 layout + blocks + pager.
  *
  * @remarks
- * - Le UI est résolu au niveau du shell (layout public / PreviewShell) et injecté via `PublicUiProvider`.
- * - Ici, on consomme le UI via `usePublicUi()` pour éviter le prop-drilling et garantir une source unique.
+ * - Le UI est résolu au niveau du shell (layout site / preview shell) et injecté via le provider site.
+ * - Ici, on consomme le UI via `ui` (props) pour éviter le prop-drilling en cascade.
  */
+
+import type { ReactNode } from "react";
 
 import { cn } from "@compoz/ui/lib/utils";
 import { BlocksRenderer } from "@compoz/ui/renderer/BlocksRenderer";
-import { PublicHeading } from "@compoz/ui/site/components/atoms/PublicHeading";
-import type { PublicDetailPagerLink } from "@compoz/ui/site/components/molecules/PublicDetailPager";
-import { PublicDetailPager } from "@compoz/ui/site/components/molecules/PublicDetailPager";
-import type { PublicGlobalUi } from "@compoz/ui/site/public-ui.types";
+import { SiteHeading } from "@compoz/ui/site/components/atoms/SiteHeading";
+import type { SiteDetailPagerLink } from "@compoz/ui/site/components/molecules/SiteDetailPager";
+import { SiteDetailPager } from "@compoz/ui/site/components/molecules/SiteDetailPager";
+import type { SiteGlobalUi } from "@compoz/ui/site/site-ui.types";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
-import type { ReactNode } from "react";
 
 export type SitePageRendererProps = Readonly<{
   /** Titre de page (sert au H1 layout). */
@@ -28,10 +29,11 @@ export type SitePageRendererProps = Readonly<{
 
   pager?: Readonly<{
     enabled: boolean;
-    prev?: PublicDetailPagerLink | null;
-    next?: PublicDetailPagerLink | null;
+    prev?: SiteDetailPagerLink | null;
+    next?: SiteDetailPagerLink | null;
   }>;
-  ui: PublicGlobalUi;
+
+  ui: SiteGlobalUi;
 }>;
 
 function isFullBleedBlock(block: BlockShape | undefined) {
@@ -67,7 +69,7 @@ export function SitePageRenderer({
       blocksUi={ui.blocks}
       layoutUi={ui.layoutSection}
       className={cn(ui.body.spacing, paddingClass)}
-      variant="public"
+      variant="site"
     />
   ) : (
     children
@@ -79,15 +81,15 @@ export function SitePageRenderer({
   return (
     <div className={cn(ui.body.surface)}>
       {showLayoutH1 ? (
-        <PublicHeading level={1} className={cn(ui.body.pageHeading.h1)}>
+        <SiteHeading level={1} className={cn(ui.body.pageHeading.h1)}>
           {resolvedTitle}
-        </PublicHeading>
+        </SiteHeading>
       ) : null}
 
       {content}
 
       {pager?.enabled ? (
-        <PublicDetailPager
+        <SiteDetailPager
           prev={pager.prev ?? null}
           next={pager.next ?? null}
           ui={ui.pager}

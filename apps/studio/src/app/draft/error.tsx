@@ -2,47 +2,37 @@
 
 /**
  * @file apps/studio/src/app/draft/error.tsx
- * @layer app/studio/draft
+ * @layer studio/app
  *
  * @description
- * Error boundary UI pour le segment public "/draft".
+ * Error boundary UI pour la route "/draft".
  * Affiche un fallback stable + actions (réessayer + retour accueil).
  *
  * @remarks
  * - Composant client obligatoire (Next.js error boundary).
- * - UI skinnable via `PublicUiProvider` (skin public) : `ui.errorPage`.
+ * - UI skinnable via `SiteUiProvider` : `ui.systemPage`.
  * - Convention V0.5 : draft preview = "/draft" (pas de querystring state).
  */
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect } from "react";
 
-import { usePublicUi } from "@compoz/ui/site/providers/PublicUiProvider";
-import { PublicSystemPage } from "@compoz/ui/site/components/system/PublicSystemPage";
+import { STUDIO_PATH } from "@compoz/core/constants/web/paths";
 import { Button } from "@compoz/ui/components/ui/button";
-import { resolveInternalHref } from "@compoz/ui/lib/links/helpers";
 import { cn } from "@compoz/ui/lib/utils";
+import { SiteSystemPage } from "@compoz/ui/site/components/system/SiteSystemPage";
+import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
 
-type PublicErrorProps = Readonly<{
+type DraftErrorProps = Readonly<{
   error: Error & { digest?: string };
   reset: () => void;
 }>;
 
-export default function DraftError({ error, reset }: PublicErrorProps) {
-  const ui = usePublicUi();
+export default function DraftError({ reset }: DraftErrorProps) {
+  const ui = useSiteUi();
 
   // ✅ Convention : home draft preview = "/draft"
-  const pathname = usePathname() || "/";
-  const homeHref = resolveInternalHref(pathname, "/");
-
-  useEffect(() => {
-    // Hook utile si tu veux logger plus tard
-    void error;
-  }, [error]);
-
   return (
-    <PublicSystemPage
+    <SiteSystemPage
       ui={ui.systemPage}
       title="Une erreur est survenue"
       description="Impossible d’afficher cette page pour le moment. Vous pouvez réessayer."
@@ -63,7 +53,7 @@ export default function DraftError({ error, reset }: PublicErrorProps) {
             className={cn(ui.systemPage.button)}
             asChild
           >
-            <Link href={homeHref} className="no-underline">
+            <Link href={STUDIO_PATH.draft} className="no-underline">
               Aller à l’accueil
             </Link>
           </Button>

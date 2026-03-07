@@ -12,12 +12,7 @@ import { TITLE_PLACEHOLDER } from "@compoz/core/constants/seo/seo";
 import type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
 
 /**
- * Valeurs par défaut pour la configuration SEO.
- *
- * @example
- * - `baseUrl: ""` → doit être renseigné manuellement, validation en amont.
- * - `robots: "index,follow"` → comportement SEO standard par défaut.
- * - `twitter.card: "summary_large_image"` → format le plus courant.
+ * Valeurs par défaut pour la configuration SEO
  */
 export const DEFAULT_SEO_SETTINGS: SeoSettings = {
   baseUrl: "", // aucun domaine tant que l'utilisateur ne le définit pas

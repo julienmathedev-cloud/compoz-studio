@@ -58,52 +58,39 @@ type InternalState = ConfirmOptions &
     resolve?: (v: boolean) => void;
   }>;
 
+type ConfirmContextValue = Readonly<{
+  confirm: (opts?: ConfirmOptions) => Promise<boolean>;
+}>;
+
 /**
  * Contexte exposant une fonction `confirm` qui ouvre le dialogue
  * et renvoie une promesse résolue à `true` (confirmé) ou `false` (annulé).
  */
-export const ConfirmContext = createContext<{
-  confirm: (opts?: ConfirmOptions) => Promise<boolean>;
-} | null>(null);
-
-// /**
-//  * Hook d’accès au dialogue de confirmation global.
-//  *
-//  * @remarks
-//  * Doit être utilisé sous un `ConfirmDialogProvider`.
-//  *
-//  * @throws Si le hook est utilisé hors provider.
-//  */
-// export function useConfirm() {
-//   const ctx = useContext(ConfirmContext);
-//   if (!ctx) {
-//     throw new Error("useConfirm must be used within <ConfirmDialogProvider />");
-//   }
-//   return ctx;
-// }
+export const ConfirmContext = createContext<ConfirmContextValue | null>(null);
 
 /**
  * Provider global du dialogue de confirmation.
  *
+ * @remarks
  * - Doit encapsuler l’arbre qui consomme `useConfirm()`.
  * - Rend les enfants + un unique `<Dialog>` monté au plus haut niveau.
  */
 export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<InternalState>({ open: false });
-  const [ack, setAck] = useState<boolean>(false);
+  const [ack, setAck] = useState(false);
 
   // ✅ Anti double-resolve (Radix peut déclencher plusieurs chemins de fermeture).
   const hasResolvedRef = useRef(false);
 
-  // Préfixe d’ID stable pour ce provider (a11y + anti-collision).
-  const idPrefix = useIdPrefix("confirm-dialog");
-  const acknowledgeId = `${idPrefix}-acknowledge`;
-  const descriptionId = `${idPrefix}-description`;
+  // Préfixe d’ID stable (a11y + anti-collision).
+  const providerId = useIdPrefix("confirm-dialog");
+  const acknowledgeId = `${providerId}-acknowledge`;
+  const descriptionId = `${providerId}-description`;
 
   const hasDescription = Boolean(state.description);
 
   /**
-   * Ferme le dialogue et nettoie l’état sensible (resolve).
+   * Ferme le dialogue et nettoie l’état sensible (resolve + ack).
    */
   const closeAndReset = useCallback(() => {
     setState((s) => ({
@@ -117,16 +104,21 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
 
   /**
    * Résout la promesse une seule fois (sécurité).
+   *
+   * @remarks
+   * On lit `resolve` depuis l’état courant au moment de l’action,
+   * puis on nettoie immédiatement.
    */
   const resolveOnce = useCallback(
     (value: boolean) => {
       if (hasResolvedRef.current) return;
       hasResolvedRef.current = true;
 
+      // Lecture "instantanée" : si pas de resolve (cas edge), on ferme quand même.
       state.resolve?.(value);
       closeAndReset();
     },
-    [closeAndReset, state, hasResolvedRef],
+    [closeAndReset, state],
   );
 
   /**
@@ -142,7 +134,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
         open: true,
         resolve,
         title: opts?.title ?? "Confirmer l’action",
-        description: opts?.description ?? "",
+        description: opts?.description,
         confirmLabel: opts?.confirmLabel ?? "Confirmer",
         cancelLabel: opts?.cancelLabel ?? "Annuler",
         tone: opts?.tone ?? "default",
@@ -170,7 +162,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
   }, [state.requireAcknowledge, ack, resolveOnce]);
 
   /** Valeur de contexte mémoïsée (évite des rerenders inutiles). */
-  const value = useMemo(() => ({ confirm }), [confirm]);
+  const value = useMemo<ConfirmContextValue>(() => ({ confirm }), [confirm]);
 
   return (
     <ConfirmContext.Provider value={value}>
@@ -230,3 +222,5 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
     </ConfirmContext.Provider>
   );
 }
+
+ConfirmDialogProvider.displayName = "ConfirmDialogProvider";

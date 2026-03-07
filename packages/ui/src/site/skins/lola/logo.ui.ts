@@ -1,18 +1,18 @@
 /**
  * @file packages/ui/src/site/skins/lola/logo.ui.ts
- * @layer ui/public/skins
+ * @layer ui/site/skins
  *
  * @description
- * Skin UI — logo public (thème Lola).
+ * Skin UI — logo site (thème Lola).
  *
  * @remarks
  * - Fournit uniquement des classes Tailwind (aucune logique).
- * - Consommé par `PublicLogo` via la prop `ui`.
+ * - Consommé par `SiteLogo` via la prop `ui`.
  */
 
-import type { PublicLogoUiOverride } from "@compoz/ui/site/public-ui.types";
+import type { SiteLogoUiOverride } from "@compoz/ui/site/site-ui.types";
 
-export const lolaLogoUi: PublicLogoUiOverride = {
+export const lolaLogoUi: SiteLogoUiOverride = {
   link: "group rounded-md focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500",
 
   image:

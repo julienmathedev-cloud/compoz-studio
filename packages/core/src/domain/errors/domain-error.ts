@@ -1,6 +1,6 @@
 /**
  * @file src/core/domain/errors/domain-error.ts
- * @layer core/domain
+ * @layer core/domain/errors
  * @description
  * Erreur métier standard du domaine : typée (`ErrorCode`), stable, sérialisable
  * et indépendante de toute représentation technique (HTTP, UI).
@@ -99,7 +99,7 @@ function hasStringCode(value: unknown): value is { code: string } {
  * Utile dans des zones où l’on veut juste distinguer :
  * → “erreur métier-like” vs “erreur technique”.
  */
-export function isDomainError(e: unknown): e is DomainError {
+export function isDomainErrorLike(e: unknown): e is { code: string } {
   return hasStringCode(e);
 }
 

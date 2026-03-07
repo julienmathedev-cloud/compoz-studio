@@ -1,8 +1,8 @@
 /**
  * @file apps/studio/src/app/api/settings/header/route.ts
- * @layer api/routes
+ * @layer studio/app/api
  * @description
- * Route API Admin pour la lecture et la mise à jour des settings du Header du site.
+ * Route API Studio pour la lecture et la mise à jour des settings du Header du site.
  *
  * Responsabilités :
  * - GET  : retourne les settings Header selon le state (draft/published).
@@ -10,6 +10,8 @@
  *          et exécution du use-case `updateHeaderSettings`.
  * - Le repository merge les settings persistés avec les defaults pour garantir la cohérence.
  */
+
+import "server-only";
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { updateHeaderSettings } from "@compoz/core/domain/site/use-cases/header/update-header-settings";
@@ -24,11 +26,10 @@ import { adaptUpdateHeaderIntent } from "@compoz/studio/app/api/_adapters/header
 import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
-
 import { UpdateHeaderSettingsIntentSchema } from "@compoz/validation/site/settings/header/header-intents";
 
 export async function GET(req: Request) {
-  const NS = "api.admin.site.header.GET" as const;
+  const NS = "api.studio.site.header.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
     const { tenantId } = await requireSessionWithTenant();
@@ -44,15 +45,17 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const NS = "api.admin.site.header.PATCH" as const;
+  const NS = "api.studio.site.header.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
     const { tenantId } = await requireSessionWithTenant();
 
     return logSpan(NS, { ns: NS, method: "PATCH", tenantId }, async () => {
+      const lg = log.child({ ns: NS });
+
       const raw = await readJsonOr400(req);
 
-      log.info?.("HEADER.PATCH.start", {
+      lg.info?.("route.header.patch.start", {
         tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
@@ -64,7 +67,7 @@ export async function PATCH(req: Request) {
 
       const dto = parseDTOOrHttp(UpdateHeaderSettingsIntentSchema, raw, {
         message: EC.VALIDATION_ERROR,
-        extras: { where: "api.admin.site.header.PATCH.payload" },
+        extras: { where: "api.studio.site.header.PATCH.payload" },
       });
 
       const input = adaptUpdateHeaderIntent(dto);
@@ -76,17 +79,17 @@ export async function PATCH(req: Request) {
       const run = updateHeaderSettings({ repo });
       const { settings } = await run(input);
 
-      log.info?.("HEADER.PATCH.afterWrite", {
+      lg.info?.("route.header.patch.afterWrite", {
         tenantId,
         headerKeys: settings?.header ? Object.keys(settings.header) : [],
       });
 
       try {
-        log.info?.("HEADER.PATCH.invalidate.start", { tenantId });
+        lg.info?.("route.header.patch.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        log.info?.("HEADER.PATCH.invalidate.done", { tenantId });
+        lg.info?.("route.header.patch.invalidate.done", { tenantId });
       } catch (e) {
-        log.error?.("HEADER.PATCH.invalidate.failed", {
+        lg.error?.("route.header.patch.invalidate.failed", {
           tenantId,
           err: String(e),
         });

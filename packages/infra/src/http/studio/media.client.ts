@@ -1,21 +1,24 @@
 /**
  * @file packages/infra/src/http/studio/media.client.ts
- * @layer infra/http
+ * @layer infra/http/studio
  * @description
- * Client HTTP Admin pour l’upload de médias (multipart/form-data).
+ * Client HTTP Studio pour l’upload de médias (multipart/form-data).
  */
 
 import { ENDPOINTS } from "@compoz/infra/http/endpoints";
 import { apiFetch } from "@compoz/infra/lib/api-fetch";
 import { logSpan } from "@compoz/infra/lib/log";
 
+import { encodeSegment } from "@compoz/infra/http/internal";
 import type {
   UploadImageKind,
   UploadImageResponse,
   UploadSvgResponse,
 } from "@compoz/infra/http/studio/media.types";
 
-function buildUploadFormData(file: File) {
+type UploadRequestOpts = Omit<RequestInit, "method" | "body">;
+
+function buildUploadFormData(file: File): FormData {
   const fd = new FormData();
   fd.append("file", file, file.name);
   return fd;
@@ -24,17 +27,19 @@ function buildUploadFormData(file: File) {
 export async function uploadImage(
   file: File,
   kind: UploadImageKind = "content",
-  opts?: Omit<RequestInit, "method" | "body">,
+  opts?: UploadRequestOpts,
 ): Promise<UploadImageResponse> {
   if (!(file instanceof File)) {
     throw new TypeError("uploadImage: argument 'file' must be a File.");
   }
 
   const fd = buildUploadFormData(file);
-  const endpoint = `${ENDPOINTS.STUDIO.MEDIA.uploadImage}?kind=${kind}`;
+  const endpoint = `${ENDPOINTS.STUDIO.MEDIA.uploadImage}?kind=${encodeSegment(
+    kind,
+  )}`;
 
   return logSpan(
-    "infra.http.admin.media.uploadImage",
+    "compoz:studio:svc:media-upload",
     {
       endpoint,
       method: "POST",
@@ -62,31 +67,29 @@ export async function uploadImage(
 
 export async function uploadSvg(
   file: File,
-  opts?: Omit<RequestInit, "method" | "body">,
+  opts?: UploadRequestOpts,
 ): Promise<UploadSvgResponse> {
   if (!(file instanceof File)) {
     throw new TypeError("uploadSvg: argument 'file' must be a File.");
   }
 
   const fd = buildUploadFormData(file);
+  const endpoint = ENDPOINTS.STUDIO.MEDIA.uploadSvg;
 
   return logSpan(
-    "infra.http.admin.media.uploadSvg",
+    "compoz:studio:svc:media-upload",
     {
-      endpoint: ENDPOINTS.STUDIO.MEDIA.uploadSvg,
+      endpoint,
       method: "POST",
       fileSize: file.size,
       fileType: file.type || undefined,
     },
     async () => {
-      const res = await apiFetch<UploadSvgResponse>(
-        ENDPOINTS.STUDIO.MEDIA.uploadSvg,
-        {
-          method: "POST",
-          body: fd,
-          ...(opts ?? {}),
-        },
-      );
+      const res = await apiFetch<UploadSvgResponse>(endpoint, {
+        method: "POST",
+        body: fd,
+        ...(opts ?? {}),
+      });
 
       if (!res) {
         throw new Error(

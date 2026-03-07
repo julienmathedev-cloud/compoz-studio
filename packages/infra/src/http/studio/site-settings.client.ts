@@ -1,8 +1,8 @@
 /**
  * @file packages/infra/src/http/studio/site-settings.client.ts
- * @layer infra/http
+ * @layer infra/http/studio
  * @description
- * Client HTTP Admin pour la gestion centralisée des réglages du site :
+ * Client HTTP Studio pour la gestion centralisée des réglages du site :
  * header, footer, menus, identity, social et SEO.
  *
  * @remarks
@@ -12,12 +12,15 @@
  */
 
 import {
-  WRITE_CONTENT_STATE,
+  DEFAULT_CONTENT_STATE,
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
-
 import { ENDPOINTS } from "@compoz/infra/http/endpoints";
-import type { HttpOpts } from "@compoz/infra/http/internal";
+import {
+  assertJsonResponse,
+  withState,
+  type HttpOpts,
+} from "@compoz/infra/http/internal";
 import { apiFetch } from "@compoz/infra/lib/api-fetch";
 import { logSpan } from "@compoz/infra/lib/log";
 
@@ -43,19 +46,6 @@ import type {
 /*                             Helpers internes                               */
 /* -------------------------------------------------------------------------- */
 
-function assertJsonResponse<T>(res: T | null, ctx: string): T {
-  if (!res) {
-    throw new Error(`${ctx}: expected JSON response, received null.`);
-  }
-  return res;
-}
-
-function withState(endpoint: string, state: ContentState): string {
-  if (state === WRITE_CONTENT_STATE) return endpoint;
-  const sep = endpoint.includes("?") ? "&" : "?";
-  return `${endpoint}${sep}state=${state}`;
-}
-
 async function getResponse<TResponse>(
   endpoint: string,
   state: ContentState,
@@ -77,7 +67,7 @@ async function patchResponse<TResponse, TPayload>(
   ctx: string,
 ): Promise<TResponse> {
   const res = await apiFetch<TResponse>(
-    withState(endpoint, WRITE_CONTENT_STATE),
+    withState(endpoint, DEFAULT_CONTENT_STATE),
     {
       method: "PATCH",
       body: JSON.stringify(payload),
@@ -92,25 +82,21 @@ async function patchResponse<TResponse, TPayload>(
 /*                               Client HTTP                                  */
 /* -------------------------------------------------------------------------- */
 
-export const settingsAdminApi = {
+export const settingsStudioApi = {
   bundle: {
     async get(
-      state: ContentState = WRITE_CONTENT_STATE,
+      state: ContentState = DEFAULT_CONTENT_STATE,
       opts?: HttpOpts,
     ): Promise<GetSettingsBundleResponse> {
       return logSpan(
-        "infra.http.admin.settings.bundle.get",
-        {
-          endpoint: ENDPOINTS.STUDIO.SETTINGS.bundle,
-          method: "GET",
-          state,
-        },
+        "compoz:studio:svc:site-settings",
+        { endpoint: ENDPOINTS.STUDIO.SETTINGS.bundle, method: "GET", state },
         () =>
           getResponse<GetSettingsBundleResponse>(
             ENDPOINTS.STUDIO.SETTINGS.bundle,
             state,
             opts,
-            "settingsAdminApi.bundle.get",
+            "settingsStudioApi.bundle.get",
           ),
       );
     },
@@ -118,18 +104,18 @@ export const settingsAdminApi = {
 
   header: {
     async get(
-      state: ContentState = WRITE_CONTENT_STATE,
+      state: ContentState = DEFAULT_CONTENT_STATE,
       opts?: HttpOpts,
     ): Promise<GetHeaderResponse> {
       return logSpan(
-        "infra.http.admin.settings.header.get",
+        "compoz:studio:svc:site-settings",
         { endpoint: ENDPOINTS.STUDIO.SETTINGS.header, method: "GET", state },
         () =>
           getResponse<GetHeaderResponse>(
             ENDPOINTS.STUDIO.SETTINGS.header,
             state,
             opts,
-            "settingsAdminApi.header.get",
+            "settingsStudioApi.header.get",
           ),
       );
     },
@@ -139,18 +125,18 @@ export const settingsAdminApi = {
       opts?: HttpOpts,
     ): Promise<PatchHeaderResponse> {
       return logSpan(
-        "infra.http.admin.settings.header.patch",
+        "compoz:studio:svc:site-settings",
         {
           endpoint: ENDPOINTS.STUDIO.SETTINGS.header,
           method: "PATCH",
-          state: WRITE_CONTENT_STATE,
+          state: DEFAULT_CONTENT_STATE,
         },
         () =>
           patchResponse<PatchHeaderResponse, TPatch>(
             ENDPOINTS.STUDIO.SETTINGS.header,
             patch,
             opts,
-            "settingsAdminApi.header.patch",
+            "settingsStudioApi.header.patch",
           ),
       );
     },
@@ -158,18 +144,18 @@ export const settingsAdminApi = {
 
   footer: {
     async get(
-      state: ContentState = WRITE_CONTENT_STATE,
+      state: ContentState = DEFAULT_CONTENT_STATE,
       opts?: HttpOpts,
     ): Promise<GetFooterResponse> {
       return logSpan(
-        "infra.http.admin.settings.footer.get",
+        "compoz:studio:svc:site-settings",
         { endpoint: ENDPOINTS.STUDIO.SETTINGS.footer, method: "GET", state },
         () =>
           getResponse<GetFooterResponse>(
             ENDPOINTS.STUDIO.SETTINGS.footer,
             state,
             opts,
-            "settingsAdminApi.footer.get",
+            "settingsStudioApi.footer.get",
           ),
       );
     },
@@ -179,18 +165,18 @@ export const settingsAdminApi = {
       opts?: HttpOpts,
     ): Promise<PatchFooterResponse> {
       return logSpan(
-        "infra.http.admin.settings.footer.patch",
+        "compoz:studio:svc:site-settings",
         {
           endpoint: ENDPOINTS.STUDIO.SETTINGS.footer,
           method: "PATCH",
-          state: WRITE_CONTENT_STATE,
+          state: DEFAULT_CONTENT_STATE,
         },
         () =>
           patchResponse<PatchFooterResponse, TPatch>(
             ENDPOINTS.STUDIO.SETTINGS.footer,
             patch,
             opts,
-            "settingsAdminApi.footer.patch",
+            "settingsStudioApi.footer.patch",
           ),
       );
     },
@@ -198,18 +184,18 @@ export const settingsAdminApi = {
 
   identity: {
     async get(
-      state: ContentState = WRITE_CONTENT_STATE,
+      state: ContentState = DEFAULT_CONTENT_STATE,
       opts?: HttpOpts,
     ): Promise<GetIdentityResponse> {
       return logSpan(
-        "infra.http.admin.settings.identity.get",
+        "compoz:studio:svc:site-settings",
         { endpoint: ENDPOINTS.STUDIO.SETTINGS.identity, method: "GET", state },
         () =>
           getResponse<GetIdentityResponse>(
             ENDPOINTS.STUDIO.SETTINGS.identity,
             state,
             opts,
-            "settingsAdminApi.identity.get",
+            "settingsStudioApi.identity.get",
           ),
       );
     },
@@ -219,18 +205,18 @@ export const settingsAdminApi = {
       opts?: HttpOpts,
     ): Promise<PatchIdentityResponse> {
       return logSpan(
-        "infra.http.admin.settings.identity.patch",
+        "compoz:studio:svc:site-settings",
         {
           endpoint: ENDPOINTS.STUDIO.SETTINGS.identity,
           method: "PATCH",
-          state: WRITE_CONTENT_STATE,
+          state: DEFAULT_CONTENT_STATE,
         },
         () =>
           patchResponse<PatchIdentityResponse, TPatch>(
             ENDPOINTS.STUDIO.SETTINGS.identity,
             patch,
             opts,
-            "settingsAdminApi.identity.patch",
+            "settingsStudioApi.identity.patch",
           ),
       );
     },
@@ -238,18 +224,18 @@ export const settingsAdminApi = {
 
   legalMenu: {
     async get(
-      state: ContentState = WRITE_CONTENT_STATE,
+      state: ContentState = DEFAULT_CONTENT_STATE,
       opts?: HttpOpts,
     ): Promise<GetLegalMenuResponse> {
       return logSpan(
-        "infra.http.admin.settings.legalMenu.get",
+        "compoz:studio:svc:site-settings",
         { endpoint: ENDPOINTS.STUDIO.SETTINGS.legalMenu, method: "GET", state },
         () =>
           getResponse<GetLegalMenuResponse>(
             ENDPOINTS.STUDIO.SETTINGS.legalMenu,
             state,
             opts,
-            "settingsAdminApi.legalMenu.get",
+            "settingsStudioApi.legalMenu.get",
           ),
       );
     },
@@ -259,18 +245,18 @@ export const settingsAdminApi = {
       opts?: HttpOpts,
     ): Promise<PatchLegalMenuResponse> {
       return logSpan(
-        "infra.http.admin.settings.legalMenu.patch",
+        "compoz:studio:svc:site-settings",
         {
           endpoint: ENDPOINTS.STUDIO.SETTINGS.legalMenu,
           method: "PATCH",
-          state: WRITE_CONTENT_STATE,
+          state: DEFAULT_CONTENT_STATE,
         },
         () =>
           patchResponse<PatchLegalMenuResponse, TPatch>(
             ENDPOINTS.STUDIO.SETTINGS.legalMenu,
             patch,
             opts,
-            "settingsAdminApi.legalMenu.patch",
+            "settingsStudioApi.legalMenu.patch",
           ),
       );
     },
@@ -278,11 +264,11 @@ export const settingsAdminApi = {
 
   primaryMenu: {
     async get(
-      state: ContentState = WRITE_CONTENT_STATE,
+      state: ContentState = DEFAULT_CONTENT_STATE,
       opts?: HttpOpts,
     ): Promise<GetPrimaryMenuResponse> {
       return logSpan(
-        "infra.http.admin.settings.primaryMenu.get",
+        "compoz:studio:svc:site-settings",
         {
           endpoint: ENDPOINTS.STUDIO.SETTINGS.primaryMenu,
           method: "GET",
@@ -293,7 +279,7 @@ export const settingsAdminApi = {
             ENDPOINTS.STUDIO.SETTINGS.primaryMenu,
             state,
             opts,
-            "settingsAdminApi.primaryMenu.get",
+            "settingsStudioApi.primaryMenu.get",
           ),
       );
     },
@@ -303,18 +289,18 @@ export const settingsAdminApi = {
       opts?: HttpOpts,
     ): Promise<PatchPrimaryMenuResponse> {
       return logSpan(
-        "infra.http.admin.settings.primaryMenu.patch",
+        "compoz:studio:svc:site-settings",
         {
           endpoint: ENDPOINTS.STUDIO.SETTINGS.primaryMenu,
           method: "PATCH",
-          state: WRITE_CONTENT_STATE,
+          state: DEFAULT_CONTENT_STATE,
         },
         () =>
           patchResponse<PatchPrimaryMenuResponse, TPatch>(
             ENDPOINTS.STUDIO.SETTINGS.primaryMenu,
             patch,
             opts,
-            "settingsAdminApi.primaryMenu.patch",
+            "settingsStudioApi.primaryMenu.patch",
           ),
       );
     },
@@ -322,18 +308,18 @@ export const settingsAdminApi = {
 
   seo: {
     async get(
-      state: ContentState = WRITE_CONTENT_STATE,
+      state: ContentState = DEFAULT_CONTENT_STATE,
       opts?: HttpOpts,
     ): Promise<GetSeoResponse> {
       return logSpan(
-        "infra.http.admin.settings.seo.get",
+        "compoz:studio:svc:site-settings",
         { endpoint: ENDPOINTS.STUDIO.SETTINGS.seo, method: "GET", state },
         () =>
           getResponse<GetSeoResponse>(
             ENDPOINTS.STUDIO.SETTINGS.seo,
             state,
             opts,
-            "settingsAdminApi.seo.get",
+            "settingsStudioApi.seo.get",
           ),
       );
     },
@@ -343,18 +329,18 @@ export const settingsAdminApi = {
       opts?: HttpOpts,
     ): Promise<PatchSeoResponse> {
       return logSpan(
-        "infra.http.admin.settings.seo.patch",
+        "compoz:studio:svc:site-settings",
         {
           endpoint: ENDPOINTS.STUDIO.SETTINGS.seo,
           method: "PATCH",
-          state: WRITE_CONTENT_STATE,
+          state: DEFAULT_CONTENT_STATE,
         },
         () =>
           patchResponse<PatchSeoResponse, TPatch>(
             ENDPOINTS.STUDIO.SETTINGS.seo,
             patch,
             opts,
-            "settingsAdminApi.seo.patch",
+            "settingsStudioApi.seo.patch",
           ),
       );
     },
@@ -362,18 +348,18 @@ export const settingsAdminApi = {
 
   social: {
     async get(
-      state: ContentState = WRITE_CONTENT_STATE,
+      state: ContentState = DEFAULT_CONTENT_STATE,
       opts?: HttpOpts,
     ): Promise<GetSocialResponse> {
       return logSpan(
-        "infra.http.admin.settings.social.get",
+        "compoz:studio:svc:site-settings",
         { endpoint: ENDPOINTS.STUDIO.SETTINGS.social, method: "GET", state },
         () =>
           getResponse<GetSocialResponse>(
             ENDPOINTS.STUDIO.SETTINGS.social,
             state,
             opts,
-            "settingsAdminApi.social.get",
+            "settingsStudioApi.social.get",
           ),
       );
     },
@@ -383,18 +369,18 @@ export const settingsAdminApi = {
       opts?: HttpOpts,
     ): Promise<PatchSocialResponse> {
       return logSpan(
-        "infra.http.admin.settings.social.patch",
+        "compoz:studio:svc:site-settings",
         {
           endpoint: ENDPOINTS.STUDIO.SETTINGS.social,
           method: "PATCH",
-          state: WRITE_CONTENT_STATE,
+          state: DEFAULT_CONTENT_STATE,
         },
         () =>
           patchResponse<PatchSocialResponse, TPatch>(
             ENDPOINTS.STUDIO.SETTINGS.social,
             patch,
             opts,
-            "settingsAdminApi.social.patch",
+            "settingsStudioApi.social.patch",
           ),
       );
     },

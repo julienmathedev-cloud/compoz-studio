@@ -1,5 +1,5 @@
 /**
- * @file packages/core/src/domain/site/use-cases/site-status-details.ts
+ * @file packages/core/src/domain/site/use-cases/status/get-site-status-details.ts
  * @layer core/domain
  *
  * @description
@@ -8,12 +8,16 @@
  * Optimisation KV :
  * - 1 read en régime via snapshot (SiteStatusCachePort)
  * - recompute lazy si absent
+ *
+ * @remarks
+ * - Source-of-truth pages = SiteIndex (draft/published) maintenu côté write.
  */
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";
 import type { Page } from "@compoz/core/domain/pages/entities/page";
+import type { SiteStatusDetailsDTO } from "@compoz/core/domain/site/dto";
 
 import type {
   GetSiteStatusDetailsDeps,
@@ -30,6 +34,7 @@ import {
 
 export function getSiteStatusDetails({
   pages,
+  site,
   cache,
 }: GetSiteStatusDetailsDeps) {
   return async function run(
@@ -55,7 +60,7 @@ export function getSiteStatusDetails({
     // -------------------------------------------------------------------
     // 2) Compute (cold path)
     // -------------------------------------------------------------------
-    await pages.ensureBase();
+    await Promise.all([pages.ensureBase(), site.ensureBase()]);
 
     const pagesDetails: SiteStatusPageDetails[] = [];
 
@@ -67,11 +72,17 @@ export function getSiteStatusDetails({
       ]);
 
       if (!d && !p) {
-        const empty = { scope, includeBlocks, pages: [] } as const;
-        await cache.writeStatusDetailsSnapshot(
+        const empty: SiteStatusDetailsDTO = {
+          scope,
+          includeBlocks,
+          pages: [],
+        };
+
+        await cache.putStatusDetailsSnapshot(
           { scope, includeBlocks, pageId },
           empty,
         );
+
         return { details: empty };
       }
 
@@ -103,14 +114,13 @@ export function getSiteStatusDetails({
         });
       }
 
-      const details = {
+      const details: SiteStatusDetailsDTO = {
         scope,
         includeBlocks,
         pages: pagesDetails,
-      } as const;
+      };
 
-      // 3) write snapshot -------------------------------------------------
-      await cache.writeStatusDetailsSnapshot(
+      await cache.putStatusDetailsSnapshot(
         { scope, includeBlocks, pageId },
         details,
       );
@@ -118,17 +128,13 @@ export function getSiteStatusDetails({
       return { details };
     }
 
-    // Mode global : all pages
-    const [draftSummaries, publishedSummaries] = await Promise.all([
-      pages.list(CONTENT_STATE.DRAFT),
-      pages.list(CONTENT_STATE.PUBLISHED),
+    // ✅ Mode global : pages = union(draftIndex, publishedIndex) (SoT)
+    const [draftIndex, publishedIndex] = await Promise.all([
+      site.readIndex(CONTENT_STATE.DRAFT),
+      site.readIndex(CONTENT_STATE.PUBLISHED),
     ]);
 
-    const draftIds = new Set(draftSummaries.map((s) => s.id));
-    const pubIds = new Set(publishedSummaries.map((s) => s.id));
-    const allPageIds = new Set<string>([...draftIds, ...pubIds]);
-
-    const ids = [...allPageIds];
+    const ids = unionPageIdsFromIndexes(draftIndex.pages, publishedIndex.pages);
 
     const [draftPagesArr, publishedPagesArr] = await Promise.all([
       pages.readManyById(CONTENT_STATE.DRAFT, ids),
@@ -141,9 +147,13 @@ export function getSiteStatusDetails({
     const publishedById = new Map<string, Page>();
     for (const p of publishedPagesArr) if (p) publishedById.set(p.id, p);
 
-    for (const id of allPageIds) {
+    for (const id of ids) {
       const d = draftById.get(id) ?? null;
       const p = publishedById.get(id) ?? null;
+
+      // Si une page est dans l’index mais absente des deux côtés, on l’ignore.
+      // (Ça évite de polluer les détails si l’index est temporairement incohérent.)
+      if (!d && !p) continue;
 
       const diff = pageDiffKind(d, p);
 
@@ -174,16 +184,42 @@ export function getSiteStatusDetails({
       });
     }
 
+    // Conserve ton comportement actuel : tri alpha par slug
     pagesDetails.sort((a, b) => a.slug.localeCompare(b.slug));
 
-    const details = { scope, includeBlocks, pages: pagesDetails } as const;
+    const details: SiteStatusDetailsDTO = {
+      scope,
+      includeBlocks,
+      pages: pagesDetails,
+    };
 
-    // 3) write snapshot ---------------------------------------------------
-    await cache.writeStatusDetailsSnapshot(
+    await cache.putStatusDetailsSnapshot(
       { scope, includeBlocks, pageId },
       details,
     );
 
     return { details };
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Inline helpers                                                             */
+/* -------------------------------------------------------------------------- */
+
+function unionPageIdsFromIndexes(
+  draftRefs: ReadonlyArray<{ id: string }>,
+  publishedRefs: ReadonlyArray<{ id: string }>,
+): string[] {
+  const ids = new Set<string>();
+
+  for (const r of draftRefs) {
+    const id = String(r?.id ?? "").trim();
+    if (id) ids.add(id);
+  }
+  for (const r of publishedRefs) {
+    const id = String(r?.id ?? "").trim();
+    if (id) ids.add(id);
+  }
+
+  return [...ids];
 }

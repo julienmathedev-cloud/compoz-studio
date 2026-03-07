@@ -2,25 +2,27 @@
 
 /**
  * @file apps/studio/src/components/loading/SectionLoader.tsx
- * @layer ui/components
+ * @layer studio/components
  *
  * @description
- * Loader de section : affiche un état de chargement uniforme (spinner + label optionnel)
- * avec une hauteur minimale pour limiter le layout shift.
+ * Loader de section : affiche un état de chargement uniforme
+ * (spinner + label optionnel) avec une hauteur minimale
+ * pour limiter le layout shift.
  *
  * @remarks
- * - UI-only : aucun fetch, aucune logique métier.
- * - À utiliser au niveau des sections/containers (ex. `if (isLoading) return <SectionLoader />`).
+ * - Composant UI uniquement : aucun fetch, aucune logique métier.
+ * - À utiliser au niveau des sections / containers
+ *   (ex. `if (isLoading) return <SectionLoader />`).
  */
 
+import type { CSSProperties } from "react";
+
 import { Loader2 } from "lucide-react";
-import { type CSSProperties, useMemo } from "react";
 
 import { cn } from "@compoz/ui/lib/utils";
 
 export type SectionLoaderProps = Readonly<{
   /** Message affiché sous le spinner. */
-
   label?: string;
 
   /**
@@ -39,10 +41,10 @@ export function SectionLoader({
   minHeight = "16rem",
   className,
 }: SectionLoaderProps) {
-  const style = useMemo<CSSProperties>(() => {
-    if (typeof minHeight === "number") return { minHeight: `${minHeight}px` };
-    return { minHeight };
-  }, [minHeight]);
+  const style: CSSProperties =
+    typeof minHeight === "number"
+      ? { minHeight: `${minHeight}px` }
+      : { minHeight };
 
   return (
     <div

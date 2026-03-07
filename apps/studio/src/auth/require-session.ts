@@ -3,7 +3,7 @@
  * @layer studio/auth
  *
  * @description
- * Helpers d'auth pour les routes API Studio :
+ * Helpers d'auth pour les routes API et pages server Studio :
  * - centralise `auth()`
  * - résout le tenantId "actif" (session + cookie admin)
  * - expose un sous-objet user minimal (id/email) pour les pages server
@@ -57,14 +57,20 @@ function normalizeEmail(value: unknown): string {
     .toLowerCase();
 }
 
-export async function requireSessionWithTenant(): Promise<SessionTenantResult> {
+/**
+ * Résout la session Studio + tenant actif.
+ *
+ * @remarks
+ * - Retourne `null` si aucune session n'est présente.
+ * - Lance une erreur si la session existe mais est invalide/incomplète.
+ * - Utile pour les pages server qui veulent rediriger vers signin
+ *   au lieu de lever directement une 401 HTTP.
+ */
+export async function getSessionWithTenantOrNull(): Promise<SessionTenantResult | null> {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    throwHttp(401, {
-      code: ERROR_CODES.UNAUTHORIZED,
-      message: ERROR_CODES.UNAUTHORIZED,
-    });
+    return null;
   }
 
   const defaultTenantId = String(session.user?.defaultTenantId ?? "")
@@ -119,6 +125,19 @@ export async function requireSessionWithTenant(): Promise<SessionTenantResult> {
       : defaultTenantId;
 
   return { tenantId, role, tenantIds, defaultTenantId, user };
+}
+
+export async function requireSessionWithTenant(): Promise<SessionTenantResult> {
+  const session = await getSessionWithTenantOrNull();
+
+  if (!session) {
+    throwHttp(401, {
+      code: ERROR_CODES.UNAUTHORIZED,
+      message: ERROR_CODES.UNAUTHORIZED,
+    });
+  }
+
+  return session;
 }
 
 /**

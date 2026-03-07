@@ -17,13 +17,13 @@ import type { ReactNode } from "react";
 
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Toaster } from "sonner";
 
 import { StudioClientProviders } from "@compoz/studio/app/[locale]/StudioClientProviders";
 import {
+  getSessionWithTenantOrNull,
   isAdminRole,
-  requireSessionWithTenant,
 } from "@compoz/studio/auth/require-session";
 import { StudioSidebar } from "@compoz/studio/components/organisms/StudioSidebar";
 import { Header } from "@compoz/studio/features/shell/components/Header";
@@ -69,7 +69,12 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const messages = await getMessages();
 
-  const session = await requireSessionWithTenant();
+  const session = await getSessionWithTenantOrNull();
+
+  if (!session) {
+    redirect(`/${locale}/signin?next=/${locale}`);
+  }
+
   // session.tenantId = tenant actif (cookie admin si présent) OU defaultTenantId
   const tenantId = toTenantId(session.tenantId);
   if (!tenantId) notFound();

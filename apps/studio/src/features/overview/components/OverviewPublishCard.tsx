@@ -26,8 +26,9 @@ import { LoadingStatus } from "@compoz/studio/components/atoms/LoadingStatus";
 import { PublicationStatusBadge } from "@compoz/studio/components/atoms/badges/PublicationStatusBadge";
 import { Heading } from "@compoz/studio/components/atoms/typography/Heading";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
-import { getSiteOrigin } from "@compoz/studio/config/siteOrigin";
+import { getPublishedSiteUrl } from "@compoz/studio/config/siteOrigin";
 import { StudioHintsPanel } from "@compoz/studio/features/_shared/components/StudioHintsPanel";
+import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
 import { usePublishSite } from "@compoz/studio/features/site/publish/usePublishSite";
 import { Button } from "@compoz/ui/components/ui/button";
 import { Card, CardContent, CardHeader } from "@compoz/ui/components/ui/card";
@@ -47,6 +48,7 @@ type OverviewPublishCardProps = Readonly<{
   data?: SiteStatusDTO;
   isError?: boolean;
   className?: string;
+  publishedBaseUrl?: string | null;
 }>;
 
 type AnyWarningLike = Readonly<{
@@ -94,8 +96,10 @@ export function OverviewPublishCard({
   data,
   isError,
   className,
+  publishedBaseUrl,
 }: OverviewPublishCardProps) {
   const t = useTranslations();
+  const tenantId = useTenantId();
 
   const { publish, isPublishing } = usePublishSite();
   const [last, setLast] = useState<PublishSiteResultDTO | null>(null);
@@ -109,6 +113,15 @@ export function OverviewPublishCard({
     data?.published?.lastPublishedAt,
   );
   const siteHasChanges = Boolean(data?.hasChanges?.site);
+
+  const publishedUrl = useMemo(
+    () =>
+      getPublishedSiteUrl({
+        tenantId,
+        publishedBaseUrl,
+      }),
+    [tenantId, publishedBaseUrl],
+  );
 
   const changesSummary = useMemo(() => {
     if (!data) {
@@ -298,7 +311,7 @@ export function OverviewPublishCard({
 
                 <DropdownMenuItem asChild>
                   <Link
-                    href={`${getSiteOrigin()}/`}
+                    href={publishedUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

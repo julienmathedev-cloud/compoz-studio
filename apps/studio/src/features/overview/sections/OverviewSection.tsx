@@ -10,20 +10,24 @@
 
 import { useTranslations } from "next-intl";
 
+import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
-
-import { useSiteStatus } from "@compoz/studio/features/site/status/useSiteStatus";
-
 import { OverviewPreviewCard } from "@compoz/studio/features/overview/components/OverviewPreviewCard";
 import { OverviewPublishCard } from "@compoz/studio/features/overview/components/OverviewPublishCard";
 import { OverviewSettingsCard } from "@compoz/studio/features/overview/components/OverviewSettingsCard";
 import { OverviewStatsRow } from "@compoz/studio/features/overview/components/OverviewStatsRow";
 import { OverviewStatusDetailsTable } from "@compoz/studio/features/overview/components/OverviewStatusDetailsTable";
+import { useSettingsBundle } from "@compoz/studio/features/settings/bundle/useSettingsBundle";
+import { useSiteStatus } from "@compoz/studio/features/site/status/useSiteStatus";
 
 export function OverviewSection() {
   const t = useTranslations();
 
   const { data, isError, isLoading, isFetching } = useSiteStatus();
+  const { data: settingsBundle } = useSettingsBundle(DEFAULT_CONTENT_STATE);
+
+  const publishedBaseUrl =
+    String(settingsBundle?.seo?.baseUrl ?? "").trim() || null;
 
   return (
     <SettingsSection
@@ -33,9 +37,12 @@ export function OverviewSection() {
       isLoading={isLoading}
       isBusy={isFetching}
     >
-      <OverviewPublishCard data={data} isError={isError} />
+      <OverviewPublishCard
+        data={data}
+        isError={isError}
+        publishedBaseUrl={publishedBaseUrl}
+      />
 
-      {/* Stats + Settings */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="md:col-span-2 lg:col-span-2">
           <OverviewStatsRow data={data} isError={isError} />
@@ -46,10 +53,8 @@ export function OverviewSection() {
         </div>
       </div>
 
-      {/* Table lazy */}
       <OverviewStatusDetailsTable />
 
-      {/* Preview */}
       <OverviewPreviewCard />
     </SettingsSection>
   );

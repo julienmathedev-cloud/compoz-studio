@@ -7,19 +7,20 @@
  */
 
 import type { Metadata } from "next";
+import type { Icons } from "next/dist/lib/metadata/types/metadata-types";
 import type { ReactNode } from "react";
 
 import "@compoz/site/app/globals.css";
 
 import { SiteNotFoundClient } from "@compoz/site/components/system/SiteNotFoundClient";
 import { getPublishedSettings } from "@compoz/site/lib/pages/published-page-loaders";
+import { resolveSiteBaseUrl } from "@compoz/site/lib/seo/resolveSiteBaseUrl";
+import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
 import {
   ensureTitleTemplate,
   resolveAssetUrl,
   resolveIconHref,
 } from "@compoz/ui/lib/seo/metadata-helpers";
-import { resolveSiteBaseUrl } from "@compoz/site/lib/seo/resolveSiteBaseUrl";
-import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
 import { cn } from "@compoz/ui/lib/utils";
 import { toLegalMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/legal-menu-shape";
 import { toPrimaryMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/primary-menu-shape";
@@ -37,6 +38,66 @@ import {
 type LayoutProps = Readonly<{
   children: ReactNode;
 }>;
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function buildFaviconIcons(favicon: string): Icons {
+  /**
+   * Convention favicon générée par le studio :
+   * - on stocke l’URL "primaire" en 32x32
+   * - on reconstruit les autres tailles à partir de ce suffixe
+   */
+  if (favicon.includes("-32.png")) {
+    return {
+      icon: [
+        {
+          url: favicon.replace("-32.png", "-16.png"),
+          sizes: "16x16",
+          type: "image/png",
+        },
+        {
+          url: favicon,
+          sizes: "32x32",
+          type: "image/png",
+        },
+        {
+          url: favicon.replace("-32.png", "-48.png"),
+          sizes: "48x48",
+          type: "image/png",
+        },
+        {
+          url: favicon.replace("-32.png", "-192.png"),
+          sizes: "192x192",
+          type: "image/png",
+        },
+        {
+          url: favicon.replace("-32.png", "-512.png"),
+          sizes: "512x512",
+          type: "image/png",
+        },
+      ],
+      apple: [
+        {
+          url: favicon.replace("-32.png", "-180.png"),
+          sizes: "180x180",
+          type: "image/png",
+        },
+      ],
+      shortcut: [{ url: favicon }],
+    };
+  }
+
+  /**
+   * Fallback : on ne devine pas les tailles si le fichier ne suit pas
+   * la convention studio.
+   */
+  return {
+    icon: [{ url: favicon }],
+    shortcut: [{ url: favicon }],
+  };
+}
 
 /* -------------------------------------------------------------------------- */
 /* Metadata                                                                   */
@@ -69,6 +130,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const robotsContent = (settings.seo?.robots ?? "").trim() || undefined;
 
+  /**
+   * Sécurité prod :
+   * - si aucun robots explicite
+   * - et qu’on n’a pas de base URL fiable
+   * => on évite d’indexer un site mal configuré.
+   */
   const isProd = process.env.NODE_ENV === "production";
   const shouldForceNoindex = isProd && !metadataBase && !robotsContent;
   const robots =
@@ -76,50 +143,27 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase,
-    title: { default: defaultTitle, template: titleTemplate },
+
+    applicationName: brandTitle,
+
+    title: {
+      default: defaultTitle,
+      template: titleTemplate,
+    },
+
     description,
     robots,
-    icons: favicon
-      ? {
-          icon: [
-            {
-              url: favicon.replace("-32.png", "-16.png"),
-              sizes: "16x16",
-              type: "image/png",
-            },
-            {
-              url: favicon.replace("-32.png", "-32.png"),
-              sizes: "32x32",
-              type: "image/png",
-            },
-            {
-              url: favicon.replace("-32.png", "-48.png"),
-              sizes: "48x48",
-              type: "image/png",
-            },
-            {
-              url: favicon.replace("-32.png", "-192.png"),
-              sizes: "192x192",
-              type: "image/png",
-            },
-            {
-              url: favicon.replace("-32.png", "-512.png"),
-              sizes: "512x512",
-              type: "image/png",
-            },
-          ],
-          apple: [
-            { url: favicon.replace("-32.png", "-180.png"), sizes: "180x180" },
-          ],
-          shortcut: [{ url: favicon }],
-        }
-      : undefined,
+
+    icons: favicon ? buildFaviconIcons(favicon) : undefined,
+
     openGraph: {
       title: defaultTitle,
       description,
       type: "website",
+      siteName: brandTitle,
       images: ogImage ? [{ url: ogImage }] : undefined,
     },
+
     twitter: {
       card: settings.seo?.twitter?.card ?? undefined,
       site: settings.seo?.twitter?.site ?? undefined,

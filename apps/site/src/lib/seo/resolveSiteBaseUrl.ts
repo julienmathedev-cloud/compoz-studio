@@ -7,28 +7,27 @@
  *
  * @remarks
  * Priorité :
- * 1) ENV explicite (NEXT_PUBLIC_SITE_URL)
- * 2) ENV Vercel (VERCEL_URL) => https://<vercel_url>
- * 3) settings.seo.baseUrl
+ * 1) settings.seo.baseUrl (source de vérité du site publié)
+ * 2) ENV explicite (NEXT_PUBLIC_SITE_URL)
+ * 3) ENV Vercel (VERCEL_URL) => https://<vercel_url>
  * Sinon : null (pas de canonical absolu)
  */
 
 export function resolveSiteBaseUrl(
   settingsBaseUrl?: string | null,
 ): URL | null {
+  const fromSettings = String(settingsBaseUrl ?? "").trim();
   const envSiteUrl = String(process.env.NEXT_PUBLIC_SITE_URL ?? "").trim();
   const vercelUrl = String(process.env.VERCEL_URL ?? "").trim();
-  const fromSettings = String(settingsBaseUrl ?? "").trim();
 
   const pick =
-    envSiteUrl || (vercelUrl ? `https://${vercelUrl}` : "") || fromSettings;
+    fromSettings || envSiteUrl || (vercelUrl ? `https://${vercelUrl}` : "");
 
   if (!pick) return null;
 
   try {
     return new URL(pick);
   } catch {
-    // Défensif : si ENV mal formée, on préfère “pas de baseUrl” plutôt que canonicals faux
     return null;
   }
 }

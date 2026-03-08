@@ -34,8 +34,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Compoz studio — Admin",
-  description: "Administration panel for Compoz Studio",
+  title: "Compoz Studio",
+  description:
+    "Compoz Studio est une interface d’administration permettant de créer, gérer et publier des sites web simplement.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 type StudioRootLayoutProps = Readonly<{

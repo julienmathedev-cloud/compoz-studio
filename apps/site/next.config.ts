@@ -6,6 +6,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: false,
+
   transpilePackages: [
     "@compoz/core",
     "@compoz/ui",
@@ -13,6 +14,15 @@ const nextConfig: NextConfig = {
     "@compoz/http",
     "@compoz/infra",
   ],
+
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.public.blob.vercel-storage.com",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

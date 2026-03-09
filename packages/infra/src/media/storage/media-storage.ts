@@ -3,12 +3,6 @@
  * @layer infra/media/storage
  * @description
  * Contrat commun de stockage des médias uploadés.
- *
- * @remarks
- * - Abstraction unique pour supporter plusieurs backends :
- *   - local FS en développement
- *   - Vercel Blob en preview / production
- * - Ne contient aucune logique HTTP.
  */
 
 export type PutMediaInput = Readonly<{
@@ -21,6 +15,21 @@ export type PutMediaResult = Readonly<{
   url: string;
 }>;
 
+export type ReadMediaInput = Readonly<{
+  key: string;
+}>;
+
+export type ReadMediaResult = Readonly<{
+  buffer: Buffer;
+  contentType?: string;
+}>;
+
+export type DeleteMediaInput = Readonly<{
+  key: string;
+}>;
+
 export interface MediaStorage {
   put(input: PutMediaInput): Promise<PutMediaResult>;
+  read(input: ReadMediaInput): Promise<ReadMediaResult>;
+  delete(input: DeleteMediaInput): Promise<void>;
 }

@@ -44,26 +44,15 @@ export const ENDPOINTS = {
   STUDIO: {
     base: STUDIO_BASE,
 
-    /** Routes de gestion des pages. */
     PAGES: {
       base: ep(STUDIO_BASE, "pages"),
-
-      // API "DB-like"
       byId: (pageId: string | number) => ep(STUDIO_BASE, "pages", pageId),
-
       blocksById: (pageId: string | number) =>
         ep(STUDIO_BASE, "pages", pageId, "blocks"),
     },
 
-    /**
-     * Routes de gestion des users Studio.
-     *
-     * @remarks
-     * Les segments "admin/users" sont conservés tels quels ici (compat / historique).
-     */
     USERS: {
       base: ep(STUDIO_BASE, "admin/users"),
-
       byId: (userId: string | number) => ep(STUDIO_BASE, "admin/users", userId),
     },
 
@@ -72,7 +61,6 @@ export const ENDPOINTS = {
       active: ep(STUDIO_BASE, "admin/tenant", "active"),
     },
 
-    /** Routes de gestion des site settings (sous-sections). */
     SETTINGS: {
       base: SETTINGS_BASE,
       header: ep(SETTINGS_BASE, "header"),
@@ -85,12 +73,21 @@ export const ENDPOINTS = {
       bundle: ep(SETTINGS_BASE, "bundle"),
     },
 
-    /** Routes liées aux médias (uploads, etc.). */
     MEDIA: {
       base: MEDIA_BASE,
       upload: ep(MEDIA_BASE, "upload"),
       uploadImage: ep(MEDIA_BASE, "upload", "image"),
       uploadSvg: ep(MEDIA_BASE, "upload", "svg"),
+
+      image: {
+        prepare: ep(MEDIA_BASE, "upload", "image", "prepare"),
+        client: ep(MEDIA_BASE, "upload", "image", "client"),
+        finalize: ep(MEDIA_BASE, "upload", "image", "finalize"),
+      },
+
+      svg: {
+        base: ep(MEDIA_BASE, "upload", "svg"),
+      },
     },
 
     SITE: {

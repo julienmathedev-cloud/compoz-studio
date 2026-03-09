@@ -181,7 +181,13 @@ export function SiteLightbox({
       const el = restoreFocusRef.current;
       if (el && typeof el.focus === "function") {
         // rAF pour laisser React retirer le portal proprement
-        requestAnimationFrame(() => el.focus());
+        requestAnimationFrame(() => {
+          try {
+            el.focus({ preventScroll: true });
+          } catch {
+            el.focus();
+          }
+        });
       }
     };
   }, [beginClose]);

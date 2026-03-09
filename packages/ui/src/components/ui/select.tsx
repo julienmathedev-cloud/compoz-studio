@@ -44,8 +44,9 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        // ✅ PRM : hover/transition/rings uniquement en motion-safe
-        "border-input data-[placeholder]:text-muted-foreground dark:bg-input/30 motion-safe:dark:hover:bg-input/50 focus-visible:outline-none motion-safe:focus-visible:ring-2 motion-safe:focus-visible:ring-ring/70 motion-safe:focus-visible:ring-offset-0 aria-invalid:ring-destructive/60 motion-safe:aria-invalid:ring-2 dark:aria-invalid:ring-destructive/40 dark:aria-invalid:border-destructive/50 gap-1.5 rounded-lg border bg-transparent py-2 pr-2 pl-2.5 text-sm motion-safe:transition-colors select-none data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:flex *:data-[slot=select-value]:gap-1.5 [&_svg:not([class*='size-'])]:size-4 flex w-fit items-center justify-between whitespace-nowrap outline-none disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "border-input data-[placeholder]:text-muted-foreground dark:bg-input/30 motion-safe:dark:hover:bg-input/50 focus-visible:outline-none gap-1.5 rounded-lg border bg-transparent py-2 pr-2 pl-2.5 text-sm motion-safe:transition-colors select-none data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:flex *:data-[slot=select-value]:gap-1.5 [&_svg:not([class*='size-'])]:size-4 flex w-fit items-center justify-between whitespace-nowrap outline-none disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "motion-safe:focus-visible:ring-2 motion-safe:focus-visible:ring-ring/70 motion-safe:focus-visible:ring-offset-0",
+        "aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 aria-invalid:ring-destructive/60 dark:aria-invalid:ring-destructive/40 motion-safe:aria-invalid:ring-2 motion-safe:focus-visible:aria-invalid:ring-destructive/60 dark:motion-safe:focus-visible:aria-invalid:ring-destructive/40",
         className,
       )}
       {...props}

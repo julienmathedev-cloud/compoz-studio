@@ -21,6 +21,8 @@ import { Spinner } from "@compoz/ui/components/ui/spinner";
 
 import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
+import { cn } from "@compoz/ui/lib/utils";
+import { ROW_SM } from "@compoz/ui/styles/studio/layout";
 
 /**
  * Props du composant `LoadingStatus`.
@@ -46,7 +48,13 @@ export function LoadingStatus({
   const desc = label ?? t("common.loading");
 
   return (
-    <span role="status" aria-live="polite" aria-atomic="true" {...rest}>
+    <span
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      className={cn(ROW_SM, "min-w-24", rest.className)}
+      {...rest}
+    >
       {withSpinner && <StudioIcon icon={Spinner} />}
 
       {children && (

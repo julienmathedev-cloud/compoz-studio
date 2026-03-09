@@ -6,14 +6,20 @@
  *
  * @description
  * Éditeur UI générique : liste d’images (add/remove/reorder) pour Gallery/Carousel (V0.5).
+ *
+ * @remarks
+ * - UI-only.
+ * - Les mises à jour d’item sont appliquées par `id` stable.
+ * - Utilise une ref sur la liste courante pour éviter les stale closures
+ *   lors des uploads asynchrones.
  */
 
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { AddEmptyCardButton } from "@compoz/studio/components/molecules/controls/AddEmptyCardButton";
 import { ImageItemEditor } from "@compoz/studio/features/pages/blocks/editor/images/ImageItemEditor";
-import { moveItem, setAt } from "@compoz/ui/lib/array";
+import { moveItem } from "@compoz/ui/lib/array";
 
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
 import { cn } from "@compoz/ui/lib/utils";
@@ -25,6 +31,15 @@ type UploadedRasterImage = Readonly<{
   width: number;
   height: number;
 }>;
+
+type ImageItemErrors = Readonly<{
+  src?: string;
+  alt?: string;
+  width?: string;
+  height?: string;
+}>;
+
+type ImagePatch = Partial<ImageEditorFormValues>;
 
 export type ImageListEditorProps = Readonly<{
   idPrefix: string;
@@ -39,10 +54,7 @@ export type ImageListEditorProps = Readonly<{
   createEmptyItem: () => ImageEditorFormValues;
 
   /** Erreurs par id (src/alt). */
-  imageErrorsById?: Record<
-    string,
-    { src?: string; alt?: string; width?: string; height?: string }
-  >;
+  imageErrorsById?: Record<string, ImageItemErrors>;
 
   /** Invariant UI : au minimum 1 image */
   minItems?: number;
@@ -67,44 +79,102 @@ export function ImageListEditor({
   const t = useTranslations();
 
   const list = useMemo(() => images ?? [], [images]);
+  const listRef = useRef<ReadonlyArray<ImageEditorFormValues>>(list);
+
+  useEffect(() => {
+    listRef.current = list;
+  }, [list]);
 
   const canRemove = list.length > minItems;
 
+  /**
+   * Retourne la liste la plus récente connue par le composant.
+   * Évite d’utiliser un snapshot capturé dans une closure plus ancienne,
+   * notamment quand un upload async se termine plus tard.
+   */
+  const getCurrentList =
+    useCallback((): ReadonlyArray<ImageEditorFormValues> => {
+      return listRef.current;
+    }, []);
+
+  /**
+   * Applique un patch partiel sur un item identifié par son `id`,
+   * en repartant toujours de la liste courante.
+   */
+  const patchImageById = useCallback(
+    (imageId: string, patch: ImagePatch) => {
+      const currentList = getCurrentList();
+      const index = currentList.findIndex((item) => item.id === imageId);
+
+      if (index < 0) return;
+
+      const currentItem = currentList[index];
+      const nextItem: ImageEditorFormValues = {
+        ...currentItem,
+        ...patch,
+      };
+
+      const nextList = Array.from(currentList);
+      nextList[index] = nextItem;
+
+      onImagesChange(nextList);
+    },
+    [getCurrentList, onImagesChange],
+  );
+
   const handleAdd = useCallback(() => {
     if (disabled) return;
-    const next = Array.from(list);
+
+    const currentList = getCurrentList();
+    const next = Array.from(currentList);
+
     next.push(createEmptyItem());
+
     onImagesChange(next);
-  }, [createEmptyItem, disabled, list, onImagesChange]);
+  }, [createEmptyItem, disabled, getCurrentList, onImagesChange]);
 
-  const handleRemove = useCallback(
-    (index: number) => {
+  const handleRemoveById = useCallback(
+    (imageId: string) => {
       if (disabled) return;
-      if (!canRemove) return;
 
-      const next = Array.from(list);
-      next.splice(index, 1);
+      const currentList = getCurrentList();
+      if (currentList.length <= minItems) return;
+
+      const next = currentList.filter((item) => item.id !== imageId);
+
+      if (next.length === currentList.length) return;
+
       onImagesChange(next);
     },
-    [canRemove, disabled, list, onImagesChange],
+    [disabled, getCurrentList, minItems, onImagesChange],
   );
 
-  const handleMoveUp = useCallback(
-    (index: number) => {
+  const handleMoveUpById = useCallback(
+    (imageId: string) => {
       if (disabled) return;
+
+      const currentList = getCurrentList();
+      const index = currentList.findIndex((item) => item.id === imageId);
+
       if (index <= 0) return;
-      onImagesChange(moveItem(list, index, index - 1));
+
+      onImagesChange(moveItem(currentList, index, index - 1));
     },
-    [disabled, list, onImagesChange],
+    [disabled, getCurrentList, onImagesChange],
   );
 
-  const handleMoveDown = useCallback(
-    (index: number) => {
+  const handleMoveDownById = useCallback(
+    (imageId: string) => {
       if (disabled) return;
-      if (index >= list.length - 1) return;
-      onImagesChange(moveItem(list, index, index + 1));
+
+      const currentList = getCurrentList();
+      const index = currentList.findIndex((item) => item.id === imageId);
+
+      if (index < 0 || index >= currentList.length - 1) return;
+
+      onImagesChange(moveItem(currentList, index, index + 1));
     },
-    [disabled, list, onImagesChange],
+    [disabled, getCurrentList, onImagesChange],
   );
 
   return (
@@ -112,7 +182,6 @@ export function ImageListEditor({
       <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {list.map((img, i) => {
           const itemPrefix = `${idPrefix}-img-${img.id}`;
-
           const itemErrors = imageErrorsById?.[img.id];
 
           // ✅ fallback : si width/height cassent, on veut le VOIR sur le champ image
@@ -129,12 +198,12 @@ export function ImageListEditor({
                 disabled={disabled}
                 canRemove={canRemove}
                 onUploadImage={onUploadImage}
-                onChange={(nextImg) => {
-                  onImagesChange(setAt(list, i, nextImg));
+                onPatch={(patch) => {
+                  patchImageById(img.id, patch);
                 }}
-                onMoveUp={() => handleMoveUp(i)}
-                onMoveDown={() => handleMoveDown(i)}
-                onRemove={() => handleRemove(i)}
+                onMoveUp={() => handleMoveUpById(img.id)}
+                onMoveDown={() => handleMoveDownById(img.id)}
+                onRemove={() => handleRemoveById(img.id)}
                 srcInvalid={Boolean(srcErrorMessage)}
                 srcErrorMessage={srcErrorMessage}
                 linksEnabled={linksEnabled}

@@ -53,7 +53,7 @@ export function SiteFooter({ footer, legalMenu, ui }: SiteFooterProps) {
           <div className={cn(ui.copyright)}>
             {showYear && rawCopyright ? (
               <>
-                © Copyright {year} - {rawCopyright}
+                © Copyright {year} · {rawCopyright}
               </>
             ) : showYear ? (
               <>© Copyright {year}</>

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @file apps/studio/src/components/molecules/media/ImageUploader.tsx
+ * @file apps/studio/src/components/molecules/media/ImageSelector.tsx
  * @layer studio/molecules
  *
  * @description
@@ -34,6 +34,7 @@ import {
   FieldError,
   FieldLabel,
 } from "@compoz/ui/components/ui/field";
+import { Spinner } from "@compoz/ui/components/ui/spinner";
 import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
 import { EMPTY_CARD } from "@compoz/ui/styles/studio/layout";
@@ -66,7 +67,11 @@ type ImageSelectorProps = Readonly<{
   previewAlt: string;
   /** Texte d’aide optionnel affiché sous le champ. */
   help?: string;
-  /** Upload optionnel : reçoit le fichier sélectionné et retourne une URL publique. */
+  /**
+   * Upload optionnel :
+   * reçoit le fichier sélectionné, orchestre éventuellement un pipeline async
+   * (prepare/direct upload/finalize), puis retourne le média finalisé.
+   */
   onFileSelect?: (file: File) => Promise<UploadedRasterImage>;
   onUploaded?: (meta: UploadedRasterImage) => void;
   /** Types MIME recommandés (hint non bloquant si différent). */
@@ -171,13 +176,15 @@ export function ImageSelector({
   const showName = pickedName || (url ? url.split("/").pop() : "");
 
   // Busy UI : désactivation globale + upload en cours
-  const isBusy = Boolean(disabled || uploading);
+  const isBusy = Boolean(uploading);
+  const isSavingLocked = Boolean(disabled);
+  const isLocked = Boolean(isSavingLocked || uploading);
 
   // Taille plus compacte (évite les gros pavés vides)
   const PREVIEW_MIN_HEIGHT = 180;
 
   // Désactivation du bouton de suppression : rien à supprimer (URL + preview + nom vides)
-  const isDeleteDisabled = isBusy || (!url && !localPreview && !pickedName);
+  const isDeleteDisabled = isLocked || (!url && !localPreview && !pickedName);
 
   function formatBytes(bytes: number): string {
     if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";
@@ -203,7 +210,7 @@ export function ImageSelector({
       onUrlChange(uploaded.url);
 
       // ✅ preview = URL publique (plus stable que blob)
-      setLocalPreview(uploaded.url);
+      //setLocalPreview(uploaded.url);
 
       // ✅ remonte width/height au parent
       onUploaded?.(uploaded);
@@ -295,7 +302,7 @@ export function ImageSelector({
   }
 
   function openPicker() {
-    if (isBusy) return;
+    if (isLocked) return;
     fileInputRef.current?.click();
   }
 
@@ -326,10 +333,10 @@ export function ImageSelector({
         id={fieldId}
         type="file"
         accept={accept}
-        disabled={isBusy}
+        disabled={isLocked}
+        tabIndex={-1}
         aria-describedby={describedBy}
         aria-invalid={isInvalid ? true : undefined}
-        tabIndex={-1}
         onChange={async (e) => {
           const f = e.currentTarget.files?.[0];
           if (!f) return;
@@ -342,19 +349,19 @@ export function ImageSelector({
       <div className="relative">
         <TooltipButton
           type="button"
-          disabled={isBusy}
+          disabled={uploading}
           tooltip={showName || undefined}
-          tabIndex={isBusy ? -1 : 0}
+          tabIndex={isLocked ? -1 : 0}
           onClick={openPicker}
-          aria-disabled={isBusy || undefined}
+          aria-disabled={isLocked || undefined}
           className={cn(
             EMPTY_CARD,
-            hasPreview && "pr-10 pl-10", // ✅ padding “anti-overlap”
+            hasPreview && "pr-10 pl-10",
             "flex w-full bg-accent/20",
-            // Affordance : hover/focus
-            !isBusy &&
+            !isLocked &&
               "cursor-pointer hover:bg-accent/50 hover:border-primary focus-visible:ring-offset-2",
-            isBusy && "cursor-not-allowed opacity-70",
+            isLocked && "cursor-not-allowed",
+            uploading && "opacity-70",
           )}
           style={{ minHeight: PREVIEW_MIN_HEIGHT }}
           aria-label={t("studio.imageSelector.previewAria")}
@@ -362,33 +369,46 @@ export function ImageSelector({
           <div
             className={cn("relative h-full w-full items-center justify-center")}
           >
+            {uploading ? (
+              <div className="absolute inset-0 z-10 flex items-center justify-center">
+                <Spinner className="scale-150 text-primary" />
+              </div>
+            ) : null}
             {hasPreview ? (
-              previewMode === "icon" ? (
-                <div className="flex h-full w-full items-center justify-center">
+              <div className="relative h-full w-full">
+                {previewMode === "icon" ? (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <Image
+                      src={src}
+                      alt={previewAlt}
+                      width={previewSize}
+                      height={previewSize}
+                      className="object-contain"
+                      unoptimized={isBlob}
+                    />
+                  </div>
+                ) : (
                   <Image
                     src={src}
                     alt={previewAlt}
-                    width={previewSize}
-                    height={previewSize}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-contain"
                     unoptimized={isBlob}
                   />
-                </div>
-              ) : (
-                <Image
-                  src={src}
-                  alt={previewAlt}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-contain"
-                  unoptimized={isBlob}
-                />
-              )
+                )}
+              </div>
             ) : (
               <EmptyState text={t("studio.imageSelector.chooseFile")} />
             )}
           </div>
         </TooltipButton>
+        {isSavingLocked && !uploading ? (
+          <div
+            className="absolute inset-0 z-10 cursor-not-allowed rounded-[inherit]"
+            aria-hidden="true"
+          />
+        ) : null}
 
         {/* Action secondaire : supprimer, discrète, sans voler la vedette */}
         <div className="absolute right-2 top-2 flex items-center gap-2">

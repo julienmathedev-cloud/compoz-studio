@@ -10,6 +10,8 @@
  * @remarks
  * - UI-only.
  * - Réutilise `ImageFields`.
+ * - N’émet plus un item complet reconstruit depuis un snapshot potentiellement stale.
+ * - Émet des patches partiels pour laisser le parent fusionner avec l’état courant.
  */
 
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -33,6 +35,8 @@ type UploadedRasterImage = Readonly<{
   height: number;
 }>;
 
+type ImageItemPatch = Partial<ImageEditorFormValues>;
+
 export type ImageItemEditorProps = Readonly<{
   idPrefix: string;
   index: number;
@@ -43,7 +47,7 @@ export type ImageItemEditorProps = Readonly<{
   disabled?: boolean;
   canRemove: boolean;
 
-  onChange: (next: ImageEditorFormValues) => void;
+  onPatch: (patch: ImageItemPatch) => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRemove: () => void;
@@ -62,7 +66,7 @@ export function ImageItemEditor({
   value,
   disabled = false,
   canRemove,
-  onChange,
+  onPatch,
   onMoveUp,
   onMoveDown,
   onRemove,
@@ -82,24 +86,20 @@ export function ImageItemEditor({
 
   const handleSrcChange = (nextSrc: unknown) => {
     const nextSrcStr = String(nextSrc ?? "");
+    const hasSrc = nextSrcStr.trim().length > 0;
 
-    const next: ImageEditorFormValues = {
-      ...value,
+    onPatch({
       src: nextSrcStr,
-      // option UX "safe" : si src est vidé, on purge les dims pour éviter du stale
-      width: nextSrcStr.trim().length ? value.width : undefined,
-      height: nextSrcStr.trim().length ? value.height : undefined,
-    };
-
-    onChange(next);
+      // ✅ si src est vidé, on purge les dimensions pour éviter un stale display
+      width: hasSrc ? value.width : undefined,
+      height: hasSrc ? value.height : undefined,
+    });
   };
 
   const handleAltChange = (nextAlt: unknown) => {
-    const next: ImageEditorFormValues = {
-      ...value,
+    onPatch({
       alt: String(nextAlt ?? ""),
-    };
-    onChange(next);
+    });
   };
 
   return (
@@ -164,9 +164,7 @@ export function ImageItemEditor({
             disabled={disabled}
             onUploadImage={onUploadImage}
             onUploaded={(meta) => {
-              // ✅ write width/height (numbers) + src url
-              onChange({
-                ...value,
+              onPatch({
                 src: meta.url,
                 width: meta.width,
                 height: meta.height,
@@ -200,7 +198,7 @@ export function ImageItemEditor({
               linksEnabled
                 ? {
                     value: value.href ?? null,
-                    onChange: (next) => onChange({ ...value, href: next }),
+                    onChange: (next) => onPatch({ href: next }),
                   }
                 : undefined
             }

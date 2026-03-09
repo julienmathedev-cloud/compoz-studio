@@ -32,9 +32,9 @@ import {
   usePrimaryMenuUiWarnings,
   type PrimaryMenuWarningKey,
 } from "@compoz/studio/features/settings/menus/primary-menu/validate";
-import { focusByFieldId } from "@compoz/ui/lib/focus";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { Card, CardContent, CardFooter } from "@compoz/ui/components/ui/card";
+import { focusByFieldId } from "@compoz/ui/lib/focus";
 import {
   createFieldIds,
   useIdPrefix,
@@ -185,7 +185,7 @@ export function PrimaryMenuForm({
   ) => {
     setValue(`items.${pIdx}.children`, nextChildren, {
       shouldDirty: true,
-      shouldTouch: true,
+      shouldTouch: false,
     });
   };
 

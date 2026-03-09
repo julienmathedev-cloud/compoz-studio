@@ -78,9 +78,8 @@ export function SiteMobileMenu({
 
   // Fermer sur changement de route
   useEffect(() => {
-    if (!open) return;
-    setOpen(false);
-  }, [pathname, open]);
+    setOpen((prev) => (prev ? false : prev));
+  }, [pathname]);
 
   // Scroll lock global (html)
   useEffect(() => {

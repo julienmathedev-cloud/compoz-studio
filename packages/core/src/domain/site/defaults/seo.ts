@@ -20,7 +20,7 @@ export const DEFAULT_SEO_SETTINGS: SeoSettings = {
   titleTemplate: TITLE_PLACEHOLDER, // ex.: "%s" ou "Mon site | %s"
   defaultDescription: "",
   canonicalUrl: "", // défini par l'utilisateur lorsque nécessaire
-  robots: "index,follow", // SEO standard
+  robots: "noindex,nofollow", // SEO standard
   openGraph: undefined, // OG non activé par défaut
   twitter: { card: "summary_large_image" }, // choix par défaut courant
   structuredDataEnabled: true, // autorise le rendu minimal RDF/JSON-LD

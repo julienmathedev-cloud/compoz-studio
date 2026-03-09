@@ -19,7 +19,7 @@ export const lolaMobileMenuUi: SiteMobileMenuUiOverride = {
   /* -------------------------------------------------------------------------- */
 
   triggerButton:
-    "md:hidden h-10 w-10 flex items-center justify-center rounded-md",
+    "md:hidden z-60 h-10 w-10 flex items-center justify-center rounded-md",
 
   triggerIcon: "text-zinc-900 transition-transform duration-300",
 
@@ -27,8 +27,7 @@ export const lolaMobileMenuUi: SiteMobileMenuUiOverride = {
   /* Overlay                                                                    */
   /* -------------------------------------------------------------------------- */
 
-  overlayBase:
-    "fixed inset-0 z-40 bg-black/20 backdrop-blur-sm transition-opacity duration-300",
+  overlayBase: "fixed inset-0 z-40 transition-opacity duration-300",
   overlayOpen: "opacity-100 pointer-events-auto",
   overlayClosed: "opacity-0 pointer-events-none",
 
@@ -38,14 +37,15 @@ export const lolaMobileMenuUi: SiteMobileMenuUiOverride = {
 
   panelBase:
     "fixed inset-y-0 left-0 z-50 w-full h-[100dvh] flex flex-col bg-white transition-transform duration-300 will-change-transform",
-  panelOpen: "translate-x-0",
+  panelOpen: "translate-x-0 pointer-events-auto visible",
   panelClosed: "-translate-x-full invisible pointer-events-none",
 
   /* -------------------------------------------------------------------------- */
   /* Topbar                                                                     */
   /* -------------------------------------------------------------------------- */
 
-  topBar: "flex items-center border-b border-zinc-100 px-4 shrink-0",
+  topBar:
+    "flex items-center border-b border-zinc-100 px-3 md:px-4 lg:px-6 shrink-0 h-[var(--header-h,64px)]",
 
   closeButton:
     "h-10 w-10 flex items-center justify-center rounded-md ml-auto hover:bg-zinc-100",

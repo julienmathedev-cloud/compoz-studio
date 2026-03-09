@@ -98,7 +98,7 @@ export function PageBlockListItem({
   return (
     <div
       className={cn(
-        "grid min-w-0 grid-cols-[max-content_auto_1fr_auto] items-center gap-3",
+        "grid min-w-0 grid-cols-[max-content_minmax(0,1fr)_auto] items-center gap-3",
       )}
       aria-busy={isBusy || undefined}
       aria-disabled={baseDisabled || undefined}
@@ -114,7 +114,7 @@ export function PageBlockListItem({
 
       <BlockCellsDescription block={block} index={index} />
 
-      <div className="shrink-0 justify-self-end">
+      <div className="min-w-max shrink-0 justify-self-end">
         <StudioButtonGroup className="shrink-0">
           <TooltipButton
             type="button"

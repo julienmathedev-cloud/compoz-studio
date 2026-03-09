@@ -60,6 +60,22 @@ const FAVICON_PREFERRED_TYPES = [
   "image/png",
 ] as const;
 
+function resolveFaviconPreviewUrl(input: string): string {
+  const url = String(input ?? "").trim();
+  if (!url) return "";
+
+  /**
+   * Convention studio actuelle :
+   * - fichier suffixé par une taille : -16 / -32 / -48 / -180 / -192 / -512
+   * - extension conservée
+   * - querystring éventuelle conservée
+   */
+  return url.replace(
+    /-(16|32|48|180|192|512)(\.[a-z0-9]+)(\?.*)?$/i,
+    "-512$2$3",
+  );
+}
+
 /**
  * Champs favicon standardisés (studio).
  */
@@ -74,11 +90,14 @@ export function FaviconFields({
   const t = useTranslations();
   const alt = logoAlt || siteName || t("studio.favicon.altFallback");
 
+  const canonicalUrl = String(faviconUrlField.value ?? "");
+  const previewUrl = resolveFaviconPreviewUrl(canonicalUrl);
+
   return (
     <ImageSelector
       ids={faviconIds}
       label={t("studio.favicon.label")}
-      url={String(faviconUrlField.value ?? "")}
+      url={previewUrl}
       onUrlChange={(value) => faviconUrlField.onChange(String(value ?? ""))}
       disabled={disabled}
       previewAlt={alt}
@@ -89,7 +108,7 @@ export function FaviconFields({
       preferredTypeHint={t("studio.favicon.preferredTypeHint")}
       maxBytes={MAX_IMAGE_UPLOAD_BYTES}
       previewMode="icon"
-      previewSize={128}
+      previewSize={64}
     />
   );
 }

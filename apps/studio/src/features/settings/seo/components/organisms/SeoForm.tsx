@@ -35,10 +35,10 @@ import { SeoOpenGraphFields } from "@compoz/studio/features/settings/seo/compone
 import { SeoTwitterFields } from "@compoz/studio/features/settings/seo/components/molecules/SeoTwitterFields";
 import type { SeoWarningKey } from "@compoz/studio/features/settings/seo/validate";
 import { useSeoUiWarnings } from "@compoz/studio/features/settings/seo/validate";
-import { focusByFieldId } from "@compoz/ui/lib/focus";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { Card, CardContent, CardFooter } from "@compoz/ui/components/ui/card";
 import { Separator } from "@compoz/ui/components/ui/separator";
+import { focusByFieldId } from "@compoz/ui/lib/focus";
 import {
   createFieldIds,
   useIdPrefix,
@@ -256,6 +256,8 @@ export function SeoForm({
     onBlockingErrorsCountChange?.(blockingErrorsCount);
   }, [blockingErrorsCount, onBlockingErrorsCountChange]);
 
+  const siteName = String(values.defaultTitle ?? "").trim() || "Nom du site";
+
   return (
     <form
       aria-busy={isBusy || undefined}
@@ -359,7 +361,7 @@ export function SeoForm({
                     />
 
                     <HelperChips
-                      items={["%s", "%s — Nom du site"]}
+                      items={["%s", `%s — ${siteName}`]}
                       onPick={(snippet) => field.onChange(snippet)}
                     />
                   </div>

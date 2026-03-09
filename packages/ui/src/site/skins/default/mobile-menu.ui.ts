@@ -22,7 +22,8 @@ export const defaultMobileMenuUi: SiteMobileMenuUi = {
   panelOpen: "translate-x-0",
   panelClosed: "-translate-x-full",
 
-  topBar: "flex items-center justify-end p-3 border-b border-border",
+  topBar:
+    "flex items-center justify-end p-3 border-b border-border shrink-0 h-[var(--header-h,64px)]",
   closeButton: "inline-flex items-center justify-center rounded-md p-2",
 
   scrollArea: "h-[calc(100dvh-56px)] overflow-y-auto p-3",

@@ -217,7 +217,7 @@ function normalizeRichTextHtmlForCompare(html: string): string {
     return "";
   }
 
-  return raw.replace(/\s+/g, " ");
+  return raw;
 }
 
 export function RichTextCellEditor({

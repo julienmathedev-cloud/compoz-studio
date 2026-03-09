@@ -85,7 +85,7 @@ export function PageListItem({
   return (
     <div
       className={cn(
-        "grid grid-cols-[max-content_auto_1fr_auto] items-center gap-3",
+        "grid grid-cols-[max-content_minmax(0,1fr)_auto] items-center gap-3",
       )}
       aria-busy={isBusy || undefined}
       aria-disabled={baseDisabled || undefined}

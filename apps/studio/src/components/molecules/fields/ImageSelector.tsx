@@ -370,10 +370,16 @@ export function ImageSelector({
             className={cn("relative h-full w-full items-center justify-center")}
           >
             {uploading ? (
-              <Spinner className="z-20 scale-150 text-primary" />
-            ) : null}
-            {hasPreview ? (
-              <div className="relative h-full w-full">
+              <div className="absolute inset-0 z-10 flex items-center justify-center">
+                <Spinner className="z-20 scale-150 text-primary" />
+              </div>
+            ) : hasPreview ? (
+              <div
+                className={cn(
+                  "relative h-full w-full",
+                  uploading && "opacity-0",
+                )}
+              >
                 {previewMode === "icon" ? (
                   <div className="flex h-full w-full items-center justify-center">
                     <Image

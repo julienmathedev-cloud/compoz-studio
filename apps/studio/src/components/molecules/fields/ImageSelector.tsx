@@ -346,7 +346,7 @@ export function ImageSelector({
       />
 
       {/* Zone interactive : placeholder (empty) → preview (filled) */}
-      <div className="relative">
+      <div className="relative w-full h-full">
         <TooltipButton
           type="button"
           disabled={uploading}
@@ -366,14 +366,14 @@ export function ImageSelector({
           style={{ minHeight: PREVIEW_MIN_HEIGHT }}
           aria-label={t("studio.imageSelector.previewAria")}
         >
-          <div
-            className={cn("relative h-full w-full items-center justify-center")}
-          >
+          <div className="relative h-full w-full">
             {uploading ? (
               <div className="absolute inset-0 z-10 flex items-center justify-center">
-                <Spinner className="z-20 scale-150 text-primary" />
+                <Spinner className="scale-150 text-primary" />
               </div>
-            ) : hasPreview ? (
+            ) : null}
+
+            {hasPreview ? (
               <div
                 className={cn(
                   "relative h-full w-full",
@@ -403,7 +403,14 @@ export function ImageSelector({
                 )}
               </div>
             ) : (
-              <EmptyState text={t("studio.imageSelector.chooseFile")} />
+              <div
+                className={cn(
+                  "flex h-full w-full items-center justify-center",
+                  uploading && "opacity-0",
+                )}
+              >
+                <EmptyState text={t("studio.imageSelector.chooseFile")} />
+              </div>
             )}
           </div>
         </TooltipButton>

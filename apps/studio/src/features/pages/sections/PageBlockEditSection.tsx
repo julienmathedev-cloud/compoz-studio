@@ -100,6 +100,7 @@ export function PageBlockEditSection({
   const handleUploadImage = useCallback(
     async (file: File): Promise<UploadedRasterImage> => {
       const result = await uploadImage(file, "content");
+      console.log("uploadImage", result);
 
       if (result.wasResized || result.wasCompressed) {
         notify.info(

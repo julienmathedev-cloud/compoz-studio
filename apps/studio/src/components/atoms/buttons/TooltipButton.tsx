@@ -22,6 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@compoz/ui/components/ui/tooltip";
+import { cn } from "@compoz/ui/lib/utils";
 
 /**
  * Props du composant `TooltipButton`.
@@ -43,35 +44,40 @@ export type TooltipButtonProps = ComponentProps<typeof Button> &
  *
  * @remarks
  * - Si `tooltip` est falsy, rend directement `<Button />`.
- * - Si `disabled`, enveloppe le bouton dans un `<span tabIndex={0}>` pour
+ * - Si `disabled`, enveloppe le bouton dans un wrapper focusable pour
  *   permettre l’affichage du tooltip (pattern Radix/ShadCN).
+ * - Le wrapper reprend la largeur du parent pour éviter les régressions
+ *   de layout sur les boutons `w-full`.
  */
 export function TooltipButton({
   tooltip,
   side = "top",
   align = "center",
   delayDuration = 150,
+  className,
   ...buttonProps
 }: TooltipButtonProps) {
-  // Si aucun tooltip (rare), on rend juste le bouton.
   if (!tooltip) {
-    return <Button {...buttonProps} />;
+    return <Button {...buttonProps} className={className} />;
   }
 
   const isDisabled = Boolean(buttonProps.disabled);
+
+  const button = <Button {...buttonProps} className={className} />;
 
   return (
     <TooltipProvider delayDuration={delayDuration}>
       <Tooltip>
         <TooltipTrigger asChild>
           {isDisabled ? (
-            <span tabIndex={0} className="inline-flex">
-              <Button {...buttonProps} />
+            <span tabIndex={0} className={cn("flex w-full")}>
+              {button}
             </span>
           ) : (
-            <Button {...buttonProps} />
+            button
           )}
         </TooltipTrigger>
+
         <TooltipContent side={side} align={align}>
           {tooltip}
         </TooltipContent>

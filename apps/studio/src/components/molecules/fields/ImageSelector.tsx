@@ -369,7 +369,9 @@ export function ImageSelector({
           <div
             className={cn("relative h-full w-full items-center justify-center")}
           >
-            {uploading ? <Spinner className="scale-150 text-primary" /> : null}
+            {uploading ? (
+              <Spinner className="z-20 scale-150 text-primary" />
+            ) : null}
             {hasPreview ? (
               <div className="relative h-full w-full">
                 {previewMode === "icon" ? (
@@ -401,7 +403,7 @@ export function ImageSelector({
         </TooltipButton>
         {isSavingLocked && !uploading ? (
           <div
-            className="absolute inset-0 z-10 cursor-not-allowed rounded-[inherit]"
+            className="absolute inset-0 z-10 opacity-0 cursor-not-allowed rounded-[inherit]"
             aria-hidden="true"
           />
         ) : null}

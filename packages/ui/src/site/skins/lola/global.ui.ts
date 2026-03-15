@@ -3,12 +3,12 @@
  * @layer ui/site/skins
  *
  * @description
- * Skin UI — preview overview site (thème Lola).
+ * Skin UI — site (thème Lola).
  *
  * @remarks
- * - Compose les skins existants du header et du footer.
- * - Ajoute un style minimal pour la zone de contenu factice de l’overview.
- * - Fournit uniquement des classes Tailwind (aucune logique).
+ * - Override partiel du skin global.
+ * - Aligne la structure sur `defaultGlobalUi`.
+ * - Fournit uniquement les surcharges nécessaires au thème Lola.
  */
 
 import type { SiteGlobalUiOverride } from "@compoz/ui/site/site-ui.types";
@@ -26,10 +26,9 @@ export const lolaGlobalUi: SiteGlobalUiOverride = {
 
   body: {
     surface: "bg-gray-50",
-    pageHeading: { h1: "sr-only" },
   },
 
-  blocks: {
+  cells: {
     navGallery: lolaNavGalleryUi,
     zoomGallery: lolaZoomGalleryUi,
   },

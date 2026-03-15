@@ -1296,7 +1296,7 @@
         "keywordsHelp": "Un mot-clé par ligne. Ils pourront être affichés sous forme de badges."
       },
 
-      "carouselEditor": {
+      "carouselCellEditor": {
         "title": "Carrousel",
         "description": "Affiche une série d’éléments sous forme de carrousel ou de slider.",
 

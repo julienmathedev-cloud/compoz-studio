@@ -1,0 +1,102 @@
+"use client";
+
+/**
+ * @file packages/ui/src/site/components/organisms/SiteCarouselItem.tsx
+ * @layer ui/site/components
+ *
+ * @description
+ * Rendu client partagé d’un item de carousel / slider.
+ */
+
+import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
+import { SiteCard } from "@compoz/ui/site/components/molecules/SiteCard";
+import { SiteCaseStudyCard } from "@compoz/ui/site/components/molecules/SiteCaseStudyCard";
+import { SiteExtendedCard } from "@compoz/ui/site/components/molecules/SiteExtendedCard";
+import type { NormalizedCarouselItem } from "@compoz/ui/site/components/organisms/carousel-item.types";
+import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
+
+export type SiteCarouselItemProps = Readonly<{
+  item: NormalizedCarouselItem;
+  ui: SiteCarouselUi;
+  isFullBleed?: boolean;
+  priority?: boolean;
+  isActive?: boolean;
+}>;
+
+export function SiteCarouselItem({
+  item,
+  ui,
+  isFullBleed = false,
+  priority = false,
+  isActive = false,
+}: SiteCarouselItemProps) {
+  if (item.kind === "image") {
+    return (
+      <div
+        className={
+          isFullBleed ? ui.imageItem.fillContainer : ui.imageItem.ratioContainer
+        }
+      >
+        <SiteAppImage
+          image={{
+            src: item.src,
+            alt: item.alt,
+            width: item.width,
+            height: item.height,
+          }}
+          fill
+          sizes="100vw"
+          className={ui.imageItem.image}
+          priority={priority}
+          fetchPriority={priority ? "high" : "auto"}
+        />
+      </div>
+    );
+  }
+
+  if (item.kind === "card") {
+    return (
+      <div
+        className={isActive ? ui.contentItem.active : ui.contentItem.inactive}
+      >
+        <SiteCard
+          title={item.title}
+          description={item.description}
+          icon={item.icon}
+        />
+      </div>
+    );
+  }
+
+  if (item.kind === "cardsExtended") {
+    return (
+      <div
+        className={isActive ? ui.contentItem.active : ui.contentItem.inactive}
+      >
+        <SiteExtendedCard
+          title={item.title}
+          description={item.description}
+          bullets={item.bullets}
+          footer={item.footer}
+          icon={item.icon}
+          align="left"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className={isActive ? ui.contentItem.active : ui.contentItem.inactive}>
+      <SiteCaseStudyCard
+        title={item.title}
+        context={item.context}
+        solution={item.solution}
+        result={item.result}
+        image={item.image}
+        ui={ui.caseStudyCard}
+      />
+    </div>
+  );
+}
+
+SiteCarouselItem.displayName = "SiteCarouselItem";

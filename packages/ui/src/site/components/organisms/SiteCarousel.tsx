@@ -13,7 +13,9 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@compoz/ui/components/ui/button";
 import { cn } from "@compoz/ui/lib/utils";
-import type { SiteCarouselFrameUi } from "@compoz/ui/site/site-ui.types";
+import { SiteCarouselItem } from "@compoz/ui/site/components/organisms/SiteCarouselItem";
+import type { NormalizedCarouselItem } from "@compoz/ui/site/components/organisms/carousel-item.types";
+import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
 
 const DEFAULT_INTERVAL_MS = 5000;
 const MIN_INTERVAL_MS = 2000;
@@ -25,29 +27,25 @@ function readPrefersReducedMotion(): boolean {
   return Boolean(mq?.matches);
 }
 
-export type SiteCarouselProps<T> = Readonly<{
-  items: ReadonlyArray<T>;
-  ui: SiteCarouselFrameUi;
+export type SiteCarouselProps = Readonly<{
+  items: ReadonlyArray<NormalizedCarouselItem>;
+  ui: SiteCarouselUi;
   showDots?: boolean;
   showArrows?: boolean;
   intervalMs?: number;
-  renderItem: (
-    item: T,
-    ctx: Readonly<{
-      index: number;
-      isActive: boolean;
-    }>,
-  ) => React.ReactNode;
+  isFullBleed?: boolean;
+  priority?: boolean;
 }>;
 
-export function SiteCarousel<T>({
+export function SiteCarousel({
   items,
   ui,
   showDots = true,
   showArrows = false,
   intervalMs = DEFAULT_INTERVAL_MS,
-  renderItem,
-}: SiteCarouselProps<T>) {
+  isFullBleed = false,
+  priority = false,
+}: SiteCarouselProps) {
   const normalizedItems = useMemo(() => items ?? [], [items]);
   const count = normalizedItems.length;
 
@@ -122,7 +120,7 @@ export function SiteCarousel<T>({
 
   return (
     <div
-      className={ui.root}
+      className={ui.carousel.root}
       aria-roledescription="carousel"
       aria-label="Carousel"
     >
@@ -130,7 +128,7 @@ export function SiteCarousel<T>({
         Slide {safeIndex + 1} sur {count}
       </p>
 
-      <div className={ui.viewport}>
+      <div className={ui.carousel.viewport}>
         {showArrows && count > 1 ? (
           <>
             <Button
@@ -139,9 +137,9 @@ export function SiteCarousel<T>({
               variant="ghost"
               onClick={goPrev}
               aria-label="Slide précédent"
-              className={ui.arrowButton}
+              className={cn(ui.carousel.arrowButton, "left-0")}
             >
-              <ChevronLeft className={ui.arrowIcon} />
+              <ChevronLeft className={ui.carousel.arrowIcon} />
             </Button>
 
             <Button
@@ -150,27 +148,35 @@ export function SiteCarousel<T>({
               variant="ghost"
               onClick={goNext}
               aria-label="Slide suivant"
-              className={ui.arrowButton}
+              className={cn(ui.carousel.arrowButton, "right-0")}
             >
-              <ChevronRight className={ui.arrowIcon} />
+              <ChevronRight className={ui.carousel.arrowIcon} />
             </Button>
           </>
         ) : null}
 
-        <div className={ui.track}>
+        <div className={ui.carousel.track}>
           {normalizedItems.map((item, index) => {
             const isActive = index === safeIndex;
 
             return (
               <div
-                key={index}
+                key={item.id}
                 className={cn(
-                  ui.slide,
-                  isActive ? ui.slideActive : ui.slideInactive,
+                  ui.carousel.slide,
+                  isActive
+                    ? ui.carousel.slideActive
+                    : ui.carousel.slideInactive,
                 )}
                 aria-hidden={!isActive}
               >
-                {renderItem(item, { index, isActive })}
+                <SiteCarouselItem
+                  item={item}
+                  ui={ui}
+                  isFullBleed={isFullBleed}
+                  priority={priority && index === 0}
+                  isActive={isActive}
+                />
               </div>
             );
           })}
@@ -178,17 +184,20 @@ export function SiteCarousel<T>({
       </div>
 
       {showDots && count > 1 ? (
-        <div className={ui.dots}>
-          {normalizedItems.map((_, index) => {
+        <div className={ui.carousel.dots}>
+          {normalizedItems.map((item, index) => {
             const isActive = index === safeIndex;
 
             return (
               <button
-                key={index}
+                key={item.id}
                 type="button"
                 aria-label={`Aller au slide ${index + 1}`}
                 aria-current={isActive ? "true" : undefined}
-                className={cn(ui.dot, isActive ? ui.dotActive : ui.dotInactive)}
+                className={cn(
+                  ui.carousel.dot,
+                  isActive ? ui.carousel.dotActive : ui.carousel.dotInactive,
+                )}
                 onClick={() => {
                   setCurrentIndex(index);
                 }}

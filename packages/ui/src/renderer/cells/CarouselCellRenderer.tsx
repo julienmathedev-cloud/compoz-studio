@@ -16,12 +16,9 @@ import type {
 } from "@compoz/validation/pages/blocks/cells/cell";
 
 import { normalizeString } from "@compoz/ui/lib/normalize";
-import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
-import { SiteCard } from "@compoz/ui/site/components/molecules/SiteCard";
-import { SiteCaseStudyCard } from "@compoz/ui/site/components/molecules/SiteCaseStudyCard";
-import { SiteExtendedCard } from "@compoz/ui/site/components/molecules/SiteExtendedCard";
 import { SiteCarousel } from "@compoz/ui/site/components/organisms/SiteCarousel";
 import { SiteSlider } from "@compoz/ui/site/components/organisms/SiteSlider";
+import type { NormalizedCarouselItem } from "@compoz/ui/site/components/organisms/carousel-item.types";
 import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
 
 export type CarouselCellRendererProps = Readonly<{
@@ -30,56 +27,6 @@ export type CarouselCellRendererProps = Readonly<{
   isFullBleed?: boolean;
   priority?: boolean;
 }>;
-
-type NormalizedImageItem = Readonly<{
-  kind: "image";
-  id: string;
-  src: string;
-  alt: string;
-  width?: number;
-  height?: number;
-  caption?: string;
-}>;
-
-type NormalizedCardItem = Readonly<{
-  kind: "card";
-  id: string;
-  title: string;
-  description: string;
-  icon?: string;
-}>;
-
-type NormalizedCardsExtendedItem = Readonly<{
-  kind: "cardsExtended";
-  id: string;
-  title: string;
-  description: string;
-  bullets: string[];
-  footer?: string;
-  icon?: string;
-}>;
-
-type NormalizedCaseStudyCardItem = Readonly<{
-  kind: "caseStudyCard";
-  id: string;
-  title: string;
-  context: string;
-  solution: string;
-  result: string;
-  image?: Readonly<{
-    src: string;
-    alt: string;
-    width: number;
-    height: number;
-    caption?: string;
-  }>;
-}>;
-
-type NormalizedCarouselItem =
-  | NormalizedImageItem
-  | NormalizedCardItem
-  | NormalizedCardsExtendedItem
-  | NormalizedCaseStudyCardItem;
 
 export function CarouselCellRenderer({
   cell,
@@ -97,18 +44,11 @@ export function CarouselCellRenderer({
     return (
       <SiteSlider
         items={items}
-        ui={ui.slider}
+        ui={ui}
         showDots={cell.showDots}
         showArrows={cell.showArrows}
-        renderItem={(item, ctx) =>
-          renderCarouselItem({
-            item,
-            ui,
-            isFullBleed,
-            priority: priority && ctx.index === 0,
-            isActive: ctx.isActive,
-          })
-        }
+        isFullBleed={isFullBleed}
+        priority={priority}
       />
     );
   }
@@ -116,18 +56,11 @@ export function CarouselCellRenderer({
   return (
     <SiteCarousel
       items={items}
-      ui={ui.carousel}
+      ui={ui}
       showDots={cell.showDots}
       showArrows={cell.showArrows}
-      renderItem={(item, ctx) =>
-        renderCarouselItem({
-          item,
-          ui,
-          isFullBleed,
-          priority: priority && ctx.index === 0,
-          isActive: ctx.isActive,
-        })
-      }
+      isFullBleed={isFullBleed}
+      priority={priority}
     />
   );
 }
@@ -144,29 +77,29 @@ function normalizeCarouselItems(
   if (cell.itemKind === "image") {
     return cell.items
       .map((item) => normalizeImageItem(item as ImageEditorShape))
-      .filter(Boolean) as NormalizedImageItem[];
+      .filter((item): item is NormalizedCarouselItem => Boolean(item));
   }
 
   if (cell.itemKind === "card") {
     return cell.items
       .map((item) => normalizeCardItem(item as CardItemShape))
-      .filter(Boolean) as NormalizedCardItem[];
+      .filter((item): item is NormalizedCarouselItem => Boolean(item));
   }
 
   if (cell.itemKind === "cardsExtended") {
     return cell.items
       .map((item) => normalizeCardsExtendedItem(item as CardsExtendedItemShape))
-      .filter(Boolean) as NormalizedCardsExtendedItem[];
+      .filter((item): item is NormalizedCarouselItem => Boolean(item));
   }
 
   return cell.items
     .map((item) => normalizeCaseStudyCardItem(item as CaseStudyCardItemShape))
-    .filter(Boolean) as NormalizedCaseStudyCardItem[];
+    .filter((item): item is NormalizedCarouselItem => Boolean(item));
 }
 
 function normalizeImageItem(
   item: ImageEditorShape,
-): NormalizedImageItem | null {
+): NormalizedCarouselItem | null {
   const src = normalizeString(item.src, "");
   if (!src) return null;
 
@@ -184,7 +117,7 @@ function normalizeImageItem(
   };
 }
 
-function normalizeCardItem(item: CardItemShape): NormalizedCardItem | null {
+function normalizeCardItem(item: CardItemShape): NormalizedCarouselItem | null {
   const title = normalizeString(item.title, "");
   if (!title) return null;
 
@@ -199,7 +132,7 @@ function normalizeCardItem(item: CardItemShape): NormalizedCardItem | null {
 
 function normalizeCardsExtendedItem(
   item: CardsExtendedItemShape,
-): NormalizedCardsExtendedItem | null {
+): NormalizedCarouselItem | null {
   const title = normalizeString(item.title, "");
   if (!title) return null;
 
@@ -220,7 +153,7 @@ function normalizeCardsExtendedItem(
 
 function normalizeCaseStudyCardItem(
   item: CaseStudyCardItemShape,
-): NormalizedCaseStudyCardItem | null {
+): NormalizedCarouselItem | null {
   const title = normalizeString(item.title, "");
   const context = normalizeString(item.context, "");
   const solution = normalizeString(item.solution, "");
@@ -254,86 +187,4 @@ function normalizeCaseStudyCardItem(
     result,
     image,
   };
-}
-
-function renderCarouselItem({
-  item,
-  ui,
-  isFullBleed,
-  priority,
-  isActive,
-}: Readonly<{
-  item: NormalizedCarouselItem;
-  ui: SiteCarouselUi;
-  isFullBleed: boolean;
-  priority: boolean;
-  isActive: boolean;
-}>) {
-  if (item.kind === "image") {
-    return (
-      <div
-        className={
-          isFullBleed ? ui.imageItem.fillContainer : ui.imageItem.ratioContainer
-        }
-      >
-        <SiteAppImage
-          image={{
-            src: item.src,
-            alt: item.alt,
-            width: item.width,
-            height: item.height,
-          }}
-          fill
-          sizes="100vw"
-          className={ui.imageItem.image}
-          priority={priority}
-          fetchPriority={priority ? "high" : "auto"}
-        />
-      </div>
-    );
-  }
-
-  if (item.kind === "card") {
-    return (
-      <div
-        className={isActive ? ui.contentItem.active : ui.contentItem.inactive}
-      >
-        <SiteCard
-          title={item.title}
-          description={item.description}
-          icon={item.icon}
-        />
-      </div>
-    );
-  }
-
-  if (item.kind === "cardsExtended") {
-    return (
-      <div
-        className={isActive ? ui.contentItem.active : ui.contentItem.inactive}
-      >
-        <SiteExtendedCard
-          title={item.title}
-          description={item.description}
-          bullets={item.bullets}
-          footer={item.footer}
-          icon={item.icon}
-          align="left"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className={isActive ? ui.contentItem.active : ui.contentItem.inactive}>
-      <SiteCaseStudyCard
-        title={item.title}
-        context={item.context}
-        solution={item.solution}
-        result={item.result}
-        image={item.image}
-        ui={ui.caseStudyCard}
-      />
-    </div>
-  );
 }

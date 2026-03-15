@@ -17,29 +17,27 @@ import { useState } from "react";
 
 import { Button } from "@compoz/ui/components/ui/button";
 import { cn } from "@compoz/ui/lib/utils";
-import type { SiteSliderUi } from "@compoz/ui/site/site-ui.types";
+import { SiteCarouselItem } from "@compoz/ui/site/components/organisms/SiteCarouselItem";
+import type { NormalizedCarouselItem } from "@compoz/ui/site/components/organisms/carousel-item.types";
+import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
 
-export type SiteSliderProps<T> = Readonly<{
-  items: ReadonlyArray<T>;
-  ui: SiteSliderUi;
+export type SiteSliderProps = Readonly<{
+  items: ReadonlyArray<NormalizedCarouselItem>;
+  ui: SiteCarouselUi;
   showDots?: boolean;
   showArrows?: boolean;
-  renderItem: (
-    item: T,
-    ctx: Readonly<{
-      index: number;
-      isActive: boolean;
-    }>,
-  ) => React.ReactNode;
+  isFullBleed?: boolean;
+  priority?: boolean;
 }>;
 
-export function SiteSlider<T>({
+export function SiteSlider({
   items,
   ui,
   showDots = true,
   showArrows = true,
-  renderItem,
-}: SiteSliderProps<T>) {
+  isFullBleed = false,
+  priority = false,
+}: SiteSliderProps) {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
 
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
@@ -70,7 +68,7 @@ export function SiteSlider<T>({
 
   return (
     <div
-      className={ui.root}
+      className={ui.slider.root}
       role="region"
       aria-label="Slider"
       aria-roledescription="carousel"
@@ -81,55 +79,64 @@ export function SiteSlider<T>({
             size="icon"
             onClick={() => instanceRef.current?.prev()}
             aria-label="Slide précédent"
-            className={ui.arrowButton}
+            className={cn(ui.slider.arrowButton, "left-0")}
           >
-            <ChevronLeft className={ui.arrowIcon} aria-hidden="true" />
+            <ChevronLeft className={ui.slider.arrowIcon} aria-hidden="true" />
           </Button>
 
           <Button
             size="icon"
             onClick={() => instanceRef.current?.next()}
             aria-label="Slide suivant"
-            className={ui.arrowButton}
+            className={cn(ui.slider.arrowButton, "right-0")}
           >
-            <ChevronRight className={ui.arrowIcon} aria-hidden="true" />
+            <ChevronRight className={ui.slider.arrowIcon} aria-hidden="true" />
           </Button>
         </>
       ) : null}
 
-      <div ref={sliderRef} className={cn("keen-slider", ui.track)}>
+      <div ref={sliderRef} className={cn("keen-slider", ui.slider.track)}>
         {items.map((item, index) => {
           const isActive = index === currentSlide;
 
           return (
             <div
-              key={index}
+              key={item.id}
               role="group"
               tabIndex={isActive ? 0 : -1}
               className={cn(
                 "keen-slider__slide",
-                ui.slide,
-                isActive ? ui.slideActive : ui.slideInactive,
+                ui.slider.slide,
+                isActive ? ui.slider.slideActive : ui.slider.slideInactive,
               )}
             >
-              {renderItem(item, { index, isActive })}
+              <SiteCarouselItem
+                item={item}
+                ui={ui}
+                isFullBleed={isFullBleed}
+                priority={priority && index === 0}
+                isActive={isActive}
+              />
             </div>
           );
         })}
       </div>
 
       {showDots && items.length > 1 ? (
-        <div className={ui.dots}>
-          {items.map((_, index) => {
+        <div className={ui.slider.dots}>
+          {items.map((item, index) => {
             const isActive = index === currentSlide;
 
             return (
               <button
-                key={index}
+                key={item.id}
                 type="button"
                 aria-label={`Aller au slide ${index + 1}`}
                 aria-current={isActive ? "true" : undefined}
-                className={cn(ui.dot, isActive ? ui.dotActive : ui.dotInactive)}
+                className={cn(
+                  ui.slider.dot,
+                  isActive ? ui.slider.dotActive : ui.slider.dotInactive,
+                )}
                 onClick={() => instanceRef.current?.moveToIdx(index)}
               />
             );

@@ -60,12 +60,7 @@ export default async function SiteRootPage() {
   });
 
   return (
-    <SitePageRenderer
-      ui={resolveSiteUi()}
-      pageTitle={page.name}
-      blocks={blocks}
-      pager={pager}
-    />
+    <SitePageRenderer ui={resolveSiteUi()} blocks={blocks} pager={pager} />
   );
 }
 

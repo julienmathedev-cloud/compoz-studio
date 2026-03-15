@@ -52,7 +52,7 @@ export async function generateMetadata({
   const page = await getDraftPageBySlug(s);
   if (!page) return {};
 
-  return { title: page.title };
+  return { title: page.name };
 }
 
 /* -------------------------------------------------------------------------- */

@@ -30,7 +30,7 @@ import { STUDIO_PATH } from "@compoz/core/constants/web/paths";
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getDraftHomePage();
   if (!page) return {};
-  return { title: page.title };
+  return { title: page.name };
 }
 
 /* -------------------------------------------------------------------------- */

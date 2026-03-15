@@ -35,7 +35,7 @@ export async function generateMetadata({
   if (!page) return {};
 
   return {
-    title: (page.title ?? "").trim(),
+    title: (page.name ?? "").trim(),
     alternates: { canonical: `/t/${encodeURIComponent(tenantId)}` },
   };
 }
@@ -63,11 +63,6 @@ export default async function SiteTenantRootPage({ params }: PageParams) {
   });
 
   return (
-    <SitePageRenderer
-      ui={resolveSiteUi()}
-      pageTitle={page.title}
-      blocks={blocks}
-      pager={pager}
-    />
+    <SitePageRenderer ui={resolveSiteUi()} blocks={blocks} pager={pager} />
   );
 }

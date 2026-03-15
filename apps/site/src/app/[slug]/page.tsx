@@ -50,7 +50,7 @@ export async function generateMetadata({
   if (!page) return {};
 
   return {
-    title: page.title,
+    title: page.name,
     alternates: { canonical: `/${encodeURIComponent(slug)}` },
   };
 }
@@ -83,7 +83,7 @@ export default async function SitePage({ params }: PageParams) {
   return (
     <SitePageRenderer
       ui={resolveSiteUi()}
-      pageTitle={page.title}
+      pageTitle={page.name}
       blocks={blocks}
       pager={pager}
     />

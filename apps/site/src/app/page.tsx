@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
   if (!page) return {};
 
   return {
-    title: (page.title ?? "").trim(),
+    title: (page.name ?? "").trim(),
     alternates: { canonical: SITE_PATH.home },
   };
 }
@@ -62,7 +62,7 @@ export default async function SiteRootPage() {
   return (
     <SitePageRenderer
       ui={resolveSiteUi()}
-      pageTitle={page.title}
+      pageTitle={page.name}
       blocks={blocks}
       pager={pager}
     />

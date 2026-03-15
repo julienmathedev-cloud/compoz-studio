@@ -15,7 +15,7 @@
 
 import { useMemo } from "react";
 
-import type { LayoutSectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
+import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
@@ -27,18 +27,17 @@ export type BlockWarningKey = "titleMissing" | "titleLooksThin" | "titleSrOnly";
  * Calcule les warnings UI pour un LayoutSectionBlock.
  */
 export function computeLayoutSectionBlockWarnings(
-  values: LayoutSectionBlockFormValues,
+  values: SectionBlockFormValues,
 ): BlockWarningKey[] {
   const warnings = new Set<BlockWarningKey>();
 
   const name = values.name;
 
-  if (title) {
-    const text = String(title.text ?? "").trim();
+  if (name) {
+    const text = String(name ?? "").trim();
 
     if (!text) warnings.add("titleMissing");
     if (text.length > 0 && text.length <= 4) warnings.add("titleLooksThin");
-    if (title.display === "sr-only") warnings.add("titleSrOnly");
   }
 
   return Array.from(warnings);
@@ -48,7 +47,7 @@ export function computeLayoutSectionBlockWarnings(
  * Hook retournant les warnings UI d’un LayoutSectionBlock (form).
  */
 export function useLayoutSectionBlockUiWarnings(
-  values: LayoutSectionBlockFormValues,
+  values: SectionBlockFormValues,
 ): BlockWarningKey[] {
   return useMemo(() => computeLayoutSectionBlockWarnings(values), [values]);
 }

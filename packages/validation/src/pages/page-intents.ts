@@ -10,7 +10,7 @@
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import {
   PageIdSchema,
-  PageTitleSchema,
+  PageNameSchema,
   SitemapChangeFreqSchema,
   SlugSchema,
 } from "@compoz/validation/pages/page";
@@ -45,7 +45,7 @@ const PageSitemapIntentSchema = z
 export const CreatePageIntentSchema = z
   .object({
     /** Titre de la page (requis côté API). */
-    title: PageTitleSchema,
+    name: PageNameSchema,
     parentId: PageIdSchema.nullable(),
     /** Slug optionnel : normalisation + unicité gérées dans le domaine. */
     slug: z.union([SlugSchema, z.literal("/")]).optional(),
@@ -61,10 +61,10 @@ export type CreatePageIntentDTO = z.infer<typeof CreatePageIntentSchema>;
 export const UpdatePageIntentSchema = z
   .object({
     /**
-     * Nouveau titre de la page. Optionnel :
+     * Nouveau nom de la page. Optionnel :
      * absence de clé ⇒ titre inchangé.
      */
-    title: PageTitleSchema.optional(),
+    name: PageNameSchema.optional(),
     parentId: PageIdSchema.nullable().optional(),
     /**
      * Nouveau slug optionnel. Collisions, normalisation et réservations sont

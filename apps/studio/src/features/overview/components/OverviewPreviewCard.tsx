@@ -137,12 +137,12 @@ export function OverviewPreviewCard() {
   const { blocks: homeBlocks, isLoading: isLoadingHomeBlocks } =
     useListPageBlocks(homePageId ?? "");
 
-  const homePageTitle = useMemo(() => {
+  const homePageName = useMemo(() => {
     const pages = siteIndex?.pages ?? [];
     const home =
       pages.find((page) => page.slug === "home" || page.slug === "") ?? null;
 
-    return home?.title ?? t("studio.shared.homeLabel");
+    return home?.name ?? t("studio.shared.homeLabel");
   }, [siteIndex, t]);
 
   const pageBaselinePreview = useMemo<PageRenderShape>(() => {
@@ -151,11 +151,11 @@ export function OverviewPreviewCard() {
       .filter((block): block is BlockShape => Boolean(block));
 
     return {
-      title: homePageTitle,
+      name: homePageName,
       blocks: pageBlocks,
       paginationEnabled: false,
     };
-  }, [homeBlocks, homePageTitle]);
+  }, [homeBlocks, homePageName]);
 
   /* ---------------------------------------------------------------------- */
   /* Preview bridge                                                         */

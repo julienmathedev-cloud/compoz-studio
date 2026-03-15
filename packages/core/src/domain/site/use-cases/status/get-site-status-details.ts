@@ -107,7 +107,7 @@ export function getSiteStatusDetails({
         pagesDetails.push({
           id: pageId,
           slug: String(d?.slug ?? p?.slug ?? ""),
-          title: String(d?.title ?? p?.title ?? ""),
+          name: String(d?.name ?? p?.name ?? ""),
           diff,
           blocks: blockCounts,
           ...(includeBlocks ? { blockItems } : null),
@@ -177,7 +177,7 @@ export function getSiteStatusDetails({
       pagesDetails.push({
         id,
         slug: String(d?.slug ?? p?.slug ?? ""),
-        title: String(d?.title ?? p?.title ?? ""),
+        name: String(d?.name ?? p?.name ?? ""),
         diff,
         blocks: blockCounts,
         ...(includeBlocks ? { blockItems } : null),

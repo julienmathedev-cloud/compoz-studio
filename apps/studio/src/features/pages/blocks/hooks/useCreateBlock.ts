@@ -19,22 +19,29 @@ import { useTranslations } from "next-intl";
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log } from "@compoz/infra/lib/log";
+
 import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+
 import { syncBlocksFromPageCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
-import { toCreateLayoutSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
+
+import { toCreateSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
+
 import {
   invalidateBlockStatusViews,
   invalidateSiteStatus,
 } from "@compoz/studio/features/site/status/invalidate";
+
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { notifyCreated } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
+
 import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
-import type { LayoutSectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
+
+import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 
 type CreateBlockArgs = Readonly<{
   pageId: string;
-  values: LayoutSectionBlockFormValues;
+  values: SectionBlockFormValues;
   insertAt?: number;
   label?: string;
 }>;
@@ -50,6 +57,7 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
   const t = useTranslations();
   const qc = useQueryClient();
   const tenantId = useTenantId();
+
   const entityLabel = t("studio.shared.entities.blocks");
 
   const mutation = useMutation({
@@ -65,7 +73,7 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
     mutationFn: async (args: CreateBlockArgs) => {
       const pageId = String(args.pageId ?? "").trim();
 
-      const payload = toCreateLayoutSectionBlockIntentDTOFromFormValues({
+      const payload = toCreateSectionBlockIntentDTOFromFormValues({
         values: args.values,
         insertAt: args.insertAt,
       });
@@ -76,7 +84,12 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
         "useCreateBlock",
         DEFAULT_CONTENT_STATE,
         () => pagesStudioApi.addBlock(pageId, payload),
-        { entity: entityLabel, fields, pageId, tenantId },
+        {
+          entity: entityLabel,
+          fields,
+          pageId,
+          tenantId,
+        },
       );
 
       return {
@@ -129,7 +142,11 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
 
     onError: (error: unknown) => {
       notify.fromError(error, UiError.unexpectedSave);
-      lg.error("create.failed", { tenantId, msg: String(error) });
+
+      lg.error("create.failed", {
+        tenantId,
+        msg: String(error),
+      });
     },
 
     retry: false,

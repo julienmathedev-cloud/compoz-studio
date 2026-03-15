@@ -175,4 +175,11 @@ export const I18N_RUNTIME_KEYS = {
       "studio.cellEditorTabs.imageCellEditor.variants.square",
     ] as const,
   },
+
+  builder: {
+    containerMode: [
+      "studio.builder.sidebar.section.containerMode.options.contained",
+      "studio.builder.sidebar.section.containerMode.options.fullBleed",
+    ] as const,
+  },
 } as const;

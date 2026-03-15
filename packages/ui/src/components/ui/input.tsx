@@ -8,7 +8,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       type={type}
       data-slot="input"
       className={cn(
-        "dark:bg-input/30 border-input focus-visible:outline-none disabled:bg-input/50 dark:disabled:bg-input/80 h-8 rounded-lg border bg-transparent px-2.5 py-1 text-sm motion-safe:transition-colors file:h-6 file:font-medium file:text-foreground placeholder:text-muted-foreground w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+        "dark:bg-input/30 bg-input border-input focus-visible:outline-none disabled:bg-input/50 dark:disabled:bg-input/80 h-8 rounded-lg border bg-transparent px-2.5 py-1 text-sm motion-safe:transition-colors file:h-6 file:font-medium file:text-foreground placeholder:text-muted-foreground w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
         "motion-safe:focus-visible:border-none motion-safe:focus-visible:ring-2 motion-safe:focus-visible:ring-ring/70 motion-safe:focus-visible:ring-offset-0",
         "aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 aria-invalid:ring-destructive/60 dark:aria-invalid:ring-destructive/40 motion-safe:aria-invalid:ring-2 motion-safe:focus-visible:aria-invalid:ring-destructive/60 dark:motion-safe:focus-visible:aria-invalid:ring-destructive/40",
         className,

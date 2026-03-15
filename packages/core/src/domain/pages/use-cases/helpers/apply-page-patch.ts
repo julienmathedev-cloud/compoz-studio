@@ -20,7 +20,7 @@ import {
   assertPaginationEnabled,
   assertParentId,
   assertPriority,
-  assertTitleRequired,
+  assertNameRequired,
 } from "@compoz/core/domain/pages/validators/pages";
 import { normalizeSlugInput } from "@compoz/core/domain/slug/utils";
 
@@ -153,7 +153,7 @@ export async function applySlugPatch({
 
   // Reset : slug vidé => on dérive depuis le titre courant (next.title si modifié)
   const baseSource =
-    rawSlug.length === 0 ? next.title : normalizeSlugInput(rawSlug);
+    rawSlug.length === 0 ? next.name : normalizeSlugInput(rawSlug);
 
   const candidate = assertPageSlug(baseSource);
 
@@ -174,7 +174,7 @@ export async function applySlugPatch({
   return { from, to: candidate };
 }
 
-export function applyTitlePatch({
+export function applyNamePatch({
   existing,
   next,
   changed,
@@ -185,11 +185,11 @@ export function applyTitlePatch({
   changed: ChangedKey[];
   input: UpdatePageInput;
 }): void {
-  if (typeof input.title !== "string") return;
+  if (typeof input.name !== "string") return;
 
-  const t = assertTitleRequired(input.title);
-  if (t !== existing.title) {
-    next.title = t;
-    changed.push("title");
+  const t = assertNameRequired(input.name);
+  if (t !== existing.name) {
+    next.name = t;
+    changed.push("name");
   }
 }

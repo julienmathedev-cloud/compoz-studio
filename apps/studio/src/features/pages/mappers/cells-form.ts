@@ -3,22 +3,23 @@
  * @layer ui/studio/pages/mappers
  *
  * @description
- * Mappers de formulaires studio pour les cells :
- * - factories UI (`createEmpty*`)
- * - normalisation (`ensureCellsLength`)
- * - DTO -> FormValues (en s’appuyant sur le mapper shared runtime)
+ * Mappers de formulaires studio pour les cells.
  */
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";
 import { toCellShapeFromDTO } from "@compoz/ui/pages/mappers/cell-shape";
 import type {
+  ButtonItemFormValues,
+  CardItemFormValues,
+  CardsExtendedItemFormValues,
+  CarouselItemFormValues,
+  CaseStudyCardItemFormValues,
   CellFormValues,
+  FormFieldFormValues,
   ImageEditorFormValues,
+  StepItemFormValues,
+  TimelineItemFormValues,
 } from "@compoz/validation/pages/blocks/cells/cell-form";
-
-/* -------------------------------------------------------------------------- */
-/* Factories UI                                                               */
-/* -------------------------------------------------------------------------- */
 
 function createUiId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -31,54 +32,250 @@ export function createEmptyImageEditor(): ImageEditorFormValues {
     id: createUiId(),
     src: "",
     alt: "",
+    caption: "",
     href: null,
     width: undefined,
     height: undefined,
   };
 }
 
-/**
- * Crée une cell vide “safe” pour un kind donné (UI-only).
- */
-export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
-  if (kind === "richText") {
-    return { kind: "richText", content: "" };
-  }
-
-  if (kind === "image") {
-    return { kind: "image", image: createEmptyImageEditor() };
-  }
-
-  if (kind === "carousel") {
-    return { kind: "carousel", images: [createEmptyImageEditor()] };
-  }
-
+export function createEmptyButtonItem(): ButtonItemFormValues {
   return {
-    kind: "gallery",
-    linksEnabled: false,
-    maxColumns: 3,
-    images: [createEmptyImageEditor()],
+    id: createUiId(),
+    label: "",
+    href: "",
+    variant: "default",
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Domain -> UI (FormValues)                                                  */
-/* -------------------------------------------------------------------------- */
+export function createEmptyCardItem(): CardItemFormValues {
+  return {
+    id: createUiId(),
+    title: "",
+    description: "",
+    icon: "",
+  };
+}
 
-/**
- * Convertit une `CellDTO` en `FormValues` studio.
- *
- * @remarks
- * - Réutilise le mapper shared `toCellShapeFromDTO`,
- *   déjà aligné avec les types Zod-driven.
- */
+export function createEmptyCardsExtendedItem(): CardsExtendedItemFormValues {
+  return {
+    id: createUiId(),
+    title: "",
+    description: "",
+    bullets: [],
+    footer: "",
+    icon: "",
+  };
+}
+
+export function createEmptyStepItem(): StepItemFormValues {
+  return {
+    id: createUiId(),
+    title: "",
+    description: "",
+  };
+}
+
+export function createEmptyTimelineItem(): TimelineItemFormValues {
+  return {
+    id: createUiId(),
+    period: "",
+    title: "",
+    subtitle: "",
+    description: "",
+    badge: "",
+    keywords: [],
+  };
+}
+
+export function createEmptyCaseStudyCardItem(): CaseStudyCardItemFormValues {
+  return {
+    id: createUiId(),
+    image: createEmptyImageEditor(),
+    title: "",
+    context: "",
+    solution: "",
+    result: "",
+  };
+}
+
+export function createEmptyCarouselCardItem(): CardItemFormValues {
+  return createEmptyCardItem();
+}
+
+export function createEmptyCarouselCardsExtendedItem(): CardsExtendedItemFormValues {
+  return createEmptyCardsExtendedItem();
+}
+
+export function createEmptyCarouselCaseStudyCardItem(): CaseStudyCardItemFormValues {
+  return createEmptyCaseStudyCardItem();
+}
+
+export function createEmptyCarouselItem(
+  itemKind: "image" | "card" | "cardsExtended" | "caseStudyCard",
+): CarouselItemFormValues {
+  if (itemKind === "image") {
+    return createEmptyImageEditor();
+  }
+
+  if (itemKind === "card") {
+    return createEmptyCarouselCardItem();
+  }
+
+  if (itemKind === "cardsExtended") {
+    return createEmptyCarouselCardsExtendedItem();
+  }
+
+  return createEmptyCarouselCaseStudyCardItem();
+}
+
+export function createEmptyFormField(): FormFieldFormValues {
+  return {
+    id: createUiId(),
+    name: "",
+    label: "",
+    type: "text",
+    placeholder: "",
+    required: true,
+  };
+}
+
+export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
+  const id = createUiId();
+
+  if (kind === "heading") {
+    return {
+      id,
+      kind: "heading",
+      level: "h2",
+      title: "",
+      subtitle: "",
+      align: "left",
+      variant: "default",
+      separator: false,
+      idAnchor: "",
+      reveal: true,
+      highlights: [],
+    };
+  }
+
+  if (kind === "richText") {
+    return { id, kind: "richText", content: "" };
+  }
+
+  if (kind === "spacer") {
+    return {
+      id,
+      kind: "spacer",
+      size: "md",
+    };
+  }
+
+  if (kind === "separator") {
+    return {
+      id,
+      kind: "separator",
+      align: "center",
+      size: "md",
+    };
+  }
+
+  if (kind === "buttons") {
+    return {
+      id,
+      kind: "buttons",
+      align: "left",
+      gap: "md",
+      items: [createEmptyButtonItem()],
+    };
+  }
+
+  if (kind === "cards") {
+    return {
+      id,
+      kind: "cards",
+      columns: 3,
+      align: "left",
+      items: [createEmptyCardItem()],
+    };
+  }
+
+  if (kind === "cardsExtended") {
+    return {
+      id,
+      kind: "cardsExtended",
+      columns: 2,
+      align: "left",
+      items: [createEmptyCardsExtendedItem()],
+    };
+  }
+
+  if (kind === "steps") {
+    return {
+      id,
+      kind: "steps",
+      variant: "vertical",
+      items: [createEmptyStepItem()],
+    };
+  }
+
+  if (kind === "timeline") {
+    return {
+      id,
+      kind: "timeline",
+      items: [createEmptyTimelineItem()],
+    };
+  }
+
+  if (kind === "caseStudyCard") {
+    return {
+      id,
+      kind: "caseStudyCard",
+      columns: 1,
+      items: [createEmptyCaseStudyCardItem()],
+    };
+  }
+
+  if (kind === "form") {
+    return {
+      id,
+      kind: "form",
+      to: "mailto:",
+      submitLabel: "Envoyer",
+      successMessage: "",
+      errorMessage: "",
+      fields: [createEmptyFormField()],
+    };
+  }
+
+  if (kind === "image") {
+    return { id, kind: "image", image: createEmptyImageEditor() };
+  }
+
+  if (kind === "carousel") {
+    return {
+      id,
+      kind: "carousel",
+      variant: "carousel",
+      showDots: true,
+      showArrows: false,
+      itemKind: "image",
+      items: [createEmptyImageEditor()],
+    };
+  }
+
+  return {
+    id,
+    kind: "gallery",
+    linksEnabled: false,
+    maxColumns: 3,
+    items: [createEmptyImageEditor()],
+  };
+}
+
 export function toCellFormValuesFromDTO(cell: CellDTO): CellFormValues {
   return toCellShapeFromDTO(cell);
 }
-
-/* -------------------------------------------------------------------------- */
-/* Normalisation (forms)                                                      */
-/* -------------------------------------------------------------------------- */
 
 export function ensureCellsLength(
   cells: ReadonlyArray<CellFormValues>,

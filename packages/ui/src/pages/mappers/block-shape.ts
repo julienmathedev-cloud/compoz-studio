@@ -20,9 +20,16 @@ import type { BlockDTO } from "@compoz/core/domain/pages/dto";
 
 import type {
   BlockShape,
-  LayoutSectionBlockShape,
+  SectionBlockShape,
 } from "@compoz/validation/pages/blocks/block";
-import type { LayoutSectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
+import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
+
+/* -------------------------------------------------------------------------- */
+/* Types locaux                                                               */
+/* -------------------------------------------------------------------------- */
+
+type SectionRowFormValues = SectionBlockFormValues["rows"][number];
+type SectionColumnFormValues = SectionRowFormValues["columns"][number];
 
 /* -------------------------------------------------------------------------- */
 /* Normalisations shared                                                      */
@@ -30,41 +37,66 @@ import type { LayoutSectionBlockFormValues } from "@compoz/validation/pages/bloc
 
 type ContainerMode = "contained" | "fullBleed";
 
+function normalizeName(input: unknown): string {
+  return typeof input === "string" ? input.trim() : "";
+}
+
 function normalizeContainerMode(input: unknown): ContainerMode {
   return input === "fullBleed" ? "fullBleed" : "contained";
 }
 
-function normalizeTitle(
-  title: LayoutSectionBlockFormValues["title"],
-): LayoutSectionBlockFormValues["title"] {
-  const text = typeof title?.text === "string" ? title.text.trim() : "";
-  const display = title?.display === "sr-only" ? "sr-only" : "visible";
-  return { text, display };
+function normalizeColumn(
+  column: SectionColumnFormValues | undefined,
+): SectionColumnFormValues {
+  return {
+    id: String(column?.id ?? "").trim(),
+    cells: Array.isArray(column?.cells) ? [...column.cells] : [],
+  };
+}
+
+function normalizeColumns(
+  columns: ReadonlyArray<SectionColumnFormValues> | undefined,
+  columnsCount: 1 | 2 | 3,
+): SectionColumnFormValues[] {
+  const safeColumns = Array.isArray(columns)
+    ? columns.map(normalizeColumn)
+    : [];
+
+  return safeColumns.slice(0, columnsCount);
+}
+
+function normalizeRow(
+  row: SectionRowFormValues | undefined,
+): SectionRowFormValues {
+  const columnsCount =
+    row?.columnsCount === 2 || row?.columnsCount === 3 ? row.columnsCount : 1;
+
+  return {
+    id: String(row?.id ?? "").trim(),
+    columnsCount,
+    columns: normalizeColumns(row?.columns, columnsCount),
+  };
+}
+
+function normalizeRows(
+  rows: ReadonlyArray<SectionRowFormValues> | undefined,
+): SectionRowFormValues[] {
+  if (!Array.isArray(rows)) return [];
+  return rows.map(normalizeRow);
 }
 
 /**
- * Normalise des FormValues UI d'un LayoutSectionBlock.
- *
- * @remarks
- * - title ALWAYS present; on trim uniquement le text
- * - containerMode coercé sur "contained" | "fullBleed"
- * - cells: normalisées à longueur = columns (via ensureCellsLength côté studio/forms)
- *
- * ⚠️ Note:
- * - `ensureCellsLength` et `createEmptyCell` sont des concerns "forms".
- *   Ici on suppose que `values.cells` est déjà cohérent OU géré côté studio.
+ * Normalise des FormValues UI d'un SectionBlock.
  */
-export function normalizeLayoutSectionBlockFormValuesShallow(
-  values: LayoutSectionBlockFormValues,
-): LayoutSectionBlockFormValues {
+export function normalizeSectionBlockFormValuesShallow(
+  values: SectionBlockFormValues,
+): SectionBlockFormValues {
   return {
     ...values,
+    name: normalizeName(values.name),
     containerMode: normalizeContainerMode(values.containerMode),
-    titleEnabled: Boolean(values.titleEnabled),
-    title: normalizeTitle(values.title),
     lcpPriority: Boolean(values.lcpPriority),
-    // cells: laissé tel quel (forms concern)
-    cells: values.cells ?? [],
+    rows: normalizeRows(values.rows),
   };
 }
 
@@ -73,27 +105,24 @@ export function normalizeLayoutSectionBlockFormValuesShallow(
 /* -------------------------------------------------------------------------- */
 
 /**
- * Convertit des valeurs de formulaire (RHF) en `LayoutSectionBlockShape`
+ * Convertit des valeurs de formulaire (RHF) en `SectionBlockShape`
  * consommé par la preview admin et le renderer public.
  */
-export function toLayoutSectionBlockShapeFromFormValues(args: {
+export function toSectionBlockShapeFromFormValues(args: {
   blockId: string;
-  values: LayoutSectionBlockFormValues;
-}): LayoutSectionBlockShape {
+  values: SectionBlockFormValues;
+}): SectionBlockShape {
   const { blockId, values } = args;
 
-  // Normalisation "shallow" (forms gèrent la cohérence cells/columns)
-  const normalized = normalizeLayoutSectionBlockFormValuesShallow(values);
+  const normalized = normalizeSectionBlockFormValuesShallow(values);
 
   return {
-    id: blockId,
-    type: "layoutSection",
-    layout: { columns: normalized.columns },
+    id: String(blockId ?? "").trim(),
+    type: "section",
+    name: normalized.name,
     containerMode: normalized.containerMode,
-    titleEnabled: normalized.titleEnabled,
-    title: normalized.title,
     lcpPriority: normalized.lcpPriority,
-    cells: normalized.cells as LayoutSectionBlockShape["cells"],
+    rows: normalized.rows as SectionBlockShape["rows"],
   };
 }
 
@@ -101,34 +130,28 @@ export function toLayoutSectionBlockShapeFromFormValues(args: {
 /* DTO -> Shape (public/runtime)                                              */
 /* -------------------------------------------------------------------------- */
 
-export function toLayoutSectionBlockShapeFromDTO(
+export function toSectionBlockShapeFromDTO(
   block: BlockDTO,
-): LayoutSectionBlockShape | null {
-  if (block.type !== "layoutSection") return null;
+): SectionBlockShape | null {
+  if (block.type !== "section") return null;
 
   return {
     id: block.id,
-    type: "layoutSection",
-    layout: { columns: block.layout?.columns ?? 1 },
+    type: "section",
+    name: normalizeName(block.name),
     containerMode: normalizeContainerMode(block.containerMode),
-    titleEnabled:
-      typeof block.titleEnabled === "boolean" ? block.titleEnabled : false,
-    title: normalizeTitle({
-      text: typeof block.title?.text === "string" ? block.title.text : "",
-      display: block.title?.display === "sr-only" ? "sr-only" : "visible",
-    }),
     lcpPriority:
       typeof block.lcpPriority === "boolean" ? block.lcpPriority : false,
-    cells: Array.isArray(block.cells)
-      ? (block.cells as LayoutSectionBlockShape["cells"])
+    rows: Array.isArray(block.rows)
+      ? (block.rows as SectionBlockShape["rows"])
       : [],
   };
 }
 
 export function toBlockShapeFromDTO(dto: BlockDTO): BlockShape | null {
   switch (dto.type) {
-    case "layoutSection":
-      return toLayoutSectionBlockShapeFromDTO(dto);
+    case "section":
+      return toSectionBlockShapeFromDTO(dto);
     default:
       return null;
   }

@@ -30,6 +30,12 @@ function looksLikeAbsoluteHttp(s: string): boolean {
   return /^https?:\/\//i.test((s ?? "").trim());
 }
 
+/** Vrai si la chaîne est une ancre locale (`#section`). */
+function looksLikeHashAnchor(s: string): boolean {
+  const v = (s ?? "").trim();
+  return v.startsWith("#") || v.startsWith("/#");
+}
+
 /**
  * Normalise les alias internes de "home".
  *
@@ -97,12 +103,18 @@ export function toExternalDraft(raw: string): string {
  *
  * - Vide ou préfixe HTTP incomplet → "/"
  * - HTTP(S) absolu → extrait pathname + search + hash
+ * - Ancre locale (`#section`) → préserve l’ancre
  * - Sinon → force un leading "/"
  */
 export function toInternalDraft(raw: string): string {
   const v = (raw ?? "").trim();
 
   if (!v || isHttpPrefixOnly(v)) return "/";
+
+  // ✅ Préserve les ancres locales
+  if (looksLikeHashAnchor(v)) {
+    return v.startsWith("/#") ? v.slice(1) : v;
+  }
 
   if (looksLikeAbsoluteHttp(v)) {
     try {

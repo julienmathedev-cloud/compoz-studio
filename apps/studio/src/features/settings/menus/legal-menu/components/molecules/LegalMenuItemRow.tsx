@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/settings/legal-menu/components/organisms/LegalMenuForm.tsx
+ * @file apps/studio/src/features/settings/legal-menu/components/molecules/LegalMenuItemRow.tsx
  * @layer ui/studio/molecules
  * @description
  * Composant représentant une ligne d’item dans le formulaire du menu légal.
@@ -13,6 +13,8 @@
  * - Permet la validation immédiate du champ `href` lors de changements programmatiques.
  */
 
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   useController,
   type Control,
@@ -22,6 +24,7 @@ import {
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
 import { MenuFieldsItem } from "@compoz/studio/features/settings/menus/_shared/MenuFieldsItem";
 import { resolveLinkFlags, slugifyPath } from "@compoz/ui/lib/links/helpers";
+import { cn } from "@compoz/ui/lib/utils";
 import type { LegalMenuFormValues } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-form";
 
 // Types UI locaux (erreurs / invalid par champ).
@@ -32,6 +35,7 @@ type RowInvalidFlags = Partial<Record<"label" | "href", boolean>>;
  * Props de la row RHF (un item du menu).
  */
 type LegalMenuItemRowProps = Readonly<{
+  sortableId: string;
   index: number;
   control: Control<LegalMenuFormValues>;
   trigger: UseFormTrigger<LegalMenuFormValues>;
@@ -39,11 +43,7 @@ type LegalMenuItemRowProps = Readonly<{
   showError: boolean;
   rowIdPrefix: string;
   internalPageOptions?: ReadonlyArray<InternalPageOptionDTO>;
-  isFirst: boolean;
-  isLast: boolean;
   onRemove: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
 }>;
 
 /**
@@ -54,6 +54,7 @@ type LegalMenuItemRowProps = Readonly<{
  * - Déclenche une validation immédiate du `href` lors des changements programmatiques.
  */
 export function LegalMenuItemRow({
+  sortableId,
   index,
   control,
   trigger,
@@ -61,12 +62,20 @@ export function LegalMenuItemRow({
   showError,
   rowIdPrefix,
   internalPageOptions,
-  isFirst,
-  isLast,
   onRemove,
-  onMoveUp,
-  onMoveDown,
 }: LegalMenuItemRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: sortableId,
+    disabled,
+  });
+
   const labelCtrl = useController({
     name: `items.${index}.label` as const,
     control,
@@ -119,36 +128,49 @@ export function LegalMenuItemRow({
     void trigger(`items.${index}.href` as const);
   };
 
+  const style = {
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+      : undefined,
+    transition,
+  };
+
   return (
-    <MenuFieldsItem
-      idPrefix={rowIdPrefix}
-      disabled={disabled}
-      isFirst={isFirst}
-      isLast={isLast}
-      internalPageOptions={internalPageOptions}
-      onRemove={onRemove}
-      onMoveUp={onMoveUp}
-      onMoveDown={onMoveDown}
-      labelField={{
-        name: labelCtrl.field.name,
-        value: labelCtrl.field.value,
-        onChange: labelCtrl.field.onChange,
-        onBlur: () =>
-          handleLabelBlur(
-            index,
-            labelCtrl.field,
-            hrefCtrl.field,
-            hrefCtrl.fieldState.isTouched,
-            trigger,
-          ),
-        ref: labelCtrl.field.ref,
-      }}
-      hrefField={hrefCtrl.field}
-      newTabField={newTabCtrl.field}
-      invalid={invalid}
-      error={error}
-      onHrefValidateNow={validateHrefNow}
-    />
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(isDragging && "opacity-60")}
+    >
+      <MenuFieldsItem
+        idPrefix={rowIdPrefix}
+        disabled={disabled}
+        dragHandleProps={{
+          ...attributes,
+          ...listeners,
+        }}
+        labelField={{
+          name: labelCtrl.field.name,
+          value: labelCtrl.field.value,
+          onChange: labelCtrl.field.onChange,
+          onBlur: () =>
+            handleLabelBlur(
+              index,
+              labelCtrl.field,
+              hrefCtrl.field,
+              hrefCtrl.fieldState.isTouched,
+              trigger,
+            ),
+          ref: labelCtrl.field.ref,
+        }}
+        hrefField={hrefCtrl.field}
+        newTabField={newTabCtrl.field}
+        invalid={invalid}
+        error={error}
+        onHrefValidateNow={validateHrefNow}
+        internalPageOptions={internalPageOptions}
+        onRemove={onRemove}
+      />
+    </div>
   );
 }
 

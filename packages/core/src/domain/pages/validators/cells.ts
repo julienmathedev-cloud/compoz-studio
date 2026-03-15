@@ -7,14 +7,31 @@
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
-import type {
-  Cell,
-  ImageEditor,
-} from "@compoz/core/domain/pages/entities/cell";
+import type { Cell } from "@compoz/core/domain/pages/entities/cell";
+import { assertButtonsCell } from "@compoz/core/domain/pages/validators/cells/button";
+import { assertCardsCell } from "@compoz/core/domain/pages/validators/cells/card";
+import { assertCardsExtendedCell } from "@compoz/core/domain/pages/validators/cells/card-extended";
+import { assertCarouselCell } from "@compoz/core/domain/pages/validators/cells/carousel";
+import { assertCaseStudyCardCell } from "@compoz/core/domain/pages/validators/cells/case-study-card";
+import { assertFormCell } from "@compoz/core/domain/pages/validators/cells/form";
+import {
+  assertGalleryMaxColumns,
+  assertMultiImageCell,
+} from "@compoz/core/domain/pages/validators/cells/gallery";
+import {
+  assertHeadingCell,
+  hasUniqueHeadingH1,
+  isHeadingH1Cell,
+  validateUniqueHeadingH1,
+} from "@compoz/core/domain/pages/validators/cells/heading";
+import { assertSingleImageCell } from "@compoz/core/domain/pages/validators/cells/image";
+import { assertRichText } from "@compoz/core/domain/pages/validators/cells/rich-text";
+import { assertSeparatorCell } from "@compoz/core/domain/pages/validators/cells/separator";
+import { assertSpacerCell } from "@compoz/core/domain/pages/validators/cells/spacer";
+import { assertStepsCell } from "@compoz/core/domain/pages/validators/cells/step";
+import { assertTimelineCell } from "@compoz/core/domain/pages/validators/cells/timeline";
 
 type Path = ReadonlyArray<string | number>;
-
-const IMAGE_RATIOS = ["default", "wide", "square", "portrait"] as const;
 
 export function assertCell(cell: Cell, path: Path): void {
   if (!cell || typeof cell !== "object") {
@@ -25,11 +42,59 @@ export function assertCell(cell: Cell, path: Path): void {
     });
   }
 
+  if (typeof cell.id !== "string" || !cell.id.trim()) {
+    throw new DomainError({
+      code: EC.CELL_INVALID,
+      message: EC.CELL_INVALID,
+      details: { path: [...path, "id"] },
+    });
+  }
+
   const kind = cell.kind;
 
   switch (kind) {
+    case "heading":
+      assertHeadingCell(cell, path);
+      return;
+
     case "richText":
       assertRichText(cell, path);
+      return;
+
+    case "spacer":
+      assertSpacerCell(cell, path);
+      return;
+
+    case "separator":
+      assertSeparatorCell(cell, path);
+      return;
+
+    case "buttons":
+      assertButtonsCell(cell, path);
+      return;
+
+    case "cards":
+      assertCardsCell(cell, path);
+      return;
+
+    case "cardsExtended":
+      assertCardsExtendedCell(cell, path);
+      return;
+
+    case "steps":
+      assertStepsCell(cell, path);
+      return;
+
+    case "timeline":
+      assertTimelineCell(cell, path);
+      return;
+
+    case "caseStudyCard":
+      assertCaseStudyCardCell(cell, path);
+      return;
+
+    case "form":
+      assertFormCell(cell, path);
       return;
 
     case "image":
@@ -37,14 +102,12 @@ export function assertCell(cell: Cell, path: Path): void {
       return;
 
     case "gallery":
-      // ✅ Galerie = images + contraintes spécifiques
-      assertMultiImageCell(cell.images, path);
+      assertMultiImageCell(cell.items, path);
       assertGalleryMaxColumns(cell.maxColumns, path);
       return;
 
     case "carousel":
-      // ✅ Carousel = images only
-      assertMultiImageCell(cell.images, path);
+      assertCarouselCell(cell, path);
       return;
 
     default:
@@ -56,156 +119,4 @@ export function assertCell(cell: Cell, path: Path): void {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                RichText                                    */
-/* -------------------------------------------------------------------------- */
-
-function assertRichText(cell: Extract<Cell, { kind: "richText" }>, path: Path) {
-  if (typeof cell.content !== "string") {
-    throw new DomainError({
-      code: EC.RICH_TEXT_CONTENT_INVALID,
-      message: EC.RICH_TEXT_CONTENT_INVALID,
-      details: { path: [...path, "content"] },
-    });
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                Image (single)                              */
-/* -------------------------------------------------------------------------- */
-
-function assertSingleImageCell(
-  cell: Extract<Cell, { kind: "image" }>,
-  path: Path,
-) {
-  if (!cell.image || typeof cell.image !== "object") {
-    throw new DomainError({
-      code: EC.CELL_IMAGE_INVALID,
-      message: EC.CELL_IMAGE_INVALID,
-      details: { path: [...path, "image"] },
-    });
-  }
-
-  assertImageEditor(cell.image, [...path, "image"]);
-
-  const { variant } = cell;
-
-  if (typeof variant !== "undefined" && !IMAGE_RATIOS.includes(variant)) {
-    throw new DomainError({
-      code: EC.IMAGE_VARIANT_INVALID,
-      message: EC.IMAGE_VARIANT_INVALID,
-      details: { path: [...path, "variant"], meta: { variant } },
-    });
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                Gallery constraints                         */
-/* -------------------------------------------------------------------------- */
-
-/**
- * maxColumns (gallery) :
- * - integer
- * - 1..5
- */
-function assertGalleryMaxColumns(maxColumns: unknown, path: Path) {
-  if (
-    typeof maxColumns !== "number" ||
-    !Number.isInteger(maxColumns) ||
-    maxColumns < 1 ||
-    maxColumns > 5
-  ) {
-    throw new DomainError({
-      code: EC.GALLERY_MAX_COLUMNS_INVALID,
-      message: EC.GALLERY_MAX_COLUMNS_INVALID,
-      details: { path: [...path, "maxColumns"], meta: { maxColumns } },
-    });
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                Shared multi-image                          */
-/* -------------------------------------------------------------------------- */
-
-function assertMultiImageCell(images: unknown, path: Path) {
-  if (!Array.isArray(images)) {
-    throw new DomainError({
-      code: EC.CELL_IMAGES_INVALID,
-      message: EC.CELL_IMAGES_INVALID,
-      details: { path: [...path, "images"] },
-    });
-  }
-
-  if (images.length < 1) {
-    throw new DomainError({
-      code: EC.CELL_IMAGES_MIN_1,
-      message: EC.CELL_IMAGES_MIN_1,
-      details: { path: [...path, "images"] },
-    });
-  }
-
-  for (let i = 0; i < images.length; i++) {
-    assertImageEditor(images[i], [...path, "images", i]);
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                Shared Image Validator                      */
-/* -------------------------------------------------------------------------- */
-
-function assertImageEditor(
-  img: unknown,
-  path: Path,
-): asserts img is ImageEditor {
-  if (!img || typeof img !== "object") {
-    throw new DomainError({
-      code: EC.CELL_IMAGE_INVALID,
-      message: EC.CELL_IMAGE_INVALID,
-      details: { path },
-    });
-  }
-
-  const { id, src, alt, caption, href } = img as ImageEditor;
-
-  if (typeof id !== "string" || !id.trim()) {
-    throw new DomainError({
-      code: EC.CELL_IMAGE_ID_REQUIRED,
-      message: EC.CELL_IMAGE_ID_REQUIRED,
-      details: { path: [...path, "id"] },
-    });
-  }
-
-  if (typeof src !== "string" || !src.trim()) {
-    throw new DomainError({
-      code: EC.CELL_IMAGE_SRC_REQUIRED,
-      message: EC.CELL_IMAGE_SRC_REQUIRED,
-      details: { path: [...path, "src"] },
-    });
-  }
-
-  if (typeof alt !== "string") {
-    throw new DomainError({
-      code: EC.CELL_IMAGE_ALT_INVALID,
-      message: EC.CELL_IMAGE_ALT_INVALID,
-      details: { path: [...path, "alt"] },
-    });
-  }
-
-  if (typeof caption !== "undefined" && typeof caption !== "string") {
-    throw new DomainError({
-      code: EC.CELL_IMAGE_CAPTION_INVALID,
-      message: EC.CELL_IMAGE_CAPTION_INVALID,
-      details: { path: [...path, "caption"] },
-    });
-  }
-
-  if (typeof href !== "undefined" && href !== null) {
-    if (typeof href !== "string" || !href.trim()) {
-      throw new DomainError({
-        code: EC.CELL_IMAGE_HREF_INVALID,
-        message: EC.CELL_IMAGE_HREF_INVALID,
-        details: { path: [...path, "href"] },
-      });
-    }
-  }
-}
+export { hasUniqueHeadingH1, isHeadingH1Cell, validateUniqueHeadingH1 };

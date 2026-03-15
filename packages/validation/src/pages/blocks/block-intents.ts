@@ -2,9 +2,7 @@
  * @file packages/validation/src/pages/blocks/block-intents.ts
  * @layer schemas
  * @description
- * Définit les schémas Zod décrivant la forme frontière des intentions liées aux blocks.
- * Ces schémas valident uniquement la structure des payloads (API) ; les invariants métier
- * et règles de cohérence sont traités dans le domaine.
+ * Schémas Zod décrivant les intentions liées aux blocks (sections).
  */
 
 import { z } from "zod";
@@ -12,9 +10,10 @@ import { z } from "zod";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import {
   BlockIdSchema,
-  LayoutSectionColumnsSchema,
-  LayoutSectionContainerModeSchema,
-  LayoutSectionTitleSchema,
+  BlockNameSchema,
+  BlockRowColumnsCountSchema,
+  BlockRowSchema,
+  SectionBlockContainerModeSchema,
 } from "@compoz/validation/pages/blocks/block";
 import { CellSchema } from "@compoz/validation/pages/blocks/cells/cell";
 
@@ -22,66 +21,84 @@ import { CellSchema } from "@compoz/validation/pages/blocks/cells/cell";
 /*                                   helpers                                  */
 /* -------------------------------------------------------------------------- */
 
-// ordered ids (reorder) : non vides ; unicité/permutation vérifiées côté domaine.
 const OrderedBlockIdsIntentSchema = z
   .array(BlockIdSchema)
   .min(1, ERROR_CODES.BLOCKS_INVALID);
 
-// Patch contrôlé V0.5 pour un LayoutSectionBlock.
-const LayoutSectionBlockPatchSchema = z
-  .object({
-    columns: LayoutSectionColumnsSchema.optional(),
-    containerMode: LayoutSectionContainerModeSchema.optional(),
-
-    // toggle title (présence de clé = patch)
-    titleEnabled: z.boolean().optional(),
-
-    // contrat : title toujours un objet (plus de null)
-    // undefined: inchangé | objet: remplacé
-    title: LayoutSectionTitleSchema.optional(),
-    lcpPriority: z.boolean().optional(),
-    cells: z.array(CellSchema).optional(),
-  })
-  .strict();
-
 /* -------------------------------------------------------------------------- */
-/*                            Intentions HTTP API                             */
+/*                         Create helpers (draft-friendly)                    */
 /* -------------------------------------------------------------------------- */
 
-/** Intention d’ajout d’un block LayoutSection sur une page (draft). */
-export const CreateLayoutSectionBlockIntentSchema = z
+/**
+ * Colonne de création :
+ * - `id` optionnel (généré côté domaine si absent)
+ * - `cells` requis
+ */
+const CreateBlockColumnIntentSchema = z
   .object({
-    columns: LayoutSectionColumnsSchema,
-    containerMode: LayoutSectionContainerModeSchema,
-    insertAt: z.number().int().min(0).optional(),
-
-    // le toggle est explicite
-    titleEnabled: z.boolean(),
-
-    // contrat : title toujours présent
-    title: LayoutSectionTitleSchema,
-    lcpPriority: z.boolean(),
+    id: z.string().trim().optional(),
     cells: z.array(CellSchema),
   })
   .strict();
 
-export type CreateLayoutSectionBlockIntentDTO = z.infer<
-  typeof CreateLayoutSectionBlockIntentSchema
->;
-
-/** Intention de mise à jour d’un block LayoutSection (draft). */
-export const UpdateLayoutSectionBlockIntentSchema = z
+/**
+ * Ligne de création :
+ * - `id` optionnel (généré côté domaine si absent)
+ * - `columnsCount` requis
+ * - `columns` requis
+ */
+const CreateBlockRowIntentSchema = z
   .object({
-    blockId: BlockIdSchema,
-    patch: LayoutSectionBlockPatchSchema,
+    id: z.string().trim().optional(),
+    columnsCount: BlockRowColumnsCountSchema,
+    columns: z.array(CreateBlockColumnIntentSchema),
   })
   .strict();
 
-export type UpdateLayoutSectionBlockIntentDTO = z.infer<
-  typeof UpdateLayoutSectionBlockIntentSchema
+/* -------------------------------------------------------------------------- */
+/*                               Create Block                                 */
+/* -------------------------------------------------------------------------- */
+
+export const CreateSectionBlockIntentSchema = z
+  .object({
+    name: BlockNameSchema.optional(),
+    containerMode: SectionBlockContainerModeSchema,
+    lcpPriority: z.boolean(),
+    rows: z.array(CreateBlockRowIntentSchema),
+    insertAt: z.number().int().min(0).optional(),
+  })
+  .strict();
+
+export type CreateSectionBlockIntentDTO = z.infer<
+  typeof CreateSectionBlockIntentSchema
 >;
 
-/** Intention de suppression d’un block d’une page (draft). */
+/* -------------------------------------------------------------------------- */
+/*                               Update Block                                 */
+/* -------------------------------------------------------------------------- */
+
+export const UpdateSectionBlockIntentSchema = z
+  .object({
+    blockId: BlockIdSchema,
+    patch: z
+      .object({
+        name: BlockNameSchema.optional(),
+        containerMode: SectionBlockContainerModeSchema.optional(),
+        lcpPriority: z.boolean().optional(),
+        rows: z.array(BlockRowSchema).optional(),
+      })
+      .strict(),
+  })
+  .strict();
+
+export type UpdateSectionBlockIntentDTO = z.infer<
+  typeof UpdateSectionBlockIntentSchema
+>;
+
+/* -------------------------------------------------------------------------- */
+/*                               Delete Block                                 */
+/* -------------------------------------------------------------------------- */
+
 export const DeleteBlockIntentSchema = z
   .object({
     blockId: BlockIdSchema,
@@ -90,7 +107,10 @@ export const DeleteBlockIntentSchema = z
 
 export type DeleteBlockIntentDTO = z.infer<typeof DeleteBlockIntentSchema>;
 
-/** Intention de réordonnancement des blocks d’une page (draft). */
+/* -------------------------------------------------------------------------- */
+/*                              Reorder Blocks                                */
+/* -------------------------------------------------------------------------- */
+
 export const ReorderBlocksIntentSchema = z
   .object({
     orderedBlockIds: OrderedBlockIdsIntentSchema,

@@ -13,9 +13,9 @@ import {
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
 import type {
-  CreateLayoutSectionBlockIntentDTO,
+  CreateSectionBlockIntentDTO,
   ReorderBlocksIntentDTO,
-  UpdateLayoutSectionBlockIntentDTO,
+  UpdateSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
 import type {
   CreatePageIntentDTO,
@@ -33,7 +33,7 @@ import { apiFetch } from "@compoz/infra/lib/api-fetch";
 import { logSpan } from "@compoz/infra/lib/log";
 
 import type {
-  AddLayoutSectionBlockResponse,
+  AddSectionBlockResponse,
   CreatePageResponse,
   DeleteBlockResponse,
   DeletePageResponse,
@@ -42,7 +42,7 @@ import type {
   ListPageBlocksResponse,
   ReorderBlocksResponse,
   ReorderChildrenResponse,
-  UpdateLayoutSectionBlockResponse,
+  UpdateSectionBlockResponse,
   UpdatePageResponse,
 } from "@compoz/infra/http/studio/pages.types";
 
@@ -136,9 +136,9 @@ export const pagesStudioApi = {
 
   async addBlock(
     pageId: string,
-    payload: CreateLayoutSectionBlockIntentDTO,
+    payload: CreateSectionBlockIntentDTO,
     opts?: HttpOpts,
-  ): Promise<AddLayoutSectionBlockResponse> {
+  ): Promise<AddSectionBlockResponse> {
     const encoded = encodeSegment(pageId);
     const url = ENDPOINTS.STUDIO.PAGES.blocksById(encoded);
 
@@ -149,7 +149,7 @@ export const pagesStudioApi = {
         method: "POST",
       },
       async () => {
-        const res = await apiFetch<AddLayoutSectionBlockResponse>(url, {
+        const res = await apiFetch<AddSectionBlockResponse>(url, {
           method: "POST",
           body: JSON.stringify(payload),
           ...(opts ?? {}),
@@ -166,9 +166,9 @@ export const pagesStudioApi = {
   async updateBlock(
     pageId: string,
     blockId: string,
-    payload: UpdateLayoutSectionBlockIntentDTO,
+    payload: UpdateSectionBlockIntentDTO,
     opts?: HttpOpts,
-  ): Promise<UpdateLayoutSectionBlockResponse> {
+  ): Promise<UpdateSectionBlockResponse> {
     const encodedPageId = encodeSegment(pageId);
     const encodedBlockId = encodeSegment(blockId);
     const url = `${ENDPOINTS.STUDIO.PAGES.blocksById(encodedPageId)}/${encodedBlockId}`;
@@ -180,7 +180,7 @@ export const pagesStudioApi = {
         method: "PATCH",
       },
       async () => {
-        const res = await apiFetch<UpdateLayoutSectionBlockResponse>(url, {
+        const res = await apiFetch<UpdateSectionBlockResponse>(url, {
           method: "PATCH",
           body: JSON.stringify(payload),
           ...(opts ?? {}),

@@ -28,7 +28,7 @@ export type SiteStatusBlockDetails = Readonly<{
   /** Optionnel mais utile en UI : type de bloc (layoutSection, richText, image, etc.) */
   type?: string;
   /** Label court si tu l’as (sinon tu peux le laisser vide côté API). */
-  title?: string;
+  name?: string;
   diff: SiteDiffKind;
 }>;
 
@@ -36,7 +36,7 @@ export type SiteStatusBlockDetails = Readonly<{
 export type SiteStatusPageDetails = Readonly<{
   id: string;
   slug: string;
-  title: string;
+  name: string;
   diff: SiteDiffKind;
 
   /**

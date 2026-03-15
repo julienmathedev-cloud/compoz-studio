@@ -14,10 +14,10 @@
 import type { ReactNode } from "react";
 
 import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
-import { LayoutSectionRenderer } from "@compoz/ui/renderer/LayoutSectionRenderer";
+import { blockRegistry } from "@compoz/ui/renderer/blockRegistry";
 import type {
-  SiteBlocksUi,
-  SiteLayoutSectionUi,
+  SiteBlockSectionUi,
+  SiteCellsUi,
 } from "@compoz/ui/site/site-ui.types";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
@@ -30,9 +30,9 @@ export type BlocksRendererProps = Readonly<{
   blocks?: ReadonlyArray<BlockShape> | null;
 
   /** UI fine. */
-  blocksUi: SiteBlocksUi;
+  cellsUi: SiteCellsUi;
 
-  layoutUi: SiteLayoutSectionUi;
+  blockUi: SiteBlockSectionUi;
 
   /**
    * Variante de rendu (micro-différences éventuelles plus tard).
@@ -52,8 +52,8 @@ export type BlocksRendererProps = Readonly<{
 
 export function BlocksRenderer({
   blocks,
-  blocksUi,
-  layoutUi,
+  cellsUi,
+  blockUi,
   variant = "site",
   className,
 }: BlocksRendererProps) {
@@ -62,25 +62,23 @@ export function BlocksRenderer({
   return (
     <div data-renderer="blocks" data-variant={variant} className={className}>
       {blocks.map((block, index) => {
-        // Key stable : block.id est requis par schema.
         const key = toStableUiKey({ id: String(block.id) }, index);
 
-        // Dispatch par type.
-        switch (block.type) {
-          case "layoutSection":
-            return (
-              <LayoutSectionRenderer
-                key={key}
-                block={block}
-                variant={variant}
-                layoutUi={layoutUi}
-                blocksUi={blocksUi}
-              />
-            );
+        const Renderer = blockRegistry[block.type];
 
-          default:
-            return _renderUnknownBlock(block, index);
+        if (!Renderer) {
+          return _renderUnknownBlock(block, index);
         }
+
+        return (
+          <Renderer
+            key={key}
+            block={block}
+            variant={variant}
+            blockUi={blockUi}
+            cellsUi={cellsUi}
+          />
+        );
       })}
     </div>
   );

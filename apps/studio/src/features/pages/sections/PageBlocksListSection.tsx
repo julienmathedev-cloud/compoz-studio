@@ -15,7 +15,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import type { BlockDTO, PageSummaryDTO } from "@compoz/core/domain/pages/dto";
 import type { SiteDiffKindDTO } from "@compoz/core/domain/site/dto";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { ExpandableLayout } from "@compoz/studio/components/layouts/ExpandableLayout";
@@ -34,7 +41,7 @@ import { PageForm } from "@compoz/studio/features/pages/components/organisms/Pag
 import { useReadPage } from "@compoz/studio/features/pages/hooks/useReadPage";
 import { useReorderPageChildren } from "@compoz/studio/features/pages/hooks/useReorderPageChildren";
 import { useUpdatePage } from "@compoz/studio/features/pages/hooks/useUpdatePage";
-import { createEmptyLayoutSectionBlock } from "@compoz/studio/features/pages/mappers/blocks-form";
+import { createEmptySectionBlock } from "@compoz/studio/features/pages/mappers/blocks-form";
 import {
   normalizePageFormValues,
   toPageFormValuesFromDTO,
@@ -51,7 +58,6 @@ import { Button } from "@compoz/ui/components/ui/button";
 import { Card, CardContent } from "@compoz/ui/components/ui/card";
 import { Separator } from "@compoz/ui/components/ui/separator";
 import { moveItem } from "@compoz/ui/lib/array";
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { cn } from "@compoz/ui/lib/utils";
 import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
 import { toLegalMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/legal-menu-shape";
@@ -126,7 +132,7 @@ export function PageBlocksListSection({
       })
       .map((pageItem) => ({
         value: pageItem.id,
-        label: `${pageItem.title}${
+        label: `${pageItem.name}${
           pageItem.slug ? ` — ${formatPagePath(pageItem.slug)}` : ""
         }`,
       }));
@@ -169,7 +175,7 @@ export function PageBlocksListSection({
   const handleSubmitPageMeta = useCallback(
     async (values: PageFormValues) => {
       const warningKeysNow = computePageWarnings({
-        title: values.title ?? "",
+        name: values.name ?? "",
         slug: values.slug ?? "",
         parentId: values.parentId ?? null,
         paginationEnabled: values.paginationEnabled ?? false,
@@ -220,7 +226,34 @@ export function PageBlocksListSection({
     return pages.filter((pageItem) => pageItem.parentId === pageId);
   }, [siteIndex, pageId]);
 
+  const [orderedChildren, setOrderedChildren] =
+    useState<ReadonlyArray<PageSummaryDTO>>(children);
+
+  const childrenSig = useMemo(() => {
+    return JSON.stringify(children.map((pageItem) => pageItem.id));
+  }, [children]);
+
+  useEffect(() => {
+    setOrderedChildren(children);
+  }, [childrenSig, children]);
+
   const list = useMemo(() => blocks ?? [], [blocks]);
+
+  /**
+   * ✅ NEW
+   * État local optimiste pour les blocks afin d’éviter le flash visuel
+   * entre le drop et le refetch réseau.
+   */
+  const [orderedBlocks, setOrderedBlocks] =
+    useState<ReadonlyArray<BlockDTO>>(list);
+
+  const blocksSig = useMemo(() => {
+    return JSON.stringify(list.map((block) => block.id));
+  }, [list]);
+
+  useEffect(() => {
+    setOrderedBlocks(list);
+  }, [blocksSig, list]);
 
   const blockStatuses = useSiteStatusDetails({
     enabled: true,
@@ -234,7 +267,7 @@ export function PageBlocksListSection({
   >(() => {
     const output: Record<string, SiteDiffKindDTO> = {};
 
-    for (const block of list) {
+    for (const block of orderedBlocks) {
       output[block.id] = "published";
     }
 
@@ -247,7 +280,7 @@ export function PageBlocksListSection({
     }
 
     return output;
-  }, [blockStatuses.data, list, pageId]);
+  }, [blockStatuses.data, orderedBlocks, pageId]);
 
   const { create, isCreating } = useCreateBlock();
   const { remove, isDeleting, deletingBlockId } = useDeleteBlock();
@@ -267,21 +300,21 @@ export function PageBlocksListSection({
     async (fromIndex: number, toIndex: number) => {
       if (!pageId.trim()) return;
       if (isBusy || busyId) return;
-      if (toIndex < 0 || toIndex >= children.length) return;
+      if (toIndex < 0 || toIndex >= orderedChildren.length) return;
       if (fromIndex === toIndex) return;
 
-      const ordered = children.map((child) => child.id);
-      const nextOrdered = moveItem(ordered, fromIndex, toIndex);
-      const picked = ordered[fromIndex];
+      const orderedIds = orderedChildren.map((child) => child.id);
+      const nextOrderedIds = moveItem(orderedIds, fromIndex, toIndex);
+      const picked = orderedIds[fromIndex];
 
       try {
         setBusyId(picked ?? "__reorder_children__");
-        await reorderChildren(pageId, nextOrdered);
+        await reorderChildren(pageId, nextOrderedIds);
       } finally {
         setBusyId(null);
       }
     },
-    [busyId, children, isBusy, pageId, reorderChildren],
+    [busyId, isBusy, orderedChildren, pageId, reorderChildren],
   );
 
   const headingTitle = t("studio.pageBlocksListSection.section.title", {
@@ -333,16 +366,16 @@ export function PageBlocksListSection({
   const pageBaselinePreview = useMemo<PageRenderShape | null>(() => {
     if (!page) return null;
 
-    const pageBlocks = list
+    const pageBlocks = orderedBlocks
       .map(toBlockShapeFromDTO)
       .filter((shape): shape is BlockShape => Boolean(shape));
 
     return {
-      title: page.title,
+      name: page.name,
       blocks: pageBlocks,
       paginationEnabled: Boolean(page.paginationEnabled),
     } as const;
-  }, [list, page]);
+  }, [orderedBlocks, page]);
 
   const { ready, setBaseline, frame, iframeRef } =
     useStudioPreview<PageRenderShape>(previewScope, pageBaselinePreview);
@@ -367,7 +400,7 @@ export function PageBlocksListSection({
     ready.isReady(previewScope);
 
   const sectionLoading =
-    (isLoading && list.length === 0) || (isLoadingIndex && !siteIndex);
+    (isLoading && orderedBlocks.length === 0) || (isLoadingIndex && !siteIndex);
 
   useEffect(() => {
     if (!siteIndex || !pageBaselinePreview) return;
@@ -428,22 +461,17 @@ export function PageBlocksListSection({
     try {
       setBusyId("__add__");
 
-      const nextIndex = list.length + 1;
-      const nextTitle = t("studio.pageBlocksListSection.bloc.title", {
-        title: nextIndex,
-      });
+      const nextIndex = orderedBlocks.length + 1;
 
-      const values = createEmptyLayoutSectionBlock({
-        columns: 1,
+      const values = createEmptySectionBlock({
         containerMode: "contained",
-        title: { text: nextTitle, display: "visible" },
       });
 
       await create({ pageId, values, label: String(nextIndex) });
     } finally {
       setBusyId(null);
     }
-  }, [busyId, create, isBusy, pageId, list.length, t]);
+  }, [busyId, create, isBusy, orderedBlocks.length, pageId]);
 
   const handleDelete = useCallback(
     async (blockIdToDelete: string) => {
@@ -464,21 +492,79 @@ export function PageBlocksListSection({
     async (fromIndex: number, toIndex: number) => {
       if (!pageId.trim()) return;
       if (isBusy || busyId) return;
-      if (toIndex < 0 || toIndex >= list.length) return;
+      if (toIndex < 0 || toIndex >= orderedBlocks.length) return;
       if (fromIndex === toIndex) return;
 
-      const ordered = list.map((block) => block.id);
-      const nextOrdered = moveItem(ordered, fromIndex, toIndex);
-      const picked = ordered[fromIndex];
+      const orderedIds = orderedBlocks.map((block) => block.id);
+      const nextOrderedIds = moveItem(orderedIds, fromIndex, toIndex);
+      const picked = orderedIds[fromIndex];
 
       try {
         setBusyId(picked ?? "__reorder__");
-        await reorder(pageId, { orderedBlockIds: nextOrdered });
+        await reorder(pageId, { orderedBlockIds: nextOrderedIds });
       } finally {
         setBusyId(null);
       }
     },
-    [busyId, isBusy, list, reorder, pageId],
+    [busyId, isBusy, orderedBlocks, reorder, pageId],
+  );
+
+  const handleBlockDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      if (!over) return;
+      if (active.id === over.id) return;
+
+      const oldIndex = orderedBlocks.findIndex(
+        (block) => block.id === active.id,
+      );
+      const newIndex = orderedBlocks.findIndex((block) => block.id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const previousBlocks = orderedBlocks;
+      const nextBlocks = moveItem(orderedBlocks, oldIndex, newIndex);
+
+      setOrderedBlocks(nextBlocks);
+
+      try {
+        await move(oldIndex, newIndex);
+      } catch {
+        setOrderedBlocks(previousBlocks);
+      }
+    },
+    [move, orderedBlocks],
+  );
+
+  const handleChildDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      if (!over) return;
+      if (active.id === over.id) return;
+
+      const oldIndex = orderedChildren.findIndex(
+        (pageItem) => pageItem.id === active.id,
+      );
+      const newIndex = orderedChildren.findIndex(
+        (pageItem) => pageItem.id === over.id,
+      );
+
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const previousChildren = orderedChildren;
+      const nextChildren = moveItem(orderedChildren, oldIndex, newIndex);
+
+      setOrderedChildren(nextChildren);
+
+      try {
+        await moveChild(oldIndex, newIndex);
+      } catch {
+        setOrderedChildren(previousChildren);
+      }
+    },
+    [moveChild, orderedChildren],
   );
 
   /* ---------------------------------------------------------------------- */
@@ -548,45 +634,47 @@ export function PageBlocksListSection({
 
       <Card variant="panel">
         <CardContent className="flex flex-col gap-2">
-          {list.length > 0 ? (
-            <ul className={cn(STACK_SM)}>
-              {list.map((block, index) => {
-                const isRowBusy =
-                  deletingBlockId === block.id || busyId === block.id;
+          {orderedBlocks.length > 0 ? (
+            <DndContext
+              collisionDetection={closestCenter}
+              onDragEnd={handleBlockDragEnd}
+            >
+              <SortableContext
+                items={orderedBlocks.map((block) => block.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <ul className={cn(STACK_SM)}>
+                  {orderedBlocks.map((block, index) => {
+                    const isRowBusy =
+                      deletingBlockId === block.id || busyId === block.id;
 
-                return (
-                  <li
-                    key={toStableUiKey(
-                      { id: block.id, label: block.type },
-                      index,
-                    )}
-                    className={cn(STACK_SM)}
-                  >
-                    <PageBlockListItem
-                      block={block}
-                      statusKind={statusByBlockId[block.id]}
-                      onMoveUp={() => move(index, index - 1)}
-                      onMoveDown={() => move(index, index + 1)}
-                      onEdit={() => {
-                        router.push(
-                          `/${locale}/pages/${pageId}/blocks/${block.id}`,
-                        );
-                      }}
-                      onDelete={() => handleDelete(block.id)}
-                      isDeleting={isRowBusy}
-                      disabled={isBusy || Boolean(busyId)}
-                      isFirst={index === 0}
-                      isLast={index === list.length - 1}
-                      index={index}
-                    />
-                    {index < list.length - 1 ? <Separator /> : null}
-                  </li>
-                );
-              })}
-            </ul>
+                    return (
+                      <li key={block.id} className={cn(STACK_SM)}>
+                        <PageBlockListItem
+                          block={block}
+                          statusKind={statusByBlockId[block.id]}
+                          onEdit={() => {
+                            router.push(
+                              `/${locale}/pages/${pageId}/builder/${block.id}`,
+                            );
+                          }}
+                          onDelete={() => handleDelete(block.id)}
+                          isDeleting={isRowBusy}
+                          disabled={isBusy || Boolean(busyId)}
+                          index={index}
+                        />
+                        {index < orderedBlocks.length - 1 ? (
+                          <Separator />
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </SortableContext>
+            </DndContext>
           ) : null}
 
-          {list.length > 0 ? <Separator /> : null}
+          {orderedBlocks.length > 0 ? <Separator /> : null}
 
           <AddEmptyCardButton
             onClick={handleAdd}
@@ -601,33 +689,45 @@ export function PageBlocksListSection({
 
       <ExpandableLayout
         id="page-blocks-children"
-        label={t("studio.pageForm.childrens.label", { count: children.length })}
+        label={t("studio.pageForm.childrens.label", {
+          count: orderedChildren.length,
+        })}
         defaultOpen={false}
-        disabled={children.length === 0}
+        disabled={orderedChildren.length === 0}
       >
-        {children.length > 0 ? (
+        {orderedChildren.length > 0 ? (
           <Card variant="panel">
             <CardContent>
               <Text as="p" variant="muted">
                 {t("studio.pageForm.childrens.help")}
               </Text>
 
-              <ul className={cn(STACK_SM, "mt-4")}>
-                {children.map((pageItem, index) => (
-                  <li key={pageItem.id}>
-                    <ChildPageListItem
-                      page={pageItem}
-                      statusKind={statusByPageId[pageItem.id]}
-                      index={index}
-                      total={children.length}
-                      isReordering={isBusy || Boolean(busyId)}
-                      onMoveUp={() => moveChild(index, index - 1)}
-                      onMoveDown={() => moveChild(index, index + 1)}
-                    />
-                    {index < children.length - 1 ? <Separator /> : null}
-                  </li>
-                ))}
-              </ul>
+              <DndContext
+                collisionDetection={closestCenter}
+                onDragEnd={handleChildDragEnd}
+              >
+                <SortableContext
+                  items={orderedChildren.map((pageItem) => pageItem.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul className={cn(STACK_SM, "mt-4")}>
+                    {orderedChildren.map((pageItem, index) => (
+                      <li key={pageItem.id}>
+                        <ChildPageListItem
+                          page={pageItem}
+                          statusKind={statusByPageId[pageItem.id]}
+                          index={index}
+                          total={orderedChildren.length}
+                          isReordering={isBusy || Boolean(busyId)}
+                        />
+                        {index < orderedChildren.length - 1 ? (
+                          <Separator />
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
             </CardContent>
           </Card>
         ) : null}

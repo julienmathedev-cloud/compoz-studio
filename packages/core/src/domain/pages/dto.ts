@@ -8,13 +8,25 @@
  */
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";
-import type { Cell } from "@compoz/core/domain/pages/entities/cell";
 import type {
+  ButtonItem,
+  CardItem,
+  CardsExtendedItem,
+  CarouselCell,
+  CarouselImageItem,
+  CarouselItem,
+  CarouselItemKind,
+  CarouselVariant,
+  CaseStudyCardItem,
+  Cell,
+  ImageEditor,
+} from "@compoz/core/domain/pages/entities/cell";
+import type {
+  InternalPageOption,
   Page,
   PageSitemap,
   PageSummary,
   SitemapChangeFreq,
-  InternalPageOption,
 } from "@compoz/core/domain/pages/entities/page";
 
 /**
@@ -48,4 +60,25 @@ export type SitemapChangeFreqDTO = SitemapChangeFreq;
 /** DTO représentant un Block (aligné sur l’entité métier `Block`). */
 export type BlockDTO = Readonly<Block>;
 
+/** DTO représentant une Cell (aligné sur l’entité métier `Cell`). */
 export type CellDTO = Readonly<Cell>;
+
+/* -------------------------------------------------------------------------- */
+/* Cell items DTO                                                             */
+/* -------------------------------------------------------------------------- */
+
+export type ImageEditorDTO = Readonly<ImageEditor>;
+export type ButtonItemDTO = Readonly<ButtonItem>;
+export type CardItemDTO = Readonly<CardItem>;
+export type CardsExtendedItemDTO = Readonly<CardsExtendedItem>;
+export type CaseStudyCardItemDTO = Readonly<CaseStudyCardItem>;
+
+/* -------------------------------------------------------------------------- */
+/* Carousel DTO                                                               */
+/* -------------------------------------------------------------------------- */
+
+export type CarouselVariantDTO = CarouselVariant;
+export type CarouselItemKindDTO = CarouselItemKind;
+export type CarouselImageItemDTO = Readonly<CarouselImageItem>;
+export type CarouselItemDTO = Readonly<CarouselItem>;
+export type CarouselCellDTO = Readonly<CarouselCell>;

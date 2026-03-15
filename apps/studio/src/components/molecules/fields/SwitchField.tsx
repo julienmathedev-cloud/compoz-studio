@@ -45,6 +45,7 @@ type SwitchFieldProps = Readonly<{
   disabled?: boolean;
   /** Indicateur visuel/ARIA d’invalidité (complète les erreurs gérées par le parent). */
   invalid?: boolean;
+  className?: string;
 }>;
 
 /**
@@ -58,6 +59,7 @@ export function SwitchField({
   onCheckedChange,
   disabled,
   invalid,
+  className,
 }: SwitchFieldProps) {
   const { fieldId, helpId } = ids;
 
@@ -66,7 +68,7 @@ export function SwitchField({
 
   return (
     <Field data-invalid={invalid || undefined} className="min-w-0">
-      <div className={cn(ROW_BETWEEN, "h-full min-w-0")}>
+      <div className={cn(ROW_BETWEEN, "h-full min-w-0", className)}>
         {/* Bloc texte (label + description) */}
         <div className="min-w-0">
           <FieldLabel htmlFor={fieldId}>{label}</FieldLabel>

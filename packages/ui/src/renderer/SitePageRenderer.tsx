@@ -14,16 +14,12 @@ import type { ReactNode } from "react";
 
 import { cn } from "@compoz/ui/lib/utils";
 import { BlocksRenderer } from "@compoz/ui/renderer/BlocksRenderer";
-import { SiteHeading } from "@compoz/ui/site/components/atoms/SiteHeading";
 import type { SiteDetailPagerLink } from "@compoz/ui/site/components/molecules/SiteDetailPager";
 import { SiteDetailPager } from "@compoz/ui/site/components/molecules/SiteDetailPager";
 import type { SiteGlobalUi } from "@compoz/ui/site/site-ui.types";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 export type SitePageRendererProps = Readonly<{
-  /** Titre de page (sert au H1 layout). */
-  pageTitle?: string;
-
   blocks?: ReadonlyArray<BlockShape>;
   children?: ReactNode;
 
@@ -36,14 +32,20 @@ export type SitePageRendererProps = Readonly<{
   ui: SiteGlobalUi;
 }>;
 
+/**
+ * Détermine si un block est fullBleed.
+ *
+ * @remarks
+ * V0.9 : seul type = "section".
+ */
 function isFullBleedBlock(block: BlockShape | undefined) {
   if (!block) return false;
-  if (block.type !== "layoutSection") return false; // V0.5 : seul type
+  if (block.type !== "section") return false;
+
   return block.containerMode === "fullBleed";
 }
 
 export function SitePageRenderer({
-  pageTitle,
   blocks,
   children,
   pager,
@@ -56,9 +58,12 @@ export function SitePageRenderer({
   const firstIsFull = isBlocksMode && isFullBleedBlock(b[0]);
   const lastIsFull = isBlocksMode && isFullBleedBlock(b[b.length - 1]);
 
-  // ⚠️ Important : pas de px/max-w ici (sinon tu casses le fullBleed)
+  /**
+   * ⚠️ Important
+   * On ne met PAS de max-width/padding global ici sinon on casse
+   * les sections fullBleed.
+   */
   const paddingClass = cn(
-    // padding “page” conditionnel (ok)
     firstIsFull ? "pt-0" : ui.body.paddingTop,
     lastIsFull ? "pb-0" : ui.body.paddingBottom,
   );
@@ -66,8 +71,8 @@ export function SitePageRenderer({
   const content = isBlocksMode ? (
     <BlocksRenderer
       blocks={b}
-      blocksUi={ui.blocks}
-      layoutUi={ui.layoutSection}
+      cellsUi={ui.cells}
+      blockUi={ui.blockSection}
       className={cn(ui.body.spacing, paddingClass)}
       variant="site"
     />
@@ -75,17 +80,8 @@ export function SitePageRenderer({
     children
   );
 
-  const resolvedTitle = (pageTitle ?? "").trim();
-  const showLayoutH1 = isBlocksMode && resolvedTitle.length > 0;
-
   return (
     <div className={cn(ui.body.surface)}>
-      {showLayoutH1 ? (
-        <SiteHeading level={1} className={cn(ui.body.pageHeading.h1)}>
-          {resolvedTitle}
-        </SiteHeading>
-      ) : null}
-
       {content}
 
       {pager?.enabled ? (

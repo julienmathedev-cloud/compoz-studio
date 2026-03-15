@@ -1,0 +1,286 @@
+"use client";
+
+/**
+ * @file apps/studio/src/features/builder/editor/cells/timeline/TimelineItemEditor.tsx
+ * @layer ui/studio/pages/blocks/editor/timeline
+ *
+ * @description
+ * Éditeur RHF-aware d’un item individuel pour TimelineCell.
+ *
+ * @remarks
+ * - Connecté directement à RHF via `useController`.
+ * - Reprend le pattern card utilisé par les éditeurs de listes.
+ * - Le reorder est géré par drag and drop via dnd-kit.
+ * - L’affichage des erreurs repose sur une règle unique :
+ *   `showError || fieldState.isTouched`.
+ */
+
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useTranslations } from "next-intl";
+import type { Control } from "react-hook-form";
+import { useController } from "react-hook-form";
+
+import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
+import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
+import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
+import { DragHandle } from "@compoz/studio/features/dnd/DragHandle";
+import { Card, CardContent } from "@compoz/ui/components/ui/card";
+import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
+import { cn } from "@compoz/ui/lib/utils";
+import { STACK_MD } from "@compoz/ui/styles/studio/layout";
+import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
+import type { TimelineItemFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
+
+type TimelineFieldBasePath = `rows.${number}.columns.${number}.cells.${number}`;
+type TimelineItemBasePath = `${TimelineFieldBasePath}.items.${number}`;
+
+export type TimelineItemEditorProps = Readonly<{
+  control: Control<SectionBlockFormValues>;
+  basePath: TimelineFieldBasePath;
+  index: number;
+  idPrefix: string;
+  value: TimelineItemFormValues;
+  disabled?: boolean;
+  canRemove?: boolean;
+  onRemove: () => void;
+  showError?: boolean;
+}>;
+
+export function TimelineItemEditor({
+  control,
+  basePath,
+  index,
+  idPrefix,
+  value,
+  disabled = false,
+  canRemove = true,
+  onRemove,
+  showError = false,
+}: TimelineItemEditorProps) {
+  const t = useTranslations();
+
+  const itemBasePath = `${basePath}.items.${index}` as TimelineItemBasePath;
+
+  const periodCtrl = useController({
+    name: `${itemBasePath}.period` as `${TimelineItemBasePath}.period`,
+    control,
+  });
+
+  const titleCtrl = useController({
+    name: `${itemBasePath}.title` as `${TimelineItemBasePath}.title`,
+    control,
+  });
+
+  const subtitleCtrl = useController({
+    name: `${itemBasePath}.subtitle` as `${TimelineItemBasePath}.subtitle`,
+    control,
+  });
+
+  const descriptionCtrl = useController({
+    name: `${itemBasePath}.description` as `${TimelineItemBasePath}.description`,
+    control,
+  });
+
+  const badgeCtrl = useController({
+    name: `${itemBasePath}.badge` as `${TimelineItemBasePath}.badge`,
+    control,
+  });
+
+  const keywordsCtrl = useController({
+    name: `${itemBasePath}.keywords` as `${TimelineItemBasePath}.keywords`,
+    control,
+  });
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: value.id,
+    disabled,
+  });
+
+  const periodIds = createFieldIds(idPrefix, "period");
+  const titleIds = createFieldIds(idPrefix, "title");
+  const subtitleIds = createFieldIds(idPrefix, "subtitle");
+  const descriptionIds = createFieldIds(idPrefix, "description");
+  const badgeIds = createFieldIds(idPrefix, "badge");
+  const keywordsIds = createFieldIds(idPrefix, "keywords");
+
+  const shouldShowPeriodError = showError || periodCtrl.fieldState.isTouched;
+  const shouldShowTitleError = showError || titleCtrl.fieldState.isTouched;
+
+  const periodInvalid =
+    shouldShowPeriodError && Boolean(periodCtrl.fieldState.error?.message);
+
+  const periodError =
+    shouldShowPeriodError && periodCtrl.fieldState.error?.message
+      ? String(periodCtrl.fieldState.error.message)
+      : undefined;
+
+  const titleInvalid =
+    shouldShowTitleError && Boolean(titleCtrl.fieldState.error?.message);
+
+  const titleError =
+    shouldShowTitleError && titleCtrl.fieldState.error?.message
+      ? String(titleCtrl.fieldState.error.message)
+      : undefined;
+
+  const keywordsValue = Array.isArray(keywordsCtrl.field.value)
+    ? keywordsCtrl.field.value.join("\n")
+    : "";
+
+  const style = {
+    transform: transform ? CSS.Transform.toString(transform) : undefined,
+    transition,
+  };
+
+  return (
+    <Card
+      ref={setNodeRef}
+      style={style}
+      className={cn("relative h-full", STACK_MD, isDragging && "opacity-60")}
+    >
+      <CardContent>
+        <div className="absolute right-2 top-2 z-10 flex items-center gap-2">
+          <DragHandle
+            className={cn(disabled && "pointer-events-none opacity-50")}
+            disabled={disabled}
+            {...attributes}
+            {...listeners}
+          />
+
+          <DeleteButton
+            disabled={!canRemove || disabled}
+            onConfirmDelete={onRemove}
+            ariaLabel={t("common.delete")}
+            title={t("common.delete")}
+          />
+        </div>
+
+        <div className="pt-1">
+          <div className={cn(STACK_MD)}>
+            <InputField
+              ids={periodIds}
+              inputRef={periodCtrl.field.ref}
+              label={t("studio.cellEditorTabs.timelineCellEditor.periodLabel")}
+              value={String(periodCtrl.field.value ?? "")}
+              onChange={(next) => {
+                periodCtrl.field.onChange(next);
+              }}
+              onBlur={periodCtrl.field.onBlur}
+              disabled={disabled}
+              placeholder={t(
+                "studio.cellEditorTabs.timelineCellEditor.periodPlaceholder",
+              )}
+              help={t("studio.cellEditorTabs.timelineCellEditor.periodHelp")}
+              invalid={periodInvalid}
+              error={periodError}
+            />
+
+            <InputField
+              ids={titleIds}
+              inputRef={titleCtrl.field.ref}
+              label={t("studio.cellEditorTabs.timelineCellEditor.titleLabel")}
+              value={String(titleCtrl.field.value ?? "")}
+              onChange={(next) => {
+                titleCtrl.field.onChange(next);
+              }}
+              onBlur={titleCtrl.field.onBlur}
+              disabled={disabled}
+              placeholder={t(
+                "studio.cellEditorTabs.timelineCellEditor.titlePlaceholder",
+              )}
+              help={t("studio.cellEditorTabs.timelineCellEditor.titleHelp")}
+              invalid={titleInvalid}
+              error={titleError}
+            />
+
+            <InputField
+              ids={subtitleIds}
+              inputRef={subtitleCtrl.field.ref}
+              label={t(
+                "studio.cellEditorTabs.timelineCellEditor.subtitleLabel",
+              )}
+              value={String(subtitleCtrl.field.value ?? "")}
+              onChange={(next) => {
+                subtitleCtrl.field.onChange(next);
+              }}
+              onBlur={subtitleCtrl.field.onBlur}
+              disabled={disabled}
+              placeholder={t(
+                "studio.cellEditorTabs.timelineCellEditor.subtitlePlaceholder",
+              )}
+              help={t("studio.cellEditorTabs.timelineCellEditor.subtitleHelp")}
+            />
+
+            <TextareaField
+              ids={descriptionIds}
+              label={t(
+                "studio.cellEditorTabs.timelineCellEditor.descriptionLabel",
+              )}
+              value={String(descriptionCtrl.field.value ?? "")}
+              onChange={(next) => {
+                descriptionCtrl.field.onChange(next);
+              }}
+              onBlur={descriptionCtrl.field.onBlur}
+              disabled={disabled}
+              placeholder={t(
+                "studio.cellEditorTabs.timelineCellEditor.descriptionPlaceholder",
+              )}
+              help={t(
+                "studio.cellEditorTabs.timelineCellEditor.descriptionHelp",
+              )}
+              rows={4}
+            />
+
+            <InputField
+              ids={badgeIds}
+              inputRef={badgeCtrl.field.ref}
+              label={t("studio.cellEditorTabs.timelineCellEditor.badgeLabel")}
+              value={String(badgeCtrl.field.value ?? "")}
+              onChange={(next) => {
+                badgeCtrl.field.onChange(next);
+              }}
+              onBlur={badgeCtrl.field.onBlur}
+              disabled={disabled}
+              placeholder={t(
+                "studio.cellEditorTabs.timelineCellEditor.badgePlaceholder",
+              )}
+              help={t("studio.cellEditorTabs.timelineCellEditor.badgeHelp")}
+            />
+
+            <TextareaField
+              ids={keywordsIds}
+              label={t(
+                "studio.cellEditorTabs.timelineCellEditor.keywordsLabel",
+              )}
+              value={keywordsValue}
+              onChange={(next) => {
+                const parsedKeywords = next
+                  .split("\n")
+                  .map((item) => item.trim())
+                  .filter(Boolean);
+
+                keywordsCtrl.field.onChange(parsedKeywords);
+              }}
+              onBlur={keywordsCtrl.field.onBlur}
+              disabled={disabled}
+              placeholder={t(
+                "studio.cellEditorTabs.timelineCellEditor.keywordsPlaceholder",
+              )}
+              help={t("studio.cellEditorTabs.timelineCellEditor.keywordsHelp")}
+              rows={4}
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+TimelineItemEditor.displayName = "TimelineItemEditor";

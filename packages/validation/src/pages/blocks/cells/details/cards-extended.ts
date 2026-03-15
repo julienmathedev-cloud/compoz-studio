@@ -1,0 +1,50 @@
+/**
+ * @file packages/validation/src/pages/blocks/cells/details/cards-extended.ts
+ * @layer schemas
+ * @description
+ * Schémas Zod de CardsExtendedCell.
+ */
+
+import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
+import { z } from "zod";
+
+import {
+  CellItemIdSchema,
+  CellIdSchema,
+} from "@compoz/validation/pages/blocks/cells/details/common";
+
+export const CardsExtendedColumnsSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+]);
+
+export const CardsExtendedAlignSchema = z.enum(["left", "center"], {
+  message: ERROR_CODES.CELL_INVALID,
+});
+
+export const CardsExtendedBulletSchema = z
+  .string()
+  .trim()
+  .min(1, ERROR_CODES.CELL_INVALID);
+
+export const CardsExtendedItemSchema = z
+  .object({
+    id: CellItemIdSchema,
+    title: z.string().trim().min(1, ERROR_CODES.CELL_INVALID),
+    description: z.string().trim().min(1, ERROR_CODES.CELL_INVALID),
+    bullets: z.array(CardsExtendedBulletSchema).optional(),
+    footer: z.string().trim().optional(),
+    icon: z.string().trim().optional(),
+  })
+  .strict();
+
+export const CardsExtendedCellSchema = z
+  .object({
+    id: CellIdSchema,
+    kind: z.literal("cardsExtended"),
+    columns: CardsExtendedColumnsSchema,
+    align: CardsExtendedAlignSchema.optional(),
+    items: z.array(CardsExtendedItemSchema).min(1, ERROR_CODES.CELL_INVALID),
+  })
+  .strict();

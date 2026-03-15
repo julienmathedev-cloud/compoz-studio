@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/settings/menus/primary-menu/components/molecules/PrimaryMenuItemRow.tsx
+ * @file apps/studio/src/features/settings/menus/primary-menu/components/molecules/PrimaryMenuParentRow.tsx
  * @layer ui/studio/molecules
  * @description
  * Composant représentant une ligne d’item dans le formulaire du menu principal.
@@ -13,6 +13,7 @@
  * - Permet la validation immédiate du champ `href` lors de changements programmatiques.
  */
 
+import { useSortable } from "@dnd-kit/sortable";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import type {
@@ -29,9 +30,9 @@ import { MenuFieldsItem } from "@compoz/studio/features/settings/menus/_shared/M
 import { Card, CardContent } from "@compoz/ui/components/ui/card";
 import { Separator } from "@compoz/ui/components/ui/separator";
 import { resolveLinkFlags, slugifyPath } from "@compoz/ui/lib/links/helpers";
+import { cn } from "@compoz/ui/lib/utils";
 import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-form";
 
-// Types UI locaux (erreurs / invalid par champ).
 type RowErrorMessages = Partial<Record<"label" | "href", string | undefined>>;
 type RowInvalidFlags = Partial<Record<"label" | "href", boolean>>;
 
@@ -39,6 +40,7 @@ type RowInvalidFlags = Partial<Record<"label" | "href", boolean>>;
  * Props de la row parent (un item du menu principal).
  */
 type ParentRowProps = Readonly<{
+  sortableId: string;
   pIdx: number;
   control: Control<PrimaryMenuFormValues>;
   trigger: UseFormTrigger<PrimaryMenuFormValues>;
@@ -46,11 +48,7 @@ type ParentRowProps = Readonly<{
   showError: boolean;
   parentIdPrefix: string;
   internalPageOptions?: ReadonlyArray<InternalPageOptionDTO>;
-  isFirst: boolean;
-  isLast: boolean;
   onRemove: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
 
   /** Ajoute un sous-lien au parent courant. */
   onAddChild: () => void;
@@ -60,12 +58,19 @@ type ParentRowProps = Readonly<{
 
   /** Nombre de sous-liens. */
   childrenCount: number;
+
+  /**
+   * Vrai pendant un drag de niveau parent.
+   * Sert à replier temporairement la zone enfant.
+   */
+  isSortingParents: boolean;
 }>;
 
 /**
  * Row RHF (parent) — obligatoire pour appeler `useController`.
  */
 export function PrimaryMenuParentRow({
+  sortableId,
   pIdx,
   control,
   trigger,
@@ -73,15 +78,24 @@ export function PrimaryMenuParentRow({
   showError,
   parentIdPrefix,
   internalPageOptions,
-  isFirst,
-  isLast,
   onRemove,
-  onMoveUp,
-  onMoveDown,
   onAddChild,
   renderChildren,
   childrenCount,
+  isSortingParents,
 }: ParentRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: sortableId,
+    disabled,
+  });
+
   const labelCtrl = useController({
     name: `items.${pIdx}.label` as const,
     control,
@@ -102,6 +116,7 @@ export function PrimaryMenuParentRow({
       control,
       name: `items.${pIdx}.children` as const,
     }) ?? [];
+
   const hasChildren = children.length > 0;
 
   const t = useTranslations();
@@ -132,6 +147,7 @@ export function PrimaryMenuParentRow({
     if (markTouched) {
       hrefCtrl.field.onBlur();
     }
+
     void trigger(`items.${pIdx}.href` as const);
   };
 
@@ -141,7 +157,6 @@ export function PrimaryMenuParentRow({
     // Pas d’auto-href si parent a des enfants
     if (hasChildren) return;
 
-    // Option 1 : on déduit le mode externe depuis `href`
     const hrefNow = String(hrefCtrl.field.value ?? "");
     const flags = resolveLinkFlags(hrefNow);
     if (flags.rawExternal) return;
@@ -164,19 +179,30 @@ export function PrimaryMenuParentRow({
     void trigger(`items.${pIdx}.href` as const);
   };
 
-  const addChildDisabled = Boolean(disabled);
+  const addChildDisabled = Boolean(disabled || isSortingParents);
+
+  const style = {
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+      : undefined,
+    transition,
+  };
 
   return (
-    <>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(isDragging && "opacity-60")}
+    >
       <MenuFieldsItem
         idPrefix={parentIdPrefix}
         disabled={disabled}
-        isFirst={isFirst}
-        isLast={isLast}
+        dragHandleProps={{
+          ...attributes,
+          ...listeners,
+        }}
         internalPageOptions={internalPageOptions}
         onRemove={onRemove}
-        onMoveUp={onMoveUp}
-        onMoveDown={onMoveDown}
         hasChildren={hasChildren}
         labelField={
           {
@@ -214,6 +240,7 @@ export function PrimaryMenuParentRow({
             : t("studio.primaryMenuForm.children.label")
         }
         disabled={disabled}
+        forceClosed={isSortingParents}
       >
         <div className="m-2">
           {childrenCount === 0 ? (
@@ -252,7 +279,7 @@ export function PrimaryMenuParentRow({
           )}
         </div>
       </ExpandableLayout>
-    </>
+    </div>
   );
 }
 

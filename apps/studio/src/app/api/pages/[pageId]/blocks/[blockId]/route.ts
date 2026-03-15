@@ -2,45 +2,56 @@
  * @file apps/studio/src/app/api/pages/[pageId]/blocks/[blockId]/route.ts
  * @layer studio/app/api
  * @description
- * Route API Studio — ressource block d’une page (V0.5).
+ * Route API Studio — ressource block d’une page.
  *
  * Responsabilités :
- * - PATCH  : met à jour un block `LayoutSection` (draft/published selon `state`).
- * - DELETE : supprime un block (draft/published selon `state`).
- * - Validation des params (pageId, blockId) et des payloads (Zod intents).
- * - Appel des use-cases `updateLayoutSectionBlock` / `deleteBlock` côté domaine.
- * - Invalidation statusCache (KV snapshots) après mutation.
+ * - PATCH  : met à jour un block Section
+ * - DELETE : supprime un block
+ * - Validation params + payload
+ * - Appel des use-cases domaine
+ * - Invalidation statusCache KV
  */
 
 import "server-only";
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import type { PageDTO } from "@compoz/core/domain/pages/dto";
+
 import { deleteBlock } from "@compoz/core/domain/pages/use-cases/blocks/delete-block";
-import { updateLayoutSectionBlock } from "@compoz/core/domain/pages/use-cases/blocks/update-layout-section-block";
+import { updateSectionBlock } from "@compoz/core/domain/pages/use-cases/blocks/update-section-block";
+
 import { throwHttp } from "@compoz/http/http-error";
+
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import type {
   DeleteBlockResponse,
-  UpdateLayoutSectionBlockResponse,
+  UpdateSectionBlockResponse,
 } from "@compoz/infra/http/studio/pages.types";
+
 import { log, logSpan } from "@compoz/infra/lib/log";
+
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteStatusCache } from "@compoz/infra/site";
-import { adaptUpdateLayoutSectionBlockIntent } from "@compoz/studio/app/api/_adapters/pages/blocks";
+
+import { adaptUpdateSectionBlockIntent } from "@compoz/studio/app/api/_adapters/pages/blocks/blocks";
+
 import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
+
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
+
 import {
-  UpdateLayoutSectionBlockIntentSchema,
-  type UpdateLayoutSectionBlockIntentDTO,
+  UpdateSectionBlockIntentSchema,
+  type UpdateSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
+
 import { PageIdAndBlockIdParamSchema } from "@compoz/validation/routes/params";
 
-// -------------------------------------------------
-// PATCH /api/pages/:pageId/blocks/:blockId → update LayoutSection
-// -------------------------------------------------
+/* -------------------------------------------------------------------------- */
+/* PATCH                                                                      */
+/* -------------------------------------------------------------------------- */
 
 export async function PATCH(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.blocks.blockId.PATCH" as const;
@@ -69,8 +80,8 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
 
         const body = await readJsonOr400(req);
 
-        const dto: UpdateLayoutSectionBlockIntentDTO = parseDTOOrHttp(
-          UpdateLayoutSectionBlockIntentSchema,
+        const dto: UpdateSectionBlockIntentDTO = parseDTOOrHttp(
+          UpdateSectionBlockIntentSchema,
           body,
           {
             message: EC.VALIDATION_ERROR,
@@ -94,11 +105,11 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
         const pagesRepo = getPagesRepository({ tenantId });
         const statusCache = getSiteStatusCache({ tenantId });
 
-        const runUpdate = updateLayoutSectionBlock({
+        const runUpdate = updateSectionBlock({
           pages: pagesRepo,
         });
 
-        const adapted = adaptUpdateLayoutSectionBlockIntent(dto);
+        const adapted = adaptUpdateSectionBlockIntent(dto);
 
         const { page } = await runUpdate({
           pageId,
@@ -106,30 +117,34 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
           patch: adapted.patch,
         });
 
-        // ✅ Invalidation KV snapshots (best-effort)
         try {
-          lg.info?.("route.statusCache.invalidateAll.start", {});
+          lg.info?.("route.statusCache.invalidate.start", {});
+
           await Promise.all([
             statusCache.invalidateStatus(),
             statusCache.invalidateStatusDetails(),
           ]);
-          lg.info?.("route.statusCache.invalidateAll.done", {});
+
+          lg.info?.("route.statusCache.invalidate.done", {});
         } catch (e) {
-          lg.error?.("route.statusCache.invalidateAll.failed", {
+          lg.error?.("route.statusCache.invalidate.failed", {
             err: String(e),
           });
         }
 
-        const res: UpdateLayoutSectionBlockResponse = { page: page as PageDTO };
+        const res: UpdateSectionBlockResponse = {
+          page: page as PageDTO,
+        };
+
         return res;
       },
     );
   });
 }
 
-// -------------------------------------------------
-// DELETE /api/pages/:pageId/blocks/:blockId → delete block
-// -------------------------------------------------
+/* -------------------------------------------------------------------------- */
+/* DELETE                                                                     */
+/* -------------------------------------------------------------------------- */
 
 export async function DELETE(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.blocks.blockId.DELETE" as const;
@@ -159,27 +174,34 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
         const pagesRepo = getPagesRepository({ tenantId });
         const statusCache = getSiteStatusCache({ tenantId });
 
-        const runDelete = deleteBlock({ pages: pagesRepo });
+        const runDelete = deleteBlock({
+          pages: pagesRepo,
+        });
+
         const { page } = await runDelete({
           pageId,
           blockId: paramBlockId,
         });
 
-        // ✅ Invalidation KV snapshots (best-effort)
         try {
-          lg.info?.("route.statusCache.invalidateAll.start", {});
+          lg.info?.("route.statusCache.invalidate.start", {});
+
           await Promise.all([
             statusCache.invalidateStatus(),
             statusCache.invalidateStatusDetails(),
           ]);
-          lg.info?.("route.statusCache.invalidateAll.done", {});
+
+          lg.info?.("route.statusCache.invalidate.done", {});
         } catch (e) {
-          lg.error?.("route.statusCache.invalidateAll.failed", {
+          lg.error?.("route.statusCache.invalidate.failed", {
             err: String(e),
           });
         }
 
-        const res: DeleteBlockResponse = { page: page as PageDTO };
+        const res: DeleteBlockResponse = {
+          page: page as PageDTO,
+        };
+
         return res;
       },
     );

@@ -5,26 +5,26 @@
  * @layer ui/studio/pages/molecules
  *
  * @description
- * Ligne compacte pour afficher une page enfant (titre + slug) avec des actions
- * de réordonnancement.
+ * Ligne compacte pour afficher une page enfant (titre + slug) avec poignée
+ * de drag & drop.
  *
  * @remarks
  * - Molecule UI : calquée sur `PageListItem` pour conserver le même rythme visuel
  *   (grid / colonnes / espacements).
- * - Les callbacks sont fournis par le parent (orchestration via hooks / sections).
+ * - Le réordonnancement est piloté par `dnd-kit` via `useSortable`.
  * - Supporte un état occupé local (`isReordering`) : ARIA + désactivation cohérente.
  * - Strictement UI-only : aucune logique métier.
  */
 
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useTranslations } from "next-intl";
 
 import type { PageSummaryDTO } from "@compoz/core/domain/pages/dto";
 import type { SiteDiffKindDTO } from "@compoz/core/domain/site/dto";
 import { DiffStatusBadge } from "@compoz/studio/components/atoms/badges/DiffStatusBadge";
-import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
-import { StudioButtonGroup } from "@compoz/studio/components/molecules/controls/StudioButtonGroup";
+import { DragHandle } from "@compoz/studio/features/dnd/DragHandle";
 import { formatPagePath } from "@compoz/studio/lib/ui/pages";
 import { cn } from "@compoz/ui/lib/utils";
 
@@ -41,16 +41,10 @@ type ChildPageListItemProps = Readonly<{
   /** Index courant de l’item dans la liste. */
   index: number;
 
-  /** Taille totale de la liste (sert aux limites haut / bas). */
+  /** Taille totale de la liste. */
   total: number;
 
-  /** Action : monter l’item (réordonnancement). */
-  onMoveUp?: () => void;
-
-  /** Action : descendre l’item (réordonnancement). */
-  onMoveDown?: () => void;
-
-  /** Indique un réordonnancement en cours (désactive les actions concernées). */
+  /** Indique un réordonnancement en cours (désactive le drag). */
   isReordering?: boolean;
 
   /** Désactive toute la ligne (verrouillage global optionnel). */
@@ -68,38 +62,52 @@ export function ChildPageListItem({
   statusKind,
   index,
   total,
-  onMoveUp,
-  onMoveDown,
   isReordering = false,
   disabled = false,
 }: ChildPageListItemProps) {
   const t = useTranslations();
 
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: page.id,
+    disabled: disabled || isReordering,
+  });
+
   const isBusy = isReordering;
   const baseDisabled = disabled || isBusy;
 
-  const isFirst = index <= 0;
-  const isLast = index >= total - 1;
-
-  const canMoveUp = Boolean(onMoveUp) && !baseDisabled && !isFirst;
-  const canMoveDown = Boolean(onMoveDown) && !baseDisabled && !isLast;
-
-  const moveUpTooltip = !canMoveUp
-    ? t("common.actionUnavailable")
-    : t("common.moveUp");
-
-  const moveDownTooltip = !canMoveDown
-    ? t("common.actionUnavailable")
-    : t("common.moveDown");
+  const style = {
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+      : undefined,
+    transition,
+  };
 
   return (
     <div
+      ref={setNodeRef}
+      style={style}
       className={cn(
-        "grid grid-cols-[max-content_auto_1fr_auto] items-center gap-3",
+        "grid grid-cols-[auto_max-content_1fr_auto] items-center gap-3",
+        isDragging && "opacity-60",
       )}
       aria-busy={isBusy || undefined}
       aria-disabled={baseDisabled || undefined}
     >
+      <div className="flex items-center justify-center">
+        <DragHandle
+          className={cn(baseDisabled && "pointer-events-none opacity-50")}
+          {...attributes}
+          {...listeners}
+        />
+      </div>
+
       <div className="flex min-w-[12ch] items-center justify-center">
         {statusKind ? (
           <DiffStatusBadge
@@ -111,7 +119,7 @@ export function ChildPageListItem({
 
       <div>
         <Text as="p" truncate className="mb-0!">
-          {page.title}
+          {page.name}
         </Text>
 
         <Text as="p" variant="meta" truncate>
@@ -119,32 +127,13 @@ export function ChildPageListItem({
         </Text>
       </div>
 
-      <div className="shrink-0 justify-self-end">
-        <StudioButtonGroup className="shrink-0">
-          <TooltipButton
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => onMoveUp?.()}
-            disabled={!canMoveUp}
-            aria-label={t("common.moveUp")}
-            tooltip={moveUpTooltip}
-          >
-            <ChevronUp />
-          </TooltipButton>
-
-          <TooltipButton
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => onMoveDown?.()}
-            disabled={!canMoveDown}
-            aria-label={t("common.moveDown")}
-            tooltip={moveDownTooltip}
-          >
-            <ChevronDown />
-          </TooltipButton>
-        </StudioButtonGroup>
+      <div className="justify-self-end">
+        <Text as="p" variant="meta">
+          {t("studio.pageForm.childrens.position", {
+            current: index + 1,
+            total,
+          })}
+        </Text>
       </div>
     </div>
   );

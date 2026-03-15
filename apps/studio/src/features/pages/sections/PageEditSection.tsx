@@ -83,12 +83,12 @@ export function PageEditSection({
   const baselineRef = useRef<PageFormValues | null>(null);
 
   /**
-   * Titre de référence depuis l’index, utile avant le chargement complet de la page.
+   * Nom de référence depuis l’index, utile avant le chargement complet de la page.
    */
-  const refTitle = useMemo(() => {
+  const refName = useMemo(() => {
     if (!editId || !index) return null;
     return (
-      index.pages.find((pageItem) => pageItem.id === editId)?.title ?? null
+      index.pages.find((pageItem) => pageItem.id === editId)?.name ?? null
     );
   }, [editId, index]);
 
@@ -102,9 +102,9 @@ export function PageEditSection({
 
     return {
       ...base,
-      title: (refTitle ?? base.title ?? "").trim(),
+      name: (refName ?? base.name ?? "").trim(),
     };
-  }, [mode, page, editId, refTitle]);
+  }, [mode, page, editId, refName]);
 
   useEffect(() => {
     baselineRef.current = initialValues;
@@ -113,7 +113,7 @@ export function PageEditSection({
   const sectionTitle =
     mode === "edit"
       ? t("studio.pageEditSection.section.titleEdit", {
-          title: page?.title ?? refTitle ?? editId ?? "",
+          title: page?.name ?? refName ?? editId ?? "",
         })
       : t("studio.pageEditSection.section.titleCreate");
 
@@ -146,7 +146,7 @@ export function PageEditSection({
   const handleSubmit = useCallback(
     async (values: PageFormValues) => {
       const warningKeysNow = computePageWarnings({
-        title: values.title ?? "",
+        name: values.name ?? "",
         slug: values.slug ?? "",
         parentId: values.parentId ?? null,
         paginationEnabled: values.paginationEnabled ?? false,

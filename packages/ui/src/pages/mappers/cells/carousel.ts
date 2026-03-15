@@ -1,0 +1,71 @@
+/**
+ * @file packages/ui/src/pages/mappers/cells/carousel.ts
+ * @layer ui/pages/mappers
+ *
+ * @description
+ * Mapper "shared runtime" pour les cellules de type `carousel`.
+ */
+
+import type {
+  CardItemDTO,
+  CardsExtendedItemDTO,
+  CarouselCellDTO,
+  CaseStudyCardItemDTO,
+  ImageEditorDTO,
+} from "@compoz/core/domain/pages/dto";
+import { toCardsCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/cards";
+import { toCardsExtendedCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/cards-extended";
+import { toCaseStudyCardCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/case-study-card";
+import type { CarouselCellFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
+
+type WithDims = { width?: number | null; height?: number | null };
+
+function coerceDims<T extends WithDims>(img: T): T {
+  return {
+    ...img,
+    width: img.width ?? undefined,
+    height: img.height ?? undefined,
+  };
+}
+
+export function toCarouselCellShapeFromDTO(
+  cell: CarouselCellDTO,
+): CarouselCellFormValues {
+  const items =
+    cell.itemKind === "image"
+      ? (cell.items as ReadonlyArray<ImageEditorDTO>).map((item) =>
+          coerceDims(item),
+        )
+      : cell.itemKind === "card"
+        ? toCardsCellShapeFromDTO({
+            id: cell.id,
+            kind: "cards",
+            columns: 2,
+            align: "left",
+            items: cell.items as CardItemDTO[],
+          }).items
+        : cell.itemKind === "cardsExtended"
+          ? toCardsExtendedCellShapeFromDTO({
+              id: cell.id,
+              kind: "cardsExtended",
+              columns: 2,
+              align: "left",
+              items: cell.items as CardsExtendedItemDTO[],
+            }).items
+          : toCaseStudyCardCellShapeFromDTO({
+              id: cell.id,
+              kind: "caseStudyCard",
+              columns: 1,
+              items: cell.items as CaseStudyCardItemDTO[],
+            }).items;
+
+  return {
+    id: cell.id,
+    kind: "carousel",
+    variant: cell.variant,
+    showDots: cell.showDots,
+    showArrows: cell.showArrows,
+    itemKind: cell.itemKind,
+    items,
+  };
+}

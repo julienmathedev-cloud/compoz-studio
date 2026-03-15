@@ -2,86 +2,124 @@
  * @file packages/core/src/domain/pages/entities/block.ts
  * @layer core/domain/pages
  * @description
- * Entités métier représentant les blocks qui composent une page.
+ * Entités métier représentant les sections (blocks) qui composent une page.
  *
- * Invariants (rappel) :
- * - un block est une unité de contenu persistée (pas un composant React),
- * - la forme canonique (types) est définie ici,
- * - pas de defaults (voir `defaults/*` si applicable),
- * - pas de validation Zod (voir `validation/*`),
- * - pas de logique métier (voir `use-cases`).
+ * Invariants :
+ * - un block représente une section de page,
+ * - un block contient une liste ordonnée de rows,
+ * - une row contient 1 à 3 colonnes,
+ * - une colonne contient une liste ordonnée de cells,
+ * - les options globales de layout/performance d’une section sont portées par le block.
+ *
+ * Ce fichier définit uniquement la forme canonique du modèle.
  */
 
 import type { Cell } from "@compoz/core/domain/pages/entities/cell";
 
 export type BlockId = string;
+export type BlockRowId = string;
+export type BlockColumnId = string;
 
 /**
- * Liste des types de blocks supportés.
+ * Type unique de block supporté en V0.9.
  *
- * V0.5 : un seul block est supporté.
+ * Un block correspond à une section de page.
  */
-export type BlockType = "layoutSection";
+export type BlockType = "section";
 
 /**
- * Layout d’une section : nombre de colonnes (V0.5).
- */
-export type LayoutSectionLayout = {
-  /** Nombre de colonnes (1 à 3). */
-  columns: 1 | 2 | 3;
-};
-
-/**
- * Titre d’une section (présent même si désactivé).
- */
-export type LayoutSectionBlockTitle = {
-  /** Texte du titre. */
-  text: string;
-
-  /** Affichage du titre : visible ou uniquement pour les lecteurs d’écran. */
-  display: "visible" | "sr-only";
-};
-
-/**
- * Mode de container appliqué à la section (impacte le layout global).
- */
-export type LayoutSectionContainerMode = "contained" | "fullBleed";
-
-/**
- * Block "LayoutSection".
+ * Mode de container appliqué à la section.
  *
- * @remarks
- * - L’ordre d’affichage est l’ordre du tableau `Page.blocks` (pas de champ `order`).
- * - La validation runtime est assurée par les validators du domaine.
+ * - `contained` : la section respecte le container global du site
+ * - `fullBleed` : la section ignore le container global et peut s’étendre pleine largeur
  */
-export type LayoutSectionBlock = {
+export type SectionBlockContainerMode = "contained" | "fullBleed";
+
+/**
+ * Row d'une section.
+ *
+ * Une row définit une ligne horizontale contenant
+ * 1 à 3 colonnes.
+ */
+export interface BlockRow {
+  /** Identifiant unique de la row. */
+  id: BlockRowId;
+
+  /** Nombre de colonnes dans la row. */
+  columnsCount: 1 | 2 | 3;
+
+  /**
+   * Colonnes de la row.
+   *
+   * Invariant domaine :
+   * `columns.length === columnsCount`
+   */
+  columns: ReadonlyArray<BlockColumn>;
+}
+
+/**
+ * Colonne d'une row.
+ *
+ * Une colonne contient une liste verticale ordonnée de cells.
+ */
+export interface BlockColumn {
+  /** Identifiant unique de la colonne. */
+  id: BlockColumnId;
+
+  /**
+   * Cells de la colonne.
+   *
+   * L'ordre du tableau correspond à l'ordre vertical de rendu.
+   */
+  cells: ReadonlyArray<Cell>;
+}
+
+/**
+ * Block "Section".
+ *
+ * Représente une section complète d'une page.
+ */
+export interface SectionBlock {
   /** Identifiant unique du block. */
   id: BlockId;
 
   /** Type discriminant. */
-  type: "layoutSection";
+  type: "section";
 
-  /** Layout de la section. */
-  layout: LayoutSectionLayout;
+  /**
+   * Libellé interne persistant du block.
+   */
+  name: string;
 
-  /** Mode de container de la section (layout global). */
-  containerMode: LayoutSectionContainerMode;
+  /**
+   * Mode de container global de la section.
+   *
+   * Définit si la section respecte le container global du site
+   * ou si elle doit s’étendre en pleine largeur.
+   */
+  containerMode: SectionBlockContainerMode;
 
-  /** Active/désactive l’affichage du titre (le champ `title` reste présent). */
-  titleEnabled: boolean;
-
-  /** Titre de la section (toujours présent). L’affichage est piloté par `titleEnabled`. */
-  title: LayoutSectionBlockTitle;
-
-  /** Indique si ce block doit être traité en priorité LCP (signal UX/perf). */
+  /**
+   * Indique si cette section doit être considérée prioritaire
+   * pour l’optimisation du Largest Contentful Paint (LCP).
+   *
+   * Ce signal permet à la couche UI/rendu d’identifier le média
+   * principal de la section à prioriser si nécessaire.
+   */
   lcpPriority: boolean;
 
   /**
-   * Cells rendues dans la section.
+   * Rows composant la section.
    *
-   * Invariant (domaine) : `cells.length === layout.columns`.
+   * L'ordre du tableau correspond à l'ordre vertical
+   * des rows dans la section.
    */
-  cells: ReadonlyArray<Cell>;
-};
+  rows: ReadonlyArray<BlockRow>;
+}
 
-export type Block = LayoutSectionBlock;
+/**
+ * Union des blocks supportés.
+ *
+ * Pour la V0.9 un seul block existe.
+ */
+export type Block = SectionBlock;

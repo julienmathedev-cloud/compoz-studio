@@ -43,9 +43,9 @@ export type ListPageBlocksResponse = Readonly<{
   blocks: ReadonlyArray<BlockDTO>;
 }>;
 
-export type AddLayoutSectionBlockResponse = Readonly<{ page: PageDTO }>;
+export type AddSectionBlockResponse = Readonly<{ page: PageDTO }>;
 
-export type UpdateLayoutSectionBlockResponse = Readonly<{ page: PageDTO }>;
+export type UpdateSectionBlockResponse = Readonly<{ page: PageDTO }>;
 
 export type DeleteBlockResponse = Readonly<{ page: PageDTO }>;
 

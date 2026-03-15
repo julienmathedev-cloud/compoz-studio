@@ -87,7 +87,7 @@ export function upsertPageRef(
     // Rien ne change → no-op
     if (
       prev.slug === ref.slug &&
-      prev.title === ref.title &&
+      prev.name === ref.name &&
       prev.parentId === ref.parentId
     )
       return index;
@@ -97,7 +97,7 @@ export function upsertPageRef(
     pages[i] = {
       ...prev,
       slug: ref.slug,
-      title: ref.title,
+      name: ref.name,
       parentId: ref.parentId ?? null,
     };
     return { ...index, pages };

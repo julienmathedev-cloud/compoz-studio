@@ -61,7 +61,7 @@ export function useInternalPageOptions(args?: UseInternalPageOptionsArgs) {
         return {
           slug,
           value: valueMode === "id" ? page.id : href,
-          label: `${page.title}${slug ? ` — ${href}` : ""}`,
+          label: `${page.name}${slug ? ` — ${href}` : ""}`,
         };
       });
   }, [index, excludePageId, rootsOnly, valueMode]);

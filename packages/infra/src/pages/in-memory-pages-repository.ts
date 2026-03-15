@@ -212,7 +212,7 @@ export class InMemoryPagesRepository implements PagesRepository {
       out.push({
         id: p.id,
         slug: p.slug,
-        title: p.title,
+        name: p.name,
         parentId: p.parentId,
       });
     }

@@ -145,7 +145,7 @@ export async function copyPages(
     copiedRefs.push({
       id,
       slug,
-      title: (p.title ?? "").trim() || slug,
+      name: (p.name ?? "").trim() || slug,
       parentId: (ref.parentId ?? "").trim() || null,
     });
   }

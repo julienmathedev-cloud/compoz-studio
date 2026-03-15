@@ -101,7 +101,7 @@ export function PageListItem({
 
       <div>
         <Text as="p" truncate className="mb-0!">
-          {page.title}
+          {page.name}
         </Text>
 
         <Text as="p" variant="meta" truncate>

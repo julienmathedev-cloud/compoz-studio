@@ -13,9 +13,9 @@
  * - Tenant-scoped : la queryKey inclut `tenantId` pour éviter les caches croisés au switch.
  */
 
-import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -27,7 +27,6 @@ import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext"
 import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { withLoadLogs } from "@compoz/ui/hooks/instrumentation";
-import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 const lg = log.child({ ns: "hook", name: "useListPageBlocks" });
 
@@ -44,9 +43,8 @@ export function useListPageBlocks(
   const tenantId = useTenantId();
   const entityLabel = t("studio.shared.entities.blocks");
 
-  const tid = toTenantId(tenantId);
   const pageIdKey = String(pageId ?? "").trim();
-  const enabled = Boolean(tid && pageIdKey);
+  const enabled = Boolean(tenantId && pageIdKey);
 
   const options = {
     queryKey: pageBlocksKey(tenantId, pageIdKey, state),
@@ -61,13 +59,13 @@ export function useListPageBlocks(
         "useListPageBlocks",
         state,
         () => pagesStudioApi.getPageBlocks(pageIdKey, state, { signal }),
-        { entity: entityLabel, tenantId: tid, pageId: pageIdKey },
+        { entity: entityLabel, tenantId: tenantId, pageId: pageIdKey },
       );
 
       const blocks = response.blocks ?? [];
 
       lg.debug("read.ok", {
-        tenantId: tid,
+        tenantId: tenantId,
         pageId: pageIdKey,
         state,
         count: blocks.length,
@@ -87,12 +85,12 @@ export function useListPageBlocks(
 
     notify.fromError(query.error);
     lg.error("read.failed", {
-      tenantId: tid,
+      tenantId: tenantId,
       pageId: pageIdKey,
       state,
       msg: String(query.error),
     });
-  }, [query.error, tid, pageIdKey, state]);
+  }, [query.error, tenantId, pageIdKey, state]);
 
   return {
     blocks: enabled ? (query.data ?? []) : [],

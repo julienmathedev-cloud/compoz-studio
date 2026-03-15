@@ -10,6 +10,8 @@
  * - Délègue A11y + perf à `SiteAppImage`.
  * - Style piloté par le skin via `ui`.
  * - Reveal : activé par défaut (V0.5).
+ * - Si une caption est présente, l’image est rendue dans un `figure`
+ *   avec `figcaption`.
  */
 
 import type { ImageCellShape } from "@compoz/validation/pages/blocks/cells/cell";
@@ -35,6 +37,8 @@ export function ImageCellRenderer({
 
   const src = normalizeString(cell.image.src, "");
   const alt = normalizeString(cell.image.alt, "");
+  const caption = normalizeString(cell.image.caption, "");
+
   if (!src) return null;
 
   const variant = cell.variant ?? "default";
@@ -58,12 +62,21 @@ export function ImageCellRenderer({
     />
   );
 
-  const content =
+  const visual =
     mode === "default" ? (
       imageNode
     ) : (
       <div className={cn(frameClass, ui.container)}>{imageNode}</div>
     );
+
+  const content = caption ? (
+    <figure className={cn(ui.figure)}>
+      {visual}
+      <figcaption className={cn(ui.caption)}>{caption}</figcaption>
+    </figure>
+  ) : (
+    visual
+  );
 
   return <SiteReveal>{content}</SiteReveal>;
 }

@@ -174,23 +174,28 @@
 
     "BLOCKS_INVALID": "Liste de blocs invalide.",
     "BLOCK_ID_REQUIRED": "Un identifiant de bloc est requis.",
+    "BLOCK_NAME_REQUIRED": "Un nom de bloc est requis.",
     "BLOCK_ID_DUPLICATE": "Cet identifiant de bloc est déjà utilisé.",
     "BLOCKS_MULTIPLE_LCP_DETECTED": "Plusieurs blocs LCP détectés pour cette page.",
     "BLOCK_TYPE_UNSUPPORTED": "Ce type de bloc n’est pas supporté.",
     "BLOCK_NOT_FOUND": "Ce bloc est introuvable.",
     "BLOCK_ID_MISMATCH": "L’identifiant du bloc dans l’URL ne correspond pas à celui des données envoyées.",
 
-    "LAYOUT_SECTION_COLUMNS_INVALID": "Le nombre de colonnes de la section est invalide (attendu : 1 à 3).",
-    "LAYOUT_SECTION_CELLS_INVALID": "Les cellules de la section sont invalides.",
-    "LAYOUT_SECTION_CELLS_COUNT_MISMATCH": "Le nombre de cellules ne correspond pas au nombre de colonnes.",
-    "LAYOUT_SECTION_TITLE_REQUIRED": "Le titre de la section est requis.",
-    "LAYOUT_SECTION_TITLE_DISPLAY_INVALID": "L’affichage du titre de la section est invalide.",
-    "LAYOUT_SECTION_CONTAINER_MODE_INVALID": "Le mode de conteneur de la section n'est pas valide.",
+    "BLOCK_SECTION_COLUMNS_INVALID": "Le nombre de colonnes de la section est invalide (attendu : 1 à 3).",
+    "BLOCK_SECTION_CONTAINER_MODE_INVALID": "Le mode de conteneur de la section n'est pas valide.",
+    "BLOCK_ROWS_INVALID": "La structure des lignes de bloc est invalide.",
+    "BLOCK_ROW_ID_REQUIRED": "L’ID de ligne est requis.",
+    "BLOCK_ROW_ID_DUPLICATE": "L’ID de ligne est déjà utilisé dans le bloc.",
+    "BLOCK_COLUMNS_INVALID": "La structure des colonnes de la ligne est invalide.",
+    "BLOCK_COLUMN_ID_REQUIRED": "L’ID de colonne est requis.",
+    "BLOCK_COLUMN_ID_DUPLICATE": "L’ID de colonne est déjà utilisé dans la ligne.",
+    "BLOCK_COLUMNS_COUNT_MISMATCH": "Le nombre de colonnes de la ligne ne correspond pas à la déclaration.",
 
     "CELL_INVALID": "Une cellule est invalide.",
     "CELL_KIND_UNSUPPORTED": "Ce type de cellule n’est pas supporté.",
 
     "RICH_TEXT_CONTENT_INVALID": "Le contenu du texte riche est invalide.",
+    "HEADING_CELL_UNIQUE_H1": "Il doit y avoir un seul cellule H1 dans un bloc.",
 
     "IMAGE_SRC_REQUIRED": "La source de l’image est requise.",
     "IMAGE_ALT_INVALID": "Le texte alternatif de l’image est invalide.",
@@ -442,6 +447,85 @@
         "help": "Configurer les rôles et les tenants autorisés pour l’utilisateur.",
         "placeholderEdit": "Modifier les rôles et les tenants",
         "placeholderCreate": "Rôles et tenants"
+      }
+    },
+
+    "builder": {
+      "preview": {
+        "section": {
+          "title": "Aperçu du bloc",
+          "description": "Prévisualisez le rendu du bloc pendant son édition."
+        },
+        "frame": {
+          "title": "Aperçu du bloc"
+        }
+      },
+      "sidebar": {
+        "title": "Builder",
+        "footer": "Configuration du bloc",
+        "groups": {
+          "section": "Section",
+          "rows": "Lignes"
+        },
+        "section": {
+          "cardTitle": "Paramètres de la section",
+          "name": {
+            "label": "Nom du bloc",
+            "help": "Nom interne pour identifier ce bloc dans le studio.",
+            "placeholder": "Ex : Hero accueil"
+          },
+          "containerMode": {
+            "label": "Mode de conteneur",
+            "options": {
+              "contained": "Contenu centré",
+              "fullBleed": "Pleine largeur"
+            }
+          },
+          "lcpPriority": {
+            "label": "Priorité LCP",
+            "help": "Active la priorité de chargement pour les éléments critiques."
+          }
+        },
+        "rows": {
+          "add": "Ajouter une ligne",
+          "rowLabel": "Ligne {index}",
+          "columnLabel": "Colonne {index}",
+          "columnsCountLabel": "Nombre de colonnes :",
+          "columnsCount": {
+            "option": "{count} colonne(s)"
+          },
+          "removeRow": "Supprimer la ligne {index}",
+          "emptyColumn": "Aucun contenu dans cette colonne.",
+          "addCell": "Ajouter un bloc",
+          "tooltips": {
+            "unavailableWhileBusy": "Action indisponible pendant une opération."
+          },
+          "reorderCells": "Réorganiser les cellules"
+        }
+      },
+      "drawer": {
+        "title": "Éditer le contenu",
+        "description": "Modifiez le contenu de cet élément.",
+        "kind": {
+          "label": "Type de contenu",
+          "help": "Sélectionnez le type de contenu à afficher.",
+          "options": {
+            "heading": "Heading",
+            "richText": "Texte riche",
+            "image": "Image",
+            "gallery": "Galerie",
+            "carousel": "Carrousel",
+            "spacer": "Espacement",
+            "separator": "Séparateur",
+            "buttons": "Boutons",
+            "cards": "Cartes",
+            "cardsExtended": "Cartes étendues",
+            "steps": "Étapes",
+            "caseStudyCard": "Étude de cas",
+            "form": "Formulaire",
+            "timeline": "Timeline"
+          }
+        }
       }
     },
 
@@ -1098,11 +1182,21 @@
         "add": "Ajouter un bloc",
         "delete": "Supprimer le bloc",
         "back": "Retour aux pages",
+        "row": "Ligne",
         "kinds": {
           "richText": "Texte",
           "image": "Image",
           "gallery": "Galerie",
-          "carousel": "Carrousel"
+          "carousel": "Carrousel",
+          "heading": "Titre",
+          "spacer": "Espacement",
+          "separator": "Séparateur",
+          "buttons": "Boutons",
+          "cards": "Cartes",
+          "cardsExtended": "Cartes étendues",
+          "steps": "Étapes",
+          "caseStudyCard": "Étude de cas",
+          "form": "Formulaire"
         },
         "fallbackSummary": "Type : {type}"
       }
@@ -1160,7 +1254,336 @@
         "richText": "Texte",
         "image": "Image",
         "gallery": "Galerie",
-        "carousel": "Carrousel"
+        "carousel": "Carrousel",
+        "heading": "Titre",
+        "spacer": "Espacement",
+        "separator": "Séparateur",
+        "buttons": "Boutons",
+        "cards": "Cartes",
+        "cardsExtended": "Cartes étendues",
+        "steps": "Étapes",
+        "caseStudyCard": "Étude de cas",
+        "form": "Formulaire",
+        "timeline": "Timeline"
+      },
+
+      "timelineCellEditor": {
+        "itemsLabel": "Étapes de la timeline",
+        "itemsHelp": "Ajoutez, modifiez et réorganisez les étapes de votre parcours.",
+
+        "periodLabel": "Période",
+        "periodPlaceholder": "2019 - 2024",
+        "periodHelp": "Période ou année affichée pour cette étape.",
+
+        "titleLabel": "Titre",
+        "titlePlaceholder": "Analyste développeur",
+        "titleHelp": "Titre principal de l’étape.",
+
+        "subtitleLabel": "Sous-titre",
+        "subtitlePlaceholder": "Innovative Diagnostics",
+        "subtitleHelp": "Contexte, structure ou entreprise associée à l’étape.",
+
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Développement d’outils métier et accompagnement des équipes sur les besoins internes.",
+        "descriptionHelp": "Texte descriptif affiché sous le titre de l’étape.",
+
+        "badgeLabel": "Badge / Sigle",
+        "badgePlaceholder": "ID",
+        "badgeHelp": "Petit sigle ou libellé court affiché visuellement dans la timeline.",
+
+        "keywordsLabel": "Mots-clés",
+        "keywordsPlaceholder": "WinDev\nSQL Server\nGestion de projet",
+        "keywordsHelp": "Un mot-clé par ligne. Ils pourront être affichés sous forme de badges."
+      },
+
+      "carouselEditor": {
+        "title": "Carrousel",
+        "description": "Affiche une série d’éléments sous forme de carrousel ou de slider.",
+
+        "variant": {
+          "label": "Type d’affichage",
+          "carousel": "Carrousel",
+          "slider": "Slider"
+        },
+
+        "items": {
+          "label": "Éléments",
+          "add": "Ajouter un élément",
+          "empty": "Aucun élément"
+        },
+
+        "item": {
+          "image": "Image",
+          "content": "Contenu",
+          "caseStudy": "Étude de cas"
+        },
+
+        "image": {
+          "src": "Image",
+          "alt": "Texte alternatif",
+          "caption": "Légende",
+          "href": "Lien (optionnel)"
+        },
+
+        "slider": {
+          "perView": "Éléments visibles",
+          "spacing": "Espacement",
+          "loop": "Boucle infinie"
+        },
+
+        "carousel": {
+          "autoplay": "Lecture automatique",
+          "delay": "Délai (ms)",
+          "pauseOnHover": "Pause au survol"
+        }
+      },
+
+      "cardsExtendedCellEditor": {
+        "itemsLabel": "Cartes",
+        "itemsHelp": "Ajoutez et organisez les cartes affichées dans cette section.",
+
+        "titleLabel": "Titre",
+        "titlePlaceholder": "Titre de la carte",
+        "titleHelp": "Titre principal affiché dans la carte.",
+
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Description de la carte",
+        "descriptionHelp": "Texte descriptif de la carte.",
+
+        "bulletsLabel": "Liste à puces",
+        "bulletsPlaceholder": "Une ligne par élément",
+        "bulletsHelp": "Chaque ligne sera affichée comme un élément de liste.",
+
+        "footerLabel": "Texte de pied",
+        "footerPlaceholder": "Texte complémentaire",
+        "footerHelp": "Texte affiché en bas de la carte.",
+
+        "iconLabel": "Icône",
+        "iconPlaceholder": "Nom de l’icône",
+        "iconHelp": "Nom d’icône optionnel à afficher dans la carte.",
+
+        "alignLabel": "Alignement",
+        "aligns": {
+          "left": "Gauche",
+          "center": "Centre"
+        },
+
+        "columnsLabel": "Colonnes",
+        "columns": {
+          "1": "1 colonne",
+          "2": "2 colonnes",
+          "3": "3 colonnes"
+        }
+      },
+
+      "caseStudyCardCellEditor": {
+        "imageLabel": "Image",
+        "imageHelp": "Image principale utilisée pour illustrer cette étude de cas.",
+
+        "titleLabel": "Titre",
+        "titlePlaceholder": "Titre de l’étude de cas",
+        "titleHelp": "Nom court et clair du projet ou du cas présenté.",
+
+        "contextLabel": "Contexte",
+        "contextPlaceholder": "Décrivez le besoin ou la situation de départ",
+        "contextHelp": "Présente le problème initial, le besoin métier ou le contexte du projet.",
+
+        "solutionLabel": "Solution",
+        "solutionPlaceholder": "Décrivez la solution mise en place",
+        "solutionHelp": "Explique la réponse apportée, l’outil conçu ou l’approche retenue.",
+
+        "resultLabel": "Résultat",
+        "resultPlaceholder": "Décrivez le résultat obtenu",
+        "resultHelp": "Met en avant les bénéfices concrets, les gains ou l’impact final."
+      },
+
+      "formCellEditor": {
+        "toLabel": "Email de destination",
+        "toPlaceholder": "contact@monsite.com",
+        "toHelp": "Adresse email de réception du formulaire. Elle sera enregistrée au format mailto:.",
+
+        "submitLabelLabel": "Texte du bouton",
+        "submitLabelPlaceholder": "Envoyer",
+        "submitLabelHelp": "Texte affiché sur le bouton d’envoi du formulaire.",
+
+        "successMessageLabel": "Message de succès",
+        "successMessagePlaceholder": "Merci pour votre message. Je vous répondrai rapidement.",
+        "successMessageHelp": "Message affiché après un envoi réussi.",
+
+        "errorMessageLabel": "Message d’erreur",
+        "errorMessagePlaceholder": "Une erreur est survenue. Merci de réessayer plus tard.",
+        "errorMessageHelp": "Message affiché si l’envoi du formulaire échoue.",
+
+        "fieldsLabel": "Champs du formulaire",
+        "fieldsHelp": "Configurez les champs affichés dans le formulaire de contact.",
+
+        "fieldNameLabel": "Nom technique",
+        "fieldNamePlaceholder": "subject",
+        "fieldNameHelp": "Nom interne utilisé pour identifier la donnée envoyée.",
+
+        "fieldLabelLabel": "Libellé",
+        "fieldLabelPlaceholder": "Sujet",
+        "fieldLabelHelp": "Texte affiché au-dessus ou à côté du champ.",
+
+        "fieldTypeLabel": "Type de champ",
+        "fieldTypeHelp": "Définit le type d’entrée utilisé pour ce champ.",
+
+        "fieldPlaceholderLabel": "Placeholder",
+        "fieldPlaceholderPlaceholder": "Décrivez votre demande",
+        "fieldPlaceholderHelp": "Texte d’exemple affiché dans le champ tant qu’il est vide.",
+
+        "fieldRequiredLabel": "Champ obligatoire",
+        "fieldRequiredHelp": "Indique si ce champ doit obligatoirement être rempli.",
+
+        "fieldTypes": {
+          "text": "Texte",
+          "email": "Email",
+          "textarea": "Texte long"
+        }
+      },
+
+      "stepsCellEditor": {
+        "itemsLabel": "Étapes",
+        "itemsHelp": "Ajoutez et organisez les étapes du processus.",
+
+        "titleLabel": "Titre de l’étape",
+        "titlePlaceholder": "Titre de l’étape",
+        "titleHelp": "Titre principal de cette étape.",
+
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Description de l’étape",
+        "descriptionHelp": "Texte expliquant cette étape.",
+
+        "variantLabel": "Disposition",
+        "variants": {
+          "vertical": "Verticale"
+        }
+      },
+
+      "cardsCellEditor": {
+        "itemsLabel": "Cartes",
+        "itemsHelp": "Ajoutez, réorganisez et modifiez les cartes de cette section.",
+        "alignLabel": "Alignement",
+        "aligns": {
+          "left": "Gauche",
+          "center": "Centre"
+        },
+        "columnsLabel": "Colonnes",
+        "columns": {
+          "2": "2",
+          "3": "3",
+          "4": "4"
+        },
+        "titleLabel": "Titre",
+        "titlePlaceholder": "Ex. Votre site est difficile à modifier",
+        "titleHelp": "Titre court et scannable de la carte.",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Ex. Chaque changement nécessite l’intervention d’un prestataire.",
+        "descriptionHelp": "Texte court pour expliquer l’idée principale.",
+        "iconLabel": "Icône",
+        "iconPlaceholder": "Ex. ⚡",
+        "iconHelp": "Icône ou emoji optionnel pour renforcer la lecture visuelle."
+      },
+
+      "separatorCellEditor": {
+        "alignLabel": "Alignement",
+        "alignHelp": "Définit le positionnement horizontal du séparateur.",
+        "sizeLabel": "Taille",
+        "sizeHelp": "Définit la largeur visuelle du séparateur.",
+        "aligns": {
+          "left": "Gauche",
+          "center": "Centre",
+          "right": "Droite",
+          "full": "Pleine largeur"
+        },
+        "sizes": {
+          "sm": "Petit",
+          "md": "Moyen",
+          "lg": "Grand"
+        }
+      },
+      "headingCellEditor": {
+        "levelLabel": "Niveau du titre",
+        "levelHelp": "Choisissez le niveau hiérarchique du titre.",
+
+        "titleLabel": "Titre",
+        "titlePlaceholder": "Saisir le titre",
+        "titleHelp": "Texte principal du titre.",
+
+        "subtitleLabel": "Sous-titre",
+        "subtitlePlaceholder": "Saisir un sous-titre",
+        "subtitleHelp": "Texte complémentaire affiché sous le titre.",
+
+        "alignLabel": "Alignement",
+        "alignHelp": "Définit l’alignement du contenu.",
+
+        "variantLabel": "Variante",
+        "variantHelp": "Choisissez le style d’affichage du titre.",
+
+        "highlightsLabel": "Mots mis en avant",
+        "highlightsPlaceholder": "mot 1, mot 2, mot 3",
+        "highlightsHelp": "Liste des segments à mettre en avant, séparés par des virgules.",
+        "separatorLabel": "Séparateur",
+        "separatorHelp": "Affiche un séparateur entre le titre et le sous-titre.",
+        "idAnchorLabel": "Identifiant d'Ancre",
+        "idAnchorPlaceholder": "mon-ancre",
+        "idAnchorHelp": "Définit l'identifiant d'ancre permettant d'être accessible depuis un lien.",
+        "revealLabel": "Effet d'apparition",
+        "revealHelp": "Active/désactive l'effet d'apparition du titre.",
+        "aligns": {
+          "left": "Gauche",
+          "center": "Centre"
+        },
+
+        "variants": {
+          "default": "Par défaut",
+          "hero": "Hero"
+        }
+      },
+      "buttonsCellEditor": {
+        "itemsLabel": "Boutons",
+        "itemsHelp": "Ajoute et organise les CTA affichés dans cette cellule.",
+        "addButton": "Ajouter un bouton",
+        "removeButton": "Supprimer le bouton",
+        "moveUp": "Monter",
+        "moveDown": "Descendre",
+        "buttonTitle": "Bouton {number}",
+        "labelLabel": "Libellé",
+        "labelPlaceholder": "Ex: Voir mes projets",
+        "labelHelp": "Texte affiché sur le bouton.",
+        "hrefLabel": "Lien",
+        "hrefPlaceholder": "/contact ou https://...",
+        "hrefHelp": "Destination du bouton.",
+        "variantLabel": "Variante",
+        "variantHelp": "Style visuel du bouton.",
+        "alignLabel": "Alignement",
+        "aligns": {
+          "left": "Gauche",
+          "center": "Centre",
+          "right": "Droite"
+        },
+        "gapLabel": "Espacement",
+        "gaps": {
+          "sm": "Petit",
+          "md": "Moyen",
+          "lg": "Grand"
+        },
+        "variants": {
+          "default": "Défaut",
+          "secondary": "Secondaire",
+          "outline": "Contour",
+          "ghost": "Ghost"
+        }
+      },
+      "spacerCellEditor": {
+        "sizeLabel": "Taille de l'espacement",
+        "sizeHelp": "Définit la hauteur verticale ajoutée dans la colonne.",
+        "sizes": {
+          "sm": "Petit",
+          "md": "Moyen",
+          "lg": "Grand",
+          "xl": "Très grand"
+        }
       },
       "richText": {
         "undo": "Annuler",
@@ -1205,7 +1628,10 @@
         "altPlaceholder": "Décrivez brièvement votre image (accessibilité)",
         "altHelp": "Décrivez brièvement votre image. Laisser vide si elle est purement décorative.",
         "hrefLabel": "Lien",
-        "hrefHelp": "Lien vers une page interne."
+        "hrefHelp": "Lien vers une page interne.",
+        "captionLabel": "Légende",
+        "captionPlaceholder": "Légende de l’image",
+        "captionHelp": "Légende de l’image (accessibilité)."
       }
     },
 

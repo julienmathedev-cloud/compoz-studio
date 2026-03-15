@@ -5,7 +5,7 @@
  * @description
  * Mappers de formulaires studio pour les blocks :
  * - DTO domaine -> FormValues RHF
- * - normalisations UI (coercitions + cohérence cells / columns)
+ * - normalisations UI légères
  * - FormValues -> Intent DTO (API studio)
  * - factories UI (`createEmpty*`)
  *
@@ -16,36 +16,114 @@
  */
 
 import type { BlockDTO } from "@compoz/core/domain/pages/dto";
-import type { LayoutSectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
+
+import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 import type {
-  CreateLayoutSectionBlockIntentDTO,
+  CreateSectionBlockIntentDTO,
   ReorderBlocksIntentDTO,
-  UpdateLayoutSectionBlockIntentDTO,
+  UpdateSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
 
 import {
   createEmptyCell,
-  ensureCellsLength,
   toCellFormValuesFromDTO,
 } from "@compoz/studio/features/pages/mappers/cells-form";
+
+/* -------------------------------------------------------------------------- */
+/* Types locaux UI                                                            */
+/* -------------------------------------------------------------------------- */
+
+type SectionBlockDTO = Extract<BlockDTO, { type: "section" }>;
+type SectionRowDTO = SectionBlockDTO["rows"][number];
+type SectionColumnDTO = SectionRowDTO["columns"][number];
+type SectionRowFormValues = SectionBlockFormValues["rows"][number];
+type SectionColumnFormValues = SectionRowFormValues["columns"][number];
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
+function createUiId(): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `ui_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+function toMutable<T>(arr: ReadonlyArray<T> | undefined): T[] {
+  return Array.isArray(arr) ? [...arr] : [];
+}
+
+function normalizeName(
+  name: SectionBlockFormValues["name"] | undefined,
+): SectionBlockFormValues["name"] {
+  return String(name ?? "").trim();
+}
+
 function normalizeContainerMode(
-  containerMode: LayoutSectionBlockFormValues["containerMode"] | undefined,
-): LayoutSectionBlockFormValues["containerMode"] {
+  containerMode: SectionBlockFormValues["containerMode"] | undefined,
+): SectionBlockFormValues["containerMode"] {
   return containerMode === "fullBleed" ? "fullBleed" : "contained";
 }
 
-function normalizeTitle(
-  title: LayoutSectionBlockFormValues["title"] | undefined,
-): LayoutSectionBlockFormValues["title"] {
-  const text = typeof title?.text === "string" ? title.text.trim() : "";
-  const display = title?.display === "sr-only" ? "sr-only" : "visible";
+function normalizeColumnId(id: string | undefined): string {
+  const normalized = String(id ?? "").trim();
+  return normalized.length > 0 ? normalized : createUiId();
+}
 
-  return { text, display };
+function normalizeRowId(id: string | undefined): string {
+  const normalized = String(id ?? "").trim();
+  return normalized.length > 0 ? normalized : createUiId();
+}
+
+function normalizeColumn(
+  column: SectionColumnFormValues | undefined,
+): SectionColumnFormValues {
+  return {
+    id: normalizeColumnId(column?.id),
+    cells: toMutable(column?.cells),
+  };
+}
+
+function normalizeColumns(
+  columns: ReadonlyArray<SectionColumnFormValues> | undefined,
+  columnsCount: 1 | 2 | 3,
+): SectionColumnFormValues[] {
+  const safeColumns = toMutable(columns).map(normalizeColumn);
+
+  if (safeColumns.length === columnsCount) {
+    return safeColumns;
+  }
+
+  const next = [...safeColumns];
+
+  while (next.length < columnsCount) {
+    next.push(createEmptyColumn());
+  }
+
+  return next.slice(0, columnsCount);
+}
+
+function normalizeRow(
+  row: SectionRowFormValues | undefined,
+): SectionRowFormValues {
+  const columnsCount =
+    row?.columnsCount === 2 || row?.columnsCount === 3 ? row.columnsCount : 1;
+
+  return {
+    id: normalizeRowId(row?.id),
+    columnsCount,
+    columns: normalizeColumns(row?.columns, columnsCount),
+  };
+}
+
+function normalizeRows(
+  rows: ReadonlyArray<SectionRowFormValues> | undefined,
+): SectionRowFormValues[] {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return [createEmptyRow()];
+  }
+
+  return toMutable(rows).map(normalizeRow);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -53,35 +131,43 @@ function normalizeTitle(
 /* -------------------------------------------------------------------------- */
 
 /**
- * Convertit un `BlockDTO` en `LayoutSectionBlockFormValues`.
+ * Convertit un `BlockDTO` en `SectionBlockFormValues`.
  *
  * @remarks
- * - Si le block n’est pas `layoutSection`, retourne une forme minimale safe.
- * - `cells` est toujours un array côté UI.
- * - V0.5 : `title` est toujours présent ; `titleEnabled` pilote l’affichage.
+ * - Si le block n’est pas `section`, retourne une forme minimale safe.
+ * - Les rows/columns/cells sont toujours présents côté UI.
  */
-export function toLayoutSectionBlockFormValuesFromDTO(
+export function toSectionBlockFormValuesFromDTO(
   block: BlockDTO,
-): LayoutSectionBlockFormValues {
-  if (block.type !== "layoutSection") {
-    return createEmptyLayoutSectionBlock();
+): SectionBlockFormValues {
+  if (block.type !== "section") {
+    return createEmptySectionBlock();
   }
 
-  const columns = block.layout?.columns ?? 1;
-
-  const cells = Array.isArray(block.cells)
-    ? block.cells.map(toCellFormValuesFromDTO)
+  const rows: SectionRowFormValues[] = Array.isArray(block.rows)
+    ? toMutable<SectionRowDTO>(block.rows).map((row) => ({
+        id: normalizeRowId(row.id),
+        columnsCount:
+          row.columnsCount === 2 || row.columnsCount === 3
+            ? row.columnsCount
+            : 1,
+        columns: Array.isArray(row.columns)
+          ? toMutable<SectionColumnDTO>(row.columns).map((column) => ({
+              id: normalizeColumnId(column.id),
+              cells: Array.isArray(column.cells)
+                ? toMutable(column.cells).map(toCellFormValuesFromDTO)
+                : [],
+            }))
+          : [],
+      }))
     : [];
 
   return {
-    columns,
+    name: normalizeName(block.name),
     containerMode: normalizeContainerMode(block.containerMode),
-    titleEnabled:
-      typeof block.titleEnabled === "boolean" ? block.titleEnabled : false,
-    title: normalizeTitle(block.title),
     lcpPriority:
       typeof block.lcpPriority === "boolean" ? block.lcpPriority : false,
-    cells: ensureCellsLength(cells, columns),
+    rows: normalizeRows(rows),
   };
 }
 
@@ -89,16 +175,14 @@ export function toLayoutSectionBlockFormValuesFromDTO(
 /* Normalisations UI (forms)                                                  */
 /* -------------------------------------------------------------------------- */
 
-export function normalizeLayoutSectionBlockFormValues(
-  values: LayoutSectionBlockFormValues,
-): LayoutSectionBlockFormValues {
+export function normalizeSectionBlockFormValues(
+  values: SectionBlockFormValues,
+): SectionBlockFormValues {
   return {
-    ...values,
+    name: normalizeName(values.name),
     containerMode: normalizeContainerMode(values.containerMode),
-    titleEnabled: Boolean(values.titleEnabled),
-    title: normalizeTitle(values.title),
     lcpPriority: Boolean(values.lcpPriority),
-    cells: ensureCellsLength(values.cells ?? [], values.columns),
+    rows: normalizeRows(values.rows),
   };
 }
 
@@ -107,42 +191,32 @@ export function normalizeLayoutSectionBlockFormValues(
 /* -------------------------------------------------------------------------- */
 
 /**
- * Construit le DTO d’intent de création d’un `LayoutSectionBlock`
+ * Construit le DTO d’intent de création d’un `SectionBlock`
  * à partir des FormValues UI (RHF).
  */
-export function toCreateLayoutSectionBlockIntentDTOFromFormValues(args: {
-  values: LayoutSectionBlockFormValues;
+export function toCreateSectionBlockIntentDTOFromFormValues(args: {
+  values: SectionBlockFormValues;
   insertAt?: number;
-}): CreateLayoutSectionBlockIntentDTO {
+}): CreateSectionBlockIntentDTO {
   const { values, insertAt } = args;
-  const normalized = normalizeLayoutSectionBlockFormValues(values);
+  const normalized = normalizeSectionBlockFormValues(values);
 
   return {
-    columns: normalized.columns,
+    ...(normalized.name ? { name: normalized.name } : {}),
     containerMode: normalized.containerMode,
-    insertAt,
-    titleEnabled: normalized.titleEnabled,
-    title: normalized.title,
     lcpPriority: normalized.lcpPriority,
-    cells: normalized.cells,
+    rows: normalized.rows,
+    insertAt,
   };
 }
 
-function toLayoutSectionBlockPatch(
-  patch: Partial<LayoutSectionBlockFormValues>,
-): UpdateLayoutSectionBlockIntentDTO["patch"] {
-  const output: UpdateLayoutSectionBlockIntentDTO["patch"] = {};
+function toSectionBlockPatch(
+  patch: Partial<SectionBlockFormValues>,
+): UpdateSectionBlockIntentDTO["patch"] {
+  const output: UpdateSectionBlockIntentDTO["patch"] = {};
 
-  if ("columns" in patch && patch.columns !== undefined) {
-    output.columns = patch.columns;
-  }
-
-  if ("titleEnabled" in patch && patch.titleEnabled !== undefined) {
-    output.titleEnabled = Boolean(patch.titleEnabled);
-  }
-
-  if ("title" in patch && patch.title !== undefined) {
-    output.title = normalizeTitle(patch.title);
+  if ("name" in patch && patch.name !== undefined) {
+    output.name = normalizeName(patch.name);
   }
 
   if ("containerMode" in patch && patch.containerMode !== undefined) {
@@ -153,25 +227,25 @@ function toLayoutSectionBlockPatch(
     output.lcpPriority = Boolean(patch.lcpPriority);
   }
 
-  if ("cells" in patch && patch.cells !== undefined) {
-    output.cells = patch.cells;
+  if ("rows" in patch && patch.rows !== undefined) {
+    output.rows = normalizeRows(patch.rows);
   }
 
   return output;
 }
 
 /**
- * Construit l’intent de mise à jour d’un `LayoutSectionBlock`.
+ * Construit l’intent de mise à jour d’un `SectionBlock`.
  */
-export function toUpdateLayoutSectionBlockIntentDTOFromFormValues(args: {
+export function toUpdateSectionBlockIntentDTOFromFormValues(args: {
   blockId: string;
-  patch: Partial<LayoutSectionBlockFormValues>;
-}): UpdateLayoutSectionBlockIntentDTO {
+  patch: Partial<SectionBlockFormValues>;
+}): UpdateSectionBlockIntentDTO {
   const { blockId, patch } = args;
 
   return {
-    blockId,
-    patch: toLayoutSectionBlockPatch(patch),
+    blockId: String(blockId ?? "").trim(),
+    patch: toSectionBlockPatch(patch),
   };
 }
 
@@ -182,7 +256,9 @@ export function normalizeReorderBlocksIntentDTO(
   values: ReorderBlocksIntentDTO,
 ): ReorderBlocksIntentDTO {
   return {
-    orderedBlockIds: values.orderedBlockIds,
+    orderedBlockIds: values.orderedBlockIds.map((id) =>
+      String(id ?? "").trim(),
+    ),
   };
 }
 
@@ -190,25 +266,41 @@ export function normalizeReorderBlocksIntentDTO(
 /* Factories UI                                                               */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Crée un bloc `LayoutSection` vide côté UI form.
- */
-export function createEmptyLayoutSectionBlock(args?: {
-  columns?: 1 | 2 | 3;
-  titleEnabled?: boolean;
-  title?: LayoutSectionBlockFormValues["title"];
-  lcpPriority?: boolean;
-  containerMode?: LayoutSectionBlockFormValues["containerMode"];
-}): LayoutSectionBlockFormValues {
-  const columns = args?.columns ?? 1;
-  const cells = ensureCellsLength([createEmptyCell("richText")], columns);
+export function createEmptyColumn(): SectionColumnFormValues {
+  return {
+    id: createUiId(),
+    cells: [createEmptyCell("richText")],
+  };
+}
+
+export function createEmptyRow(args?: {
+  columnsCount?: 1 | 2 | 3;
+}): SectionRowFormValues {
+  const columnsCount =
+    args?.columnsCount === 2 || args?.columnsCount === 3
+      ? args.columnsCount
+      : 1;
 
   return {
-    columns,
+    id: createUiId(),
+    columnsCount,
+    columns: normalizeColumns([], columnsCount),
+  };
+}
+
+/**
+ * Crée un block `Section` vide côté UI form.
+ */
+export function createEmptySectionBlock(args?: {
+  name?: string;
+  lcpPriority?: boolean;
+  containerMode?: SectionBlockFormValues["containerMode"];
+  rows?: ReadonlyArray<SectionRowFormValues>;
+}): SectionBlockFormValues {
+  return {
+    name: normalizeName(args?.name),
     containerMode: normalizeContainerMode(args?.containerMode),
-    titleEnabled: args?.titleEnabled ?? false,
-    title: normalizeTitle(args?.title),
     lcpPriority: args?.lcpPriority ?? false,
-    cells,
+    rows: normalizeRows(args?.rows),
   };
 }

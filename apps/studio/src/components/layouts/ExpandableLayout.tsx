@@ -10,7 +10,8 @@
  * @remarks
  * - UI-only : ne connaît ni RHF ni le métier.
  * - Réduit la charge visuelle en regroupant des options avancées.
- * - `forceOpen` force l’ouverture de manière one-way (ne referme pas automatiquement).
+ * - `forceClosed` force une fermeture temporaire one-way (ex: pendant un drag parent).
+ * - `open` permet un mode contrôlé optionnel.
  * - `onOpenChange` permet une instrumentation optionnelle (debug/analytics).
  */
 
@@ -31,7 +32,7 @@ import { cn } from "@compoz/ui/lib/utils";
  * Props du composant `ExpandableLayout`.
  */
 export type ExpandableLayoutProps = Readonly<{
-  /** Entete toujours visible (compact). */
+  /** Entête toujours visible (compact). */
   summary?: ReactNode;
 
   /** Zone repliable (options). */
@@ -49,6 +50,15 @@ export type ExpandableLayoutProps = Readonly<{
   /** État contrôlé (optionnel). Si fourni, le composant devient contrôlé. */
   open?: boolean;
 
+  /**
+   * Force une fermeture temporaire sans perdre l’état local.
+   *
+   * @remarks
+   * Typiquement utile pendant un drag parent pour éviter que des zones
+   * droppables enfants restent actives/visibles.
+   */
+  forceClosed?: boolean;
+
   /** Callback optionnel (instrumentation / debug / analytics). */
   onOpenChange?: (open: boolean) => void;
 
@@ -56,7 +66,6 @@ export type ExpandableLayoutProps = Readonly<{
   id?: string;
 
   className?: string;
-
   triggerClassName?: string;
 }>;
 
@@ -70,6 +79,7 @@ export function ExpandableLayout({
   defaultOpen = false,
   disabled = false,
   open,
+  forceClosed = false,
   onOpenChange,
   id,
   className,
@@ -80,18 +90,28 @@ export function ExpandableLayout({
 
   // État local (non contrôlé) : `defaultOpen` initialise.
   const [openState, setOpenState] = useState(Boolean(defaultOpen));
+
   const isControlled = typeof open === "boolean";
-  const effectiveOpen = isControlled ? open : openState;
+
+  /**
+   * Priorité d’ouverture :
+   * 1. forceClosed => toujours fermé
+   * 2. mode contrôlé => `open`
+   * 3. mode non contrôlé => état local
+   */
+  const effectiveOpen = forceClosed
+    ? false
+    : isControlled
+      ? Boolean(open)
+      : openState;
 
   const t = useTranslations();
   const resolvedLabel = label ?? t("studio.expandable.advancedOptions");
 
   return (
     <div className={cn(className, "flex flex-col")}>
-      {/* Zone compacte toujours visible */}
-      {summary && <div>{summary}</div>}
+      {summary ? <div>{summary}</div> : null}
 
-      {/* Zone repliable : encapsulation Accordion shadcn */}
       <Accordion
         type="single"
         collapsible
@@ -99,20 +119,24 @@ export function ExpandableLayout({
         onValueChange={(v) => {
           const nextOpen = v === itemValue;
 
-          // Si contrôlé: on notifie seulement
+          // Si fermeture forcée, on ignore les interactions utilisateur.
+          if (forceClosed) {
+            onOpenChange?.(false);
+            return;
+          }
+
           if (isControlled) {
             onOpenChange?.(nextOpen);
             return;
           }
 
-          // Sinon: état interne
           setOpenState(nextOpen);
           onOpenChange?.(nextOpen);
         }}
       >
         <AccordionItem value={itemValue}>
           <AccordionTrigger
-            disabled={disabled}
+            disabled={disabled || forceClosed}
             className={cn(triggerClassName, "leading-none")}
           >
             {resolvedLabel}

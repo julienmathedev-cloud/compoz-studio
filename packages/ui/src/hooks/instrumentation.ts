@@ -61,11 +61,22 @@ async function logSpan<T>(
     writeLog("debug", `${name}.ok`, { ...meta, ms: Date.now() - start });
     return result;
   } catch (e) {
+    // Abort/cancel normal → pas une vraie erreur
+    if (isAbortError(e)) {
+      writeLog("debug", `${name}.abort`, {
+        ...meta,
+        ms: Date.now() - start,
+      });
+      throw e;
+    }
+
+    // vraie erreur
     writeLog("error", `${name}.error`, {
       ...meta,
       ms: Date.now() - start,
       error: errorMessage(e),
     });
+
     throw e;
   }
 }
@@ -128,14 +139,6 @@ export async function withLoadLogs<T>(
       try {
         return await runMaybeSignalFn(fn, opts);
       } catch (e: unknown) {
-        if (isAbortError(e, opts.signal)) {
-          writeLog("debug", "load.abort", {
-            scope,
-            op: "load",
-            state,
-            ...(meta ?? {}),
-          });
-        }
         throw e;
       }
     },
@@ -165,14 +168,6 @@ export async function withSaveLogs<T>(
       try {
         return await runMaybeSignalFn(fn, opts);
       } catch (e: unknown) {
-        if (isAbortError(e, opts.signal)) {
-          writeLog("debug", "save.abort", {
-            scope,
-            op: "save",
-            state,
-            ...(meta ?? {}),
-          });
-        }
         throw e;
       }
     },

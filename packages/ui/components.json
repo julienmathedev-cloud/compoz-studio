@@ -5,16 +5,16 @@
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "./styles/base.css",
+    "css": "src/styles/base.css",
     "baseColor": "zinc",
     "cssVariables": true,
     "prefix": ""
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "./src/components",
-    "ui": "./src/components/ui",
-    "lib": "./src/lib"
+    "components": "src/components",
+    "ui": "src/components/ui",
+    "lib": "src/lib"
   },
   "menuColor": "default",
   "menuAccent": "subtle",

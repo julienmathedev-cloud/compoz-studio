@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @file apps/studio/src/components/molecules/fields/TextField.tsx
+ * @file apps/studio/src/components/molecules/fields/InputField.tsx
  * @layer studio/molecules
  *
  * @description

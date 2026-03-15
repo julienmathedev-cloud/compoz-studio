@@ -20,11 +20,11 @@ import type {
 } from "@compoz/core/domain/pages/use-cases/create-page.types";
 import { applySitemapDefaults } from "@compoz/core/domain/pages/use-cases/helpers/apply-page-defaults";
 import {
+  assertNameRequired,
   assertPageSlug,
   assertPaginationEnabled,
   assertParentId,
   assertPriority,
-  assertTitleRequired,
 } from "@compoz/core/domain/pages/validators/pages";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 
@@ -37,7 +37,7 @@ export function createPage({
     // Contrat : la création se fait toujours dans l’état par défaut (draft).
     const state = DEFAULT_CONTENT_STATE;
 
-    const title = assertTitleRequired(input.title);
+    const name = assertNameRequired(input.name);
 
     const inputSlug =
       typeof input.slug === "string" ? input.slug.trim() : undefined;
@@ -54,7 +54,7 @@ export function createPage({
           });
 
     const base = assertPageSlug(
-      inputSlug && inputSlug.length > 0 ? inputSlug : title,
+      inputSlug && inputSlug.length > 0 ? inputSlug : name,
     );
 
     // Règle "home" : si "home" existe déjà, on bloque (plutôt que suffixer).
@@ -87,7 +87,7 @@ export function createPage({
       id: idGenerator.nextId(),
       parentId,
       slug,
-      title,
+      name,
       sitemap,
       paginationEnabled,
       nowIso,
@@ -140,7 +140,7 @@ type BuildPageEntityProps = {
   id: string;
   parentId: string | null;
   slug: string;
-  title: string;
+  name: string;
   sitemap: Page["sitemap"];
   paginationEnabled: boolean;
   nowIso: NonNullable<CreatePageDeps["nowIso"]>;
@@ -150,7 +150,7 @@ function buildPageEntity({
   id,
   parentId,
   slug,
-  title,
+  name,
   sitemap,
   paginationEnabled,
   nowIso,
@@ -161,7 +161,7 @@ function buildPageEntity({
     id,
     parentId,
     slug,
-    title,
+    name,
     blocks: [],
     meta: { createdAt: at, updatedAt: at },
     paginationEnabled,

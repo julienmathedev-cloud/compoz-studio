@@ -5,13 +5,12 @@
  * @layer hooks/studio/pages/blocks
  *
  * @description
- * Hook studio React Query pour mettre à jour un block `LayoutSection` draft via l’API.
+ * Hook studio React Query pour mettre à jour un block `Section` draft via l’API.
  *
  * @remarks
  * - Orchestration UI-only (mutation, logs, notifications).
  * - Applique un patch minimal à partir d’un baseline + next (UI).
  * - Gère explicitement le cas “no changes”.
- * - Aucune logique métier ni validation domaine.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -19,32 +18,41 @@ import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log } from "@compoz/infra/lib/log";
+
 import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+
 import { syncBlocksFromPageCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
-import { toUpdateLayoutSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
+
+import { toUpdateSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
+
 import {
   invalidateBlockStatusViews,
   invalidateSiteStatus,
 } from "@compoz/studio/features/site/status/invalidate";
+
 import { notify } from "@compoz/studio/lib/ui/notify";
 import {
   notifyNoChanges,
   notifyUpdated,
 } from "@compoz/studio/lib/ui/notify-presets";
+
 import { UiError } from "@compoz/studio/lib/ui/uiError";
+
 import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
 import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
-import type { LayoutSectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
-import type { UpdateLayoutSectionBlockIntentDTO } from "@compoz/validation/pages/blocks/block-intents";
+
+import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
+import type { UpdateSectionBlockIntentDTO } from "@compoz/validation/pages/blocks/block-intents";
 
 type UseUpdateBlockResult = Readonly<{
   update: (
     pageId: string,
     blockId: string,
-    baseline: LayoutSectionBlockFormValues,
-    next: LayoutSectionBlockFormValues,
+    baseline: SectionBlockFormValues,
+    next: SectionBlockFormValues,
     hasOtherLcpPriority?: boolean,
   ) => Promise<void>;
   updatingBlockId: string | null;
@@ -54,7 +62,7 @@ type UseUpdateBlockResult = Readonly<{
 type UpdateBlockArgs = Readonly<{
   pageId: string;
   blockId: string;
-  payload: UpdateLayoutSectionBlockIntentDTO;
+  payload: UpdateSectionBlockIntentDTO;
   fields: ReadonlyArray<string>;
 }>;
 
@@ -106,6 +114,7 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
       if (lcpWasActivated) {
         notify.info(t("studio.pageBlockEditHeader.lcpPriority.replacedInfo"));
       }
+
       setLcpWasActivated(false);
 
       const pageIdKey = String(pageId ?? "").trim();
@@ -151,8 +160,8 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
     async (
       pageId: string,
       blockId: string,
-      baseline: LayoutSectionBlockFormValues,
-      next: LayoutSectionBlockFormValues,
+      baseline: SectionBlockFormValues,
+      next: SectionBlockFormValues,
       hasOtherLcpPriority?: boolean,
     ) => {
       if (mutation.isPending) return;
@@ -164,7 +173,7 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
       if (updatingBlockId === blockIdKey) return;
 
       const uiPatch =
-        buildShallowDiff<LayoutSectionBlockFormValues>(baseline, next) ?? null;
+        buildShallowDiff<SectionBlockFormValues>(baseline, next) ?? null;
 
       if (!uiPatch) {
         notifyNoChanges(
@@ -179,8 +188,8 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
 
       setLcpWasActivated(Boolean(lcpWasJustActivated && hasOtherLcpPriority));
 
-      const payload: UpdateLayoutSectionBlockIntentDTO =
-        toUpdateLayoutSectionBlockIntentDTOFromFormValues({
+      const payload: UpdateSectionBlockIntentDTO =
+        toUpdateSectionBlockIntentDTOFromFormValues({
           blockId: blockIdKey,
           patch: uiPatch,
         });

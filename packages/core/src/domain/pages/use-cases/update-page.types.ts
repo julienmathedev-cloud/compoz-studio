@@ -18,7 +18,7 @@ import type { SiteRepository } from "@compoz/core/domain/site/ports/site-reposit
  */
 export type UpdatePageInput = {
   pageId: string;
-  title?: string;
+  name?: string;
   slug?: string;
   parentId?: string | null;
   sitemap?: Partial<PageSitemap>;
@@ -43,5 +43,5 @@ export interface UpdatePageDeps {
 
 export type ChangedKey = keyof Pick<
   Page,
-  "title" | "slug" | "parentId" | "sitemap" | "paginationEnabled"
+  "name" | "slug" | "parentId" | "sitemap" | "paginationEnabled"
 >;

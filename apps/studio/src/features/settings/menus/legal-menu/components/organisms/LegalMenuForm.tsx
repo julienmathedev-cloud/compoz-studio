@@ -15,9 +15,14 @@
  */
 
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import type { FieldErrors } from "react-hook-form";
 import { useFieldArray, useFormState, useWatch } from "react-hook-form";
 
@@ -183,6 +188,23 @@ export function LegalMenuForm({
     });
   }
 
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      if (!over || active.id === over.id) return;
+      if (isBusy) return;
+
+      const oldIndex = fields.findIndex((field) => field.id === active.id);
+      const newIndex = fields.findIndex((field) => field.id === over.id);
+
+      if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return;
+
+      move(oldIndex, newIndex);
+    },
+    [fields, isBusy, move],
+  );
+
   return (
     <form
       aria-busy={isBusy || undefined}
@@ -197,34 +219,39 @@ export function LegalMenuForm({
           {fields.length === 0 ? (
             <EmptyState text={t("studio.legalMenuForm.empty")} />
           ) : (
-            fields.map((field, index) => {
-              const rowIdPrefix = `${formIdPrefix}-item-${index}`;
+            <DndContext
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={fields.map((field) => field.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {fields.map((field, index) => {
+                  const rowIdPrefix = `${formIdPrefix}-item-${index}`;
 
-              return (
-                <Fragment key={field.id}>
-                  <div>
-                    <LegalMenuItemRow
-                      index={index}
-                      control={control}
-                      trigger={trigger}
-                      disabled={isBusy}
-                      showError={showError}
-                      rowIdPrefix={rowIdPrefix}
-                      internalPageOptions={internalPageOptions}
-                      isFirst={index === 0}
-                      isLast={index === fields.length - 1}
-                      onRemove={() => remove(index)}
-                      onMoveUp={() => move(index, Math.max(0, index - 1))}
-                      onMoveDown={() =>
-                        move(index, Math.min(fields.length - 1, index + 1))
-                      }
-                    />
-                  </div>
+                  return (
+                    <Fragment key={field.id}>
+                      <div>
+                        <LegalMenuItemRow
+                          sortableId={field.id}
+                          index={index}
+                          control={control}
+                          trigger={trigger}
+                          disabled={isBusy}
+                          showError={showError}
+                          rowIdPrefix={rowIdPrefix}
+                          internalPageOptions={internalPageOptions}
+                          onRemove={() => remove(index)}
+                        />
+                      </div>
 
-                  {index < fields.length - 1 ? <Separator /> : null}
-                </Fragment>
-              );
-            })
+                      {index < fields.length - 1 ? <Separator /> : null}
+                    </Fragment>
+                  );
+                })}
+              </SortableContext>
+            </DndContext>
           )}
         </CardContent>
 

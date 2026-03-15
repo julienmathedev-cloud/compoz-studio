@@ -1,0 +1,42 @@
+/**
+ * @file apps/studio/src/app/api/_adapters/pages/blocks/cells/form.ts
+ * @layer studio/app/api/adapters
+ * @description
+ * Adapteurs API Studio pour les cellules de type `FormCell`.
+ */
+
+import { trimOrKeep } from "@compoz/studio/lib/strings";
+
+import type {
+  FormCell,
+  FormField,
+} from "@compoz/core/domain/pages/entities/cell";
+import type {
+  FormCellIntentDTO,
+  FormFieldIntentDTO,
+} from "@compoz/validation/pages/blocks/cells/cell-intents";
+
+function adaptFormField(dto: FormFieldIntentDTO): FormField {
+  return {
+    id: trimOrKeep(dto.id),
+    name: trimOrKeep(dto.name),
+    label: trimOrKeep(dto.label),
+    type: dto.type,
+    placeholder: dto.placeholder ? trimOrKeep(dto.placeholder) : undefined,
+    required: dto.required,
+  };
+}
+
+export function adaptFormCell(dto: FormCellIntentDTO): FormCell {
+  return {
+    id: trimOrKeep(dto.id),
+    kind: "form",
+    to: trimOrKeep(dto.to),
+    submitLabel: trimOrKeep(dto.submitLabel),
+    successMessage: dto.successMessage
+      ? trimOrKeep(dto.successMessage)
+      : undefined,
+    errorMessage: dto.errorMessage ? trimOrKeep(dto.errorMessage) : undefined,
+    fields: dto.fields.map(adaptFormField),
+  };
+}

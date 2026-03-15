@@ -65,16 +65,24 @@ export function useDeleteBlock(onSuccess?: () => void): UseDeleteBlockResult {
     ] as const,
 
     mutationFn: async ({ pageId, blockId }: DeleteBlockArgs) => {
+      const pageIdKey = String(pageId ?? "").trim();
+      const blockIdKey = String(blockId ?? "").trim();
+
       const response: DeleteBlockResponse = await withSaveLogs(
         "useDeleteBlock",
         DEFAULT_CONTENT_STATE,
-        () => pagesStudioApi.deleteBlock(pageId, blockId),
-        { entity: entityLabel, pageId, blockId, tenantId },
+        () => pagesStudioApi.deleteBlock(pageIdKey, blockIdKey),
+        {
+          entity: entityLabel,
+          pageId: pageIdKey,
+          blockId: blockIdKey,
+          tenantId,
+        },
       );
 
       return {
-        pageId,
-        blockId,
+        pageId: pageIdKey,
+        blockId: blockIdKey,
         page: response.page,
       } as const;
     },

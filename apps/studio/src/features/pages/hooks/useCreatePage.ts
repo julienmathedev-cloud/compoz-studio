@@ -70,7 +70,7 @@ export function useCreatePage(onSuccess?: () => void): UseCreatePageResult {
         t("notifications.created.title", { entity: entityLabel }),
         t("notifications.created.description", {
           entity: entityLabel,
-          name: payload.title,
+          name: payload.name,
         }),
       );
 

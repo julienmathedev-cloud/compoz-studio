@@ -15,6 +15,7 @@ import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import {
   isAbsoluteHttpProtocol,
+  isHashAnchor,
   isRelativeUrl,
 } from "@compoz/core/domain/urls/guards";
 import { isMailtoHref } from "@compoz/core/domain/urls/mailto";
@@ -37,16 +38,6 @@ export type UrlRuntime = Readonly<{
 /** Runtime par défaut (dev-friendly). À overrider via `setUrlRuntime`. */
 let _runtime: UrlRuntime = { isProd: false };
 
-/**
- * Configure le runtime du module (à appeler au boot côté infra/app).
- *
- * @example
- * setUrlRuntime({ isProd: runtime.isProd })
- */
-export function setUrlRuntime(next: UrlRuntime): void {
-  _runtime = next;
-}
-
 /** Lecture interne du runtime (encapsulé pour centraliser la règle). */
 function isProd(): boolean {
   return _runtime.isProd;
@@ -60,11 +51,16 @@ type Brand<K extends string> = { readonly __brand: K };
 
 type RelativeUrl = string & Brand<"RelativeUrl">;
 type AbsoluteHttpUrl = string & Brand<"AbsoluteHttpUrl">;
+type HashAnchorUrl = string & Brand<"HashAnchorUrl">;
 type MailtoUrl = string & Brand<"MailtoUrl">;
 
-export type AssetUrl = RelativeUrl | AbsoluteHttpUrl;
+export type AssetUrl = RelativeUrl | AbsoluteHttpUrl | HashAnchorUrl;
 export type AssetUrlOrNull = AssetUrl | null;
-export type BrandedHref = RelativeUrl | AbsoluteHttpUrl | MailtoUrl;
+export type BrandedHref =
+  | RelativeUrl
+  | AbsoluteHttpUrl
+  | HashAnchorUrl
+  | MailtoUrl;
 
 /* -------------------------------------------------------------------------- */
 /* URL relatives                                                               */
@@ -82,6 +78,24 @@ export function rel(s: string): RelativeUrl {
   }
 
   return s as RelativeUrl;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Hash anchors                                                                */
+/* -------------------------------------------------------------------------- */
+
+export function anchor(s: string): HashAnchorUrl {
+  if (!isProd()) {
+    if (!isHashAnchor(s)) {
+      throw new DomainError({
+        code: EC.HREF_RELATIVE_INVALID,
+        message: EC.HREF_RELATIVE_INVALID,
+        details: { value: String(s) },
+      });
+    }
+  }
+
+  return s as HashAnchorUrl;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -136,15 +150,19 @@ function mail(s: string): MailtoUrl {
 /* -------------------------------------------------------------------------- */
 
 export function asBrandedHref(s: string): BrandedHref {
-  const i = s.indexOf(":");
+  const trimmed = s.trim();
+
+  if (isHashAnchor(trimmed)) return anchor(trimmed);
+
+  const i = trimmed.indexOf(":");
 
   if (i > 0) {
-    const proto = s.slice(0, i + 1).toLowerCase();
-    if (proto === "http:" || proto === "https:") return abs(s);
-    if (proto === "mailto:") return mail(s);
+    const proto = trimmed.slice(0, i + 1).toLowerCase();
+    if (proto === "http:" || proto === "https:") return abs(trimmed);
+    if (proto === "mailto:") return mail(trimmed);
   }
 
-  return rel(s);
+  return rel(trimmed);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -159,6 +177,10 @@ function brandHrefSafe(
 
   const s = input.trim();
   if (!s) return prev;
+
+  if (isHashAnchor(s)) {
+    return anchor(s);
+  }
 
   const i = s.indexOf(":");
 
@@ -211,10 +233,6 @@ export function isAbsoluteAssetUrl(u: AssetUrl): u is AbsoluteHttpUrl {
   return u.startsWith("http://") || u.startsWith("https://");
 }
 
-export function isRelativeAssetUrl(u: AssetUrl): u is RelativeUrl {
-  return u.startsWith("/");
-}
-
 function isHttpAbsoluteUrl(s: string): boolean {
   const v = s.trim().toLowerCase();
   return v.startsWith("http://") || v.startsWith("https://");
@@ -223,11 +241,16 @@ function isHttpAbsoluteUrl(s: string): boolean {
 /**
  * Convertit une string **déjà validée** en `AssetUrl`.
  * - http(s) => abs()
+ * - #anchor => anchor()
  * - sinon   => rel()
  */
 export function asAssetUrl(input: string): AssetUrl {
   const s = input.trim();
-  return isHttpAbsoluteUrl(s) ? abs(s) : rel(s);
+
+  if (isHttpAbsoluteUrl(s)) return abs(s);
+  if (isHashAnchor(s)) return anchor(s);
+
+  return rel(s);
 }
 
 /**
@@ -241,5 +264,5 @@ export function asAssetUrlOrNull(
   if (input == null) return null;
   const s = input.trim();
   if (s === "") return null;
-  return isHttpAbsoluteUrl(s) ? abs(s) : rel(s);
+  return asAssetUrl(s);
 }

@@ -12,6 +12,7 @@ import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repo
 // Dépendances du use-case.
 export interface ReorderBlocksDeps {
   pages: PagesRepository;
+  nowIso?: () => string;
 }
 
 export type ReorderBlocksInput = {

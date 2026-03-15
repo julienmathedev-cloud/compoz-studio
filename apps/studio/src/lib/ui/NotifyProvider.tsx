@@ -26,7 +26,7 @@ export function NotifyProvider({ children }: NotifyProviderProps) {
   const resolve = useCallback(
     (key: string) => {
       // next-intl accepte des clés dynamiques en string
-      return t(key as never);
+      return t(key);
     },
     [t],
   );

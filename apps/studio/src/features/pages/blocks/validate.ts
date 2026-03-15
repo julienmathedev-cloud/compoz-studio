@@ -31,7 +31,7 @@ export function computeLayoutSectionBlockWarnings(
 ): BlockWarningKey[] {
   const warnings = new Set<BlockWarningKey>();
 
-  const title = values.title;
+  const name = values.name;
 
   if (title) {
     const text = String(title.text ?? "").trim();

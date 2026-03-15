@@ -1,0 +1,110 @@
+"use client";
+
+/**
+ * @file apps/studio/src/features/builder/editor/cells/timeline/TimelineCellEditor.tsx
+ * @layer ui/studio/pages/blocks/editor/cells
+ *
+ * @description
+ * Éditeur RHF-aware d’une TimelineCell avec ajout, suppression,
+ * réordonnancement et édition des étapes.
+ *
+ * @remarks
+ * - Connecté directement à RHF via `useFieldArray`.
+ * - Réutilise `TimelineListEditor`.
+ * - Les items sont gérés par RHF via `useFieldArray` pour garantir
+ *   une gestion propre des valeurs, erreurs et reorder.
+ * - Les erreurs near-field sont gérées au niveau des items.
+ */
+
+import { useTranslations } from "next-intl";
+import type { Control } from "react-hook-form";
+import { useFieldArray } from "react-hook-form";
+
+import { TimelineListEditor } from "@compoz/studio/features/builder/editor/cells/timeline/TimelineListEditor";
+import { createEmptyTimelineItem } from "@compoz/studio/features/pages/mappers/cells-form";
+import { cn } from "@compoz/ui/lib/utils";
+import { STACK_MD } from "@compoz/ui/styles/studio/layout";
+import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
+import type { TimelineItemFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
+
+type SelectedCellLocation = Readonly<{
+  rowIndex: number;
+  columnIndex: number;
+  cellIndex: number;
+  rowId: string;
+  columnId: string;
+  cellId: string;
+}>;
+
+type TimelineFieldBasePath = `rows.${number}.columns.${number}.cells.${number}`;
+type TimelineItemsPath = `${TimelineFieldBasePath}.items`;
+
+type TimelineItemField = TimelineItemFormValues & { fieldId: string };
+
+export type TimelineCellEditorProps = Readonly<{
+  control: Control<SectionBlockFormValues>;
+  idPrefix: string;
+  selectedCellLocation: SelectedCellLocation;
+  disabled?: boolean;
+  showError?: boolean;
+}>;
+
+export function TimelineCellEditor({
+  control,
+  idPrefix,
+  selectedCellLocation,
+  disabled,
+  showError = false,
+}: TimelineCellEditorProps) {
+  const t = useTranslations();
+
+  const basePath =
+    `rows.${selectedCellLocation.rowIndex}.columns.${selectedCellLocation.columnIndex}.cells.${selectedCellLocation.cellIndex}` as TimelineFieldBasePath;
+
+  const itemsPath = `${basePath}.items` as TimelineItemsPath;
+
+  /**
+   * `useFieldArray` est la source de vérité RHF pour la liste des étapes.
+   *
+   * `keyName: "fieldId"` évite d’entrer en collision avec notre `id` métier
+   * déjà présent dans `TimelineItemFormValues`.
+   */
+  const { fields, append, remove, move } = useFieldArray<
+    SectionBlockFormValues,
+    TimelineItemsPath,
+    "fieldId"
+  >({
+    control,
+    name: itemsPath,
+    keyName: "fieldId",
+  });
+
+  return (
+    <div className={cn(STACK_MD)}>
+      <div>
+        <p className="text-sm font-medium">
+          {t("studio.cellEditorTabs.timelineCellEditor.itemsLabel")}
+        </p>
+        <p className="text-muted-foreground text-sm">
+          {t("studio.cellEditorTabs.timelineCellEditor.itemsHelp")}
+        </p>
+      </div>
+
+      <TimelineListEditor
+        control={control}
+        idPrefix={idPrefix}
+        basePath={basePath}
+        fields={fields as TimelineItemField[]}
+        append={append}
+        remove={remove}
+        move={move}
+        disabled={disabled}
+        createEmptyItem={createEmptyTimelineItem}
+        minItems={1}
+        showError={showError}
+      />
+    </div>
+  );
+}
+
+TimelineCellEditor.displayName = "TimelineCellEditor";

@@ -174,7 +174,7 @@ export function OverviewPublishCard({
       const key = `errors.${code}`;
 
       try {
-        const message = t(key as never);
+        const message = t(key);
         return path ? `${message} (${path})` : message;
       } catch {
         return path ? `${code} (${path})` : code;

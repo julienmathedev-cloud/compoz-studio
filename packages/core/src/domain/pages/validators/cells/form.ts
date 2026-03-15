@@ -1,0 +1,151 @@
+/**
+ * @file packages/core/src/domain/pages/validators/cells/form.ts
+ * @layer core/domain/pages/validators
+ * @description
+ * Validateur métier de FormCell.
+ */
+
+import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
+import { DomainError } from "@compoz/core/domain/errors/domain-error";
+import type { Cell, FormField } from "@compoz/core/domain/pages/entities/cell";
+import { isMailtoHref } from "@compoz/core/domain/urls/mailto";
+
+type Path = ReadonlyArray<string | number>;
+
+const FORM_FIELD_TYPES = ["text", "email", "textarea"] as const;
+
+export function assertFormCell(
+  cell: Extract<Cell, { kind: "form" }>,
+  path: Path,
+) {
+  if (typeof cell.to !== "string" || !cell.to.trim()) {
+    throw new DomainError({
+      code: EC.CELL_INVALID,
+      message: EC.CELL_INVALID,
+      details: { path: [...path, "to"] },
+    });
+  }
+
+  if (!isMailtoHref(cell.to)) {
+    throw new DomainError({
+      code: EC.CELL_INVALID,
+      message: EC.CELL_INVALID,
+      details: {
+        path: [...path, "to"],
+        meta: { value: cell.to, rule: "expects_mailto" },
+      },
+    });
+  }
+
+  if (typeof cell.submitLabel !== "string" || !cell.submitLabel.trim()) {
+    throw new DomainError({
+      code: EC.CELL_INVALID,
+      message: EC.CELL_INVALID,
+      details: { path: [...path, "submitLabel"] },
+    });
+  }
+
+  if (
+    typeof cell.successMessage !== "undefined" &&
+    typeof cell.successMessage !== "string"
+  ) {
+    throw new DomainError({
+      code: EC.CELL_INVALID,
+      message: EC.CELL_INVALID,
+      details: { path: [...path, "successMessage"] },
+    });
+  }
+
+  if (
+    typeof cell.errorMessage !== "undefined" &&
+    typeof cell.errorMessage !== "string"
+  ) {
+    throw new DomainError({
+      code: EC.CELL_INVALID,
+      message: EC.CELL_INVALID,
+      details: { path: [...path, "errorMessage"] },
+    });
+  }
+
+  if (!Array.isArray(cell.fields) || cell.fields.length < 1) {
+    throw new DomainError({
+      code: EC.CELL_INVALID,
+      message: EC.CELL_INVALID,
+      details: { path: [...path, "fields"] },
+    });
+  }
+
+  for (let i = 0; i < cell.fields.length; i++) {
+    assertFormField(cell.fields[i], [...path, "fields", i]);
+  }
+}
+
+function assertFormField(field: FormField, path: Path) {
+  if (!field || typeof field !== "object") {
+    throw new DomainError({
+      code: EC.CELL_INVALID,
+      message: EC.CELL_INVALID,
+      details: { path },
+    });
+  }
+
+  if (typeof field.id !== "string" || !field.id.trim()) {
+    throw new DomainError({
+      code: EC.CELL_INVALID,
+      message: EC.CELL_INVALID,
+      details: { path: [...path, "id"] },
+    });
+  }
+
+  if (typeof field.name !== "string" || !field.name.trim()) {
+    throw new DomainError({
+      code: EC.CELL_INVALID,
+      message: EC.CELL_INVALID,
+      details: { path: [...path, "name"] },
+    });
+  }
+
+  if (typeof field.label !== "string" || !field.label.trim()) {
+    throw new DomainError({
+      code: EC.CELL_INVALID,
+      message: EC.CELL_INVALID,
+      details: { path: [...path, "label"] },
+    });
+  }
+
+  if (
+    typeof field.type !== "string" ||
+    !FORM_FIELD_TYPES.includes(field.type)
+  ) {
+    throw new DomainError({
+      code: EC.CELL_INVALID,
+      message: EC.CELL_INVALID,
+      details: {
+        path: [...path, "type"],
+        meta: { type: field.type },
+      },
+    });
+  }
+
+  if (
+    typeof field.placeholder !== "undefined" &&
+    typeof field.placeholder !== "string"
+  ) {
+    throw new DomainError({
+      code: EC.CELL_INVALID,
+      message: EC.CELL_INVALID,
+      details: { path: [...path, "placeholder"] },
+    });
+  }
+
+  if (
+    typeof field.required !== "undefined" &&
+    typeof field.required !== "boolean"
+  ) {
+    throw new DomainError({
+      code: EC.CELL_INVALID,
+      message: EC.CELL_INVALID,
+      details: { path: [...path, "required"] },
+    });
+  }
+}

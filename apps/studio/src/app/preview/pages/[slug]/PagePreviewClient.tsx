@@ -74,7 +74,7 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
       page: {
         hasBaseline: Boolean(page.baseline),
         hasOverride: Boolean(page.override),
-        title: (visiblePage?.title ?? "").trim(),
+        name: (visiblePage?.name ?? "").trim(),
         blocks: blocks.length,
         paginationEnabled: Boolean(visiblePage?.paginationEnabled),
       },
@@ -85,7 +85,7 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
       visibleIndex,
       page.baseline,
       page.override,
-      visiblePage?.title,
+      visiblePage?.name,
       visiblePage?.paginationEnabled,
       blocks.length,
       currentFromIndex,
@@ -106,11 +106,7 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
 
   return (
     <PreviewShell>
-      <SitePageRenderer
-        ui={resolveSiteUi()}
-        pageTitle={visiblePage.title}
-        blocks={blocks}
-      />
+      <SitePageRenderer ui={resolveSiteUi()} blocks={blocks} />
     </PreviewShell>
   );
 }

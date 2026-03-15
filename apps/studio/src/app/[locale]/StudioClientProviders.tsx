@@ -36,13 +36,21 @@ type StudioClientProvidersProps = Readonly<{
    * Important : reflète le cookie httpOnly "tenant actif" pour les admins.
    */
   tenantId: string;
+  hasSidebar?: boolean;
 }>;
 
 export function StudioClientProviders({
   children,
   tenantId,
+  hasSidebar = true,
 }: StudioClientProvidersProps) {
   const value = useMemo(() => ({ tenantId }), [tenantId]);
+
+  const content = hasSidebar ? (
+    <SidebarProvider>{children}</SidebarProvider>
+  ) : (
+    children
+  );
 
   return (
     <>
@@ -53,9 +61,7 @@ export function StudioClientProviders({
         <NotifyProvider>
           <StudioThemeProvider>
             <ConfirmDialogProvider>
-              <StudioDirtyGuardProvider>
-                <SidebarProvider>{children}</SidebarProvider>
-              </StudioDirtyGuardProvider>
+              <StudioDirtyGuardProvider>{content}</StudioDirtyGuardProvider>
             </ConfirmDialogProvider>
           </StudioThemeProvider>
         </NotifyProvider>

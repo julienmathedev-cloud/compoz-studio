@@ -2,14 +2,16 @@
  * @file packages/validation/src/pages/blocks/block.ts
  * @layer schemas
  * @description
- * Définit les schémas Zod décrivant la forme frontière des blocks/cells d’une page.
- * Ces schémas valident uniquement la structure (API / infra) ; les invariants métier
- * et règles de cohérence sont traités dans le domaine.
+ * Schémas Zod décrivant la structure frontière des blocks (sections) d’une page.
+ *
+ * Ces schémas valident uniquement la forme (API / infra).
+ * Les invariants métier sont vérifiés dans le domaine.
  */
+
+import { z } from "zod";
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { CellSchema } from "@compoz/validation/pages/blocks/cells/cell";
-import { z } from "zod";
 
 /* -------------------------------------------------------------------------- */
 /*                               Schémas atomiques                            */
@@ -20,52 +22,77 @@ export const BlockIdSchema = z
   .trim()
   .min(1, ERROR_CODES.BLOCK_ID_REQUIRED);
 
-export const LayoutSectionColumnsSchema = z.union(
+export const BlockRowIdSchema = z
+  .string()
+  .trim()
+  .min(1, ERROR_CODES.BLOCK_ID_REQUIRED);
+
+export const BlockColumnIdSchema = z
+  .string()
+  .trim()
+  .min(1, ERROR_CODES.BLOCK_ID_REQUIRED);
+
+export const BlockNameSchema = z
+  .string()
+  .trim()
+  .min(1, ERROR_CODES.BLOCK_NAME_REQUIRED);
+
+export const BlockRowColumnsCountSchema = z.union(
   [z.literal(1), z.literal(2), z.literal(3)] as const,
-  { message: ERROR_CODES.LAYOUT_SECTION_COLUMNS_INVALID },
+  { message: ERROR_CODES.BLOCK_SECTION_COLUMNS_INVALID },
 );
 
-export const LayoutSectionTitleSchema = z
-  .object({
-    text: z.string().trim(),
-    display: z.enum(["visible", "sr-only"] as const, {
-      message: ERROR_CODES.LAYOUT_SECTION_TITLE_DISPLAY_INVALID,
-    }),
-  })
-  .strict();
-
-export const LayoutSectionLayoutSchema = z
-  .object({
-    columns: LayoutSectionColumnsSchema,
-  })
-  .strict();
-
-export const LayoutSectionContainerModeSchema = z.enum(
+export const SectionBlockContainerModeSchema = z.enum(
   ["contained", "fullBleed"] as const,
-  { message: ERROR_CODES.LAYOUT_SECTION_CONTAINER_MODE_INVALID },
+  { message: ERROR_CODES.BLOCK_SECTION_CONTAINER_MODE_INVALID },
 );
 
 /* -------------------------------------------------------------------------- */
-/*                                   Blocks                                   */
+/*                                   Column                                   */
 /* -------------------------------------------------------------------------- */
 
-export const LayoutSectionBlockSchema = z
+export const BlockColumnSchema = z
   .object({
-    id: BlockIdSchema,
-    type: z.literal("layoutSection"),
-    layout: LayoutSectionLayoutSchema,
-    containerMode: LayoutSectionContainerModeSchema,
-    titleEnabled: z.boolean(),
-    title: LayoutSectionTitleSchema,
-    lcpPriority: z.boolean(),
+    id: BlockColumnIdSchema,
     cells: z.array(CellSchema),
   })
   .strict();
 
-// Prépare l’évolution : plusieurs blocks à terme.
-export const BlockSchema = z.discriminatedUnion("type", [
-  LayoutSectionBlockSchema,
-]);
+/* -------------------------------------------------------------------------- */
+/*                                    Row                                     */
+/* -------------------------------------------------------------------------- */
+
+export const BlockRowSchema = z
+  .object({
+    id: BlockRowIdSchema,
+    columnsCount: BlockRowColumnsCountSchema,
+    columns: z.array(BlockColumnSchema),
+  })
+  .strict();
+
+/* -------------------------------------------------------------------------- */
+/*                                   Block                                    */
+/* -------------------------------------------------------------------------- */
+
+export const SectionBlockSchema = z
+  .object({
+    id: BlockIdSchema,
+    type: z.literal("section"),
+    name: BlockNameSchema,
+    containerMode: SectionBlockContainerModeSchema,
+    lcpPriority: z.boolean(),
+    rows: z.array(BlockRowSchema),
+  })
+  .strict();
+
+/* -------------------------------------------------------------------------- */
+/*                                Union future                                */
+/* -------------------------------------------------------------------------- */
+
+export const BlockSchema = z.discriminatedUnion("type", [SectionBlockSchema]);
 
 export type BlockShape = z.infer<typeof BlockSchema>;
-export type LayoutSectionBlockShape = z.infer<typeof LayoutSectionBlockSchema>;
+export type SectionBlockShape = z.infer<typeof SectionBlockSchema>;
+export type BlockRowShape = z.infer<typeof BlockRowSchema>;
+export type BlockColumnShape = z.infer<typeof BlockColumnSchema>;
+export type BlockNameShape = z.infer<typeof BlockNameSchema>;

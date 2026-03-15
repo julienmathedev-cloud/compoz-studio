@@ -52,8 +52,8 @@ export interface Page {
   /** Slug unique de la page (clé métier). */
   slug: string;
 
-  /** Titre affiché (studio, listes, éventuellement SEO). */
-  title: string;
+  /** Nom affiché (studio, listes, éventuellement SEO). */
+  name: string;
 
   /** Blocs de contenu associés à la page (contenu structuré). */
   blocks: ReadonlyArray<Block>;
@@ -72,7 +72,7 @@ export interface Page {
 }
 
 /** Résumé minimal utilisé dans les listes (studio). */
-export type PageSummary = Pick<Page, "id" | "slug" | "title" | "parentId">;
+export type PageSummary = Pick<Page, "id" | "slug" | "name" | "parentId">;
 
 /**
  * Option de page interne sélectionnable (picker).

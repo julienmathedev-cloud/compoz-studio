@@ -78,7 +78,7 @@ export function PagesListSection({
 
   const handleDelete = useCallback(
     async (page: PageSummaryDTO) => {
-      await remove({ pageId: page.id, label: page.title });
+      await remove({ pageId: page.id, label: page.name });
     },
     [remove],
   );

@@ -5,16 +5,16 @@
  * @layer studio/features/_shared/ui
  *
  * @description
- * Champs image génériques (src + alt + link optionnel) avec preview et upload optionnel.
+ * Champs image génériques (src + alt + caption + link optionnel) avec preview et upload optionnel.
  */
 
-import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
 import { ImageSelector } from "@compoz/studio/components/molecules/fields/ImageSelector";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
-import { LinkFieldsItem } from "@compoz/studio/features/settings/menus/_shared/LinkFieldsItem";
+import { LinkFieldsItem } from "@compoz/studio/components/molecules/fields/LinkFieldsItem";
 import { MAX_IMAGE_UPLOAD_BYTES } from "@compoz/studio/lib/config/uploads";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
@@ -36,68 +36,46 @@ type FieldLike<T> = Readonly<{
 }>;
 
 type ImageFieldsProps = Readonly<{
-  /** Préfixe stable pour générer les IDs ARIA. */
   idPrefix: string;
-
-  /** Champs (RHF ou contrôlés). */
   srcField: FieldLike<string>;
   altField: FieldLike<string>;
-
-  /** Optionnel : href (gallery menu). */
+  captionField?: FieldLike<string>;
   hrefField?: FieldLike<string | null>;
-
-  /**
-   * Optionnel : newTab (tu as dit que ça ne dérange pas).
-   * Si présent => LinkFieldsItem affichera le switch.
-   */
   newTabField?: FieldLike<boolean>;
-
-  /** Options internes (picker) */
   internalPageOptions?: ReadonlyArray<InternalPageOptionDTO>;
-
-  /** Désactive toute interaction. */
   disabled?: boolean;
-
-  /** Indicateur invalidité + message d’erreur alt (optionnel). */
   invalidAlt?: boolean;
   altErrorMessage?: string;
-
-  /** Upload optionnel. */
   onUploadImage?: (file: File) => Promise<UploadedRasterImage>;
   onUploaded?: (meta: UploadedRasterImage) => void;
-  /** Config input file. */
   accept?: string;
   preferredTypes?: ReadonlyArray<string>;
   preferredTypeHint?: string;
-
-  /** Layout */
   layout?: "stack" | "split";
-
-  /** Slot optionnel */
   sideSlot?: ReactNode;
-
-  /** Libellés */
   labels: Readonly<{
     image: string;
     alt: string;
+    caption?: string;
     href?: string;
   }>;
-
-  /** Aide (optionnelle) */
   help: Readonly<{
     image: string;
     alt: string;
+    caption?: string;
     href?: string;
   }>;
-
   srcInvalid?: boolean;
   srcErrorMessage?: string;
+  hrefInvalid?: boolean;
+  hrefErrorMessage?: string;
 }>;
 
 export function ImageFields({
   idPrefix,
   srcField,
   altField,
+  captionField,
   hrefField,
   newTabField,
   internalPageOptions,
@@ -115,14 +93,18 @@ export function ImageFields({
   help,
   srcInvalid,
   srcErrorMessage,
+  hrefInvalid,
+  hrefErrorMessage,
 }: ImageFieldsProps) {
   const t = useTranslations();
 
   const idsImage = createFieldIds(idPrefix, "src", { hint: true });
   const idsAlt = createFieldIds(idPrefix, "alt");
+  const idsCaption = createFieldIds(idPrefix, "caption");
 
   const src = srcField.value ?? "";
   const altRaw = altField.value ?? "";
+  const captionRaw = captionField?.value ?? "";
 
   const isBusy = Boolean(disabled);
   const maxBytes = MAX_IMAGE_UPLOAD_BYTES;
@@ -137,7 +119,7 @@ export function ImageFields({
   return (
     <div
       role="group"
-      data-invalid={invalidAlt || srcInvalid || undefined}
+      data-invalid={invalidAlt || srcInvalid || hrefInvalid || undefined}
       className={cn(containerClass)}
     >
       <ImageSelector
@@ -150,7 +132,9 @@ export function ImageFields({
         help={help.image}
         accept={accept}
         onFileSelect={onUploadImage}
-        onUploaded={onUploaded}
+        onUploaded={(meta) => {
+          onUploaded?.(meta);
+        }}
         preferredTypes={preferredTypes}
         preferredTypeHint={preferredTypeHint}
         maxBytes={maxBytes}
@@ -159,8 +143,6 @@ export function ImageFields({
       />
 
       <div className={cn(STACK_MD)}>
-        {sideSlot ? <div className={cn(STACK_MD)}>{sideSlot}</div> : null}
-
         <InputField
           ids={idsAlt}
           label={labels.alt}
@@ -176,23 +158,47 @@ export function ImageFields({
           autoCorrect="on"
         />
 
-        {/* ✅ Link editor (menu-like) */}
+        {captionField ? (
+          <InputField
+            ids={idsCaption}
+            label={
+              labels.caption ?? t("studio.cellEditorTabs.image.captionLabel")
+            }
+            value={captionRaw}
+            onChange={(v) => captionField.onChange(String(v ?? ""))}
+            onBlur={() => captionField.onBlur?.()}
+            placeholder={t("studio.cellEditorTabs.image.captionPlaceholder")}
+            help={help.caption ?? t("studio.cellEditorTabs.image.captionHelp")}
+            disabled={isBusy}
+            autoCapitalize="sentences"
+            autoCorrect="on"
+          />
+        ) : null}
+
+        {sideSlot ? <div className={cn(STACK_MD)}>{sideSlot}</div> : null}
+
         {canShowLink ? (
           <LinkFieldsItem
             idPrefix={`${idPrefix}-href`}
             href={String(hrefField!.value ?? "")}
             onHrefChange={(next) => {
-              // "" => null (reset)
               const trimmed = String(next ?? "").trim();
               hrefField!.onChange(trimmed.length ? trimmed : null);
             }}
             disabled={isBusy}
             internalPageOptions={internalPageOptions}
-            // newTab optionnel (tu veux le laisser possible)
             newTab={newTabField?.value}
             onNewTabChange={
               newTabField ? (v) => newTabField.onChange(Boolean(v)) : undefined
             }
+            invalid={hrefInvalid}
+            error={hrefErrorMessage}
+            onValidateNow={(markTouched) => {
+              if (markTouched) {
+                hrefField?.onBlur?.();
+                newTabField?.onBlur?.();
+              }
+            }}
           />
         ) : null}
       </div>

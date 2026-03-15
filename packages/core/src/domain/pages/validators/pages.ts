@@ -20,16 +20,16 @@ import { assertSlug } from "@compoz/core/domain/slug/validator";
 /**
  * Valide qu’un titre de page est non vide une fois trimé.
  *
- * @param title - Titre brut (éventuellement undefined).
+ * @param name - Titre brut (éventuellement undefined).
  * @param path  - Chemin logique de l’erreur (pour `details.path`).
  * @throws DomainError(EC.PAGE_TITLE_REQUIRED) si le titre est vide après trim.
  * @returns Le titre normalisé (trimé).
  */
-export function assertTitleRequired(
-  title: string | undefined,
+export function assertNameRequired(
+  name: string | undefined,
   path: (string | number)[] = ["title"],
 ): string {
-  const t = (title ?? "").trim();
+  const t = (name ?? "").trim();
   if (!t) {
     throw new DomainError({
       code: EC.PAGE_TITLE_REQUIRED,
@@ -191,7 +191,7 @@ export function assertParentId(
 }
 
 export function assertPage(p: Page): void {
-  assertTitleRequired(p.title, ["page", "title"]);
+  assertNameRequired(p.name, ["page", "title"]);
   assertPageSlug(p.slug, ["page", "slug"]);
 
   // ✅ parentId obligatoire : null ou string non vide

@@ -8,23 +8,21 @@
  * Ligne éditable d’un item de menu (label + lien) pour le studio.
  *
  * @remarks
- * - Molecule UI : compose `InputField`, `NewMenuLinkFieldsItem` et des actions (move/delete).
+ * - Molecule UI : compose `InputField`, `LinkFieldsItem` et des actions.
  * - RHF-aware : reçoit les `ControllerRenderProps` (fields) fournis par le parent.
  * - Le type est dérivé depuis `href` (ex. menu légal).
  * - Strictement UI-only : aucune logique métier.
  */
 
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type { ComponentPropsWithoutRef } from "react";
 import type { ControllerRenderProps, FieldValues } from "react-hook-form";
 
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
-import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
 import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
-import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
-import { StudioButtonGroup } from "@compoz/studio/components/molecules/controls/StudioButtonGroup";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
-import { NewMenuLinkFieldsItem } from "@compoz/studio/features/settings/menus/_shared/NewMenuLinkFieldsItem";
+import { LinkFieldsItem } from "@compoz/studio/components/molecules/fields/LinkFieldsItem";
+import { DragHandle } from "@compoz/studio/features/dnd/DragHandle";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
 import { MENU_ITEM_LAYOUT, ROW_END } from "@compoz/ui/styles/studio/layout";
@@ -33,6 +31,11 @@ type RowErrorMessages = Partial<Record<"label" | "href", string | undefined>>;
 type RowInvalidFlags = Partial<Record<"label" | "href", boolean>>;
 
 type RHFField = ControllerRenderProps<FieldValues>;
+
+type DragHandleProps = Omit<
+  ComponentPropsWithoutRef<"button">,
+  "type" | "children"
+>;
 
 /**
  * Props du composant `MenuFieldsItem`.
@@ -54,18 +57,12 @@ type MenuFieldsItemProps = Readonly<{
   error?: RowErrorMessages;
   /** Déclenche une validation immédiate du champ href côté parent. */
   onHrefValidateNow?: (markTouched?: boolean) => void;
+  /** Props du handle de drag injectées par `useSortable`. */
+  dragHandleProps?: DragHandleProps;
   /** Action : suppression de la ligne. */
   onRemove: () => void;
-  /** Action : déplacement vers le haut. */
-  onMoveUp: () => void;
-  /** Action : déplacement vers le bas. */
-  onMoveDown: () => void;
   /** Indique si l’item a des enfants (groupe). */
   hasChildren?: boolean;
-  /** Indique si l’item est en première position. */
-  isFirst?: boolean;
-  /** Indique si l’item est en dernière position. */
-  isLast?: boolean;
   /** Désactive l’édition et les actions. */
   disabled?: boolean;
 }>;
@@ -82,12 +79,9 @@ export function MenuFieldsItem({
   error,
   internalPageOptions,
   onHrefValidateNow,
+  dragHandleProps,
   onRemove,
-  onMoveUp,
-  onMoveDown,
   hasChildren = false,
-  isFirst = false,
-  isLast = false,
   disabled = false,
 }: MenuFieldsItemProps) {
   const labelIds = createFieldIds(idPrefix, "label");
@@ -95,72 +89,57 @@ export function MenuFieldsItem({
   const t = useTranslations();
 
   return (
-    <div className={cn(MENU_ITEM_LAYOUT)}>
-      <InputField
-        ids={labelIds}
-        inputRef={labelField.ref}
-        label={t("studio.menuFieldsItem.labelField.label")}
-        value={String(labelField.value ?? "")}
-        onChange={(v) => labelField.onChange(v)}
-        onBlur={labelField.onBlur}
-        placeholder={t("studio.menuFieldsItem.labelField.placeholder")}
-        disabled={disabled}
-        invalid={invalid?.label}
-        error={error?.label}
-        help
-      />
+    <div className={cn("grid grid-cols-[auto_1fr] gap-3")}>
+      <div className="pt-[2.2rem]">
+        <DragHandle
+          className={cn(disabled && "pointer-events-none opacity-50")}
+          disabled={disabled}
+          {...dragHandleProps}
+        />
+      </div>
 
-      <NewMenuLinkFieldsItem
-        idPrefix={linkIdPrefix}
-        hrefField={hrefField}
-        newTabField={newTabField}
-        disabled={disabled}
-        parentHasChildren={hasChildren}
-        invalid={invalid?.href}
-        error={error?.href}
-        internalPageOptions={internalPageOptions}
-        onValidateNow={onHrefValidateNow}
-      />
+      <div className={cn(MENU_ITEM_LAYOUT)}>
+        <InputField
+          ids={labelIds}
+          inputRef={labelField.ref}
+          label={t("studio.menuFieldsItem.labelField.label")}
+          value={String(labelField.value ?? "")}
+          onChange={(v) => labelField.onChange(v)}
+          onBlur={labelField.onBlur}
+          placeholder={t("studio.menuFieldsItem.labelField.placeholder")}
+          disabled={disabled}
+          invalid={invalid?.label}
+          error={error?.label}
+          help
+        />
 
-      <div className={cn(ROW_END)}>
-        <div className="mt-[1.6rem] flex h-9 items-center">
-          <StudioButtonGroup className="shrink-0">
-            <TooltipButton
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onMoveUp}
-              disabled={disabled || isFirst}
-              aria-label={t("common.moveUp")}
-              tooltip={
-                disabled || isFirst
-                  ? disabled
-                    ? t("common.actionUnavailable")
-                    : t("common.alreadyTop")
-                  : t("common.moveUp")
-              }
-            >
-              <StudioIcon icon={ChevronUp} />
-            </TooltipButton>
+        <LinkFieldsItem
+          idPrefix={linkIdPrefix}
+          href={String(hrefField.value ?? "")}
+          onHrefChange={(next) => {
+            hrefField.onChange(next);
+          }}
+          newTab={Boolean(newTabField.value)}
+          onNewTabChange={(next) => {
+            newTabField.onChange(next);
+          }}
+          disabled={disabled}
+          parentHasChildren={hasChildren}
+          invalid={invalid?.href}
+          error={error?.href}
+          internalPageOptions={internalPageOptions}
+          onValidateNow={(markTouched) => {
+            if (markTouched) {
+              hrefField.onBlur();
+              newTabField.onBlur?.();
+            }
 
-            <TooltipButton
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onMoveDown}
-              disabled={disabled || isLast}
-              aria-label={t("common.moveDown")}
-              tooltip={
-                disabled || isLast
-                  ? disabled
-                    ? t("common.actionUnavailable")
-                    : t("common.alreadyBottom")
-                  : t("common.moveDown")
-              }
-            >
-              <StudioIcon icon={ChevronDown} />
-            </TooltipButton>
+            onHrefValidateNow?.(markTouched);
+          }}
+        />
 
+        <div className={cn(ROW_END)}>
+          <div className="mt-[1.6rem] flex h-9 items-center">
             <DeleteButton
               disabled={disabled}
               size="icon"
@@ -172,7 +151,7 @@ export function MenuFieldsItem({
                 ),
               }}
             />
-          </StudioButtonGroup>
+          </div>
         </div>
       </div>
     </div>

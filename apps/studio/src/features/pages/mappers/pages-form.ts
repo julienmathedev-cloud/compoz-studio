@@ -55,7 +55,7 @@ export function normalizePageFormValues(
   values: PageFormValues,
 ): PageFormValues {
   return {
-    title: String(values.title ?? "").trim(),
+    name: String(values.name ?? "").trim(),
     parentId: values.parentId ?? null,
     slug: String(values.slug ?? "").trim(),
     sitemap: {
@@ -104,7 +104,7 @@ export function toCreatePageIntentDTOFromFormValues(
   const slug = toSlugIntentInput(normalizedValues.slug);
 
   const output: CreatePageIntentDTO = {
-    title: normalizedValues.title,
+    name: normalizedValues.name,
     parentId: normalizedValues.parentId,
     paginationEnabled: normalizedValues.paginationEnabled,
     ...(slug ? { slug } : {}),
@@ -126,8 +126,8 @@ export function toUpdatePageIntentDTOFromFormValues(
 ): UpdatePageIntentDTO {
   const output: UpdatePageIntentDTO = {};
 
-  if ("title" in patch && patch.title !== undefined) {
-    output.title = String(patch.title ?? "").trim();
+  if ("title" in patch && patch.name !== undefined) {
+    output.name = String(patch.name ?? "").trim();
   }
 
   if ("slug" in patch && patch.slug !== undefined) {

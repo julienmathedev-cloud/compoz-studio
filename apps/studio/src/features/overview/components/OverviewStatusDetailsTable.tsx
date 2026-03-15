@@ -68,8 +68,8 @@ export function OverviewStatusDetailsTable() {
     if (pages.length <= 1) return pages;
 
     return [...pages].sort((a, b) => {
-      const compareTitle = collator.compare(a.title ?? "", b.title ?? "");
-      if (compareTitle !== 0) return compareTitle;
+      const compareName = collator.compare(a.name ?? "", b.name ?? "");
+      if (compareName !== 0) return compareName;
       return a.id.localeCompare(b.id);
     });
   }, [details.data?.pages, collator]);
@@ -193,7 +193,7 @@ function PageRow({ page, isOpen, canToggle, onToggle }: PageRowProps) {
 
       <TableCell className="align-middle">
         <Text className="font-medium" truncate>
-          {page.title}
+          {page.name}
         </Text>
         <Text variant="muted" truncate>
           {formatPagePath(page.slug)}

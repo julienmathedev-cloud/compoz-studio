@@ -82,12 +82,7 @@ export default async function DraftPage({ params }: PageParams) {
   });
 
   return (
-    <SitePageRenderer
-      ui={resolveSiteUi()}
-      pageTitle={page.title}
-      blocks={blocks}
-      pager={pager}
-    />
+    <SitePageRenderer ui={resolveSiteUi()} blocks={blocks} pager={pager} />
   );
 }
 

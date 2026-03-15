@@ -61,12 +61,12 @@ export function computeSitePager(args: {
   return {
     enabled: true,
     prev:
-      prev?.slug && prev?.title
-        ? { href: hrefForSlug(prev.slug), label: prev.title }
+      prev?.slug && prev?.name
+        ? { href: hrefForSlug(prev.slug), label: prev.name }
         : null,
     next:
-      next?.slug && next?.title
-        ? { href: hrefForSlug(next.slug), label: next.title }
+      next?.slug && next?.name
+        ? { href: hrefForSlug(next.slug), label: next.name }
         : null,
   };
 }

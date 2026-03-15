@@ -70,7 +70,7 @@ export function adaptCreatePagePayload(
   });
 
   const out: CreatePageInput = {
-    title: trimOrKeep(dto.title),
+    name: trimOrKeep(dto.name),
     parentId: dto.parentId,
     paginationEnabled: dto.parentId === null ? false : dto.paginationEnabled,
   };
@@ -119,8 +119,8 @@ export function adaptUpdatePagePayload(
   const out: UpdatePagePatchInput = {};
 
   if ("title" in dto) {
-    if (typeof dto.title === "string") {
-      out.title = trimOrKeep(dto.title);
+    if (typeof dto.name === "string") {
+      out.name = trimOrKeep(dto.name);
     }
   }
 

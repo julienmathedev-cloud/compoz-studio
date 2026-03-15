@@ -93,7 +93,17 @@ export function useReorderPageChildren(
 
   return {
     reorderChildren: async (parentId, childIds) => {
-      await mutation.mutateAsync({ parentId, childIds });
+      const parentIdKey = String(parentId ?? "").trim();
+      const orderedChildIds = childIds ?? [];
+
+      if (!parentIdKey || orderedChildIds.length === 0) {
+        return;
+      }
+
+      await mutation.mutateAsync({
+        parentId: parentIdKey,
+        childIds: orderedChildIds,
+      });
     },
     isReordering: mutation.isPending,
   } as const;

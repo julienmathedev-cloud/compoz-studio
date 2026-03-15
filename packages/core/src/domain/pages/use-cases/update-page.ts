@@ -26,11 +26,11 @@ import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type { Page } from "@compoz/core/domain/pages/entities/page";
 import {
+  applyNamePatch,
   applyPaginationEnabledPatch,
   applyParentIdPatch,
   applySitemapPatch,
   applySlugPatch,
-  applyTitlePatch,
 } from "@compoz/core/domain/pages/use-cases/helpers/apply-page-patch";
 import type {
   ChangedKey,
@@ -66,7 +66,7 @@ export function updatePage({
     const next: Page = { ...existing };
     const changed: ChangedKey[] = [];
 
-    applyTitlePatch({ existing, next, changed, input });
+    applyNamePatch({ existing, next, changed, input });
 
     const slugChange = await applySlugPatch({
       existing,

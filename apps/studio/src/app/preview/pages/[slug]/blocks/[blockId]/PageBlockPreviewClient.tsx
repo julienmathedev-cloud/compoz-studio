@@ -42,8 +42,8 @@ export function PageBlockPreviewClient({
     <div className="h-dvh min-h-0 min-w-0 overflow-y-auto">
       <BlocksRenderer
         blocks={[visible]}
-        blocksUi={ui.blocks}
-        layoutUi={ui.layoutSection}
+        cellsUi={ui.cells}
+        blockUi={ui.blockSection}
       />
     </div>
   );

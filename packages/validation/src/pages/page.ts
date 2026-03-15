@@ -7,17 +7,15 @@
  * les invariants métier et règles globales sont traités dans le domaine.
  */
 
-import { PAGE_TITLE } from "@compoz/core/constants/limits/pages";
+import { z } from "zod";
+
+import { PAGE_NAME } from "@compoz/core/constants/limits/pages";
 import { SLUG } from "@compoz/core/constants/limits/slug";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { SLUG_FINAL_RE } from "@compoz/core/domain/slug/constants";
 import { isReservedSlug } from "@compoz/core/domain/slug/utils";
 import { IsoDateStringSchema } from "@compoz/validation/common/date";
-import {
-  BlockSchema,
-  LayoutSectionBlockSchema,
-} from "@compoz/validation/pages/blocks/block";
-import { z } from "zod";
+import { BlockSchema } from "@compoz/validation/pages/blocks/block";
 
 /* -------------------------------------------------------------------------- */
 /*                               Schémas atomiques                            */
@@ -32,15 +30,15 @@ export const SlugSchema = z
   .refine((s) => !isReservedSlug(s), ERROR_CODES.PAGE_SLUG_RESERVED);
 
 /**
- * Titre de page :
+ * Nom de page :
  * - trim automatique
  * - bornes min/max alignées sur `PAGE_TITLE`
  */
-export const PageTitleSchema = z
+export const PageNameSchema = z
   .string()
   .trim()
-  .min(PAGE_TITLE.MIN, ERROR_CODES.PAGE_TITLE_TOO_SHORT)
-  .max(PAGE_TITLE.MAX, ERROR_CODES.PAGE_TITLE_TOO_LONG);
+  .min(PAGE_NAME.MIN, ERROR_CODES.PAGE_TITLE_TOO_SHORT)
+  .max(PAGE_NAME.MAX, ERROR_CODES.PAGE_TITLE_TOO_LONG);
 
 /**
  * Id technique d'une Page.
@@ -103,7 +101,7 @@ export const PageSitemapSchema = z
 /*                                Schéma Page                                 */
 /* -------------------------------------------------------------------------- */
 
-/** Schéma complet Page (forme API/infra, sans `id`, sans `layout`). */
+/** Schéma complet Page (forme API/infra). */
 export const PageSchema = z
   .object({
     /** Id technique unique (uuid). */
@@ -111,11 +109,11 @@ export const PageSchema = z
 
     parentId: PageParentIdSchema,
 
-    /** Slug métier unique (kebab-case, non réservé, /). */
+    /** Slug métier unique (kebab-case, non réservé). */
     slug: SlugSchema,
 
     /** Titre affiché de la page (trim + min/max). */
-    title: PageTitleSchema,
+    name: PageNameSchema,
 
     /** Blocs de contenu de la page. */
     blocks: z.array(BlockSchema),
@@ -141,8 +139,8 @@ export const PageSchema = z
 
 export const PageRenderSchema = z
   .object({
-    title: PageTitleSchema,
-    blocks: z.array(LayoutSectionBlockSchema),
+    name: PageNameSchema,
+    blocks: z.array(BlockSchema),
     paginationEnabled: z.boolean(),
   })
   .strict();

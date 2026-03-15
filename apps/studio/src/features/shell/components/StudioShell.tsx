@@ -36,7 +36,7 @@ export function StudioShell({ children }: StudioShellProps) {
 
   if (!isMounted) {
     // Pas encore monté côté client → on évite de rendre Tabs/Dialog/etc.
-    return <SectionLoader label={label} />;
+    return <SectionLoader label={label} className="h-full" />;
   }
 
   // Une fois monté → on rend tout le Studio normalement (Dashboard, Tabs, etc.)

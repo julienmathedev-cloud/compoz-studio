@@ -8,6 +8,7 @@
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
+
 import type { Block } from "@compoz/core/domain/pages/entities/block";
 import { assertBlocks } from "@compoz/core/domain/pages/validators/blocks";
 
@@ -17,7 +18,10 @@ import type {
   DeleteBlockResult,
 } from "@compoz/core/domain/pages/use-cases/blocks/delete-block.types";
 
-export function deleteBlock({ pages }: DeleteBlockDeps) {
+export function deleteBlock({
+  pages,
+  nowIso = () => new Date().toISOString(),
+}: DeleteBlockDeps) {
   return async function run(
     input: DeleteBlockInput,
   ): Promise<DeleteBlockResult> {
@@ -31,6 +35,7 @@ export function deleteBlock({ pages }: DeleteBlockDeps) {
         details: { path: ["pageId"] },
       });
     }
+
     if (!blockId) {
       throw new DomainError({
         code: EC.INVALID_ARGUMENT,
@@ -42,6 +47,7 @@ export function deleteBlock({ pages }: DeleteBlockDeps) {
     await pages.ensureBase();
 
     const page = await pages.readById(DEFAULT_CONTENT_STATE, pageId);
+
     if (!page) {
       throw new DomainError({
         code: EC.PAGE_NOT_FOUND,
@@ -53,9 +59,10 @@ export function deleteBlock({ pages }: DeleteBlockDeps) {
       });
     }
 
-    const currentBlocks: Block[] = Array.isArray(page.blocks)
+    const currentBlocks: ReadonlyArray<Block> = Array.isArray(page.blocks)
       ? page.blocks
       : [];
+
     const index = currentBlocks.findIndex((b) => b.id === blockId);
 
     if (index < 0) {
@@ -77,11 +84,17 @@ export function deleteBlock({ pages }: DeleteBlockDeps) {
     const nextPage = {
       ...page,
       blocks: nextBlocks,
-      meta: { ...page.meta, updatedAt: new Date().toISOString() },
+      meta: {
+        ...page.meta,
+        updatedAt: nowIso(),
+      },
     };
 
     await pages.put(DEFAULT_CONTENT_STATE, nextPage);
 
-    return { page: nextPage, blocks: nextBlocks };
+    return {
+      page: nextPage,
+      blocks: nextBlocks,
+    };
   };
 }

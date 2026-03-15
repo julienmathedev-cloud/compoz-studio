@@ -16,9 +16,14 @@
  * - Option “derive external” : le mode interne/externe est dérivé depuis `href` côté UI.
  */
 
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FieldErrors } from "react-hook-form";
 import { useFieldArray, useFormState, useWatch } from "react-hook-form";
 
@@ -103,6 +108,13 @@ export function PrimaryMenuForm({
   const t = useTranslations();
   const [hasSubmittedOnce, setHasSubmittedOnce] = useState(false);
 
+  /**
+   * ✅ NEW
+   * Vrai pendant un drag des items parents.
+   * Sert à replier / désactiver temporairement les sous-listes enfants.
+   */
+  const [isSortingParents, setIsSortingParents] = useState(false);
+
   const { fields, append, remove, move } = useFieldArray({
     control,
     name: "items",
@@ -179,33 +191,36 @@ export function PrimaryMenuForm({
     onBlockingErrorsCountChange?.(blockingErrorsCount);
   }, [blockingErrorsCount, onBlockingErrorsCountChange]);
 
-  const setChildren = (
-    pIdx: number,
-    nextChildren: PrimaryMenuChildFormValues[],
-  ) => {
-    setValue(`items.${pIdx}.children`, nextChildren, {
-      shouldDirty: true,
-      shouldTouch: false,
-    });
-  };
+  const setChildren = useCallback(
+    (pIdx: number, nextChildren: PrimaryMenuChildFormValues[]) => {
+      setValue(`items.${pIdx}.children`, nextChildren, {
+        shouldDirty: true,
+        shouldTouch: false,
+      });
+    },
+    [setValue],
+  );
 
   /**
    * Parent avec enfants : force `newTab=false` (cohérence nav).
    */
-  const enforceParentRulesIfHasChildren = (pIdx: number) => {
-    const parent = getValues(`items.${pIdx}`) as
-      | PrimaryMenuItemFormValues
-      | undefined;
-    if (!parent) return;
+  const enforceParentRulesIfHasChildren = useCallback(
+    (pIdx: number) => {
+      const parent = getValues(`items.${pIdx}`) as
+        | PrimaryMenuItemFormValues
+        | undefined;
+      if (!parent) return;
 
-    const hasChildren = (parent.children?.length ?? 0) > 0;
-    if (!hasChildren) return;
+      const hasChildren = (parent.children?.length ?? 0) > 0;
+      if (!hasChildren) return;
 
-    setValue(`items.${pIdx}.newTab`, false, {
-      shouldDirty: true,
-      shouldTouch: true,
-    });
-  };
+      setValue(`items.${pIdx}.newTab`, false, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    },
+    [getValues, setValue],
+  );
 
   const handleSubmitErrors = (
     formErrors: FieldErrors<PrimaryMenuFormValues>,
@@ -274,6 +289,29 @@ export function PrimaryMenuForm({
     focusByFieldId(targetId);
   };
 
+  const handleParentDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      // ✅ Fin de drag parent => on restaure les enfants
+      setIsSortingParents(false);
+
+      if (!over || active.id === over.id) return;
+      if (isBusy) return;
+
+      const oldIndex = fields.findIndex((field) => field.id === active.id);
+      const newIndex = fields.findIndex((field) => field.id === over.id);
+
+      if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return;
+
+      move(oldIndex, newIndex);
+
+      // ✅ Recalage des erreurs RHF après reorder
+      await trigger("items");
+    },
+    [fields, isBusy, move, trigger],
+  );
+
   return (
     <form
       aria-busy={isBusy || undefined}
@@ -288,33 +326,47 @@ export function PrimaryMenuForm({
           {fields.length === 0 ? (
             <EmptyState text={t("studio.primaryMenuForm.empty.primary")} />
           ) : (
-            fields.map((field, pIdx) => (
-              <PrimaryMenuItemBlock
-                key={field.id}
-                pIdx={pIdx}
-                totalParents={fields.length}
-                control={control}
-                trigger={trigger}
-                setFocus={setFocus}
-                disabled={isBusy}
-                showError={showError}
-                formIdPrefix={formIdPrefix}
-                internalPageOptions={internalPageOptions}
-                parent={
-                  (values.items?.[pIdx] ?? {}) as PrimaryMenuItemFormValues
-                }
-                onRemoveParent={() => remove(pIdx)}
-                onMoveParentUp={() => move(pIdx, Math.max(0, pIdx - 1))}
-                onMoveParentDown={() =>
-                  move(pIdx, Math.min(fields.length - 1, pIdx + 1))
-                }
-                setChildren={setChildren}
-                createEmptyChild={createEmptyChild}
-                enforceParentRulesIfHasChildren={
-                  enforceParentRulesIfHasChildren
-                }
-              />
-            ))
+            <DndContext
+              collisionDetection={closestCenter}
+              onDragStart={() => {
+                setIsSortingParents(true);
+              }}
+              onDragCancel={() => {
+                setIsSortingParents(false);
+              }}
+              onDragEnd={handleParentDragEnd}
+            >
+              <SortableContext
+                items={fields.map((field) => field.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {fields.map((field, pIdx) => (
+                  <PrimaryMenuItemBlock
+                    key={field.id}
+                    sortableId={field.id}
+                    pIdx={pIdx}
+                    totalParents={fields.length}
+                    control={control}
+                    trigger={trigger}
+                    setFocus={setFocus}
+                    disabled={isBusy}
+                    showError={showError}
+                    formIdPrefix={formIdPrefix}
+                    internalPageOptions={internalPageOptions}
+                    parent={
+                      (values.items?.[pIdx] ?? {}) as PrimaryMenuItemFormValues
+                    }
+                    onRemoveParent={() => remove(pIdx)}
+                    setChildren={setChildren}
+                    createEmptyChild={createEmptyChild}
+                    enforceParentRulesIfHasChildren={
+                      enforceParentRulesIfHasChildren
+                    }
+                    isSortingParents={isSortingParents}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           )}
         </CardContent>
 

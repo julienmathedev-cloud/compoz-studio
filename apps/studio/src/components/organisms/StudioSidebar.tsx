@@ -256,7 +256,7 @@ export function StudioSidebar({
 
   return (
     <Sidebar collapsible="icon" className={cn("border-none", "z-50 w-max-100")}>
-      <SidebarHeader className="h-12 items-center justify-center">
+      <SidebarHeader className="flex h-12 items-center justify-between px-2">
         <SidebarGroupLabel className="truncate text-2xl text-foreground tracking-tighter font-bold">
           {title ?? "Compoz Studio"}
         </SidebarGroupLabel>

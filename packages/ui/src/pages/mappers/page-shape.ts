@@ -49,7 +49,7 @@ export function toPageShapeFromDTO(
 
   if (!page) {
     return {
-      title: "",
+      name: "",
       parentId: null,
       slug: fallbackSlug,
       sitemap: { ...DEFAULT_SITEMAP },
@@ -60,7 +60,7 @@ export function toPageShapeFromDTO(
   const slug = normalizePageSlug(page.slug ?? fallbackSlug);
 
   return {
-    title: page.title ?? "",
+    name: page.name ?? "",
     parentId: page.parentId ?? null,
     slug,
     sitemap: {

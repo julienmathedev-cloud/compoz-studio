@@ -17,7 +17,10 @@ import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
 import { MenuFieldsItem } from "@compoz/studio/features/settings/menus/_shared/MenuFieldsItem";
 import { Separator } from "@compoz/ui/components/ui/separator";
 import { resolveLinkFlags, slugifyPath } from "@compoz/ui/lib/links/helpers";
+import { cn } from "@compoz/ui/lib/utils";
 import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-form";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type {
   Control,
   ControllerRenderProps,
@@ -33,6 +36,7 @@ type RowInvalidFlags = Partial<Record<"label" | "href", boolean>>;
  * Props de la row enfant (sous-lien d’un parent).
  */
 type ChildRowProps = Readonly<{
+  sortableId: string;
   pIdx: number;
   cIdx: number;
   control: Control<PrimaryMenuFormValues>;
@@ -41,17 +45,14 @@ type ChildRowProps = Readonly<{
   showError: boolean;
   childIdPrefix: string;
   internalPageOptions?: ReadonlyArray<InternalPageOptionDTO>;
-  isFirst: boolean;
-  isLast: boolean;
   onRemove: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
 }>;
 
 /**
  * Row RHF (enfant) — obligatoire pour appeler `useController`.
  */
 export function PrimaryMenuChildRow({
+  sortableId,
   pIdx,
   cIdx,
   control,
@@ -60,12 +61,20 @@ export function PrimaryMenuChildRow({
   showError,
   childIdPrefix,
   internalPageOptions,
-  isFirst,
-  isLast,
   onRemove,
-  onMoveUp,
-  onMoveDown,
 }: ChildRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: sortableId,
+    disabled,
+  });
+
   const labelCtrl = useController({
     name: `items.${pIdx}.children.${cIdx}.label` as const,
     control,
@@ -137,17 +146,28 @@ export function PrimaryMenuChildRow({
     void trigger(`items.${pIdx}.children.${cIdx}.href` as const);
   };
 
+  const style = {
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+      : undefined,
+    transition,
+  };
+
   return (
-    <li>
+    <li
+      ref={setNodeRef}
+      style={style}
+      className={cn(isDragging && "opacity-60")}
+    >
       <MenuFieldsItem
         idPrefix={childIdPrefix}
         disabled={disabled}
-        isFirst={isFirst}
-        isLast={isLast}
+        dragHandleProps={{
+          ...attributes,
+          ...listeners,
+        }}
         internalPageOptions={internalPageOptions}
         onRemove={onRemove}
-        onMoveUp={onMoveUp}
-        onMoveDown={onMoveDown}
         hasChildren={false}
         labelField={
           {
@@ -174,7 +194,7 @@ export function PrimaryMenuChildRow({
         error={error}
         onHrefValidateNow={validateHrefNow}
       />
-      {!isLast ? <Separator aria-hidden="true" /> : null}
+      <Separator aria-hidden="true" />
     </li>
   );
 }

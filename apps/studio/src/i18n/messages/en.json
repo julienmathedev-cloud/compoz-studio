@@ -174,23 +174,28 @@
 
     "BLOCKS_INVALID": "The blocks are invalid.",
     "BLOCK_ID_REQUIRED": "A block ID is required.",
+    "BLOCK_NAME_REQUIRED": "A block name is required.",
     "BLOCK_ID_DUPLICATE": "This block ID is already used.",
     "BLOCKS_MULTIPLE_LCP_DETECTED": "Multiple LCP blocks detected for this page.",
     "BLOCK_TYPE_UNSUPPORTED": "This block type is not supported.",
     "BLOCK_NOT_FOUND": "This block is not found.",
     "BLOCK_ID_MISMATCH": "The block ID in the URL does not match the data sent.",
 
-    "LAYOUT_SECTION_COLUMNS_INVALID": "The number of columns is invalid (expected 1 to 3).",
-    "LAYOUT_SECTION_CELLS_INVALID": "The cells are invalid.",
-    "LAYOUT_SECTION_CELLS_COUNT_MISMATCH": "The number of cells does not match the number of columns.",
-    "LAYOUT_SECTION_TITLE_REQUIRED": "The section title is required.",
-    "LAYOUT_SECTION_TITLE_DISPLAY_INVALID": "The section title display is invalid.",
-    "LAYOUT_SECTION_CONTAINER_MODE_INVALID": "Invalid container mode for this layout section.",
+    "BLOCK_SECTION_COLUMNS_INVALID": "The number of columns is invalid (expected 1 to 3).",
+    "BLOCK_SECTION_CONTAINER_MODE_INVALID": "Invalid container mode for this layout section.",
+    "BLOCK_ROWS_INVALID": "Block rows structure is invalid.",
+    "BLOCK_ROW_ID_REQUIRED": "Row id is required.",
+    "BLOCK_ROW_ID_DUPLICATE": "Duplicate row id detected in block.",
+    "BLOCK_COLUMNS_INVALID": "Row columns structure is invalid.",
+    "BLOCK_COLUMN_ID_REQUIRED": "Column id is required.",
+    "BLOCK_COLUMN_ID_DUPLICATE": "Duplicate column id detected in row.",
+    "BLOCK_COLUMNS_COUNT_MISMATCH": "Row columns count does not match declared columnsCount.",
 
     "CELL_INVALID": "A cell is invalid.",
     "CELL_KIND_UNSUPPORTED": "This cell type is not supported.",
 
     "RICH_TEXT_CONTENT_INVALID": "The rich text content is invalid.",
+    "HEADING_CELL_UNIQUE_H1": "There must be only one heading H1 cell in a block.",
 
     "IMAGE_SRC_REQUIRED": "The image source is required.",
     "IMAGE_ALT_INVALID": "The image alt text is invalid.",
@@ -458,6 +463,97 @@
         "help": "Configure the roles and tenants allowed for the user.",
         "placeholderEdit": "Edit roles and tenants",
         "placeholderCreate": "Roles and tenants"
+      }
+    },
+
+    "builder": {
+      "preview": {
+        "section": {
+          "title": "Block preview",
+          "description": "Preview the block rendering while editing."
+        },
+        "frame": {
+          "title": "Block preview"
+        }
+      },
+      "sidebar": {
+        "title": "Builder",
+        "footer": "Block configuration",
+        "groups": {
+          "section": "Section",
+          "rows": "Rows"
+        },
+        "section": {
+          "cardTitle": "Section settings",
+          "name": {
+            "label": "Block name",
+            "help": "Internal name used to identify this block in the studio.",
+            "placeholder": "Example: Homepage hero"
+          },
+          "containerMode": {
+            "label": "Container mode",
+            "options": {
+              "contained": "Contained",
+              "fullBleed": "Full width"
+            }
+          },
+          "lcpPriority": {
+            "label": "LCP priority",
+            "help": "Enable loading priority for critical content."
+          }
+        },
+        "rows": {
+          "add": "Add row",
+          "rowLabel": "Row {index}",
+          "columnLabel": "Column {index}",
+          "columnsCountLabel": "Number of columns :",
+          "columnsCount": {
+            "option": "{count} column(s)"
+          },
+          "removeRow": "Remove row {index}",
+          "emptyColumn": "No content in this column.",
+          "addCell": "Add block",
+          "tooltips": {
+            "unavailableWhileBusy": "Action unavailable while busy."
+          }
+        }
+      },
+      "drawer": {
+        "title": "Edit content",
+        "description": "Edit the content of this element.",
+        "kind": {
+          "label": "Content type",
+          "help": "Select the type of content to display.",
+          "options": {
+            "richText": "Rich text",
+            "image": "Image",
+            "gallery": "Gallery",
+            "carousel": "Carousel"
+          }
+        }
+      }
+    },
+
+    "pages": {
+      "blocksList": {
+        "title": "Blocks list"
+      },
+      "blocksEdit": {
+        "title": "Edit a block"
+      },
+      "error": {
+        "ariaLabel": "Page error",
+        "title": "Error",
+        "description": "An error occurred while loading the page.",
+        "retry": "Retry",
+        "errorCode": "Error code :",
+        "backToAdmin": "Back to admin"
+      },
+      "notFound": {
+        "ariaLabel": "Page not found",
+        "title": "Page not found",
+        "description": "The requested page could not be found.",
+        "backToAdmin": "Back to admin"
       }
     },
 
@@ -1068,7 +1164,8 @@
         "delete": "Delete block",
         "add": "Add a block",
         "back": "Back to pages",
-        "fallbackSummary": "Type : {type}"
+        "fallbackSummary": "Type : {type}",
+        "row": "Row"
       }
     },
     "pageBlockEditSection": {

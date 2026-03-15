@@ -14,11 +14,7 @@
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 
-import type {
-  Block,
-  LayoutSectionBlock,
-} from "@compoz/core/domain/pages/entities/block";
-import type { Cell } from "@compoz/core/domain/pages/entities/cell";
+import type { Block } from "@compoz/core/domain/pages/entities/block";
 import type { Page, PageMeta } from "@compoz/core/domain/pages/entities/page";
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
 
@@ -74,22 +70,13 @@ function toDomainPage(p: PageShape): Page {
     updatedAt: p.meta.updatedAt,
   };
 
-  const blocks: ReadonlyArray<Block> = p.blocks.map((b) => {
-    const block: LayoutSectionBlock = {
-      ...b,
-      id: b.id,
-      containerMode: b.containerMode ?? "contained",
-      cells: b.cells as ReadonlyArray<Cell>,
-      title: b.title as LayoutSectionBlock["title"],
-    };
-    return block;
-  });
+  const blocks: ReadonlyArray<Block> = p.blocks as ReadonlyArray<Block>;
 
   return {
     id: p.id,
     parentId: p.parentId,
     slug: p.slug,
-    title: p.title,
+    name: p.name,
     blocks,
     meta,
     sitemap: p.sitemap,

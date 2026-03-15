@@ -5,19 +5,23 @@
  * @layer ui/studio/pages/blocks/molecules
  *
  * @description
- * Résumé UI des cells d’un block :
- * - titre seul
+ * Résumé UI d’un block :
+ * - nom seul
  * - badges seuls
- * - titre + badges
+ * - nom + badges
  *
  * @remarks
  * - Strictement UI-only.
- * - Supporte principalement `layoutSection`.
+ * - Supporte le block `section` (V0.9).
  * - Fournit un fallback lisible pour les autres types de blocks.
  */
 
 import type { BlockDTO, CellDTO } from "@compoz/core/domain/pages/dto";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
+import {
+  getCellKind,
+  getCellKindMeta,
+} from "@compoz/studio/lib/pages/blocks/cell-kind-meta";
 import { Badge } from "@compoz/ui/components/ui/badge";
 import {
   Tooltip,
@@ -26,12 +30,7 @@ import {
   TooltipTrigger,
 } from "@compoz/ui/components/ui/tooltip";
 import { cn } from "@compoz/ui/lib/utils";
-import {
-  GalleryHorizontal,
-  Image as ImageIcon,
-  Images,
-  Type,
-} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 type BlockCellsDescriptionMode = "full" | "title" | "badges";
@@ -43,28 +42,70 @@ type BlockCellsDescriptionProps = Readonly<{
   mode?: BlockCellsDescriptionMode;
 }>;
 
-function getCellKind(value: BlockDTO["cells"][number]): CellDTO["kind"] | null {
-  if (!value || typeof value !== "object") return null;
+type BlockCellBadgeItem = Readonly<{
+  key: string;
+  row: number;
+  column: number;
+  kind: CellDTO["kind"];
+  kindLabel: string;
+  Icon: LucideIcon;
+}>;
 
-  const kind = (value as { kind?: unknown }).kind;
+type SectionBlockDTO = Extract<BlockDTO, { type: "section" }>;
+type SectionRowDTO = SectionBlockDTO["rows"][number];
+type SectionColumnDTO = SectionRowDTO["columns"][number];
 
-  if (
-    kind === "richText" ||
-    kind === "image" ||
-    kind === "gallery" ||
-    kind === "carousel"
-  ) {
-    return kind;
+function getFallbackBlockName(
+  block: BlockDTO,
+  index: number | undefined,
+  blockEntityLabel: string,
+): string {
+  const explicitName = String(block.name ?? "").trim();
+
+  if (explicitName.length > 0) {
+    return explicitName;
   }
 
-  return null;
+  return index != null ? `${blockEntityLabel} ${index + 1}` : blockEntityLabel;
 }
 
-function getKindIcon(kind: CellDTO["kind"]) {
-  if (kind === "richText") return Type;
-  if (kind === "image") return ImageIcon;
-  if (kind === "carousel") return GalleryHorizontal;
-  return Images;
+function getSectionCellBadges(
+  block: SectionBlockDTO,
+  t: ReturnType<typeof useTranslations>,
+): ReadonlyArray<BlockCellBadgeItem> {
+  const rows: ReadonlyArray<SectionRowDTO> = Array.isArray(block.rows)
+    ? block.rows
+    : [];
+
+  return rows.flatMap((row: SectionRowDTO, rowIndex: number) => {
+    const columns: ReadonlyArray<SectionColumnDTO> = Array.isArray(row.columns)
+      ? row.columns
+      : [];
+
+    return columns.flatMap((column: SectionColumnDTO, colIndex: number) => {
+      const cells: ReadonlyArray<CellDTO> = Array.isArray(column.cells)
+        ? column.cells
+        : [];
+
+      return cells
+        .map((cell: CellDTO, cellIndex: number) => {
+          const kind = getCellKind(cell);
+          if (!kind) return null;
+
+          const meta = getCellKindMeta(kind, t);
+
+          return {
+            key: `${rowIndex}:${colIndex}:${cellIndex}:${kind}`,
+            row: rowIndex + 1,
+            column: colIndex + 1,
+            kind,
+            kindLabel: meta.label,
+            Icon: meta.Icon,
+          } satisfies BlockCellBadgeItem;
+        })
+        .filter((item): item is BlockCellBadgeItem => Boolean(item));
+    });
+  });
 }
 
 export function BlockCellsDescription({
@@ -74,26 +115,25 @@ export function BlockCellsDescription({
   mode = "full",
 }: BlockCellsDescriptionProps) {
   const t = useTranslations();
+  const blockEntityLabel = t("studio.shared.entities.blocks");
 
-  const title =
-    block.title?.text ??
-    `${t("studio.shared.entities.blocks")}${index != null ? ` ${index + 1}` : ""}`;
+  const name = getFallbackBlockName(block, index, blockEntityLabel);
 
   if (mode === "title") {
     return (
       <div className={cn("min-w-0", className)}>
         <Text as="p" truncate>
-          {title}
+          {name}
         </Text>
       </div>
     );
   }
 
-  if (block.type !== "layoutSection") {
+  if (block.type !== "section") {
     return (
       <div className={cn("min-w-0", className)}>
         <Text as="p" truncate>
-          {title}
+          {name}
         </Text>
 
         <Text as="p" variant="meta" truncate>
@@ -105,39 +145,19 @@ export function BlockCellsDescription({
     );
   }
 
-  const cells = Array.isArray(block.cells) ? block.cells : [];
-
-  const columnBadges = cells
-    .map((cell, cellIndex) => {
-      const kind = getCellKind(cell);
-      if (!kind) return null;
-
-      const Icon = getKindIcon(kind);
-      const kindLabel = t(`studio.cellEditorTabs.kinds.${kind}`, {
-        default: kind,
-      });
-
-      return {
-        key: `${cellIndex}:${kind}`,
-        column: cellIndex + 1,
-        kind,
-        kindLabel,
-        Icon,
-      };
-    })
-    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const cellBadges = getSectionCellBadges(block, t);
 
   const badges = (
     <TooltipProvider>
       <div className={cn("flex flex-wrap items-center gap-1.5", className)}>
-        {columnBadges.length > 0 ? (
-          columnBadges.map(({ key, column, kind, kindLabel, Icon }) => (
+        {cellBadges.length > 0 ? (
+          cellBadges.map(({ key, row, column, kind, kindLabel, Icon }) => (
             <Tooltip key={key}>
               <TooltipTrigger asChild>
                 <Badge
                   variant="outline"
                   className="h-8 w-8"
-                  aria-label={`${kindLabel} (colonne ${column})`}
+                  aria-label={`${kindLabel} (ligne ${row}, colonne ${column})`}
                   tabIndex={0}
                 >
                   <Icon aria-hidden="true" className="h-4 w-4" />
@@ -146,7 +166,9 @@ export function BlockCellsDescription({
               </TooltipTrigger>
 
               <TooltipContent>
-                {`${t("studio.cellEditorTabs.tabs", {
+                {`${t("studio.pageBlocksListSection.bloc.row", {
+                  number: row,
+                })} · ${t("studio.cellEditorTabs.tabs", {
                   number: column,
                 })} : ${kindLabel}`}
               </TooltipContent>
@@ -169,12 +191,12 @@ export function BlockCellsDescription({
     <div
       className={cn(
         "grid items-center gap-3",
-        "grid-cols-[minmax(4rem,10rem)_1fr]",
+        "grid-cols-[minmax(8rem,12rem)_1fr]",
         className,
       )}
     >
       <Text as="p" truncate>
-        {title}
+        {name}
       </Text>
 
       {badges}

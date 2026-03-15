@@ -13,7 +13,7 @@
 
 import { useMemo } from "react";
 
-import { PAGE_TITLE } from "@compoz/core/constants/limits/pages";
+import { PAGE_NAME } from "@compoz/core/constants/limits/pages";
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 import { normalizeSlug } from "@compoz/core/domain/slug/utils";
 import type { PageFormValues } from "@compoz/validation/pages/page-form";
@@ -34,7 +34,7 @@ export type PageWarningKey = "slugNotNormalized" | "titleLooksThin";
 export function computePageWarnings(values: PageFormValues): PageWarningKey[] {
   const warnings = new Set<PageWarningKey>();
 
-  const title = String(values.title ?? "").trim();
+  const name = String(values.name ?? "").trim();
   const slug = String(values.slug ?? "").trim();
 
   const normalizedSlug = normalizeSlug(slug);
@@ -43,7 +43,7 @@ export function computePageWarnings(values: PageFormValues): PageWarningKey[] {
   }
 
   // UX : warning “titre un peu léger” (le form garantit déjà min / max).
-  if (title && title.length <= Math.max(4, PAGE_TITLE.MIN)) {
+  if (name && name.length <= Math.max(4, PAGE_NAME.MIN)) {
     warnings.add("titleLooksThin");
   }
 

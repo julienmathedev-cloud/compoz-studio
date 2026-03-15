@@ -174,7 +174,7 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
           pages: nextIndexEntity.pages.map((p) => ({
             id: p.id,
             slug: p.slug,
-            title: p.title,
+            name: p.name,
             parentId: p.parentId,
           })),
           updatedAt: nowIso,
@@ -284,7 +284,7 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
         const nextIndexEntity = upsertPageRef(baseIndex, {
           id: page.id,
           slug: page.slug,
-          title: page.title,
+          name: page.name,
           parentId: page.parentId,
         });
 
@@ -292,7 +292,7 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
           pages: nextIndexEntity.pages.map((p) => ({
             id: p.id,
             slug: p.slug,
-            title: p.title,
+            name: p.name,
             parentId: p.parentId,
           })),
           updatedAt: nowIso,

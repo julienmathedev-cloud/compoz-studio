@@ -23,7 +23,7 @@ import { useEffect, useMemo, useRef } from "react";
 import type { FieldErrors, UseFormSetValue } from "react-hook-form";
 import { Controller, useForm, useFormState, useWatch } from "react-hook-form";
 
-import { PAGE_TITLE } from "@compoz/core/constants/limits/pages";
+import { PAGE_NAME } from "@compoz/core/constants/limits/pages";
 import { SLUG_FINAL_RE } from "@compoz/core/domain/slug/constants";
 import { normalizeSlug } from "@compoz/core/domain/slug/utils";
 import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
@@ -153,7 +153,7 @@ export function PageForm({
   }, [isDirty, onDirtyChange]);
 
   const formIdPrefix = useIdPrefix("page-form");
-  const titleIds = createFieldIds(formIdPrefix, "title");
+  const nameIds = createFieldIds(formIdPrefix, "name");
   const slugIds = createFieldIds(formIdPrefix, "slug");
   const sitemapIncludeIds = createFieldIds(formIdPrefix, "sitemapInclude");
   const sitemapPriorityIds = createFieldIds(formIdPrefix, "sitemapPriority");
@@ -184,9 +184,9 @@ export function PageForm({
     if (mode !== "edit" || !bFocusFields || isBusy) return;
 
     queueMicrotask(() => {
-      focusByFieldId(titleIds.fieldId);
+      focusByFieldId(nameIds.fieldId);
     });
-  }, [mode, bFocusFields, isBusy, initialValues, titleIds.fieldId]);
+  }, [mode, bFocusFields, isBusy, initialValues, nameIds.fieldId]);
 
   const watchedValues =
     (useWatch({ control }) as PageFormValues | undefined) ?? initialValues;
@@ -218,10 +218,10 @@ export function PageForm({
   });
 
   const NEAR = 10;
-  const titleLen = (values.title ?? "").length;
-  const remaining = Math.max(0, PAGE_TITLE.MAX - titleLen);
+  const nameLen = (values.name ?? "").length;
+  const remaining = Math.max(0, PAGE_NAME.MAX - nameLen);
 
-  const helpTitle =
+  const helpName =
     remaining <= NEAR
       ? t("studio.pageForm.title.helpNearLimit", { remaining })
       : t("studio.pageForm.title.help");
@@ -249,13 +249,13 @@ export function PageForm({
 
   const showError = isSubmitted || submitCount > 0;
 
-  const invalidTitle =
-    (showError || Boolean(touchedFields.title)) &&
-    Boolean(errors.title?.message ?? errors.title);
+  const invalidName =
+    (showError || Boolean(touchedFields.name)) &&
+    Boolean(errors.name?.message ?? errors.name);
 
   const titleErrorMessage =
-    (showError || Boolean(touchedFields.title)) && errors.title
-      ? String(errors.title.message)
+    (showError || Boolean(touchedFields.name)) && errors.name
+      ? String(errors.name.message)
       : undefined;
 
   const invalidSlug =
@@ -268,8 +268,8 @@ export function PageForm({
       : undefined;
 
   const blockingErrorsCount = useMemo(() => {
-    return [invalidTitle, invalidSlug].filter(Boolean).length;
-  }, [invalidTitle, invalidSlug]);
+    return [invalidName, invalidSlug].filter(Boolean).length;
+  }, [invalidName, invalidSlug]);
 
   useEffect(() => {
     onBlockingErrorsCountChange?.(blockingErrorsCount);
@@ -295,12 +295,12 @@ export function PageForm({
   function handleSubmitErrors(formErrors: FieldErrors<PageFormValues>) {
     notify.error(t("uiErrors.formHasErrors"));
 
-    const fieldPriority: Array<keyof PageFormValues> = ["title", "slug"];
+    const fieldPriority: Array<keyof PageFormValues> = ["name", "slug"];
     const first = fieldPriority.find((key) => Boolean(formErrors[key]));
     if (!first) return;
 
     const fieldIdByName: Partial<Record<keyof PageFormValues, string>> = {
-      title: titleIds.fieldId,
+      name: nameIds.fieldId,
       slug: slugIds.fieldId,
     };
 
@@ -313,11 +313,11 @@ export function PageForm({
   const summaryBlock = (
     <FormGrid>
       <Controller
-        name="title"
+        name="name"
         control={control}
         render={({ field }) => (
           <InputField
-            ids={titleIds}
+            ids={nameIds}
             inputRef={field.ref}
             label={t("studio.pageForm.title.label")}
             value={field.value ?? ""}
@@ -336,15 +336,15 @@ export function PageForm({
                 ? t("studio.pageForm.title.placeholderEdit")
                 : t("studio.pageForm.title.placeholderCreate")
             }
-            help={helpTitle}
+            help={helpName}
             required
-            minLength={PAGE_TITLE.MIN}
-            maxLength={PAGE_TITLE.MAX}
+            minLength={PAGE_NAME.MIN}
+            maxLength={PAGE_NAME.MAX}
             showCount
             autoCapitalize="sentences"
             spellCheck={false}
             disabled={isBusy}
-            invalid={invalidTitle}
+            invalid={invalidName}
             error={titleErrorMessage}
           />
         )}

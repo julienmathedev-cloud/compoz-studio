@@ -29,7 +29,7 @@ export interface CreatePageDeps {
 
 /**
  * Données d’entrée pour la création d’une page.
- * - `title` (obligatoire) : doit être non vide (validé dans le use-case).
+ * - `name` (obligatoire) : doit être non vide (validé dans le use-case).
  * - `slug`  (optionnel)  : si absent, dérivé du titre.
  * - `sitemap` (optionnel) : partiel ; s’il est fourni, il est complété via `applySitemapDefaults()`.
  *
@@ -37,7 +37,7 @@ export interface CreatePageDeps {
  * La création se fait toujours en **draft** ; la publication est gérée par un use-case dédié.
  */
 export type CreatePageInput = {
-  title: string;
+  name: string;
   slug?: string;
   parentId: string | null;
   sitemap?: Partial<PageSitemap>;

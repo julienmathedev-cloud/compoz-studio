@@ -126,14 +126,14 @@ export function buildBlockDetails(
           ? p.type
           : undefined;
 
-    const title =
-      typeof d?.title === "string"
-        ? d.title
-        : typeof p?.title === "string"
-          ? p.title
+    const name =
+      typeof d?.name === "string"
+        ? d.name
+        : typeof p?.name === "string"
+          ? p.name
           : undefined;
 
-    items.push({ id, type, title, diff });
+    items.push({ id, type, name, diff });
   }
 
   const hasChanges = blocksNew + blocksModified + blocksDeleted > 0;

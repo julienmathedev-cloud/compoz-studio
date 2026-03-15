@@ -70,7 +70,7 @@ export function TooltipButton({
       <Tooltip>
         <TooltipTrigger asChild>
           {isDisabled ? (
-            <span tabIndex={0} className={cn("flex w-full")}>
+            <span tabIndex={0} className={cn("flex")}>
               {button}
             </span>
           ) : (

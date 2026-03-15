@@ -44,12 +44,11 @@ export function GalleryCellRenderer({
   zoomUi,
   priority,
 }: GalleryCellRendererProps) {
-  const images = Array.isArray(cell?.images) ? cell.images : [];
-  if (images.length === 0) return null;
+  const items = Array.isArray(cell?.items) ? cell.items : [];
+  if (items.length === 0) return null;
 
   const max = clampMaxColumns(cell.maxColumns);
 
-  // ✅ Compose “base list” + “variant columns” depuis le skin
   const resolvedNavUi: SiteNavGalleryUi = {
     ...navUi,
     list: cn(navUi.list, navUi.columns[max]),
@@ -62,14 +61,14 @@ export function GalleryCellRenderer({
 
   return cell.linksEnabled ? (
     <SiteGalleryNavList
-      images={images}
+      images={items}
       ui={resolvedNavUi}
       columns={max}
       priority={priority}
     />
   ) : (
     <SiteGalleryZoomList
-      images={images}
+      images={items}
       ui={resolvedZoomUi}
       columns={max}
       priority={priority}

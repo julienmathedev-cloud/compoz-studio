@@ -25,16 +25,16 @@ import { DEFAULT_LEGAL_MENU_SETTINGS } from "@compoz/core/domain/site/defaults/l
 import { DEFAULT_PRIMARY_MENU_SETTINGS } from "@compoz/core/domain/site/defaults/primary-menu";
 import { DEFAULT_SEO_SETTINGS } from "@compoz/core/domain/site/defaults/seo";
 import { DEFAULT_SOCIAL_SETTINGS } from "@compoz/core/domain/site/defaults/social";
+import { DEFAULT_THEME_SETTINGS } from "@compoz/core/domain/site/defaults/theme";
 
 /**
- * Retourne un index vide daté de l’instant présent.
+ * Retourne un index vide selon l’espace de contenu demandé.
  * Contrat : utilisé comme fallback si l’index est absent.
  */
-function defaultIndex(): SiteIndex {
-  return {
-    pages: [],
-    updatedAt: new Date().toISOString(),
-  };
+function defaultIndex(state: ContentState): SiteIndex {
+  return state === CONTENT_STATE.DRAFT
+    ? { pages: [], updatedAt: new Date().toISOString() }
+    : { pages: [], updatedAt: "" };
 }
 
 /**
@@ -50,6 +50,11 @@ function defaultSettings(): SiteSettings {
     identity: { ...DEFAULT_IDENTITY_SETTINGS },
     social: { ...DEFAULT_SOCIAL_SETTINGS },
     seo: { ...DEFAULT_SEO_SETTINGS },
+    theme: {
+      ...DEFAULT_THEME_SETTINGS,
+      lightTokens: { ...DEFAULT_THEME_SETTINGS.lightTokens },
+      darkTokens: { ...DEFAULT_THEME_SETTINGS.darkTokens },
+    },
   };
 }
 
@@ -99,11 +104,11 @@ export class InMemorySiteRepository implements SiteRepository {
   }
 
   /** Positionne les settings pour un espace donné. */
-  private setSettings(state: ContentState, s: SiteSettings): void {
+  private setSettings(state: ContentState, settings: SiteSettings): void {
     if (state === CONTENT_STATE.PUBLISHED) {
-      this.settingsPublished = s;
+      this.settingsPublished = settings;
     } else {
-      this.settingsDraft = s;
+      this.settingsDraft = settings;
     }
   }
 
@@ -116,7 +121,7 @@ export class InMemorySiteRepository implements SiteRepository {
    * Contrat : fallback sur defaultIndex(), retourne une copie.
    */
   async readIndex(state: ContentState): Promise<SiteIndex> {
-    return structuredClone(this.pickIndex(state) ?? defaultIndex());
+    return structuredClone(this.pickIndex(state) ?? defaultIndex(state));
   }
 
   /**

@@ -286,7 +286,7 @@ export function AdminUsersForm({
       )}
       noValidate
     >
-      <Card variant="panel">
+      <Card variant="panelStudio">
         <CardContent>
           <AdminUsersFormRbacFields
             mode={mode}

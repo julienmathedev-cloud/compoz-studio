@@ -3,7 +3,7 @@
  * @layer infra/http/studio
  * @description
  * Client HTTP Studio pour la gestion centralisée des réglages du site :
- * header, footer, menus, identity, social et SEO.
+ * header, footer, menus, identity, social, SEO et theme.
  *
  * @remarks
  * - Client HTTP pur (infra-only)
@@ -33,6 +33,7 @@ import type {
   GetSeoResponse,
   GetSettingsBundleResponse,
   GetSocialResponse,
+  GetThemeResponse,
   PatchFooterResponse,
   PatchHeaderResponse,
   PatchIdentityResponse,
@@ -40,6 +41,7 @@ import type {
   PatchPrimaryMenuResponse,
   PatchSeoResponse,
   PatchSocialResponse,
+  PatchThemeResponse,
 } from "@compoz/infra/http/studio/site-settings.types";
 
 /* -------------------------------------------------------------------------- */
@@ -381,6 +383,46 @@ export const settingsStudioApi = {
             patch,
             opts,
             "settingsStudioApi.social.patch",
+          ),
+      );
+    },
+  },
+
+  theme: {
+    async get(
+      state: ContentState = DEFAULT_CONTENT_STATE,
+      opts?: HttpOpts,
+    ): Promise<GetThemeResponse> {
+      return logSpan(
+        "compoz:studio:svc:site-settings",
+        { endpoint: ENDPOINTS.STUDIO.SETTINGS.theme, method: "GET", state },
+        () =>
+          getResponse<GetThemeResponse>(
+            ENDPOINTS.STUDIO.SETTINGS.theme,
+            state,
+            opts,
+            "settingsStudioApi.theme.get",
+          ),
+      );
+    },
+
+    async patch<TPatch extends object>(
+      patch: TPatch,
+      opts?: HttpOpts,
+    ): Promise<PatchThemeResponse> {
+      return logSpan(
+        "compoz:studio:svc:site-settings",
+        {
+          endpoint: ENDPOINTS.STUDIO.SETTINGS.theme,
+          method: "PATCH",
+          state: DEFAULT_CONTENT_STATE,
+        },
+        () =>
+          patchResponse<PatchThemeResponse, TPatch>(
+            ENDPOINTS.STUDIO.SETTINGS.theme,
+            patch,
+            opts,
+            "settingsStudioApi.theme.patch",
           ),
       );
     },

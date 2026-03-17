@@ -17,31 +17,27 @@
  */
 
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 import type { SocialSettingsShape } from "@compoz/validation/site/settings/social/social";
 
-import { SiteIconLink } from "@compoz/ui/site/components/atoms/SiteIconLink";
-import { SiteNavLink } from "@compoz/ui/site/components/atoms/SiteNavLink";
+import { DynamicIcon } from "lucide-react/dynamic";
+import type dynamicIconImports from "lucide-react/dynamicIconImports";
 
 import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { renderSocialKindIcon } from "@compoz/ui/lib/social/social-kind-icons";
 import { cn } from "@compoz/ui/lib/utils";
-
+import { SiteIconLink } from "@compoz/ui/site/components/atoms/SiteIconLink";
+import { SiteNavLink } from "@compoz/ui/site/components/atoms/SiteNavLink";
 import type { SiteMobileMenuUi } from "@compoz/ui/site/site-ui.types";
-import { DynamicIcon } from "lucide-react/dynamic";
-import type dynamicIconImports from "lucide-react/dynamicIconImports";
 
 export type SiteMobileMenuProps = Readonly<{
   primaryMenu: PrimaryMenuSettingsShape;
   social: SocialSettingsShape;
   ui: SiteMobileMenuUi;
-
   ariaLabel?: string;
   className?: string;
-
-  /** Si menu vide : afficher un petit empty state (sinon null) */
   emptyLabel?: string;
 }>;
 
@@ -52,7 +48,10 @@ const ICON_CHEVRON: keyof typeof dynamicIconImports = "chevron-down";
 const MENU_ID = "site-mobile-menu";
 
 function isActivePath(pathname: string, href?: string) {
-  if (!href) return false;
+  if (!href) {
+    return false;
+  }
+
   return pathname === href || pathname.startsWith(href + "/");
 }
 
@@ -70,31 +69,40 @@ export function SiteMobileMenu({
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
 
-  const items = useMemo(() => primaryMenu.items ?? [], [primaryMenu.items]);
-  const socials = useMemo(() => social.items ?? [], [social.items]);
+  const items = primaryMenu.items ?? [];
+  const socials = social.items ?? [];
 
   const hasMenu = items.length > 0;
   const hasSocial = socials.length > 0;
 
-  // Fermer sur changement de route
   useEffect(() => {
     setOpen((prev) => (prev ? false : prev));
   }, [pathname]);
 
-  // Scroll lock global (html)
   useEffect(() => {
     const html = document.documentElement;
-    if (open) html.classList.add("overflow-hidden");
-    else html.classList.remove("overflow-hidden");
-    return () => html.classList.remove("overflow-hidden");
+
+    if (open) {
+      html.classList.add("overflow-hidden");
+    } else {
+      html.classList.remove("overflow-hidden");
+    }
+
+    return () => {
+      html.classList.remove("overflow-hidden");
+    };
   }, [open]);
 
-  // Focus trap + Esc
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
 
     const panel = panelRef.current;
-    if (!panel) return;
+
+    if (!panel) {
+      return;
+    }
 
     const nodes = Array.from(
       panel.querySelectorAll<HTMLElement>(
@@ -104,6 +112,7 @@ export function SiteMobileMenu({
 
     const first = nodes[0];
     const last = nodes[nodes.length - 1];
+
     first?.focus();
 
     const onKey = (e: KeyboardEvent) => {
@@ -126,40 +135,11 @@ export function SiteMobileMenu({
     };
 
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+
+    return () => {
+      document.removeEventListener("keydown", onKey);
+    };
   }, [open]);
-
-  const renderRootLink = useCallback(
-    (href: string, label: string, newTab: boolean, key: string) => (
-      <li key={key} className={cn(ui.item)}>
-        <SiteNavLink
-          href={href}
-          label={label}
-          ariaLabel={label}
-          newTab={newTab}
-          className={cn(ui.interactive)}
-          linkClassName={cn(ui.link)}
-        />
-      </li>
-    ),
-    [ui.interactive, ui.item, ui.link],
-  );
-
-  const renderChildLink = useCallback(
-    (href: string, label: string, newTab: boolean, key: string) => (
-      <li key={key} className={cn(ui.childItem)}>
-        <SiteNavLink
-          href={href}
-          label={label}
-          ariaLabel={label}
-          newTab={newTab}
-          className={cn(ui.childInteractive)}
-          linkClassName={cn(ui.link)}
-        />
-      </li>
-    ),
-    [ui.childInteractive, ui.childItem, ui.link],
-  );
 
   if (!hasMenu && !hasSocial) {
     return emptyLabel ? (
@@ -169,14 +149,13 @@ export function SiteMobileMenu({
 
   return (
     <div className={cn(className)}>
-      {/* Trigger */}
       <button
         ref={triggerRef}
         type="button"
         aria-expanded={open}
         aria-controls={MENU_ID}
         aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen((value) => !value)}
         className={cn(ui.triggerButton, ui.focusRing)}
       >
         <DynamicIcon
@@ -188,14 +167,12 @@ export function SiteMobileMenu({
         />
       </button>
 
-      {/* Overlay */}
       <div
         aria-hidden={!open}
         className={cn(ui.overlayBase, open ? ui.overlayOpen : ui.overlayClosed)}
         onClick={() => setOpen(false)}
       />
 
-      {/* Drawer */}
       <div
         id={MENU_ID}
         role="dialog"
@@ -205,7 +182,6 @@ export function SiteMobileMenu({
         className={cn(ui.panelBase, open ? ui.panelOpen : ui.panelClosed)}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Topbar */}
         <div className={cn(ui.topBar)}>
           <button
             type="button"
@@ -222,9 +198,7 @@ export function SiteMobileMenu({
           </button>
         </div>
 
-        {/* Content */}
         <nav className={cn(ui.scrollArea)}>
-          {/* Nav list */}
           {hasMenu ? (
             <ul className={cn(ui.list)}>
               {items.map((item, index) => {
@@ -235,10 +209,9 @@ export function SiteMobileMenu({
                 const label = item.label?.trim() ?? "";
                 const key = toStableUiKey({ href: item.href, label }, index);
 
-                // Dropdown
                 if (children.length > 0) {
-                  const hasActiveChild = children.some((c) =>
-                    isActivePath(pathname, c.href?.trim()),
+                  const hasActiveChild = children.some((child) =>
+                    isActivePath(pathname, child.href?.trim()),
                   );
 
                   return (
@@ -256,6 +229,7 @@ export function SiteMobileMenu({
                           aria-label={label || "Menu"}
                         >
                           <span className="truncate">{label || "Menu"}</span>
+
                           <DynamicIcon
                             name={ICON_CHEVRON}
                             size={18}
@@ -267,21 +241,28 @@ export function SiteMobileMenu({
 
                         <ul className={cn(ui.dropdownList)}>
                           {children
-                            .filter((c) => Boolean(c.href?.trim()))
-                            .map((c, i) => {
-                              const childHref = c.href!.trim();
-                              const childLabel = c.label?.trim() ?? childHref;
+                            .filter((child) => Boolean(child.href?.trim()))
+                            .map((child, childIndex) => {
+                              const childHref = child.href!.trim();
+                              const childLabel =
+                                child.label?.trim() ?? childHref;
 
                               const childKey = toStableUiKey(
                                 { href: childHref, label: childLabel },
-                                i,
+                                childIndex,
                               );
 
-                              return renderChildLink(
-                                childHref,
-                                childLabel,
-                                Boolean(c.newTab),
-                                childKey,
+                              return (
+                                <li key={childKey} className={cn(ui.childItem)}>
+                                  <SiteNavLink
+                                    href={childHref}
+                                    label={childLabel}
+                                    ariaLabel={childLabel}
+                                    newTab={Boolean(child.newTab)}
+                                    className={cn(ui.childInteractive)}
+                                    linkClassName={cn(ui.link)}
+                                  />
+                                </li>
                               );
                             })}
                         </ul>
@@ -290,13 +271,18 @@ export function SiteMobileMenu({
                   );
                 }
 
-                // Simple link
                 if (href) {
-                  return renderRootLink(
-                    href,
-                    label || href,
-                    Boolean(item.newTab),
-                    key,
+                  return (
+                    <li key={key} className={cn(ui.item)}>
+                      <SiteNavLink
+                        href={href}
+                        label={label || href}
+                        ariaLabel={label}
+                        newTab={Boolean(item.newTab)}
+                        className={cn(ui.interactive)}
+                        linkClassName={cn(ui.link)}
+                      />
+                    </li>
                   );
                 }
 
@@ -305,20 +291,19 @@ export function SiteMobileMenu({
             </ul>
           ) : null}
 
-          {/* Social row (SoT identique à SiteSocialMenu) */}
           {hasSocial ? (
             <div className={cn(ui.socialsRow)}>
-              {socials.map((it, idx) => (
+              {socials.map((item, index) => (
                 <SiteIconLink
                   key={toStableUiKey(
-                    { keyId: `${it.kind}:${idx}`, href: it.href },
-                    idx,
+                    { keyId: `${item.kind}:${index}`, href: item.href },
+                    index,
                   )}
-                  href={it.href}
-                  ariaLabel={it.kind}
+                  href={item.href}
+                  ariaLabel={item.kind}
                   className={cn(ui.socialLink, ui.focusRing)}
                   linkClassName={cn(ui.socialLink)}
-                  icon={renderSocialKindIcon(it.kind, {
+                  icon={renderSocialKindIcon(item.kind, {
                     className: cn(ui.socialIcon),
                   })}
                 />

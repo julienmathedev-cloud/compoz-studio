@@ -113,11 +113,14 @@ export function SelectField({
 
   return (
     <Field data-invalid={isInvalid || undefined} className="min-w-0">
-      <FieldLabel htmlFor={fieldId}>{label}</FieldLabel>
+      <FieldLabel visualMode="studio" htmlFor={fieldId}>
+        {label}
+      </FieldLabel>
 
       <Select value={value} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger
           id={fieldId}
+          visualMode="studio"
           aria-describedby={describedBy}
           aria-invalid={isInvalid ? true : undefined}
         >
@@ -128,9 +131,9 @@ export function SelectField({
           )}
         </SelectTrigger>
 
-        <SelectContent>
+        <SelectContent visualMode="studio">
           {items.map((it) => (
-            <SelectItem key={it.value} value={it.value}>
+            <SelectItem key={it.value} value={it.value} visualMode="studio">
               {it.label}
             </SelectItem>
           ))}
@@ -138,7 +141,7 @@ export function SelectField({
       </Select>
 
       {help && (
-        <FieldDescription>
+        <FieldDescription visualMode="studio">
           <FieldMetaBar text={help} textId={helpId} />
         </FieldDescription>
       )}

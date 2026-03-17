@@ -42,7 +42,7 @@ function AccordionTrigger({
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
         className={cn(
-          "focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-0 **:data-[slot=accordion-trigger-icon]:text-muted-foreground rounded-lg py-2.5 text-left text-sm font-medium hover:underline **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4 group/accordion-trigger relative flex flex-1 items-start justify-between border border-transparent motion-safe:transition-all motion-reduce:transition-none outline-none disabled:pointer-events-none disabled:opacity-50",
+          "group/accordion-trigger relative flex flex-1 items-start justify-between rounded-lg border border-transparent py-2.5 text-left text-sm font-medium motion-safe:transition-all motion-reduce:transition-none outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4 **:data-[slot=accordion-trigger-icon]:text-muted-foreground",
           className,
         )}
         {...props}
@@ -69,12 +69,12 @@ function AccordionContent({
   return (
     <AccordionPrimitive.Content
       data-slot="accordion-content"
-      className="motion-safe:data-open:animate-accordion-down motion-safe:data-closed:animate-accordion-up text-sm overflow-hidden"
+      className="overflow-hidden text-sm motion-safe:data-open:animate-accordion-down motion-safe:data-closed:animate-accordion-up"
       {...props}
     >
       <div
         className={cn(
-          "px-0.5 pt-0 pb-2.5 [&_p:not(:last-child)]:mb-4",
+          "h-(--radix-accordion-content-height) px-0.5 pt-0 pb-2.5 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4",
           className,
         )}
       >

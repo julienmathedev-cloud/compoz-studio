@@ -31,7 +31,7 @@ export function SignOutButton() {
   return (
     <TooltipButton
       type="button"
-      variant="header"
+      variant="headerStudio"
       size="icon"
       aria-label={t("studio.login.signOut")}
       tooltip={t("studio.login.signOut")}

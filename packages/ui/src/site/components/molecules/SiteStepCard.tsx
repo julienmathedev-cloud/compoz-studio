@@ -31,12 +31,11 @@ export function SiteStepCard({
   ui,
 }: SiteStepCardProps) {
   const isCentered = align === "center";
+  const alignClassName = isCentered ? ui.align.center : ui.align.left;
 
   return (
     <Card className={ui.root}>
-      <CardHeader
-        className={cn(ui.header, isCentered ? ui.align.center : ui.align.left)}
-      >
+      <CardHeader className={cn(ui.header, alignClassName)}>
         <div className={ui.badge} aria-hidden="true">
           {step}
         </div>
@@ -45,12 +44,7 @@ export function SiteStepCard({
       </CardHeader>
 
       {description ? (
-        <CardContent
-          className={cn(
-            ui.content,
-            isCentered ? ui.align.center : ui.align.left,
-          )}
-        >
+        <CardContent className={cn(ui.content, alignClassName)}>
           <p className={ui.description}>{description}</p>
         </CardContent>
       ) : null}

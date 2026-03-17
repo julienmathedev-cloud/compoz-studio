@@ -5,15 +5,15 @@
  * @layer ui/studio/pages/organisms
  *
  * @description
- * Formulaire d’édition d’une page (titre + slug) — RHF + Zod comme source de vérité UI.
+ * Formulaire d’édition d’une page (nom + slug + SEO) — RHF + Zod comme source de vérité UI.
  *
  * @remarks
  * - Contrôlé : le parent fournit `initialValues` et reçoit `onSubmit`.
  * - Les warnings UI (non bloquants) sont dérivés des valeurs RHF et remontés au parent.
  * - Les erreurs bloquantes sont affichées au plus près des champs (near-field).
- * - UX : auto-sync du slug depuis le titre tant que l’utilisateur n’a pas “lock” le slug.
+ * - UX : auto-sync du slug depuis le nom tant que l’utilisateur n’a pas “lock” le slug.
  * - UX : focus/scroll du premier champ invalide au submit.
- * - UX : focus impératif du champ titre via IDs stables.
+ * - UX : focus impératif du champ nom via IDs stables.
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -155,6 +155,7 @@ export function PageForm({
   const formIdPrefix = useIdPrefix("page-form");
   const nameIds = createFieldIds(formIdPrefix, "name");
   const slugIds = createFieldIds(formIdPrefix, "slug");
+  const seoTitleIds = createFieldIds(formIdPrefix, "seoTitle");
   const sitemapIncludeIds = createFieldIds(formIdPrefix, "sitemapInclude");
   const sitemapPriorityIds = createFieldIds(formIdPrefix, "sitemapPriority");
   const sitemapChangefreqIds = createFieldIds(
@@ -191,7 +192,14 @@ export function PageForm({
   const watchedValues =
     (useWatch({ control }) as PageFormValues | undefined) ?? initialValues;
 
-  const values: PageFormValues = watchedValues ?? { title: "", slug: "" };
+  const values: PageFormValues = watchedValues ?? {
+    name: "",
+    seoTitle: "",
+    slug: "",
+    parentId: null,
+    sitemap: undefined,
+    paginationEnabled: false,
+  };
 
   const isRootPage = values.parentId === null;
 
@@ -253,7 +261,7 @@ export function PageForm({
     (showError || Boolean(touchedFields.name)) &&
     Boolean(errors.name?.message ?? errors.name);
 
-  const titleErrorMessage =
+  const nameErrorMessage =
     (showError || Boolean(touchedFields.name)) && errors.name
       ? String(errors.name.message)
       : undefined;
@@ -267,9 +275,18 @@ export function PageForm({
       ? String(errors.slug.message)
       : undefined;
 
+  const invalidSeoTitle =
+    (showError || Boolean(touchedFields.seoTitle)) &&
+    Boolean(errors.seoTitle?.message ?? errors.seoTitle);
+
+  const seoTitleErrorMessage =
+    (showError || Boolean(touchedFields.seoTitle)) && errors.seoTitle?.message
+      ? String(errors.seoTitle.message)
+      : undefined;
+
   const blockingErrorsCount = useMemo(() => {
-    return [invalidName, invalidSlug].filter(Boolean).length;
-  }, [invalidName, invalidSlug]);
+    return [invalidName, invalidSlug, invalidSeoTitle].filter(Boolean).length;
+  }, [invalidName, invalidSlug, invalidSeoTitle]);
 
   useEffect(() => {
     onBlockingErrorsCountChange?.(blockingErrorsCount);
@@ -295,13 +312,18 @@ export function PageForm({
   function handleSubmitErrors(formErrors: FieldErrors<PageFormValues>) {
     notify.error(t("uiErrors.formHasErrors"));
 
-    const fieldPriority: Array<keyof PageFormValues> = ["name", "slug"];
+    const fieldPriority: Array<keyof PageFormValues> = [
+      "name",
+      "slug",
+      "seoTitle",
+    ];
     const first = fieldPriority.find((key) => Boolean(formErrors[key]));
     if (!first) return;
 
     const fieldIdByName: Partial<Record<keyof PageFormValues, string>> = {
       name: nameIds.fieldId,
       slug: slugIds.fieldId,
+      seoTitle: seoTitleIds.fieldId,
     };
 
     const targetId = fieldIdByName[first];
@@ -323,7 +345,7 @@ export function PageForm({
             value={field.value ?? ""}
             onChange={(value) => field.onChange(value)}
             onBlur={() =>
-              handleTitleBlur(
+              handleNameBlur(
                 field,
                 getValues,
                 setValue,
@@ -345,7 +367,7 @@ export function PageForm({
             spellCheck={false}
             disabled={isBusy}
             invalid={invalidName}
-            error={titleErrorMessage}
+            error={nameErrorMessage}
           />
         )}
       />
@@ -479,7 +501,7 @@ export function PageForm({
       )}
       noValidate
     >
-      <Card variant="panel">
+      <Card variant="panelStudio">
         <CardContent>
           <ExpandableLayout
             id={`${formIdPrefix}-sitemap`}
@@ -515,6 +537,30 @@ export function PageForm({
                       );
                     }}
                     disabled={isBusy}
+                  />
+                )}
+              />
+
+              <Controller
+                name="seoTitle"
+                control={control}
+                render={({ field }) => (
+                  <InputField
+                    ids={seoTitleIds}
+                    inputRef={field.ref}
+                    label={t("studio.pageForm.seoTitle.label")}
+                    value={field.value ?? ""}
+                    onChange={(value) => field.onChange(value)}
+                    onBlur={field.onBlur}
+                    placeholder={t("studio.pageForm.seoTitle.placeholder")}
+                    help={t("studio.pageForm.seoTitle.help")}
+                    maxLength={PAGE_NAME.MAX}
+                    showCount
+                    autoCapitalize="sentences"
+                    spellCheck={false}
+                    disabled={isBusy}
+                    invalid={invalidSeoTitle}
+                    error={seoTitleErrorMessage}
                   />
                 )}
               />
@@ -595,7 +641,7 @@ export function PageForm({
                   <div className="flex h-9 items-center justify-end md:mt-[1.6rem]">
                     <TooltipButton
                       type="button"
-                      variant="outline"
+                      variant="outlineStudio"
                       size="icon"
                       onPointerDown={(event) => {
                         event.preventDefault();
@@ -671,23 +717,23 @@ function resetSlugAutoSync(
 }
 
 /**
- * Extraction de la logique `onBlur` du champ title.
+ * Extraction de la logique `onBlur` du champ name.
  */
-function handleTitleBlur(
+function handleNameBlur(
   field: { onBlur: () => void },
-  getValues: (name: "title" | "slug") => string | undefined,
+  getValues: (name: "name" | "slug") => string | undefined,
   setValue: UseFormSetValue<PageFormValues>,
   slugLockedRef: ReturnType<typeof useRef<boolean>>,
   lastAutoSlugRef: ReturnType<typeof useRef<string>>,
 ) {
   field.onBlur();
 
-  const titleNow = (getValues("title") ?? "").trim();
+  const nameNow = (getValues("name") ?? "").trim();
   const slugNow = (getValues("slug") ?? "").trim();
 
   if (slugNow === "/") return;
 
-  const nextAuto = normalizeSlug(titleNow);
+  const nextAuto = normalizeSlug(nameNow);
 
   const canAutoUpdate =
     !slugLockedRef.current &&

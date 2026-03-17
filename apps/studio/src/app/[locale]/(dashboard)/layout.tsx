@@ -90,7 +90,7 @@ export default async function LocaleLayout({
               </aside>
 
               <SidebarInset className="flex min-h-0 min-w-0 h-full flex-col bg-sidebar">
-                <Header leftSlot={<SidebarTrigger />} />
+                <Header leftSlot={<SidebarTrigger visualMode="studio" />} />
 
                 <div
                   id="main"

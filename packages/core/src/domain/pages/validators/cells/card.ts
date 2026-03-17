@@ -20,8 +20,8 @@ export function assertCardsCell(
 ) {
   if (!CARDS_COLUMNS.includes(cell.columns)) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_CARDS_COLUMNS_INVALID,
+      message: EC.CELL_CARDS_COLUMNS_INVALID,
       details: {
         path: [...path, "columns"],
         meta: { columns: cell.columns },
@@ -31,24 +31,24 @@ export function assertCardsCell(
 
   if (typeof cell.align !== "undefined" && !CARDS_ALIGNS.includes(cell.align)) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_CARDS_ALIGN_INVALID,
+      message: EC.CELL_CARDS_ALIGN_INVALID,
       details: { path: [...path, "align"], meta: { align: cell.align } },
     });
   }
 
   if (!Array.isArray(cell.items)) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_CARDS_ITEMS_INVALID,
+      message: EC.CELL_CARDS_ITEMS_INVALID,
       details: { path: [...path, "items"] },
     });
   }
 
   if (cell.items.length < 1) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_CARDS_ITEMS_MIN_1,
+      message: EC.CELL_CARDS_ITEMS_MIN_1,
       details: { path: [...path, "items"] },
     });
   }
@@ -58,43 +58,43 @@ export function assertCardsCell(
   }
 }
 
-function assertCardItem(item: CardItem, path: Path) {
+export function assertCardItem(item: CardItem, path: Path) {
   if (!item || typeof item !== "object") {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_CARD_ITEM_INVALID,
+      message: EC.CELL_CARD_ITEM_INVALID,
       details: { path },
     });
   }
 
   if (typeof item.id !== "string" || !item.id.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_CARD_ITEM_ID_REQUIRED,
+      message: EC.CELL_CARD_ITEM_ID_REQUIRED,
       details: { path: [...path, "id"] },
     });
   }
 
   if (typeof item.title !== "string" || !item.title.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_CARD_ITEM_TITLE_REQUIRED,
+      message: EC.CELL_CARD_ITEM_TITLE_REQUIRED,
       details: { path: [...path, "title"] },
     });
   }
 
   if (typeof item.description !== "string" || !item.description.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_CARD_ITEM_DESCRIPTION_REQUIRED,
+      message: EC.CELL_CARD_ITEM_DESCRIPTION_REQUIRED,
       details: { path: [...path, "description"] },
     });
   }
 
   if (typeof item.icon !== "undefined" && typeof item.icon !== "string") {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_CARD_ITEM_ICON_INVALID,
+      message: EC.CELL_CARD_ITEM_ICON_INVALID,
       details: { path: [...path, "icon"] },
     });
   }

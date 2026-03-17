@@ -10,6 +10,8 @@
  * @remarks
  * - Couche client : utilise `usePreviewOverride` pour récupérer le block.
  * - Affiche le block si visible, sinon rien (empty géré par le wrapper preview).
+ * - Le skin UI est fourni par `SiteUiProvider` monté dans `PreviewProviders`.
+ * - Le thème CSS est fourni par `ThemeProvider` monté dans `PreviewProviders`.
  */
 
 import { useMemo } from "react";
@@ -18,7 +20,7 @@ import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePre
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 import { BlocksRenderer } from "@compoz/ui/renderer/BlocksRenderer";
-import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
+import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
 
 type PageBlockPreviewClientProps = Readonly<{
   slug: string;
@@ -33,10 +35,9 @@ export function PageBlockPreviewClient({
 
   const block = usePreviewOverride<BlockShape>(scope);
   const visible = block.override ?? block.baseline;
+  const ui = useSiteUi();
 
   if (!visible) return null;
-
-  const ui = resolveSiteUi();
 
   return (
     <div className="h-dvh min-h-0 min-w-0 overflow-y-auto">
@@ -48,3 +49,5 @@ export function PageBlockPreviewClient({
     </div>
   );
 }
+
+PageBlockPreviewClient.displayName = "PageBlockPreviewClient";

@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * @file packages/ui/src/site/components/organisms/SitePrimaryMenu.tsx
  * @layer ui/site/organisms
@@ -42,7 +40,10 @@ export function SitePrimaryMenu({
   ui,
 }: SitePrimaryMenuProps) {
   const items = Array.isArray(settings?.items) ? settings.items : [];
-  if (items.length === 0) return null;
+
+  if (items.length === 0) {
+    return null;
+  }
 
   return (
     <ul className={cn(ui.list)}>
@@ -51,17 +52,39 @@ export function SitePrimaryMenu({
         const label = item.label?.trim() ?? "";
 
         const children = Array.isArray(item.children) ? item.children : [];
-        const safeChildren = children.filter((c) => {
-          const childHref = c.href?.trim() ?? "";
-          const childLabel = c.label?.trim() ?? "";
-          return Boolean(childHref && childLabel);
-        });
+        const safeChildren = children.reduce<
+          Array<
+            Readonly<{
+              href: string;
+              label: string;
+              ariaLabel?: string;
+              newTab?: boolean;
+            }>
+          >
+        >((acc, child) => {
+          const childHref = child.href?.trim() ?? "";
+          const childLabel = child.label?.trim() ?? "";
+
+          if (!childHref || !childLabel) {
+            return acc;
+          }
+
+          acc.push({
+            href: childHref,
+            label: childLabel,
+            ariaLabel: childLabel,
+            newTab: Boolean(child.newTab),
+          });
+
+          return acc;
+        }, []);
 
         const hasChildren = safeChildren.length > 0;
         const hasLink = Boolean(href);
 
-        // Rien d’exploitable : on ne rend pas l’item.
-        if (!hasChildren && !hasLink) return null;
+        if (!hasChildren && !hasLink) {
+          return null;
+        }
 
         return (
           <li
@@ -70,17 +93,14 @@ export function SitePrimaryMenu({
           >
             {hasChildren ? (
               <SiteNavDropdown
-                // href vide possible : le dropdown forcera un <button> (cf. ta logique interne)
                 href={href || undefined}
                 label={label || undefined}
                 ariaLabel={label || undefined}
                 items={safeChildren}
                 blurClassName={blurClassName}
-                ui={{
-                  itemContainer: cn(ui.interactive),
-                  itemLink: cn(ui.link),
-                  panel: cn(ui.dropdownPanel),
-                }}
+                itemContainerClass={ui.interactive}
+                itemLinkClass={ui.link}
+                panelClass={ui.dropdownPanel}
               />
             ) : (
               <SiteNavLink

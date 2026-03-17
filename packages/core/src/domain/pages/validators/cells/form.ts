@@ -20,16 +20,16 @@ export function assertFormCell(
 ) {
   if (typeof cell.to !== "string" || !cell.to.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_FORM_TO_REQUIRED,
+      message: EC.CELL_FORM_TO_REQUIRED,
       details: { path: [...path, "to"] },
     });
   }
 
   if (!isMailtoHref(cell.to)) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_FORM_TO_INVALID,
+      message: EC.CELL_FORM_TO_INVALID,
       details: {
         path: [...path, "to"],
         meta: { value: cell.to, rule: "expects_mailto" },
@@ -39,8 +39,8 @@ export function assertFormCell(
 
   if (typeof cell.submitLabel !== "string" || !cell.submitLabel.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_FORM_SUBMIT_LABEL_REQUIRED,
+      message: EC.CELL_FORM_SUBMIT_LABEL_REQUIRED,
       details: { path: [...path, "submitLabel"] },
     });
   }
@@ -50,8 +50,8 @@ export function assertFormCell(
     typeof cell.successMessage !== "string"
   ) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_FORM_SUCCESS_MESSAGE_INVALID,
+      message: EC.CELL_FORM_SUCCESS_MESSAGE_INVALID,
       details: { path: [...path, "successMessage"] },
     });
   }
@@ -61,16 +61,24 @@ export function assertFormCell(
     typeof cell.errorMessage !== "string"
   ) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_FORM_ERROR_MESSAGE_INVALID,
+      message: EC.CELL_FORM_ERROR_MESSAGE_INVALID,
       details: { path: [...path, "errorMessage"] },
     });
   }
 
-  if (!Array.isArray(cell.fields) || cell.fields.length < 1) {
+  if (!Array.isArray(cell.fields)) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_FORM_FIELDS_INVALID,
+      message: EC.CELL_FORM_FIELDS_INVALID,
+      details: { path: [...path, "fields"] },
+    });
+  }
+
+  if (cell.fields.length < 1) {
+    throw new DomainError({
+      code: EC.CELL_FORM_FIELDS_MIN_1,
+      message: EC.CELL_FORM_FIELDS_MIN_1,
       details: { path: [...path, "fields"] },
     });
   }
@@ -83,32 +91,32 @@ export function assertFormCell(
 function assertFormField(field: FormField, path: Path) {
   if (!field || typeof field !== "object") {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_FORM_FIELD_INVALID,
+      message: EC.CELL_FORM_FIELD_INVALID,
       details: { path },
     });
   }
 
   if (typeof field.id !== "string" || !field.id.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_FORM_FIELD_ID_REQUIRED,
+      message: EC.CELL_FORM_FIELD_ID_REQUIRED,
       details: { path: [...path, "id"] },
     });
   }
 
   if (typeof field.name !== "string" || !field.name.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_FORM_FIELD_NAME_REQUIRED,
+      message: EC.CELL_FORM_FIELD_NAME_REQUIRED,
       details: { path: [...path, "name"] },
     });
   }
 
   if (typeof field.label !== "string" || !field.label.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_FORM_FIELD_LABEL_REQUIRED,
+      message: EC.CELL_FORM_FIELD_LABEL_REQUIRED,
       details: { path: [...path, "label"] },
     });
   }
@@ -118,8 +126,8 @@ function assertFormField(field: FormField, path: Path) {
     !FORM_FIELD_TYPES.includes(field.type)
   ) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_FORM_FIELD_TYPE_INVALID,
+      message: EC.CELL_FORM_FIELD_TYPE_INVALID,
       details: {
         path: [...path, "type"],
         meta: { type: field.type },
@@ -132,8 +140,8 @@ function assertFormField(field: FormField, path: Path) {
     typeof field.placeholder !== "string"
   ) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_FORM_FIELD_PLACEHOLDER_INVALID,
+      message: EC.CELL_FORM_FIELD_PLACEHOLDER_INVALID,
       details: { path: [...path, "placeholder"] },
     });
   }
@@ -143,8 +151,8 @@ function assertFormField(field: FormField, path: Path) {
     typeof field.required !== "boolean"
   ) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_FORM_FIELD_REQUIRED_INVALID,
+      message: EC.CELL_FORM_FIELD_REQUIRED_INVALID,
       details: { path: [...path, "required"] },
     });
   }

@@ -21,22 +21,12 @@ import type {
   SiteZoomGalleryUi,
 } from "@compoz/ui/site/site-ui.types";
 
-/* -------------------------------------------------------------------------- */
-/* Types                                                                      */
-/* -------------------------------------------------------------------------- */
-
 export type GalleryCellRendererProps = Readonly<{
   cell: GalleryCellShape;
-
-  /** UI (skin) requis. */
   navUi: SiteNavGalleryUi;
   zoomUi: SiteZoomGalleryUi;
   priority?: boolean;
 }>;
-
-/* -------------------------------------------------------------------------- */
-/* Component                                                                  */
-/* -------------------------------------------------------------------------- */
 
 export function GalleryCellRenderer({
   cell,
@@ -77,10 +67,6 @@ export function GalleryCellRenderer({
 }
 
 GalleryCellRenderer.displayName = "GalleryCellRenderer";
-
-/* -------------------------------------------------------------------------- */
-/* Internals                                                                  */
-/* -------------------------------------------------------------------------- */
 
 function clampMaxColumns(v: unknown): GalleryMaxColumns {
   return v === 1 || v === 2 || v === 3 || v === 4 || v === 5 ? v : 3;

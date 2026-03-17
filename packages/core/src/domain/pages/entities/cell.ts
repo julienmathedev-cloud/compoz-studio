@@ -9,7 +9,6 @@ import type { ButtonsCell } from "@compoz/core/domain/pages/entities/cells/butto
 import type { CardsCell } from "@compoz/core/domain/pages/entities/cells/cards";
 import type { CardsExtendedCell } from "@compoz/core/domain/pages/entities/cells/cards-extended";
 import type { CarouselCell } from "@compoz/core/domain/pages/entities/cells/carousel";
-import type { CaseStudyCardCell } from "@compoz/core/domain/pages/entities/cells/case-study-card";
 import type { FormCell } from "@compoz/core/domain/pages/entities/cells/form";
 import type { GalleryCell } from "@compoz/core/domain/pages/entities/cells/gallery";
 import type { HeadingCell } from "@compoz/core/domain/pages/entities/cells/heading";
@@ -18,6 +17,7 @@ import type { RichTextCell } from "@compoz/core/domain/pages/entities/cells/rich
 import type { SeparatorCell } from "@compoz/core/domain/pages/entities/cells/separator";
 import type { SpacerCell } from "@compoz/core/domain/pages/entities/cells/spacer";
 import type { StepsCell } from "@compoz/core/domain/pages/entities/cells/steps";
+import type { StructuredCardCell } from "@compoz/core/domain/pages/entities/cells/structured-card";
 import type { TimelineCell } from "@compoz/core/domain/pages/entities/cells/timeline";
 
 export type CellKind =
@@ -32,7 +32,7 @@ export type CellKind =
   | "cards"
   | "cardsExtended"
   | "steps"
-  | "caseStudyCard"
+  | "structuredCard"
   | "form"
   | "timeline";
 
@@ -48,7 +48,7 @@ export type Cell =
   | CardsCell
   | CardsExtendedCell
   | StepsCell
-  | CaseStudyCardCell
+  | StructuredCardCell
   | FormCell
   | TimelineCell;
 
@@ -57,65 +57,78 @@ export type {
   ButtonItemVariant,
   ButtonsCell,
 } from "@compoz/core/domain/pages/entities/cells/buttons";
+
 export type {
   CardItem,
   CardsAlign,
   CardsCell,
   CardsColumns,
 } from "@compoz/core/domain/pages/entities/cells/cards";
+
 export type {
   CardsExtendedAlign,
   CardsExtendedCell,
   CardsExtendedColumns,
   CardsExtendedItem,
 } from "@compoz/core/domain/pages/entities/cells/cards-extended";
+
 export type {
   CarouselCell,
-  CarouselImageItem,
   CarouselItem,
   CarouselItemKind,
   CarouselVariant,
 } from "@compoz/core/domain/pages/entities/cells/carousel";
-export type {
-  CaseStudyCardCell,
-  CaseStudyCardColumns,
-  CaseStudyCardItem,
-} from "@compoz/core/domain/pages/entities/cells/case-study-card";
+
 export type {
   FormCell,
   FormField,
   FormFieldType,
 } from "@compoz/core/domain/pages/entities/cells/form";
+
 export type {
   GalleryCell,
   GalleryMaxColumns,
 } from "@compoz/core/domain/pages/entities/cells/gallery";
+
 export type {
   HeadingAlign,
   HeadingCell,
   HeadingLevel,
   HeadingVariant,
 } from "@compoz/core/domain/pages/entities/cells/heading";
+
 export type {
   ImageCell,
   ImageEditor,
   ImageRatio,
 } from "@compoz/core/domain/pages/entities/cells/image";
+
 export type { RichTextCell } from "@compoz/core/domain/pages/entities/cells/rich-text";
+
 export type {
   SeparatorAlign,
   SeparatorCell,
   SeparatorSize,
 } from "@compoz/core/domain/pages/entities/cells/separator";
+
 export type {
   SpacerCell,
   SpacerSize,
 } from "@compoz/core/domain/pages/entities/cells/spacer";
+
 export type {
   StepItem,
   StepsCell,
   StepsVariant,
 } from "@compoz/core/domain/pages/entities/cells/steps";
+
+export type {
+  StructuredCardCell,
+  StructuredCardColumns,
+  StructuredCardItem,
+  StructuredCardSection,
+} from "@compoz/core/domain/pages/entities/cells/structured-card";
+
 export type {
   TimelineCell,
   TimelineItem,

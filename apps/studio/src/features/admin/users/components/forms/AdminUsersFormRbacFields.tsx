@@ -167,7 +167,9 @@ export function AdminUsersFormRbacFields({
                     field.onChange(parts);
                   }}
                   onBlur={field.onBlur}
-                  placeholder={t("studio.users.form.rbac.tenantIds.placeholder")}
+                  placeholder={t(
+                    "studio.users.form.rbac.tenantIds.placeholder",
+                  )}
                   disabled={isBusy}
                   invalid={tenantIdsState.invalid}
                   error={
@@ -241,7 +243,7 @@ export function AdminUsersFormRbacFields({
             <div className="md:mt-[1.6rem] flex h-9 items-center justify-end">
               <TooltipButton
                 type="button"
-                variant="outline"
+                variant="outlineStudio"
                 size="icon"
                 onPointerDown={(e) => {
                   e.preventDefault();

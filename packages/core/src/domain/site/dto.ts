@@ -25,6 +25,7 @@ import type {
   SiteStatus,
   SocialItem,
   SocialSettings,
+  ThemeSettings,
 } from "@compoz/core/domain/site/entities";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 // Garde si le use-case publish existe déjà, sinon retire l'import/DTO :
@@ -61,6 +62,8 @@ export type SocialItemDTO = Readonly<SocialItem>;
 export type IdentitySettingsDTO = Readonly<IdentitySettings>;
 /** DTO en lecture pour la configuration SEO globale. */
 export type SeoSettingsDTO = Readonly<SeoSettings>;
+/** DTO en lecture pour la configuration du thème public. */
+export type ThemeSettingsDTO = Readonly<ThemeSettings>;
 
 /**
  * DTO de sortie du use-case `publishSite`.
@@ -80,6 +83,7 @@ export type SiteSettingsDTO = Readonly<{
   social: SocialSettingsDTO;
   identity: IdentitySettingsDTO;
   seo: SeoSettingsDTO;
+  theme: ThemeSettingsDTO;
 }>;
 
 /**

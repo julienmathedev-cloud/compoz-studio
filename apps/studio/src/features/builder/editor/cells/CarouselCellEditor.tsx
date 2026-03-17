@@ -28,24 +28,24 @@ import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
 import { CardExtendedListEditor } from "@compoz/studio/features/builder/editor/cells/cards-extended/CardExtendedListEditor";
 import { CardListEditor } from "@compoz/studio/features/builder/editor/cells/cards/CardListEditor";
-import { CaseStudyCardListEditor } from "@compoz/studio/features/builder/editor/cells/case-study-card/CaseStudyCardListEditor";
 import { ImageListEditor } from "@compoz/studio/features/builder/editor/cells/images/ImageListEditor";
+import { StructuredCardListEditor } from "@compoz/studio/features/builder/editor/cells/structured-cards/StructuredCardListEditor";
 import {
   createEmptyCardItem,
   createEmptyCardsExtendedItem,
-  createEmptyCaseStudyCardItem,
   createEmptyImageEditor,
+  createEmptyStructuredCardItem,
 } from "@compoz/studio/features/pages/mappers/cells-form";
 import { Button } from "@compoz/ui/components/ui/button";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
-import { STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
+import { ROW_SM, STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 import type {
   CardItemFormValues,
   CardsExtendedItemFormValues,
-  CaseStudyCardItemFormValues,
   ImageEditorFormValues,
+  StructuredCardItemFormValues,
 } from "@compoz/validation/pages/blocks/cells/cell-form";
 
 type UploadedRasterImage = Readonly<{
@@ -68,7 +68,7 @@ const CAROUSEL_ITEM_KINDS = [
   "image",
   "card",
   "cardsExtended",
-  "caseStudyCard",
+  "structuredCard",
 ] as const;
 
 type CarouselVariant = (typeof CAROUSEL_VARIANTS)[number];
@@ -82,7 +82,7 @@ type CardItemField = CardItemFormValues & { fieldId: string };
 type CardsExtendedItemField = CardsExtendedItemFormValues & {
   fieldId: string;
 };
-type CaseStudyCardItemField = CaseStudyCardItemFormValues & {
+type StructuredCardItemField = StructuredCardItemFormValues & {
   fieldId: string;
 };
 
@@ -99,7 +99,7 @@ function getEmptyItemByKind(kind: CarouselItemKind) {
   if (kind === "image") return createEmptyImageEditor();
   if (kind === "card") return createEmptyCardItem();
   if (kind === "cardsExtended") return createEmptyCardsExtendedItem();
-  return createEmptyCaseStudyCardItem();
+  return createEmptyStructuredCardItem();
 }
 
 export function CarouselCellEditor({
@@ -173,21 +173,19 @@ export function CarouselCellEditor({
         </p>
       </div>
 
-      <div
-        className={cn("grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4")}
-      >
+      <FormGrid>
         <div className={cn(STACK_SM)}>
           <Text as="p" className="font-medium">
             {t("studio.cellEditorTabs.carouselCellEditor.variantLabel")}
           </Text>
 
-          <div className="flex items-center gap-0.5">
+          <div className={cn(ROW_SM)}>
             {CAROUSEL_VARIANTS.map((item) => (
               <Button
                 key={item}
                 type="button"
                 size="sm"
-                variant={variant === item ? "default" : "ghost"}
+                variant={variant === item ? "defaultStudio" : "ghostStudio"}
                 onClick={() => {
                   variantCtrl.field.onChange(item);
                 }}
@@ -204,13 +202,13 @@ export function CarouselCellEditor({
             {t("studio.cellEditorTabs.carouselCellEditor.itemKindLabel")}
           </Text>
 
-          <div className="flex flex-wrap items-center gap-0.5">
+          <div className={cn(ROW_SM)}>
             {CAROUSEL_ITEM_KINDS.map((item) => (
               <Button
                 key={item}
                 type="button"
                 size="sm"
-                variant={itemKind === item ? "default" : "ghost"}
+                variant={itemKind === item ? "defaultStudio" : "ghostStudio"}
                 onClick={() => {
                   itemKindCtrl.field.onChange(item);
                   replace([getEmptyItemByKind(item)]);
@@ -224,7 +222,7 @@ export function CarouselCellEditor({
             ))}
           </div>
         </div>
-      </div>
+      </FormGrid>
 
       <FormGrid>
         <SwitchField
@@ -299,17 +297,17 @@ export function CarouselCellEditor({
         />
       ) : null}
 
-      {itemKind === "caseStudyCard" ? (
-        <CaseStudyCardListEditor
+      {itemKind === "structuredCard" ? (
+        <StructuredCardListEditor
           control={control}
           idPrefix={idPrefix}
           basePath={basePath}
-          fields={fields as CaseStudyCardItemField[]}
+          fields={fields as StructuredCardItemField[]}
           append={append}
           remove={remove}
           move={move}
           disabled={disabled}
-          createEmptyItem={createEmptyCaseStudyCardItem}
+          createEmptyItem={createEmptyStructuredCardItem}
           minItems={1}
           showError={showError}
           onUploadImage={onUploadImage}

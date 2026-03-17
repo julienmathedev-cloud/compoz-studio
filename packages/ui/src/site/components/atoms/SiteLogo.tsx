@@ -36,36 +36,32 @@ export type SiteLogoProps = Readonly<{
 }>;
 
 export function SiteLogo({ identity, ui }: SiteLogoProps) {
-  const logoUrl = normalizeString(identity.logoUrl);
   const pathname = usePathname() || "/";
+  const logoUrl = normalizeString(identity.logoUrl);
 
-  if (!logoUrl) return null;
+  if (!logoUrl) {
+    return null;
+  }
 
   const disableAllLinks = shouldDisableLinksInPreview(pathname);
   const homeHref = resolveInternalHref(pathname, "/");
-
-  // variables par défaut
   const ariaLabel = normalizeString(identity.siteName) || "Accueil";
-  const width = 240;
-  const height = 60;
 
   const logoImage = (
     <SiteAppImage
       image={{
         src: logoUrl,
-        alt: "", // décoratif (le lien porte le label)
-        width,
-        height,
+        alt: "",
+        width: 240,
+        height: 60,
       }}
-      priority={false} // <- important
-      fetchPriority="low"
-      // logo = élément header, on évite les surprises : taille stable + décodage auto
+      priority={false}
+      fetchPriority="auto"
       sizes="240px"
       className={cn(ui.image)}
     />
   );
 
-  // ✅ Preview : logo non cliquable
   if (disableAllLinks) {
     return (
       <span

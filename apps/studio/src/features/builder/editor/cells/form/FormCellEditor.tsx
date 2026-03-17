@@ -21,11 +21,11 @@ import { useController, useFieldArray } from "react-hook-form";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
+import { AddEmptyCardButton } from "@compoz/studio/components/molecules/controls/AddEmptyCardButton";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
 import { FormFieldItemEditor } from "@compoz/studio/features/builder/editor/cells/form/FormFieldItemEditor";
 import { createEmptyFormField } from "@compoz/studio/features/pages/mappers/cells-form";
-import { Button } from "@compoz/ui/components/ui/button";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
@@ -218,14 +218,13 @@ export function FormCellEditor({
         ))}
 
         <div>
-          <Button
-            type="button"
-            variant="outline"
+          <AddEmptyCardButton
             onClick={() => append(createEmptyFormField())}
             disabled={disabled}
-          >
-            {t("common.add")}
-          </Button>
+            ariaLabel={t("common.add")}
+            tooltip={t("common.add")}
+            compact
+          />
         </div>
       </div>
     </div>

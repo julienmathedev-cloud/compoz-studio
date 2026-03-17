@@ -43,11 +43,12 @@ export function OverviewSettingsCard({
     { key: "header", label: t("studio.shared.entities.header") },
     { key: "footer", label: t("studio.shared.entities.footer") },
     { key: "seo", label: t("studio.shared.entities.seo") },
+    { key: "theme", label: t("studio.shared.entities.theme") },
   ] as const;
 
   return (
     <Card
-      variant="panel"
+      variant="panelStudio"
       data-state={isError ? "error" : undefined}
       className={cn(isError ? "border-destructive/40" : undefined)}
     >

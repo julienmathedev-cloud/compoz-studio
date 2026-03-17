@@ -12,7 +12,6 @@ import { assertButtonsCell } from "@compoz/core/domain/pages/validators/cells/bu
 import { assertCardsCell } from "@compoz/core/domain/pages/validators/cells/card";
 import { assertCardsExtendedCell } from "@compoz/core/domain/pages/validators/cells/card-extended";
 import { assertCarouselCell } from "@compoz/core/domain/pages/validators/cells/carousel";
-import { assertCaseStudyCardCell } from "@compoz/core/domain/pages/validators/cells/case-study-card";
 import { assertFormCell } from "@compoz/core/domain/pages/validators/cells/form";
 import {
   assertGalleryMaxColumns,
@@ -29,6 +28,7 @@ import { assertRichText } from "@compoz/core/domain/pages/validators/cells/rich-
 import { assertSeparatorCell } from "@compoz/core/domain/pages/validators/cells/separator";
 import { assertSpacerCell } from "@compoz/core/domain/pages/validators/cells/spacer";
 import { assertStepsCell } from "@compoz/core/domain/pages/validators/cells/step";
+import { assertStructuredCardCell } from "@compoz/core/domain/pages/validators/cells/structured-card";
 import { assertTimelineCell } from "@compoz/core/domain/pages/validators/cells/timeline";
 
 type Path = ReadonlyArray<string | number>;
@@ -36,16 +36,16 @@ type Path = ReadonlyArray<string | number>;
 export function assertCell(cell: Cell, path: Path): void {
   if (!cell || typeof cell !== "object") {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_SHAPE_INVALID,
+      message: EC.CELL_SHAPE_INVALID,
       details: { path },
     });
   }
 
   if (typeof cell.id !== "string" || !cell.id.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_ID_REQUIRED,
+      message: EC.CELL_ID_REQUIRED,
       details: { path: [...path, "id"] },
     });
   }
@@ -89,8 +89,8 @@ export function assertCell(cell: Cell, path: Path): void {
       assertTimelineCell(cell, path);
       return;
 
-    case "caseStudyCard":
-      assertCaseStudyCardCell(cell, path);
+    case "structuredCard":
+      assertStructuredCardCell(cell, path);
       return;
 
     case "form":

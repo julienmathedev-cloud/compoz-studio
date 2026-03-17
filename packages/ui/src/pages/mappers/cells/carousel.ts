@@ -10,12 +10,12 @@ import type {
   CardItemDTO,
   CardsExtendedItemDTO,
   CarouselCellDTO,
-  CaseStudyCardItemDTO,
   ImageEditorDTO,
+  StructuredCardItemDTO,
 } from "@compoz/core/domain/pages/dto";
 import { toCardsCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/cards";
 import { toCardsExtendedCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/cards-extended";
-import { toCaseStudyCardCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/case-study-card";
+import { toStructuredCardCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/structured-card";
 import type { CarouselCellFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 
 type WithDims = { width?: number | null; height?: number | null };
@@ -52,11 +52,11 @@ export function toCarouselCellShapeFromDTO(
               align: "left",
               items: cell.items as CardsExtendedItemDTO[],
             }).items
-          : toCaseStudyCardCellShapeFromDTO({
+          : toStructuredCardCellShapeFromDTO({
               id: cell.id,
-              kind: "caseStudyCard",
+              kind: "structuredCard",
               columns: 1,
-              items: cell.items as CaseStudyCardItemDTO[],
+              items: cell.items as StructuredCardItemDTO[],
             }).items;
 
   return {

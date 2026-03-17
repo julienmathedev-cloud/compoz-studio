@@ -16,17 +16,16 @@ import { notFound, redirect } from "next/navigation";
 
 import { SITE_PATH } from "@compoz/core/constants/web/paths";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
+import { computeSitePager } from "@compoz/site/app/_helpers/site-pager";
 import {
   getPublishedIndex,
   getPublishedPageBySlug,
 } from "@compoz/site/lib/pages/published-page-loaders";
+import { SitePageRuntimeRenderer } from "@compoz/site/lib/pages/SitePageRuntimeRenderer";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
+import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
 import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
-import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
-import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
-
-import { computeSitePager } from "@compoz/site/app/_helpers/site-pager";
 
 export const dynamic = "force-dynamic";
 
@@ -43,14 +42,22 @@ export async function generateMetadata({
 }: PageParams): Promise<Metadata> {
   const { slug } = await unwrapParams(params);
 
-  // "home" est routée sur / (page dédiée), donc pas de metadata ici
   if (slug === HOME_SLUG) return {};
 
   const page = await getPublishedPageBySlug(slug);
   if (!page) return {};
 
+  const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
+    .map(toBlockShapeFromDTO)
+    .filter((b): b is BlockShape => Boolean(b));
+
+  const h1 = getPageH1(blocks);
+
+  const title =
+    (page.seoTitle ?? "").trim() || h1 || (page.name ?? "").trim() || undefined;
+
   return {
-    title: page.name,
+    title,
     alternates: { canonical: `/${encodeURIComponent(slug)}` },
   };
 }
@@ -80,7 +87,7 @@ export default async function SitePage({ params }: PageParams) {
     hrefForSlug: (s) => (s === HOME_SLUG ? SITE_PATH.home : `/${s}`),
   });
 
-  return (
-    <SitePageRenderer ui={resolveSiteUi()} blocks={blocks} pager={pager} />
-  );
+  return <SitePageRuntimeRenderer blocks={blocks} pager={pager} />;
 }
+
+SitePage.displayName = "SitePage";

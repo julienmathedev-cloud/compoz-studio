@@ -19,6 +19,7 @@ import type {
   SeoSettingsDTO,
   SiteSettingsDTO,
   SocialSettingsDTO,
+  ThemeSettingsDTO,
 } from "@compoz/core/domain/site/dto";
 
 /* -------------------------------------------------------------------------- */
@@ -82,3 +83,11 @@ export type PatchSeoResponse = SeoSettingsResponse;
 type SocialSettingsResponse = Readonly<{ settings: SocialSettingsDTO }>;
 export type GetSocialResponse = SocialSettingsResponse;
 export type PatchSocialResponse = SocialSettingsResponse;
+
+/* -------------------------------------------------------------------------- */
+/* Theme                                                                      */
+/* -------------------------------------------------------------------------- */
+
+type ThemeSettingsResponse = Readonly<{ settings: ThemeSettingsDTO }>;
+export type GetThemeResponse = ThemeSettingsResponse;
+export type PatchThemeResponse = ThemeSettingsResponse;

@@ -19,18 +19,6 @@
  */
 
 import { usePathname } from "next/navigation";
-import { createPortal } from "react-dom";
-
-import { getAriaLabel } from "@compoz/ui/lib/a11y/helpers";
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
-import {
-  isActiveLink,
-  resolveInternalHref,
-  resolveLinkFlags,
-} from "@compoz/ui/lib/links/helpers";
-import { normalizeArray, normalizeString } from "@compoz/ui/lib/normalize";
-import { cn } from "@compoz/ui/lib/utils";
-import { SiteNavLink } from "@compoz/ui/site/components/atoms/SiteNavLink";
 import type {
   Dispatch,
   FocusEvent,
@@ -48,49 +36,41 @@ import {
   useEffect,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
+
+import { getAriaLabel } from "@compoz/ui/lib/a11y/helpers";
+import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
+import {
+  isActiveLink,
+  resolveInternalHref,
+  resolveLinkFlags,
+} from "@compoz/ui/lib/links/helpers";
+import { normalizeString } from "@compoz/ui/lib/normalize";
+import { cn } from "@compoz/ui/lib/utils";
+import { SiteNavLink } from "@compoz/ui/site/components/atoms/SiteNavLink";
 
 type SiteNavItem = Readonly<{
   href: string;
   label: string;
   ariaLabel?: string;
-
-  /**
-   * Ouverture dans un nouvel onglet.
-   * - Si absent : dérivé au rendu (externe => true, interne => false).
-   */
   newTab?: boolean;
 }>;
 
-export type SiteNavDropdownUi = Readonly<{
-  /** Classes appliquées par le skin/template (trigger). */
-  itemContainer: string;
-
-  /** Classes appliquées par le skin/template (lien). */
-  itemLink: string;
-
-  /** Classes appliquées par le skin/template (panel). */
-  panel: string;
-}>;
-
 export type SiteNavDropdownProps = Readonly<{
-  /** Href du trigger (défaut : "#"). "#"/vide → trigger button. */
   href?: string;
-  /** Libellé visible si `children` est absent. */
   label?: string;
-  /** Nom accessible optionnel du trigger (utile si icône seule). */
   ariaLabel?: string;
-  /** Classes appliquées par le skin/template (wrapper). */
   className?: string;
   blurClassName?: string;
-  /** Contenu du trigger (prioritaire sur `label`). */
   children?: ReactNode;
-  /** Items du dropdown (filtrés côté UI si href/label vides). */
   items: ReadonlyArray<SiteNavItem>;
-  /** Optionnel : classes UI injectées par le skin/template. */
-  ui: SiteNavDropdownUi;
+  itemContainerClass?: string;
+  itemLinkClass?: string;
+  panelClass?: string;
 }>;
 
 export function SiteNavDropdown({
@@ -101,7 +81,9 @@ export function SiteNavDropdown({
   label,
   children,
   items,
-  ui,
+  itemContainerClass,
+  itemLinkClass,
+  panelClass,
 }: SiteNavDropdownProps) {
   const [open, setOpen] = useState(false);
 
@@ -120,7 +102,6 @@ export function SiteNavDropdown({
     }
   }, [open]);
 
-  // Détection tactile (pointer: coarse).
   const isCoarseRef = useRef(false);
   const lastTapTsRef = useRef(0);
   const suppressNextClickRef = useRef(false);
@@ -133,88 +114,25 @@ export function SiteNavDropdown({
 
   const pathname = usePathname() ?? "/";
 
-  const normalizedHref = normalizeString(href);
-  const triggerHref = normalizedHref
-    ? resolveInternalHref(pathname, normalizedHref)
-    : "";
+  const normalizedHref = useMemo(() => normalizeString(href), [href]);
 
-  const links = normalizeArray<SiteNavItem>(items);
-  const safeItems = links.filter(
-    (it) => normalizeString(it.href) && normalizeString(it.label),
-  );
+  const triggerHref = useMemo(() => {
+    return normalizedHref ? resolveInternalHref(pathname, normalizedHref) : "";
+  }, [normalizedHref, pathname]);
+
+  const safeItems = useMemo(() => {
+    return items.filter(
+      (item) => normalizeString(item.href) && normalizeString(item.label),
+    );
+  }, [items]);
 
   const hasSubItems = safeItems.length > 0;
 
-  // ✅ IMPORTANT :
-  // Si on a des sous-items, on FORCE un <button> pour le trigger.
-  // => le dropdown reste ouvrable au survol/clavier, tout en gardant les items neutralisés via SiteNavLink.
   const isButtonTrigger =
     !normalizedHref || normalizedHref === "#" || hasSubItems;
 
   const triggerText = children ?? label ?? normalizedHref;
-
-  // A11y : calcule un nom accessible pour le trigger button (icône seule / texte vide).
   const computedTriggerAria = getAriaLabel(ariaLabel, triggerText, "Menu");
-
-  /**
-   * ✅ newTab dérivé au rendu (pas stocké via `isExternal`).
-   * - si `newTab` est fourni : respect strict
-   * - sinon : externe => true, interne => false
-   */
-  const resolveNewTab = (href: string, newTab?: boolean) => {
-    if (typeof newTab === "boolean") return newTab;
-    const flags = resolveLinkFlags(normalizeString(href));
-    return Boolean(flags.rawExternal);
-  };
-
-  const focusFirstItem = () => {
-    const el = panelRef.current?.querySelector<HTMLElement>(
-      'a, button, [tabindex]:not([tabindex="-1"])',
-    );
-    el?.focus();
-  };
-
-  const refocusTrigger = () => {
-    triggerRef.current?.focus();
-  };
-
-  function focusNextTopLevelAfterThisDropdown() {
-    const li = containerRef.current?.closest("li");
-    if (!li) return;
-
-    let next: HTMLElement | null = li.nextElementSibling as HTMLElement | null;
-    while (next) {
-      const nextFocusable = next.querySelector<HTMLElement>(
-        'a,button,[tabindex]:not([tabindex="-1"])',
-      );
-      if (nextFocusable) {
-        nextFocusable.focus();
-        return;
-      }
-      next = next.nextElementSibling as HTMLElement | null;
-    }
-    triggerRef.current?.focus();
-  }
-
-  const isInDropdown = (node: EventTarget | null) => {
-    const n = node as Node | null;
-    return (
-      !!n && (triggerRef.current?.contains(n) || panelRef.current?.contains(n))
-    );
-  };
-
-  const handleTriggerFocus = () => setOpen(true);
-  const handleTriggerBlur = (e: FocusEvent) => {
-    if (!isInDropdown(e.relatedTarget)) setOpen(false);
-  };
-
-  const handlePanelBlur = (e: FocusEvent) => {
-    if (!isInDropdown(e.relatedTarget)) setOpen(false);
-  };
-
-  const handleItemClick = useCallback(() => {
-    setTimeout(() => setOpen(false), 0);
-  }, []);
 
   const isCurrentTrigger =
     !!normalizedHref &&
@@ -224,17 +142,97 @@ export function SiteNavDropdown({
       "exact",
     );
 
-  const childActive = safeItems.some((i) => {
-    const h = normalizeString(i.href);
-    if (!h) return false;
-    const resolved = resolveInternalHref(pathname, h);
+  const childActive = safeItems.some((item) => {
+    const itemHref = normalizeString(item.href);
+
+    if (!itemHref) {
+      return false;
+    }
+
+    const resolved = resolveInternalHref(pathname, itemHref);
     return isActiveLink(pathname, resolved, "startsWith");
   });
 
   const sectionActive = isCurrentTrigger || childActive;
 
-  const setTriggerEl = (el: HTMLButtonElement | HTMLAnchorElement | null) => {
-    triggerRef.current = el;
+  const focusFirstItem = () => {
+    const element = panelRef.current?.querySelector<HTMLElement>(
+      'a, button, [tabindex]:not([tabindex="-1"])',
+    );
+
+    element?.focus();
+  };
+
+  const refocusTrigger = () => {
+    triggerRef.current?.focus();
+  };
+
+  function focusNextTopLevelAfterThisDropdown() {
+    const li = containerRef.current?.closest("li");
+
+    if (!li) {
+      return;
+    }
+
+    let next: HTMLElement | null = li.nextElementSibling as HTMLElement | null;
+
+    while (next) {
+      const nextFocusable = next.querySelector<HTMLElement>(
+        'a,button,[tabindex]:not([tabindex="-1"])',
+      );
+
+      if (nextFocusable) {
+        nextFocusable.focus();
+        return;
+      }
+
+      next = next.nextElementSibling as HTMLElement | null;
+    }
+
+    triggerRef.current?.focus();
+  }
+
+  const isInDropdown = (node: EventTarget | null) => {
+    const currentNode = node as Node | null;
+
+    return (
+      !!currentNode &&
+      (triggerRef.current?.contains(currentNode) ||
+        panelRef.current?.contains(currentNode))
+    );
+  };
+
+  const handleTriggerFocus = () => setOpen(true);
+
+  const handleTriggerBlur = (event: FocusEvent) => {
+    if (!isInDropdown(event.relatedTarget)) {
+      setOpen(false);
+    }
+  };
+
+  const handlePanelBlur = (event: FocusEvent) => {
+    if (!isInDropdown(event.relatedTarget)) {
+      setOpen(false);
+    }
+  };
+
+  const handleItemClick = useCallback(() => {
+    setTimeout(() => setOpen(false), 0);
+  }, []);
+
+  const setTriggerEl = (
+    element: HTMLButtonElement | HTMLAnchorElement | null,
+  ) => {
+    triggerRef.current = element;
+  };
+
+  const resolveNewTab = (itemHref: string, newTab?: boolean) => {
+    if (typeof newTab === "boolean") {
+      return newTab;
+    }
+
+    const flags = resolveLinkFlags(normalizeString(itemHref));
+    return Boolean(flags.rawExternal);
   };
 
   return (
@@ -255,10 +253,10 @@ export function SiteNavDropdown({
           aria-controls={panelId}
           onFocus={handleTriggerFocus}
           onBlur={handleTriggerBlur}
-          onKeyDown={(e) =>
-            handleTriggerKeyDown(e, open, setOpen, focusFirstItem)
+          onKeyDown={(event) =>
+            handleTriggerKeyDown(event, open, setOpen, focusFirstItem)
           }
-          className={cn(className, ui.itemContainer, ui.itemLink)}
+          className={cn(className, itemContainerClass, itemLinkClass)}
           data-section-active={sectionActive || undefined}
         >
           {triggerText}
@@ -274,12 +272,12 @@ export function SiteNavDropdown({
           aria-controls={panelId}
           onFocus={handleTriggerFocus}
           onBlur={handleTriggerBlur}
-          onKeyDown={(e) =>
-            handleTriggerKeyDown(e, open, setOpen, focusFirstItem)
+          onKeyDown={(event) =>
+            handleTriggerKeyDown(event, open, setOpen, focusFirstItem)
           }
-          onClick={(e) =>
+          onClick={(event) =>
             handleDropdownTriggerClick(
-              e,
+              event,
               open,
               setOpen,
               focusFirstItem,
@@ -289,17 +287,17 @@ export function SiteNavDropdown({
               DOUBLE_TAP_MS,
             )
           }
-          onPointerDown={(e) =>
+          onPointerDown={(event) =>
             handleDropdownTriggerPointerDown(
-              e,
+              event,
               open,
               setOpen,
               focusFirstItem,
               suppressNextClickRef,
             )
           }
-          className={cn(className, ui.itemContainer, ui.itemLink)}
-          linkClassName={cn(ui.itemLink)}
+          className={cn(className, itemContainerClass, itemLinkClass)}
+          linkClassName={cn(itemLinkClass)}
           data-section-active={sectionActive || undefined}
         >
           {triggerText}
@@ -316,9 +314,9 @@ export function SiteNavDropdown({
             aria-labelledby={triggerId}
             aria-hidden={!open}
             data-state={open ? "open" : "closed"}
-            onKeyDown={(e) =>
+            onKeyDown={(event) =>
               handlePanelKeyDown(
-                e,
+                event,
                 setOpen,
                 refocusTrigger,
                 focusNextTopLevelAfterThisDropdown,
@@ -328,9 +326,8 @@ export function SiteNavDropdown({
             onBlur={handlePanelBlur}
             style={{ position: "fixed", left: rect.left, top: rect.bottom }}
             className={cn(
-              ui.panel,
+              panelClass,
               blurClassName,
-              // ✅ PRM guard : si un skin met des animations/transitions, on les coupe en reduced-motion.
               "motion-reduce:transition-none motion-reduce:animate-none",
               open
                 ? "opacity-100 pointer-events-auto"
@@ -350,8 +347,8 @@ export function SiteNavDropdown({
                     ariaLabel={item.ariaLabel}
                     newTab={resolveNewTab(item.href, item.newTab)}
                     role="menuitem"
-                    className={cn(ui.itemContainer)}
-                    linkClassName={cn(ui.itemLink)}
+                    className={cn(itemContainerClass)}
+                    linkClassName={cn(itemLinkClass)}
                     onClick={handleItemClick}
                   />
                 </li>
@@ -364,9 +361,6 @@ export function SiteNavDropdown({
   );
 }
 
-/**
- * Construit une clé stable pour un item de dropdown.
- */
 function getDropdownItemKey(item: SiteNavItem, index: number) {
   const href = normalizeString(item.href);
   const label = normalizeString(item.label);
@@ -385,13 +379,20 @@ function handleTriggerKeyDown(
     requestAnimationFrame(focusFirstItem);
     return;
   }
+
   if (e.key === "Tab" && !e.shiftKey) {
-    if (!open) setOpen(true);
+    if (!open) {
+      setOpen(true);
+    }
+
     e.preventDefault();
     requestAnimationFrame(focusFirstItem);
     return;
   }
-  if (e.key === "Escape") setOpen(false);
+
+  if (e.key === "Escape") {
+    setOpen(false);
+  }
 }
 
 function handleDropdownTriggerClick(
@@ -402,7 +403,7 @@ function handleDropdownTriggerClick(
   suppressNextClickRef: MutableRefObject<boolean>,
   isCoarseRef: MutableRefObject<boolean>,
   lastTapTsRef: MutableRefObject<number>,
-  DOUBLE_TAP_MS: number,
+  doubleTapMs: number,
 ) {
   if (isCoarseRef.current && suppressNextClickRef.current) {
     e.preventDefault();
@@ -410,7 +411,10 @@ function handleDropdownTriggerClick(
     suppressNextClickRef.current = false;
     return;
   }
-  if (!isCoarseRef.current) return; // desktop : laisser naviguer
+
+  if (!isCoarseRef.current) {
+    return;
+  }
 
   const now = Date.now();
   const elapsed = now - (lastTapTsRef.current || 0);
@@ -424,8 +428,8 @@ function handleDropdownTriggerClick(
     return;
   }
 
-  if (elapsed <= DOUBLE_TAP_MS) {
-    setOpen(false); // navigation : éviter flash
+  if (elapsed <= doubleTapMs) {
+    setOpen(false);
     return;
   }
 
@@ -441,7 +445,10 @@ function handleDropdownTriggerPointerDown(
   focusFirstItem: () => void,
   suppressNextClickRef: MutableRefObject<boolean>,
 ) {
-  if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
+  if (e.pointerType !== "touch" && e.pointerType !== "pen") {
+    return;
+  }
+
   if (!open) {
     e.preventDefault();
     e.stopPropagation();
@@ -469,7 +476,10 @@ function handlePanelKeyDown(
     const focusables = panelRef.current?.querySelectorAll<HTMLElement>(
       'a,button,[tabindex]:not([tabindex="-1"])',
     );
-    if (!focusables || focusables.length === 0) return;
+
+    if (!focusables || focusables.length === 0) {
+      return;
+    }
 
     const first = focusables[0];
     const last = focusables[focusables.length - 1];
@@ -485,7 +495,6 @@ function handlePanelKeyDown(
       e.preventDefault();
       setOpen(false);
       requestAnimationFrame(focusNextTopLevelAfterThisDropdown);
-      return;
     }
   }
 }

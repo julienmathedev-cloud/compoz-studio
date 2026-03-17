@@ -30,7 +30,7 @@ function normalizePageSlug(input: string): string {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Domain (DTO) -> Shape frontière (safe)                                      */
+/* Domain (DTO) -> Shape frontière (safe)                                     */
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -50,6 +50,7 @@ export function toPageShapeFromDTO(
   if (!page) {
     return {
       name: "",
+      seoTitle: "",
       parentId: null,
       slug: fallbackSlug,
       sitemap: { ...DEFAULT_SITEMAP },
@@ -61,6 +62,7 @@ export function toPageShapeFromDTO(
 
   return {
     name: page.name ?? "",
+    seoTitle: page.seoTitle ?? "",
     parentId: page.parentId ?? null,
     slug,
     sitemap: {

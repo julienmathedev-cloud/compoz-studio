@@ -9,7 +9,6 @@ import { adaptButtonsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/
 import { adaptCardsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/cards";
 import { adaptCardsExtendedCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/cards-extended";
 import { adaptCarouselCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/carousel";
-import { adaptCaseStudyCardCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/case-study-card";
 import { adaptFormCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/form";
 import { adaptGalleryCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/gallery";
 import { adaptHeadingCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/heading";
@@ -18,6 +17,7 @@ import { adaptRichTextCell } from "@compoz/studio/app/api/_adapters/pages/blocks
 import { adaptSeparatorCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/separator";
 import { adaptSpacerCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/spacer";
 import { adaptStepsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/steps";
+import { adaptStructuredCardCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/structured-card";
 import { adaptTimelineCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/timeline";
 
 export function adaptCells(
@@ -29,32 +29,46 @@ export function adaptCells(
     switch (cell.kind) {
       case "heading":
         return adaptHeadingCell(cell);
+
       case "richText":
         return adaptRichTextCell(cell);
+
       case "spacer":
         return adaptSpacerCell(cell);
+
       case "separator":
         return adaptSeparatorCell(cell);
+
       case "buttons":
         return adaptButtonsCell(cell);
+
       case "image":
         return adaptImageCell(cell);
+
       case "gallery":
         return adaptGalleryCell(cell);
+
       case "carousel":
         return adaptCarouselCell(cell);
+
       case "cards":
         return adaptCardsCell(cell);
+
       case "cardsExtended":
         return adaptCardsExtendedCell(cell);
+
       case "steps":
         return adaptStepsCell(cell);
+
       case "timeline":
         return adaptTimelineCell(cell);
-      case "caseStudyCard":
-        return adaptCaseStudyCardCell(cell);
+
+      case "structuredCard":
+        return adaptStructuredCardCell(cell);
+
       case "form":
         return adaptFormCell(cell);
+
       default:
         return cell;
     }

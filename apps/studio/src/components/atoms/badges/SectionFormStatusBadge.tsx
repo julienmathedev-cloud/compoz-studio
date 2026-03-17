@@ -37,13 +37,13 @@ export function SectionFormStatusBadge({
         ? t("common.oneError", { count })
         : t("common.multipleErrors", { count });
 
-    return <StatusBadge variant="destructive" label={label} />;
+    return <StatusBadge variant="errorStudio" label={label} />;
   }
 
   const map = {
-    modified: { variant: "warning", label: t("common.modified") },
-    saved: { variant: "success", label: t("common.saved") },
-    saving: { variant: "info", label: t("common.saving") },
+    modified: { variant: "warningStudio", label: t("common.modified") },
+    saved: { variant: "successStudio", label: t("common.saved") },
+    saving: { variant: "infoStudio", label: t("common.saving") },
   } as const;
 
   const cfg = map[kind];

@@ -40,7 +40,7 @@ export default function DraftError({ reset }: DraftErrorProps) {
         <>
           <Button
             type="button"
-            variant="outline"
+            variant="outlineVanilla"
             className={cn(ui.systemPage.button)}
             onClick={reset}
           >
@@ -49,7 +49,7 @@ export default function DraftError({ reset }: DraftErrorProps) {
 
           <Button
             type="button"
-            variant="outline"
+            variant="outlineVanilla"
             className={cn(ui.systemPage.button)}
             asChild
           >

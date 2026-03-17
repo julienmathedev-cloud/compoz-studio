@@ -2,23 +2,16 @@
 
 /**
  * @file packages/ui/src/site/components/atoms/SiteReveal.tsx
- * @layer ui/site/components
- *
- * @description
- * Apparition au scroll (fade + slide + scale) via Framer Motion.
- *
- * @remarks
- * - PRM : si prefers-reduced-motion => pas de mouvement (opacity=1, y=0, scale=1).
- * - once:true => l’animation ne se joue qu’une fois.
- * - Perf : will-change activé uniquement pendant l’animation.
  */
 
 import type { UseInViewOptions } from "framer-motion";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import type { ElementType, ReactNode } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 
 import { cn } from "@compoz/ui/lib/utils";
+import { useTheme } from "@compoz/ui/settings/theme/ThemeProvider";
+import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
 
 export type SiteRevealProps = Readonly<{
   as?:
@@ -35,30 +28,13 @@ export type SiteRevealProps = Readonly<{
     | "li"
     | "p"
     | "span";
-
   className?: string;
   children: ReactNode;
-
-  /** Delay explicite (ms). */
   delayMs?: number;
-
-  /** Base pour calculer un delay (seedOrder * staggerMs) si delayMs absent. */
   seedOrder?: number;
-
-  /** Pas (ms) utilisé avec seedOrder. */
   staggerMs?: number;
-
-  /** Part visible pour considérer "in view" (0..1). */
   amount?: number;
-
-  /** Margin viewport pour déclencher plus tôt/tard. */
   viewportMargin?: string;
-
-  /** Offset Y initial (px) si motion autorisé. */
-  initialY?: number;
-
-  /** Scale initial si motion autorisé. */
-  initialScale?: number;
 }>;
 
 type MotionElementTag = NonNullable<SiteRevealProps["as"]>;
@@ -88,13 +64,16 @@ export function SiteReveal({
   staggerMs = 80,
   amount = 0.35,
   viewportMargin = "0px",
-  initialY = 12,
-  initialScale = 0.9,
 }: SiteRevealProps) {
   const prefersReduced = useReducedMotion();
 
-  const Comp = (MOTION_COMPONENTS[as] ?? motion.div) as ElementType;
+  const ui = useSiteUi();
+  const theme = useTheme();
 
+  const preset = theme?.revealPreset ?? "fade-up";
+  const revealUi = ui.reveal[preset];
+
+  const Comp = (MOTION_COMPONENTS[as] ?? motion.div) as ElementType;
   const ref = useRef<HTMLElement | null>(null);
 
   const inView = useInView(ref, {
@@ -103,47 +82,41 @@ export function SiteReveal({
     once: true,
   });
 
-  // will-change uniquement pendant l’animation
-  const [willChangeOn, setWillChangeOn] = useState(false);
-
-  const delaySec = useMemo(() => {
-    const computed = delayMs ?? seedOrder * staggerMs;
-    return Math.max(0, computed) / 1000;
-  }, [delayMs, seedOrder, staggerMs]);
+  const delaySec = Math.max(0, delayMs ?? seedOrder * staggerMs) / 1000;
 
   const variants = useMemo(() => {
-    const hidden = prefersReduced
-      ? { opacity: 1, y: 0, scale: 1 }
-      : { opacity: 0, y: initialY, scale: initialScale };
+    if (prefersReduced) {
+      return {
+        hidden: { opacity: 1, y: 0, scale: 1 },
+        visible: { opacity: 1, y: 0, scale: 1 },
+      };
+    }
 
-    const visible = { opacity: 1, y: 0, scale: 1 };
+    return {
+      hidden: revealUi.hidden,
+      visible: revealUi.visible,
+    };
+  }, [prefersReduced, revealUi]);
 
-    return { hidden, visible };
-  }, [prefersReduced, initialY, initialScale]);
+  const transition = useMemo(() => {
+    if (prefersReduced) {
+      return { duration: 0 };
+    }
+
+    return {
+      ...revealUi.transition,
+      delay: delaySec,
+    };
+  }, [prefersReduced, revealUi, delaySec]);
 
   return (
     <Comp
       ref={ref}
-      className={cn(
-        // PRM : will-change utile seulement si motion autorisé
-        willChangeOn && !prefersReduced ? "will-change-transform" : null,
-        className,
-      )}
-      // Important : pas besoin de bricoler le style à la main.
+      className={cn(!prefersReduced && "will-change-transform", className)}
       initial={false}
       animate={inView ? "visible" : "hidden"}
       variants={variants}
-      transition={
-        prefersReduced
-          ? { duration: 0 } // neutralise
-          : { duration: 0.3, ease: "easeOut", delay: delaySec }
-      }
-      onAnimationStart={() => {
-        if (!prefersReduced) setWillChangeOn(true);
-      }}
-      onAnimationComplete={() => {
-        setWillChangeOn(false);
-      }}
+      transition={transition}
     >
       {children}
     </Comp>

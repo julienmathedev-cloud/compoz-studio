@@ -30,7 +30,7 @@ import { cn } from "@compoz/ui/lib/utils";
 /**
  * Variantes disponibles pour les messages.
  */
-type Variant = "info" | "warning" | "success" | "error";
+type Variant = "infoStudio" | "warningStudio" | "successStudio" | "errorStudio";
 
 /**
  * Props du composant `HintList`.
@@ -52,10 +52,10 @@ export type HintListProps = Readonly<{
 
 /** Mapping `Variant` → icône Lucide. */
 const ICON_BY_VARIANT: Record<Variant, LucideIcon> = {
-  info: Info,
-  warning: AlertTriangle,
-  success: CheckCircle2,
-  error: XCircle,
+  infoStudio: Info,
+  warningStudio: AlertTriangle,
+  successStudio: CheckCircle2,
+  errorStudio: XCircle,
 };
 
 function assertNever(x: never): never {
@@ -64,12 +64,12 @@ function assertNever(x: never): never {
 
 function alertToneClasses(variant: Variant) {
   switch (variant) {
-    case "warning":
+    case "warningStudio":
       return "border-t-[color:var(--warning-border)]/45 border-b-[color:var(--warning-border)]/55 text-warning/70 shadow-warning/15";
-    case "success":
-    case "info":
+    case "successStudio":
+    case "infoStudio":
       return "text-foreground";
-    case "error":
+    case "errorStudio":
       return "";
     default:
       return assertNever(variant);
@@ -82,7 +82,7 @@ function alertToneClasses(variant: Variant) {
 export function HintList({
   hints = [],
   title,
-  variant = "warning",
+  variant = "warningStudio",
   className,
   role,
   ariaLive,
@@ -93,15 +93,15 @@ export function HintList({
   if (hints.length === 0) return null;
 
   const computedRole: "status" | "alert" =
-    role ?? (variant === "error" ? "alert" : "status");
+    role ?? (variant === "errorStudio" ? "alert" : "status");
 
-  const live = ariaLive ?? (variant === "error" ? "assertive" : "polite");
+  const live = ariaLive ?? (variant === "errorStudio" ? "assertive" : "polite");
 
   const Icon = ICON_BY_VARIANT[variant];
 
   return (
     <Card
-      variant="panel"
+      variant="panelStudio"
       className={cn(alertToneClasses(variant), className, "gap-2")}
       aria-live={live}
       role={computedRole}

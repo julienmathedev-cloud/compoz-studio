@@ -27,23 +27,23 @@ export function PublicationStatusBadge({ kind }: PublicationStatusBadgeProps) {
 
   const map = {
     published: {
-      variant: "success",
+      variant: "successStudio",
       label: t("common.published"),
     },
     never: {
-      variant: "info",
+      variant: "infoStudio",
       label: t("studio.overviewSection.globalStatus.never"),
     },
     publishing: {
-      variant: "info",
+      variant: "infoStudio",
       label: t("common.publishing"),
     },
     changesPending: {
-      variant: "warning",
+      variant: "warningStudio",
       label: t("studio.overviewSection.globalStatus.changesPending"),
     },
-    upToDate: { variant: "success", label: t("common.upToDate") },
-    error: { variant: "destructive", label: t("common.error") },
+    upToDate: { variant: "successStudio", label: t("common.upToDate") },
+    error: { variant: "errorStudio", label: t("common.error") },
   } as const;
 
   const cfg = map[kind];

@@ -1,14 +1,13 @@
 /**
- * @file packages/ui/src/site/components/molecules/SiteCaseStudyCard.tsx
+ * @file packages/ui/src/site/components/molecules/SiteStructuredCard.tsx
  * @layer ui/site/molecules
  *
  * @description
- * Carte publique utilisée pour afficher une étude de cas
- * dans la cell `caseStudyCard`.
+ * Carte publique utilisée pour afficher un item de type `structuredCard`.
  *
  * @remarks
  * - UI-only.
- * - Utilisé par `CaseStudyCardCellRenderer`.
+ * - Utilisé par `StructuredCardCellRenderer`.
  * - Utilise `SiteAppImage` pour rester cohérent avec le runtime site.
  * - Tous les styles sont pilotés par `ui`.
  */
@@ -21,13 +20,17 @@ import {
 } from "@compoz/ui/components/ui/card";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
-import type { SiteCaseStudyCardUi } from "@compoz/ui/site/site-ui.types";
+import type { SiteStructuredCardUi } from "@compoz/ui/site/site-ui.types";
 
-export type SiteCaseStudyCardProps = Readonly<{
+export type SiteStructuredCardProps = Readonly<{
   title: string;
-  context: string;
-  solution: string;
-  result: string;
+  meta?: string;
+  sections: ReadonlyArray<
+    Readonly<{
+      label: string;
+      content: string;
+    }>
+  >;
   image?: Readonly<{
     src: string;
     alt: string;
@@ -35,21 +38,24 @@ export type SiteCaseStudyCardProps = Readonly<{
     height: number;
     caption?: string;
   }>;
-  ui: SiteCaseStudyCardUi;
+  ui: SiteStructuredCardUi;
   className?: string;
 }>;
 
-export function SiteCaseStudyCard({
+export function SiteStructuredCard({
   title,
-  context,
-  solution,
-  result,
+  meta,
+  sections,
   image,
   ui,
   className,
-}: SiteCaseStudyCardProps) {
+}: SiteStructuredCardProps) {
   const normalizedImage =
     image?.src?.trim() && image.width && image.height ? image : undefined;
+
+  const visibleSections = sections.filter(
+    (section) => section.label.trim() && section.content.trim(),
+  );
 
   return (
     <Card className={cn(ui.card, className)}>
@@ -71,29 +77,23 @@ export function SiteCaseStudyCard({
       <CardHeader className={cn(ui.header)}>
         <CardTitle className={cn(ui.title)}>{title}</CardTitle>
 
-        {normalizedImage?.caption ? (
+        {meta ? <p className={cn(ui.caption)}>{meta}</p> : null}
+
+        {!meta && normalizedImage?.caption ? (
           <p className={cn(ui.caption)}>{normalizedImage.caption}</p>
         ) : null}
       </CardHeader>
 
       <CardContent className={cn(ui.content)}>
-        <section className={cn(ui.section)}>
-          <h3 className={cn(ui.sectionTitle)}>{ui.labels.context}</h3>
-          <p className={cn(ui.sectionText)}>{context}</p>
-        </section>
-
-        <section className={cn(ui.section)}>
-          <h3 className={cn(ui.sectionTitle)}>{ui.labels.solution}</h3>
-          <p className={cn(ui.sectionText)}>{solution}</p>
-        </section>
-
-        <section className={cn(ui.section)}>
-          <h3 className={cn(ui.sectionTitle)}>{ui.labels.result}</h3>
-          <p className={cn(ui.sectionText)}>{result}</p>
-        </section>
+        {visibleSections.map((section, index) => (
+          <section key={`${section.label}-${index}`} className={cn(ui.section)}>
+            <h3 className={cn(ui.sectionTitle)}>{section.label}</h3>
+            <p className={cn(ui.sectionText)}>{section.content}</p>
+          </section>
+        ))}
       </CardContent>
     </Card>
   );
 }
 
-SiteCaseStudyCard.displayName = "SiteCaseStudyCard";
+SiteStructuredCard.displayName = "SiteStructuredCard";

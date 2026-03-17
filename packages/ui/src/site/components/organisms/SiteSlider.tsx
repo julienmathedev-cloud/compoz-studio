@@ -38,11 +38,14 @@ export function SiteSlider({
   isFullBleed = false,
   priority = false,
 }: SiteSliderProps) {
+  const count = items.length;
   const [currentSlide, setCurrentSlide] = useState<number>(0);
 
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
-    loop: items.length > 1,
-    slideChanged: (slider) => setCurrentSlide(slider.track.details.rel),
+    loop: count > 1,
+    slideChanged: (slider) => {
+      setCurrentSlide(slider.track.details.rel);
+    },
     slides: {
       origin: "center",
       perView: 1.15,
@@ -64,7 +67,9 @@ export function SiteSlider({
     },
   });
 
-  if (!items.length) return null;
+  if (count === 0) {
+    return null;
+  }
 
   return (
     <div
@@ -73,7 +78,7 @@ export function SiteSlider({
       aria-label="Slider"
       aria-roledescription="carousel"
     >
-      {showArrows && items.length > 1 ? (
+      {showArrows && count > 1 ? (
         <>
           <Button
             size="icon"
@@ -122,7 +127,7 @@ export function SiteSlider({
         })}
       </div>
 
-      {showDots && items.length > 1 ? (
+      {showDots && count > 1 ? (
         <div className={ui.slider.dots}>
           {items.map((item, index) => {
             const isActive = index === currentSlide;

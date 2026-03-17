@@ -53,6 +53,7 @@ export type SiteStatus = Readonly<{
     header: boolean;
     footer: boolean;
     seo: boolean;
+    theme: boolean;
   }>;
 
   /** Warnings non bloquants visibles avant publication */

@@ -16,6 +16,7 @@ import { SiteNotFoundClient } from "@compoz/site/components/system/SiteNotFoundC
 import { getPublishedSettings } from "@compoz/site/lib/pages/published-page-loaders";
 import { resolveSiteBaseUrl } from "@compoz/site/lib/seo/resolveSiteBaseUrl";
 import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
+import { fontVariablesClassName } from "@compoz/ui/lib/fonts";
 import {
   ensureTitleTemplate,
   resolveAssetUrl,
@@ -27,7 +28,7 @@ import { toPrimaryMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/p
 import { toSocialSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/social-shape";
 import { SiteFooter } from "@compoz/ui/site/components/layouts/SiteFooter";
 import { SiteHeader } from "@compoz/ui/site/components/layouts/SiteHeader";
-import { SiteUiProvider } from "@compoz/ui/site/providers/SiteUiProvider";
+import { SiteRuntimeProvider } from "@compoz/ui/site/providers/SiteRuntimeProvider";
 import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 import {
   SITE_APP_COLUMN,
@@ -44,11 +45,6 @@ type LayoutProps = Readonly<{
 /* -------------------------------------------------------------------------- */
 
 function buildFaviconIcons(favicon: string): Icons {
-  /**
-   * Convention favicon générée par le studio :
-   * - on stocke l’URL "primaire" en 32x32
-   * - on reconstruit les autres tailles à partir de ce suffixe
-   */
   if (favicon.includes("-32.png")) {
     return {
       icon: [
@@ -89,10 +85,6 @@ function buildFaviconIcons(favicon: string): Icons {
     };
   }
 
-  /**
-   * Fallback : on ne devine pas les tailles si le fichier ne suit pas
-   * la convention studio.
-   */
   return {
     icon: [{ url: favicon }],
     shortcut: [{ url: favicon }],
@@ -130,12 +122,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const robotsContent = (settings.seo?.robots ?? "").trim() || undefined;
 
-  /**
-   * Sécurité prod :
-   * - si aucun robots explicite
-   * - et qu’on n’a pas de base URL fiable
-   * => on évite d’indexer un site mal configuré.
-   */
   const isProd = process.env.NODE_ENV === "production";
   const shouldForceNoindex = isProd && !metadataBase && !robotsContent;
   const robots =
@@ -143,19 +129,14 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase,
-
     applicationName: brandTitle,
-
     title: {
       default: defaultTitle,
       template: titleTemplate,
     },
-
     description,
     robots,
-
     icons: favicon ? buildFaviconIcons(favicon) : undefined,
-
     openGraph: {
       title: defaultTitle,
       description,
@@ -163,7 +144,6 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: brandTitle,
       images: ogImage ? [{ url: ogImage }] : undefined,
     },
-
     twitter: {
       card: settings.seo?.twitter?.card ?? undefined,
       site: settings.seo?.twitter?.site ?? undefined,
@@ -182,9 +162,13 @@ export default async function SiteLayout({ children }: LayoutProps) {
   const ui = resolveSiteUi();
 
   return (
-    <html id="app-site" lang="fr" className="overscroll-none h-dvh theme-site">
+    <html
+      id="app-site"
+      lang="fr"
+      className={cn("overscroll-none h-dvh theme-site", fontVariablesClassName)}
+    >
       <body className={cn("antialiased", SITE_APP_SHELL)}>
-        <SiteUiProvider ui={ui}>
+        <SiteRuntimeProvider ui={ui} theme={settings?.theme}>
           <ScrollTopOnRouteChange />
 
           <div className={cn(SITE_APP_COLUMN)}>
@@ -216,7 +200,7 @@ export default async function SiteLayout({ children }: LayoutProps) {
               <SiteNotFoundClient />
             )}
           </div>
-        </SiteUiProvider>
+        </SiteRuntimeProvider>
       </body>
     </html>
   );

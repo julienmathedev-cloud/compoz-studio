@@ -34,13 +34,17 @@ export type NormalizedCardsExtendedItem = Readonly<{
   icon?: string;
 }>;
 
-export type NormalizedCaseStudyCardItem = Readonly<{
-  kind: "caseStudyCard";
+export type NormalizedStructuredCardItem = Readonly<{
+  kind: "structuredCard";
   id: string;
   title: string;
-  context: string;
-  solution: string;
-  result: string;
+  meta?: string;
+  sections: ReadonlyArray<
+    Readonly<{
+      label: string;
+      content: string;
+    }>
+  >;
   image?: Readonly<{
     src: string;
     alt: string;
@@ -54,4 +58,4 @@ export type NormalizedCarouselItem =
   | NormalizedImageItem
   | NormalizedCardItem
   | NormalizedCardsExtendedItem
-  | NormalizedCaseStudyCardItem;
+  | NormalizedStructuredCardItem;

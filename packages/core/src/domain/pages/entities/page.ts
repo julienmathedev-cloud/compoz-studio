@@ -55,6 +55,9 @@ export interface Page {
   /** Nom affiché (studio, listes, éventuellement SEO). */
   name: string;
 
+  /** Titre SEO (optionnel). */
+  seoTitle?: string;
+
   /** Blocs de contenu associés à la page (contenu structuré). */
   blocks: ReadonlyArray<Block>;
 

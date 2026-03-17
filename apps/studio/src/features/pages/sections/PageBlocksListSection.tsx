@@ -605,7 +605,7 @@ export function PageBlocksListSection({
       <Button
         asChild
         type="button"
-        variant="outline"
+        variant="outlineStudio"
         size="sm"
         className="gap-2"
         aria-label={t("studio.pageBlocksListSection.bloc.back")}
@@ -632,7 +632,7 @@ export function PageBlocksListSection({
         </Link>
       </Button>
 
-      <Card variant="panel">
+      <Card variant="panelStudio">
         <CardContent className="flex flex-col gap-2">
           {orderedBlocks.length > 0 ? (
             <DndContext
@@ -696,7 +696,7 @@ export function PageBlocksListSection({
         disabled={orderedChildren.length === 0}
       >
         {orderedChildren.length > 0 ? (
-          <Card variant="panel">
+          <Card variant="panelStudio">
             <CardContent>
               <Text as="p" variant="muted">
                 {t("studio.pageForm.childrens.help")}

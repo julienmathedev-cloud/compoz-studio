@@ -1,16 +1,16 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/builder/editor/cells/case-study-card/CaseStudyCardCellEditor.tsx
+ * @file apps/studio/src/features/builder/editor/cells/structured-cards/StructuredCardCellEditor.tsx
  * @layer ui/studio/pages/blocks/editor/cells
  *
  * @description
- * Éditeur RHF-aware d’une CaseStudyCardCell avec ajout, suppression,
- * réordonnancement et édition d’une liste de case studies.
+ * Éditeur RHF-aware d’une StructuredCardCell avec ajout, suppression,
+ * réordonnancement et édition d’une liste de structured cards.
  *
  * @remarks
  * - Connecté directement à RHF via `useController` et `useFieldArray`.
- * - Réutilise `CaseStudyCardListEditor`.
+ * - Réutilise `StructuredCardListEditor`.
  * - Les items sont gérés par RHF via `useFieldArray` pour garantir
  *   une gestion propre des valeurs, erreurs et reorder.
  * - La cellule porte uniquement les options de layout (`columns`)
@@ -22,13 +22,13 @@ import type { Control } from "react-hook-form";
 import { useController, useFieldArray } from "react-hook-form";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
-import { CaseStudyCardListEditor } from "@compoz/studio/features/builder/editor/cells/case-study-card/CaseStudyCardListEditor";
-import { createEmptyCaseStudyCardItem } from "@compoz/studio/features/pages/mappers/cells-form";
+import { StructuredCardListEditor } from "@compoz/studio/features/builder/editor/cells/structured-cards/StructuredCardListEditor";
+import { createEmptyStructuredCardItem } from "@compoz/studio/features/pages/mappers/cells-form";
 import { Button } from "@compoz/ui/components/ui/button";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
-import type { CaseStudyCardItemFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
+import type { StructuredCardItemFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 
 type UploadedRasterImage = Readonly<{
   url: string;
@@ -45,18 +45,18 @@ type SelectedCellLocation = Readonly<{
   cellId: string;
 }>;
 
-const CASE_STUDY_CARD_COLUMNS = [1, 2, 3] as const;
+const STRUCTURED_CARD_COLUMNS = [1, 2, 3] as const;
 
-type CaseStudyCardColumns = (typeof CASE_STUDY_CARD_COLUMNS)[number];
-type CaseStudyCardFieldBasePath =
+type StructuredCardColumns = (typeof STRUCTURED_CARD_COLUMNS)[number];
+type StructuredCardFieldBasePath =
   `rows.${number}.columns.${number}.cells.${number}`;
-type CaseStudyCardItemsPath = `${CaseStudyCardFieldBasePath}.items`;
+type StructuredCardItemsPath = `${StructuredCardFieldBasePath}.items`;
 
-type CaseStudyCardItemField = CaseStudyCardItemFormValues & {
+type StructuredCardItemField = StructuredCardItemFormValues & {
   fieldId: string;
 };
 
-export type CaseStudyCardCellEditorProps = Readonly<{
+export type StructuredCardCellEditorProps = Readonly<{
   control: Control<SectionBlockFormValues>;
   idPrefix: string;
   selectedCellLocation: SelectedCellLocation;
@@ -65,35 +65,29 @@ export type CaseStudyCardCellEditorProps = Readonly<{
   onUploadImage?: (file: File) => Promise<UploadedRasterImage>;
 }>;
 
-export function CaseStudyCardCellEditor({
+export function StructuredCardCellEditor({
   control,
   idPrefix,
   selectedCellLocation,
   disabled,
   showError = false,
   onUploadImage,
-}: CaseStudyCardCellEditorProps) {
+}: StructuredCardCellEditorProps) {
   const t = useTranslations();
 
   const basePath =
-    `rows.${selectedCellLocation.rowIndex}.columns.${selectedCellLocation.columnIndex}.cells.${selectedCellLocation.cellIndex}` as CaseStudyCardFieldBasePath;
+    `rows.${selectedCellLocation.rowIndex}.columns.${selectedCellLocation.columnIndex}.cells.${selectedCellLocation.cellIndex}` as StructuredCardFieldBasePath;
 
-  const itemsPath = `${basePath}.items` as CaseStudyCardItemsPath;
+  const itemsPath = `${basePath}.items` as StructuredCardItemsPath;
 
   const columnsCtrl = useController({
-    name: `${basePath}.columns` as `${CaseStudyCardFieldBasePath}.columns`,
+    name: `${basePath}.columns` as `${StructuredCardFieldBasePath}.columns`,
     control,
   });
 
-  /**
-   * `useFieldArray` est la source de vérité RHF pour la liste des case studies.
-   *
-   * `keyName: "fieldId"` évite d’entrer en collision avec notre `id` métier
-   * déjà présent dans `CaseStudyCardItemFormValues`.
-   */
   const { fields, append, remove, move } = useFieldArray<
     SectionBlockFormValues,
-    CaseStudyCardItemsPath,
+    StructuredCardItemsPath,
     "fieldId"
   >({
     control,
@@ -101,45 +95,45 @@ export function CaseStudyCardCellEditor({
     keyName: "fieldId",
   });
 
-  const columns: CaseStudyCardColumns =
+  const columns: StructuredCardColumns =
     columnsCtrl.field.value &&
-    CASE_STUDY_CARD_COLUMNS.includes(
-      columnsCtrl.field.value as CaseStudyCardColumns,
+    STRUCTURED_CARD_COLUMNS.includes(
+      columnsCtrl.field.value as StructuredCardColumns,
     )
-      ? (columnsCtrl.field.value as CaseStudyCardColumns)
+      ? (columnsCtrl.field.value as StructuredCardColumns)
       : 1;
 
   return (
     <div className={cn(STACK_MD)}>
       <div>
         <p className="text-sm font-medium">
-          {t("studio.cellEditorTabs.caseStudyCardCellEditor.itemsLabel")}
+          {t("studio.cellEditorTabs.structuredCardCellEditor.itemsLabel")}
         </p>
         <p className="text-muted-foreground text-sm">
-          {t("studio.cellEditorTabs.caseStudyCardCellEditor.itemsHelp")}
+          {t("studio.cellEditorTabs.structuredCardCellEditor.itemsHelp")}
         </p>
       </div>
 
       <div className={cn("grid grid-cols-1 gap-2 md:grid-cols-2")}>
         <div className={cn(STACK_SM)}>
           <Text as="p" className="font-medium">
-            {t("studio.cellEditorTabs.caseStudyCardCellEditor.columnsLabel")}
+            {t("studio.cellEditorTabs.structuredCardCellEditor.columnsLabel")}
           </Text>
 
           <div className="flex items-center gap-0.5">
-            {CASE_STUDY_CARD_COLUMNS.map((item) => (
+            {STRUCTURED_CARD_COLUMNS.map((item) => (
               <Button
                 key={item}
                 type="button"
                 size="sm"
-                variant={columns === item ? "default" : "ghost"}
+                variant={columns === item ? "defaultStudio" : "ghostStudio"}
                 onClick={() => {
                   columnsCtrl.field.onChange(item);
                 }}
                 disabled={disabled}
               >
                 {t(
-                  `studio.cellEditorTabs.caseStudyCardCellEditor.columns.${item}`,
+                  `studio.cellEditorTabs.structuredCardCellEditor.columns.${item}`,
                 )}
               </Button>
             ))}
@@ -147,16 +141,16 @@ export function CaseStudyCardCellEditor({
         </div>
       </div>
 
-      <CaseStudyCardListEditor
+      <StructuredCardListEditor
         control={control}
         idPrefix={idPrefix}
         basePath={basePath}
-        fields={fields as CaseStudyCardItemField[]}
+        fields={fields as StructuredCardItemField[]}
         append={append}
         remove={remove}
         move={move}
         disabled={disabled}
-        createEmptyItem={createEmptyCaseStudyCardItem}
+        createEmptyItem={createEmptyStructuredCardItem}
         minItems={1}
         showError={showError}
         onUploadImage={onUploadImage}
@@ -165,4 +159,4 @@ export function CaseStudyCardCellEditor({
   );
 }
 
-CaseStudyCardCellEditor.displayName = "CaseStudyCardCellEditor";
+StructuredCardCellEditor.displayName = "StructuredCardCellEditor";

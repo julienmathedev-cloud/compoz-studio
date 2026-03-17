@@ -71,6 +71,7 @@ type BuilderSidebarProps = Readonly<{
   isDirty?: boolean;
   selectedCellId?: string;
   onSelectCell?: (cellId: string) => void;
+  onHoverCell?: (cellId: string | undefined) => void;
   onReset: () => void;
   onBack: () => void;
 }>;
@@ -92,19 +93,6 @@ function hasMeaningfulRichTextContent(html: string): boolean {
   return text.length > 0;
 }
 
-/**
- * Détermine si une cellule doit déclencher le guard lors
- * de la suppression implicite d’une colonne.
- *
- * Règle :
- * - `richText` vide => safe, pas de guard
- * - toute autre cell => guard
- *
- * @remarks
- * On considère qu’un changement de type de cell suffit à rendre
- * la suppression potentiellement destructive, même si l’utilisateur
- * n’a pas encore rempli tout le contenu.
- */
 function shouldGuardCellOnColumnsReduce(cell: CellFormValues): boolean {
   if (!cell || typeof cell !== "object") return false;
 
@@ -169,6 +157,7 @@ export function BuilderSidebar({
   isDirty = false,
   selectedCellId,
   onSelectCell,
+  onHoverCell,
   onReset,
   onBack,
 }: BuilderSidebarProps) {
@@ -437,7 +426,7 @@ export function BuilderSidebar({
         <div className="flex items-center justify-start">
           <Button
             type="button"
-            variant="header"
+            variant="headerStudio"
             size="icon"
             onClick={onBack}
             disabled={isBusy}
@@ -493,7 +482,9 @@ export function BuilderSidebar({
                     type="button"
                     size="sm"
                     variant={
-                      liveValues.containerMode === mode ? "default" : "ghost"
+                      liveValues.containerMode === mode
+                        ? "defaultStudio"
+                        : "ghostStudio"
                     }
                     onClick={() =>
                       setValue("containerMode", mode, {
@@ -562,6 +553,7 @@ export function BuilderSidebar({
                         isBusy={isBusy}
                         isSortingRows={isSortingRows}
                         onSelectCell={onSelectCell}
+                        onHoverCell={onHoverCell}
                         onRemoveRow={handleRemoveRow}
                         onSetRowColumnsCount={handleSetRowColumnsCount}
                         onAddCell={handleAddCell}

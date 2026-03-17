@@ -9,19 +9,18 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { STUDIO_PATH } from "@compoz/core/constants/web/paths";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
+import { DraftPageRenderer } from "@compoz/studio/features/draft/DraftPageRenderer";
 import {
   getDraftHomePage,
   getDraftIndex,
 } from "@compoz/studio/lib/pages/draft-page-loaders";
-import type { BlockShape } from "@compoz/validation/pages/blocks/block";
-
 import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { toSlug } from "@compoz/ui/lib/routing/slug";
+import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
 import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
-import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
-import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
-import { STUDIO_PATH } from "@compoz/core/constants/web/paths";
+import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 /* -------------------------------------------------------------------------- */
 /* Metadata                                                                   */
@@ -30,7 +29,17 @@ import { STUDIO_PATH } from "@compoz/core/constants/web/paths";
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getDraftHomePage();
   if (!page) return {};
-  return { title: page.name };
+
+  const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
+    .map(toBlockShapeFromDTO)
+    .filter((b): b is BlockShape => Boolean(b));
+
+  const h1 = getPageH1(blocks);
+
+  const title =
+    (page.seoTitle ?? "").trim() || h1 || (page.name ?? "").trim() || undefined;
+
+  return { title };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -64,9 +73,7 @@ export default async function DraftRootPage() {
     hrefForSlug: hrefForDraftSlug,
   });
 
-  return (
-    <SitePageRenderer ui={resolveSiteUi()} blocks={blocks} pager={pager} />
-  );
+  return <DraftPageRenderer blocks={blocks} pager={pager} />;
 }
 
 DraftRootPage.displayName = "DraftRootPage";

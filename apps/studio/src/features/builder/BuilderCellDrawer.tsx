@@ -32,7 +32,6 @@ import { ButtonsCellEditor } from "@compoz/studio/features/builder/editor/cells/
 import { CardsExtendedCellEditor } from "@compoz/studio/features/builder/editor/cells/cards-extended/CardsExtendedCellEditor";
 import { CardsCellEditor } from "@compoz/studio/features/builder/editor/cells/cards/CardsCellEditor";
 import { CarouselCellEditor } from "@compoz/studio/features/builder/editor/cells/CarouselCellEditor";
-import { CaseStudyCardCellEditor } from "@compoz/studio/features/builder/editor/cells/case-study-card/CaseStudyCardCellEditor";
 import { FormCellEditor } from "@compoz/studio/features/builder/editor/cells/form/FormCellEditor";
 import { GalleryCellEditor } from "@compoz/studio/features/builder/editor/cells/GalleryCellEditor";
 import { HeadingCellEditor } from "@compoz/studio/features/builder/editor/cells/HeadingCellEditor";
@@ -41,6 +40,7 @@ import { RichTextCellEditor } from "@compoz/studio/features/builder/editor/cells
 import { SeparatorCellEditor } from "@compoz/studio/features/builder/editor/cells/SeparatorCellEditor";
 import { SpacerCellEditor } from "@compoz/studio/features/builder/editor/cells/SpacerCellEditor";
 import { StepsCellEditor } from "@compoz/studio/features/builder/editor/cells/steps/StepsCellEditor";
+import { StructuredCardCellEditor } from "@compoz/studio/features/builder/editor/cells/structured-cards/StructuredCardCellEditor";
 import { TimelineCellEditor } from "@compoz/studio/features/builder/editor/cells/timeline/TimelineCellEditor";
 import { createEmptyCell } from "@compoz/studio/features/pages/mappers/cells-form";
 import {
@@ -226,7 +226,12 @@ export function BuilderCellDrawer({
   };
 
   return (
-    <Drawer open={open} onOpenChange={handleDrawerOpenChange} direction="left">
+    <Drawer
+      open={open}
+      onOpenChange={handleDrawerOpenChange}
+      direction="left"
+      handleOnly
+    >
       <DrawerContent className="mr-auto h-full! w-[80vw]! max-w-[1200px]! rounded-none border-r border-l-0 sm:max-w-[1200px]!">
         <DrawerHeader>
           <div className="flex items-center justify-between gap-4">
@@ -246,7 +251,10 @@ export function BuilderCellDrawer({
           </div>
         </DrawerHeader>
 
-        <div className={cn("flex-1 overflow-y-auto px-4 pb-6", STACK_MD)}>
+        <div
+          className={cn("flex-1 overflow-y-auto px-4 pb-6", STACK_MD)}
+          data-vaul-no-drag
+        >
           {!selectedCell || !selectedCellLocation ? null : (
             <>
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
@@ -309,9 +317,9 @@ export function BuilderCellDrawer({
                       label: t("studio.builder.drawer.kind.options.timeline"),
                     },
                     {
-                      value: "caseStudyCard",
+                      value: "structuredCard",
                       label: t(
-                        "studio.builder.drawer.kind.options.caseStudyCard",
+                        "studio.builder.drawer.kind.options.structuredCard",
                       ),
                     },
                     {
@@ -433,8 +441,8 @@ export function BuilderCellDrawer({
                 />
               ) : null}
 
-              {selectedCell.kind === "caseStudyCard" ? (
-                <CaseStudyCardCellEditor
+              {selectedCell.kind === "structuredCard" ? (
+                <StructuredCardCellEditor
                   control={control}
                   idPrefix={`builder-cell-${selectedCell.id}`}
                   selectedCellLocation={selectedCellLocation}

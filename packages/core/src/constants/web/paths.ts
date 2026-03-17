@@ -27,6 +27,7 @@ export const STUDIO_PATH = {
   pages: "/pages",
   blocks: "/blocks",
   seo: "/seo",
+  theme: "/theme",
   adminPath: ADMIN_PATH,
   mentionsLegales: "/mentions-legales",
   confidentialite: "/confidentialite",

@@ -114,7 +114,7 @@ export function StepsCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={variant === item ? "default" : "ghost"}
+                variant={variant === item ? "defaultStudio" : "ghostStudio"}
                 onClick={() => {
                   variantCtrl.field.onChange(item);
                 }}

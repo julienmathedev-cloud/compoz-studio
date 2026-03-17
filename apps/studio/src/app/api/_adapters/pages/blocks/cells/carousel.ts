@@ -10,14 +10,14 @@ import { trimOrKeep } from "@compoz/studio/lib/strings";
 import type { CarouselCell } from "@compoz/core/domain/pages/entities/cell";
 import { adaptCardsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/cards";
 import { adaptCardsExtendedCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/cards-extended";
-import { adaptCaseStudyCardCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/case-study-card";
 import { adaptImage } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/image";
+import { adaptStructuredCardCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/structured-card";
 import type {
   CardItemIntentDTO,
   CardsExtendedItemIntentDTO,
   CarouselCellIntentDTO,
-  CaseStudyCardItemIntentDTO,
   ImageEditorIntentDTO,
+  StructuredCardItemIntentDTO,
 } from "@compoz/validation/pages/blocks/cells/cell-intents";
 
 export function adaptCarouselCell(dto: CarouselCellIntentDTO): CarouselCell {
@@ -40,11 +40,11 @@ export function adaptCarouselCell(dto: CarouselCellIntentDTO): CarouselCell {
               align: "left",
               items: dto.items as CardsExtendedItemIntentDTO[],
             }).items
-          : adaptCaseStudyCardCell({
+          : adaptStructuredCardCell({
               id: dto.id,
-              kind: "caseStudyCard",
+              kind: "structuredCard",
               columns: 1,
-              items: dto.items as CaseStudyCardItemIntentDTO[],
+              items: dto.items as StructuredCardItemIntentDTO[],
             }).items;
 
   return {

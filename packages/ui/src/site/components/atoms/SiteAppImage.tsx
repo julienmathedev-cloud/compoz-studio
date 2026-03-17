@@ -21,7 +21,6 @@
 import Image, { type StaticImageData } from "next/image";
 
 import { normalizeString } from "@compoz/ui/lib/normalize";
-import { cn } from "@compoz/ui/lib/utils";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -76,31 +75,24 @@ export function SiteAppImage({
   const normalizedLabelledBy = normalizeString(ariaLabelledBy);
 
   const isDecorative = normalizedAlt === "";
-
   const decoding = decodingMode ?? (priority ? "auto" : "async");
   const loading = priority ? undefined : "lazy";
 
-  // ✅ amélioration : si `src` est un StaticImageData, on récupère ses dimensions.
   const staticDims = isStaticImageData(image.src)
     ? { width: image.src.width, height: image.src.height }
     : null;
 
-  let dimensionProps: { width?: number; height?: number } = {};
+  const dimensionProps = fill
+    ? {}
+    : {
+        width: image.width ?? staticDims?.width,
+        height: image.height ?? staticDims?.height,
+      };
 
-  if (!fill) {
-    const width = image.width ?? staticDims?.width;
-    const height = image.height ?? staticDims?.height;
-
-    if (!width || !height) {
-      if (process.env.NODE_ENV !== "production") {
-        throw new Error("[SiteAppImage] width/height required when fill=false");
-      }
+  if (!fill && (!dimensionProps.width || !dimensionProps.height)) {
+    if (process.env.NODE_ENV !== "production") {
+      throw new Error("[SiteAppImage] width/height required when fill=false");
     }
-
-    dimensionProps = {
-      width,
-      height,
-    };
   }
 
   const describedBy =
@@ -120,7 +112,7 @@ export function SiteAppImage({
       loading={loading}
       sizes={normalizedSizes}
       fill={fill}
-      className={cn(className)}
+      className={className}
       aria-describedby={describedBy}
       aria-labelledby={labelledBy}
       placeholder={placeholder}

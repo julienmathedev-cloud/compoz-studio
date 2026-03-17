@@ -18,8 +18,6 @@ import {
   CarouselItemKindSchema,
   CarouselItemSchema,
   CarouselVariantSchema,
-  CaseStudyCardCellSchema,
-  CaseStudyCardItemSchema,
   FormCellSchema,
   FormFieldSchema,
   GalleryCellSchema,
@@ -31,6 +29,9 @@ import {
   SpacerCellSchema,
   StepItemSchema,
   StepsCellSchema,
+  StructuredCardCellSchema,
+  StructuredCardItemSchema,
+  StructuredCardSectionSchema,
   TimelineCellSchema,
   TimelineItemSchema,
 } from "@compoz/validation/pages/blocks/cells/cell";
@@ -47,7 +48,7 @@ export const CellFormSchema = z.discriminatedUnion("kind", [
   CardsCellSchema,
   CardsExtendedCellSchema,
   StepsCellSchema,
-  CaseStudyCardCellSchema,
+  StructuredCardCellSchema,
   FormCellSchema,
   TimelineCellSchema,
 ]);
@@ -118,14 +119,20 @@ export type StepItemFormValues = z.infer<typeof StepItemFormValuesSchema>;
 export const StepsCellFormValuesSchema = StepsCellSchema;
 export type StepsCellFormValues = z.infer<typeof StepsCellFormValuesSchema>;
 
-export const CaseStudyCardItemFormValuesSchema = CaseStudyCardItemSchema;
-export type CaseStudyCardItemFormValues = z.infer<
-  typeof CaseStudyCardItemFormValuesSchema
+export const StructuredCardSectionFormValuesSchema =
+  StructuredCardSectionSchema;
+export type StructuredCardSectionFormValues = z.infer<
+  typeof StructuredCardSectionFormValuesSchema
 >;
 
-export const CaseStudyCardCellFormValuesSchema = CaseStudyCardCellSchema;
-export type CaseStudyCardCellFormValues = z.infer<
-  typeof CaseStudyCardCellFormValuesSchema
+export const StructuredCardItemFormValuesSchema = StructuredCardItemSchema;
+export type StructuredCardItemFormValues = z.infer<
+  typeof StructuredCardItemFormValuesSchema
+>;
+
+export const StructuredCardCellFormValuesSchema = StructuredCardCellSchema;
+export type StructuredCardCellFormValues = z.infer<
+  typeof StructuredCardCellFormValuesSchema
 >;
 
 export const FormFieldFormValuesSchema = FormFieldSchema;

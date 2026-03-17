@@ -48,7 +48,7 @@ export default function SiteError({ error, reset }: SiteErrorProps) {
         <>
           <Button
             type="button"
-            variant="outline"
+            variant="outlineVanilla"
             className={cn(ui.systemPage.button)}
             onClick={reset}
           >
@@ -57,7 +57,7 @@ export default function SiteError({ error, reset }: SiteErrorProps) {
 
           <Button
             type="button"
-            variant="outline"
+            variant="outlineVanilla"
             className={cn(ui.systemPage.button)}
             asChild
           >

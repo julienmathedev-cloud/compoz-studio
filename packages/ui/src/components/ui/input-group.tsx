@@ -8,13 +8,77 @@ import { Input } from "@compoz/ui/components/ui/input";
 import { Textarea } from "@compoz/ui/components/ui/textarea";
 import { cn } from "@compoz/ui/lib/utils";
 
+type InputGroupVisualMode = "vanilla" | "studio";
+type InputGroupButtonVariant =
+  | "default"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "destructive"
+  | "link";
+
+function resolveInputGroupButtonVariant(
+  variant: InputGroupButtonVariant,
+  visualMode: InputGroupVisualMode,
+):
+  | "defaultVanilla"
+  | "outlineVanilla"
+  | "secondaryVanilla"
+  | "ghostVanilla"
+  | "destructiveVanilla"
+  | "linkVanilla"
+  | "defaultStudio"
+  | "outlineStudio"
+  | "secondaryStudio"
+  | "ghostStudio"
+  | "destructiveStudio"
+  | "linkStudio" {
+  if (visualMode === "studio") {
+    switch (variant) {
+      case "default":
+        return "defaultStudio";
+      case "outline":
+        return "outlineStudio";
+      case "secondary":
+        return "secondaryStudio";
+      case "ghost":
+        return "ghostStudio";
+      case "destructive":
+        return "destructiveStudio";
+      case "link":
+        return "linkStudio";
+    }
+  }
+
+  switch (variant) {
+    case "default":
+      return "defaultVanilla";
+    case "outline":
+      return "outlineVanilla";
+    case "secondary":
+      return "secondaryVanilla";
+    case "ghost":
+      return "ghostVanilla";
+    case "destructive":
+      return "destructiveVanilla";
+    case "link":
+      return "linkVanilla";
+  }
+}
+
+function resolveInputGroupFieldVariant(
+  visualMode: InputGroupVisualMode,
+): "defaultVanilla" | "defaultStudio" {
+  return visualMode === "studio" ? "defaultStudio" : "defaultVanilla";
+}
+
 function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="input-group"
       role="group"
       className={cn(
-        "border-input dark:bg-input/30 motion-safe:has-[[data-slot=input-group-control]:focus-visible]:border-ring motion-safe:has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50 has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot][aria-invalid=true]]:ring-destructive/60 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40 has-disabled:bg-input/50 dark:has-disabled:bg-input/80 h-8 rounded-lg border motion-safe:transition-colors has-disabled:opacity-50 motion-safe:has-[[data-slot=input-group-control]:focus-visible]:ring-[3px] motion-safe:has-[[data-slot][aria-invalid=true]]:ring-[3px] has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-end]]:[&>input]:pt-3 has-[>[data-align=block-start]]:[&>input]:pb-3 has-[>[data-align=inline-end]]:[&>input]:pr-1.5 has-[>[data-align=inline-start]]:[&>input]:pl-1.5 [[data-slot=combobox-content]_&]:focus-within:border-inherit [[data-slot=combobox-content]_&]:focus-within:ring-0 group/input-group relative flex w-full min-w-0 items-center outline-none has-[>textarea]:h-auto",
+        "border-input dark:bg-input/30 motion-safe:has-[[data-slot=input-group-control]:focus-visible]:border-ring motion-safe:has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50 has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot][aria-invalid=true]]:ring-destructive/60 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40 has-disabled:bg-input/50 dark:has-disabled:bg-input/80 h-8 rounded-lg border motion-safe:transition-colors motion-reduce:transition-none has-disabled:opacity-50 motion-safe:has-[[data-slot=input-group-control]:focus-visible]:ring-[3px] motion-safe:has-[[data-slot][aria-invalid=true]]:ring-[3px] has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-end]]:[&>input]:pt-3 has-[>[data-align=block-start]]:[&>input]:pb-3 has-[>[data-align=inline-end]]:[&>input]:pr-1.5 has-[>[data-align=inline-start]]:[&>input]:pl-1.5 [[data-slot=combobox-content]_&]:focus-within:border-inherit [[data-slot=combobox-content]_&]:focus-within:ring-0 group/input-group relative flex w-full min-w-0 items-center outline-none has-[>textarea]:h-auto",
         "motion-safe:has-[[data-slot][aria-invalid=true]]:focus-within:border-destructive motion-safe:has-[[data-slot][aria-invalid=true]]:focus-within:ring-destructive/60 dark:motion-safe:has-[[data-slot][aria-invalid=true]]:focus-within:ring-destructive/40",
         className,
       )}
@@ -88,15 +152,19 @@ function InputGroupButton({
   className,
   type = "button",
   variant = "ghost",
+  visualMode = "vanilla",
   size = "xs",
   ...props
-}: Omit<React.ComponentProps<typeof Button>, "size"> &
-  VariantProps<typeof inputGroupButtonVariants>) {
+}: Omit<React.ComponentProps<typeof Button>, "size" | "variant"> &
+  VariantProps<typeof inputGroupButtonVariants> & {
+    variant?: InputGroupButtonVariant;
+    visualMode?: InputGroupVisualMode;
+  }) {
   return (
     <Button
       type={type}
       data-size={size}
-      variant={variant}
+      variant={resolveInputGroupButtonVariant(variant, visualMode)}
       className={cn(inputGroupButtonVariants({ size }), className)}
       {...props}
     />
@@ -117,11 +185,15 @@ function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
 
 function InputGroupInput({
   className,
+  visualMode = "vanilla",
   ...props
-}: React.ComponentProps<"input">) {
+}: React.ComponentProps<"input"> & {
+  visualMode?: InputGroupVisualMode;
+}) {
   return (
     <Input
       data-slot="input-group-control"
+      variant={resolveInputGroupFieldVariant(visualMode)}
       className={cn(
         "rounded-none border-0 bg-transparent shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent flex-1",
         className,
@@ -133,11 +205,15 @@ function InputGroupInput({
 
 function InputGroupTextarea({
   className,
+  visualMode = "vanilla",
   ...props
-}: React.ComponentProps<"textarea">) {
+}: React.ComponentProps<"textarea"> & {
+  visualMode?: InputGroupVisualMode;
+}) {
   return (
     <Textarea
       data-slot="input-group-control"
+      variant={resolveInputGroupFieldVariant(visualMode)}
       className={cn(
         "rounded-none border-0 bg-transparent py-2 shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent flex-1 resize-none",
         className,

@@ -36,6 +36,7 @@ export type SiteGlobalUi = Readonly<{
   blockSection: SiteBlockSectionUi;
   cells: SiteCellsUi;
   pager: SiteDetailPagerUi;
+  reveal: SiteRevealUi;
 
   systemPage: SiteSystemPageUi;
   systemLoading: SiteSystemLoadingUi;
@@ -56,7 +57,7 @@ export type SiteCellsUi = Readonly<{
   cards: SiteCardsUi;
   cardsExtended: SiteCardsExtendedUi;
   steps: SiteStepsUi;
-  caseStudyCard: SiteCaseStudyCardUi;
+  structuredCard: SiteStructuredCardUi;
   image: SiteImageUi;
   navGallery: SiteNavGalleryUi;
   zoomGallery: SiteZoomGalleryUi;
@@ -221,7 +222,7 @@ export type SiteCardsExtendedUi = Readonly<{
 
 export type SiteCardsExtendedUiOverride = DeepPartial<SiteCardsExtendedUi>;
 
-export type SiteCaseStudyCardUi = Readonly<{
+export type SiteStructuredCardUi = Readonly<{
   root: string;
   grid: string;
   columns: Readonly<{
@@ -240,15 +241,9 @@ export type SiteCaseStudyCardUi = Readonly<{
   section: string;
   sectionTitle: string;
   sectionText: string;
-
-  labels: Readonly<{
-    context: string;
-    solution: string;
-    result: string;
-  }>;
 }>;
 
-export type SiteCaseStudyCardUiOverride = DeepPartial<SiteCaseStudyCardUi>;
+export type SiteStructuredCardUiOverride = DeepPartial<SiteStructuredCardUi>;
 
 export type SiteImageUi = Readonly<{
   container: string;
@@ -305,7 +300,7 @@ export type SiteCarouselUi = Readonly<{
     inactive: string;
   }>;
 
-  caseStudyCard: SiteCaseStudyCardUi;
+  structuredCard: SiteStructuredCardUi;
 }>;
 
 export type SiteCarouselUiOverride = DeepPartial<SiteCarouselUi>;
@@ -559,3 +554,31 @@ export type SiteTimelineUi = Readonly<{
 }>;
 
 export type SiteTimelineUiOverride = DeepPartial<SiteTimelineUi>;
+
+export type SiteRevealPresetUi = Readonly<{
+  hidden: Readonly<{
+    opacity: number;
+    y?: number;
+    scale?: number;
+  }>;
+  visible: Readonly<{
+    opacity: number;
+    y?: number;
+    scale?: number;
+  }>;
+  transition: Readonly<{
+    duration: number;
+    ease: "linear" | "easeIn" | "easeOut" | "easeInOut";
+  }>;
+}>;
+
+export type SiteRevealPresetUiOverride = DeepPartial<SiteRevealPresetUi>;
+
+export type SiteRevealUi = Readonly<{
+  fade: SiteRevealPresetUi;
+  "fade-up": SiteRevealPresetUi;
+  "scale-in": SiteRevealPresetUi;
+  "slide-up": SiteRevealPresetUi;
+}>;
+
+export type SiteRevealUiOverride = DeepPartial<SiteRevealUi>;

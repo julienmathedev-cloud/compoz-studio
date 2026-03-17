@@ -70,6 +70,7 @@ export const ENDPOINTS = {
       identity: ep(SETTINGS_BASE, "identity"),
       social: ep(SETTINGS_BASE, "social"),
       seo: ep(SETTINGS_BASE, "seo"),
+      theme: ep(SETTINGS_BASE, "theme"),
       bundle: ep(SETTINGS_BASE, "bundle"),
     },
 

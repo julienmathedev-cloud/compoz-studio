@@ -321,7 +321,7 @@ export function PrimaryMenuForm({
       }, handleSubmitErrors)}
       noValidate
     >
-      <Card variant="panel">
+      <Card variant="panelStudio">
         <CardContent className={cn(STACK_SM)}>
           {fields.length === 0 ? (
             <EmptyState text={t("studio.primaryMenuForm.empty.primary")} />

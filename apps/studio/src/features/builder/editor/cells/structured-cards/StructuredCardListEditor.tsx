@@ -1,14 +1,14 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/builder/editor/cells/case-study-card/CaseStudyCardListEditor.tsx
- * @layer ui/studio/pages/blocks/editor/case-study-card
+ * @file apps/studio/src/features/builder/editor/cells/structured-cards/StructuredCardListEditor.tsx
+ * @layer ui/studio/pages/blocks/editor/structured-card
  *
  * @description
- * Éditeur UI de liste de case studies (add/remove/reorder) pour CaseStudyCardCell.
+ * Éditeur UI de liste de structured cards (add/remove/reorder) pour StructuredCardCell.
  *
  * @remarks
- * - S’appuie sur `useFieldArray` côté parent (`CaseStudyCardCellEditor`).
+ * - S’appuie sur `useFieldArray` côté parent (`StructuredCardCellEditor`).
  * - Le reorder est géré par drag and drop via dnd-kit.
  * - Les updates métier (append/remove/move) sont déléguées à RHF.
  * - Les clés React utilisent `fieldId`, alors que le DnD s’appuie
@@ -34,11 +34,11 @@ import type {
 } from "react-hook-form";
 
 import { AddEmptyCardButton } from "@compoz/studio/components/molecules/controls/AddEmptyCardButton";
-import { CaseStudyCardItemEditor } from "@compoz/studio/features/builder/editor/cells/case-study-card/CaseStudyCardItemEditor";
+import { StructuredCardItemEditor } from "@compoz/studio/features/builder/editor/cells/structured-cards/StructuredCardItemEditor";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_SM } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
-import type { CaseStudyCardItemFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
+import type { StructuredCardItemFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 
 type UploadedRasterImage = Readonly<{
   url: string;
@@ -46,30 +46,30 @@ type UploadedRasterImage = Readonly<{
   height: number;
 }>;
 
-type CaseStudyCardFieldBasePath =
+type StructuredCardFieldBasePath =
   `rows.${number}.columns.${number}.cells.${number}`;
-type CaseStudyCardItemsPath = `${CaseStudyCardFieldBasePath}.items`;
+type StructuredCardItemsPath = `${StructuredCardFieldBasePath}.items`;
 
-type CaseStudyCardItemField = CaseStudyCardItemFormValues & {
+type StructuredCardItemField = StructuredCardItemFormValues & {
   fieldId: string;
 };
 
-export type CaseStudyCardListEditorProps = Readonly<{
+export type StructuredCardListEditorProps = Readonly<{
   control: Control<SectionBlockFormValues>;
   idPrefix: string;
-  basePath: CaseStudyCardFieldBasePath;
-  fields: ReadonlyArray<CaseStudyCardItemField>;
-  append: UseFieldArrayAppend<SectionBlockFormValues, CaseStudyCardItemsPath>;
+  basePath: StructuredCardFieldBasePath;
+  fields: ReadonlyArray<StructuredCardItemField>;
+  append: UseFieldArrayAppend<SectionBlockFormValues, StructuredCardItemsPath>;
   remove: UseFieldArrayRemove;
   move: UseFieldArrayMove;
   disabled?: boolean;
-  createEmptyItem: () => CaseStudyCardItemFormValues;
+  createEmptyItem: () => StructuredCardItemFormValues;
   minItems?: number;
   showError?: boolean;
   onUploadImage?: (file: File) => Promise<UploadedRasterImage>;
 }>;
 
-export function CaseStudyCardListEditor({
+export function StructuredCardListEditor({
   control,
   idPrefix,
   basePath,
@@ -82,7 +82,7 @@ export function CaseStudyCardListEditor({
   minItems = 1,
   showError = false,
   onUploadImage,
-}: CaseStudyCardListEditorProps) {
+}: StructuredCardListEditorProps) {
   const t = useTranslations();
 
   const sensors = useSensors(
@@ -141,11 +141,11 @@ export function CaseStudyCardListEditor({
         >
           <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {fields.map((item, index) => {
-              const itemPrefix = `${idPrefix}-case-study-card-${item.id}`;
+              const itemPrefix = `${idPrefix}-structured-card-${item.id}`;
 
               return (
                 <li key={item.fieldId} className="min-w-0">
-                  <CaseStudyCardItemEditor
+                  <StructuredCardItemEditor
                     control={control}
                     basePath={basePath}
                     index={index}
@@ -178,4 +178,4 @@ export function CaseStudyCardListEditor({
   );
 }
 
-CaseStudyCardListEditor.displayName = "CaseStudyCardListEditor";
+StructuredCardListEditor.displayName = "StructuredCardListEditor";

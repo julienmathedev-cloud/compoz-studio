@@ -155,7 +155,7 @@ export function BlockCellsDescription({
             <Tooltip key={key}>
               <TooltipTrigger asChild>
                 <Badge
-                  variant="outline"
+                  variant="outlineStudio"
                   className="h-8 w-8"
                   aria-label={`${kindLabel} (ligne ${row}, colonne ${column})`}
                   tabIndex={0}
@@ -175,7 +175,7 @@ export function BlockCellsDescription({
             </Tooltip>
           ))
         ) : (
-          <Badge variant="info">
+          <Badge variant="infoStudio">
             {t("studio.pageBlocksListSection.bloc.empty")}
           </Badge>
         )}

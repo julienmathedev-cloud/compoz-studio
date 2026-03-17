@@ -211,8 +211,8 @@ function assertColumns(
 
     if (!Array.isArray(col.cells)) {
       throw new DomainError({
-        code: EC.CELL_INVALID,
-        message: EC.CELL_INVALID,
+        code: EC.BLOCK_CELLS_INVALID,
+        message: EC.BLOCK_CELLS_INVALID,
         details: { path: [...colPath, "cells"] },
       });
     }
@@ -234,8 +234,8 @@ type AssertInsertAtProps = {
 export function assertInsertAt({ insertAt, size }: AssertInsertAtProps): void {
   if (insertAt < 0 || insertAt > size) {
     throw new DomainError({
-      code: EC.BLOCKS_INVALID,
-      message: EC.BLOCKS_INVALID,
+      code: EC.BLOCK_INSERT_AT_INVALID,
+      message: EC.BLOCK_INSERT_AT_INVALID,
       details: {
         path: ["insertAt"],
         meta: { insertAt, size },
@@ -255,8 +255,8 @@ export function assertPermutation({
 }: AssertPermutationProps): void {
   if (!Array.isArray(ordered)) {
     throw new DomainError({
-      code: EC.BLOCKS_INVALID,
-      message: EC.BLOCKS_INVALID,
+      code: EC.BLOCK_ORDER_INVALID,
+      message: EC.BLOCK_ORDER_INVALID,
       details: { path: ["orderedBlockIds"] },
     });
   }
@@ -296,8 +296,8 @@ export function assertPermutation({
 
   if (ordered.length !== current.length) {
     throw new DomainError({
-      code: EC.BLOCKS_INVALID,
-      message: EC.BLOCKS_INVALID,
+      code: EC.BLOCK_ORDER_INVALID,
+      message: EC.BLOCK_ORDER_INVALID,
       details: {
         path: ["orderedBlockIds"],
         meta: { expected: current.length, actual: ordered.length },

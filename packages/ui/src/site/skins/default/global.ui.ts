@@ -17,7 +17,6 @@ import { defaultButtonsUi } from "@compoz/ui/site/skins/default/cells/buttons-ce
 import { defaultCardsUi } from "@compoz/ui/site/skins/default/cells/cards-cell.ui";
 import { defaultCardsExtendedUi } from "@compoz/ui/site/skins/default/cells/cards-extended-cell.ui";
 import { defaultCarouselUi } from "@compoz/ui/site/skins/default/cells/carousel-cell.ui";
-import { defaultCaseStudyCardUi } from "@compoz/ui/site/skins/default/cells/case-study-card-cell.ui";
 import { defaultFormUi } from "@compoz/ui/site/skins/default/cells/form-cell.ui";
 import { defaultHeadingUi } from "@compoz/ui/site/skins/default/cells/heading-cell.ui";
 import { defaultImageUi } from "@compoz/ui/site/skins/default/cells/image-cell.ui";
@@ -26,11 +25,13 @@ import { defaultRichTextUi } from "@compoz/ui/site/skins/default/cells/richtext-
 import { defaultSeparatorUi } from "@compoz/ui/site/skins/default/cells/separator-cell.ui";
 import { defaultSpacerUi } from "@compoz/ui/site/skins/default/cells/spacer-cell.ui";
 import { defaultStepsUi } from "@compoz/ui/site/skins/default/cells/steps-cell.ui";
+import { defaultStructuredCardUi } from "@compoz/ui/site/skins/default/cells/structured-card-cell.ui";
 import { defaultTimelineUi } from "@compoz/ui/site/skins/default/cells/timeline-cell.ui";
 import { defaultZoomGalleryUi } from "@compoz/ui/site/skins/default/cells/zoom-gallery-cell.ui";
 import { defaultFooterUi } from "@compoz/ui/site/skins/default/footer.ui";
 import { defaultHeaderUi } from "@compoz/ui/site/skins/default/header.ui";
 import { defaultPagerUi } from "@compoz/ui/site/skins/default/pager.ui";
+import { defaultRevealUi } from "@compoz/ui/site/skins/default/reveal.ui";
 import { defaultSystemLoadingUi } from "@compoz/ui/site/skins/default/system-loading.ui";
 import { defaultSystemPageUi } from "@compoz/ui/site/skins/default/system-page.ui";
 
@@ -55,7 +56,7 @@ export const defaultGlobalUi: SiteGlobalUi = {
     cards: defaultCardsUi,
     cardsExtended: defaultCardsExtendedUi,
     steps: defaultStepsUi,
-    caseStudyCard: defaultCaseStudyCardUi,
+    structuredCard: defaultStructuredCardUi,
     heading: defaultHeadingUi,
     spacer: defaultSpacerUi,
     separator: defaultSeparatorUi,
@@ -64,6 +65,7 @@ export const defaultGlobalUi: SiteGlobalUi = {
     timeline: defaultTimelineUi,
   },
 
+  reveal: defaultRevealUi,
   pager: defaultPagerUi,
   blockSection: defaultBlockSectionUi,
   systemPage: defaultSystemPageUi,

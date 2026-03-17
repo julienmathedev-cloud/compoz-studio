@@ -29,6 +29,7 @@ import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { getPublishedSiteUrl } from "@compoz/studio/config/siteOrigin";
 import { StudioHintsPanel } from "@compoz/studio/features/_shared/components/StudioHintsPanel";
 import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useConfirmList } from "@compoz/studio/features/confirm/useConfirmList";
 import { usePublishSite } from "@compoz/studio/features/site/publish/usePublishSite";
 import { Button } from "@compoz/ui/components/ui/button";
 import { Card, CardContent, CardHeader } from "@compoz/ui/components/ui/card";
@@ -100,6 +101,7 @@ export function OverviewPublishCard({
 }: OverviewPublishCardProps) {
   const t = useTranslations();
   const tenantId = useTenantId();
+  const confirmList = useConfirmList();
 
   const { publish, isPublishing } = usePublishSite();
   const [last, setLast] = useState<PublishSiteResultDTO | null>(null);
@@ -202,18 +204,38 @@ export function OverviewPublishCard({
       : prePublishWarningHints;
 
   const handlePublish = useCallback(async () => {
+    if (isPublishing) return;
+
     setPublishWarnings([]);
+
+    if (prePublishWarningHints.length > 0) {
+      const ok = await confirmList({
+        title: t("studio.shared.confirm.saveDespiteWarnings.title"),
+        intro: t("studio.shared.confirm.saveDespiteWarnings.intro"),
+        items: prePublishWarningHints,
+        confirmLabel: t(
+          "studio.shared.confirm.saveDespiteWarnings.confirmLabel",
+        ),
+        cancelLabel: t("common.cancel"),
+        requireAckLabel: t(
+          "studio.shared.confirm.saveDespiteWarnings.requireAckLabel",
+        ),
+        tone: "default",
+      });
+
+      if (!ok) return;
+    }
 
     const result = await publish();
     if (!result) return;
 
     setLast(result);
     setPublishWarnings(result.warnings ?? []);
-  }, [publish]);
+  }, [confirmList, isPublishing, prePublishWarningHints, publish, t]);
 
   return (
     <Card
-      variant="panel"
+      variant="panelStudio"
       data-state={isError ? "error" : undefined}
       className={className}
     >
@@ -265,7 +287,11 @@ export function OverviewPublishCard({
         />
 
         <div className={cn(STACK_MD, "flex flex-1 flex-col")}>
-          <StudioHintsPanel id="publish-warnings" hints={visibleWarningHints} />
+          <StudioHintsPanel
+            id="publish-warnings"
+            hints={visibleWarningHints}
+            variant="warningStudio"
+          />
 
           {last ? (
             <Text as="p" variant="muted">
@@ -279,7 +305,11 @@ export function OverviewPublishCard({
           ) : null}
 
           <div className={cn(ROW_BETWEEN, "mt-auto gap-3")}>
-            <Button onClick={handlePublish} disabled={isPublishing}>
+            <Button
+              variant="defaultStudio"
+              onClick={handlePublish}
+              disabled={isPublishing}
+            >
               {isPublishing ? (
                 <LoadingStatus
                   label={t("studio.overviewSection.publish.inProgress")}
@@ -292,24 +322,28 @@ export function OverviewPublishCard({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outlineStudio">
                   {t("studio.overviewSection.publish.view")}
                 </Button>
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent align="end" className="w-24">
-                <DropdownMenuLabel>
+              <DropdownMenuContent
+                visualMode="studio"
+                align="end"
+                className="w-24"
+              >
+                <DropdownMenuLabel visualMode="studio">
                   {t("studio.overviewSection.publish.view")}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem visualMode="studio" asChild>
                   <Link href="/draft" target="_blank" rel="noopener noreferrer">
                     {t("studio.shared.visualize.draft")}
                   </Link>
                 </DropdownMenuItem>
 
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem visualMode="studio" asChild>
                   <Link
                     href={publishedUrl}
                     target="_blank"

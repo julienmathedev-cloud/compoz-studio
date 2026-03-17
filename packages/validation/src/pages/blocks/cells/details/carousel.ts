@@ -12,15 +12,15 @@ import { CellIdSchema } from "@compoz/validation/pages/blocks/cells/details/comm
 
 import { CardItemSchema } from "@compoz/validation/pages/blocks/cells/details/cards";
 import { CardsExtendedItemSchema } from "@compoz/validation/pages/blocks/cells/details/cards-extended";
-import { CaseStudyCardItemSchema } from "@compoz/validation/pages/blocks/cells/details/case-study-card";
 import { ImageEditorSchema } from "@compoz/validation/pages/blocks/cells/details/image";
+import { StructuredCardItemSchema } from "@compoz/validation/pages/blocks/cells/details/structured-card";
 
 /* ------------------------------------------------------------------ */
 /* Variant                                                            */
 /* ------------------------------------------------------------------ */
 
 export const CarouselVariantSchema = z.enum(["carousel", "slider"], {
-  message: ERROR_CODES.CELL_INVALID,
+  message: ERROR_CODES.CELL_CAROUSEL_VARIANT_INVALID,
 });
 
 /* ------------------------------------------------------------------ */
@@ -28,9 +28,9 @@ export const CarouselVariantSchema = z.enum(["carousel", "slider"], {
 /* ------------------------------------------------------------------ */
 
 export const CarouselItemKindSchema = z.enum(
-  ["image", "card", "cardsExtended", "caseStudyCard"],
+  ["image", "card", "cardsExtended", "structuredCard"],
   {
-    message: ERROR_CODES.CELL_INVALID,
+    message: ERROR_CODES.CELL_CAROUSEL_ITEM_KIND_INVALID,
   },
 );
 
@@ -42,7 +42,7 @@ export const CarouselItemSchema = z.union([
   ImageEditorSchema,
   CardItemSchema,
   CardsExtendedItemSchema,
-  CaseStudyCardItemSchema,
+  StructuredCardItemSchema,
 ]);
 
 /* ------------------------------------------------------------------ */
@@ -57,12 +57,20 @@ export const CarouselCellSchema = z
 
     variant: CarouselVariantSchema,
 
-    showDots: z.boolean(),
+    showDots: z.boolean({
+      message: ERROR_CODES.CELL_CAROUSEL_SHOW_DOTS_INVALID,
+    }),
 
-    showArrows: z.boolean(),
+    showArrows: z.boolean({
+      message: ERROR_CODES.CELL_CAROUSEL_SHOW_ARROWS_INVALID,
+    }),
 
     itemKind: CarouselItemKindSchema,
 
-    items: z.array(CarouselItemSchema).min(1, ERROR_CODES.CELL_INVALID),
+    items: z
+      .array(CarouselItemSchema, {
+        message: ERROR_CODES.CELL_CAROUSEL_ITEMS_INVALID,
+      })
+      .min(1, ERROR_CODES.CELL_CAROUSEL_ITEMS_MIN_1),
   })
   .strict();

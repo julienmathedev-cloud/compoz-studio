@@ -48,7 +48,7 @@ export function getCellKind(value: unknown): CellKind | null {
     kind === "cardsExtended" ||
     kind === "steps" ||
     kind === "timeline" ||
-    kind === "caseStudyCard" ||
+    kind === "structuredCard" ||
     kind === "form" ||
     kind === "image" ||
     kind === "gallery" ||
@@ -70,7 +70,7 @@ export function getCellKindIcon(kind: CellKind): LucideIcon {
   if (kind === "cardsExtended") return LayoutGrid;
   if (kind === "steps") return ListOrdered;
   if (kind === "timeline") return History;
-  if (kind === "caseStudyCard") return FileText;
+  if (kind === "structuredCard") return FileText;
   if (kind === "form") return Mail;
   if (kind === "image") return ImageIcon;
   if (kind === "carousel") return GalleryHorizontal;

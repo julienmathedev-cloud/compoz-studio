@@ -13,7 +13,6 @@ import { toButtonsCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/button
 import { toCardsCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/cards";
 import { toCardsExtendedCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/cards-extended";
 import { toCarouselCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/carousel";
-import { toCaseStudyCardCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/case-study-card";
 import { toFormCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/form";
 import { toGalleryCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/gallery";
 import { toHeadingCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/heading";
@@ -22,6 +21,7 @@ import { toRichTextCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/rich-
 import { toSeparatorCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/separator";
 import { toSpacerCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/spacer";
 import { toStepsCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/steps";
+import { toStructuredCardCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/structured-card";
 import { toTimelineCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/timeline";
 
 export function toCellShapeFromDTO(cell: CellDTO): CellFormValues {
@@ -30,12 +30,14 @@ export function toCellShapeFromDTO(cell: CellDTO): CellFormValues {
   if (cell.kind === "separator") return toSeparatorCellShapeFromDTO(cell);
   if (cell.kind === "buttons") return toButtonsCellShapeFromDTO(cell);
   if (cell.kind === "cards") return toCardsCellShapeFromDTO(cell);
-  if (cell.kind === "cardsExtended")
+  if (cell.kind === "cardsExtended") {
     return toCardsExtendedCellShapeFromDTO(cell);
+  }
   if (cell.kind === "steps") return toStepsCellShapeFromDTO(cell);
   if (cell.kind === "timeline") return toTimelineCellShapeFromDTO(cell);
-  if (cell.kind === "caseStudyCard")
-    return toCaseStudyCardCellShapeFromDTO(cell);
+  if (cell.kind === "structuredCard") {
+    return toStructuredCardCellShapeFromDTO(cell);
+  }
   if (cell.kind === "form") return toFormCellShapeFromDTO(cell);
   if (cell.kind === "image") return toImageCellShapeFromDTO(cell);
   if (cell.kind === "gallery") return toGalleryCellShapeFromDTO(cell);

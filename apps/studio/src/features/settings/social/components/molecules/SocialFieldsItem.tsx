@@ -218,7 +218,7 @@ export function SocialFieldsItem({
           <StudioButtonGroup className="shrink-0">
             <TooltipButton
               type="button"
-              variant="ghost"
+              variant="ghostStudio"
               size="icon"
               onClick={onMoveUp}
               disabled={disabled || isFirst}
@@ -236,7 +236,7 @@ export function SocialFieldsItem({
 
             <TooltipButton
               type="button"
-              variant="ghost"
+              variant="ghostStudio"
               size="icon"
               onClick={onMoveDown}
               disabled={disabled || isLast}

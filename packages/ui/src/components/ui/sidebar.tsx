@@ -1,7 +1,7 @@
 "use client";
 
-import { cva, type VariantProps } from "class-variance-authority";
 import * as Slot from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
 import { Button } from "@compoz/ui/components/ui/button";
@@ -40,6 +40,8 @@ type SidebarContextProps = {
   isMobile: boolean;
   toggleSidebar: () => void;
 };
+
+type SidebarVisualMode = "vanilla" | "studio";
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
 
@@ -152,6 +154,7 @@ function Sidebar({
   side = "left",
   variant = "sidebar",
   collapsible = "offcanvas",
+  visualMode = "vanilla",
   className,
   children,
   dir,
@@ -160,6 +163,7 @@ function Sidebar({
   side?: "left" | "right";
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
+  visualMode?: SidebarVisualMode;
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
 
@@ -182,6 +186,7 @@ function Sidebar({
     return (
       <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
         <SheetContent
+          buttonVariantMode={visualMode}
           dir={dir}
           data-sidebar="sidebar"
           data-slot="sidebar"
@@ -218,7 +223,7 @@ function Sidebar({
         data-slot="sidebar-gap"
         className={cn(
           // ✅ PRM : transition width uniquement en motion-safe
-          "motion-safe:transition-[width] motion-safe:duration-200 motion-safe:ease-linear motion-reduce:transition-none relative w-(--sidebar-width) bg-transparent",
+          "motion-safe:transition-[width] motion-safe:duration-200 motion-safe:ease-linear motion-reduce:transition-none motion-reduce:animate-none relative w-(--sidebar-width) bg-transparent",
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
           variant === "floating" || variant === "inset"
@@ -231,7 +236,7 @@ function Sidebar({
         data-side={side}
         className={cn(
           // ✅ PRM : transition left/right/width uniquement en motion-safe
-          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) motion-safe:transition-[left,right,width] motion-safe:duration-200 motion-safe:ease-linear motion-reduce:transition-none data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] md:flex",
+          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) motion-safe:transition-[left,right,width] motion-safe:duration-200 motion-safe:ease-linear motion-reduce:transition-none motion-reduce:animate-none data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] md:flex",
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
@@ -255,15 +260,18 @@ function Sidebar({
 function SidebarTrigger({
   className,
   onClick,
+  visualMode = "vanilla",
   ...props
-}: React.ComponentProps<typeof Button>) {
+}: React.ComponentProps<typeof Button> & {
+  visualMode?: SidebarVisualMode;
+}) {
   const { toggleSidebar } = useSidebar();
 
   return (
     <Button
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
-      variant="header"
+      variant={visualMode === "studio" ? "headerStudio" : "ghostVanilla"}
       size="icon"
       className={cn(className)}
       onClick={(event) => {
@@ -291,7 +299,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
       title="Toggle Sidebar"
       className={cn(
         // ✅ PRM : hover/transition uniquement en motion-safe
-        "motion-safe:hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 motion-safe:transition-all motion-safe:ease-linear motion-reduce:transition-none group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-[2px] sm:flex ltr:-translate-x-1/2 rtl:-translate-x-1/2",
+        "motion-safe:hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 motion-safe:transition-all motion-safe:ease-linear motion-reduce:transition-none motion-reduce:animate-none group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-[2px] sm:flex ltr:-translate-x-1/2 rtl:-translate-x-1/2",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
         "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
         "motion-safe:hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full",
@@ -319,10 +327,14 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
 
 function SidebarInput({
   className,
+  visualMode = "vanilla",
   ...props
-}: React.ComponentProps<typeof Input>) {
+}: React.ComponentProps<typeof Input> & {
+  visualMode?: SidebarVisualMode;
+}) {
   return (
     <Input
+      variant={visualMode === "studio" ? "defaultStudio" : "defaultVanilla"}
       data-slot="sidebar-input"
       data-sidebar="input"
       className={cn("bg-background h-8 w-full shadow-none", className)}
@@ -405,7 +417,7 @@ function SidebarGroupLabel({
       data-sidebar="group-label"
       className={cn(
         // ✅ PRM : transition (margin/opacity) uniquement en motion-safe
-        "text-sidebar-foreground/70 h-8 rounded-md px-2 text-xs font-medium motion-safe:transition-[margin,opacity] motion-safe:duration-200 motion-safe:ease-linear motion-reduce:transition-none group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:pointer-events-none group-data-[collapsible=icon]:opacity-0 focus-visible:outline-none motion-safe:focus-visible:ring-2 motion-safe:focus-visible:ring-ring/70 motion-safe:focus-visible:ring-offset-0 [&>svg]:size-4 flex shrink-0 items-center outline-hidden [&>svg]:shrink-0",
+        "text-sidebar-foreground/70 h-8 rounded-md px-2 text-xs font-medium motion-safe:transition-[margin,opacity] motion-safe:duration-200 motion-safe:ease-linear motion-reduce:transition-none motion-reduce:animate-none group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:pointer-events-none group-data-[collapsible=icon]:opacity-0 focus-visible:outline-none motion-safe:focus-visible:ring-2 motion-safe:focus-visible:ring-ring/70 motion-safe:focus-visible:ring-offset-0 [&>svg]:size-4 flex shrink-0 items-center outline-hidden [&>svg]:shrink-0",
         className,
       )}
       {...props}

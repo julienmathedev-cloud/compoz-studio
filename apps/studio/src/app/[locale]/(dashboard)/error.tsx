@@ -50,7 +50,7 @@ export default function StudioError({ error, reset }: StudioErrorProps) {
         ) : null}
 
         <div className={cn(ROW_SM)}>
-          <Button type="button" variant="ghost" onClick={reset}>
+          <Button type="button" variant="ghostStudio" onClick={reset}>
             {t("studio.pages.error.retry")}
           </Button>
         </div>

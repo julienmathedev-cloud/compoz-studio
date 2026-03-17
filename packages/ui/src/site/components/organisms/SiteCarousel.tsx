@@ -9,7 +9,7 @@
  */
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@compoz/ui/components/ui/button";
 import { cn } from "@compoz/ui/lib/utils";
@@ -22,7 +22,10 @@ const MIN_INTERVAL_MS = 2000;
 const FIRST_INTERVAL_MS = 2500;
 
 function readPrefersReducedMotion(): boolean {
-  if (typeof window === "undefined") return false;
+  if (typeof window === "undefined") {
+    return false;
+  }
+
   const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
   return Boolean(mq?.matches);
 }
@@ -46,20 +49,19 @@ export function SiteCarousel({
   isFullBleed = false,
   priority = false,
 }: SiteCarouselProps) {
-  const normalizedItems = useMemo(() => items ?? [], [items]);
-  const count = normalizedItems.length;
+  const count = items.length;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [prefersReducedMotion] = useState(() => readPrefersReducedMotion());
 
-  const hasAutoplay =
-    !prefersReducedMotion && intervalMs > 0 && normalizedItems.length > 1;
-
+  const hasAutoplay = !prefersReducedMotion && intervalMs > 0 && count > 1;
   const safeMs = Math.max(intervalMs, MIN_INTERVAL_MS);
   const safeIndex = count === 0 ? 0 : Math.min(currentIndex, count - 1);
 
   useEffect(() => {
-    if (!hasAutoplay) return;
+    if (!hasAutoplay) {
+      return;
+    }
 
     let firstTimeout: ReturnType<typeof setTimeout> | null = null;
     let intervalId: ReturnType<typeof setInterval> | null = null;
@@ -73,7 +75,9 @@ export function SiteCarousel({
     };
 
     const start = () => {
-      if (firstTimeout || intervalId) return;
+      if (firstTimeout || intervalId) {
+        return;
+      }
 
       firstTimeout = setTimeout(() => {
         tick();
@@ -81,9 +85,11 @@ export function SiteCarousel({
       }, FIRST_INTERVAL_MS);
     };
 
-    if (document.visibilityState === "visible") start();
+    if (document.visibilityState === "visible") {
+      start();
+    }
 
-    const onVis = () => {
+    const onVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         start();
         return;
@@ -93,22 +99,31 @@ export function SiteCarousel({
         clearTimeout(firstTimeout);
         firstTimeout = null;
       }
+
       if (intervalId) {
         clearInterval(intervalId);
         intervalId = null;
       }
     };
 
-    document.addEventListener("visibilitychange", onVis);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
-      document.removeEventListener("visibilitychange", onVis);
-      if (firstTimeout) clearTimeout(firstTimeout);
-      if (intervalId) clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+
+      if (firstTimeout) {
+        clearTimeout(firstTimeout);
+      }
+
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
   }, [count, hasAutoplay, safeMs]);
 
-  if (count === 0) return null;
+  if (count === 0) {
+    return null;
+  }
 
   const goPrev = () => {
     setCurrentIndex((prev) => (prev === 0 ? count - 1 : prev - 1));
@@ -134,7 +149,7 @@ export function SiteCarousel({
             <Button
               type="button"
               size="icon"
-              variant="ghost"
+              variant="ghostVanilla"
               onClick={goPrev}
               aria-label="Slide précédent"
               className={cn(ui.carousel.arrowButton, "left-0")}
@@ -145,7 +160,7 @@ export function SiteCarousel({
             <Button
               type="button"
               size="icon"
-              variant="ghost"
+              variant="ghostVanilla"
               onClick={goNext}
               aria-label="Slide suivant"
               className={cn(ui.carousel.arrowButton, "right-0")}
@@ -156,7 +171,7 @@ export function SiteCarousel({
         ) : null}
 
         <div className={ui.carousel.track}>
-          {normalizedItems.map((item, index) => {
+          {items.map((item, index) => {
             const isActive = index === safeIndex;
 
             return (
@@ -185,7 +200,7 @@ export function SiteCarousel({
 
       {showDots && count > 1 ? (
         <div className={ui.carousel.dots}>
-          {normalizedItems.map((item, index) => {
+          {items.map((item, index) => {
             const isActive = index === safeIndex;
 
             return (

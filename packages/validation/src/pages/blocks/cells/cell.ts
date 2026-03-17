@@ -20,11 +20,6 @@ import type {
 } from "@compoz/validation/pages/blocks/cells/details/carousel";
 import { CarouselCellSchema } from "@compoz/validation/pages/blocks/cells/details/carousel";
 import type {
-  CaseStudyCardColumnsSchema,
-  CaseStudyCardItemSchema,
-} from "@compoz/validation/pages/blocks/cells/details/case-study-card";
-import { CaseStudyCardCellSchema } from "@compoz/validation/pages/blocks/cells/details/case-study-card";
-import type {
   FormFieldSchema,
   FormFieldTypeSchema,
 } from "@compoz/validation/pages/blocks/cells/details/form";
@@ -38,6 +33,12 @@ import { SeparatorCellSchema } from "@compoz/validation/pages/blocks/cells/detai
 import { SpacerCellSchema } from "@compoz/validation/pages/blocks/cells/details/spacer";
 import type { StepItemSchema } from "@compoz/validation/pages/blocks/cells/details/steps";
 import { StepsCellSchema } from "@compoz/validation/pages/blocks/cells/details/steps";
+import type {
+  StructuredCardColumnsSchema,
+  StructuredCardItemSchema,
+  StructuredCardSectionSchema,
+} from "@compoz/validation/pages/blocks/cells/details/structured-card";
+import { StructuredCardCellSchema } from "@compoz/validation/pages/blocks/cells/details/structured-card";
 import type {
   TimelineItemSchema,
   TimelineKeywordSchema,
@@ -56,7 +57,7 @@ export const CellSchema = z.discriminatedUnion("kind", [
   CardsCellSchema,
   CardsExtendedCellSchema,
   StepsCellSchema,
-  CaseStudyCardCellSchema,
+  StructuredCardCellSchema,
   FormCellSchema,
   TimelineCellSchema,
 ]);
@@ -77,8 +78,10 @@ export type CarouselCellInput = z.input<typeof CarouselCellSchema>;
 export type CarouselCellOutput = z.output<typeof CarouselCellSchema>;
 export type StepsCellInput = z.input<typeof StepsCellSchema>;
 export type StepsCellOutput = z.output<typeof StepsCellSchema>;
-export type CaseStudyCardCellInput = z.input<typeof CaseStudyCardCellSchema>;
-export type CaseStudyCardCellOutput = z.output<typeof CaseStudyCardCellSchema>;
+export type StructuredCardCellInput = z.input<typeof StructuredCardCellSchema>;
+export type StructuredCardCellOutput = z.output<
+  typeof StructuredCardCellSchema
+>;
 export type FormCellInput = z.input<typeof FormCellSchema>;
 export type FormCellOutput = z.output<typeof FormCellSchema>;
 export type TimelineCellInput = z.input<typeof TimelineCellSchema>;
@@ -101,11 +104,14 @@ export type CarouselItemShape = z.infer<typeof CarouselItemSchema>;
 export type CarouselCellShape = z.infer<typeof CarouselCellSchema>;
 export type StepItemShape = z.infer<typeof StepItemSchema>;
 export type StepsCellShape = z.infer<typeof StepsCellSchema>;
-export type CaseStudyCardItemShape = z.infer<typeof CaseStudyCardItemSchema>;
-export type CaseStudyCardColumnsShape = z.infer<
-  typeof CaseStudyCardColumnsSchema
+export type StructuredCardSectionShape = z.infer<
+  typeof StructuredCardSectionSchema
 >;
-export type CaseStudyCardCellShape = z.infer<typeof CaseStudyCardCellSchema>;
+export type StructuredCardItemShape = z.infer<typeof StructuredCardItemSchema>;
+export type StructuredCardColumnsShape = z.infer<
+  typeof StructuredCardColumnsSchema
+>;
+export type StructuredCardCellShape = z.infer<typeof StructuredCardCellSchema>;
 export type FormFieldTypeShape = z.infer<typeof FormFieldTypeSchema>;
 export type FormFieldShape = z.infer<typeof FormFieldSchema>;
 export type FormCellShape = z.infer<typeof FormCellSchema>;
@@ -138,11 +144,6 @@ export {
   CarouselVariantSchema,
 } from "@compoz/validation/pages/blocks/cells/details/carousel";
 export {
-  CaseStudyCardCellSchema,
-  CaseStudyCardColumnsSchema,
-  CaseStudyCardItemSchema,
-} from "@compoz/validation/pages/blocks/cells/details/case-study-card";
-export {
   FormCellSchema,
   FormFieldSchema,
   FormFieldTypeSchema,
@@ -165,6 +166,12 @@ export {
   StepsCellSchema,
   StepsVariantSchema,
 } from "@compoz/validation/pages/blocks/cells/details/steps";
+export {
+  StructuredCardCellSchema,
+  StructuredCardColumnsSchema,
+  StructuredCardItemSchema,
+  StructuredCardSectionSchema,
+} from "@compoz/validation/pages/blocks/cells/details/structured-card";
 export {
   TimelineCellSchema,
   TimelineItemSchema,

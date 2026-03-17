@@ -91,7 +91,12 @@ export function SectionBlockRenderer({
                       lcpTarget.cellIndex === cellIndex;
 
                     return (
-                      <div key={__cellKey(cell, cellIndex)}>
+                      <div
+                        key={__cellKey(cell, cellIndex)}
+                        data-cell-id={cell.id}
+                        data-cell-kind={cell.kind}
+                        className="relative min-w-0"
+                      >
                         {renderCellFromRegistry(
                           cell,
                           containerMode === "fullBleed",
@@ -118,7 +123,7 @@ SectionBlockRenderer.displayName = "SectionBlockRenderer";
 /* -------------------------------------------------------------------------- */
 
 function __cellKey(cell: CellShape, index: number) {
-  return toStableUiKey({ id: `${cell.kind}-${index}` }, index);
+  return toStableUiKey({ id: cell.id }, index);
 }
 
 function isMediaCell(cell: CellShape): boolean {

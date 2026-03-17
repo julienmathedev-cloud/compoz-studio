@@ -12,7 +12,7 @@ import { ButtonsCellRenderer } from "@compoz/ui/renderer/cells/ButtonsCellRender
 import { CardsCellRenderer } from "@compoz/ui/renderer/cells/CardsCellRenderer";
 import { CardsExtendedCellRenderer } from "@compoz/ui/renderer/cells/CardsExtendedCellRenderer";
 import { CarouselCellRenderer } from "@compoz/ui/renderer/cells/CarouselCellRenderer";
-import { CaseStudyCardCellRenderer } from "@compoz/ui/renderer/cells/CaseStudyCardCellRenderer";
+import { StructuredCardCellRenderer } from "@compoz/ui/renderer/cells/StructuredCardCellRenderer";
 import { FormCellRenderer } from "@compoz/ui/renderer/cells/FormCellRenderer";
 import { GalleryCellRenderer } from "@compoz/ui/renderer/cells/GalleryCellRenderer";
 import { HeadingCellRenderer } from "@compoz/ui/renderer/cells/HeadingCellRenderer";
@@ -30,7 +30,7 @@ import type {
   CardsCellShape,
   CardsExtendedCellShape,
   CarouselCellShape,
-  CaseStudyCardCellShape,
+  StructuredCardCellShape,
   CellShape,
   FormCellShape,
   GalleryCellShape,
@@ -95,10 +95,10 @@ export const cellRegistry: Record<string, CellRenderer> = {
     <TimelineCellRenderer cell={cell as TimelineCellShape} ui={ui.timeline} />
   ),
 
-  caseStudyCard: ({ cell, ui }) => (
-    <CaseStudyCardCellRenderer
-      cell={cell as CaseStudyCardCellShape}
-      ui={ui.caseStudyCard}
+  structuredCard: ({ cell, ui }) => (
+    <StructuredCardCellRenderer
+      cell={cell as StructuredCardCellShape}
+      ui={ui.structuredCard}
     />
   ),
 

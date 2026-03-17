@@ -8,25 +8,28 @@
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type {
+  CardItem,
+  CardsExtendedItem,
   CarouselItem,
   CarouselItemKind,
   Cell,
+  ImageEditor,
+  StructuredCardItem,
 } from "@compoz/core/domain/pages/entities/cell";
+import { assertCardItem } from "@compoz/core/domain/pages/validators/cells/card";
+import { assertCardsExtendedItem } from "@compoz/core/domain/pages/validators/cells/card-extended";
 import { assertImageEditor } from "@compoz/core/domain/pages/validators/cells/shared-image";
+import { assertStructuredCardItem } from "@compoz/core/domain/pages/validators/cells/structured-card";
 
 type Path = ReadonlyArray<string | number>;
 
-function throwInvalidCell(path: Path): never {
-  throw new DomainError({
-    code: EC.CELL_INVALID,
-    message: EC.CELL_INVALID,
-    details: { path },
-  });
-}
-
-function assertCarouselVariant(value: unknown, path: Path) {
+function assertCarouselVariant(value: unknown, path: Path): void {
   if (value !== "carousel" && value !== "slider") {
-    throwInvalidCell(path);
+    throw new DomainError({
+      code: EC.CELL_CAROUSEL_VARIANT_INVALID,
+      message: EC.CELL_CAROUSEL_VARIANT_INVALID,
+      details: { path, meta: { variant: value } },
+    });
   }
 }
 
@@ -38,143 +41,13 @@ function assertCarouselItemKind(
     value !== "image" &&
     value !== "card" &&
     value !== "cardsExtended" &&
-    value !== "caseStudyCard"
+    value !== "structuredCard"
   ) {
-    throwInvalidCell(path);
-  }
-}
-
-function assertCarouselImageItem(item: unknown, path: Path) {
-  assertImageEditor(item, path);
-}
-
-function assertCarouselCardItem(item: unknown, path: Path) {
-  if (!item || typeof item !== "object") {
-    throwInvalidCell(path);
-  }
-
-  const candidate = item as {
-    id?: unknown;
-    title?: unknown;
-    description?: unknown;
-    icon?: unknown;
-  };
-
-  if (typeof candidate.id !== "string" || !candidate.id.trim()) {
-    throwInvalidCell([...path, "id"]);
-  }
-
-  if (typeof candidate.title !== "string" || !candidate.title.trim()) {
-    throwInvalidCell([...path, "title"]);
-  }
-
-  if (
-    typeof candidate.description !== "string" ||
-    !candidate.description.trim()
-  ) {
-    throwInvalidCell([...path, "description"]);
-  }
-
-  if (
-    typeof candidate.icon !== "undefined" &&
-    typeof candidate.icon !== "string"
-  ) {
-    throwInvalidCell([...path, "icon"]);
-  }
-}
-
-function assertCarouselCardsExtendedItem(item: unknown, path: Path) {
-  if (!item || typeof item !== "object") {
-    throwInvalidCell(path);
-  }
-
-  const candidate = item as {
-    id?: unknown;
-    title?: unknown;
-    description?: unknown;
-    bullets?: unknown;
-    footer?: unknown;
-    icon?: unknown;
-  };
-
-  if (typeof candidate.id !== "string" || !candidate.id.trim()) {
-    throwInvalidCell([...path, "id"]);
-  }
-
-  if (typeof candidate.title !== "string" || !candidate.title.trim()) {
-    throwInvalidCell([...path, "title"]);
-  }
-
-  if (
-    typeof candidate.description !== "string" ||
-    !candidate.description.trim()
-  ) {
-    throwInvalidCell([...path, "description"]);
-  }
-
-  if (!Array.isArray(candidate.bullets)) {
-    throwInvalidCell([...path, "bullets"]);
-  }
-
-  for (let index = 0; index < candidate.bullets.length; index += 1) {
-    const bullet = candidate.bullets[index];
-
-    if (typeof bullet !== "string" || !bullet.trim()) {
-      throwInvalidCell([...path, "bullets", index]);
-    }
-  }
-
-  if (
-    typeof candidate.footer !== "undefined" &&
-    typeof candidate.footer !== "string"
-  ) {
-    throwInvalidCell([...path, "footer"]);
-  }
-
-  if (
-    typeof candidate.icon !== "undefined" &&
-    typeof candidate.icon !== "string"
-  ) {
-    throwInvalidCell([...path, "icon"]);
-  }
-}
-
-function assertCarouselCaseStudyCardItem(item: unknown, path: Path) {
-  if (!item || typeof item !== "object") {
-    throwInvalidCell(path);
-  }
-
-  const candidate = item as {
-    id?: unknown;
-    image?: unknown;
-    title?: unknown;
-    context?: unknown;
-    solution?: unknown;
-    result?: unknown;
-  };
-
-  if (typeof candidate.id !== "string" || !candidate.id.trim()) {
-    throwInvalidCell([...path, "id"]);
-  }
-
-  if (typeof candidate.title !== "string" || !candidate.title.trim()) {
-    throwInvalidCell([...path, "title"]);
-  }
-
-  if (typeof candidate.context !== "string" || !candidate.context.trim()) {
-    throwInvalidCell([...path, "context"]);
-  }
-
-  if (typeof candidate.solution !== "string" || !candidate.solution.trim()) {
-    throwInvalidCell([...path, "solution"]);
-  }
-
-  if (typeof candidate.result !== "string" || !candidate.result.trim()) {
-    throwInvalidCell([...path, "result"]);
-  }
-
-  if (typeof candidate.image !== "undefined") {
-    assertImageEditor(candidate.image, [...path, "image"]);
+    throw new DomainError({
+      code: EC.CELL_CAROUSEL_ITEM_KIND_INVALID,
+      message: EC.CELL_CAROUSEL_ITEM_KIND_INVALID,
+      details: { path, meta: { itemKind: value } },
+    });
   }
 }
 
@@ -182,47 +55,70 @@ function assertCarouselItemByKind(
   item: CarouselItem,
   itemKind: CarouselItemKind,
   path: Path,
-) {
+): void {
   switch (itemKind) {
     case "image":
-      assertCarouselImageItem(item, path);
+      assertImageEditor(item as ImageEditor, path);
       return;
 
     case "card":
-      assertCarouselCardItem(item, path);
+      assertCardItem(item as CardItem, path);
       return;
 
     case "cardsExtended":
-      assertCarouselCardsExtendedItem(item, path);
+      assertCardsExtendedItem(item as CardsExtendedItem, path);
       return;
 
-    case "caseStudyCard":
-      assertCarouselCaseStudyCardItem(item, path);
+    case "structuredCard":
+      assertStructuredCardItem(item as StructuredCardItem, path);
       return;
-
-    default:
-      throwInvalidCell(path);
   }
 }
 
 export function assertCarouselCell(
   cell: Extract<Cell, { kind: "carousel" }>,
   path: Path,
-) {
+): void {
   assertCarouselVariant(cell.variant, [...path, "variant"]);
 
   if (typeof cell.showDots !== "boolean") {
-    throwInvalidCell([...path, "showDots"]);
+    throw new DomainError({
+      code: EC.CELL_CAROUSEL_SHOW_DOTS_INVALID,
+      message: EC.CELL_CAROUSEL_SHOW_DOTS_INVALID,
+      details: {
+        path: [...path, "showDots"],
+        meta: { showDots: cell.showDots },
+      },
+    });
   }
 
   if (typeof cell.showArrows !== "boolean") {
-    throwInvalidCell([...path, "showArrows"]);
+    throw new DomainError({
+      code: EC.CELL_CAROUSEL_SHOW_ARROWS_INVALID,
+      message: EC.CELL_CAROUSEL_SHOW_ARROWS_INVALID,
+      details: {
+        path: [...path, "showArrows"],
+        meta: { showArrows: cell.showArrows },
+      },
+    });
   }
 
   assertCarouselItemKind(cell.itemKind, [...path, "itemKind"]);
 
-  if (!Array.isArray(cell.items) || cell.items.length < 1) {
-    throwInvalidCell([...path, "items"]);
+  if (!Array.isArray(cell.items)) {
+    throw new DomainError({
+      code: EC.CELL_CAROUSEL_ITEMS_INVALID,
+      message: EC.CELL_CAROUSEL_ITEMS_INVALID,
+      details: { path: [...path, "items"] },
+    });
+  }
+
+  if (cell.items.length < 1) {
+    throw new DomainError({
+      code: EC.CELL_CAROUSEL_ITEMS_MIN_1,
+      message: EC.CELL_CAROUSEL_ITEMS_MIN_1,
+      details: { path: [...path, "items"] },
+    });
   }
 
   cell.items.forEach((item, index) => {

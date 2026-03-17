@@ -22,24 +22,24 @@ export function assertStepsCell(
     !STEPS_VARIANTS.includes(cell.variant)
   ) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_STEPS_VARIANT_INVALID,
+      message: EC.CELL_STEPS_VARIANT_INVALID,
       details: { path: [...path, "variant"], meta: { variant: cell.variant } },
     });
   }
 
   if (!Array.isArray(cell.items)) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_STEPS_ITEMS_INVALID,
+      message: EC.CELL_STEPS_ITEMS_INVALID,
       details: { path: [...path, "items"] },
     });
   }
 
   if (cell.items.length < 1) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_STEPS_ITEMS_MIN_1,
+      message: EC.CELL_STEPS_ITEMS_MIN_1,
       details: { path: [...path, "items"] },
     });
   }
@@ -52,32 +52,32 @@ export function assertStepsCell(
 function assertStepItem(item: StepItem, path: Path) {
   if (!item || typeof item !== "object") {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_STEP_ITEM_INVALID,
+      message: EC.CELL_STEP_ITEM_INVALID,
       details: { path },
     });
   }
 
   if (typeof item.id !== "string" || !item.id.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_STEP_ITEM_ID_REQUIRED,
+      message: EC.CELL_STEP_ITEM_ID_REQUIRED,
       details: { path: [...path, "id"] },
     });
   }
 
   if (typeof item.title !== "string" || !item.title.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_STEP_ITEM_TITLE_REQUIRED,
+      message: EC.CELL_STEP_ITEM_TITLE_REQUIRED,
       details: { path: [...path, "title"] },
     });
   }
 
   if (typeof item.description !== "string" || !item.description.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_STEP_ITEM_DESCRIPTION_REQUIRED,
+      message: EC.CELL_STEP_ITEM_DESCRIPTION_REQUIRED,
       details: { path: [...path, "description"] },
     });
   }

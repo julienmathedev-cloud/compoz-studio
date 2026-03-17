@@ -39,6 +39,7 @@ export interface CreatePageDeps {
 export type CreatePageInput = {
   name: string;
   slug?: string;
+  seoTitle?: string;
   parentId: string | null;
   sitemap?: Partial<PageSitemap>;
   existingSlugs?: ReadonlySet<string>;

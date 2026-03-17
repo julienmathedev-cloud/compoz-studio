@@ -277,7 +277,7 @@ export function IdentityForm({
       )}
       noValidate
     >
-      <Card variant="panel">
+      <Card variant="panelStudio">
         <CardContent className={cn(STACK_MD)}>
           <FormGrid>
             <Controller

@@ -16,8 +16,8 @@
 
 import type { CardItem } from "@compoz/core/domain/pages/entities/cells/cards";
 import type { CardsExtendedItem } from "@compoz/core/domain/pages/entities/cells/cards-extended";
-import type { CaseStudyCardItem } from "@compoz/core/domain/pages/entities/cells/case-study-card";
 import type { ImageEditor } from "@compoz/core/domain/pages/entities/cells/image";
+import type { StructuredCardItem } from "@compoz/core/domain/pages/entities/cells/structured-card.ts";
 
 /**
  * Variantes visuelles supportées par la cellule carousel.
@@ -35,21 +35,16 @@ export type CarouselItemKind =
   | "image"
   | "card"
   | "cardsExtended"
-  | "caseStudyCard";
-
-/**
- * Item image pour le carousel.
- */
-export type CarouselImageItem = ImageEditor;
+  | "structuredCard";
 
 /**
  * Union des items autorisés dans un carousel.
  */
 export type CarouselItem =
-  | CarouselImageItem
+  | ImageEditor
   | CardItem
   | CardsExtendedItem
-  | CaseStudyCardItem;
+  | StructuredCardItem;
 
 /**
  * Cellule de type `carousel`.

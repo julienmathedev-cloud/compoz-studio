@@ -60,6 +60,7 @@ type BlockRowItemProps = Readonly<{
   isBusy: boolean;
   isSortingRows: boolean;
   onSelectCell?: (cellId: string) => void;
+  onHoverCell?: (cellId: string | undefined) => void;
   onRemoveRow: (rowId: string) => void | Promise<void>;
   onSetRowColumnsCount: (
     rowId: string,
@@ -84,6 +85,7 @@ export function BlockRowItem({
   isBusy,
   isSortingRows,
   onSelectCell,
+  onHoverCell,
   onRemoveRow,
   onSetRowColumnsCount,
   onAddCell,
@@ -148,8 +150,6 @@ export function BlockRowItem({
     const overColumnId = cellColumnById.get(overCellId);
 
     if (!activeColumnId || !overColumnId) return;
-
-    // ✅ V1 : uniquement dans la même colonne
     if (activeColumnId !== overColumnId) return;
 
     await onMoveCell({
@@ -227,7 +227,11 @@ export function BlockRowItem({
                     key={count}
                     type="button"
                     size="sm"
-                    variant={row.columnsCount === count ? "default" : "ghost"}
+                    variant={
+                      row.columnsCount === count
+                        ? "defaultStudio"
+                        : "ghostStudio"
+                    }
                     onClick={() => void onSetRowColumnsCount(row.id, count)}
                     disabled={isBusy}
                   >
@@ -240,7 +244,7 @@ export function BlockRowItem({
             <TooltipButton
               type="button"
               size="icon"
-              variant={isSortingCells ? "default" : "ghost"}
+              variant={isSortingCells ? "defaultStudio" : "ghostStudio"}
               tooltip={t("studio.builder.sidebar.rows.reorderCells")}
               aria-label={t("studio.builder.sidebar.rows.reorderCells")}
               onClick={() => setIsSortingCells((prev) => !prev)}
@@ -297,11 +301,14 @@ export function BlockRowItem({
                               isSelected={isSelected}
                               isSortingCells={isSortingCells}
                               onSelect={() => onSelectCell?.(cell.id)}
+                              onHoverChange={(hovered) => {
+                                onHoverCell?.(hovered ? cell.id : undefined);
+                              }}
                             />
                           );
                         })
                       ) : (
-                        <Badge variant="info">
+                        <Badge variant="infoStudio">
                           {t("studio.pageBlocksListSection.bloc.empty")}
                         </Badge>
                       )}
@@ -340,6 +347,7 @@ type SortableCellTileProps = Readonly<{
   isSelected: boolean;
   isSortingCells: boolean;
   onSelect: () => void;
+  onHoverChange: (hovered: boolean) => void;
 }>;
 
 function SortableCellTile({
@@ -350,6 +358,7 @@ function SortableCellTile({
   isSelected,
   isSortingCells,
   onSelect,
+  onHoverChange,
 }: SortableCellTileProps) {
   const {
     attributes,
@@ -373,8 +382,12 @@ function SortableCellTile({
       ref={setNodeRef}
       type="button"
       onClick={isSortingCells ? undefined : onSelect}
+      onMouseEnter={() => onHoverChange(true)}
+      onMouseLeave={() => onHoverChange(false)}
+      onFocus={() => onHoverChange(true)}
+      onBlur={() => onHoverChange(false)}
       disabled={disabled}
-      variant={isSelected ? "default" : "ghost"}
+      variant={isSelected ? "defaultStudio" : "ghostStudio"}
       tooltip={label}
       className={cn(
         "flex h-12 w-12 shrink-0 items-center justify-center p-0",

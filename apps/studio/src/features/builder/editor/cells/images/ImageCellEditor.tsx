@@ -148,7 +148,7 @@ export function ImageCellEditor({
             key={v}
             type="button"
             size="sm"
-            variant={variant === v ? "default" : "ghost"}
+            variant={variant === v ? "defaultStudio" : "ghostStudio"}
             disabled={disabled}
             onClick={() => {
               variantCtrl.field.onChange(v);

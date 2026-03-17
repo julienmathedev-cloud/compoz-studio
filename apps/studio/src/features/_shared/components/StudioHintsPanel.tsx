@@ -31,7 +31,7 @@ type StudioHintsPanelProps = Readonly<{
    * Variante visuelle du panneau.
    * @default "warning"
    */
-  variant?: "warning" | "info";
+  variant?: "warningStudio" | "infoStudio";
 
   /**
    * Titre optionnel de la liste.
@@ -43,7 +43,7 @@ type StudioHintsPanelProps = Readonly<{
 export function StudioHintsPanel({
   id,
   hints,
-  variant = "warning",
+  variant = "warningStudio",
   title,
 }: StudioHintsPanelProps) {
   const t = useTranslations();

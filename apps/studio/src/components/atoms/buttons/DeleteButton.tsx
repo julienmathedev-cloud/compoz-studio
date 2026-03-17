@@ -74,7 +74,7 @@ export function DeleteButton({
   return (
     <TooltipButton
       type="button"
-      variant="destructive"
+      variant="destructiveStudio"
       size={size}
       disabled={isDisabled}
       aria-label={aria}

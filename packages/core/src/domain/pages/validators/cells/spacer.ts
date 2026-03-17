@@ -19,8 +19,8 @@ export function assertSpacerCell(
 ) {
   if (!SPACER_SIZES.includes(cell.size)) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_SPACER_SIZE_INVALID,
+      message: EC.CELL_SPACER_SIZE_INVALID,
       details: { path: [...path, "size"], meta: { size: cell.size } },
     });
   }

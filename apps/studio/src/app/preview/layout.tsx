@@ -1,21 +1,16 @@
 /**
  * @file apps/studio/src/app/preview/layout.tsx
  * @layer app/preview
- *
- * @description
- * Layout racine de la preview (iframe admin).
- *
- * @remarks
- * - Layout server (par défaut Next) : contient uniquement le wrapper.
- * - Le chrome (Header/Footer + skin) est géré par `PreviewShell` (client),
- *   car il dépend des baselines via `usePreviewOverride()`.
  */
 
+import type { ReactNode } from "react";
+
+import { PreviewProviders } from "@compoz/studio/features/preview/PreviewProviders";
+import { fontVariablesClassName } from "@compoz/ui/lib/fonts";
 import { cn } from "@compoz/ui/lib/utils";
 import { SITE_APP_SHELL } from "@compoz/ui/styles/site/layout";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
-import type { ReactNode } from "react";
 
 type PreviewLayoutProps = Readonly<{
   children: ReactNode;
@@ -27,7 +22,11 @@ export default async function PreviewLayout({ children }: PreviewLayoutProps) {
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <div className={cn(SITE_APP_SHELL)}>{children}</div>
+      <PreviewProviders>
+        <div className={cn(SITE_APP_SHELL, fontVariablesClassName)}>
+          {children}
+        </div>
+      </PreviewProviders>
     </NextIntlClientProvider>
   );
 }

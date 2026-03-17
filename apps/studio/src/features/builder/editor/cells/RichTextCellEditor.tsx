@@ -459,7 +459,7 @@ export function RichTextCellEditor({
         <div className="flex items-center gap-1">
           <Button
             type="button"
-            variant="ghost"
+            variant="ghostStudio"
             size="icon"
             disabled={disabled || !canUndo}
             onClick={() => editor.chain().focus().undo().run()}
@@ -472,7 +472,7 @@ export function RichTextCellEditor({
 
           <Button
             type="button"
-            variant="ghost"
+            variant="ghostStudio"
             size="icon"
             disabled={disabled || !canRedo}
             onClick={() => editor.chain().focus().redo().run()}
@@ -590,6 +590,7 @@ export function RichTextCellEditor({
               title={labels.list}
               disabled={disabled}
               onClick={() => editor.chain().focus().run()}
+              visualMode="studio"
               className={cn(
                 "relative",
                 (editor.isActive("bulletList") ||
@@ -602,9 +603,15 @@ export function RichTextCellEditor({
             </Toggle>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="start" className="w-34">
+          <DropdownMenuContent
+            visualMode="studio"
+            align="start"
+            className="w-34"
+          >
             <DropdownMenuGroup>
-              <DropdownMenuLabel>{labels.list}</DropdownMenuLabel>
+              <DropdownMenuLabel visualMode="studio">
+                {labels.list}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
 
               <DropdownMenuRadioGroup
@@ -616,6 +623,7 @@ export function RichTextCellEditor({
               >
                 {/* Valeur "none" invisible (comme pour paragraph) */}
                 <DropdownMenuRadioItem
+                  visualMode="studio"
                   value="none"
                   disabled={disabled}
                   className="hidden"
@@ -623,6 +631,7 @@ export function RichTextCellEditor({
                 />
 
                 <DropdownMenuRadioItem
+                  visualMode="studio"
                   value="bulletList"
                   aria-label={labels.bulletList}
                   title={labels.bulletList}
@@ -633,6 +642,7 @@ export function RichTextCellEditor({
                 </DropdownMenuRadioItem>
 
                 <DropdownMenuRadioItem
+                  visualMode="studio"
                   value="orderedList"
                   aria-label={labels.orderedList}
                   title={labels.orderedList}
@@ -656,6 +666,7 @@ export function RichTextCellEditor({
           onPressedChange={() => {
             applyQuote();
           }}
+          visualMode="studio"
         >
           <TextQuote />
         </Toggle>
@@ -664,6 +675,7 @@ export function RichTextCellEditor({
 
         {/* Marks: bold/italic/underline/strike + link */}
         <ToggleGroup
+          visualMode="studio"
           type="multiple"
           value={marksValue}
           spacing={1}
@@ -673,6 +685,7 @@ export function RichTextCellEditor({
         >
           <ToggleGroupItem
             value="bold"
+            visualMode="studio"
             aria-label={labels.bold}
             title={labels.bold}
             disabled={disabled}
@@ -683,6 +696,7 @@ export function RichTextCellEditor({
 
           <ToggleGroupItem
             value="italic"
+            visualMode="studio"
             aria-label={labels.italic}
             title={labels.italic}
             disabled={disabled}
@@ -693,6 +707,7 @@ export function RichTextCellEditor({
 
           <ToggleGroupItem
             value="underline"
+            visualMode="studio"
             aria-label={labels.underline}
             title={labels.underline}
             disabled={disabled}
@@ -703,6 +718,7 @@ export function RichTextCellEditor({
 
           <ToggleGroupItem
             value="strike"
+            visualMode="studio"
             aria-label={labels.strike}
             title={labels.strike}
             disabled={disabled}
@@ -726,7 +742,7 @@ export function RichTextCellEditor({
           >
             <PopoverTrigger asChild>
               <Button
-                variant="ghost"
+                variant="ghostStudio"
                 size="icon"
                 aria-label={labels.link}
                 title={labels.link}
@@ -750,6 +766,7 @@ export function RichTextCellEditor({
                 {/* Input + Apply */}
                 <InputGroup className="flex-1 [--radius:9999px]">
                   <InputGroupInput
+                    visualMode="studio"
                     placeholder="https://…"
                     disabled={disabled}
                     value={linkDraft}
@@ -765,7 +782,7 @@ export function RichTextCellEditor({
                 {/* Apply/remove */}
                 <Button
                   size="icon"
-                  variant="ghost"
+                  variant="ghostStudio"
                   aria-label={labels.applyLink}
                   title={labels.applyLink}
                   disabled={disabled}
@@ -776,7 +793,7 @@ export function RichTextCellEditor({
                 </Button>
                 <Button
                   size="icon"
-                  variant="ghost"
+                  variant="ghostStudio"
                   aria-label={labels.removeLink}
                   title={labels.removeLink}
                   disabled={disabled || !editor.isActive("link")}
@@ -794,6 +811,7 @@ export function RichTextCellEditor({
 
         <ToggleGroup
           type="single"
+          visualMode="studio"
           value={scriptValue}
           spacing={1}
           onValueChange={() => {
@@ -801,10 +819,16 @@ export function RichTextCellEditor({
           }}
         >
           {/* ✅ Valeur “vide” invisible */}
-          <ToggleGroupItem value="none" className="hidden" aria-hidden="true" />
+          <ToggleGroupItem
+            value="none"
+            visualMode="studio"
+            className="hidden"
+            aria-hidden="true"
+          />
 
           <ToggleGroupItem
             value="superscript"
+            visualMode="studio"
             aria-label={labels.superScript}
             title={labels.superScript}
             disabled={disabled}
@@ -820,6 +844,7 @@ export function RichTextCellEditor({
 
           <ToggleGroupItem
             value="subscript"
+            visualMode="studio"
             aria-label={labels.subScript}
             title={labels.subScript}
             disabled={disabled}
@@ -839,6 +864,7 @@ export function RichTextCellEditor({
         {/* Align */}
         <ToggleGroup
           type="single"
+          visualMode="studio"
           value={alignValue}
           spacing={1}
           onValueChange={(next) => {
@@ -848,6 +874,7 @@ export function RichTextCellEditor({
         >
           <ToggleGroupItem
             value="left"
+            visualMode="studio"
             aria-label={labels.alignLeft}
             title={labels.alignLeft}
             disabled={disabled}
@@ -857,6 +884,7 @@ export function RichTextCellEditor({
 
           <ToggleGroupItem
             value="center"
+            visualMode="studio"
             aria-label={labels.alignCenter}
             title={labels.alignCenter}
             disabled={disabled}
@@ -866,6 +894,7 @@ export function RichTextCellEditor({
 
           <ToggleGroupItem
             value="right"
+            visualMode="studio"
             aria-label={labels.alignRight}
             title={labels.alignRight}
             disabled={disabled}
@@ -875,6 +904,7 @@ export function RichTextCellEditor({
 
           <ToggleGroupItem
             value="justify"
+            visualMode="studio"
             aria-label={labels.alignJustify}
             title={labels.alignJustify}
             disabled={disabled}

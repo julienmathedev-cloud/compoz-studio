@@ -121,7 +121,9 @@ export function InputField({
       className="min-w-0"
     >
       {/* Label accessible associé à l’input via htmlFor */}
-      <FieldLabel htmlFor={fieldId}>{label}</FieldLabel>
+      <FieldLabel visualMode="studio" htmlFor={fieldId}>
+        {label}
+      </FieldLabel>
 
       {/* Contrôle principal : input contrôlé */}
       <Input
@@ -134,12 +136,13 @@ export function InputField({
         aria-invalid={isInvalid ? true : undefined}
         aria-describedby={describedBy}
         disabled={disabled}
+        variant="defaultStudio"
         {...inputProps}
       />
 
       {/* Description + barre meta (aide + compteur) */}
       {(help || showCount) && (
-        <FieldDescription>
+        <FieldDescription visualMode="studio">
           <FieldMetaBar
             text={help}
             textId={helpId}

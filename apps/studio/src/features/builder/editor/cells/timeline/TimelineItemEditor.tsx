@@ -22,6 +22,7 @@ import type { Control } from "react-hook-form";
 import { useController } from "react-hook-form";
 
 import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
+import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
 import { DragHandle } from "@compoz/studio/features/dnd/DragHandle";
@@ -143,6 +144,7 @@ export function TimelineItemEditor({
     <Card
       ref={setNodeRef}
       style={style}
+      variant="defaultStudio"
       className={cn("relative h-full", STACK_MD, isDragging && "opacity-60")}
     >
       <CardContent>
@@ -162,122 +164,114 @@ export function TimelineItemEditor({
           />
         </div>
 
-        <div className="pt-1">
-          <div className={cn(STACK_MD)}>
-            <InputField
-              ids={periodIds}
-              inputRef={periodCtrl.field.ref}
-              label={t("studio.cellEditorTabs.timelineCellEditor.periodLabel")}
-              value={String(periodCtrl.field.value ?? "")}
-              onChange={(next) => {
-                periodCtrl.field.onChange(next);
-              }}
-              onBlur={periodCtrl.field.onBlur}
-              disabled={disabled}
-              placeholder={t(
-                "studio.cellEditorTabs.timelineCellEditor.periodPlaceholder",
-              )}
-              help={t("studio.cellEditorTabs.timelineCellEditor.periodHelp")}
-              invalid={periodInvalid}
-              error={periodError}
-            />
+        <FormGrid className={cn(STACK_MD, "pt-1")}>
+          <InputField
+            ids={periodIds}
+            inputRef={periodCtrl.field.ref}
+            label={t("studio.cellEditorTabs.timelineCellEditor.periodLabel")}
+            value={String(periodCtrl.field.value ?? "")}
+            onChange={(next) => {
+              periodCtrl.field.onChange(next);
+            }}
+            onBlur={periodCtrl.field.onBlur}
+            disabled={disabled}
+            placeholder={t(
+              "studio.cellEditorTabs.timelineCellEditor.periodPlaceholder",
+            )}
+            help={t("studio.cellEditorTabs.timelineCellEditor.periodHelp")}
+            invalid={periodInvalid}
+            error={periodError}
+          />
 
-            <InputField
-              ids={titleIds}
-              inputRef={titleCtrl.field.ref}
-              label={t("studio.cellEditorTabs.timelineCellEditor.titleLabel")}
-              value={String(titleCtrl.field.value ?? "")}
-              onChange={(next) => {
-                titleCtrl.field.onChange(next);
-              }}
-              onBlur={titleCtrl.field.onBlur}
-              disabled={disabled}
-              placeholder={t(
-                "studio.cellEditorTabs.timelineCellEditor.titlePlaceholder",
-              )}
-              help={t("studio.cellEditorTabs.timelineCellEditor.titleHelp")}
-              invalid={titleInvalid}
-              error={titleError}
-            />
+          <InputField
+            ids={badgeIds}
+            inputRef={badgeCtrl.field.ref}
+            label={t("studio.cellEditorTabs.timelineCellEditor.badgeLabel")}
+            value={String(badgeCtrl.field.value ?? "")}
+            onChange={(next) => {
+              badgeCtrl.field.onChange(next);
+            }}
+            onBlur={badgeCtrl.field.onBlur}
+            disabled={disabled}
+            placeholder={t(
+              "studio.cellEditorTabs.timelineCellEditor.badgePlaceholder",
+            )}
+            help={t("studio.cellEditorTabs.timelineCellEditor.badgeHelp")}
+          />
 
-            <InputField
-              ids={subtitleIds}
-              inputRef={subtitleCtrl.field.ref}
-              label={t(
-                "studio.cellEditorTabs.timelineCellEditor.subtitleLabel",
-              )}
-              value={String(subtitleCtrl.field.value ?? "")}
-              onChange={(next) => {
-                subtitleCtrl.field.onChange(next);
-              }}
-              onBlur={subtitleCtrl.field.onBlur}
-              disabled={disabled}
-              placeholder={t(
-                "studio.cellEditorTabs.timelineCellEditor.subtitlePlaceholder",
-              )}
-              help={t("studio.cellEditorTabs.timelineCellEditor.subtitleHelp")}
-            />
+          <InputField
+            ids={titleIds}
+            inputRef={titleCtrl.field.ref}
+            label={t("studio.cellEditorTabs.timelineCellEditor.titleLabel")}
+            value={String(titleCtrl.field.value ?? "")}
+            onChange={(next) => {
+              titleCtrl.field.onChange(next);
+            }}
+            onBlur={titleCtrl.field.onBlur}
+            disabled={disabled}
+            placeholder={t(
+              "studio.cellEditorTabs.timelineCellEditor.titlePlaceholder",
+            )}
+            help={t("studio.cellEditorTabs.timelineCellEditor.titleHelp")}
+            invalid={titleInvalid}
+            error={titleError}
+          />
 
-            <TextareaField
-              ids={descriptionIds}
-              label={t(
-                "studio.cellEditorTabs.timelineCellEditor.descriptionLabel",
-              )}
-              value={String(descriptionCtrl.field.value ?? "")}
-              onChange={(next) => {
-                descriptionCtrl.field.onChange(next);
-              }}
-              onBlur={descriptionCtrl.field.onBlur}
-              disabled={disabled}
-              placeholder={t(
-                "studio.cellEditorTabs.timelineCellEditor.descriptionPlaceholder",
-              )}
-              help={t(
-                "studio.cellEditorTabs.timelineCellEditor.descriptionHelp",
-              )}
-              rows={4}
-            />
+          <InputField
+            ids={subtitleIds}
+            inputRef={subtitleCtrl.field.ref}
+            label={t("studio.cellEditorTabs.timelineCellEditor.subtitleLabel")}
+            value={String(subtitleCtrl.field.value ?? "")}
+            onChange={(next) => {
+              subtitleCtrl.field.onChange(next);
+            }}
+            onBlur={subtitleCtrl.field.onBlur}
+            disabled={disabled}
+            placeholder={t(
+              "studio.cellEditorTabs.timelineCellEditor.subtitlePlaceholder",
+            )}
+            help={t("studio.cellEditorTabs.timelineCellEditor.subtitleHelp")}
+          />
 
-            <InputField
-              ids={badgeIds}
-              inputRef={badgeCtrl.field.ref}
-              label={t("studio.cellEditorTabs.timelineCellEditor.badgeLabel")}
-              value={String(badgeCtrl.field.value ?? "")}
-              onChange={(next) => {
-                badgeCtrl.field.onChange(next);
-              }}
-              onBlur={badgeCtrl.field.onBlur}
-              disabled={disabled}
-              placeholder={t(
-                "studio.cellEditorTabs.timelineCellEditor.badgePlaceholder",
-              )}
-              help={t("studio.cellEditorTabs.timelineCellEditor.badgeHelp")}
-            />
+          <TextareaField
+            ids={descriptionIds}
+            label={t(
+              "studio.cellEditorTabs.timelineCellEditor.descriptionLabel",
+            )}
+            value={String(descriptionCtrl.field.value ?? "")}
+            onChange={(next) => {
+              descriptionCtrl.field.onChange(next);
+            }}
+            onBlur={descriptionCtrl.field.onBlur}
+            disabled={disabled}
+            placeholder={t(
+              "studio.cellEditorTabs.timelineCellEditor.descriptionPlaceholder",
+            )}
+            help={t("studio.cellEditorTabs.timelineCellEditor.descriptionHelp")}
+            rows={4}
+          />
 
-            <TextareaField
-              ids={keywordsIds}
-              label={t(
-                "studio.cellEditorTabs.timelineCellEditor.keywordsLabel",
-              )}
-              value={keywordsValue}
-              onChange={(next) => {
-                const parsedKeywords = next
-                  .split("\n")
-                  .map((item) => item.trim())
-                  .filter(Boolean);
+          <TextareaField
+            ids={keywordsIds}
+            label={t("studio.cellEditorTabs.timelineCellEditor.keywordsLabel")}
+            value={keywordsValue}
+            onChange={(next) => {
+              const parsedKeywords = next
+                .split("\n")
+                .map((item) => item.trim())
+                .filter(Boolean);
 
-                keywordsCtrl.field.onChange(parsedKeywords);
-              }}
-              onBlur={keywordsCtrl.field.onBlur}
-              disabled={disabled}
-              placeholder={t(
-                "studio.cellEditorTabs.timelineCellEditor.keywordsPlaceholder",
-              )}
-              help={t("studio.cellEditorTabs.timelineCellEditor.keywordsHelp")}
-              rows={4}
-            />
-          </div>
-        </div>
+              keywordsCtrl.field.onChange(parsedKeywords);
+            }}
+            onBlur={keywordsCtrl.field.onBlur}
+            disabled={disabled}
+            placeholder={t(
+              "studio.cellEditorTabs.timelineCellEditor.keywordsPlaceholder",
+            )}
+            help={t("studio.cellEditorTabs.timelineCellEditor.keywordsHelp")}
+            rows={4}
+          />
+        </FormGrid>
       </CardContent>
     </Card>
   );

@@ -10,21 +10,21 @@
  * @remarks
  * - Gating strict : ne rend rien tant que l’index et la page courante ne sont pas disponibles.
  * - Preview : navigation/pager désactivés (pas de liens prev/next).
- * - Le rendu final est délégué à `SitePageRenderer` (UI site).
+ * - Le rendu final est délégué à `SitePageRenderer`.
+ * - Le skin UI est récupéré ici puis transmis au renderer en props.
+ * - Le thème CSS est fourni par `ThemeProvider` monté dans `PreviewProviders`.
  */
 
 import { useEffect, useMemo } from "react";
 
 import type { PageSummaryDTO } from "@compoz/core/domain/pages/dto";
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
-import { log } from "@compoz/infra/lib/log";
-
-import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
-import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
-
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
-import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePreviewOverride";
+import { log } from "@compoz/infra/lib/log";
 import { PreviewShell } from "@compoz/studio/features/preview/PreviewShell";
+import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePreviewOverride";
+import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
+import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
 import type { PageRenderShape } from "@compoz/validation/pages/page";
 
 /* -------------------------------------------------------------------------- */
@@ -53,13 +53,13 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
   const visiblePage = page.override ?? page.baseline;
 
   const blocks = visiblePage?.blocks ?? [];
+  const ui = useSiteUi();
 
   const currentFromIndex = useMemo<PageSummaryDTO | null>(() => {
-    if (!visibleIndex) return null;
+    if (!visibleIndex) {
+      return null;
+    }
 
-    // IMPORTANT :
-    // - si slug = "home" => on accepte "" comme home
-    // - sinon match strict
     const found = (visibleIndex.pages ?? []).find(
       (p) => p.slug === slug || (slug === HOME_SLUG && p.slug === ""),
     );
@@ -98,15 +98,17 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
     }
   }, [flags]);
 
-  // Tant que l’index n’est pas là : gating strict OK (handshake)
-  if (!visibleIndex) return null;
+  if (!visibleIndex) {
+    return null;
+  }
 
-  // Index OK mais page introuvable ou pas de baseline envoyée
-  if (!visiblePage || !currentFromIndex) return null;
+  if (!visiblePage || !currentFromIndex) {
+    return null;
+  }
 
   return (
-    <PreviewShell>
-      <SitePageRenderer ui={resolveSiteUi()} blocks={blocks} />
+    <PreviewShell ui={ui}>
+      <SitePageRenderer ui={ui} blocks={blocks} />
     </PreviewShell>
   );
 }

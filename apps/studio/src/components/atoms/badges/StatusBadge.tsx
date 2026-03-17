@@ -12,7 +12,11 @@
 
 import { Badge } from "@compoz/ui/components/ui/badge";
 
-export type StatusBadgeVariant = "success" | "warning" | "info" | "destructive";
+export type StatusBadgeVariant =
+  | "successStudio"
+  | "warningStudio"
+  | "infoStudio"
+  | "errorStudio";
 
 export type StatusBadgeProps = Readonly<{
   variant: StatusBadgeVariant;

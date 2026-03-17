@@ -18,10 +18,18 @@ export function assertTimelineCell(
   cell: Extract<Cell, { kind: "timeline" }>,
   path: Path,
 ) {
-  if (!Array.isArray(cell.items) || cell.items.length < 1) {
+  if (!Array.isArray(cell.items)) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_TIMELINE_ITEMS_INVALID,
+      message: EC.CELL_TIMELINE_ITEMS_INVALID,
+      details: { path: [...path, "items"] },
+    });
+  }
+
+  if (cell.items.length < 1) {
+    throw new DomainError({
+      code: EC.CELL_TIMELINE_ITEMS_MIN_1,
+      message: EC.CELL_TIMELINE_ITEMS_MIN_1,
       details: { path: [...path, "items"] },
     });
   }
@@ -34,32 +42,32 @@ export function assertTimelineCell(
 function assertTimelineItem(item: TimelineItem, path: Path) {
   if (!item || typeof item !== "object") {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_TIMELINE_ITEM_INVALID,
+      message: EC.CELL_TIMELINE_ITEM_INVALID,
       details: { path },
     });
   }
 
   if (typeof item.id !== "string" || !item.id.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_TIMELINE_ITEM_ID_REQUIRED,
+      message: EC.CELL_TIMELINE_ITEM_ID_REQUIRED,
       details: { path: [...path, "id"] },
     });
   }
 
   if (typeof item.period !== "string" || !item.period.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_TIMELINE_ITEM_PERIOD_REQUIRED,
+      message: EC.CELL_TIMELINE_ITEM_PERIOD_REQUIRED,
       details: { path: [...path, "period"] },
     });
   }
 
   if (typeof item.title !== "string" || !item.title.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_TIMELINE_ITEM_TITLE_REQUIRED,
+      message: EC.CELL_TIMELINE_ITEM_TITLE_REQUIRED,
       details: { path: [...path, "title"] },
     });
   }
@@ -69,8 +77,8 @@ function assertTimelineItem(item: TimelineItem, path: Path) {
     typeof item.subtitle !== "string"
   ) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_TIMELINE_ITEM_SUBTITLE_INVALID,
+      message: EC.CELL_TIMELINE_ITEM_SUBTITLE_INVALID,
       details: { path: [...path, "subtitle"] },
     });
   }
@@ -80,16 +88,16 @@ function assertTimelineItem(item: TimelineItem, path: Path) {
     typeof item.description !== "string"
   ) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_TIMELINE_ITEM_DESCRIPTION_INVALID,
+      message: EC.CELL_TIMELINE_ITEM_DESCRIPTION_INVALID,
       details: { path: [...path, "description"] },
     });
   }
 
   if (typeof item.badge !== "undefined" && typeof item.badge !== "string") {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_TIMELINE_ITEM_BADGE_INVALID,
+      message: EC.CELL_TIMELINE_ITEM_BADGE_INVALID,
       details: { path: [...path, "badge"] },
     });
   }
@@ -97,8 +105,8 @@ function assertTimelineItem(item: TimelineItem, path: Path) {
   if (typeof item.keywords !== "undefined") {
     if (!Array.isArray(item.keywords)) {
       throw new DomainError({
-        code: EC.CELL_INVALID,
-        message: EC.CELL_INVALID,
+        code: EC.CELL_TIMELINE_ITEM_KEYWORDS_INVALID,
+        message: EC.CELL_TIMELINE_ITEM_KEYWORDS_INVALID,
         details: { path: [...path, "keywords"] },
       });
     }
@@ -108,8 +116,8 @@ function assertTimelineItem(item: TimelineItem, path: Path) {
 
       if (typeof keyword !== "string" || !keyword.trim()) {
         throw new DomainError({
-          code: EC.CELL_INVALID,
-          message: EC.CELL_INVALID,
+          code: EC.CELL_TIMELINE_ITEM_KEYWORD_INVALID,
+          message: EC.CELL_TIMELINE_ITEM_KEYWORD_INVALID,
           details: { path: [...path, "keywords", i] },
         });
       }

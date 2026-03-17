@@ -14,10 +14,10 @@ import type { ErrorCode } from "@compoz/core/domain/errors/codes";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { statusFromCode } from "@compoz/infra/http/error-adapter";
 import { HttpError } from "@compoz/infra/lib/api-fetch";
-import { Button } from "@compoz/ui/components/ui/button";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import type { UiErrorToken } from "@compoz/studio/lib/ui/uiError";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
+import { Button } from "@compoz/ui/components/ui/button";
 
 const DEV_ONLY = process.env.NODE_ENV !== "production";
 
@@ -49,7 +49,11 @@ type MatrixButton = Readonly<{
   key: string;
   label: string;
   onClick: () => void;
-  variant?: "default" | "secondary" | "outline" | "destructive";
+  variant?:
+    | "defaultStudio"
+    | "secondaryStudio"
+    | "outlineStudio"
+    | "destructiveStudio";
 }>;
 
 function Section({
@@ -64,7 +68,7 @@ function Section({
           <Button
             key={b.key}
             type="button"
-            variant={b.variant ?? "outline"}
+            variant={b.variant ?? "outlineStudio"}
             size="sm"
             onClick={b.onClick}
           >
@@ -107,25 +111,25 @@ export default function ToastMatrixPage() {
     {
       key: "base.success",
       label: "success()",
-      variant: "secondary",
+      variant: "secondaryStudio",
       onClick: () => notify.success("Success title", "Success description"),
     },
     {
       key: "base.info",
       label: "info()",
-      variant: "secondary",
+      variant: "secondaryStudio",
       onClick: () => notify.info("Info title", "Info description"),
     },
     {
       key: "base.warning",
       label: "warning()",
-      variant: "secondary",
+      variant: "secondaryStudio",
       onClick: () => notify.warning("Warning title", "Warning description"),
     },
     {
       key: "base.error",
       label: "error()",
-      variant: "destructive",
+      variant: "destructiveStudio",
       onClick: () => notify.error("Error title", "Error description"),
     },
   ];
@@ -140,7 +144,7 @@ export default function ToastMatrixPage() {
     {
       key: "scenario.validation",
       label: "fromError → VALIDATION_ERROR (422)",
-      variant: "destructive",
+      variant: "destructiveStudio",
       onClick: () =>
         notify.fromError(
           new HttpError(ERROR_CODES.VALIDATION_ERROR, {
@@ -163,7 +167,7 @@ export default function ToastMatrixPage() {
     {
       key: "scenario.http500",
       label: "fromError → 500",
-      variant: "destructive",
+      variant: "destructiveStudio",
       onClick: () =>
         notify.fromError(
           new HttpError(UiError.http500, {
@@ -175,7 +179,7 @@ export default function ToastMatrixPage() {
     {
       key: "scenario.domain",
       label: "fromError → domain (SOCIAL_DUPLICATE_KIND)",
-      variant: "destructive",
+      variant: "destructiveStudio",
       onClick: () => {
         const code = ERROR_CODES.SOCIAL_DUPLICATE_KIND;
         notify.fromError(
@@ -196,7 +200,9 @@ export default function ToastMatrixPage() {
       key: `ui.${token}`,
       label: isHttp ? `ui http: ${token}` : `ui: ${token}`,
       variant:
-        isHttp && UI_HTTP_STATUS[token] >= 500 ? "destructive" : "outline",
+        isHttp && UI_HTTP_STATUS[token] >= 500
+          ? "destructiveStudio"
+          : "outlineStudio",
       onClick: () => {
         if (isHttp) {
           const status = UI_HTTP_STATUS[token];

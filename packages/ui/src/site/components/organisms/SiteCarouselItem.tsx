@@ -1,17 +1,15 @@
-"use client";
-
 /**
  * @file packages/ui/src/site/components/organisms/SiteCarouselItem.tsx
  * @layer ui/site/components
  *
  * @description
- * Rendu client partagé d’un item de carousel / slider.
+ * Rendu partagé d’un item de carousel / slider.
  */
 
 import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
 import { SiteCard } from "@compoz/ui/site/components/molecules/SiteCard";
-import { SiteCaseStudyCard } from "@compoz/ui/site/components/molecules/SiteCaseStudyCard";
 import { SiteExtendedCard } from "@compoz/ui/site/components/molecules/SiteExtendedCard";
+import { SiteStructuredCard } from "@compoz/ui/site/components/molecules/SiteStructuredCard";
 import type { NormalizedCarouselItem } from "@compoz/ui/site/components/organisms/carousel-item.types";
 import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
 
@@ -30,6 +28,10 @@ export function SiteCarouselItem({
   priority = false,
   isActive = false,
 }: SiteCarouselItemProps) {
+  const contentStateClassName = isActive
+    ? ui.contentItem.active
+    : ui.contentItem.inactive;
+
   if (item.kind === "image") {
     return (
       <div
@@ -56,9 +58,7 @@ export function SiteCarouselItem({
 
   if (item.kind === "card") {
     return (
-      <div
-        className={isActive ? ui.contentItem.active : ui.contentItem.inactive}
-      >
+      <div className={contentStateClassName}>
         <SiteCard
           title={item.title}
           description={item.description}
@@ -70,9 +70,7 @@ export function SiteCarouselItem({
 
   if (item.kind === "cardsExtended") {
     return (
-      <div
-        className={isActive ? ui.contentItem.active : ui.contentItem.inactive}
-      >
+      <div className={contentStateClassName}>
         <SiteExtendedCard
           title={item.title}
           description={item.description}
@@ -86,14 +84,13 @@ export function SiteCarouselItem({
   }
 
   return (
-    <div className={isActive ? ui.contentItem.active : ui.contentItem.inactive}>
-      <SiteCaseStudyCard
+    <div className={contentStateClassName}>
+      <SiteStructuredCard
         title={item.title}
-        context={item.context}
-        solution={item.solution}
-        result={item.result}
+        meta={item.meta}
+        sections={item.sections}
         image={item.image}
-        ui={ui.caseStudyCard}
+        ui={ui.structuredCard}
       />
     </div>
   );

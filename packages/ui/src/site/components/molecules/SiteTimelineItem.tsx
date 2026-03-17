@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * @file packages/ui/src/site/components/molecules/SiteTimelineItem.tsx
  * @layer ui/site/molecules
@@ -14,11 +12,12 @@
  * - Gère le décalage vertical progressif en desktop.
  */
 
-import { cn } from "@compoz/ui/lib/utils";
-import type { SiteTimelineItemUi } from "@compoz/ui/site/site-ui.types";
-import { SiteTimelineItemDescription } from "@compoz/ui/site/components/atoms/SiteTimelineItemDescription";
-import type { TimelineItemShape } from "@compoz/validation/pages/blocks/cells/cell";
 import type { CSSProperties } from "react";
+
+import { cn } from "@compoz/ui/lib/utils";
+import { SiteTimelineItemDescription } from "@compoz/ui/site/components/atoms/SiteTimelineItemDescription";
+import type { SiteTimelineItemUi } from "@compoz/ui/site/site-ui.types";
+import type { TimelineItemShape } from "@compoz/validation/pages/blocks/cells/cell";
 
 export type SiteTimelineItemProps = Readonly<{
   item: TimelineItemShape;
@@ -30,11 +29,15 @@ export function SiteTimelineItem({ item, index, ui }: SiteTimelineItemProps) {
   const isLeft = index % 2 === 0;
   const margin = index > 0 ? -(80 + index * 10) : 0;
 
+  const itemStyle = {
+    "--timeline-item-mt": `${margin}px`,
+  } as CSSProperties;
+
   return (
     <div className={cn(ui.root)}>
       <div
         className={cn(ui.row, isLeft ? ui.rowLeft : ui.rowRight, ui.mobileRow)}
-        style={{ "--timeline-item-mt": `${margin}px` } as CSSProperties}
+        style={itemStyle}
       >
         {!isLeft ? <div className={cn(ui.side)} /> : null}
 

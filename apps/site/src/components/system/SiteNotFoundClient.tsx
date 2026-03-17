@@ -34,7 +34,11 @@ export function SiteNotFoundClient() {
       title="Page introuvable"
       description="La page que vous cherchez n’existe pas ou a été déplacée."
       actions={
-        <Button asChild variant="outline" className={cn(ui.systemPage?.button)}>
+        <Button
+          asChild
+          variant="outlineVanilla"
+          className={cn(ui.systemPage?.button)}
+        >
           <Link href={homeHref} className="no-underline">
             Retour à l’accueil
           </Link>

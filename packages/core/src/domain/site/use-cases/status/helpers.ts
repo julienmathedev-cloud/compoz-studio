@@ -47,6 +47,7 @@ export function computeSettingsDiff(
     header: isDeepChanged(draftSettings?.header, publishedSettings?.header),
     footer: isDeepChanged(draftSettings?.footer, publishedSettings?.footer),
     seo: isDeepChanged(draftSettings?.seo, publishedSettings?.seo),
+    theme: isDeepChanged(draftSettings?.theme, publishedSettings?.theme),
   } as const;
 
   return { settingsHasChanges, changedSettings } as const;

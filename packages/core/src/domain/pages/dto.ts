@@ -13,13 +13,16 @@ import type {
   CardItem,
   CardsExtendedItem,
   CarouselCell,
-  CarouselImageItem,
   CarouselItem,
   CarouselItemKind,
   CarouselVariant,
-  CaseStudyCardItem,
+  StructuredCardItem,
   Cell,
   ImageEditor,
+  TimelineItem,
+  StructuredCardColumns,
+  StructuredCardCell,
+  StructuredCardSection,
 } from "@compoz/core/domain/pages/entities/cell";
 import type {
   InternalPageOption,
@@ -71,7 +74,11 @@ export type ImageEditorDTO = Readonly<ImageEditor>;
 export type ButtonItemDTO = Readonly<ButtonItem>;
 export type CardItemDTO = Readonly<CardItem>;
 export type CardsExtendedItemDTO = Readonly<CardsExtendedItem>;
-export type CaseStudyCardItemDTO = Readonly<CaseStudyCardItem>;
+export type StructuredCardItemDTO = Readonly<StructuredCardItem>;
+export type TimelineItemDTO = Readonly<TimelineItem>;
+export type StructuredCardColumnsDTO = Readonly<StructuredCardColumns>;
+export type StructuredCardCellDTO = Readonly<StructuredCardCell>;
+export type StructuredCardSectionDTO = Readonly<StructuredCardSection>;
 
 /* -------------------------------------------------------------------------- */
 /* Carousel DTO                                                               */
@@ -79,6 +86,5 @@ export type CaseStudyCardItemDTO = Readonly<CaseStudyCardItem>;
 
 export type CarouselVariantDTO = CarouselVariant;
 export type CarouselItemKindDTO = CarouselItemKind;
-export type CarouselImageItemDTO = Readonly<CarouselImageItem>;
 export type CarouselItemDTO = Readonly<CarouselItem>;
 export type CarouselCellDTO = Readonly<CarouselCell>;

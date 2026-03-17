@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * @file packages/ui/src/site/components/molecules/SiteSocialMenu.tsx
  * @layer ui/site/components
@@ -30,24 +28,29 @@ export type SiteSocialMenuProps = Readonly<{
 
 export function SiteSocialMenu({ settings, ui }: SiteSocialMenuProps) {
   const items = settings?.items ?? [];
-  if (items.length === 0) return null;
+
+  if (items.length === 0) {
+    return null;
+  }
 
   return (
     <ul className={cn(ui.list)}>
-      {items.map((it, idx) => (
+      {items.map((item, index) => (
         <li
           key={toStableUiKey(
-            { keyId: `${it.kind}:${idx}`, href: it.href },
-            idx,
+            { keyId: `${item.kind}:${index}`, href: item.href },
+            index,
           )}
           className={cn(ui.item)}
         >
           <SiteIconLink
-            href={it.href}
-            ariaLabel={it.kind}
+            href={item.href}
+            ariaLabel={item.kind}
             className={cn(ui.interactive)}
             linkClassName={cn(ui.link)}
-            icon={renderSocialKindIcon(it.kind, { className: cn(ui.icon) })}
+            icon={renderSocialKindIcon(item.kind, {
+              className: cn(ui.icon),
+            })}
           />
         </li>
       ))}

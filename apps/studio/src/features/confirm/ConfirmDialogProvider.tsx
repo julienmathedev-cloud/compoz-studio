@@ -204,14 +204,16 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
           ) : null}
 
           <DialogFooter className={cn("bg-accent/20 py-1.5")}>
-            <Button variant="ghost" size="sm" onClick={onCancel}>
+            <Button variant="ghostStudio" size="sm" onClick={onCancel}>
               {state.cancelLabel}
             </Button>
 
             <Button
               onClick={onConfirm}
               size="sm"
-              variant={state.tone === "danger" ? "destructive" : "default"}
+              variant={
+                state.tone === "danger" ? "destructiveStudio" : "defaultVanilla"
+              }
               disabled={Boolean(state.requireAcknowledge) && !ack}
             >
               {state.confirmLabel}

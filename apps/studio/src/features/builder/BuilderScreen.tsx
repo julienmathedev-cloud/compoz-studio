@@ -160,6 +160,7 @@ export function BuilderScreen({
     "baseline",
   );
   const [selectedCellId, setSelectedCellId] = useState<string | undefined>();
+  const [hoveredCellId, setHoveredCellId] = useState<string | undefined>();
 
   const baseline = useMemo<SectionBlockFormValues>(() => {
     return normalizeSectionBlockFormValues(initialValues);
@@ -360,6 +361,49 @@ export function BuilderScreen({
     setDraft,
   ]);
 
+  /**
+   * Synchronise le hover de cell dans l'iframe de preview.
+   *
+   * @remarks
+   * - Repose sur un wrapper DOM côté preview avec `data-cell-id="<id>"`.
+   * - Ajoute / retire un attribut `data-builder-hovered` utilisé par le CSS preview.
+   * - Même origine requise (ok ici : route `/preview/...` de la même app).
+   */
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    const doc = iframe?.contentDocument;
+
+    if (!iframe || !doc) return;
+
+    const previous = doc.querySelectorAll<HTMLElement>(
+      "[data-builder-hovered='true']",
+    );
+
+    previous.forEach((node) => {
+      node.removeAttribute("data-builder-hovered");
+      node.style.outline = "";
+      node.style.outlineOffset = "";
+      node.style.borderRadius = "";
+      node.style.boxShadow = "";
+      node.style.transition = "";
+      node.style.backgroundColor = "";
+    });
+
+    if (!hoveredCellId) return;
+
+    const target = doc.querySelector<HTMLElement>(
+      `[data-cell-id="${hoveredCellId}"]`,
+    );
+
+    if (!target) return;
+
+    target.setAttribute("data-builder-hovered", "true");
+    target.style.borderRadius = "12px";
+    target.style.boxShadow = "0 0 0 6px var(--secondary)";
+    target.style.backgroundColor = "var(--accent)";
+    target.style.transition = "all 150ms ease";
+  }, [hoveredCellId, iframeRef, draftPreviewSig, baselinePreviewSig]);
+
   const handleBack = useCallback(async () => {
     await dirtyGuard.navigate(backHref);
   }, [backHref, dirtyGuard]);
@@ -502,6 +546,7 @@ export function BuilderScreen({
 
     dirtyGuard.setDirty(false);
     setSelectedCellId(undefined);
+    setHoveredCellId(undefined);
 
     if (baselinePreview) {
       const sig = JSON.stringify(baselinePreview);
@@ -549,6 +594,7 @@ export function BuilderScreen({
           isDirty={isDirty}
           selectedCellId={effectiveSelectedCellId}
           onSelectCell={setSelectedCellId}
+          onHoverCell={setHoveredCellId}
           onReset={handleReset}
           onBack={handleBack}
         />

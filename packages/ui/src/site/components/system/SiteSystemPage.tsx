@@ -6,9 +6,10 @@
  * Layout UI-only réutilisable pour les "system pages" du site public (error, not-found, etc.).
  *
  * @remarks
- * - 100% skinnable via `SiteUiProvider`.
+ * - 100% skinnable via le design system site.
  * - Ne contient aucune logique métier : uniquement structure + classes.
  * - Les actions (boutons/liens) sont injectées via `actions`.
+ * - Ce composant reste server-friendly et consomme `ui` en props.
  */
 
 import type { ReactNode } from "react";
@@ -23,10 +24,7 @@ export type SiteSystemPageProps = Readonly<{
   actions?: ReactNode;
 
   /**
-   * UI "résolu" (skin/template) + override local éventuel.
-   *
-   * @remarks
-   * En pratique, tu passes plutôt `ui` depuis le resolver via `useSiteUi()`.
+   * UI résolue (skin/template) + override local éventuel.
    */
   ui: SiteSystemPageUi;
 }>;

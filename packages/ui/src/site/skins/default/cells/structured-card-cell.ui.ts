@@ -1,14 +1,14 @@
 /**
- * @file packages/ui/src/site/skins/default/blocks/case-study-card-cell.ui.ts
+ * @file packages/ui/src/site/skins/default/blocks/structured-card-cell.ui.ts
  * @layer ui/site/skins
  *
  * @description
- * Skin UI — case study card cell (thème Default).
+ * Skin UI — structured card cell (thème Default).
  */
 
-import type { SiteCaseStudyCardUi } from "@compoz/ui/site/site-ui.types";
+import type { SiteStructuredCardUi } from "@compoz/ui/site/site-ui.types";
 
-export const defaultCaseStudyCardUi: SiteCaseStudyCardUi = {
+export const defaultStructuredCardUi: SiteStructuredCardUi = {
   root: "",
 
   grid: "grid gap-6",
@@ -39,10 +39,4 @@ export const defaultCaseStudyCardUi: SiteCaseStudyCardUi = {
     "text-sm font-semibold uppercase tracking-wide text-muted-foreground",
 
   sectionText: "text-sm text-foreground",
-
-  labels: {
-    context: "Contexte",
-    solution: "Solution",
-    result: "Résultat",
-  },
 } as const;

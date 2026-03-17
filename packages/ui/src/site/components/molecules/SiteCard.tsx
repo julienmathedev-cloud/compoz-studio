@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * @file packages/ui/src/site/components/molecules/SiteCard.tsx
  * @layer ui/site/molecules
@@ -41,25 +39,18 @@ export function SiteCard({
 }: SiteCardProps) {
   const isCentered = align === "center";
 
+  const headerAlignClassName = isCentered
+    ? "items-center text-center"
+    : "items-start text-left";
+
+  const textAlignClassName = isCentered ? "text-center" : "text-left";
+
   return (
-    <Card
-      className={cn(
-        "h-full border-border/60 bg-background/80 shadow-sm",
-        className,
-      )}
-    >
-      <CardHeader
-        className={cn(
-          "space-y-3",
-          isCentered ? "items-center text-center" : "items-start text-left",
-        )}
-      >
+    <Card className={cn("h-full", className)}>
+      <CardHeader className={cn("space-y-3", headerAlignClassName)}>
         {icon ? (
           <div
-            className={cn(
-              "text-2xl leading-none",
-              isCentered ? "text-center" : "text-left",
-            )}
+            className={cn("text-2xl leading-none", textAlignClassName)}
             aria-hidden="true"
           >
             {icon}
@@ -69,7 +60,7 @@ export function SiteCard({
         <CardTitle className="text-lg leading-tight">{title}</CardTitle>
       </CardHeader>
 
-      <CardContent className={cn(isCentered ? "text-center" : "text-left")}>
+      <CardContent className={cn(textAlignClassName)}>
         <p className="text-sm leading-6 text-muted-foreground">{description}</p>
       </CardContent>
     </Card>

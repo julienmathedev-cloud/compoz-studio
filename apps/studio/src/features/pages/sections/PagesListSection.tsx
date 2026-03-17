@@ -147,7 +147,7 @@ export function PagesListSection({
           className={cn(EMPTY_CARD)}
         />
       ) : (
-        <Card variant="panel">
+        <Card variant="panelStudio">
           <CardContent>
             <ul className={cn(STACK_SM)}>
               {groups.parents.map((parent, parentIndex) => {
@@ -176,7 +176,7 @@ export function PagesListSection({
                           triggerClassName="text-muted-foreground"
                         >
                           <Card
-                            variant="panel"
+                            variant="panelStudio"
                             className="bg-accent/10 shadow-xs shadow-accent"
                           >
                             <CardContent className="flex flex-col">

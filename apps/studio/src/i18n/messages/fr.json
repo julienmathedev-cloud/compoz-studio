@@ -33,7 +33,8 @@
     "status": "État",
     "create": "Créer",
     "creating": "Création…",
-    "availableInNextVersion": "Disponible dans la prochaine version"
+    "availableInNextVersion": "Disponible dans la prochaine version",
+    "chooseColor": "Choisir une couleur"
   },
 
   "notifications": {
@@ -71,6 +72,45 @@
     "HREF_ABSOLUTE_HTTP_INVALID": "Le lien doit être une URL absolue http(s).",
     "HREF_MAILTO_INVALID": "Le lien email est invalide (ex. mailto:adresse@exemple.com).",
 
+    "THEME_MODE_INVALID": "Mode de thème invalide.",
+
+    "THEME_FONT_FAMILY_REQUIRED": "La police du site est requise.",
+
+    "THEME_REVEAL_PRESET_INVALID": "Le preset d’animation sélectionné est invalide.",
+
+    "THEME_DARK_MODE_DISABLED_INVALID_MODE": "Le mode sombre est désactivé, ce mode de thème n'est pas autorisé.",
+
+    "THEME_TOKEN_BACKGROUND_REQUIRED": "La couleur de fond du site est requise.",
+    "THEME_TOKEN_FOREGROUND_REQUIRED": "La couleur principale du texte est requise.",
+
+    "THEME_TOKEN_CARD_REQUIRED": "La couleur de fond des cartes est requise.",
+    "THEME_TOKEN_CARD_FOREGROUND_REQUIRED": "La couleur du texte des cartes est requise.",
+
+    "THEME_TOKEN_POPOVER_REQUIRED": "La couleur de fond des popovers est requise.",
+    "THEME_TOKEN_POPOVER_FOREGROUND_REQUIRED": "La couleur du texte des popovers est requise.",
+
+    "THEME_TOKEN_PRIMARY_REQUIRED": "La couleur principale du thème est requise.",
+    "THEME_TOKEN_PRIMARY_FOREGROUND_REQUIRED": "La couleur du texte sur la couleur principale est requise.",
+
+    "THEME_TOKEN_SECONDARY_REQUIRED": "La couleur secondaire du thème est requise.",
+    "THEME_TOKEN_SECONDARY_FOREGROUND_REQUIRED": "La couleur du texte sur la couleur secondaire est requise.",
+
+    "THEME_TOKEN_MUTED_REQUIRED": "La couleur de fond des éléments atténués est requise.",
+    "THEME_TOKEN_MUTED_FOREGROUND_REQUIRED": "La couleur du texte atténué est requise.",
+
+    "THEME_TOKEN_ACCENT_REQUIRED": "La couleur d’accent du thème est requise.",
+    "THEME_TOKEN_ACCENT_FOREGROUND_REQUIRED": "La couleur du texte sur l’accent est requise.",
+
+    "THEME_TOKEN_DESTRUCTIVE_REQUIRED": "La couleur des actions destructives est requise.",
+    "THEME_TOKEN_DESTRUCTIVE_FOREGROUND_REQUIRED": "La couleur du texte pour les actions destructives est requise.",
+
+    "THEME_TOKEN_BORDER_REQUIRED": "La couleur des bordures est requise.",
+    "THEME_TOKEN_INPUT_REQUIRED": "La couleur de fond des champs de saisie est requise.",
+    "THEME_TOKEN_RING_REQUIRED": "La couleur de focus (ring) est requise.",
+
+    "THEME_FONT_UNSUPPORTED": "Le type de police n’est pas pris en charge.",
+    "THEME_DARK_MODE_DISABLED": "Le thème sombre est désactivé.",
+
     "PAYLOAD_TOO_LARGE": "La taille de la requête dépasse la limite autorisée.",
     "UPLOAD_FILE_MISSING": "Aucun fichier n’a été fourni.",
     "UPLOAD_IMAGE_REQUIRED": "Le fichier doit être une image.",
@@ -83,6 +123,7 @@
     "PUBLISH_EMPTY_INDEX": "Avertissement : aucune page n’est définie. Le site publié sera vide.",
     "PUBLISH_PAGE_MISSING": "Avertissement : une page référencée n’a pas pu être copiée.",
     "PUBLISH_PAGE_DELETE_FAILED": "Avertissement : une page n'a pas pu être supprimée pendant la publication.",
+    "PUBLISH_PAGE_H1_MISSING": "Avertissement : une page n’a pas de titre de niveau H1.",
     "PUBLISH_SETTINGS_COPY_FAILED": "Avertissement : échec lors de la copie des réglages pendant la publication.",
     "PUBLISH_IDENTICAL_STATES": "Publication inutile : les états source et cible sont identiques.",
     "PUBLISH_HOME_MISSING": "Avertissement : la page “home” est absente. Le site n’aura probablement pas de page d’accueil.",
@@ -180,6 +221,9 @@
     "BLOCK_TYPE_UNSUPPORTED": "Ce type de bloc n’est pas supporté.",
     "BLOCK_NOT_FOUND": "Ce bloc est introuvable.",
     "BLOCK_ID_MISMATCH": "L’identifiant du bloc dans l’URL ne correspond pas à celui des données envoyées.",
+    "BLOCK_CELLS_INVALID": "La liste des cellules du bloc est invalide.",
+    "BLOCK_INSERT_AT_INVALID": "L'insertion à l'index est invalide.",
+    "BLOCK_ORDER_INVALID": "L'ordre des blocs est invalide.",
 
     "BLOCK_SECTION_COLUMNS_INVALID": "Le nombre de colonnes de la section est invalide (attendu : 1 à 3).",
     "BLOCK_SECTION_CONTAINER_MODE_INVALID": "Le mode de conteneur de la section n'est pas valide.",
@@ -193,6 +237,125 @@
 
     "CELL_INVALID": "Une cellule est invalide.",
     "CELL_KIND_UNSUPPORTED": "Ce type de cellule n’est pas supporté.",
+    "CELL_SHAPE_INVALID": "La structure de la cellule est invalide.",
+    "CELL_ID_REQUIRED": "Un identifiant de cellule est requis.",
+    "CELL_BUTTONS_ALIGN_INVALID": "L’alignement des boutons est invalide.",
+    "CELL_BUTTONS_GAP_INVALID": "L’espacement entre les boutons est invalide.",
+    "CELL_BUTTONS_ITEMS_INVALID": "La liste des boutons est invalide.",
+    "CELL_BUTTONS_ITEMS_MIN_1": "Au moins un bouton est requis.",
+
+    "CELL_BUTTON_ITEM_INVALID": "Un bouton est invalide.",
+    "CELL_BUTTON_ITEM_ID_REQUIRED": "Un identifiant de bouton est requis.",
+    "CELL_BUTTON_ITEM_LABEL_REQUIRED": "Un libellé de bouton est requis.",
+    "CELL_BUTTON_ITEM_HREF_INVALID": "Le lien du bouton est invalide.",
+    "CELL_BUTTON_ITEM_VARIANT_INVALID": "La variante du bouton est invalide.",
+
+    "CELL_CARDS_EXTENDED_COLUMNS_INVALID": "Le nombre de colonnes des cartes étendues est invalide.",
+    "CELL_CARDS_EXTENDED_ALIGN_INVALID": "L’alignement des cartes étendues est invalide.",
+    "CELL_CARDS_EXTENDED_ITEMS_INVALID": "La liste des cartes étendues est invalide.",
+    "CELL_CARDS_EXTENDED_ITEMS_MIN_1": "Au moins une carte étendue est requise.",
+
+    "CELL_CARDS_EXTENDED_ITEM_INVALID": "Une carte étendue est invalide.",
+    "CELL_CARDS_EXTENDED_ITEM_ID_REQUIRED": "Un identifiant de carte étendue est requis.",
+    "CELL_CARDS_EXTENDED_ITEM_TITLE_REQUIRED": "Un titre de carte étendue est requis.",
+    "CELL_CARDS_EXTENDED_ITEM_DESCRIPTION_REQUIRED": "Une description de carte étendue est requise.",
+    "CELL_CARDS_EXTENDED_ITEM_ICON_INVALID": "L’icône de la carte étendue est invalide.",
+    "CELL_CARDS_EXTENDED_ITEM_FOOTER_INVALID": "Le footer de la carte étendue est invalide.",
+    "CELL_CARDS_EXTENDED_ITEM_BULLETS_INVALID": "La liste des bullet points de la carte étendue est invalide.",
+    "CELL_CARDS_EXTENDED_ITEM_BULLET_INVALID": "Un bullet point de la carte étendue est invalide.",
+
+    "CELL_CARDS_COLUMNS_INVALID": "Le nombre de colonnes des cartes est invalide.",
+    "CELL_CARDS_ALIGN_INVALID": "L’alignement des cartes est invalide.",
+    "CELL_CARDS_ITEMS_INVALID": "La liste des cartes est invalide.",
+    "CELL_CARDS_ITEMS_MIN_1": "Au moins une carte est requise.",
+
+    "CELL_CARD_ITEM_INVALID": "Une carte est invalide.",
+    "CELL_CARD_ITEM_ID_REQUIRED": "Un identifiant de carte est requis.",
+    "CELL_CARD_ITEM_TITLE_REQUIRED": "Un titre de carte est requis.",
+    "CELL_CARD_ITEM_DESCRIPTION_REQUIRED": "Une description de carte est requise.",
+    "CELL_CARD_ITEM_ICON_INVALID": "L’icône de la carte est invalide.",
+
+    "CELL_STRUCTURED_CARD_COLUMNS_INVALID": "Le nombre de colonnes de la carte structurée est invalide.",
+    "CELL_STRUCTURED_CARD_ITEMS_INVALID": "La liste des cartes structurées est invalide.",
+    "CELL_STRUCTURED_CARD_ITEMS_MIN_1": "Au moins une carte structurée est requise.",
+
+    "CELL_STRUCTURED_CARD_ITEM_INVALID": "La carte structurée est invalide.",
+    "CELL_STRUCTURED_CARD_ITEM_ID_REQUIRED": "Un identifiant de carte est requis.",
+    "CELL_STRUCTURED_CARD_ITEM_TITLE_REQUIRED": "Un titre de carte est requis.",
+    "CELL_STRUCTURED_CARD_ITEM_META_INVALID": "Le champ méta de la carte est invalide.",
+    "CELL_STRUCTURED_CARD_ITEM_SECTIONS_INVALID": "Les sections de la carte sont invalides.",
+    "CELL_STRUCTURED_CARD_ITEM_SECTIONS_MIN_1": "Au moins une section est requise pour la carte.",
+
+    "CELL_STRUCTURED_CARD_SECTION_INVALID": "La section de la carte est invalide.",
+    "CELL_STRUCTURED_CARD_SECTION_ID_REQUIRED": "Un identifiant de section est requis.",
+    "CELL_STRUCTURED_CARD_SECTION_LABEL_REQUIRED": "Un label de section est requis.",
+    "CELL_STRUCTURED_CARD_SECTION_CONTENT_REQUIRED": "Un contenu de section est requis.",
+
+    "CELL_FORM_TO_REQUIRED": "L’adresse de destination du formulaire est requise.",
+    "CELL_FORM_TO_INVALID": "L’adresse de destination du formulaire est invalide.",
+
+    "CELL_FORM_SUBMIT_LABEL_REQUIRED": "Le libellé du bouton d’envoi du formulaire est requis.",
+
+    "CELL_FORM_SUCCESS_MESSAGE_INVALID": "Le message de succès du formulaire est invalide.",
+    "CELL_FORM_ERROR_MESSAGE_INVALID": "Le message d’erreur du formulaire est invalide.",
+
+    "CELL_FORM_FIELDS_INVALID": "La liste des champs du formulaire est invalide.",
+    "CELL_FORM_FIELDS_MIN_1": "Au moins un champ est requis dans le formulaire.",
+
+    "CELL_FORM_FIELD_INVALID": "Un champ du formulaire est invalide.",
+    "CELL_FORM_FIELD_ID_REQUIRED": "Un identifiant de champ est requis.",
+    "CELL_FORM_FIELD_NAME_REQUIRED": "Un nom de champ est requis.",
+    "CELL_FORM_FIELD_LABEL_REQUIRED": "Un libellé de champ est requis.",
+    "CELL_FORM_FIELD_TYPE_INVALID": "Le type de champ est invalide.",
+    "CELL_FORM_FIELD_PLACEHOLDER_INVALID": "Le placeholder du champ est invalide.",
+    "CELL_FORM_FIELD_REQUIRED_INVALID": "La valeur \"required\" du champ est invalide.",
+
+    "CELL_HEADING_LEVEL_INVALID": "Le niveau du titre est invalide.",
+    "CELL_HEADING_TITLE_REQUIRED": "Le titre est requis.",
+    "CELL_HEADING_SUBTITLE_INVALID": "Le sous-titre du titre est invalide.",
+    "CELL_HEADING_ALIGN_INVALID": "L’alignement du titre est invalide.",
+    "CELL_HEADING_VARIANT_INVALID": "La variante du titre est invalide.",
+    "CELL_HEADING_SEPARATOR_INVALID": "La valeur du séparateur du titre est invalide.",
+    "CELL_HEADING_ID_ANCHOR_INVALID": "L’identifiant d’ancre du titre est invalide.",
+    "CELL_HEADING_REVEAL_INVALID": "La configuration d’animation du titre est invalide.",
+    "CELL_HEADING_HIGHLIGHTS_INVALID": "La liste des highlights du titre est invalide.",
+    "CELL_HEADING_HIGHLIGHT_INVALID": "Un highlight du titre est invalide.",
+
+    "CELL_SEPARATOR_ALIGN_INVALID": "L’alignement du séparateur est invalide.",
+    "CELL_SEPARATOR_SIZE_INVALID": "La taille du séparateur est invalide.",
+
+    "CELL_SPACER_SIZE_INVALID": "La taille de l’espace est invalide.",
+
+    "CELL_STEPS_VARIANT_INVALID": "La variante des étapes est invalide.",
+    "CELL_STEPS_ITEMS_INVALID": "La liste des étapes est invalide.",
+    "CELL_STEPS_ITEMS_MIN_1": "Au moins une étape est requise.",
+
+    "CELL_STEP_ITEM_INVALID": "Une étape est invalide.",
+    "CELL_STEP_ITEM_ID_REQUIRED": "Un identifiant d’étape est requis.",
+    "CELL_STEP_ITEM_TITLE_REQUIRED": "Un titre d’étape est requis.",
+    "CELL_STEP_ITEM_DESCRIPTION_REQUIRED": "Une description d’étape est requise.",
+
+    "CELL_TIMELINE_ITEMS_INVALID": "La liste des éléments de la timeline est invalide.",
+    "CELL_TIMELINE_ITEMS_MIN_1": "Au moins un élément est requis dans la timeline.",
+
+    "CELL_TIMELINE_ITEM_INVALID": "Un élément de la timeline est invalide.",
+    "CELL_TIMELINE_ITEM_ID_REQUIRED": "Un identifiant d’élément de timeline est requis.",
+    "CELL_TIMELINE_ITEM_PERIOD_REQUIRED": "La période de l’élément de timeline est requise.",
+    "CELL_TIMELINE_ITEM_TITLE_REQUIRED": "Le titre de l’élément de timeline est requis.",
+    "CELL_TIMELINE_ITEM_SUBTITLE_INVALID": "Le sous-titre de l’élément de timeline est invalide.",
+    "CELL_TIMELINE_ITEM_DESCRIPTION_INVALID": "La description de l’élément de timeline est invalide.",
+    "CELL_TIMELINE_ITEM_BADGE_INVALID": "Le badge de l’élément de timeline est invalide.",
+    "CELL_TIMELINE_ITEM_KEYWORDS_INVALID": "La liste des mots-clés de l’élément de timeline est invalide.",
+    "CELL_TIMELINE_ITEM_KEYWORD_INVALID": "Un mot-clé de l’élément de timeline est invalide.",
+
+    "CELL_CAROUSEL_VARIANT_INVALID": "La variante du carousel est invalide.",
+    "CELL_CAROUSEL_SHOW_DOTS_INVALID": "La valeur d’affichage des points du carousel est invalide.",
+    "CELL_CAROUSEL_SHOW_ARROWS_INVALID": "La valeur d’affichage des flèches du carousel est invalide.",
+    "CELL_CAROUSEL_ITEM_KIND_INVALID": "Le type d’item du carousel est invalide.",
+    "CELL_CAROUSEL_ITEMS_INVALID": "La liste des items du carousel est invalide.",
+    "CELL_CAROUSEL_ITEMS_MIN_1": "Au moins un item est requis dans le carousel.",
+
+    "CELL_ITEM_ID_REQUIRED": "Un identifiant d’item de cellule est requis.",
 
     "RICH_TEXT_CONTENT_INVALID": "Le contenu du texte riche est invalide.",
     "HEADING_CELL_UNIQUE_H1": "Il doit y avoir un seul cellule H1 dans un bloc.",
@@ -287,7 +450,8 @@
         "site": "Site",
         "user": "Utilisateur",
         "users": "Utilisateurs",
-        "tenant": "Site"
+        "tenant": "Site",
+        "theme": "Thème"
       },
 
       "upload": {
@@ -353,6 +517,131 @@
       "homeMissing": "Aucune page d'accueil n’est définie.",
       "pageEmpty": "Cette page n'a pas encore de contenu",
       "blocks": "Aucun bloc n’est défini."
+    },
+
+    "themeSection": {
+      "section": {
+        "title": "Thème",
+        "description": "Personnalise l’apparence globale du site : mode clair/sombre, police, animation de reveal et couleurs principales."
+      }
+    },
+
+    "themeForm": {
+      "general": {
+        "title": "Réglages généraux"
+      },
+
+      "enableDarkMode": {
+        "label": "Activer le mode sombre",
+        "help": "Permet d’utiliser un thème sombre sur le site public."
+      },
+
+      "fontFamily": {
+        "label": "Police principale",
+        "placeholder": "Inter",
+        "help": "Police utilisée par défaut sur l’ensemble du site."
+      },
+
+      "mode": {
+        "label": "Mode par défaut",
+        "help": "Choisit le mode appliqué au chargement du site.",
+        "items": {
+          "light": "Clair",
+          "dark": "Sombre",
+          "system": "Système"
+        }
+      },
+
+      "revealPreset": {
+        "label": "Animation de reveal",
+        "help": "Choisit le preset d’animation utilisé pour les entrées en reveal.",
+        "items": {
+          "fade": "Fade",
+          "fade-up": "Fade up",
+          "scale-in": "Scale in",
+          "slide-up": "Slide up"
+        }
+      },
+
+      "lightTokens": {
+        "title": "Couleurs — mode clair",
+        "description": "Définit les tokens de couleur utilisés quand le site est affiché en mode clair."
+      },
+
+      "darkTokens": {
+        "title": "Couleurs — mode sombre",
+        "description": "Définit les tokens de couleur utilisés quand le site est affiché en mode sombre."
+      },
+
+      "tokens": {
+        "title": "Couleurs du thème",
+        "description": "Définis les couleurs globales utilisées par le site pour les surfaces, textes, actions et états.",
+        "labels": {
+          "background": "Background",
+          "foreground": "Foreground",
+          "card": "Card",
+          "card-foreground": "Card foreground",
+          "popover": "Popover",
+          "popover-foreground": "Popover foreground",
+          "primary": "Primary",
+          "primary-foreground": "Primary foreground",
+          "secondary": "Secondary",
+          "secondary-foreground": "Secondary foreground",
+          "muted": "Muted",
+          "muted-foreground": "Muted foreground",
+          "accent": "Accent",
+          "accent-foreground": "Accent foreground",
+          "destructive": "Destructive",
+          "destructive-foreground": "Destructive foreground",
+          "border": "Border",
+          "input": "Input",
+          "ring": "Ring"
+        },
+
+        "placeholders": {
+          "background": "var(--mauve-2)",
+          "foreground": "var(--mauve-12)",
+          "card": "var(--mauve-1)",
+          "card-foreground": "var(--mauve-12)",
+          "popover": "var(--mauve-1)",
+          "popover-foreground": "var(--mauve-12)",
+          "primary": "var(--indigo-9)",
+          "primary-foreground": "white",
+          "secondary": "var(--mauve-1)",
+          "secondary-foreground": "var(--mauve-12)",
+          "muted": "var(--mauve-3)",
+          "muted-foreground": "var(--mauve-11)",
+          "accent": "var(--indigo-3)",
+          "accent-foreground": "var(--indigo-11)",
+          "destructive": "oklch(0.577 0.245 27.325)",
+          "destructive-foreground": "white",
+          "border": "var(--indigo-4)",
+          "input": "var(--indigo-4)",
+          "ring": "var(--indigo-9)"
+        },
+
+        "help": {
+          "background": "Couleur de fond principale du site.",
+          "foreground": "Couleur de texte principale.",
+          "card": "Couleur de fond des cartes et surfaces élevées.",
+          "card-foreground": "Couleur de texte utilisée sur les cartes.",
+          "popover": "Couleur de fond des popovers et panneaux flottants.",
+          "popover-foreground": "Couleur de texte utilisée dans les popovers.",
+          "primary": "Couleur d’action principale.",
+          "primary-foreground": "Couleur de texte utilisée sur primary.",
+          "secondary": "Couleur secondaire utilisée pour certaines surfaces ou boutons.",
+          "secondary-foreground": "Couleur de texte utilisée sur secondary.",
+          "muted": "Couleur utilisée pour les zones atténuées.",
+          "muted-foreground": "Couleur de texte utilisée sur muted.",
+          "accent": "Couleur d’accent visuelle.",
+          "accent-foreground": "Couleur de texte utilisée sur accent.",
+          "destructive": "Couleur utilisée pour les actions dangereuses.",
+          "destructive-foreground": "Couleur de texte utilisée sur destructive.",
+          "border": "Couleur des bordures principales.",
+          "input": "Couleur des bordures ou fonds d’inputs selon les composants.",
+          "ring": "Couleur du focus ring."
+        }
+      }
     },
 
     "login": {
@@ -521,7 +810,7 @@
             "cards": "Cartes",
             "cardsExtended": "Cartes étendues",
             "steps": "Étapes",
-            "caseStudyCard": "Étude de cas",
+            "structuredCard": "Carte structurée",
             "form": "Formulaire",
             "timeline": "Timeline"
           }
@@ -790,6 +1079,11 @@
         "placeholderCreate": "Laisser vide pour le dériver du titre",
         "inputTitle": "Le slug doit contenir uniquement des lettres minuscules, chiffres et tirets."
       },
+      "seoTitle": {
+        "label": "Titre SEO",
+        "placeholder": "Titre affiché dans les résultats de recherche",
+        "help": "Optionnel. Laisse vide pour utiliser un fallback automatique basé sur le contenu de la page."
+      },
       "parent": {
         "label": "Page parente",
         "help": "Selectionner une page afin d'associer celle-ci en tant que parente.",
@@ -948,7 +1242,8 @@
         "footer": "Footer",
         "pages": "Pages",
         "blocks": "Blocs",
-        "seo": "SEO"
+        "seo": "SEO",
+        "theme": "Thème"
       }
     },
 
@@ -1195,7 +1490,7 @@
           "cards": "Cartes",
           "cardsExtended": "Cartes étendues",
           "steps": "Étapes",
-          "caseStudyCard": "Étude de cas",
+          "structuredCard": "Carte structurée",
           "form": "Formulaire"
         },
         "fallbackSummary": "Type : {type}"
@@ -1262,7 +1557,7 @@
         "cards": "Cartes",
         "cardsExtended": "Cartes étendues",
         "steps": "Étapes",
-        "caseStudyCard": "Étude de cas",
+        "structuredCard": "Carte structurée",
         "form": "Formulaire",
         "timeline": "Timeline"
       },
@@ -1297,44 +1592,23 @@
       },
 
       "carouselCellEditor": {
-        "title": "Carrousel",
-        "description": "Affiche une série d’éléments sous forme de carrousel ou de slider.",
-
-        "variant": {
-          "label": "Type d’affichage",
-          "carousel": "Carrousel",
+        "itemsLabel": "Éléments du carousel",
+        "itemsHelp": "Ajoutez, réorganisez et modifiez les éléments affichés dans le carousel.",
+        "variantLabel": "Affichage",
+        "itemKindLabel": "Type de contenu",
+        "showDotsLabel": "Afficher les points",
+        "showDotsHelp": "Affiche des indicateurs de pagination sous le carousel.",
+        "showArrowsLabel": "Afficher les flèches",
+        "showArrowsHelp": "Affiche des flèches de navigation sur le carousel.",
+        "variants": {
+          "carousel": "Carousel",
           "slider": "Slider"
         },
-
-        "items": {
-          "label": "Éléments",
-          "add": "Ajouter un élément",
-          "empty": "Aucun élément"
-        },
-
-        "item": {
+        "itemKinds": {
           "image": "Image",
-          "content": "Contenu",
-          "caseStudy": "Étude de cas"
-        },
-
-        "image": {
-          "src": "Image",
-          "alt": "Texte alternatif",
-          "caption": "Légende",
-          "href": "Lien (optionnel)"
-        },
-
-        "slider": {
-          "perView": "Éléments visibles",
-          "spacing": "Espacement",
-          "loop": "Boucle infinie"
-        },
-
-        "carousel": {
-          "autoplay": "Lecture automatique",
-          "delay": "Délai (ms)",
-          "pauseOnHover": "Pause au survol"
+          "card": "Carte",
+          "cardsExtended": "Carte étendue",
+          "structuredCard": "Carte structurée"
         }
       },
 
@@ -1376,25 +1650,34 @@
         }
       },
 
-      "caseStudyCardCellEditor": {
+      "structuredCardCellEditor": {
+        "itemsLabel": "Cartes structurées",
+        "itemsHelp": "Ajoutez, réorganisez et éditez les cartes structurées affichées dans cette cellule.",
+
+        "columnsLabel": "Colonnes",
+        "columns": {
+          "1": "1 colonne",
+          "2": "2 colonnes",
+          "3": "3 colonnes"
+        },
+
         "imageLabel": "Image",
-        "imageHelp": "Image principale utilisée pour illustrer cette étude de cas.",
+        "imageHelp": "Image principale utilisée pour illustrer cette carte.",
 
         "titleLabel": "Titre",
-        "titlePlaceholder": "Titre de l’étude de cas",
-        "titleHelp": "Nom court et clair du projet ou du cas présenté.",
+        "titlePlaceholder": "Titre de la carte",
+        "titleHelp": "Nom court et clair de l’élément présenté.",
 
-        "contextLabel": "Contexte",
-        "contextPlaceholder": "Décrivez le besoin ou la situation de départ",
-        "contextHelp": "Présente le problème initial, le besoin métier ou le contexte du projet.",
+        "metaLabel": "Méta",
+        "metaPlaceholder": "Sous-information, contexte court, date, client…",
+        "metaHelp": "Texte secondaire optionnel affiché sous le titre.",
 
-        "solutionLabel": "Solution",
-        "solutionPlaceholder": "Décrivez la solution mise en place",
-        "solutionHelp": "Explique la réponse apportée, l’outil conçu ou l’approche retenue.",
+        "sectionLabelLabel": "Label de section",
+        "sectionLabelPlaceholder": "Ex. Contexte, Solution, Résultat",
+        "sectionContentLabel": "Contenu de section",
+        "sectionContentPlaceholder": "Décrivez le contenu de cette section",
 
-        "resultLabel": "Résultat",
-        "resultPlaceholder": "Décrivez le résultat obtenu",
-        "resultHelp": "Met en avant les bénéfices concrets, les gains ou l’impact final."
+        "addSection": "Ajouter une section"
       },
 
       "formCellEditor": {

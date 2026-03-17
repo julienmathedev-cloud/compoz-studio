@@ -11,7 +11,7 @@ import { z } from "zod";
 import { CellIdSchema } from "@compoz/validation/pages/blocks/cells/details/common";
 
 export const SpacerSizeSchema = z.enum(["sm", "md", "lg", "xl"], {
-  message: ERROR_CODES.CELL_INVALID,
+  message: ERROR_CODES.CELL_SPACER_SIZE_INVALID,
 });
 
 export const SpacerCellSchema = z

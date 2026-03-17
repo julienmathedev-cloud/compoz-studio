@@ -141,7 +141,7 @@ export function NewSocialLinkField({
 
   return (
     <Field data-invalid={isInvalid || undefined} className="min-w-0">
-      <FieldLabel htmlFor={fieldId}>
+      <FieldLabel visualMode="studio" htmlFor={fieldId}>
         {t("studio.socialLinkField.label")}
       </FieldLabel>
 
@@ -160,12 +160,13 @@ export function NewSocialLinkField({
           aria-invalid={isInvalid ? true : undefined}
           aria-describedby={describedBy}
           disabled={disabled}
+          variant="defaultStudio"
           className="rounded-l-none border-l-0 pl-0.5"
         />
       </InputGroup>
 
       {help && (
-        <FieldDescription>
+        <FieldDescription visualMode="studio">
           <FieldMetaBar text={help} textId={helpId} />
         </FieldDescription>
       )}

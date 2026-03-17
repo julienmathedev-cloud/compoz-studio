@@ -70,16 +70,15 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
     },
     ref,
   ) {
+    const pathname = usePathname() || "/";
+
     const normalizedHref = normalizeString(href);
     const textNode = children ?? label ?? normalizedHref;
 
-    const pathname = usePathname() || "/";
     const disableAllLinks = shouldDisableLinksInPreview(pathname);
-
     const { special, external, rawExternal, unsafe } =
       resolveLinkFlags(normalizedHref);
 
-    // A11y: nom accessible
     const computedAria = getAriaLabel(
       ariaLabel,
       textNode,
@@ -89,7 +88,6 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
     const shouldNewTab = Boolean(newTab) && external && !special;
     const target = shouldNewTab ? externalTarget : undefined;
     const rel = shouldNewTab ? externalRel : undefined;
-
     const shouldHintNewTab = shouldNewTab && (showNewTabHint ?? true);
 
     const content = (
@@ -101,37 +99,28 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
       </>
     );
 
-    // Unsafe / vide : neutralisé
+    const disabledContent = (
+      <span
+        className={cn(linkClassName)}
+        aria-label={computedAria}
+        aria-disabled="true"
+        data-disabled="true"
+        tabIndex={-1}
+      >
+        {content}
+      </span>
+    );
+
     if (unsafe || !normalizedHref) {
-      return (
-        <span
-          className={cn(className)}
-          aria-disabled="true"
-          data-disabled="true"
-          tabIndex={-1}
-        >
-          {content}
-        </span>
-      );
+      return <span className={cn(className)}>{disabledContent}</span>;
     }
 
-    // Preview : neutralise tout
     if (disableAllLinks) {
       return (
-        <div className={cn(className, "cursor-pointer")}>
-          <span
-            className={cn(linkClassName)}
-            aria-label={computedAria}
-            aria-disabled="true"
-            data-disabled="true"
-          >
-            {content}
-          </span>
-        </div>
+        <div className={cn(className, "cursor-pointer")}>{disabledContent}</div>
       );
     }
 
-    // Spécial: mailto/tel
     if (special) {
       return (
         <div className={cn(className, "cursor-pointer")}>
@@ -148,7 +137,6 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
       );
     }
 
-    // Externe http(s)
     if (rawExternal) {
       return (
         <div className={cn(className)}>
@@ -168,12 +156,10 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
       );
     }
 
-    // Interne : résout le mount (/site, /draft, /)
     const internalHref = resolveInternalHref(pathname, normalizedHref);
 
-    // Détection actif (paths uniquement)
-    const base = resolveSiteMountBase(pathname); // "/site" | "/draft" | "/"
-    const targetPath = normalizePath(internalHref); // important
+    const base = resolveSiteMountBase(pathname);
+    const targetPath = normalizePath(internalHref);
 
     const isHomeOfMount = targetPath === base;
     const mode = isHomeOfMount ? "exact" : activeMode;
@@ -192,12 +178,13 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
           prefetch={prefetch}
           scroll={false}
           {...(rest as Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href">)}
-          onClick={(e) => {
+          onClick={(event) => {
             if (isExactCurrent) {
-              e.preventDefault();
+              event.preventDefault();
               return;
             }
-            onClick?.(e);
+
+            onClick?.(event);
           }}
         >
           {content}

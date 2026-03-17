@@ -23,10 +23,10 @@ import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 import { ActionsBar } from "@compoz/studio/components/molecules/controls/ActionsBar";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
-import type { FooterWarningKey } from "@compoz/studio/features/settings/footer/validate";
-import { useFooterUiWarnings } from "@compoz/studio/features/settings/footer/validate";
 import { useSettingsSectionForm } from "@compoz/studio/features/settings/_shared/useSettingsSectionForm";
 import { useStableWarningKeys } from "@compoz/studio/features/settings/_shared/useStableWarningKeys";
+import type { FooterWarningKey } from "@compoz/studio/features/settings/footer/validate";
+import { useFooterUiWarnings } from "@compoz/studio/features/settings/footer/validate";
 import { Card, CardContent, CardFooter } from "@compoz/ui/components/ui/card";
 import {
   createFieldIds,
@@ -166,7 +166,7 @@ export function FooterForm({
       onSubmit={handleSubmit(onSubmit)}
       noValidate
     >
-      <Card variant="panel">
+      <Card variant="panelStudio">
         <CardContent>
           <FormGrid>
             <InputField

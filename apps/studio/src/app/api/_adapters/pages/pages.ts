@@ -54,7 +54,8 @@ function normalizeSitemapPatch(
  * Transforme un DTO de création de page en input domaine.
  *
  * Contrat :
- * - `title` toujours trimé et obligatoire.
+ * - `name` toujours trimé et obligatoire.
+ * - `seoTitle` trimé si fourni.
  * - `slug` optionnel : normalisé s’il est fourni, sinon logique fallback côté domaine.
  * - `sitemap` : si la clé est présente, on propage après normalisation (déjà validé par Zod).
  */
@@ -65,6 +66,7 @@ export function adaptCreatePagePayload(
 
   log.debug("studio.adapter.pages.create.start", {
     hasSlug: typeof dto.slug === "string",
+    hasSeoTitle: typeof dto.seoTitle === "string",
     hasSitemap: "sitemap" in dto,
     hasParentId: "parentId" in dto,
   });
@@ -74,6 +76,10 @@ export function adaptCreatePagePayload(
     parentId: dto.parentId,
     paginationEnabled: dto.parentId === null ? false : dto.paginationEnabled,
   };
+
+  if ("seoTitle" in dto && typeof dto.seoTitle === "string") {
+    out.seoTitle = trimOrKeep(dto.seoTitle);
+  }
 
   if ("slug" in dto && typeof dto.slug === "string") {
     const s = toSlugIntentInput(dto.slug);
@@ -110,7 +116,8 @@ export function adaptUpdatePagePayload(
   const started = Date.now();
 
   log.debug("studio.adapter.pages.update.start", {
-    hasTitle: "title" in dto,
+    hasName: "name" in dto,
+    hasSeoTitle: "seoTitle" in dto,
     hasSlug: "slug" in dto,
     hasSitemap: "sitemap" in dto,
     hasParentId: "parentId" in dto,
@@ -118,9 +125,15 @@ export function adaptUpdatePagePayload(
 
   const out: UpdatePagePatchInput = {};
 
-  if ("title" in dto) {
+  if ("name" in dto) {
     if (typeof dto.name === "string") {
       out.name = trimOrKeep(dto.name);
+    }
+  }
+
+  if ("seoTitle" in dto) {
+    if (typeof dto.seoTitle === "string") {
+      out.seoTitle = trimOrKeep(dto.seoTitle);
     }
   }
 

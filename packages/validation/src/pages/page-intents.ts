@@ -7,14 +7,16 @@
  * métier et décisions de cohérence sont traitées dans le domaine.
  */
 
+import { z } from "zod";
+
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import {
   PageIdSchema,
   PageNameSchema,
+  PageSeoTitleSchema,
   SitemapChangeFreqSchema,
   SlugSchema,
 } from "@compoz/validation/pages/page";
-import { z } from "zod";
 
 /**
  * Patch sitemap côté API :
@@ -46,11 +48,18 @@ export const CreatePageIntentSchema = z
   .object({
     /** Titre de la page (requis côté API). */
     name: PageNameSchema,
+
+    /** Titre SEO optionnel. */
+    seoTitle: PageSeoTitleSchema.optional(),
+
     parentId: PageIdSchema.nullable(),
+
     /** Slug optionnel : normalisation + unicité gérées dans le domaine. */
     slug: z.union([SlugSchema, z.literal("/")]).optional(),
+
     /** Bloc sitemap partiel autorisé (defaults appliqués côté domaine). */
     sitemap: PageSitemapIntentSchema.optional(),
+
     paginationEnabled: z.boolean(),
   })
   .strict();
@@ -65,14 +74,21 @@ export const UpdatePageIntentSchema = z
      * absence de clé ⇒ titre inchangé.
      */
     name: PageNameSchema.optional(),
+
+    /** Nouveau titre SEO optionnel. */
+    seoTitle: PageSeoTitleSchema.optional(),
+
     parentId: PageIdSchema.nullable().optional(),
+
     /**
      * Nouveau slug optionnel. Collisions, normalisation et réservations sont
      * gérées dans le domaine (use-case `updatePage`).
      */
     slug: z.union([SlugSchema, z.literal(""), z.literal("/")]).optional(),
+
     /** Bloc sitemap partiel (include/changefreq/priority). */
     sitemap: PageSitemapIntentSchema.optional(),
+
     paginationEnabled: z.boolean().optional(),
   })
   .strict();

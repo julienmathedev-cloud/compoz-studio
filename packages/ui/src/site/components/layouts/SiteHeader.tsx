@@ -47,22 +47,19 @@ export function SiteHeader({
 }: SiteHeaderProps) {
   const { sticky, blur, swapPrimaryAndSocial, showLogo, showSiteName } = header;
 
-  // Hauteur de header → variable CSS (sticky/layout)
   const headerRef = useHeaderHeightVar();
 
   const hasLogo = showLogo && Boolean(identity.logoUrl);
   const hasSiteName = showSiteName && Boolean(identity.siteName);
-
   const hasMenu = (primaryMenu.items?.length ?? 0) > 0;
   const hasSocial = (social?.items?.length ?? 0) > 0;
+  const hasVisibleContent = hasLogo || hasSiteName || hasMenu || hasSocial;
 
-  const blurClassName = blur ? ui.header.blur : "";
+  const blurClassName = blur ? ui.header.blur : undefined;
 
-  // Rien à afficher : header minimal (skip-link + base) pour garder le noeud DOM.
-  if (!hasLogo && !hasSiteName && !hasMenu && !hasSocial) {
+  if (!hasVisibleContent) {
     return (
       <header ref={headerRef} className={cn(ui.header.base)}>
-        {/* ✅ Skip link (visible au focus clavier) */}
         <a href="#main-content" className={cn(ui.skipLink)}>
           Aller au contenu
         </a>
@@ -70,36 +67,23 @@ export function SiteHeader({
     );
   }
 
-  const logoContent = (
-    <div className={cn(ui.logoSlot)}>
-      {hasLogo && <SiteLogo identity={identity} ui={ui.logo} />}
-      {hasSiteName ? (
-        <span className={cn(ui.siteNameText)}>{identity.siteName}</span>
-      ) : null}
-    </div>
-  );
-
   return (
     <header
       ref={headerRef}
-      className={cn(
-        // Sticky piloté par settings.
-        sticky && ui.header.sticky,
-
-        // Blur piloté par settings (classes fournies par le skin).
-        blurClassName,
-        ui.header.base,
-      )}
+      className={cn(ui.header.base, sticky && ui.header.sticky, blurClassName)}
     >
-      {/* ✅ Skip link (visible au focus clavier) */}
       <a href="#main-content" className={cn(ui.skipLink)}>
         Aller au contenu
       </a>
 
       <div className={cn(ui.headerContainer)}>
-        {logoContent}
+        <div className={cn(ui.logoSlot)}>
+          {hasLogo ? <SiteLogo identity={identity} ui={ui.logo} /> : null}
+          {hasSiteName ? (
+            <span className={cn(ui.siteNameText)}>{identity.siteName}</span>
+          ) : null}
+        </div>
 
-        {/* Nav desktop */}
         <div className="hidden md:block">
           <SiteHeaderNav
             primaryMenu={primaryMenu}
@@ -112,14 +96,13 @@ export function SiteHeader({
           />
         </div>
 
-        {/* Nav mobile */}
         <div className="md:hidden">
           <SiteMobileMenu
             primaryMenu={primaryMenu}
             social={social}
             ui={ui.mobileMenu}
             ariaLabel="Menu principal"
-            emptyLabel="Menu vide" // optionnel
+            emptyLabel="Menu vide"
           />
         </div>
       </div>

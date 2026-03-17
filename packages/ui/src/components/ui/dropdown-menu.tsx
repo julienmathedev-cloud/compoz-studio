@@ -6,6 +6,9 @@ import * as React from "react";
 import { cn } from "@compoz/ui/lib/utils";
 import { CheckIcon, ChevronRightIcon } from "lucide-react";
 
+type DropdownMenuVisualMode = "vanilla" | "studio";
+type DropdownMenuItemVariant = "default" | "destructive";
+
 function DropdownMenu({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
@@ -35,16 +38,20 @@ function DropdownMenuContent({
   className,
   align = "start",
   sideOffset = 4,
+  visualMode = "vanilla",
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Content> & {
+  visualMode?: DropdownMenuVisualMode;
+}) {
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
         data-slot="dropdown-menu-content"
+        data-visual-mode={visualMode}
         sideOffset={sideOffset}
         align={align}
         className={cn(
-          "motion-safe:data-open:animate-in motion-safe:data-closed:animate-out motion-safe:data-closed:fade-out-0 motion-safe:data-open:fade-in-0 motion-safe:data-closed:zoom-out-95 motion-safe:data-open:zoom-in-95 motion-safe:data-[side=bottom]:slide-in-from-top-2 motion-safe:data-[side=left]:slide-in-from-right-2 motion-safe:data-[side=right]:slide-in-from-left-2 motion-safe:data-[side=top]:slide-in-from-bottom-2 ring-accent shadow-primary/15 bg-popover text-popover-foreground min-w-32 rounded-lg p-1 shadow-md ring-1 motion-safe:duration-100 z-50 max-h-(--radix-dropdown-menu-content-available-height) w-(--radix-dropdown-menu-trigger-width) origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto data-closed:overflow-hidden",
+          "z-50 max-h-(--radix-dropdown-menu-content-available-height) w-(--radix-dropdown-menu-trigger-width) min-w-32 origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto bg-popover p-1 text-popover-foreground shadow-md ring-1 data-closed:overflow-hidden motion-safe:duration-100 motion-safe:data-[side=bottom]:slide-in-from-top-2 motion-safe:data-[side=left]:slide-in-from-right-2 motion-safe:data-[side=right]:slide-in-from-left-2 motion-safe:data-[side=top]:slide-in-from-bottom-2 motion-safe:data-open:animate-in motion-safe:data-open:fade-in-0 motion-safe:data-open:zoom-in-95 motion-safe:data-closed:animate-out motion-safe:data-closed:fade-out-0 motion-safe:data-closed:zoom-out-95 motion-reduce:transition-none motion-reduce:animate-none data-[visual-mode=vanilla]:rounded-lg data-[visual-mode=vanilla]:ring-foreground/10 data-[visual-mode=studio]:rounded-lg data-[visual-mode=studio]:ring-secondary data-[visual-mode=studio]:shadow-primary/15",
           className,
         )}
         {...props}
@@ -64,19 +71,22 @@ function DropdownMenuGroup({
 function DropdownMenuItem({
   className,
   inset,
+  visualMode = "vanilla",
   variant = "default",
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
   inset?: boolean;
-  variant?: "default" | "destructive";
+  visualMode?: DropdownMenuVisualMode;
+  variant?: DropdownMenuItemVariant;
 }) {
   return (
     <DropdownMenuPrimitive.Item
       data-slot="dropdown-menu-item"
       data-inset={inset}
+      data-visual-mode={visualMode}
       data-variant={variant}
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/70 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:text-destructive not-data-[variant=destructive]:focus:**:text-accent-foreground gap-1.5 rounded-md px-1.5 py-1 text-sm [&_svg:not([class*='size-'])]:size-4 group/dropdown-menu-item relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "group/dropdown-menu-item relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[variant=default]:focus:bg-accent data-[variant=default]:focus:text-accent-foreground data-[variant=default]:focus:**:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:text-destructive data-[visual-mode=vanilla]:data-inset:pl-7 data-[visual-mode=studio]:data-inset:pl-8 data-[variant=destructive]:data-[visual-mode=vanilla]:focus:bg-destructive/10 dark:data-[variant=destructive]:data-[visual-mode=vanilla]:focus:bg-destructive/20 data-[variant=destructive]:data-[visual-mode=studio]:focus:bg-destructive/70 dark:data-[variant=destructive]:data-[visual-mode=studio]:focus:bg-destructive/20",
         className,
       )}
       {...props}
@@ -88,13 +98,20 @@ function DropdownMenuCheckboxItem({
   className,
   children,
   checked,
+  inset,
+  visualMode = "vanilla",
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.CheckboxItem>) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.CheckboxItem> & {
+  inset?: boolean;
+  visualMode?: DropdownMenuVisualMode;
+}) {
   return (
     <DropdownMenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
+      data-inset={inset}
+      data-visual-mode={visualMode}
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm [&_svg:not([class*='size-'])]:size-4 relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[visual-mode=vanilla]:pl-1.5 data-[visual-mode=vanilla]:data-inset:pl-7 data-[visual-mode=studio]:pl-1.5 data-[visual-mode=studio]:data-inset:pl-8",
         className,
       )}
       checked={checked}
@@ -127,13 +144,20 @@ function DropdownMenuRadioGroup({
 function DropdownMenuRadioItem({
   className,
   children,
+  inset,
+  visualMode = "vanilla",
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem>) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem> & {
+  inset?: boolean;
+  visualMode?: DropdownMenuVisualMode;
+}) {
   return (
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
+      data-inset={inset}
+      data-visual-mode={visualMode}
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm [&_svg:not([class*='size-'])]:size-4 relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[visual-mode=vanilla]:pl-1.5 data-[visual-mode=vanilla]:data-inset:pl-7 data-[visual-mode=studio]:pl-1.5 data-[visual-mode=studio]:data-inset:pl-8",
         className,
       )}
       {...props}
@@ -154,16 +178,19 @@ function DropdownMenuRadioItem({
 function DropdownMenuLabel({
   className,
   inset,
+  visualMode = "vanilla",
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Label> & {
   inset?: boolean;
+  visualMode?: DropdownMenuVisualMode;
 }) {
   return (
     <DropdownMenuPrimitive.Label
       data-slot="dropdown-menu-label"
       data-inset={inset}
+      data-visual-mode={visualMode}
       className={cn(
-        "text-muted-foreground px-1.5 py-1 text-xs font-medium data-inset:pl-8",
+        "px-1.5 py-1 text-xs font-medium text-muted-foreground data-[visual-mode=vanilla]:data-inset:pl-7 data-[visual-mode=studio]:data-inset:pl-8",
         className,
       )}
       {...props}
@@ -178,7 +205,7 @@ function DropdownMenuSeparator({
   return (
     <DropdownMenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
-      className={cn("bg-border -mx-1 my-1 h-px", className)}
+      className={cn("-mx-1 my-1 h-px bg-border", className)}
       {...props}
     />
   );
@@ -192,7 +219,7 @@ function DropdownMenuShortcut({
     <span
       data-slot="dropdown-menu-shortcut"
       className={cn(
-        "text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground ml-auto text-xs tracking-widest",
+        "ml-auto text-xs tracking-widest text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground",
         className,
       )}
       {...props}
@@ -210,16 +237,19 @@ function DropdownMenuSubTrigger({
   className,
   inset,
   children,
+  visualMode = "vanilla",
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.SubTrigger> & {
   inset?: boolean;
+  visualMode?: DropdownMenuVisualMode;
 }) {
   return (
     <DropdownMenuPrimitive.SubTrigger
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
+      data-visual-mode={visualMode}
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground gap-1.5 rounded-md px-1.5 py-1 text-sm [&_svg:not([class*='size-'])]:size-4 flex cursor-default items-center outline-hidden select-none data-inset:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-open:bg-accent data-open:text-accent-foreground focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-[visual-mode=vanilla]:data-inset:pl-7 data-[visual-mode=studio]:data-inset:pl-8",
         className,
       )}
       {...props}
@@ -232,13 +262,17 @@ function DropdownMenuSubTrigger({
 
 function DropdownMenuSubContent({
   className,
+  visualMode = "vanilla",
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent>) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent> & {
+  visualMode?: DropdownMenuVisualMode;
+}) {
   return (
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
+      data-visual-mode={visualMode}
       className={cn(
-        "motion-safe:data-open:animate-in motion-safe:data-closed:animate-out motion-safe:data-closed:fade-out-0 motion-safe:data-open:fade-in-0 motion-safe:data-closed:zoom-out-95 motion-safe:data-open:zoom-in-95 motion-safe:data-[side=bottom]:slide-in-from-top-2 motion-safe:data-[side=left]:slide-in-from-right-2 motion-safe:data-[side=right]:slide-in-from-left-2 motion-safe:data-[side=top]:slide-in-from-bottom-2 ring-foreground/10 bg-popover text-popover-foreground min-w-[96px] rounded-md p-1 shadow-lg ring-1 motion-safe:duration-100 z-50 origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden",
+        "z-50 min-w-[96px] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden bg-popover p-1 text-popover-foreground shadow-lg ring-1 motion-safe:duration-100 motion-safe:data-[side=bottom]:slide-in-from-top-2 motion-safe:data-[side=left]:slide-in-from-right-2 motion-safe:data-[side=right]:slide-in-from-left-2 motion-safe:data-[side=top]:slide-in-from-bottom-2 motion-safe:data-open:animate-in motion-safe:data-open:fade-in-0 motion-safe:data-open:zoom-in-95 motion-safe:data-closed:animate-out motion-safe:data-closed:fade-out-0 motion-safe:data-closed:zoom-out-95 motion-reduce:transition-none motion-reduce:animate-none data-[visual-mode=vanilla]:rounded-lg data-[visual-mode=vanilla]:ring-foreground/10 data-[visual-mode=studio]:rounded-md data-[visual-mode=studio]:ring-foreground/10",
         className,
       )}
       {...props}

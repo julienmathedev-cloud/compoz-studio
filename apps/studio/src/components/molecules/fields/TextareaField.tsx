@@ -111,7 +111,9 @@ export function TextareaField({
   return (
     <Field data-invalid={isInvalid || undefined}>
       {/* Label principal */}
-      <FieldLabel htmlFor={fieldId}>{label}</FieldLabel>
+      <FieldLabel visualMode="studio" htmlFor={fieldId}>
+        {label}
+      </FieldLabel>
 
       {/* Contrôle principal */}
       <Textarea
@@ -123,12 +125,13 @@ export function TextareaField({
         aria-describedby={describedBy}
         aria-invalid={isInvalid ? true : undefined}
         disabled={disabled}
+        variant="defaultStudio"
         {...textareaProps}
       />
 
       {/* Aide + compteur (non bloquants) */}
       {(help || showCount) && (
-        <FieldDescription>
+        <FieldDescription visualMode="studio">
           <FieldMetaBar
             text={help}
             textId={helpId}

@@ -15,11 +15,9 @@
 import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
-
 import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
 import { SiteNavLink } from "@compoz/ui/site/components/atoms/SiteNavLink";
 import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
-
 import type { SiteNavGalleryUi } from "@compoz/ui/site/site-ui.types.ts";
 import type { ImageEditorShape } from "@compoz/validation/pages/blocks/cells/cell";
 
@@ -28,6 +26,16 @@ export type SiteGalleryNavListProps = Readonly<{
   ui: SiteNavGalleryUi;
   columns: number;
   priority?: boolean;
+}>;
+
+type NormalizedImage = Readonly<{
+  id: string;
+  src: string;
+  alt: string;
+  caption?: string;
+  href?: string;
+  width?: number;
+  height?: number;
 }>;
 
 export function SiteGalleryNavList({
@@ -41,24 +49,25 @@ export function SiteGalleryNavList({
   return (
     <ul className={cn(ui.list)}>
       {images.map((img, index) => {
-        const normalized = __normalizeImage(img);
-        if (!normalized.src) return null;
+        const normalized = normalizeImage(img);
+
+        if (!normalized.src) {
+          return null;
+        }
 
         const seed = index % cols;
-        const key = __imageKey(normalized.id, index);
+        const key = getImageKey(normalized.id, index);
+        const href = normalized.href;
+        const ariaLabel = normalized.alt || normalized.caption || "Naviguer";
 
-        const href = normalizeString(img.href, "");
-        const label = normalizeString(img.alt, "");
-        const ariaLabel = label || "Naviguer";
-
-        const Figure = (
+        const figure = (
           <figure className={cn(ui.figure)}>
             <SiteAppImage
               image={{
                 src: normalized.src,
-                alt: "", // décoratif : caption/aria-label portent le sens
-                width: img.width,
-                height: img.height,
+                alt: normalized.alt,
+                width: normalized.width,
+                height: normalized.height,
               }}
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className={cn(ui.image)}
@@ -66,30 +75,32 @@ export function SiteGalleryNavList({
               fetchPriority={priority && index === 0 ? "high" : "auto"}
             />
 
-            {label ? (
+            {normalized.caption ? (
               <figcaption className={cn(ui.overlayPanel)}>
-                <div className={cn(ui.overlayContent)}>{label}</div>
+                <div className={cn(ui.overlayContent)}>
+                  {normalized.caption}
+                </div>
               </figcaption>
             ) : null}
           </figure>
         );
 
-        const Item = href ? (
+        const item = href ? (
           <SiteNavLink
             href={href}
             ariaLabel={ariaLabel}
             linkClassName={cn(ui.link)}
           >
-            {Figure}
+            {figure}
           </SiteNavLink>
         ) : (
-          Figure
+          figure
         );
 
         return (
           <li key={key}>
             <SiteReveal seedOrder={seed} staggerMs={60} amount={0.1}>
-              {Item}
+              {item}
             </SiteReveal>
           </li>
         );
@@ -100,19 +111,24 @@ export function SiteGalleryNavList({
 
 SiteGalleryNavList.displayName = "SiteGalleryNavList";
 
-/* -------------------------------------------------------------------------- */
-/* Internals                                                                  */
-/* -------------------------------------------------------------------------- */
+function normalizeImage(img: ImageEditorShape): NormalizedImage {
+  const caption = normalizeString(
+    typeof img.caption === "string" ? img.caption : "",
+    "",
+  );
 
-function __normalizeImage(img: ImageEditorShape) {
   return {
     id: normalizeString(img.id, ""),
     src: normalizeString(img.src, ""),
     alt: normalizeString(img.alt, ""),
+    caption: caption || undefined,
+    href: normalizeString(img.href, "") || undefined,
+    width: img.width,
+    height: img.height,
   } as const;
 }
 
-function __imageKey(id: string, index: number) {
+function getImageKey(id: string, index: number) {
   const safeId = id.trim();
   return toStableUiKey({ id: safeId || `gallery-${index}` }, index);
 }

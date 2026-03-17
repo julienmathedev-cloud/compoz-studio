@@ -20,16 +20,16 @@ export function assertSeparatorCell(
 ) {
   if (!SEPARATOR_ALIGNS.includes(cell.align)) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_SEPARATOR_ALIGN_INVALID,
+      message: EC.CELL_SEPARATOR_ALIGN_INVALID,
       details: { path: [...path, "align"], meta: { align: cell.align } },
     });
   }
 
   if (!SEPARATOR_SIZES.includes(cell.size)) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_SEPARATOR_SIZE_INVALID,
+      message: EC.CELL_SEPARATOR_SIZE_INVALID,
       details: { path: [...path, "size"], meta: { size: cell.size } },
     });
   }

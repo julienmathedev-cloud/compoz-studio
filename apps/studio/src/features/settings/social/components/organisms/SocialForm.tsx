@@ -319,7 +319,7 @@ export function SocialForm({
       )}
       noValidate
     >
-      <Card variant="panel">
+      <Card variant="panelStudio">
         <CardContent className={cn(STACK_MD)}>
           {fields.length === 0 ? (
             <EmptyState text={t("studio.socialForm.empty")} />

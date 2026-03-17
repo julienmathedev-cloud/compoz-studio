@@ -118,9 +118,9 @@ export function FormFieldItemEditor({
       : undefined;
 
   return (
-    <Card className="relative">
+    <Card variant="defaultStudio" className="relative">
       <CardContent className={cn(STACK_MD)}>
-        <div className="absolute right-4 top-4">
+        <div className="absolute right-3 top-2">
           <DeleteButton
             size="icon"
             disabled={!canRemove || disabled}

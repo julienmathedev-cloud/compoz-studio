@@ -20,6 +20,7 @@ import type {
   PrimaryMenuSettings,
   SeoSettings,
   SocialSettings,
+  ThemeSettings,
 } from "@compoz/core/domain/site/entities";
 
 /** Agrégat principal : source de vérité des réglages du site. */
@@ -31,4 +32,5 @@ export interface SiteSettings {
   social: SocialSettings;
   identity: IdentitySettings;
   seo: SeoSettings;
+  theme: ThemeSettings;
 }

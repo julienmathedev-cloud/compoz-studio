@@ -20,6 +20,7 @@ import {
 } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
+import type { Page } from "@compoz/core/domain/pages/entities/page";
 import type { SiteIndex } from "@compoz/core/domain/site/entities";
 import {
   copyPages,
@@ -33,6 +34,7 @@ import type {
 } from "@compoz/core/domain/site/use-cases/publish/publish-site.types";
 import {
   assertPublishInvariantsOrThrowValidationError,
+  publishPageWarnings,
   publishWarnings,
   type PublishWarning,
 } from "@compoz/core/domain/site/validators/publish";
@@ -64,6 +66,18 @@ export function publishSite({
     ]);
 
     warnings.push(...publishWarnings(sourceIndex, sourceSettings));
+
+    const sourcePagesArr = await pages.readManyById(
+      from,
+      sourceIndex.pages.map((ref) => ref.id),
+    );
+
+    const sourcePagesById = new Map<string, Page>();
+    for (const page of sourcePagesArr) {
+      if (page) sourcePagesById.set(page.id, page);
+    }
+
+    warnings.push(...publishPageWarnings(sourceIndex, sourcePagesById));
 
     // ✅ runtime injecté (pas de process.env dans le domaine)
     const { isProd } = runtime;

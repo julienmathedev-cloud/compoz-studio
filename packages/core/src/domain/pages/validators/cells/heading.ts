@@ -25,16 +25,16 @@ export function assertHeadingCell(
 ) {
   if (!HEADING_LEVELS.includes(cell.level)) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_HEADING_LEVEL_INVALID,
+      message: EC.CELL_HEADING_LEVEL_INVALID,
       details: { path: [...path, "level"], meta: { level: cell.level } },
     });
   }
 
   if (typeof cell.title !== "string" || !cell.title.trim()) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_HEADING_TITLE_REQUIRED,
+      message: EC.CELL_HEADING_TITLE_REQUIRED,
       details: { path: [...path, "title"] },
     });
   }
@@ -44,8 +44,8 @@ export function assertHeadingCell(
     typeof cell.subtitle !== "string"
   ) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_HEADING_SUBTITLE_INVALID,
+      message: EC.CELL_HEADING_SUBTITLE_INVALID,
       details: { path: [...path, "subtitle"] },
     });
   }
@@ -55,8 +55,8 @@ export function assertHeadingCell(
     !HEADING_ALIGNS.includes(cell.align)
   ) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_HEADING_ALIGN_INVALID,
+      message: EC.CELL_HEADING_ALIGN_INVALID,
       details: { path: [...path, "align"], meta: { align: cell.align } },
     });
   }
@@ -66,8 +66,8 @@ export function assertHeadingCell(
     !HEADING_VARIANTS.includes(cell.variant)
   ) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_HEADING_VARIANT_INVALID,
+      message: EC.CELL_HEADING_VARIANT_INVALID,
       details: { path: [...path, "variant"], meta: { variant: cell.variant } },
     });
   }
@@ -77,8 +77,8 @@ export function assertHeadingCell(
     typeof cell.separator !== "boolean"
   ) {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_HEADING_SEPARATOR_INVALID,
+      message: EC.CELL_HEADING_SEPARATOR_INVALID,
       details: {
         path: [...path, "separator"],
         meta: { separator: cell.separator },
@@ -89,8 +89,8 @@ export function assertHeadingCell(
   if (typeof cell.idAnchor !== "undefined") {
     if (typeof cell.idAnchor !== "string") {
       throw new DomainError({
-        code: EC.CELL_INVALID,
-        message: EC.CELL_INVALID,
+        code: EC.CELL_HEADING_ID_ANCHOR_INVALID,
+        message: EC.CELL_HEADING_ID_ANCHOR_INVALID,
         details: {
           path: [...path, "idAnchor"],
           meta: { idAnchor: cell.idAnchor },
@@ -105,8 +105,8 @@ export function assertHeadingCell(
       !HEADING_ANCHOR_ID_RE.test(normalizedIdAnchor)
     ) {
       throw new DomainError({
-        code: EC.CELL_INVALID,
-        message: EC.CELL_INVALID,
+        code: EC.CELL_HEADING_ID_ANCHOR_INVALID,
+        message: EC.CELL_HEADING_ID_ANCHOR_INVALID,
         details: {
           path: [...path, "idAnchor"],
           meta: { idAnchor: cell.idAnchor },
@@ -117,8 +117,8 @@ export function assertHeadingCell(
 
   if (typeof cell.reveal !== "undefined" && typeof cell.reveal !== "boolean") {
     throw new DomainError({
-      code: EC.CELL_INVALID,
-      message: EC.CELL_INVALID,
+      code: EC.CELL_HEADING_REVEAL_INVALID,
+      message: EC.CELL_HEADING_REVEAL_INVALID,
       details: {
         path: [...path, "reveal"],
         meta: { reveal: cell.reveal },
@@ -129,8 +129,8 @@ export function assertHeadingCell(
   if (typeof cell.highlights !== "undefined") {
     if (!Array.isArray(cell.highlights)) {
       throw new DomainError({
-        code: EC.CELL_INVALID,
-        message: EC.CELL_INVALID,
+        code: EC.CELL_HEADING_HIGHLIGHTS_INVALID,
+        message: EC.CELL_HEADING_HIGHLIGHTS_INVALID,
         details: { path: [...path, "highlights"] },
       });
     }
@@ -140,8 +140,8 @@ export function assertHeadingCell(
 
       if (typeof highlight !== "string" || !highlight.trim()) {
         throw new DomainError({
-          code: EC.CELL_INVALID,
-          message: EC.CELL_INVALID,
+          code: EC.CELL_HEADING_HIGHLIGHT_INVALID,
+          message: EC.CELL_HEADING_HIGHLIGHT_INVALID,
           details: { path: [...path, "highlights", i] },
         });
       }

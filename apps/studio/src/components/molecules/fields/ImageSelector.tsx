@@ -316,7 +316,9 @@ export function ImageSelector({
       data-invalid={isInvalid ? true : undefined}
       aria-busy={isBusy || undefined}
     >
-      <FieldLabel htmlFor={fieldId}>{label}</FieldLabel>
+      <FieldLabel visualMode="studio" htmlFor={fieldId}>
+        {label}
+      </FieldLabel>
 
       {/* Statut a11y uniquement (pas de layout shift) */}
       {uploading && (
@@ -354,6 +356,7 @@ export function ImageSelector({
           tabIndex={isLocked ? -1 : 0}
           onClick={openPicker}
           aria-disabled={isLocked || undefined}
+          variant="defaultStudio"
           className={cn(
             EMPTY_CARD,
             hasPreview && "pr-10 pl-10",
@@ -441,7 +444,7 @@ export function ImageSelector({
 
       {/* Description / hints (types recommandés) */}
       {(typeHint || help) && (
-        <FieldDescription id={hintId}>
+        <FieldDescription visualMode="studio" id={hintId}>
           {typeHint ? (
             <Text as="span" variant="meta">
               {typeHint}

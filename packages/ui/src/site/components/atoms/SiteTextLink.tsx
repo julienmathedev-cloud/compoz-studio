@@ -35,28 +35,13 @@ const DEFAULT_EXTERNAL_REL = "noopener noreferrer external";
 
 export type SiteTextLinkProps = Readonly<
   Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href" | "children"> & {
-    /** Href (interne ou externe). */
     href: string;
-
-    /** Contenu du lien (prioritaire). */
     children?: ReactNode;
-
-    /** Fallback texte si `children` est absent. */
     label?: string;
-
-    /** Nom accessible optionnel (si icône seule / texte ambigu). */
     ariaLabel?: string;
-
-    /** Ouvre dans un nouvel onglet (uniquement si externe et non spécial). */
     newTab?: boolean;
-
-    /** Prefetch Next.js (liens internes). */
     prefetch?: boolean;
-
-    /** Classes appliquées par le skin/template (wrapper). */
     className?: string;
-
-    /** Classes appliquées au lien (`<a>`/`<Link>`). */
     linkClassName?: string;
   }
 >;
@@ -72,29 +57,21 @@ export function SiteTextLink({
   linkClassName,
   ...rest
 }: SiteTextLinkProps) {
-  // (1) Normalisation.
+  const pathname = usePathname() || "/";
   const normalizedHref = normalizeString(href);
-
-  // Texte final : children > label > href.
   const textNode: ReactNode = children ?? label ?? normalizedHref;
 
-  const pathname = usePathname() || "/";
+  if (!normalizedHref) {
+    return null;
+  }
 
-  // Invariants (UI).
-  if (!normalizedHref) return null;
-
-  // ✅ Preview : on neutralise toutes les navigations.
   const disableAllLinks = shouldDisableLinksInPreview(pathname);
-
-  // (2) Détection : spécial / externe / unsafe.
   const { special, external, rawExternal, unsafe } =
     resolveLinkFlags(normalizedHref);
 
-  // (3) A11y : nom accessible uniquement si nécessaire.
   const fallback = normalizeString(label) || normalizedHref;
   const computedAria = getAriaLabel(ariaLabel, textNode, fallback);
 
-  // Hint SR (nouvel onglet) : uniquement si lien externe http(s) et ouverture nouvel onglet.
   const shouldOpenNewTab = Boolean(newTab) && external && !special;
   const target = shouldOpenNewTab ? DEFAULT_EXTERNAL_TARGET : undefined;
   const rel = shouldOpenNewTab ? DEFAULT_EXTERNAL_REL : undefined;
@@ -108,36 +85,28 @@ export function SiteTextLink({
     </>
   );
 
-  // (4) Unsafe : lien neutralisé.
+  const disabledContent = (
+    <span
+      className={cn(linkClassName)}
+      aria-label={computedAria}
+      aria-disabled="true"
+      data-disabled="true"
+      tabIndex={-1}
+    >
+      {content}
+    </span>
+  );
+
   if (unsafe) {
-    return (
-      <span
-        className={cn(className)}
-        aria-label={computedAria}
-        aria-disabled="true"
-        data-disabled="true"
-        tabIndex={-1}
-      >
-        {content}
-      </span>
-    );
+    return <span className={cn(className)}>{disabledContent}</span>;
   }
 
-  // ✅ Preview : on neutralise TOUTES les navigations (interne + externe + special).
   if (disableAllLinks) {
     return (
-      <span
-        className={cn(className, "cursor-default")}
-        aria-label={computedAria}
-        aria-disabled="true"
-        data-disabled="true"
-      >
-        <span className={cn(linkClassName)}>{content}</span>
-      </span>
+      <span className={cn(className, "cursor-default")}>{disabledContent}</span>
     );
   }
 
-  // (5) Externe (http(s) / mailto / tel) : <a>
   if (rawExternal) {
     const dataExternal = special ? undefined : true;
 
@@ -158,7 +127,6 @@ export function SiteTextLink({
     );
   }
 
-  // (6) Interne : <Link>
   const internalHref = resolveInternalHref(pathname, normalizedHref);
 
   return (

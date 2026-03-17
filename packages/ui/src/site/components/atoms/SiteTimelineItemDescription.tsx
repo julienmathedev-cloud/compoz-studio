@@ -37,8 +37,13 @@ export function SiteTimelineItemDescription({
   isLeft,
   ui,
 }: SiteTimelineItemDescriptionProps) {
+  const textAlignClassName = isLeft ? ui.textLeft : ui.textRight;
+  const keywordsWrapClassName = isLeft
+    ? ui.keywordsWrapLeft
+    : ui.keywordsWrapRight;
+
   return (
-    <div className={cn(ui.cardInner, isLeft ? ui.textLeft : ui.textRight)}>
+    <div className={cn(ui.cardInner, textAlignClassName)}>
       <p className={cn(ui.period)}>{period}</p>
 
       <div className={cn(ui.textBlock)}>
@@ -51,12 +56,7 @@ export function SiteTimelineItemDescription({
         ) : null}
 
         {keywords?.length ? (
-          <div
-            className={cn(
-              ui.keywordsWrap,
-              isLeft ? ui.keywordsWrapLeft : ui.keywordsWrapRight,
-            )}
-          >
+          <div className={cn(ui.keywordsWrap, keywordsWrapClassName)}>
             {keywords.map((keyword, index) => (
               <Badge key={`${keyword}-${index}`} className={cn(ui.keyword)}>
                 {keyword}

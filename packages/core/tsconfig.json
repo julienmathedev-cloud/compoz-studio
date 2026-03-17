@@ -10,5 +10,9 @@
     "lib": ["esnext"],
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/constants/theme/theme-fonts.ts"
+  ]
 }

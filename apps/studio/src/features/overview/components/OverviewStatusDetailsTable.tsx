@@ -75,12 +75,12 @@ export function OverviewStatusDetailsTable() {
   }, [details.data?.pages, collator]);
 
   return (
-    <Card variant="panel">
+    <Card variant="panelStudio">
       <CardHeader className="flex items-center justify-between gap-4">
         <Heading as="h3">{t("studio.overviewSection.details.title")}</Heading>
 
         <Button
-          variant="outline"
+          variant="outlineStudio"
           onClick={() => {
             setOpenPageId(null);
             setScope((currentScope) =>
@@ -322,7 +322,7 @@ function BlocksSummary({ blocks }: BlocksSummaryProps) {
       {items.map((item) => (
         <Badge
           key={item.key}
-          variant="outline"
+          variant="outlineStudio"
           className="text-xs"
           aria-label={`${item.count} ${item.label}`}
         >

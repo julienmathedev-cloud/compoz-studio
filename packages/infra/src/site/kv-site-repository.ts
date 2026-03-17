@@ -17,6 +17,7 @@ import { DEFAULT_LEGAL_MENU_SETTINGS } from "@compoz/core/domain/site/defaults/l
 import { DEFAULT_PRIMARY_MENU_SETTINGS } from "@compoz/core/domain/site/defaults/primary-menu";
 import { DEFAULT_SEO_SETTINGS } from "@compoz/core/domain/site/defaults/seo";
 import { DEFAULT_SOCIAL_SETTINGS } from "@compoz/core/domain/site/defaults/social";
+import { DEFAULT_THEME_SETTINGS } from "@compoz/core/domain/site/defaults/theme";
 
 import type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
@@ -61,6 +62,11 @@ function defaultSettings(): SiteSettings {
     identity: { ...DEFAULT_IDENTITY_SETTINGS },
     social: { ...DEFAULT_SOCIAL_SETTINGS },
     seo: { ...DEFAULT_SEO_SETTINGS },
+    theme: {
+      ...DEFAULT_THEME_SETTINGS,
+      lightTokens: { ...DEFAULT_THEME_SETTINGS.lightTokens },
+      darkTokens: { ...DEFAULT_THEME_SETTINGS.darkTokens },
+    },
   };
 }
 
@@ -121,6 +127,7 @@ export class KvSiteRepository implements SiteRepository {
       identity: json.identity ?? d.identity,
       social: json.social ?? d.social,
       seo: json.seo ?? d.seo,
+      theme: json.theme ?? d.theme,
     };
   }
 

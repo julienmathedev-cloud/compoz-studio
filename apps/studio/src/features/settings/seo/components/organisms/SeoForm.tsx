@@ -314,7 +314,7 @@ export function SeoForm({
       )}
       noValidate
     >
-      <Card variant="panel">
+      <Card variant="panelStudio">
         <CardContent className={cn(STACK_MD)}>
           <FormGrid>
             {/* ===== Base ===== */}

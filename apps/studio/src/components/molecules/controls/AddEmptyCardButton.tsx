@@ -64,6 +64,7 @@ export function AddEmptyCardButton({
       disabled={disabled}
       aria-label={ariaLabel}
       tooltip={disabled ? (disabledTooltip ?? tooltip) : tooltip}
+      variant="defaultStudio"
       className={cn(
         EMPTY_CARD,
         "flex w-full items-center bg-accent/20 text-left",

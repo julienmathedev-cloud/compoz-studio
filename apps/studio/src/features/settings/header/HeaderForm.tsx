@@ -137,7 +137,7 @@ export function HeaderForm({
       onSubmit={handleSubmit(onSubmit)}
       noValidate
     >
-      <Card variant="panel">
+      <Card variant="panelStudio">
         <CardContent>
           <FormGrid>
             <SwitchField

@@ -11,8 +11,8 @@ import type {
   CardItemShape,
   CardsExtendedItemShape,
   CarouselCellShape,
-  CaseStudyCardItemShape,
   ImageEditorShape,
+  StructuredCardItemShape,
 } from "@compoz/validation/pages/blocks/cells/cell";
 
 import { normalizeString } from "@compoz/ui/lib/normalize";
@@ -93,7 +93,7 @@ function normalizeCarouselItems(
   }
 
   return cell.items
-    .map((item) => normalizeCaseStudyCardItem(item as CaseStudyCardItemShape))
+    .map((item) => normalizeStructuredCardItem(item as StructuredCardItemShape))
     .filter((item): item is NormalizedCarouselItem => Boolean(item));
 }
 
@@ -151,15 +151,22 @@ function normalizeCardsExtendedItem(
   };
 }
 
-function normalizeCaseStudyCardItem(
-  item: CaseStudyCardItemShape,
+function normalizeStructuredCardItem(
+  item: StructuredCardItemShape,
 ): NormalizedCarouselItem | null {
   const title = normalizeString(item.title, "");
-  const context = normalizeString(item.context, "");
-  const solution = normalizeString(item.solution, "");
-  const result = normalizeString(item.result, "");
+  if (!title) return null;
 
-  if (!title || !context || !solution || !result) return null;
+  const sections = Array.isArray(item.sections)
+    ? item.sections
+        .map((section) => ({
+          label: normalizeString(section.label, ""),
+          content: normalizeString(section.content, ""),
+        }))
+        .filter((section) => Boolean(section.label && section.content))
+    : [];
+
+  if (sections.length === 0) return null;
 
   const image =
     item.image?.src &&
@@ -179,12 +186,11 @@ function normalizeCaseStudyCardItem(
       : undefined;
 
   return {
-    kind: "caseStudyCard",
+    kind: "structuredCard",
     id: item.id,
     title,
-    context,
-    solution,
-    result,
+    meta: normalizeString(item.meta ?? "", "") || undefined,
+    sections,
     image,
   };
 }

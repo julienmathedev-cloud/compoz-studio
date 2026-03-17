@@ -1,4 +1,5 @@
 "use client";
+
 /**
  * @file packages/ui/src/site/components/molecules/SiteContactForm.tsx
  * @layer ui/site/molecules
@@ -14,7 +15,7 @@
  * - Supporte les types `text`, `email` et `textarea`.
  */
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@compoz/ui/components/ui/button";
 import {
@@ -47,15 +48,22 @@ export function SiteContactForm({
   disabled = false,
   onSubmit,
 }: SiteContactFormProps) {
+  const visibleFields = useMemo(
+    () => fields.filter((field) => field.name?.trim() && field.label?.trim()),
+    [fields],
+  );
+
   const [values, setValues] = useState<SiteContactFormSubmitValues>(() =>
     buildInitialValues(fields),
   );
 
-  const visibleFields = fields.filter(
-    (field) => field.name?.trim() && field.label?.trim(),
-  );
+  useEffect(() => {
+    setValues(buildInitialValues(fields));
+  }, [fields]);
 
-  if (visibleFields.length < 1) return null;
+  if (visibleFields.length < 1) {
+    return null;
+  }
 
   const handleChange = (name: string, value: string) => {
     setValues((prev) => ({
@@ -142,7 +150,10 @@ function buildInitialValues(
   const output: SiteContactFormSubmitValues = {};
 
   for (const field of fields) {
-    if (!field.name?.trim()) continue;
+    if (!field.name?.trim()) {
+      continue;
+    }
+
     output[field.name] = "";
   }
 

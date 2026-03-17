@@ -100,13 +100,6 @@ export function useReorderBlocks(
               .filter(Boolean) as ReadonlyArray<BlockDTO>;
           },
         );
-
-        console.log(
-          "RQ BLOCK CACHE AFTER OPTIMISTIC",
-          qc
-            .getQueryData<ReadonlyArray<BlockDTO>>(key)
-            ?.map((block) => block.id),
-        );
       }
 
       return { previous, pageIdKey };
@@ -133,11 +126,7 @@ export function useReorderBlocks(
           tenantId,
         },
       );
-      console.log(
-        "REORDER RESPONSE BLOCK IDS",
-        response.page.blocks?.map((block) => block.id),
-      );
-      console.log("REORDER PAYLOAD IDS", payload.orderedBlockIds);
+
       return {
         pageId: pageIdKey,
         payload,
@@ -157,15 +146,6 @@ export function useReorderBlocks(
           pageId,
           page,
           DEFAULT_CONTENT_STATE,
-        );
-
-        console.log(
-          "RQ BLOCK CACHE AFTER SYNC",
-          qc
-            .getQueryData<
-              ReadonlyArray<BlockDTO>
-            >(pageBlocksKey(tenantId, pageId, DEFAULT_CONTENT_STATE))
-            ?.map((block) => block.id),
         );
       }
 

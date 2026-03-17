@@ -21,7 +21,10 @@ import type {
 } from "@compoz/core/domain/site/use-cases/status/get-site-status.types";
 
 import type { PublishWarning } from "@compoz/core/domain/site/validators/publish";
-import { publishWarnings } from "@compoz/core/domain/site/validators/publish";
+import {
+  publishPageWarnings,
+  publishWarnings,
+} from "@compoz/core/domain/site/validators/publish";
 import { assertSiteStatus } from "@compoz/core/domain/site/validators/status";
 
 import { asNonEmptyString } from "@compoz/core/domain/site/use-cases/status/site-diff";
@@ -79,16 +82,16 @@ export function getSiteStatus({ pages, site, cache }: GetSiteStatusDeps) {
     const publishedPagesById = new Map<string, Page>();
     for (const p of publishedPagesArr) if (p) publishedPagesById.set(p.id, p);
 
-    const prePublishWarnings: ReadonlyArray<PublishWarning> = publishWarnings(
-      publishedIndex,
-      {
+    const prePublishWarnings: ReadonlyArray<PublishWarning> = [
+      ...publishWarnings(draftIndex, {
         identity: draftSettings.identity,
         seo: draftSettings.seo,
         primaryMenu: draftSettings.primaryMenu,
         legalMenu: draftSettings.legalMenu,
         social: draftSettings.social,
-      },
-    );
+      }),
+      ...publishPageWarnings(draftIndex, draftPagesById),
+    ];
 
     const diff = computePagesAndBlocksDiff({
       draftIndexRefs: draftIndex.pages,

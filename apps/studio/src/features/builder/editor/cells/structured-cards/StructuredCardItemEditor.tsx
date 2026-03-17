@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/builder/editor/cells/case-study-card/CaseStudyCardItemEditor.tsx
- * @layer ui/studio/pages/blocks/editor/case-study-card
+ * @file apps/studio/src/features/builder/editor/cells/structured-cards/StructuredCardItemEditor.tsx
+ * @layer ui/studio/pages/blocks/editor/structured-card
  *
  * @description
- * Éditeur RHF-aware d’un item individuel de CaseStudyCardCell.
+ * Éditeur RHF-aware d’un item individuel de StructuredCardCell.
  *
  * @remarks
  * - Connecté directement à RHF via `useController`.
@@ -14,26 +14,29 @@
  * - L’affichage des erreurs repose sur une règle unique :
  *   `showError || fieldState.isTouched`.
  * - Chaque item édite son propre contenu :
- *   image, title, context, solution, result.
+ *   image, title, meta et liste de sections.
  */
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useTranslations } from "next-intl";
 import type { Control } from "react-hook-form";
-import { useController } from "react-hook-form";
+import { useController, useFieldArray } from "react-hook-form";
 
 import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
+import { AddEmptyCardButton } from "@compoz/studio/components/molecules/controls/AddEmptyCardButton";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
-import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
 import { ImageFields } from "@compoz/studio/features/_shared/components/ImageFields";
+import { StructuredCardSectionEditor } from "@compoz/studio/features/builder/editor/cells/structured-cards/StructuredCardSectionEditor";
 import { DragHandle } from "@compoz/studio/features/dnd/DragHandle";
+import { createEmptyStructuredCardSection } from "@compoz/studio/features/pages/mappers/cells-form";
 import { Card, CardContent } from "@compoz/ui/components/ui/card";
+import { Separator } from "@compoz/ui/components/ui/separator";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
-import { STACK_MD } from "@compoz/ui/styles/studio/layout";
+import { STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
-import type { CaseStudyCardItemFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
+import type { StructuredCardItemFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 
 type UploadedRasterImage = Readonly<{
   url: string;
@@ -41,17 +44,18 @@ type UploadedRasterImage = Readonly<{
   height: number;
 }>;
 
-type CaseStudyCardFieldBasePath =
+type StructuredCardFieldBasePath =
   `rows.${number}.columns.${number}.cells.${number}`;
-type CaseStudyCardItemBasePath =
-  `${CaseStudyCardFieldBasePath}.items.${number}`;
+type StructuredCardItemBasePath =
+  `${StructuredCardFieldBasePath}.items.${number}`;
+type StructuredCardSectionsPath = `${StructuredCardItemBasePath}.sections`;
 
-export type CaseStudyCardItemEditorProps = Readonly<{
+export type StructuredCardItemEditorProps = Readonly<{
   control: Control<SectionBlockFormValues>;
-  basePath: CaseStudyCardFieldBasePath;
+  basePath: StructuredCardFieldBasePath;
   index: number;
   idPrefix: string;
-  value: CaseStudyCardItemFormValues;
+  value: StructuredCardItemFormValues;
   disabled?: boolean;
   canRemove?: boolean;
   onRemove: () => void;
@@ -59,7 +63,7 @@ export type CaseStudyCardItemEditorProps = Readonly<{
   onUploadImage?: (file: File) => Promise<UploadedRasterImage>;
 }>;
 
-export function CaseStudyCardItemEditor({
+export function StructuredCardItemEditor({
   control,
   basePath,
   index,
@@ -70,55 +74,60 @@ export function CaseStudyCardItemEditor({
   onRemove,
   showError = false,
   onUploadImage,
-}: CaseStudyCardItemEditorProps) {
+}: StructuredCardItemEditorProps) {
   const t = useTranslations();
 
   const itemBasePath =
-    `${basePath}.items.${index}` as CaseStudyCardItemBasePath;
+    `${basePath}.items.${index}` as StructuredCardItemBasePath;
+  const sectionsPath = `${itemBasePath}.sections` as StructuredCardSectionsPath;
 
   const imageSrcCtrl = useController({
-    name: `${itemBasePath}.image.src` as `${CaseStudyCardItemBasePath}.image.src`,
+    name: `${itemBasePath}.image.src` as `${StructuredCardItemBasePath}.image.src`,
     control,
   });
 
   const imageAltCtrl = useController({
-    name: `${itemBasePath}.image.alt` as `${CaseStudyCardItemBasePath}.image.alt`,
+    name: `${itemBasePath}.image.alt` as `${StructuredCardItemBasePath}.image.alt`,
     control,
   });
 
   const imageCaptionCtrl = useController({
-    name: `${itemBasePath}.image.caption` as `${CaseStudyCardItemBasePath}.image.caption`,
+    name: `${itemBasePath}.image.caption` as `${StructuredCardItemBasePath}.image.caption`,
     control,
   });
 
   const imageWidthCtrl = useController({
-    name: `${itemBasePath}.image.width` as `${CaseStudyCardItemBasePath}.image.width`,
+    name: `${itemBasePath}.image.width` as `${StructuredCardItemBasePath}.image.width`,
     control,
   });
 
   const imageHeightCtrl = useController({
-    name: `${itemBasePath}.image.height` as `${CaseStudyCardItemBasePath}.image.height`,
+    name: `${itemBasePath}.image.height` as `${StructuredCardItemBasePath}.image.height`,
     control,
   });
 
   const titleCtrl = useController({
-    name: `${itemBasePath}.title` as `${CaseStudyCardItemBasePath}.title`,
+    name: `${itemBasePath}.title` as `${StructuredCardItemBasePath}.title`,
     control,
   });
 
-  const contextCtrl = useController({
-    name: `${itemBasePath}.context` as `${CaseStudyCardItemBasePath}.context`,
+  const metaCtrl = useController({
+    name: `${itemBasePath}.meta` as `${StructuredCardItemBasePath}.meta`,
     control,
   });
 
-  const solutionCtrl = useController({
-    name: `${itemBasePath}.solution` as `${CaseStudyCardItemBasePath}.solution`,
+  const {
+    fields: sectionFields,
+    append: appendSection,
+    remove: removeSection,
+  } = useFieldArray<
+    SectionBlockFormValues,
+    StructuredCardSectionsPath,
+    "fieldId"
+  >({
     control,
-  });
-
-  const resultCtrl = useController({
-    name: `${itemBasePath}.result` as `${CaseStudyCardItemBasePath}.result`,
-    control,
+    name: sectionsPath,
+    keyName: "fieldId",
   });
 
   const {
@@ -134,19 +143,14 @@ export function CaseStudyCardItemEditor({
   });
 
   const titleIds = createFieldIds(idPrefix, "title");
-  const contextIds = createFieldIds(idPrefix, "context");
-  const solutionIds = createFieldIds(idPrefix, "solution");
-  const resultIds = createFieldIds(idPrefix, "result");
+  const metaIds = createFieldIds(idPrefix, "meta");
 
   const shouldShowImageSrcError =
     showError || imageSrcCtrl.fieldState.isTouched;
   const shouldShowImageAltError =
     showError || imageAltCtrl.fieldState.isTouched;
   const shouldShowTitleError = showError || titleCtrl.fieldState.isTouched;
-  const shouldShowContextError = showError || contextCtrl.fieldState.isTouched;
-  const shouldShowSolutionError =
-    showError || solutionCtrl.fieldState.isTouched;
-  const shouldShowResultError = showError || resultCtrl.fieldState.isTouched;
+  const shouldShowMetaError = showError || metaCtrl.fieldState.isTouched;
 
   const imageSrcErrorMessage = shouldShowImageSrcError
     ? imageSrcCtrl.fieldState.error?.message
@@ -176,28 +180,12 @@ export function CaseStudyCardItemEditor({
       ? String(titleCtrl.fieldState.error.message)
       : undefined;
 
-  const contextInvalid =
-    shouldShowContextError && Boolean(contextCtrl.fieldState.error?.message);
+  const metaInvalid =
+    shouldShowMetaError && Boolean(metaCtrl.fieldState.error?.message);
 
-  const contextError =
-    shouldShowContextError && contextCtrl.fieldState.error?.message
-      ? String(contextCtrl.fieldState.error.message)
-      : undefined;
-
-  const solutionInvalid =
-    shouldShowSolutionError && Boolean(solutionCtrl.fieldState.error?.message);
-
-  const solutionError =
-    shouldShowSolutionError && solutionCtrl.fieldState.error?.message
-      ? String(solutionCtrl.fieldState.error.message)
-      : undefined;
-
-  const resultInvalid =
-    shouldShowResultError && Boolean(resultCtrl.fieldState.error?.message);
-
-  const resultError =
-    shouldShowResultError && resultCtrl.fieldState.error?.message
-      ? String(resultCtrl.fieldState.error.message)
+  const metaError =
+    shouldShowMetaError && metaCtrl.fieldState.error?.message
+      ? String(metaCtrl.fieldState.error.message)
       : undefined;
 
   const style = {
@@ -209,6 +197,7 @@ export function CaseStudyCardItemEditor({
     <Card
       ref={setNodeRef}
       style={style}
+      variant="defaultStudio"
       className={cn("relative h-full", STACK_MD, isDragging && "opacity-60")}
     >
       <CardContent>
@@ -281,14 +270,14 @@ export function CaseStudyCardItemEditor({
               )}
               labels={{
                 image: t(
-                  "studio.cellEditorTabs.caseStudyCardCellEditor.imageLabel",
+                  "studio.cellEditorTabs.structuredCardCellEditor.imageLabel",
                 ),
                 alt: t("studio.cellEditorTabs.image.altLabel"),
                 caption: t("studio.cellEditorTabs.image.captionLabel"),
               }}
               help={{
                 image: t(
-                  "studio.cellEditorTabs.caseStudyCardCellEditor.imageHelp",
+                  "studio.cellEditorTabs.structuredCardCellEditor.imageHelp",
                 ),
                 alt: t("studio.cellEditorTabs.image.altHelp"),
                 caption: t("studio.cellEditorTabs.image.captionHelp"),
@@ -304,81 +293,74 @@ export function CaseStudyCardItemEditor({
               ids={titleIds}
               inputRef={titleCtrl.field.ref}
               label={t(
-                "studio.cellEditorTabs.caseStudyCardCellEditor.titleLabel",
+                "studio.cellEditorTabs.structuredCardCellEditor.titleLabel",
               )}
               value={String(titleCtrl.field.value ?? "")}
               onChange={titleCtrl.field.onChange}
               onBlur={titleCtrl.field.onBlur}
               placeholder={t(
-                "studio.cellEditorTabs.caseStudyCardCellEditor.titlePlaceholder",
+                "studio.cellEditorTabs.structuredCardCellEditor.titlePlaceholder",
               )}
               disabled={disabled}
               help={t(
-                "studio.cellEditorTabs.caseStudyCardCellEditor.titleHelp",
+                "studio.cellEditorTabs.structuredCardCellEditor.titleHelp",
               )}
               invalid={titleInvalid}
               error={titleError}
             />
 
-            <TextareaField
-              ids={contextIds}
+            <InputField
+              ids={metaIds}
+              inputRef={metaCtrl.field.ref}
               label={t(
-                "studio.cellEditorTabs.caseStudyCardCellEditor.contextLabel",
+                "studio.cellEditorTabs.structuredCardCellEditor.metaLabel",
               )}
-              value={String(contextCtrl.field.value ?? "")}
-              onChange={contextCtrl.field.onChange}
-              onBlur={contextCtrl.field.onBlur}
+              value={String(metaCtrl.field.value ?? "")}
+              onChange={metaCtrl.field.onChange}
+              onBlur={metaCtrl.field.onBlur}
               placeholder={t(
-                "studio.cellEditorTabs.caseStudyCardCellEditor.contextPlaceholder",
+                "studio.cellEditorTabs.structuredCardCellEditor.metaPlaceholder",
               )}
               disabled={disabled}
-              rows={4}
               help={t(
-                "studio.cellEditorTabs.caseStudyCardCellEditor.contextHelp",
+                "studio.cellEditorTabs.structuredCardCellEditor.metaHelp",
               )}
-              invalid={contextInvalid}
-              error={contextError}
+              invalid={metaInvalid}
+              error={metaError}
             />
 
-            <TextareaField
-              ids={solutionIds}
-              label={t(
-                "studio.cellEditorTabs.caseStudyCardCellEditor.solutionLabel",
-              )}
-              value={String(solutionCtrl.field.value ?? "")}
-              onChange={solutionCtrl.field.onChange}
-              onBlur={solutionCtrl.field.onBlur}
-              placeholder={t(
-                "studio.cellEditorTabs.caseStudyCardCellEditor.solutionPlaceholder",
-              )}
-              disabled={disabled}
-              rows={4}
-              help={t(
-                "studio.cellEditorTabs.caseStudyCardCellEditor.solutionHelp",
-              )}
-              invalid={solutionInvalid}
-              error={solutionError}
-            />
+            <Separator />
 
-            <TextareaField
-              ids={resultIds}
-              label={t(
-                "studio.cellEditorTabs.caseStudyCardCellEditor.resultLabel",
-              )}
-              value={String(resultCtrl.field.value ?? "")}
-              onChange={resultCtrl.field.onChange}
-              onBlur={resultCtrl.field.onBlur}
-              placeholder={t(
-                "studio.cellEditorTabs.caseStudyCardCellEditor.resultPlaceholder",
-              )}
-              disabled={disabled}
-              rows={4}
-              help={t(
-                "studio.cellEditorTabs.caseStudyCardCellEditor.resultHelp",
-              )}
-              invalid={resultInvalid}
-              error={resultError}
-            />
+            <div className={cn(STACK_SM)}>
+              {sectionFields.map((section, sectionIndex) => (
+                <StructuredCardSectionEditor
+                  key={section.fieldId}
+                  control={control}
+                  itemBasePath={itemBasePath}
+                  sectionIndex={sectionIndex}
+                  sectionId={section.id}
+                  idPrefix={idPrefix}
+                  disabled={disabled}
+                  showError={showError}
+                  canRemove={sectionFields.length > 1}
+                  onRemove={() => removeSection(sectionIndex)}
+                />
+              ))}
+
+              <AddEmptyCardButton
+                onClick={() =>
+                  appendSection(createEmptyStructuredCardSection())
+                }
+                disabled={disabled}
+                ariaLabel={t(
+                  "studio.cellEditorTabs.structuredCardCellEditor.addSection",
+                )}
+                tooltip={t(
+                  "studio.cellEditorTabs.structuredCardCellEditor.addSection",
+                )}
+                compact
+              />
+            </div>
           </div>
         </div>
       </CardContent>
@@ -386,4 +368,4 @@ export function CaseStudyCardItemEditor({
   );
 }
 
-CaseStudyCardItemEditor.displayName = "CaseStudyCardItemEditor";
+StructuredCardItemEditor.displayName = "StructuredCardItemEditor";

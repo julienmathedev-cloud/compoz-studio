@@ -12,20 +12,20 @@
  * - Gating strict : ne rend rien tant que toutes les baselines nécessaires ne sont pas disponibles
  *   (l’empty state est géré par le wrapper preview).
  * - `header` : override possible (sync), les autres : baseline only.
+ * - Le skin UI est fourni par `SiteUiProvider` monté dans `PreviewProviders`.
+ * - Le thème CSS est fourni par `ThemeProvider` monté dans `PreviewProviders`.
  */
 
 import { useEffect } from "react";
 
 import { log } from "@compoz/infra/lib/log";
-
 import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePreviewOverride";
+import { SiteHeader } from "@compoz/ui/site/components/layouts/SiteHeader";
+import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
 import type { HeaderSettingsShape } from "@compoz/validation/site/settings/header/header";
 import type { IdentitySettingsShape } from "@compoz/validation/site/settings/identity/identity";
 import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 import type { SocialSettingsShape } from "@compoz/validation/site/settings/social/social";
-
-import { SiteHeader } from "@compoz/ui/site/components/layouts/SiteHeader";
-import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 
 /* -------------------------------------------------------------------------- */
 /* Logger                                                                     */
@@ -43,6 +43,8 @@ export default function HeaderPreviewPage() {
   const primaryMenu =
     usePreviewOverride<PrimaryMenuSettingsShape>("primaryMenu");
   const social = usePreviewOverride<SocialSettingsShape>("social");
+
+  const ui = useSiteUi();
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") {
@@ -65,8 +67,6 @@ export default function HeaderPreviewPage() {
   ) {
     return null;
   }
-
-  const ui = resolveSiteUi();
 
   return (
     <SiteHeader

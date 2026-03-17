@@ -106,7 +106,10 @@ export function MenuBadges({ item, className }: MenuBadgesProps) {
         const Icon = ICONS[kind];
 
         return (
-          <Badge key={toStableUiKey({ label: kind }, index)} variant="info">
+          <Badge
+            key={toStableUiKey({ label: kind }, index)}
+            variant="infoStudio"
+          >
             <StudioIcon icon={Icon} />
             <span>{t(`studio.menuBadges.kinds.${kind}`)}</span>
           </Badge>

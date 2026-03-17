@@ -28,7 +28,11 @@ import {
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 
-type SiteButtonVariant = "default" | "secondary" | "outline" | "ghost";
+type SiteButtonVariant =
+  | "defaultVanilla"
+  | "secondaryVanilla"
+  | "outlineVanilla"
+  | "ghostVanilla";
 
 export type SiteButtonProps = Readonly<{
   label: string;
@@ -40,7 +44,7 @@ export type SiteButtonProps = Readonly<{
 export function SiteButton({
   label,
   href,
-  variant = "default",
+  variant = "defaultVanilla",
   className,
 }: SiteButtonProps) {
   const pathname = usePathname() || "/";
@@ -48,22 +52,24 @@ export function SiteButton({
   const normalizedLabel = normalizeString(label);
   const normalizedHref = normalizeString(href);
 
-  if (!normalizedLabel) return null;
+  if (!normalizedLabel) {
+    return null;
+  }
 
-  // ✅ Pas encore de href en phase de construction :
-  // on garde le rendu visuel du bouton, sans navigation.
+  const disabledButton = (
+    <Button
+      type="button"
+      variant={variant}
+      className={cn(className)}
+      aria-disabled="true"
+      data-disabled="true"
+    >
+      {normalizedLabel}
+    </Button>
+  );
+
   if (!normalizedHref) {
-    return (
-      <Button
-        type="button"
-        variant={variant}
-        className={cn(className)}
-        aria-disabled="true"
-        data-disabled="true"
-      >
-        {normalizedLabel}
-      </Button>
-    );
+    return disabledButton;
   }
 
   const disableAllLinks = shouldDisableLinksInPreview(pathname);
@@ -72,44 +78,18 @@ export function SiteButton({
 
   const isHashAnchor = normalizedHref.startsWith("#");
 
-  // CTA externe : nouvel onglet automatique
   const shouldOpenNewTab = external && !special;
   const target = shouldOpenNewTab ? "_blank" : undefined;
   const rel = shouldOpenNewTab ? "noopener noreferrer external" : undefined;
 
-  // Lien non sûr : rendu neutralisé mais visuel conservé
   if (unsafe) {
-    return (
-      <Button
-        type="button"
-        variant={variant}
-        className={cn(className)}
-        aria-disabled="true"
-        data-disabled="true"
-      >
-        {normalizedLabel}
-      </Button>
-    );
+    return disabledButton;
   }
 
-  // ✅ Preview :
-  // - on laisse les ancres fonctionner
-  // - on neutralise les autres navigations sans style disabled
   if (disableAllLinks && !isHashAnchor) {
-    return (
-      <Button
-        type="button"
-        variant={variant}
-        className={cn(className)}
-        aria-disabled="true"
-        data-disabled="true"
-      >
-        {normalizedLabel}
-      </Button>
-    );
+    return disabledButton;
   }
 
-  // Externe + spécial (http(s), mailto, tel)
   if (rawExternal || isHashAnchor) {
     return (
       <Button asChild variant={variant} className={cn(className)}>
@@ -125,7 +105,6 @@ export function SiteButton({
     );
   }
 
-  // Interne
   const internalHref = resolveInternalHref(pathname, normalizedHref);
 
   return (

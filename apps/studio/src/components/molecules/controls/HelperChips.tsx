@@ -31,7 +31,7 @@ export function HelperChips({ items, onPick }: HelperChipsProps) {
         <Button
           key={`helper-chip-${item}-${index}`}
           type="button"
-          variant="ghost"
+          variant="ghostStudio"
           size="sm"
           onClick={() => onPick(item)}
         >

@@ -19,9 +19,9 @@ import {
   getPublishedHomePage,
   getPublishedIndex,
 } from "@compoz/site/lib/pages/published-page-loaders";
+import { SitePageRuntimeRenderer } from "@compoz/site/lib/pages/SitePageRuntimeRenderer";
+import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
 import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
-import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
-import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 /* -------------------------------------------------------------------------- */
@@ -32,8 +32,17 @@ export async function generateMetadata(): Promise<Metadata> {
   const page = await getPublishedHomePage();
   if (!page) return {};
 
+  const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
+    .map(toBlockShapeFromDTO)
+    .filter((b): b is BlockShape => Boolean(b));
+
+  const h1 = getPageH1(blocks);
+
+  const title =
+    (page.seoTitle ?? "").trim() || h1 || (page.name ?? "").trim() || undefined;
+
   return {
-    title: (page.name ?? "").trim(),
+    title,
     alternates: { canonical: SITE_PATH.home },
   };
 }
@@ -59,9 +68,7 @@ export default async function SiteRootPage() {
     hrefForSlug: (slug) => (slug === HOME_SLUG ? SITE_PATH.home : `/${slug}`),
   });
 
-  return (
-    <SitePageRenderer ui={resolveSiteUi()} blocks={blocks} pager={pager} />
-  );
+  return <SitePageRuntimeRenderer blocks={blocks} pager={pager} />;
 }
 
 SiteRootPage.displayName = "SiteRootPage";

@@ -7,6 +7,12 @@ import { Button } from "@compoz/ui/components/ui/button";
 import { cn } from "@compoz/ui/lib/utils";
 import { XIcon } from "lucide-react";
 
+type SheetButtonVariantMode = "vanilla" | "studio";
+
+function getSheetGhostVariant(mode: SheetButtonVariantMode) {
+  return mode === "studio" ? "ghostStudio" : "ghostVanilla";
+}
+
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
 }
@@ -37,7 +43,7 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        "motion-safe:data-open:animate-in motion-safe:data-closed:animate-out motion-safe:data-closed:fade-out-0 motion-safe:data-open:fade-in-0 bg-black/10 motion-safe:duration-100 motion-reduce:transition-none data-ending-style:opacity-0 data-starting-style:opacity-0 supports-backdrop-filter:backdrop-blur-xs fixed inset-0 z-50",
+        "fixed inset-0 z-50 bg-black/10 supports-backdrop-filter:backdrop-blur-xs motion-safe:duration-100 motion-safe:data-open:animate-in motion-safe:data-open:fade-in-0 motion-safe:data-closed:animate-out motion-safe:data-closed:fade-out-0 motion-reduce:transition-none motion-reduce:animate-none",
         className,
       )}
       {...props}
@@ -50,10 +56,12 @@ function SheetContent({
   children,
   side = "right",
   showCloseButton = true,
+  buttonVariantMode = "vanilla",
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left";
   showCloseButton?: boolean;
+  buttonVariantMode?: SheetButtonVariantMode;
 }) {
   return (
     <SheetPortal>
@@ -62,7 +70,7 @@ function SheetContent({
         data-slot="sheet-content"
         data-side={side}
         className={cn(
-          "bg-background motion-safe:data-open:animate-in motion-safe:data-closed:animate-out motion-safe:data-[side=right]:data-closed:slide-out-to-right-10 motion-safe:data-[side=right]:data-open:slide-in-from-right-10 motion-safe:data-[side=left]:data-closed:slide-out-to-left-10 motion-safe:data-[side=left]:data-open:slide-in-from-left-10 motion-safe:data-[side=top]:data-closed:slide-out-to-top-10 motion-safe:data-[side=top]:data-open:slide-in-from-top-10 motion-safe:data-closed:fade-out-0 motion-safe:data-open:fade-in-0 motion-safe:data-[side=bottom]:data-closed:slide-out-to-bottom-10 motion-safe:data-[side=bottom]:data-open:slide-in-from-bottom-10 fixed z-50 flex flex-col gap-4 bg-clip-padding text-sm shadow-lg motion-safe:transition motion-safe:duration-200 motion-safe:ease-in-out motion-reduce:transition-none data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm",
+          "fixed z-50 flex flex-col gap-4 bg-background bg-clip-padding text-sm shadow-lg motion-safe:duration-200 motion-safe:ease-in-out motion-safe:data-open:animate-in motion-safe:data-open:fade-in-0 motion-safe:data-closed:animate-out motion-safe:data-closed:fade-out-0 motion-safe:data-[side=bottom]:data-open:slide-in-from-bottom-10 motion-safe:data-[side=left]:data-open:slide-in-from-left-10 motion-safe:data-[side=right]:data-open:slide-in-from-right-10 motion-safe:data-[side=top]:data-open:slide-in-from-top-10 motion-safe:data-[side=bottom]:data-closed:slide-out-to-bottom-10 motion-safe:data-[side=left]:data-closed:slide-out-to-left-10 motion-safe:data-[side=right]:data-closed:slide-out-to-right-10 motion-safe:data-[side=top]:data-closed:slide-out-to-top-10 motion-reduce:transition-none motion-reduce:animate-none data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm",
           className,
         )}
         {...props}
@@ -71,7 +79,7 @@ function SheetContent({
         {showCloseButton && (
           <SheetPrimitive.Close data-slot="sheet-close" asChild>
             <Button
-              variant="ghost"
+              variant={getSheetGhostVariant(buttonVariantMode)}
               className="absolute top-3 right-3"
               size="icon-sm"
             >
@@ -89,7 +97,7 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-header"
-      className={cn("gap-0.5 p-4 flex flex-col", className)}
+      className={cn("flex flex-col gap-0.5 p-4", className)}
       {...props}
     />
   );
@@ -99,7 +107,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-footer"
-      className={cn("gap-2 p-4 mt-auto flex flex-col", className)}
+      className={cn("mt-auto flex flex-col gap-2 p-4", className)}
       {...props}
     />
   );
@@ -112,7 +120,7 @@ function SheetTitle({
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn("text-foreground text-base font-medium", className)}
+      className={cn("text-base font-medium text-foreground", className)}
       {...props}
     />
   );
@@ -125,7 +133,7 @@ function SheetDescription({
   return (
     <SheetPrimitive.Description
       data-slot="sheet-description"
-      className={cn("text-muted-foreground text-sm", className)}
+      className={cn("text-sm text-muted-foreground", className)}
       {...props}
     />
   );

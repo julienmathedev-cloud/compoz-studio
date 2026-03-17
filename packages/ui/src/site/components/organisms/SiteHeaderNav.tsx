@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * @file packages/ui/src/site/components/organisms/SiteHeaderNav.tsx
  * @layer ui/site/organisms
@@ -48,7 +46,9 @@ export function SiteHeaderNav({
   const hasMenu = (primaryMenu.items?.length ?? 0) > 0;
   const hasSocial = (social?.items?.length ?? 0) > 0;
 
-  if (!hasMenu && !hasSocial) return null;
+  if (!hasMenu && !hasSocial) {
+    return null;
+  }
 
   const primary = hasMenu ? (
     <SitePrimaryMenu

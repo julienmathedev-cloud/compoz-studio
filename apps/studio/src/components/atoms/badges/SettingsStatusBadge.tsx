@@ -23,12 +23,12 @@ export function SettingsStatusBadge({ kind }: SettingsStatusBadgeProps) {
   const t = useTranslations();
 
   if (kind === "upToDate") {
-    return <StatusBadge variant="success" label={t("common.upToDate")} />;
+    return <StatusBadge variant="successStudio" label={t("common.upToDate")} />;
   }
   if (kind === "modified") {
-    return <StatusBadge variant="warning" label={t("common.modified")} />;
+    return <StatusBadge variant="warningStudio" label={t("common.modified")} />;
   }
-  return <StatusBadge variant="destructive" label={t("common.error")} />;
+  return <StatusBadge variant="errorStudio" label={t("common.error")} />;
 }
 
 SettingsStatusBadge.displayName = "SettingsStatusBadge";

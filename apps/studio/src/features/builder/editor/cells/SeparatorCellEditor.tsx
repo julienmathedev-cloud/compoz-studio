@@ -5,21 +5,23 @@
  * @layer ui/studio/pages/blocks/editor/cells
  *
  * @description
- * Éditeur UI d’une SeparatorCell avec gestion de l’alignement
- * et de la taille.
+ * Éditeur UI d’une SeparatorCell avec gestion directe de l’alignement
+ * et de la taille via boutons.
  *
  * @remarks
  * - UI-only : aucune logique métier.
  * - Modèle contrôlé (value/onChange).
- * - Réutilise `SelectField` pour rester homogène avec le Studio.
+ * - Utilise des boutons plutôt que des selects pour une édition
+ *   plus directe et cohérente avec les autres editors Studio.
  */
 
 import { useTranslations } from "next-intl";
 
-import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
-import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
+import { Text } from "@compoz/studio/components/atoms/typography/Text";
+import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
+import { Button } from "@compoz/ui/components/ui/button";
 import { cn } from "@compoz/ui/lib/utils";
-import { STACK_MD } from "@compoz/ui/styles/studio/layout";
+import { ROW_SM, STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 import type { SeparatorCellFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 
 export type SeparatorCellEditorProps = Readonly<{
@@ -36,15 +38,11 @@ type SeparatorAlign = (typeof ALIGNS)[number];
 type SeparatorSize = (typeof SIZES)[number];
 
 export function SeparatorCellEditor({
-  idPrefix,
   value,
   onChange,
   disabled,
 }: SeparatorCellEditorProps) {
   const t = useTranslations();
-
-  const alignIds = createFieldIds(idPrefix, "align");
-  const sizeIds = createFieldIds(idPrefix, "size");
 
   const align: SeparatorAlign =
     value.align && ALIGNS.includes(value.align as SeparatorAlign)
@@ -58,41 +56,67 @@ export function SeparatorCellEditor({
 
   return (
     <div className={cn(STACK_MD)}>
-      <SelectField
-        ids={alignIds}
-        label={t("studio.cellEditorTabs.separatorCellEditor.alignLabel")}
-        value={align}
-        onChange={(next) => {
-          onChange({
-            ...value,
-            align: next as SeparatorAlign,
-          });
-        }}
-        items={ALIGNS.map((item) => ({
-          value: item,
-          label: t(`studio.cellEditorTabs.separatorCellEditor.aligns.${item}`),
-        }))}
-        disabled={disabled}
-        help={t("studio.cellEditorTabs.separatorCellEditor.alignHelp")}
-      />
+      <FormGrid>
+        <div className={cn(STACK_SM)}>
+          <Text as="p" className="font-medium">
+            {t("studio.cellEditorTabs.separatorCellEditor.alignLabel")}
+          </Text>
 
-      <SelectField
-        ids={sizeIds}
-        label={t("studio.cellEditorTabs.separatorCellEditor.sizeLabel")}
-        value={size}
-        onChange={(next) => {
-          onChange({
-            ...value,
-            size: next as SeparatorSize,
-          });
-        }}
-        items={SIZES.map((item) => ({
-          value: item,
-          label: t(`studio.cellEditorTabs.separatorCellEditor.sizes.${item}`),
-        }))}
-        disabled={disabled}
-        help={t("studio.cellEditorTabs.separatorCellEditor.sizeHelp")}
-      />
+          <div className={cn(ROW_SM, "flex-wrap")}>
+            {ALIGNS.map((item) => (
+              <Button
+                key={item}
+                type="button"
+                size="sm"
+                variant={align === item ? "defaultStudio" : "ghostStudio"}
+                disabled={disabled}
+                onClick={() => {
+                  onChange({
+                    ...value,
+                    align: item,
+                  });
+                }}
+              >
+                {t(`studio.cellEditorTabs.separatorCellEditor.aligns.${item}`)}
+              </Button>
+            ))}
+          </div>
+
+          <Text as="p" variant="meta">
+            {t("studio.cellEditorTabs.separatorCellEditor.alignHelp")}
+          </Text>
+        </div>
+
+        <div className={cn(STACK_SM)}>
+          <Text as="p" className="font-medium">
+            {t("studio.cellEditorTabs.separatorCellEditor.sizeLabel")}
+          </Text>
+
+          <div className={cn(ROW_SM, "flex-wrap")}>
+            {SIZES.map((item) => (
+              <Button
+                key={item}
+                type="button"
+                size="sm"
+                variant={size === item ? "defaultStudio" : "ghostStudio"}
+                disabled={disabled}
+                onClick={() => {
+                  onChange({
+                    ...value,
+                    size: item,
+                  });
+                }}
+              >
+                {t(`studio.cellEditorTabs.separatorCellEditor.sizes.${item}`)}
+              </Button>
+            ))}
+          </div>
+
+          <Text as="p" variant="meta">
+            {t("studio.cellEditorTabs.separatorCellEditor.sizeHelp")}
+          </Text>
+        </div>
+      </FormGrid>
     </div>
   );
 }

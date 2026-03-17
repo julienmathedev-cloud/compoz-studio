@@ -19,6 +19,7 @@ import type { SiteRepository } from "@compoz/core/domain/site/ports/site-reposit
 export type UpdatePageInput = {
   pageId: string;
   name?: string;
+  seoTitle?: string;
   slug?: string;
   parentId?: string | null;
   sitemap?: Partial<PageSitemap>;

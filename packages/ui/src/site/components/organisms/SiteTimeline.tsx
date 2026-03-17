@@ -33,9 +33,11 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
   const [isOpen, setIsOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
 
-  if (!items.length) return null;
+  if (!items.length) {
+    return null;
+  }
 
-  const handleScrollToButton = () => {
+  const scrollToAnchor = () => {
     anchorRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "start",
@@ -46,10 +48,7 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
     if (!isOpen) {
       setIsOpen(true);
 
-      window.setTimeout(() => {
-        handleScrollToButton();
-      }, 100);
-
+      window.setTimeout(scrollToAnchor, 100);
       return;
     }
 
@@ -96,7 +95,6 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
       >
         {isOpen ? (
           <div className="relative">
-            {/* Ligne verticale desktop + pastilles */}
             <div className={cn(ui.desktopRailWrap)}>
               <div className={cn(ui.desktopStartDot)} />
 
@@ -116,7 +114,6 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
             </div>
 
             <div className={cn(ui.contentWrap)}>
-              {/* Ligne verticale mobile + pastilles */}
               <div className={cn(ui.mobileRailWrap)}>
                 <div className={cn(ui.mobileStartDot)} />
 

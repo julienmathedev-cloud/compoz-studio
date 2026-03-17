@@ -17,6 +17,8 @@ import {
   isDomainErrorLike,
 } from "@compoz/core/domain/errors/domain-error";
 import type { UiWarning } from "@compoz/core/domain/errors/issue.types";
+import type { Page } from "@compoz/core/domain/pages/entities/page";
+import { getPageH1FromBlocks } from "@compoz/core/domain/pages/seo/get-page-h1";
 import type {
   IdentitySettings,
   SeoSettings,
@@ -33,7 +35,7 @@ export type PublishWarningCode =
   | typeof EC.PUBLISH_SETTINGS_COPY_FAILED
   | typeof EC.PUBLISH_PAGE_MISSING
   | typeof EC.PUBLISH_PAGE_DELETE_FAILED
-  // Warnings “site live” (V0.5)
+  | typeof EC.PUBLISH_PAGE_H1_MISSING
   | typeof EC.PUBLISH_HOME_MISSING
   | typeof EC.PUBLISH_PRIMARY_MENU_EMPTY
   | typeof EC.PUBLISH_LEGAL_MENU_EMPTY
@@ -66,7 +68,6 @@ export function publishWarnings(
   /* --- index vide --- */
   if (index.pages.length === 0) {
     warnings.push({ code: EC.PUBLISH_EMPTY_INDEX, path: ["pages"] });
-    // On continue : d’autres warnings peuvent être utiles.
   }
 
   /* --- home absente de l’index --- */
@@ -103,12 +104,14 @@ export function publishWarnings(
 
     const logoUrl = (settings.identity?.logoUrl ?? "").trim();
     const faviconUrl = (settings.identity?.faviconUrl ?? "").trim();
+
     if (!logoUrl) {
       warnings.push({
         code: EC.PUBLISH_IDENTITY_LOGO_MISSING,
         path: ["identity", "logoUrl"],
       });
     }
+
     if (!faviconUrl) {
       warnings.push({
         code: EC.PUBLISH_IDENTITY_FAVICON_MISSING,
@@ -133,13 +136,48 @@ export function publishWarnings(
     }
 
     const baseUrl = (settings.seo?.baseUrl ?? "").trim();
-
-    // baseUrl manquante -> warning (source canonique recommandée)
-    // (l’invariant bloquant est seulement : si renseignée, elle doit être valide)
     if (!baseUrl) {
       warnings.push({
         code: EC.PUBLISH_SEO_BASEURL_MISSING,
         path: ["seo", "baseUrl"],
+      });
+    }
+  }
+
+  return warnings;
+}
+
+/**
+ * Warnings dépendant du contenu des pages.
+ *
+ * @remarks
+ * - `pagesById` représente la source de vérité des pages réellement candidates à la publication.
+ * - Une page sans H1 génère un warning non bloquant.
+ */
+export function publishPageWarnings(
+  index: SiteIndex,
+  pagesById: ReadonlyMap<string, Page>,
+): ReadonlyArray<PublishWarning> {
+  const warnings: PublishWarning[] = [];
+
+  for (const ref of index.pages) {
+    const page = pagesById.get(ref.id);
+
+    if (!page) {
+      warnings.push({
+        code: EC.PUBLISH_PAGE_MISSING,
+        path: ["pages", ref.id],
+        meta: { pageId: ref.id, slug: ref.slug },
+      });
+      continue;
+    }
+
+    const h1 = getPageH1FromBlocks(page.blocks);
+    if (!h1) {
+      warnings.push({
+        code: EC.PUBLISH_PAGE_H1_MISSING,
+        path: ["pages", page.id, "blocks"],
+        meta: { pageId: page.id, slug: page.slug },
       });
     }
   }

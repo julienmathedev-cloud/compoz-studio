@@ -50,7 +50,7 @@ export function OverviewStatCard({
 
   return (
     <Card
-      variant="panel"
+      variant="panelStudio"
       data-state={isError ? "error" : undefined}
       className={cn(isError ? "border-destructive/40" : undefined, "h-full")}
     >
@@ -73,7 +73,7 @@ export function OverviewStatCard({
 
           <div>
             {isError ? (
-              <StatusBadge variant="destructive" label={t("common.error")} />
+              <StatusBadge variant="errorStudio" label={t("common.error")} />
             ) : showBreakdown ? (
               <ul
                 className={cn(

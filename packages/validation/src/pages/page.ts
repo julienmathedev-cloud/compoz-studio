@@ -32,12 +32,23 @@ export const SlugSchema = z
 /**
  * Nom de page :
  * - trim automatique
- * - bornes min/max alignées sur `PAGE_TITLE`
+ * - bornes min/max alignées sur `PAGE_NAME`
  */
 export const PageNameSchema = z
   .string()
   .trim()
   .min(PAGE_NAME.MIN, ERROR_CODES.PAGE_TITLE_TOO_SHORT)
+  .max(PAGE_NAME.MAX, ERROR_CODES.PAGE_TITLE_TOO_LONG);
+
+/**
+ * Titre SEO optionnel :
+ * - trim automatique
+ * - vide autorisé (`""`) pour permettre un fallback runtime
+ * - borne max alignée sur `PAGE_NAME`
+ */
+export const PageSeoTitleSchema = z
+  .string()
+  .trim()
   .max(PAGE_NAME.MAX, ERROR_CODES.PAGE_TITLE_TOO_LONG);
 
 /**
@@ -112,8 +123,11 @@ export const PageSchema = z
     /** Slug métier unique (kebab-case, non réservé). */
     slug: SlugSchema,
 
-    /** Titre affiché de la page (trim + min/max). */
+    /** Nom affiché de la page côté studio/admin. */
     name: PageNameSchema,
+
+    /** Titre SEO optionnel. */
+    seoTitle: PageSeoTitleSchema.optional(),
 
     /** Blocs de contenu de la page. */
     blocks: z.array(BlockSchema),
@@ -140,6 +154,7 @@ export const PageSchema = z
 export const PageRenderSchema = z
   .object({
     name: PageNameSchema,
+    seoTitle: PageSeoTitleSchema.optional(),
     blocks: z.array(BlockSchema),
     paginationEnabled: z.boolean(),
   })

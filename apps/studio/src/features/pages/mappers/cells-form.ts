@@ -13,11 +13,12 @@ import type {
   CardItemFormValues,
   CardsExtendedItemFormValues,
   CarouselItemFormValues,
-  CaseStudyCardItemFormValues,
   CellFormValues,
   FormFieldFormValues,
   ImageEditorFormValues,
   StepItemFormValues,
+  StructuredCardItemFormValues,
+  StructuredCardSectionFormValues,
   TimelineItemFormValues,
 } from "@compoz/validation/pages/blocks/cells/cell-form";
 
@@ -88,14 +89,21 @@ export function createEmptyTimelineItem(): TimelineItemFormValues {
   };
 }
 
-export function createEmptyCaseStudyCardItem(): CaseStudyCardItemFormValues {
+export function createEmptyStructuredCardSection(): StructuredCardSectionFormValues {
+  return {
+    id: createUiId(),
+    label: "",
+    content: "",
+  };
+}
+
+export function createEmptyStructuredCardItem(): StructuredCardItemFormValues {
   return {
     id: createUiId(),
     image: createEmptyImageEditor(),
     title: "",
-    context: "",
-    solution: "",
-    result: "",
+    meta: "",
+    sections: [createEmptyStructuredCardSection()],
   };
 }
 
@@ -107,12 +115,12 @@ export function createEmptyCarouselCardsExtendedItem(): CardsExtendedItemFormVal
   return createEmptyCardsExtendedItem();
 }
 
-export function createEmptyCarouselCaseStudyCardItem(): CaseStudyCardItemFormValues {
-  return createEmptyCaseStudyCardItem();
+export function createEmptyCarouselStructuredCardItem(): StructuredCardItemFormValues {
+  return createEmptyStructuredCardItem();
 }
 
 export function createEmptyCarouselItem(
-  itemKind: "image" | "card" | "cardsExtended" | "caseStudyCard",
+  itemKind: "image" | "card" | "cardsExtended" | "structuredCard",
 ): CarouselItemFormValues {
   if (itemKind === "image") {
     return createEmptyImageEditor();
@@ -126,7 +134,7 @@ export function createEmptyCarouselItem(
     return createEmptyCarouselCardsExtendedItem();
   }
 
-  return createEmptyCarouselCaseStudyCardItem();
+  return createEmptyCarouselStructuredCardItem();
 }
 
 export function createEmptyFormField(): FormFieldFormValues {
@@ -227,12 +235,12 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     };
   }
 
-  if (kind === "caseStudyCard") {
+  if (kind === "structuredCard") {
     return {
       id,
-      kind: "caseStudyCard",
+      kind: "structuredCard",
       columns: 1,
-      items: [createEmptyCaseStudyCardItem()],
+      items: [createEmptyStructuredCardItem()],
     };
   }
 

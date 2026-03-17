@@ -26,12 +26,12 @@ export function DiffStatusBadge({
 
   const map = {
     published: {
-      variant: "success",
+      variant: "successStudio",
       label: pLabel,
     },
-    modified: { variant: "warning", label: t("common.modified") },
-    new: { variant: "info", label: t("common.new") },
-    deleted: { variant: "destructive", label: t("common.deleted") },
+    modified: { variant: "warningStudio", label: t("common.modified") },
+    new: { variant: "infoStudio", label: t("common.new") },
+    deleted: { variant: "errorStudio", label: t("common.deleted") },
   } as const;
 
   const cfg = map[kind];

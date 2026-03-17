@@ -133,7 +133,7 @@ export function ButtonsCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={align === item ? "default" : "ghost"}
+                variant={align === item ? "defaultStudio" : "ghostStudio"}
                 onClick={() => {
                   alignCtrl.field.onChange(item);
                 }}
@@ -156,7 +156,7 @@ export function ButtonsCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={gap === item ? "default" : "ghost"}
+                variant={gap === item ? "defaultStudio" : "ghostStudio"}
                 onClick={() => {
                   gapCtrl.field.onChange(item);
                 }}

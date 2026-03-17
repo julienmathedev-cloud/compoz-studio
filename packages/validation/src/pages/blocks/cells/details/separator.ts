@@ -12,11 +12,13 @@ import { CellIdSchema } from "@compoz/validation/pages/blocks/cells/details/comm
 
 export const SeparatorAlignSchema = z.enum(
   ["left", "center", "right", "full"],
-  { message: ERROR_CODES.CELL_INVALID },
+  {
+    message: ERROR_CODES.CELL_SEPARATOR_ALIGN_INVALID,
+  },
 );
 
 export const SeparatorSizeSchema = z.enum(["sm", "md", "lg"], {
-  message: ERROR_CODES.CELL_INVALID,
+  message: ERROR_CODES.CELL_SEPARATOR_SIZE_INVALID,
 });
 
 export const SeparatorCellSchema = z

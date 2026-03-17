@@ -113,7 +113,7 @@ export function PageListItem({
         <StudioButtonGroup className="shrink-0">
           <TooltipButton
             type="button"
-            variant="ghost"
+            variant="ghostStudio"
             size="icon"
             onClick={() => onEditMeta?.(page.id)}
             disabled={!canEditMeta}
@@ -128,6 +128,7 @@ export function PageListItem({
           <TooltipButton
             type="button"
             size="icon"
+            variant="defaultStudio"
             onClick={() => onEditContent?.(page.id)}
             disabled={!canEditContent}
             aria-label={editContentLabel}

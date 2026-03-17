@@ -9,33 +9,59 @@ import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
 import {
-  CellItemIdSchema,
   CellIdSchema,
+  CellItemIdSchema,
 } from "@compoz/validation/pages/blocks/cells/details/common";
 
-export const CardsExtendedColumnsSchema = z.union([
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-]);
+export const CardsExtendedColumnsSchema = z.union(
+  [z.literal(1), z.literal(2), z.literal(3)],
+  {
+    message: ERROR_CODES.CELL_CARDS_EXTENDED_COLUMNS_INVALID,
+  },
+);
 
 export const CardsExtendedAlignSchema = z.enum(["left", "center"], {
-  message: ERROR_CODES.CELL_INVALID,
+  message: ERROR_CODES.CELL_CARDS_EXTENDED_ALIGN_INVALID,
 });
 
 export const CardsExtendedBulletSchema = z
   .string()
   .trim()
-  .min(1, ERROR_CODES.CELL_INVALID);
+  .min(1, ERROR_CODES.CELL_CARDS_EXTENDED_ITEM_BULLET_INVALID);
 
 export const CardsExtendedItemSchema = z
   .object({
     id: CellItemIdSchema,
-    title: z.string().trim().min(1, ERROR_CODES.CELL_INVALID),
-    description: z.string().trim().min(1, ERROR_CODES.CELL_INVALID),
-    bullets: z.array(CardsExtendedBulletSchema).optional(),
-    footer: z.string().trim().optional(),
-    icon: z.string().trim().optional(),
+
+    title: z
+      .string()
+      .trim()
+      .min(1, ERROR_CODES.CELL_CARDS_EXTENDED_ITEM_TITLE_REQUIRED),
+
+    description: z
+      .string()
+      .trim()
+      .min(1, ERROR_CODES.CELL_CARDS_EXTENDED_ITEM_DESCRIPTION_REQUIRED),
+
+    bullets: z
+      .array(CardsExtendedBulletSchema, {
+        message: ERROR_CODES.CELL_CARDS_EXTENDED_ITEM_BULLETS_INVALID,
+      })
+      .optional(),
+
+    footer: z
+      .string({
+        message: ERROR_CODES.CELL_CARDS_EXTENDED_ITEM_FOOTER_INVALID,
+      })
+      .trim()
+      .optional(),
+
+    icon: z
+      .string({
+        message: ERROR_CODES.CELL_CARDS_EXTENDED_ITEM_ICON_INVALID,
+      })
+      .trim()
+      .optional(),
   })
   .strict();
 
@@ -45,6 +71,11 @@ export const CardsExtendedCellSchema = z
     kind: z.literal("cardsExtended"),
     columns: CardsExtendedColumnsSchema,
     align: CardsExtendedAlignSchema.optional(),
-    items: z.array(CardsExtendedItemSchema).min(1, ERROR_CODES.CELL_INVALID),
+
+    items: z
+      .array(CardsExtendedItemSchema, {
+        message: ERROR_CODES.CELL_CARDS_EXTENDED_ITEMS_INVALID,
+      })
+      .min(1, ERROR_CODES.CELL_CARDS_EXTENDED_ITEMS_MIN_1),
   })
   .strict();

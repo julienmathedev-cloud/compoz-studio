@@ -255,7 +255,7 @@ export function HeadingCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={align === item ? "default" : "ghost"}
+                variant={align === item ? "defaultStudio" : "ghostStudio"}
                 onClick={() => alignCtrl.field.onChange(item)}
                 disabled={disabled}
               >
@@ -276,7 +276,7 @@ export function HeadingCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={variant === item ? "default" : "ghost"}
+                variant={variant === item ? "defaultStudio" : "ghostStudio"}
                 onClick={() => variantCtrl.field.onChange(item)}
                 disabled={disabled}
               >

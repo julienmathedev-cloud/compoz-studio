@@ -16,25 +16,22 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { getDraftSettings } from "@compoz/studio/lib/pages/draft-page-loaders";
 import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
-import { SiteFooter } from "@compoz/ui/site/components/layouts/SiteFooter";
-import { SiteHeader } from "@compoz/ui/site/components/layouts/SiteHeader";
-import { SiteUiProvider } from "@compoz/ui/site/providers/SiteUiProvider";
-import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
-
-import { toLegalMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/legal-menu-shape";
-import { toPrimaryMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/primary-menu-shape";
-import { toSocialSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/social-shape";
-
+import { fontVariablesClassName } from "@compoz/ui/lib/fonts";
 import {
   ensureTitleTemplate,
   resolveAssetUrl,
   toSafeUrl,
 } from "@compoz/ui/lib/seo/metadata-helpers";
-
-import { getDraftSettings } from "@compoz/studio/lib/pages/draft-page-loaders";
-
 import { cn } from "@compoz/ui/lib/utils";
+import { toLegalMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/legal-menu-shape";
+import { toPrimaryMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/primary-menu-shape";
+import { toSocialSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/social-shape";
+import { SiteFooter } from "@compoz/ui/site/components/layouts/SiteFooter";
+import { SiteHeader } from "@compoz/ui/site/components/layouts/SiteHeader";
+import { SiteRuntimeProvider } from "@compoz/ui/site/providers/SiteRuntimeProvider";
+import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 import {
   SITE_APP_COLUMN,
   SITE_APP_SHELL,
@@ -73,10 +70,6 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase,
     title: { default: defaultTitle, template: titleTemplate },
     description,
-
-    /**
-     * Draft/preview : toujours exclu de l’indexation.
-     */
     robots: {
       index: false,
       follow: false,
@@ -87,18 +80,12 @@ export async function generateMetadata(): Promise<Metadata> {
         noimageindex: true,
       },
     },
-
-    /**
-     * Draft : on conserve le favicon Compoz Studio hérité du root layout.
-     * On ne surcharge pas avec le favicon client ici.
-     */
     openGraph: {
       title: defaultTitle,
       description,
       type: "website",
       images: ogImage ? [{ url: ogImage }] : undefined,
     },
-
     twitter: {
       card: settings.seo?.twitter?.card ?? undefined,
       site: settings.seo?.twitter?.site ?? undefined,
@@ -115,8 +102,8 @@ export default async function DraftLayout({ children }: LayoutProps) {
   const ui = resolveSiteUi();
 
   return (
-    <div className={cn(SITE_APP_SHELL)}>
-      <SiteUiProvider ui={ui}>
+    <div className={cn(SITE_APP_SHELL, fontVariablesClassName)}>
+      <SiteRuntimeProvider ui={ui} theme={settings.theme}>
         <ScrollTopOnRouteChange />
         <div className={cn(SITE_APP_COLUMN)}>
           <SiteHeader
@@ -139,7 +126,7 @@ export default async function DraftLayout({ children }: LayoutProps) {
             ui={ui.footer}
           />
         </div>
-      </SiteUiProvider>
+      </SiteRuntimeProvider>
     </div>
   );
 }

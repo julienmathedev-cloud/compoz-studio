@@ -30,29 +30,11 @@ import { cn } from "@compoz/ui/lib/utils";
 export type SiteFooterLinkProps = Readonly<{
   label: string;
   href: string;
-
-  /** Ouvre dans un nouvel onglet (uniquement si externe et non spécial). */
   newTab?: boolean;
-
-  /** Nom accessible si le libellé est ambigu (optionnel). */
   ariaLabel?: string;
-
-  /**
-   * Ajoute un hint SR-only “(ouvre dans un nouvel onglet)” sur les liens externes.
-   * @default true
-   */
   showNewTabHint?: boolean;
-
-  /**
-   * Libellé SR-only pour indiquer l’ouverture dans un nouvel onglet.
-   * @default " (ouvre dans un nouvel onglet)"
-   */
   newTabHintSrLabel?: string;
-
-  /** Classes appliquées par le skin/template (wrapper). */
   className?: string;
-
-  /** Classes injectées par skin/template. */
   linkClassName?: string;
 }>;
 
@@ -66,33 +48,18 @@ export function SiteFooterLink({
   className,
   linkClassName,
 }: SiteFooterLinkProps) {
-  const normalizedHref = normalizeString(href);
-  const normalizedLabel = normalizeString(label);
   const pathname = usePathname() || "/";
 
-  // Invariants (UI).
-  if (!normalizedHref || !normalizedLabel) return null;
+  const normalizedHref = normalizeString(href);
+  const normalizedLabel = normalizeString(label);
 
-  // ✅ Preview : on neutralise toutes les navigations.
+  if (!normalizedHref || !normalizedLabel) {
+    return null;
+  }
+
   const disableAllLinks = shouldDisableLinksInPreview(pathname);
-
-  // Détection : externe / spécial / unsafe.
   const { special, external, rawExternal, unsafe } =
     resolveLinkFlags(normalizedHref);
-
-  // Href non sûr : lien neutralisé.
-  if (unsafe) {
-    return (
-      <span
-        className={cn(linkClassName)}
-        aria-disabled="true"
-        data-disabled="true"
-        tabIndex={-1}
-      >
-        {normalizedLabel}
-      </span>
-    );
-  }
 
   const shouldNewTab = Boolean(newTab) && external && !special;
   const target = shouldNewTab ? "_blank" : undefined;
@@ -107,21 +74,27 @@ export function SiteFooterLink({
     </>
   );
 
+  const disabledContent = (
+    <span
+      className={cn(linkClassName)}
+      aria-disabled="true"
+      data-disabled="true"
+      tabIndex={-1}
+    >
+      {content}
+    </span>
+  );
+
+  if (unsafe) {
+    return disabledContent;
+  }
+
   if (disableAllLinks) {
     return (
-      <div className={cn(className, "cursor-pointer")}>
-        <span
-          className={cn(linkClassName)}
-          aria-disabled="true"
-          data-disabled="true"
-        >
-          {content}
-        </span>
-      </div>
+      <div className={cn(className, "cursor-pointer")}>{disabledContent}</div>
     );
   }
 
-  // Externe (http(s) / mailto / tel).
   if (rawExternal) {
     return (
       <div className={cn(className, "cursor-pointer")}>
@@ -139,7 +112,6 @@ export function SiteFooterLink({
     );
   }
 
-  // Interne.
   const internalHref = resolveInternalHref(pathname, normalizedHref);
 
   return (

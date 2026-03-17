@@ -18,8 +18,6 @@ import {
   CarouselItemKindSchema,
   CarouselItemSchema,
   CarouselVariantSchema,
-  CaseStudyCardCellSchema,
-  CaseStudyCardItemSchema,
   CellSchema,
   FormCellSchema,
   FormFieldSchema,
@@ -32,6 +30,9 @@ import {
   SpacerCellSchema,
   StepItemSchema,
   StepsCellSchema,
+  StructuredCardCellSchema,
+  StructuredCardItemSchema,
+  StructuredCardSectionSchema,
   TimelineCellSchema,
   TimelineItemSchema,
 } from "@compoz/validation/pages/blocks/cells/cell";
@@ -95,14 +96,19 @@ export type StepItemIntentDTO = z.infer<typeof StepItemIntentSchema>;
 export const StepsCellIntentSchema = StepsCellSchema;
 export type StepsCellIntentDTO = z.infer<typeof StepsCellIntentSchema>;
 
-export const CaseStudyCardItemIntentSchema = CaseStudyCardItemSchema;
-export type CaseStudyCardItemIntentDTO = z.infer<
-  typeof CaseStudyCardItemIntentSchema
+export const StructuredCardSectionIntentSchema = StructuredCardSectionSchema;
+export type StructuredCardSectionIntentDTO = z.infer<
+  typeof StructuredCardSectionIntentSchema
 >;
 
-export const CaseStudyCardCellIntentSchema = CaseStudyCardCellSchema;
-export type CaseStudyCardCellIntentDTO = z.infer<
-  typeof CaseStudyCardCellIntentSchema
+export const StructuredCardItemIntentSchema = StructuredCardItemSchema;
+export type StructuredCardItemIntentDTO = z.infer<
+  typeof StructuredCardItemIntentSchema
+>;
+
+export const StructuredCardCellIntentSchema = StructuredCardCellSchema;
+export type StructuredCardCellIntentDTO = z.infer<
+  typeof StructuredCardCellIntentSchema
 >;
 
 export const FormFieldIntentSchema = FormFieldSchema;

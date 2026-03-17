@@ -48,17 +48,23 @@ export function LocaleSwitch() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="header" size="icon" aria-label={t("common.language")}>
+        <Button
+          variant="headerStudio"
+          size="icon"
+          aria-label={t("common.language")}
+        >
           {locale.toUpperCase()}
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
+        visualMode="studio"
         align="end"
         className="mt-0.5 min-w-10 font-semibold"
       >
         {routing.locales.map((loc) => (
           <DropdownMenuItem
+            visualMode="studio"
             key={loc}
             onSelect={() => onLocaleChange(loc)}
             className={cn(

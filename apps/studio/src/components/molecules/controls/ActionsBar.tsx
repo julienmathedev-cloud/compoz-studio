@@ -170,7 +170,7 @@ export function ActionsBar({
         <div className={cn(ROW_BETWEEN, "w-full")}>
           <TooltipButton
             type="button"
-            variant="outline"
+            variant="outlineStudio"
             size="lg"
             onClick={onAdd}
             disabled={computedAddDisabled}
@@ -183,7 +183,7 @@ export function ActionsBar({
           <StudioButtonGroup className="flex">
             <TooltipButton
               type="button"
-              variant="ghost"
+              variant="ghostStudio"
               size="lg"
               onPointerDown={(e) => {
                 // ✅ empêche la perte de focus => évite le blur des inputs
@@ -205,6 +205,7 @@ export function ActionsBar({
             <TooltipButton
               size="lg"
               type={submitType}
+              variant="defaultStudio"
               onClick={submitType === "button" ? onSubmit : undefined}
               disabled={computedSubmitDisabled}
               tooltip={
@@ -229,6 +230,7 @@ export function ActionsBar({
           <TooltipButton
             size="lg"
             type={submitType}
+            variant="defaultStudio"
             onClick={submitType === "button" ? onSubmit : undefined}
             disabled={computedSubmitDisabled}
             tooltip={
@@ -249,7 +251,7 @@ export function ActionsBar({
           <StudioButtonGroup>
             <TooltipButton
               type="button"
-              variant="ghost"
+              variant="ghostStudio"
               size="lg"
               onPointerDown={(e) => {
                 // ✅ empêche la perte de focus => évite le blur des inputs
@@ -269,6 +271,7 @@ export function ActionsBar({
 
             <TooltipButton
               type={submitType}
+              variant="defaultStudio"
               onClick={submitType === "button" ? onSubmit : undefined}
               disabled={computedSubmitDisabled}
               size="lg"

@@ -32,3 +32,10 @@ export type {
 } from "@compoz/core/domain/site/entities/social";
 
 export type { SiteStatus } from "@compoz/core/domain/site/entities/site-status";
+
+export type {
+  PublicThemeTokens,
+  RevealPreset,
+  ThemeMode,
+  ThemeSettings,
+} from "@compoz/core/domain/site/entities/theme";

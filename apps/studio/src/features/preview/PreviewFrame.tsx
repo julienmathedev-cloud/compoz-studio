@@ -205,7 +205,10 @@ export function PreviewFrame({
       <div className={cn(ROW_BETWEEN, "flex-wrap gap-2")}>
         <Text>{t("studio.shared.preview.navDisabled")}</Text>
 
-        <Card className={cn(STUDIO_SHADOW_PANEL, "p-0 shadow-accent")}>
+        <Card
+          variant="defaultStudio"
+          className={cn(STUDIO_SHADOW_PANEL, "p-0 shadow-accent")}
+        >
           <CardContent className={cn(ROW_CENTER, "gap-1 p-1")}>
             {availableDevices.map((currentDevice, index) => {
               const deviceLabel = t(
@@ -221,7 +224,7 @@ export function PreviewFrame({
                   )}
                   type="button"
                   size="icon"
-                  variant={isActive ? "default" : "ghost"}
+                  variant={isActive ? "defaultStudio" : "ghostStudio"}
                   onClick={() => setDevice(currentDevice)}
                   disabled={uiDisabled}
                   aria-label={deviceLabel}
@@ -243,7 +246,7 @@ export function PreviewFrame({
             {onReset ? (
               <TooltipButton
                 type="button"
-                variant="ghost"
+                variant="ghostStudio"
                 size="icon"
                 onClick={handleReset}
                 disabled={uiDisabled}
@@ -257,7 +260,7 @@ export function PreviewFrame({
             {onSync ? (
               <TooltipButton
                 type="button"
-                variant="ghost"
+                variant="ghostStudio"
                 size="icon"
                 onClick={handleSync}
                 disabled={uiDisabled || Boolean(syncDisabled)}

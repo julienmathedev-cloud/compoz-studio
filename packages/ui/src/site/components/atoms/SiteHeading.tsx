@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * @file packages/ui/src/site/components/atoms/SiteHeading.tsx
  * @layer ui/site/components
@@ -51,14 +49,12 @@ export type SiteHeadingProps = Readonly<
 /* Internals                                                                  */
 /* -------------------------------------------------------------------------- */
 
-/** Clamp un niveau heading dans [1..6]. */
 function clampHeading(level: number | undefined): SiteHeadingLevel {
   const n = typeof level === "number" && Number.isFinite(level) ? level : 2;
   const clamped = Math.min(6, Math.max(1, Math.round(n)));
   return clamped as SiteHeadingLevel;
 }
 
-/** Retourne le tag HTML correspondant au niveau. */
 function getHeadingTag(level: SiteHeadingLevel): HeadingTag {
   return `h${level}` as HeadingTag;
 }
@@ -67,9 +63,6 @@ function getHeadingTag(level: SiteHeadingLevel): HeadingTag {
 /* Component                                                                  */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Titre site sémantique (h1..h6).
- */
 export function SiteHeading({
   level = 2,
   visuallyHidden = false,

@@ -46,6 +46,7 @@ import {
   Fingerprint,
   LayoutDashboard,
   Menu,
+  Palette,
   PanelBottom,
   PanelTop,
   Search,
@@ -63,6 +64,7 @@ export const STUDIO_SIDEBAR_ICONS = {
   footer: PanelBottom,
   pages: Files,
   blocks: Blocks,
+  theme: Palette,
   seo: Search,
 
   // ✅ Studio-only
@@ -182,6 +184,11 @@ export function StudioSidebar({
         href: base + STUDIO_PATH.blocks,
       },
       {
+        key: "theme",
+        label: t("studio.dashboard.tabs.theme"),
+        href: base + STUDIO_PATH.theme,
+      },
+      {
         key: "seo",
         label: t("studio.dashboard.tabs.seo"),
         href: base + STUDIO_PATH.seo,
@@ -255,7 +262,11 @@ export function StudioSidebar({
   );
 
   return (
-    <Sidebar collapsible="icon" className={cn("border-none", "z-50 w-max-100")}>
+    <Sidebar
+      collapsible="icon"
+      visualMode="studio"
+      className={cn("border-none", "z-50 w-max-100")}
+    >
       <SidebarHeader className="flex h-12 items-center justify-between px-2">
         <SidebarGroupLabel className="truncate text-2xl text-foreground tracking-tighter font-bold">
           {title ?? "Compoz Studio"}

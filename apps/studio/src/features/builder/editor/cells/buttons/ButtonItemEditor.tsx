@@ -128,6 +128,7 @@ export function ButtonItemEditor({
     <Card
       ref={setNodeRef}
       style={style}
+      variant="defaultStudio"
       className={cn("relative h-full", STACK_MD, isDragging && "opacity-60")}
     >
       <CardContent>

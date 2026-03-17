@@ -15,7 +15,7 @@
  */
 
 import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
-import { defaultCaseStudyCardUi } from "@compoz/ui/site/skins/default/cells/case-study-card-cell.ui";
+import { defaultStructuredCardUi } from "@compoz/ui/site/skins/default/cells/structured-card-cell.ui";
 
 export const defaultCarouselUi: SiteCarouselUi = {
   carousel: {
@@ -62,5 +62,5 @@ export const defaultCarouselUi: SiteCarouselUi = {
     inactive: "w-full max-w-5xl py-0.5",
   },
 
-  caseStudyCard: defaultCaseStudyCardUi,
+  structuredCard: defaultStructuredCardUi,
 } as const;

@@ -71,10 +71,12 @@ export function SwitchField({
       <div className={cn(ROW_BETWEEN, "h-full min-w-0", className)}>
         {/* Bloc texte (label + description) */}
         <div className="min-w-0">
-          <FieldLabel htmlFor={fieldId}>{label}</FieldLabel>
+          <FieldLabel visualMode="studio" htmlFor={fieldId}>
+            {label}
+          </FieldLabel>
 
           {help && (
-            <FieldDescription>
+            <FieldDescription visualMode="studio">
               <HelpText as="span" id={helpId}>
                 {help}
               </HelpText>

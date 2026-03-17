@@ -133,7 +133,7 @@ export function CardsCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={align === item ? "default" : "ghost"}
+                variant={align === item ? "defaultStudio" : "ghostStudio"}
                 onClick={() => {
                   alignCtrl.field.onChange(item);
                 }}
@@ -156,7 +156,7 @@ export function CardsCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={columns === item ? "default" : "ghost"}
+                variant={columns === item ? "defaultStudio" : "ghostStudio"}
                 onClick={() => {
                   columnsCtrl.field.onChange(item);
                 }}

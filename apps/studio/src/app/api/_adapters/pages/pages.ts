@@ -9,7 +9,7 @@
  * Responsabilités :
  * - trimming défensif (ids, strings)
  * - propagation des champs optionnels (sémantique PATCH = présence de clé)
- * - normalisation sitemap (intents `null` -> domaine `undefined`)
+ * - normalisation sitemap alignée sur le domaine (`null` conservé)
  * - normalisation slug via SoT UI (`toSlugIntentInput`)
  * - le `state` est géré par la route, pas par l’adapter
  */
@@ -32,21 +32,27 @@ import type { UpdatePageInput } from "@compoz/core/domain/pages/use-cases/update
 type UpdatePagePatchInput = Omit<UpdatePageInput, "pageId">;
 
 /**
- * Normalise le patch sitemap venant des intents API.
- * - Les intents autorisent `null` pour « unset » (ex: priority/changefreq).
- * - Le domaine utilise `undefined` (champ optionnel).
+ * Normalise le bloc sitemap venant des intents API.
+ *
+ * Contrat domaine actuel :
+ * - `sitemap` peut être `null`
+ * - `changefreq` peut être `null`
+ * - `priority` peut être `null`
+ * - en patch, l’absence de clé doit rester `undefined`
  */
-function normalizeSitemapPatch(
-  sitemap: CreatePageIntentDTO["sitemap"] | UpdatePageIntentDTO["sitemap"],
+function normalizeSitemap(
+  sitemap:
+    | CreatePageIntentDTO["sitemap"]
+    | UpdatePageIntentDTO["sitemap"]
+    | undefined,
 ): UpdatePagePatchInput["sitemap"] | CreatePageInput["sitemap"] | undefined {
-  if (!sitemap) return undefined;
+  if (typeof sitemap === "undefined") return undefined;
+  if (sitemap === null) return null;
 
-  // On ne touche pas à `include` (boolean).
-  // `null` => `undefined` pour rester conforme aux types domaine.
   return {
-    ...sitemap,
-    changefreq: sitemap.changefreq === null ? undefined : sitemap.changefreq,
-    priority: sitemap.priority === null ? undefined : sitemap.priority,
+    include: sitemap.include,
+    changefreq: sitemap.changefreq,
+    priority: sitemap.priority,
   };
 }
 
@@ -55,9 +61,9 @@ function normalizeSitemapPatch(
  *
  * Contrat :
  * - `name` toujours trimé et obligatoire.
- * - `seoTitle` trimé si fourni.
+ * - `seoTitle` trimé si fourni, sinon `null`.
  * - `slug` optionnel : normalisé s’il est fourni, sinon logique fallback côté domaine.
- * - `sitemap` : si la clé est présente, on propage après normalisation (déjà validé par Zod).
+ * - `sitemap` toujours propagé (`null` ou objet normalisé).
  */
 export function adaptCreatePagePayload(
   dto: CreatePageIntentDTO,
@@ -66,31 +72,24 @@ export function adaptCreatePagePayload(
 
   log.debug("studio.adapter.pages.create.start", {
     hasSlug: typeof dto.slug === "string",
-    hasSeoTitle: typeof dto.seoTitle === "string",
-    hasSitemap: "sitemap" in dto,
-    hasParentId: "parentId" in dto,
+    hasSeoTitle: dto.seoTitle !== null,
+    hasSitemap: true,
+    hasParentId: true,
   });
 
   const out: CreatePageInput = {
     name: trimOrKeep(dto.name),
+    seoTitle: dto.seoTitle !== null ? trimOrKeep(dto.seoTitle) : null,
     parentId: dto.parentId,
+    sitemap: normalizeSitemap(dto.sitemap) ?? null,
     paginationEnabled: dto.parentId === null ? false : dto.paginationEnabled,
   };
-
-  if ("seoTitle" in dto && typeof dto.seoTitle === "string") {
-    out.seoTitle = trimOrKeep(dto.seoTitle);
-  }
 
   if ("slug" in dto && typeof dto.slug === "string") {
     const s = toSlugIntentInput(dto.slug);
 
     // create : si vide, on laisse le domaine appliquer son fallback.
     if (s.length > 0) out.slug = s;
-  }
-
-  if ("sitemap" in dto) {
-    const normalized = normalizeSitemapPatch(dto.sitemap);
-    if (normalized !== undefined) out.sitemap = normalized;
   }
 
   log.debug("studio.adapter.pages.create.end", {
@@ -107,7 +106,7 @@ export function adaptCreatePagePayload(
  * Contrat :
  * - Un champ n’est posé que si la clé est présente dans le DTO.
  * - `state` est géré par la route.
- * - `sitemap` propagé si la clé est présente (y compris `{ include: false }`).
+ * - `sitemap` propagé si la clé est présente (y compris `null`).
  * - `slug` : on garde "" comme signal explicite de reset.
  */
 export function adaptUpdatePagePayload(
@@ -125,41 +124,34 @@ export function adaptUpdatePagePayload(
 
   const out: UpdatePagePatchInput = {};
 
-  if ("name" in dto) {
-    if (typeof dto.name === "string") {
-      out.name = trimOrKeep(dto.name);
-    }
+  if ("name" in dto && typeof dto.name === "string") {
+    out.name = trimOrKeep(dto.name);
   }
 
   if ("seoTitle" in dto) {
-    if (typeof dto.seoTitle === "string") {
-      out.seoTitle = trimOrKeep(dto.seoTitle);
-    }
+    out.seoTitle =
+      dto.seoTitle !== null && typeof dto.seoTitle === "string"
+        ? trimOrKeep(dto.seoTitle)
+        : null;
   }
 
-  if ("slug" in dto) {
-    if (typeof dto.slug === "string") {
-      const s = toSlugIntentInput(dto.slug);
+  if ("slug" in dto && typeof dto.slug === "string") {
+    const s = toSlugIntentInput(dto.slug);
 
-      // ✅ important : en update, "" est un reset explicite
-      // HOME_SLUG est aussi une valeur valide (home)
-      out.slug = s;
-    }
+    // en update, "" est un reset explicite
+    out.slug = s;
   }
 
-  // ✅ important : clé présente => on propage (même si null)
   if ("parentId" in dto) {
     out.parentId = dto.parentId;
   }
 
-  // ✅ propager si la clé est présente
   if ("paginationEnabled" in dto) {
     out.paginationEnabled = dto.paginationEnabled;
   }
 
   if ("sitemap" in dto) {
-    const normalized = normalizeSitemapPatch(dto.sitemap);
-    if (normalized !== undefined) out.sitemap = normalized;
+    out.sitemap = normalizeSitemap(dto.sitemap);
   }
 
   log.debug("studio.adapter.pages.update.end", {

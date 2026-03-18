@@ -37,12 +37,12 @@ export function HeadingCellRenderer({ cell, ui }: HeadingCellRendererProps) {
   const title = normalizeString(cell.title, "");
   if (!title) return null;
 
-  const subtitle = normalizeString(cell.subtitle, "");
-  const level = cell.level ?? "h2";
-  const align = cell.align ?? "left";
-  const variant = cell.variant ?? "default";
-  const idAnchor = normalizeString(cell.idAnchor, "");
-  const reveal = cell.reveal ?? true;
+  const subtitle = normalizeString(cell.subtitle ?? "", "");
+  const level = cell.level;
+  const align = cell.align;
+  const variant = cell.variant;
+  const idAnchor = normalizeString(cell.idAnchor ?? "", "");
+  const reveal = cell.reveal;
   const showSeparator = cell.separator === true && Boolean(subtitle);
   const highlights = normalizeHighlights(cell.highlights);
 
@@ -148,9 +148,7 @@ function HeadingTag({ id, level, className, children }: HeadingTagProps) {
   }
 }
 
-function normalizeHighlights(
-  highlights: readonly string[] | undefined,
-): string[] {
+function normalizeHighlights(highlights: readonly string[] | null): string[] {
   if (!highlights?.length) return [];
 
   return highlights

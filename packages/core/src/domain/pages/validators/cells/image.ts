@@ -30,11 +30,22 @@ export function assertSingleImageCell(
 
   const { variant } = cell;
 
-  if (typeof variant !== "undefined" && !IMAGE_RATIOS.includes(variant)) {
+  if (!IMAGE_RATIOS.includes(variant)) {
     throw new DomainError({
       code: EC.IMAGE_VARIANT_INVALID,
       message: EC.IMAGE_VARIANT_INVALID,
       details: { path: [...path, "variant"], meta: { variant } },
+    });
+  }
+
+  if (typeof cell.reveal !== "boolean") {
+    throw new DomainError({
+      code: EC.IMAGE_REVEAL_INVALID,
+      message: EC.IMAGE_REVEAL_INVALID,
+      details: {
+        path: [...path, "reveal"],
+        meta: { reveal: cell.reveal },
+      },
     });
   }
 }

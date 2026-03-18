@@ -20,13 +20,24 @@ import type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
 import type { UpdateSeoSettingsInput } from "@compoz/core/domain/site/use-cases/seo/update-seo-settings.types";
 import { asAssetUrlOrNull } from "@compoz/core/domain/urls/href";
 import { log } from "@compoz/infra/lib/log";
-import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
+import { trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type {
   OpenGraphPatchDTO,
   TwitterPatchDTO,
   UpdateSeoSettingsIntentDTO,
 } from "@compoz/validation/site/settings/seo/seo-intents";
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function trimNullableString(value: string | null | undefined): string | null {
+  if (value === null || typeof value === "undefined") return null;
+
+  const trimmed = trimOrKeep(value);
+  return trimmed.length > 0 ? trimmed : null;
+}
 
 /* -------------------------------------------------------------------------- */
 /* Intent → Domain patch                                                      */
@@ -37,7 +48,7 @@ import type {
  *
  * Contrat :
  * - Seules les clés présentes dans l’intent sont posées.
- * - Les strings sont trimées ; les valeurs vides deviennent `undefined` (donc clé omise).
+ * - Les strings sont trimées ; les valeurs vides deviennent `null`.
  * - `openGraph` / `twitter` : patch superficiel, uniquement sur les champs présents.
  * - `defaultImageUrl` : ""/null => null (clear explicite), sinon normalisé via `asAssetUrlOrNull`.
  */
@@ -63,33 +74,27 @@ export function adaptUpdateSeoIntent(
   /* ------------------------------ Root fields ------------------------------ */
 
   if ("baseUrl" in dto) {
-    const v = trimClearableOrUndef(dto.baseUrl);
-    if (v !== undefined) patch.baseUrl = v;
+    patch.baseUrl = trimNullableString(dto.baseUrl);
   }
 
   if ("defaultTitle" in dto) {
-    const v = trimClearableOrUndef(dto.defaultTitle);
-    if (v !== undefined) patch.defaultTitle = v;
+    patch.defaultTitle = trimNullableString(dto.defaultTitle);
   }
 
   if ("defaultDescription" in dto) {
-    const v = trimClearableOrUndef(dto.defaultDescription);
-    if (v !== undefined) patch.defaultDescription = v;
+    patch.defaultDescription = trimNullableString(dto.defaultDescription);
   }
 
   if ("titleTemplate" in dto) {
-    const v = trimClearableOrUndef(dto.titleTemplate);
-    if (v !== undefined) patch.titleTemplate = v;
+    patch.titleTemplate = trimNullableString(dto.titleTemplate);
   }
 
   if ("canonicalUrl" in dto) {
-    const v = trimClearableOrUndef(dto.canonicalUrl);
-    if (v !== undefined) patch.canonicalUrl = v;
+    patch.canonicalUrl = trimNullableString(dto.canonicalUrl);
   }
 
   if ("robots" in dto) {
-    const v = trimClearableOrUndef(dto.robots);
-    if (v !== undefined) patch.robots = v;
+    patch.robots = trimNullableString(dto.robots);
   }
 
   if (
@@ -102,30 +107,28 @@ export function adaptUpdateSeoIntent(
   /* ------------------------------ OpenGraph ------------------------------ */
 
   if ("openGraph" in dto) {
-    const ogIn = dto.openGraph as OpenGraphPatchDTO | undefined;
+    const ogIn = dto.openGraph as OpenGraphPatchDTO | null | undefined;
 
-    if (ogIn && typeof ogIn === "object") {
-      const ogOut: NonNullable<SeoSettings["openGraph"]> = {};
+    if (ogIn === null) {
+      patch.openGraph = null;
+    } else if (ogIn && typeof ogIn === "object") {
+      const ogOut: Partial<NonNullable<SeoSettings["openGraph"]>> = {};
 
       if ("title" in ogIn) {
-        const v = trimClearableOrUndef(ogIn.title);
-        if (v !== undefined) ogOut.title = v;
+        ogOut.title = trimNullableString(ogIn.title);
       }
 
       if ("description" in ogIn) {
-        const v = trimClearableOrUndef(ogIn.description);
-        if (v !== undefined) ogOut.description = v;
+        ogOut.description = trimNullableString(ogIn.description);
       }
 
       if ("imageAlt" in ogIn) {
-        const v = trimClearableOrUndef(ogIn.imageAlt);
-        if (v !== undefined) ogOut.imageAlt = v;
+        ogOut.imageAlt = trimNullableString(ogIn.imageAlt) ?? "";
       }
 
       if ("defaultImageUrl" in ogIn) {
         const raw = ogIn.defaultImageUrl;
 
-        // Clear explicite (null ou "")
         if (raw === null) {
           ogOut.defaultImageUrl = null;
         } else if (typeof raw === "string") {
@@ -134,31 +137,32 @@ export function adaptUpdateSeoIntent(
         }
       }
 
-      if (Object.keys(ogOut).length > 0) patch.openGraph = ogOut;
+      if (Object.keys(ogOut).length > 0) {
+        patch.openGraph = ogOut as NonNullable<SeoSettings["openGraph"]>;
+      }
     }
   }
 
   /* -------------------------------- Twitter ------------------------------- */
 
   if ("twitter" in dto) {
-    const twIn = dto.twitter as TwitterPatchDTO | undefined;
+    const twIn = dto.twitter as TwitterPatchDTO | null | undefined;
 
-    if (twIn && typeof twIn === "object") {
+    if (twIn === null) {
+      patch.twitter = null;
+    } else if (twIn && typeof twIn === "object") {
       const twOut: Partial<NonNullable<SeoSettings["twitter"]>> = {};
 
       if ("card" in twIn && typeof twIn.card === "string") {
-        // Le domaine/defaults garantissent une valeur cohérente au read
         twOut.card = twIn.card as NonNullable<SeoSettings["twitter"]>["card"];
       }
 
       if ("site" in twIn) {
-        const v = trimClearableOrUndef(twIn.site);
-        if (v !== undefined) twOut.site = v;
+        twOut.site = trimNullableString(twIn.site);
       }
 
       if ("creator" in twIn) {
-        const v = trimClearableOrUndef(twIn.creator);
-        if (v !== undefined) twOut.creator = v;
+        twOut.creator = trimNullableString(twIn.creator);
       }
 
       if (Object.keys(twOut).length > 0) {

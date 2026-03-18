@@ -358,14 +358,10 @@ export function BuilderCellDrawer({
 
               {selectedCell.kind === "richText" ? (
                 <RichTextCellEditor
-                  value={selectedCell.content}
+                  control={control}
+                  idPrefix={`builder-cell-${selectedCell.id}`}
+                  selectedCellLocation={selectedCellLocation}
                   disabled={isSubmitting}
-                  onChange={(nextContent) => {
-                    setSelectedCell({
-                      ...selectedCell,
-                      content: nextContent,
-                    });
-                  }}
                 />
               ) : null}
 

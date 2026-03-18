@@ -21,20 +21,18 @@ import {
 /**
  * Patch sitemap côté API :
  * - Champs optionnels (patch partiel)
- * - `null` permet d’« unset » certains champs (ex: priority)
+ * - `null` permet d’unset certains champs
+ * - absence de clé => ne pas modifier
  */
 const PageSitemapIntentSchema = z
   .object({
     include: z.boolean().optional(),
     changefreq: SitemapChangeFreqSchema.nullable().optional(),
     priority: z
-      .union([
-        z
-          .number()
-          .min(0, ERROR_CODES.PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE)
-          .max(1, ERROR_CODES.PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE),
-        z.null(),
-      ])
+      .number()
+      .min(0, ERROR_CODES.PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE)
+      .max(1, ERROR_CODES.PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE)
+      .nullable()
       .optional(),
   })
   .strict();
@@ -46,19 +44,27 @@ const PageSitemapIntentSchema = z
 /** Intention de création d’une page. */
 export const CreatePageIntentSchema = z
   .object({
-    /** Titre de la page (requis côté API). */
+    /** Nom de la page (requis côté API). */
     name: PageNameSchema,
 
-    /** Titre SEO optionnel. */
-    seoTitle: PageSeoTitleSchema.optional(),
+    /** Titre SEO explicite ou null. */
+    seoTitle: PageSeoTitleSchema,
 
     parentId: PageIdSchema.nullable(),
 
-    /** Slug optionnel : normalisation + unicité gérées dans le domaine. */
+    /**
+     * Slug optionnel :
+     * - absence => génération / normalisation côté domaine
+     * - "/" autorisé pour la page d’accueil
+     */
     slug: z.union([SlugSchema, z.literal("/")]).optional(),
 
-    /** Bloc sitemap partiel autorisé (defaults appliqués côté domaine). */
-    sitemap: PageSitemapIntentSchema.optional(),
+    /**
+     * Sitemap :
+     * - null = pas de config sitemap explicite
+     * - objet = config fournie
+     */
+    sitemap: PageSitemapIntentSchema.nullable(),
 
     paginationEnabled: z.boolean(),
   })
@@ -70,25 +76,38 @@ export type CreatePageIntentDTO = z.infer<typeof CreatePageIntentSchema>;
 export const UpdatePageIntentSchema = z
   .object({
     /**
-     * Nouveau nom de la page. Optionnel :
-     * absence de clé ⇒ titre inchangé.
+     * Absence de clé => nom inchangé
      */
     name: PageNameSchema.optional(),
 
-    /** Nouveau titre SEO optionnel. */
+    /**
+     * Absence => inchangé
+     * null => vider explicitement
+     */
     seoTitle: PageSeoTitleSchema.optional(),
 
+    /**
+     * Absence => inchangé
+     * null => page racine
+     */
     parentId: PageIdSchema.nullable().optional(),
 
     /**
-     * Nouveau slug optionnel. Collisions, normalisation et réservations sont
-     * gérées dans le domaine (use-case `updatePage`).
+     * Absence => inchangé
+     * "" / "/" gardés pour le flow UI existant
      */
     slug: z.union([SlugSchema, z.literal(""), z.literal("/")]).optional(),
 
-    /** Bloc sitemap partiel (include/changefreq/priority). */
-    sitemap: PageSitemapIntentSchema.optional(),
+    /**
+     * Absence => inchangé
+     * null => supprimer la config sitemap
+     * objet => patch partiel
+     */
+    sitemap: PageSitemapIntentSchema.nullable().optional(),
 
+    /**
+     * Absence => inchangé
+     */
     paginationEnabled: z.boolean().optional(),
   })
   .strict();

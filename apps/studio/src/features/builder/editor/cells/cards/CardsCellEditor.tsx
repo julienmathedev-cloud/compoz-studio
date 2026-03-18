@@ -17,13 +17,16 @@
  */
 
 import { useTranslations } from "next-intl";
+import { useMemo } from "react";
 import type { Control } from "react-hook-form";
 import { useController, useFieldArray } from "react-hook-form";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
+import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
 import { CardListEditor } from "@compoz/studio/features/builder/editor/cells/cards/CardListEditor";
 import { createEmptyCardItem } from "@compoz/studio/features/pages/mappers/cells-form";
 import { Button } from "@compoz/ui/components/ui/button";
+import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
@@ -80,12 +83,11 @@ export function CardsCellEditor({
     control,
   });
 
-  /**
-   * `useFieldArray` est la source de vérité RHF pour la liste des cards.
-   *
-   * `keyName: "fieldId"` évite d’entrer en collision avec notre `id` métier
-   * déjà présent dans `CardItemFormValues`.
-   */
+  const revealCtrl = useController({
+    name: `${basePath}.reveal` as `${CardsFieldBasePath}.reveal`,
+    control,
+  });
+
   const { fields, append, remove, move } = useFieldArray<
     SectionBlockFormValues,
     CardsItemsPath,
@@ -107,6 +109,11 @@ export function CardsCellEditor({
     CARDS_COLUMNS.includes(columnsCtrl.field.value as CardsColumns)
       ? (columnsCtrl.field.value as CardsColumns)
       : 3;
+
+  const revealIds = useMemo(
+    () => createFieldIds(idPrefix, "reveal"),
+    [idPrefix],
+  );
 
   return (
     <div className={cn(STACK_MD)}>
@@ -167,6 +174,19 @@ export function CardsCellEditor({
             ))}
           </div>
         </div>
+
+        <SwitchField
+          ids={revealIds}
+          label={t("studio.cellEditorTabs.cardsCellEditor.revealLabel")}
+          help={t("studio.cellEditorTabs.cardsCellEditor.revealHelp")}
+          checked={
+            typeof revealCtrl.field.value === "boolean"
+              ? revealCtrl.field.value
+              : true
+          }
+          disabled={disabled}
+          onCheckedChange={revealCtrl.field.onChange}
+        />
       </div>
 
       <CardListEditor

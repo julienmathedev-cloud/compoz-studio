@@ -41,15 +41,16 @@ export const PageNameSchema = z
   .max(PAGE_NAME.MAX, ERROR_CODES.PAGE_TITLE_TOO_LONG);
 
 /**
- * Titre SEO optionnel :
+ * Titre SEO :
  * - trim automatique
- * - vide autorisé (`""`) pour permettre un fallback runtime
+ * - null autorisé pour représenter l’absence de valeur
  * - borne max alignée sur `PAGE_NAME`
  */
 export const PageSeoTitleSchema = z
   .string()
   .trim()
-  .max(PAGE_NAME.MAX, ERROR_CODES.PAGE_TITLE_TOO_LONG);
+  .max(PAGE_NAME.MAX, ERROR_CODES.PAGE_TITLE_TOO_LONG)
+  .nullable();
 
 /**
  * Id technique d'une Page.
@@ -94,17 +95,17 @@ export const SitemapChangeFreqSchema = z.enum([
   "never",
 ] as const);
 
-/** Bloc sitemap (forme frontière ; defaults appliqués côté domaine). */
+/** Bloc sitemap (forme frontière alignée sur le domaine). */
 export const PageSitemapSchema = z
   .object({
     include: z.boolean(),
-    changefreq: SitemapChangeFreqSchema.optional(),
-    /** Priorité ∈ [0,1] ; validations métier complémentaires côté domaine. */
+    changefreq: SitemapChangeFreqSchema.nullable(),
+    /** Priorité ∈ [0,1]. */
     priority: z
       .number()
       .min(0, ERROR_CODES.PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE)
       .max(1, ERROR_CODES.PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE)
-      .optional(),
+      .nullable(),
   })
   .strict();
 
@@ -126,8 +127,8 @@ export const PageSchema = z
     /** Nom affiché de la page côté studio/admin. */
     name: PageNameSchema,
 
-    /** Titre SEO optionnel. */
-    seoTitle: PageSeoTitleSchema.optional(),
+    /** Titre SEO. */
+    seoTitle: PageSeoTitleSchema,
 
     /** Blocs de contenu de la page. */
     blocks: z.array(BlockSchema),
@@ -140,8 +141,8 @@ export const PageSchema = z
       })
       .strict(),
 
-    /** Configuration sitemap optionnelle. */
-    sitemap: PageSitemapSchema.optional(),
+    /** Configuration sitemap. */
+    sitemap: PageSitemapSchema.nullable(),
 
     paginationEnabled: z.boolean(),
   })
@@ -154,7 +155,7 @@ export const PageSchema = z
 export const PageRenderSchema = z
   .object({
     name: PageNameSchema,
-    seoTitle: PageSeoTitleSchema.optional(),
+    seoTitle: PageSeoTitleSchema,
     blocks: z.array(BlockSchema),
     paginationEnabled: z.boolean(),
   })

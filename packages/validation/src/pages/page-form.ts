@@ -50,24 +50,20 @@ const PageSlugFormSchema = z
   });
 
 /**
- * Bloc sitemap UI (optionnel).
+ * Bloc sitemap UI.
  * - `include` pilote l’activation.
- * - `changefreq` reste optionnel : defaults côté domaine.
- * - `priority` est optionnelle et peut être `null` pour “reset” côté UI.
+ * - `changefreq` peut être `null`.
+ * - `priority` peut être `null` pour “reset” côté UI.
  */
 const PageSitemapFormSchema = z
   .object({
     include: z.boolean(),
-    changefreq: SitemapChangeFreqSchema.nullable().optional(),
+    changefreq: SitemapChangeFreqSchema.nullable(),
     priority: z
-      .union([
-        z
-          .number()
-          .min(0, ERROR_CODES.PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE)
-          .max(1, ERROR_CODES.PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE),
-        z.null(),
-      ])
-      .optional(),
+      .number()
+      .min(0, ERROR_CODES.PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE)
+      .max(1, ERROR_CODES.PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE)
+      .nullable(),
   })
   .strict();
 
@@ -78,10 +74,10 @@ const PageSitemapFormSchema = z
 export const PageFormSchema = z
   .object({
     name: PageNameSchema,
-    seoTitle: PageSeoTitleSchema.optional(),
+    seoTitle: PageSeoTitleSchema,
     parentId: PageIdSchema.nullable(),
     slug: PageSlugFormSchema,
-    sitemap: PageSitemapFormSchema.optional(),
+    sitemap: PageSitemapFormSchema.nullable(),
     paginationEnabled: z.boolean(),
   })
   .strict();

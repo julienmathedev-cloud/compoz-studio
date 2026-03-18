@@ -87,9 +87,7 @@ export function PageEditSection({
    */
   const refName = useMemo(() => {
     if (!editId || !index) return null;
-    return (
-      index.pages.find((pageItem) => pageItem.id === editId)?.name ?? null
-    );
+    return index.pages.find((pageItem) => pageItem.id === editId)?.name ?? null;
   }, [editId, index]);
 
   const initialValues = useMemo<PageFormValues>(() => {
@@ -147,8 +145,10 @@ export function PageEditSection({
     async (values: PageFormValues) => {
       const warningKeysNow = computePageWarnings({
         name: values.name ?? "",
-        slug: values.slug ?? "",
+        seoTitle: values.seoTitle ?? null,
         parentId: values.parentId ?? null,
+        slug: values.slug ?? "",
+        sitemap: values.sitemap ?? null,
         paginationEnabled: values.paginationEnabled ?? false,
       });
 

@@ -9,4 +9,5 @@ export type RichTextCell = {
   id: string;
   kind: "richText";
   content: string;
+  reveal: boolean;
 };

@@ -11,56 +11,58 @@ import type { TwitterCardType } from "@compoz/core/constants/seo/seo";
 import type { AssetUrlOrNull } from "@compoz/core/domain/urls/href";
 
 /** Paramètres OpenGraph pour l’aperçu social. */
-interface OpenGraphSettings {
-  /** Titre OG (absent = undefined, jamais ""). */
-  title?: string;
+export interface OpenGraphSettings {
+  /** Titre OG (null si absent). */
+  title: string | null;
 
-  /** Description OG, optionnelle. */
-  description?: string;
+  /** Description OG (null si absente). */
+  description: string | null;
 
-  /** Image OG (null = aucune image, sinon AssetUrl valide). */
-  defaultImageUrl?: AssetUrlOrNull;
+  /** Image OG (null = aucune image). */
+  defaultImageUrl: AssetUrlOrNull;
 
   /** Texte alternatif de l’image OG. */
-  imageAlt?: string;
+  imageAlt: string;
 }
 
 /** Paramètres Twitter Card. */
-interface TwitterSettings {
-  /** Type de carte (toujours défini via les defaults SEO). */
+export interface TwitterSettings {
+  /** Type de carte. */
   card: TwitterCardType;
 
-  /** Handles Twitter optionnels (jamais ""). */
-  site?: string;
-  creator?: string;
+  /** Handle du site (null si absent). */
+  site: string | null;
+
+  /** Handle du créateur (null si absent). */
+  creator: string | null;
 }
 
 /** Réglages SEO globaux. */
 export interface SeoSettings {
-  /** Domaine de base du site (validé par les règles en prod). */
-  baseUrl?: string;
+  /** Domaine de base du site (null si absent). */
+  baseUrl: string | null;
 
-  /** Titre par défaut (obligatoire en publication). */
-  defaultTitle?: string;
+  /** Titre par défaut. */
+  defaultTitle: string | null;
 
-  /** Template de titre (peut contenir le placeholder %s). */
-  titleTemplate?: string;
+  /** Template de titre. */
+  titleTemplate: string | null;
 
   /** Description par défaut. */
-  defaultDescription?: string;
+  defaultDescription: string | null;
 
   /** URL canonique globale. */
-  canonicalUrl?: string;
+  canonicalUrl: string | null;
 
-  /** Directive robots (ex. "index,follow"). */
-  robots?: string;
+  /** Directive robots. */
+  robots: string | null;
 
-  /** Bloc OpenGraph facultatif. */
-  openGraph?: OpenGraphSettings;
+  /** Bloc OpenGraph. */
+  openGraph: OpenGraphSettings | null;
 
-  /** Bloc Twitter (card toujours définie via les defaults). */
-  twitter?: TwitterSettings;
+  /** Bloc Twitter. */
+  twitter: TwitterSettings | null;
 
   /** Active les données structurées. */
-  structuredDataEnabled?: boolean;
+  structuredDataEnabled: boolean;
 }

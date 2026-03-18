@@ -19,10 +19,7 @@ export function assertButtonsCell(
   cell: Extract<Cell, { kind: "buttons" }>,
   path: Path,
 ) {
-  if (
-    typeof cell.align !== "undefined" &&
-    !BUTTON_ALIGNS.includes(cell.align)
-  ) {
+  if (!BUTTON_ALIGNS.includes(cell.align)) {
     throw new DomainError({
       code: EC.CELL_BUTTONS_ALIGN_INVALID,
       message: EC.CELL_BUTTONS_ALIGN_INVALID,
@@ -30,7 +27,7 @@ export function assertButtonsCell(
     });
   }
 
-  if (typeof cell.gap !== "undefined" && !BUTTON_GAPS.includes(cell.gap)) {
+  if (!BUTTON_GAPS.includes(cell.gap)) {
     throw new DomainError({
       code: EC.CELL_BUTTONS_GAP_INVALID,
       message: EC.CELL_BUTTONS_GAP_INVALID,

@@ -77,6 +77,7 @@ function toDomainPage(p: PageShape): Page {
     parentId: p.parentId,
     slug: p.slug,
     name: p.name,
+    seoTitle: p.seoTitle,
     blocks,
     meta,
     sitemap: p.sitemap,

@@ -9,8 +9,8 @@ import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
 import {
-  CellItemIdSchema,
   CellIdSchema,
+  CellItemIdSchema,
 } from "@compoz/validation/pages/blocks/cells/details/common";
 
 export const CardsColumnsSchema = z.union(
@@ -37,7 +37,7 @@ export const CardItemSchema = z
         message: ERROR_CODES.CELL_CARD_ITEM_ICON_INVALID,
       })
       .trim()
-      .optional(),
+      .nullable(),
   })
   .strict();
 
@@ -46,7 +46,10 @@ export const CardsCellSchema = z
     id: CellIdSchema,
     kind: z.literal("cards"),
     columns: CardsColumnsSchema,
-    align: CardsAlignSchema.optional(),
+    align: CardsAlignSchema,
+    reveal: z.boolean({
+      message: ERROR_CODES.CELL_CARDS_REVEAL_INVALID,
+    }),
     items: z
       .array(CardItemSchema, {
         message: ERROR_CODES.CELL_CARDS_ITEMS_INVALID,

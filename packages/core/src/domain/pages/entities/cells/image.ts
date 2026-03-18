@@ -9,8 +9,8 @@ export type ImageEditor = {
   id: string;
   src: string;
   alt: string;
-  caption?: string;
-  href?: string | null;
+  caption: string | null;
+  href: string | null;
   width: number;
   height: number;
 };
@@ -21,5 +21,6 @@ export type ImageCell = {
   id: string;
   kind: "image";
   image: ImageEditor;
-  variant?: ImageRatio;
+  variant: ImageRatio;
+  reveal: boolean;
 };

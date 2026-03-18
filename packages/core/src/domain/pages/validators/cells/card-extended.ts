@@ -32,14 +32,19 @@ export function assertCardsExtendedCell(
     });
   }
 
-  if (
-    typeof cell.align !== "undefined" &&
-    !CARDS_EXTENDED_ALIGNS.includes(cell.align)
-  ) {
+  if (!CARDS_EXTENDED_ALIGNS.includes(cell.align)) {
     throw new DomainError({
       code: EC.CELL_CARDS_EXTENDED_ALIGN_INVALID,
       message: EC.CELL_CARDS_EXTENDED_ALIGN_INVALID,
       details: { path: [...path, "align"], meta: { align: cell.align } },
+    });
+  }
+
+  if (typeof cell.reveal !== "boolean") {
+    throw new DomainError({
+      code: EC.CELL_CARDS_EXTENDED_REVEAL_INVALID,
+      message: EC.CELL_CARDS_EXTENDED_REVEAL_INVALID,
+      details: { path: [...path, "reveal"], meta: { reveal: cell.reveal } },
     });
   }
 
@@ -97,7 +102,7 @@ export function assertCardsExtendedItem(item: CardsExtendedItem, path: Path) {
     });
   }
 
-  if (typeof item.icon !== "undefined" && typeof item.icon !== "string") {
+  if (item.icon !== null && typeof item.icon !== "string") {
     throw new DomainError({
       code: EC.CELL_CARDS_EXTENDED_ITEM_ICON_INVALID,
       message: EC.CELL_CARDS_EXTENDED_ITEM_ICON_INVALID,
@@ -105,7 +110,7 @@ export function assertCardsExtendedItem(item: CardsExtendedItem, path: Path) {
     });
   }
 
-  if (typeof item.footer !== "undefined" && typeof item.footer !== "string") {
+  if (item.footer !== null && typeof item.footer !== "string") {
     throw new DomainError({
       code: EC.CELL_CARDS_EXTENDED_ITEM_FOOTER_INVALID,
       message: EC.CELL_CARDS_EXTENDED_ITEM_FOOTER_INVALID,
@@ -113,25 +118,23 @@ export function assertCardsExtendedItem(item: CardsExtendedItem, path: Path) {
     });
   }
 
-  if (typeof item.bullets !== "undefined") {
-    if (!Array.isArray(item.bullets)) {
+  if (!Array.isArray(item.bullets)) {
+    throw new DomainError({
+      code: EC.CELL_CARDS_EXTENDED_ITEM_BULLETS_INVALID,
+      message: EC.CELL_CARDS_EXTENDED_ITEM_BULLETS_INVALID,
+      details: { path: [...path, "bullets"] },
+    });
+  }
+
+  for (let i = 0; i < item.bullets.length; i++) {
+    const bullet = item.bullets[i];
+
+    if (typeof bullet !== "string" || !bullet.trim()) {
       throw new DomainError({
-        code: EC.CELL_CARDS_EXTENDED_ITEM_BULLETS_INVALID,
-        message: EC.CELL_CARDS_EXTENDED_ITEM_BULLETS_INVALID,
-        details: { path: [...path, "bullets"] },
+        code: EC.CELL_CARDS_EXTENDED_ITEM_BULLET_INVALID,
+        message: EC.CELL_CARDS_EXTENDED_ITEM_BULLET_INVALID,
+        details: { path: [...path, "bullets", i] },
       });
-    }
-
-    for (let i = 0; i < item.bullets.length; i++) {
-      const bullet = item.bullets[i];
-
-      if (typeof bullet !== "string" || !bullet.trim()) {
-        throw new DomainError({
-          code: EC.CELL_CARDS_EXTENDED_ITEM_BULLET_INVALID,
-          message: EC.CELL_CARDS_EXTENDED_ITEM_BULLET_INVALID,
-          details: { path: [...path, "bullets", i] },
-        });
-      }
     }
   }
 }

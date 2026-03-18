@@ -20,14 +20,16 @@ export function toTimelineCellShapeFromDTO(
       id: normalizeString(item.id, ""),
       period: normalizeString(item.period, ""),
       title: normalizeString(item.title, ""),
-      subtitle: normalizeString(item.subtitle ?? "", ""),
-      description: normalizeString(item.description ?? "", ""),
-      badge: normalizeString(item.badge ?? "", ""),
-      keywords: item.keywords
-        ? item.keywords
-            .map((keyword) => normalizeString(keyword, ""))
-            .filter(Boolean)
-        : [],
+      subtitle:
+        item.subtitle !== null ? normalizeString(item.subtitle, "") : null,
+      description:
+        item.description !== null
+          ? normalizeString(item.description, "")
+          : null,
+      badge: item.badge !== null ? normalizeString(item.badge, "") : null,
+      keywords: [...item.keywords]
+        .map((keyword) => normalizeString(keyword, ""))
+        .filter(Boolean),
     })),
   };
 }

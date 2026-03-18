@@ -25,7 +25,6 @@ import {
 } from "@compoz/ui/lib/urls/formats";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // ✅ compat: selon ta version Next, headers() peut être sync ou async
   const h = await headers();
   const hostRaw = h.get("x-forwarded-host") ?? h.get("host") ?? "";
 
@@ -49,10 +48,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pages = index?.pages ?? [];
   const updatedAt = index?.updatedAt;
 
+  const seoBaseUrl = settings?.seo?.baseUrl ?? "";
+  const envBaseUrl = process.env["NEXT_PUBLIC_SITE_URL"] ?? "";
+
   const baseUrl =
-    stripTrailingSlashes(settings?.seo?.baseUrl) ||
-    stripTrailingSlashes(process.env["NEXT_PUBLIC_SITE_URL"]) ||
-    "";
+    stripTrailingSlashes(seoBaseUrl) || stripTrailingSlashes(envBaseUrl) || "";
 
   const lastModified =
     updatedAt && !Number.isNaN(Date.parse(updatedAt))

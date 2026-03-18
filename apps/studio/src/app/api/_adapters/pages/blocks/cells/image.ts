@@ -17,7 +17,7 @@ export function adaptImage(dto: ImageEditorIntentDTO): ImageEditor {
   return {
     id: trimOrKeep(dto.id),
     src: trimOrKeep(dto.src),
-    alt: typeof dto.alt === "string" ? trimOrKeep(dto.alt) : dto.alt,
+    alt: trimOrKeep(dto.alt),
     caption:
       typeof dto.caption === "string" ? trimOrKeep(dto.caption) : dto.caption,
     href: typeof dto.href === "string" ? trimOrKeep(dto.href) : dto.href,
@@ -31,6 +31,7 @@ export function adaptImageCell(dto: ImageCellIntentDTO): ImageCell {
     id: trimOrKeep(dto.id),
     kind: "image",
     variant: dto.variant,
+    reveal: dto.reveal,
     image: adaptImage(dto.image),
   };
 }

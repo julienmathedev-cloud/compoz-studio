@@ -28,6 +28,9 @@ export const GalleryCellSchema = z
     kind: z.literal("gallery"),
     linksEnabled: z.boolean(),
     maxColumns: GalleryMaxColumnsSchema,
+    reveal: z.boolean({
+      message: ERROR_CODES.GALLERY_REVEAL_INVALID,
+    }),
     items: z.array(ImageEditorSchema).min(1, ERROR_CODES.CELL_IMAGES_MIN_1),
   })
   .strict();

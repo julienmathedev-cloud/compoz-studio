@@ -30,6 +30,7 @@ export function adaptCarouselCell(dto: CarouselCellIntentDTO): CarouselCell {
             kind: "cards",
             columns: 2,
             align: "left",
+            reveal: true,
             items: dto.items as CardItemIntentDTO[],
           }).items
         : dto.itemKind === "cardsExtended"
@@ -38,12 +39,14 @@ export function adaptCarouselCell(dto: CarouselCellIntentDTO): CarouselCell {
               kind: "cardsExtended",
               columns: 2,
               align: "left",
+              reveal: true,
               items: dto.items as CardsExtendedItemIntentDTO[],
             }).items
           : adaptStructuredCardCell({
               id: dto.id,
               kind: "structuredCard",
               columns: 1,
+              reveal: true,
               items: dto.items as StructuredCardItemIntentDTO[],
             }).items;
 

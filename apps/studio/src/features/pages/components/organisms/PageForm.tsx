@@ -526,8 +526,9 @@ export function PageForm({
                       setValue(
                         "sitemap",
                         {
-                          ...(current ?? {}),
                           include: checked,
+                          priority: current?.priority ?? null,
+                          changefreq: current?.changefreq ?? null,
                         },
                         {
                           shouldDirty: true,

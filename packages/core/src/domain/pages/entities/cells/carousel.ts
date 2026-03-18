@@ -17,7 +17,7 @@
 import type { CardItem } from "@compoz/core/domain/pages/entities/cells/cards";
 import type { CardsExtendedItem } from "@compoz/core/domain/pages/entities/cells/cards-extended";
 import type { ImageEditor } from "@compoz/core/domain/pages/entities/cells/image";
-import type { StructuredCardItem } from "@compoz/core/domain/pages/entities/cells/structured-card.ts";
+import type { StructuredCardItem } from "@compoz/core/domain/pages/entities/cells/structured-card";
 
 /**
  * Variantes visuelles supportées par la cellule carousel.

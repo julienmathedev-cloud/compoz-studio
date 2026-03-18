@@ -12,7 +12,7 @@ import type {
   StructuredCardItem,
   StructuredCardSection,
 } from "@compoz/core/domain/pages/entities/cell";
-import { assertSingleImageCell } from "@compoz/core/domain/pages/validators/cells/image";
+import { assertImageEditor } from "@compoz/core/domain/pages/validators/cells/shared-image";
 
 type Path = ReadonlyArray<string | number>;
 
@@ -78,7 +78,7 @@ export function assertStructuredCardItem(item: StructuredCardItem, path: Path) {
     });
   }
 
-  if (typeof item.meta !== "undefined" && typeof item.meta !== "string") {
+  if (item.meta !== null && typeof item.meta !== "string") {
     throw new DomainError({
       code: EC.CELL_STRUCTURED_CARD_ITEM_META_INVALID,
       message: EC.CELL_STRUCTURED_CARD_ITEM_META_INVALID,
@@ -106,15 +106,8 @@ export function assertStructuredCardItem(item: StructuredCardItem, path: Path) {
     assertStructuredCardSection(section, [...path, "sections", index]);
   });
 
-  if (typeof item.image !== "undefined") {
-    assertSingleImageCell(
-      {
-        id: item.id,
-        kind: "image",
-        image: item.image,
-      },
-      [...path, "image"],
-    );
+  if (item.image !== null) {
+    assertImageEditor(item.image, [...path, "image"]);
   }
 }
 
@@ -127,6 +120,14 @@ export function assertStructuredCardCell(
       code: EC.CELL_STRUCTURED_CARD_COLUMNS_INVALID,
       message: EC.CELL_STRUCTURED_CARD_COLUMNS_INVALID,
       details: { path: [...path, "columns"] },
+    });
+  }
+
+  if (typeof cell.reveal !== "boolean") {
+    throw new DomainError({
+      code: EC.CELL_STRUCTURED_CARD_REVEAL_INVALID,
+      message: EC.CELL_STRUCTURED_CARD_REVEAL_INVALID,
+      details: { path: [...path, "reveal"], meta: { reveal: cell.reveal } },
     });
   }
 

@@ -29,14 +29,27 @@ export const TimelineItemSchema = z
       .string()
       .trim()
       .min(1, ERROR_CODES.CELL_TIMELINE_ITEM_TITLE_REQUIRED),
-    subtitle: z.string().trim().optional(),
-    description: z.string().trim().optional(),
-    badge: z.string().trim().optional(),
-    keywords: z
-      .array(TimelineKeywordSchema, {
-        message: ERROR_CODES.CELL_TIMELINE_ITEM_KEYWORDS_INVALID,
+    subtitle: z
+      .string({
+        message: ERROR_CODES.CELL_TIMELINE_ITEM_SUBTITLE_INVALID,
       })
-      .optional(),
+      .trim()
+      .nullable(),
+    description: z
+      .string({
+        message: ERROR_CODES.CELL_TIMELINE_ITEM_DESCRIPTION_INVALID,
+      })
+      .trim()
+      .nullable(),
+    badge: z
+      .string({
+        message: ERROR_CODES.CELL_TIMELINE_ITEM_BADGE_INVALID,
+      })
+      .trim()
+      .nullable(),
+    keywords: z.array(TimelineKeywordSchema, {
+      message: ERROR_CODES.CELL_TIMELINE_ITEM_KEYWORDS_INVALID,
+    }),
   })
   .strict();
 

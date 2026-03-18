@@ -127,6 +127,11 @@ export function GalleryCellEditor({
     control,
   });
 
+  const revealCtrl = useController({
+    name: `${basePath}.reveal` as `${GalleryFieldBasePath}.reveal`,
+    control,
+  });
+
   const { fields, append, remove, move, replace } = useFieldArray<
     SectionBlockFormValues,
     GalleryItemsPath,
@@ -148,6 +153,11 @@ export function GalleryCellEditor({
 
   const maxColumnsIds = useMemo(
     () => createFieldIds(idPrefix, "maxColumns"),
+    [idPrefix],
+  );
+
+  const revealIds = useMemo(
+    () => createFieldIds(idPrefix, "reveal"),
     [idPrefix],
   );
 
@@ -186,6 +196,19 @@ export function GalleryCellEditor({
               replace(normalized);
             }
           }}
+        />
+
+        <SwitchField
+          ids={revealIds}
+          label={t("studio.galleryCellEditor.reveal.label")}
+          help={t("studio.galleryCellEditor.reveal.help")}
+          checked={
+            typeof revealCtrl.field.value === "boolean"
+              ? revealCtrl.field.value
+              : true
+          }
+          disabled={disabled}
+          onCheckedChange={revealCtrl.field.onChange}
         />
       </FormGrid>
 

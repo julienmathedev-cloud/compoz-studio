@@ -72,10 +72,7 @@ function assertTimelineItem(item: TimelineItem, path: Path) {
     });
   }
 
-  if (
-    typeof item.subtitle !== "undefined" &&
-    typeof item.subtitle !== "string"
-  ) {
+  if (item.subtitle !== null && typeof item.subtitle !== "string") {
     throw new DomainError({
       code: EC.CELL_TIMELINE_ITEM_SUBTITLE_INVALID,
       message: EC.CELL_TIMELINE_ITEM_SUBTITLE_INVALID,
@@ -83,10 +80,7 @@ function assertTimelineItem(item: TimelineItem, path: Path) {
     });
   }
 
-  if (
-    typeof item.description !== "undefined" &&
-    typeof item.description !== "string"
-  ) {
+  if (item.description !== null && typeof item.description !== "string") {
     throw new DomainError({
       code: EC.CELL_TIMELINE_ITEM_DESCRIPTION_INVALID,
       message: EC.CELL_TIMELINE_ITEM_DESCRIPTION_INVALID,
@@ -94,7 +88,7 @@ function assertTimelineItem(item: TimelineItem, path: Path) {
     });
   }
 
-  if (typeof item.badge !== "undefined" && typeof item.badge !== "string") {
+  if (item.badge !== null && typeof item.badge !== "string") {
     throw new DomainError({
       code: EC.CELL_TIMELINE_ITEM_BADGE_INVALID,
       message: EC.CELL_TIMELINE_ITEM_BADGE_INVALID,
@@ -102,25 +96,23 @@ function assertTimelineItem(item: TimelineItem, path: Path) {
     });
   }
 
-  if (typeof item.keywords !== "undefined") {
-    if (!Array.isArray(item.keywords)) {
+  if (!Array.isArray(item.keywords)) {
+    throw new DomainError({
+      code: EC.CELL_TIMELINE_ITEM_KEYWORDS_INVALID,
+      message: EC.CELL_TIMELINE_ITEM_KEYWORDS_INVALID,
+      details: { path: [...path, "keywords"] },
+    });
+  }
+
+  for (let i = 0; i < item.keywords.length; i++) {
+    const keyword = item.keywords[i];
+
+    if (typeof keyword !== "string" || !keyword.trim()) {
       throw new DomainError({
-        code: EC.CELL_TIMELINE_ITEM_KEYWORDS_INVALID,
-        message: EC.CELL_TIMELINE_ITEM_KEYWORDS_INVALID,
-        details: { path: [...path, "keywords"] },
+        code: EC.CELL_TIMELINE_ITEM_KEYWORD_INVALID,
+        message: EC.CELL_TIMELINE_ITEM_KEYWORD_INVALID,
+        details: { path: [...path, "keywords", i] },
       });
-    }
-
-    for (let i = 0; i < item.keywords.length; i++) {
-      const keyword = item.keywords[i];
-
-      if (typeof keyword !== "string" || !keyword.trim()) {
-        throw new DomainError({
-          code: EC.CELL_TIMELINE_ITEM_KEYWORD_INVALID,
-          message: EC.CELL_TIMELINE_ITEM_KEYWORD_INVALID,
-          details: { path: [...path, "keywords", i] },
-        });
-      }
     }
   }
 }

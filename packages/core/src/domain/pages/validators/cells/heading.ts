@@ -39,10 +39,7 @@ export function assertHeadingCell(
     });
   }
 
-  if (
-    typeof cell.subtitle !== "undefined" &&
-    typeof cell.subtitle !== "string"
-  ) {
+  if (cell.subtitle !== null && typeof cell.subtitle !== "string") {
     throw new DomainError({
       code: EC.CELL_HEADING_SUBTITLE_INVALID,
       message: EC.CELL_HEADING_SUBTITLE_INVALID,
@@ -50,10 +47,7 @@ export function assertHeadingCell(
     });
   }
 
-  if (
-    typeof cell.align !== "undefined" &&
-    !HEADING_ALIGNS.includes(cell.align)
-  ) {
+  if (!HEADING_ALIGNS.includes(cell.align)) {
     throw new DomainError({
       code: EC.CELL_HEADING_ALIGN_INVALID,
       message: EC.CELL_HEADING_ALIGN_INVALID,
@@ -61,10 +55,7 @@ export function assertHeadingCell(
     });
   }
 
-  if (
-    typeof cell.variant !== "undefined" &&
-    !HEADING_VARIANTS.includes(cell.variant)
-  ) {
+  if (!HEADING_VARIANTS.includes(cell.variant)) {
     throw new DomainError({
       code: EC.CELL_HEADING_VARIANT_INVALID,
       message: EC.CELL_HEADING_VARIANT_INVALID,
@@ -72,10 +63,7 @@ export function assertHeadingCell(
     });
   }
 
-  if (
-    typeof cell.separator !== "undefined" &&
-    typeof cell.separator !== "boolean"
-  ) {
+  if (typeof cell.separator !== "boolean") {
     throw new DomainError({
       code: EC.CELL_HEADING_SEPARATOR_INVALID,
       message: EC.CELL_HEADING_SEPARATOR_INVALID,
@@ -86,7 +74,7 @@ export function assertHeadingCell(
     });
   }
 
-  if (typeof cell.idAnchor !== "undefined") {
+  if (cell.idAnchor !== null) {
     if (typeof cell.idAnchor !== "string") {
       throw new DomainError({
         code: EC.CELL_HEADING_ID_ANCHOR_INVALID,
@@ -115,7 +103,7 @@ export function assertHeadingCell(
     }
   }
 
-  if (typeof cell.reveal !== "undefined" && typeof cell.reveal !== "boolean") {
+  if (typeof cell.reveal !== "boolean") {
     throw new DomainError({
       code: EC.CELL_HEADING_REVEAL_INVALID,
       message: EC.CELL_HEADING_REVEAL_INVALID,
@@ -126,25 +114,23 @@ export function assertHeadingCell(
     });
   }
 
-  if (typeof cell.highlights !== "undefined") {
-    if (!Array.isArray(cell.highlights)) {
+  if (!Array.isArray(cell.highlights)) {
+    throw new DomainError({
+      code: EC.CELL_HEADING_HIGHLIGHTS_INVALID,
+      message: EC.CELL_HEADING_HIGHLIGHTS_INVALID,
+      details: { path: [...path, "highlights"] },
+    });
+  }
+
+  for (let i = 0; i < cell.highlights.length; i++) {
+    const highlight = cell.highlights[i];
+
+    if (typeof highlight !== "string" || !highlight.trim()) {
       throw new DomainError({
-        code: EC.CELL_HEADING_HIGHLIGHTS_INVALID,
-        message: EC.CELL_HEADING_HIGHLIGHTS_INVALID,
-        details: { path: [...path, "highlights"] },
+        code: EC.CELL_HEADING_HIGHLIGHT_INVALID,
+        message: EC.CELL_HEADING_HIGHLIGHT_INVALID,
+        details: { path: [...path, "highlights", i] },
       });
-    }
-
-    for (let i = 0; i < cell.highlights.length; i++) {
-      const highlight = cell.highlights[i];
-
-      if (typeof highlight !== "string" || !highlight.trim()) {
-        throw new DomainError({
-          code: EC.CELL_HEADING_HIGHLIGHT_INVALID,
-          message: EC.CELL_HEADING_HIGHLIGHT_INVALID,
-          details: { path: [...path, "highlights", i] },
-        });
-      }
     }
   }
 }

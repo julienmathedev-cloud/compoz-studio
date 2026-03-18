@@ -21,7 +21,7 @@ function adaptCardItem(dto: CardItemIntentDTO): CardItem {
     id: trimOrKeep(dto.id),
     title: trimOrKeep(dto.title),
     description: trimOrKeep(dto.description),
-    icon: dto.icon ? trimOrKeep(dto.icon) : undefined,
+    icon: dto.icon ? trimOrKeep(dto.icon) : null,
   };
 }
 
@@ -31,6 +31,7 @@ export function adaptCardsCell(dto: CardsCellIntentDTO): CardsCell {
     kind: "cards",
     columns: dto.columns,
     align: dto.align,
+    reveal: dto.reveal,
     items: dto.items.map(adaptCardItem),
   };
 }

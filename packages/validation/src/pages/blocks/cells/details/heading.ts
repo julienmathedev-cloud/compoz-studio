@@ -23,12 +23,12 @@ export const HeadingVariantSchema = z.enum(["default", "hero"], {
 });
 
 /**
- * ID d’ancre optionnel pour un heading.
+ * ID d’ancre pour un heading.
  *
  * @remarks
- * - `""` est autorisé côté UI pour permettre une suppression simple dans le form.
- * - Si la valeur est non vide, elle doit respecter le format attendu.
- * - Le renderer décidera d’ajouter ou non l’attribut `id` selon que la chaîne est vide.
+ * - null = pas d’ancre
+ * - "" est autorisé côté UI pour permettre une suppression simple dans le form
+ * - si la valeur est non vide, elle doit respecter le format attendu
  */
 export const HeadingAnchorIdSchema = z
   .string()
@@ -36,28 +36,34 @@ export const HeadingAnchorIdSchema = z
   .refine(
     (value) => value === "" || /^[A-Za-z0-9_-]+$/.test(value),
     ERROR_CODES.CELL_HEADING_ID_ANCHOR_INVALID,
-  );
+  )
+  .nullable();
 
 export const HeadingCellSchema = z
   .object({
     id: CellIdSchema,
     kind: z.literal("heading"),
+
     level: HeadingLevelSchema,
+
     title: z.string().trim().min(1, ERROR_CODES.CELL_HEADING_TITLE_REQUIRED),
-    subtitle: z.string().trim().optional(),
-    align: HeadingAlignSchema.optional(),
-    variant: HeadingVariantSchema.optional(),
-    separator: z
-      .boolean({
-        message: ERROR_CODES.CELL_HEADING_SEPARATOR_INVALID,
-      })
-      .optional(),
-    idAnchor: HeadingAnchorIdSchema.optional(),
-    reveal: z
-      .boolean({
-        message: ERROR_CODES.CELL_HEADING_REVEAL_INVALID,
-      })
-      .optional(),
+
+    subtitle: z.string().trim().nullable(),
+
+    align: HeadingAlignSchema,
+
+    variant: HeadingVariantSchema,
+
+    separator: z.boolean({
+      message: ERROR_CODES.CELL_HEADING_SEPARATOR_INVALID,
+    }),
+
+    idAnchor: HeadingAnchorIdSchema,
+
+    reveal: z.boolean({
+      message: ERROR_CODES.CELL_HEADING_REVEAL_INVALID,
+    }),
+
     highlights: z
       .array(
         z.string().trim().min(1, ERROR_CODES.CELL_HEADING_HIGHLIGHT_INVALID),
@@ -65,6 +71,6 @@ export const HeadingCellSchema = z
           message: ERROR_CODES.CELL_HEADING_HIGHLIGHTS_INVALID,
         },
       )
-      .optional(),
+      .nullable(),
   })
   .strict();

@@ -50,7 +50,7 @@ export function toPageShapeFromDTO(
   if (!page) {
     return {
       name: "",
-      seoTitle: "",
+      seoTitle: null,
       parentId: null,
       slug: fallbackSlug,
       sitemap: { ...DEFAULT_SITEMAP },
@@ -61,15 +61,17 @@ export function toPageShapeFromDTO(
   const slug = normalizePageSlug(page.slug ?? fallbackSlug);
 
   return {
-    name: page.name ?? "",
-    seoTitle: page.seoTitle ?? "",
-    parentId: page.parentId ?? null,
+    name: page.name,
+    seoTitle: page.seoTitle,
+    parentId: page.parentId,
     slug,
-    sitemap: {
-      include: page.sitemap?.include ?? DEFAULT_SITEMAP.include,
-      priority: page.sitemap?.priority ?? DEFAULT_SITEMAP.priority,
-      changefreq: page.sitemap?.changefreq ?? DEFAULT_SITEMAP.changefreq,
-    },
-    paginationEnabled: page.paginationEnabled ?? false,
+    sitemap: page.sitemap
+      ? {
+          include: page.sitemap.include,
+          priority: page.sitemap.priority,
+          changefreq: page.sitemap.changefreq,
+        }
+      : null,
+    paginationEnabled: page.paginationEnabled,
   };
 }

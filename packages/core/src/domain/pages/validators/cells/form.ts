@@ -45,10 +45,7 @@ export function assertFormCell(
     });
   }
 
-  if (
-    typeof cell.successMessage !== "undefined" &&
-    typeof cell.successMessage !== "string"
-  ) {
+  if (cell.successMessage !== null && typeof cell.successMessage !== "string") {
     throw new DomainError({
       code: EC.CELL_FORM_SUCCESS_MESSAGE_INVALID,
       message: EC.CELL_FORM_SUCCESS_MESSAGE_INVALID,
@@ -56,10 +53,7 @@ export function assertFormCell(
     });
   }
 
-  if (
-    typeof cell.errorMessage !== "undefined" &&
-    typeof cell.errorMessage !== "string"
-  ) {
+  if (cell.errorMessage !== null && typeof cell.errorMessage !== "string") {
     throw new DomainError({
       code: EC.CELL_FORM_ERROR_MESSAGE_INVALID,
       message: EC.CELL_FORM_ERROR_MESSAGE_INVALID,
@@ -135,10 +129,7 @@ function assertFormField(field: FormField, path: Path) {
     });
   }
 
-  if (
-    typeof field.placeholder !== "undefined" &&
-    typeof field.placeholder !== "string"
-  ) {
+  if (field.placeholder !== null && typeof field.placeholder !== "string") {
     throw new DomainError({
       code: EC.CELL_FORM_FIELD_PLACEHOLDER_INVALID,
       message: EC.CELL_FORM_FIELD_PLACEHOLDER_INVALID,
@@ -146,10 +137,7 @@ function assertFormField(field: FormField, path: Path) {
     });
   }
 
-  if (
-    typeof field.required !== "undefined" &&
-    typeof field.required !== "boolean"
-  ) {
+  if (typeof field.required !== "boolean") {
     throw new DomainError({
       code: EC.CELL_FORM_FIELD_REQUIRED_INVALID,
       message: EC.CELL_FORM_FIELD_REQUIRED_INVALID,

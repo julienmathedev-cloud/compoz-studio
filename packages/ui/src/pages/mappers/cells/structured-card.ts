@@ -16,11 +16,12 @@ export function toStructuredCardCellShapeFromDTO(
     id: cell.id,
     kind: "structuredCard",
     columns: cell.columns,
+    reveal: cell.reveal,
     items: cell.items.map((item) => ({
       id: item.id,
-      image: item.image ?? undefined,
+      image: item.image,
       title: item.title,
-      meta: item.meta ?? undefined,
+      meta: item.meta,
       sections: item.sections.map((section) => ({
         id: section.id,
         label: section.label,

@@ -17,11 +17,12 @@ export function toCardsExtendedCellShapeFromDTO(
     kind: "cardsExtended",
     columns: cell.columns,
     align: cell.align,
+    reveal: cell.reveal,
     items: cell.items.map((item) => ({
       id: item.id,
       title: item.title,
       description: item.description,
-      bullets: item.bullets ? [...item.bullets] : [],
+      bullets: item.bullets ? [...item.bullets] : null,
       footer: item.footer,
       icon: item.icon,
     })),

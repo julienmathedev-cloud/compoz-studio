@@ -34,9 +34,9 @@ function adaptStructuredCardItem(
 ): StructuredCardItem {
   return {
     id: trimOrKeep(dto.id),
-    image: dto.image ? adaptImage(dto.image) : undefined,
+    image: dto.image ? adaptImage(dto.image) : null,
     title: trimOrKeep(dto.title),
-    meta: dto.meta ? trimOrKeep(dto.meta) : undefined,
+    meta: dto.meta ? trimOrKeep(dto.meta) : null,
     sections: dto.sections.map(adaptStructuredCardSection),
   };
 }
@@ -48,6 +48,7 @@ export function adaptStructuredCardCell(
     id: trimOrKeep(dto.id),
     kind: "structuredCard",
     columns: dto.columns,
+    reveal: dto.reveal,
     items: dto.items.map(adaptStructuredCardItem),
   };
 }

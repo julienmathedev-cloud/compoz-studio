@@ -44,7 +44,7 @@ FormCellRenderer.displayName = "FormCellRenderer";
 /* -------------------------------------------------------------------------- */
 
 function normalizeFields(
-  fields: readonly FormFieldShape[] | undefined,
+  fields: readonly FormFieldShape[] | null,
 ): FormFieldShape[] {
   if (!fields?.length) return [];
 
@@ -53,7 +53,7 @@ function normalizeFields(
     name: normalizeString(field.name, ""),
     label: normalizeString(field.label, ""),
     type: field.type,
-    placeholder: normalizeDefinedString(field.placeholder),
+    placeholder: normalizeNullableString(field.placeholder),
     required: field.required === true,
   }));
 }
@@ -70,7 +70,7 @@ function isRenderableFormField(field: FormFieldShape): boolean {
   );
 }
 
-function normalizeDefinedString(value: string | undefined): string | undefined {
+function normalizeNullableString(value: string | null): string | null {
   const normalized = normalizeString(value ?? "", "");
-  return normalized || undefined;
+  return normalized || null;
 }

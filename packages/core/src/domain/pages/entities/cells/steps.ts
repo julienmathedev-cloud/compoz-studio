@@ -16,6 +16,6 @@ export type StepItem = {
 export type StepsCell = {
   id: string;
   kind: "steps";
-  variant?: StepsVariant;
+  variant: StepsVariant;
   items: ReadonlyArray<StepItem>;
 };

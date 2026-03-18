@@ -16,6 +16,7 @@ import type { IdentitySettings } from "@compoz/core/domain/site/entities/identit
 export const DEFAULT_IDENTITY_SETTINGS: IdentitySettings = {
   siteName: "Compoz",
   logoAlt: "",
+  tagline: null,
   logoUrl: null,
   faviconUrl: null,
 };

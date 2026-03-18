@@ -26,4 +26,14 @@ export function assertGalleryMaxColumns(maxColumns: unknown, path: Path) {
   }
 }
 
+export function assertGalleryReveal(reveal: unknown, path: Path) {
+  if (typeof reveal !== "boolean") {
+    throw new DomainError({
+      code: EC.GALLERY_REVEAL_INVALID,
+      message: EC.GALLERY_REVEAL_INVALID,
+      details: { path: [...path, "reveal"], meta: { reveal } },
+    });
+  }
+}
+
 export { assertMultiImageCell };

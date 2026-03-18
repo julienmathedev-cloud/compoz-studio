@@ -12,8 +12,8 @@ export type FormField = {
   name: string;
   label: string;
   type: FormFieldType;
-  placeholder?: string;
-  required?: boolean;
+  placeholder: string | null;
+  required: boolean;
 };
 
 export type FormCell = {
@@ -33,15 +33,15 @@ export type FormCell = {
   /**
    * Message affiché après envoi réussi
    */
-  successMessage?: string;
+  successMessage: string | null;
 
   /**
    * Message affiché en cas d'erreur
    */
-  errorMessage?: string;
+  errorMessage: string | null;
 
   /**
    * Champs du formulaire
    */
-  fields: FormField[];
+  fields: ReadonlyArray<FormField>;
 };

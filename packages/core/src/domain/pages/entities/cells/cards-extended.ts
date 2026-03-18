@@ -12,15 +12,16 @@ export type CardsExtendedItem = {
   id: string;
   title: string;
   description: string;
-  bullets?: ReadonlyArray<string>;
-  footer?: string;
-  icon?: string;
+  bullets: ReadonlyArray<string>;
+  footer: string | null;
+  icon: string | null;
 };
 
 export type CardsExtendedCell = {
   id: string;
   kind: "cardsExtended";
   columns: CardsExtendedColumns;
-  align?: CardsExtendedAlign;
+  align: CardsExtendedAlign;
+  reveal: boolean;
   items: ReadonlyArray<CardsExtendedItem>;
 };

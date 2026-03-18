@@ -1,16 +1,7 @@
 "use client";
 
 /**
- * @file <apps />
- <studio />
- <source />
- <features />
- <builder />
- <editor />
- <cells />
- <images></images>/ImageCellEditor.tsx
- * @layer ui/studio/pages/blocks/editor/cells
- *
+ * @file apps/studio/src/features/builder/editor/cells/images/ImageCellEditor.tsx
  * @description
  * Éditeur RHF-aware d’une ImageCell avec gestion de la source,
  * de l’alt, de la caption et de la variante d’affichage.
@@ -30,8 +21,10 @@ import type { Control } from "react-hook-form";
 import { useController } from "react-hook-form";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
+import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
 import { ImageFields } from "@compoz/studio/features/_shared/components/ImageFields";
 import { Button } from "@compoz/ui/components/ui/button";
+import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
 import { ROW_SM, STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
@@ -107,6 +100,13 @@ export function ImageCellEditor({
     control,
   });
 
+  const revealCtrl = useController({
+    name: `${basePath}.reveal` as `${ImageFieldBasePath}.reveal`,
+    control,
+  });
+
+  const revealIds = createFieldIds(idPrefix, "reveal");
+
   const variant: Variant =
     variantCtrl.field.value &&
     VARIANTS.includes(variantCtrl.field.value as Variant)
@@ -138,26 +138,41 @@ export function ImageCellEditor({
 
   const variantSlot = (
     <div className={cn(STACK_SM)}>
-      <Text as="p" className="font-medium">
-        {t("studio.cellEditorTabs.imageCellEditor.variantLabel")}
-      </Text>
+      <div className={cn(STACK_SM)}>
+        <Text as="p" className="font-medium">
+          {t("studio.cellEditorTabs.imageCellEditor.variantLabel")}
+        </Text>
 
-      <div className={cn(ROW_SM)}>
-        {VARIANTS.map((v) => (
-          <Button
-            key={v}
-            type="button"
-            size="sm"
-            variant={variant === v ? "defaultStudio" : "ghostStudio"}
-            disabled={disabled}
-            onClick={() => {
-              variantCtrl.field.onChange(v);
-            }}
-          >
-            {t(`studio.cellEditorTabs.imageCellEditor.variants.${v}`)}
-          </Button>
-        ))}
+        <div className={cn(ROW_SM)}>
+          {VARIANTS.map((v) => (
+            <Button
+              key={v}
+              type="button"
+              size="sm"
+              variant={variant === v ? "defaultStudio" : "ghostStudio"}
+              disabled={disabled}
+              onClick={() => {
+                variantCtrl.field.onChange(v);
+              }}
+            >
+              {t(`studio.cellEditorTabs.imageCellEditor.variants.${v}`)}
+            </Button>
+          ))}
+        </div>
       </div>
+
+      <SwitchField
+        ids={revealIds}
+        label={t("studio.cellEditorTabs.imageCellEditor.revealLabel")}
+        checked={
+          typeof revealCtrl.field.value === "boolean"
+            ? revealCtrl.field.value
+            : true
+        }
+        onCheckedChange={revealCtrl.field.onChange}
+        disabled={disabled}
+        help={t("studio.cellEditorTabs.imageCellEditor.revealHelp")}
+      />
     </div>
   );
 

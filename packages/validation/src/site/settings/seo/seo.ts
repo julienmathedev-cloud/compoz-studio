@@ -18,18 +18,21 @@ import {
   AssetUrlSchema,
 } from "@compoz/validation/common/url-fragments";
 
-
 /* -------------------------------------------------------------------------- */
 /*                         Helpers draft ("" accepté)                         */
 /* -------------------------------------------------------------------------- */
 
-export const OptionalAbsoluteHttpUrlDraftSchema = z
-  .union([AbsoluteHttpUrlSchema, z.literal("")])
-  .optional();
+export const OptionalAbsoluteHttpUrlDraftSchema = z.union([
+  AbsoluteHttpUrlSchema,
+  z.literal(""),
+  z.null(),
+]);
 
-export const OptionalAssetUrlDraftSchema = z
-  .union([AssetUrlSchema, z.literal("")])
-  .optional();
+export const OptionalAssetUrlDraftSchema = z.union([
+  AssetUrlSchema,
+  z.literal(""),
+  z.null(),
+]);
 
 /* -------------------------------------------------------------------------- */
 /*                                OpenGraph                                   */
@@ -41,21 +44,20 @@ export const OpenGraphSettingsSchema = z
       .string()
       .trim()
       .max(SEO.TITLE.MAX, ERROR_CODES.SEO_OPEN_GRAPH_TITLE_TOO_LONG)
-      .optional(),
+      .nullable(),
 
     description: z
       .string()
       .trim()
       .max(SEO.DESCRIPTION.MAX, ERROR_CODES.SEO_OPEN_GRAPH_DESCRIPTION_TOO_LONG)
-      .optional(),
+      .nullable(),
 
     defaultImageUrl: OptionalAssetUrlDraftSchema,
 
     imageAlt: z
       .string()
       .trim()
-      .max(SEO.IMAGE_ALT.MAX, ERROR_CODES.SEO_OPEN_GRAPH_IMAGE_ALT_TOO_LONG)
-      .optional(),
+      .max(SEO.IMAGE_ALT.MAX, ERROR_CODES.SEO_OPEN_GRAPH_IMAGE_ALT_TOO_LONG),
   })
   .strict();
 
@@ -72,9 +74,11 @@ export const TwitterHandleSchema = z
     message: ERROR_CODES.SEO_TWITTER_HANDLE_INVALID,
   });
 
-export const OptionalTwitterHandleDraftSchema = z
-  .union([TwitterHandleSchema, z.literal("")])
-  .optional();
+export const OptionalTwitterHandleDraftSchema = z.union([
+  TwitterHandleSchema,
+  z.literal(""),
+  z.null(),
+]);
 
 export const TwitterSettingsSchema = z
   .object({
@@ -99,8 +103,7 @@ export function validateSeoSettingsValues(
 ) {
   const requireBaseUrlHttps = opts?.requireBaseUrlHttps ?? false;
 
-  // defaultTitle requis
-  const title = val.defaultTitle.trim();
+  const title = val.defaultTitle !== null ? val.defaultTitle.trim() : "";
   if (title.length < SEO.TITLE.MIN) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -109,8 +112,7 @@ export function validateSeoSettingsValues(
     });
   }
 
-  // baseUrl : si renseignée => doit être valide ; https requis selon option
-  const baseUrl = (val.baseUrl ?? "").trim();
+  const baseUrl = typeof val.baseUrl === "string" ? val.baseUrl.trim() : "";
   if (baseUrl.length > 0) {
     try {
       const { protocol } = new URL(baseUrl);
@@ -130,8 +132,8 @@ export function validateSeoSettingsValues(
     }
   }
 
-  // defaultDescription si renseignée => min
-  const desc = (val.defaultDescription ?? "").trim();
+  const desc =
+    val.defaultDescription !== null ? val.defaultDescription.trim() : "";
   if (desc.length > 0 && desc.length < SEO.DESCRIPTION.MIN) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -140,8 +142,7 @@ export function validateSeoSettingsValues(
     });
   }
 
-  // titleTemplate si renseigné => min + placeholder
-  const tpl = (val.titleTemplate ?? "").trim();
+  const tpl = val.titleTemplate !== null ? val.titleTemplate.trim() : "";
   if (tpl.length > 0) {
     if (tpl.length < SEO.TITLE_TEMPLATE.MIN) {
       ctx.addIssue({
@@ -167,34 +168,41 @@ export function validateSeoSettingsValues(
 export const SeoSettingsObjectSchema = z
   .object({
     baseUrl: OptionalAbsoluteHttpUrlDraftSchema,
+
     defaultTitle: z
       .string()
       .trim()
-      .max(SEO.TITLE.MAX, ERROR_CODES.SEO_TITLE_TOO_LONG),
+      .max(SEO.TITLE.MAX, ERROR_CODES.SEO_TITLE_TOO_LONG)
+      .nullable(),
+
     defaultDescription: z
       .string()
       .trim()
       .max(SEO.DESCRIPTION.MAX, ERROR_CODES.SEO_DESCRIPTION_TOO_LONG)
-      .optional(),
+      .nullable(),
+
     titleTemplate: z
       .string()
       .trim()
       .max(SEO.TITLE_TEMPLATE.MAX, ERROR_CODES.SEO_TITLE_TEMPLATE_TOO_LONG)
-      .optional(),
+      .nullable(),
+
     canonicalUrl: OptionalAbsoluteHttpUrlDraftSchema,
+
     robots: z
       .string()
       .trim()
       .max(SEO.ROBOTS.MAX, ERROR_CODES.SEO_ROBOTS_TOO_LONG)
-      .optional(),
-    openGraph: OpenGraphSettingsSchema.optional(),
-    twitter: TwitterSettingsSchema.optional(),
-    structuredDataEnabled: z.boolean().optional(),
+      .nullable(),
+
+    openGraph: OpenGraphSettingsSchema.nullable(),
+
+    twitter: TwitterSettingsSchema.nullable(),
+
+    structuredDataEnabled: z.boolean(),
   })
   .strict();
 
-// Par défaut, pas de dépendance runtime.
-// Le “https only en prod” doit être appliqué plus haut (route/use-case) via option.
 export const SeoSettingsSchema = SeoSettingsObjectSchema.superRefine(
   (val, ctx) => validateSeoSettingsValues(val, ctx),
 );

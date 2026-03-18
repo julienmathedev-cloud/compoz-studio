@@ -17,13 +17,16 @@
  */
 
 import { useTranslations } from "next-intl";
+import { useMemo } from "react";
 import type { Control } from "react-hook-form";
 import { useController, useFieldArray } from "react-hook-form";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
+import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
 import { CardExtendedListEditor } from "@compoz/studio/features/builder/editor/cells/cards-extended/CardExtendedListEditor";
 import { createEmptyCardsExtendedItem } from "@compoz/studio/features/pages/mappers/cells-form";
 import { Button } from "@compoz/ui/components/ui/button";
+import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
@@ -83,12 +86,11 @@ export function CardsExtendedCellEditor({
     control,
   });
 
-  /**
-   * `useFieldArray` est la source de vérité RHF pour la liste des cards étendues.
-   *
-   * `keyName: "fieldId"` évite d’entrer en collision avec notre `id` métier
-   * déjà présent dans `CardsExtendedItemFormValues`.
-   */
+  const revealCtrl = useController({
+    name: `${basePath}.reveal` as `${CardsExtendedFieldBasePath}.reveal`,
+    control,
+  });
+
   const { fields, append, remove, move } = useFieldArray<
     SectionBlockFormValues,
     CardsExtendedItemsPath,
@@ -112,6 +114,11 @@ export function CardsExtendedCellEditor({
     )
       ? (columnsCtrl.field.value as CardsExtendedColumns)
       : 2;
+
+  const revealIds = useMemo(
+    () => createFieldIds(idPrefix, "reveal"),
+    [idPrefix],
+  );
 
   return (
     <div className={cn(STACK_MD)}>
@@ -176,6 +183,19 @@ export function CardsExtendedCellEditor({
             ))}
           </div>
         </div>
+
+        <SwitchField
+          ids={revealIds}
+          label={t("studio.cellEditorTabs.cardsExtendedCellEditor.revealLabel")}
+          help={t("studio.cellEditorTabs.cardsExtendedCellEditor.revealHelp")}
+          checked={
+            typeof revealCtrl.field.value === "boolean"
+              ? revealCtrl.field.value
+              : true
+          }
+          disabled={disabled}
+          onCheckedChange={revealCtrl.field.onChange}
+        />
       </div>
 
       <CardExtendedListEditor

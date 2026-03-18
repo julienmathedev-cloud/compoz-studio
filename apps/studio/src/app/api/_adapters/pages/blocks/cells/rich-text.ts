@@ -16,5 +16,6 @@ export function adaptRichTextCell(dto: RichTextCellIntentDTO): RichTextCell {
     id: trimOrKeep(dto.id),
     kind: "richText",
     content: safe,
+    reveal: dto.reveal,
   };
 }

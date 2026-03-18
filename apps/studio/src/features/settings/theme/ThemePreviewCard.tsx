@@ -172,6 +172,7 @@ export function ThemePreviewCard({
 
     return {
       name: homePageName,
+      seoTitle: null,
       blocks: pageBlocks,
       paginationEnabled: false,
     };

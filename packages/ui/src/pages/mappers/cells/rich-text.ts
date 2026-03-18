@@ -15,5 +15,6 @@ export function toRichTextCellShapeFromDTO(
     id: cell.id,
     kind: "richText",
     content: cell.content,
+    reveal: cell.reveal,
   };
 }

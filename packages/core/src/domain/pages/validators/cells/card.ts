@@ -29,11 +29,19 @@ export function assertCardsCell(
     });
   }
 
-  if (typeof cell.align !== "undefined" && !CARDS_ALIGNS.includes(cell.align)) {
+  if (!CARDS_ALIGNS.includes(cell.align)) {
     throw new DomainError({
       code: EC.CELL_CARDS_ALIGN_INVALID,
       message: EC.CELL_CARDS_ALIGN_INVALID,
       details: { path: [...path, "align"], meta: { align: cell.align } },
+    });
+  }
+
+  if (typeof cell.reveal !== "boolean") {
+    throw new DomainError({
+      code: EC.CELL_CARDS_REVEAL_INVALID,
+      message: EC.CELL_CARDS_REVEAL_INVALID,
+      details: { path: [...path, "reveal"], meta: { reveal: cell.reveal } },
     });
   }
 
@@ -91,7 +99,7 @@ export function assertCardItem(item: CardItem, path: Path) {
     });
   }
 
-  if (typeof item.icon !== "undefined" && typeof item.icon !== "string") {
+  if (item.icon !== null && typeof item.icon !== "string") {
     throw new DomainError({
       code: EC.CELL_CARD_ITEM_ICON_INVALID,
       message: EC.CELL_CARD_ITEM_ICON_INVALID,

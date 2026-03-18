@@ -152,6 +152,7 @@ export function OverviewPreviewCard() {
 
     return {
       name: homePageName,
+      seoTitle: null,
       blocks: pageBlocks,
       paginationEnabled: false,
     };

@@ -44,11 +44,7 @@ export function toSeoFormValuesFromDTO(dto: SeoSettingsDTO): SeoFormValues {
     openGraph: {
       title: trimKeepEmpty(dto.openGraph?.title),
       description: trimKeepEmpty(dto.openGraph?.description),
-      defaultImageUrl: trimKeepEmpty(
-        typeof dto.openGraph?.defaultImageUrl === "string"
-          ? dto.openGraph.defaultImageUrl
-          : "",
-      ),
+      defaultImageUrl: trimKeepEmpty(dto.openGraph?.defaultImageUrl),
       imageAlt: trimKeepEmpty(dto.openGraph?.imageAlt),
     },
 
@@ -74,16 +70,16 @@ export function normalizeSeoFormValues(values: SeoFormValues): SeoFormValues {
     structuredDataEnabled: asBool(values.structuredDataEnabled),
 
     openGraph: {
-      title: trimKeepEmpty(values.openGraph?.title),
-      description: trimKeepEmpty(values.openGraph?.description),
-      defaultImageUrl: trimKeepEmpty(values.openGraph?.defaultImageUrl),
-      imageAlt: trimKeepEmpty(values.openGraph?.imageAlt),
+      title: trimKeepEmpty(values.openGraph.title),
+      description: trimKeepEmpty(values.openGraph.description),
+      defaultImageUrl: trimKeepEmpty(values.openGraph.defaultImageUrl),
+      imageAlt: trimKeepEmpty(values.openGraph.imageAlt),
     },
 
     twitter: {
-      card: values.twitter?.card ?? DEFAULT_TWITTER_CARD,
-      site: trimKeepEmpty(values.twitter?.site),
-      creator: trimKeepEmpty(values.twitter?.creator),
+      card: values.twitter.card ?? DEFAULT_TWITTER_CARD,
+      site: trimKeepEmpty(values.twitter.site),
+      creator: trimKeepEmpty(values.twitter.creator),
     },
   };
 }
@@ -135,6 +131,8 @@ export function toUpdateSeoIntentDTOFromFormValues(
         defaultImageUrl: trimKeepEmpty(ogIn.defaultImageUrl),
         imageAlt: trimKeepEmpty(ogIn.imageAlt),
       };
+    } else {
+      out.openGraph = null;
     }
   }
 
@@ -146,6 +144,8 @@ export function toUpdateSeoIntentDTOFromFormValues(
         site: trimKeepEmpty(twIn.site),
         creator: trimKeepEmpty(twIn.creator),
       };
+    } else {
+      out.twitter = null;
     }
   }
 

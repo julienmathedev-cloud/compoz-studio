@@ -22,7 +22,7 @@ function adaptFormField(dto: FormFieldIntentDTO): FormField {
     name: trimOrKeep(dto.name),
     label: trimOrKeep(dto.label),
     type: dto.type,
-    placeholder: dto.placeholder ? trimOrKeep(dto.placeholder) : undefined,
+    placeholder: dto.placeholder ? trimOrKeep(dto.placeholder) : null,
     required: dto.required,
   };
 }
@@ -33,10 +33,8 @@ export function adaptFormCell(dto: FormCellIntentDTO): FormCell {
     kind: "form",
     to: trimOrKeep(dto.to),
     submitLabel: trimOrKeep(dto.submitLabel),
-    successMessage: dto.successMessage
-      ? trimOrKeep(dto.successMessage)
-      : undefined,
-    errorMessage: dto.errorMessage ? trimOrKeep(dto.errorMessage) : undefined,
+    successMessage: dto.successMessage ? trimOrKeep(dto.successMessage) : null,
+    errorMessage: dto.errorMessage ? trimOrKeep(dto.errorMessage) : null,
     fields: dto.fields.map(adaptFormField),
   };
 }

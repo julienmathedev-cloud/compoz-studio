@@ -28,7 +28,7 @@ export function adaptUpdateIdentityIntent(
 
   log.debug("studio.adapter.identity.patch.start", {
     hasSiteName: typeof dto.siteName === "string",
-    hasTagline: typeof dto.tagline === "string",
+    hasTagline: "tagline" in dto,
     hasLogoAlt: typeof dto.logoAlt === "string",
     hasLogoUrl: dto.logoUrl !== undefined,
     hasFaviconUrl: dto.faviconUrl !== undefined,
@@ -42,9 +42,13 @@ export function adaptUpdateIdentityIntent(
     patch.siteName = trimOrKeep(dto.siteName);
   }
 
-  if (typeof dto.tagline === "string") {
-    const v = trimOrKeep(dto.tagline);
-    patch.tagline = v.length === 0 ? undefined : v;
+  if ("tagline" in dto) {
+    if (dto.tagline === null) {
+      patch.tagline = null;
+    } else if (typeof dto.tagline === "string") {
+      const v = trimOrKeep(dto.tagline);
+      patch.tagline = v.length === 0 ? null : v;
+    }
   }
 
   if (typeof dto.logoAlt === "string") {

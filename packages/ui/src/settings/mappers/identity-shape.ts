@@ -16,21 +16,16 @@
 import type { IdentitySettingsDTO } from "@compoz/core/domain/site/dto";
 import type { IdentitySettingsShape } from "@compoz/validation/site/settings/identity/identity";
 
-import {
-  assetUiToSettings,
-  emptyToUndef,
-  trimKeepEmpty,
-} from "@compoz/ui/lib/form-utils";
+import { assetUiToSettings, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 
 export function toIdentitySettingsShapeFromDTO(
   dto: IdentitySettingsDTO | null | undefined,
 ): IdentitySettingsShape {
   return {
     siteName: trimKeepEmpty(dto?.siteName), // peut être ""
-    tagline: emptyToUndef(dto?.tagline),
-    // assetUiToSettings accepte `string | null | undefined` (DTO ou FormValues)
+    tagline: dto?.tagline !== null ? trimKeepEmpty(dto?.tagline) : null,
     logoUrl: assetUiToSettings(dto?.logoUrl),
-    logoAlt: emptyToUndef(dto?.logoAlt),
+    logoAlt: trimKeepEmpty(dto?.logoAlt),
     faviconUrl: assetUiToSettings(dto?.faviconUrl),
   };
 }

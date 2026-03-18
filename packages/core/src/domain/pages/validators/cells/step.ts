@@ -17,10 +17,7 @@ export function assertStepsCell(
   cell: Extract<Cell, { kind: "steps" }>,
   path: Path,
 ) {
-  if (
-    typeof cell.variant !== "undefined" &&
-    !STEPS_VARIANTS.includes(cell.variant)
-  ) {
+  if (!STEPS_VARIANTS.includes(cell.variant)) {
     throw new DomainError({
       code: EC.CELL_STEPS_VARIANT_INVALID,
       message: EC.CELL_STEPS_VARIANT_INVALID,

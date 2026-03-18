@@ -42,6 +42,7 @@ export function toCarouselCellShapeFromDTO(
             kind: "cards",
             columns: 2,
             align: "left",
+            reveal: true,
             items: cell.items as CardItemDTO[],
           }).items
         : cell.itemKind === "cardsExtended"
@@ -50,12 +51,14 @@ export function toCarouselCellShapeFromDTO(
               kind: "cardsExtended",
               columns: 2,
               align: "left",
+              reveal: true,
               items: cell.items as CardsExtendedItemDTO[],
             }).items
           : toStructuredCardCellShapeFromDTO({
               id: cell.id,
               kind: "structuredCard",
               columns: 1,
+              reveal: true,
               items: cell.items as StructuredCardItemDTO[],
             }).items;
 

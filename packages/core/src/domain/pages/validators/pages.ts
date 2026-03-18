@@ -2,7 +2,7 @@
  * @file packages/core/src/domain/pages/validators/pages.ts
  * @layer core/domain/pages/validators
  * @description
- * Invariants métier des pages : validation title/slug, defaults sitemap et contrôle de priority.
+ * Invariants métier des pages : validation name/slug, sitemap et contrôle de priority.
  * Ce module reste purement domaine (pas de Zod/HTTP/UI).
  */
 
@@ -18,18 +18,19 @@ import type { Page } from "@compoz/core/domain/pages/entities/page";
 import { assertSlug } from "@compoz/core/domain/slug/validator";
 
 /**
- * Valide qu’un titre de page est non vide une fois trimé.
+ * Valide qu’un nom de page est non vide une fois trimé.
  *
- * @param name - Titre brut (éventuellement undefined).
- * @param path  - Chemin logique de l’erreur (pour `details.path`).
- * @throws DomainError(EC.PAGE_TITLE_REQUIRED) si le titre est vide après trim.
- * @returns Le titre normalisé (trimé).
+ * @param name - Nom brut.
+ * @param path - Chemin logique de l’erreur.
+ * @throws DomainError(EC.PAGE_TITLE_REQUIRED) si le nom est vide après trim.
+ * @returns Le nom normalisé (trimé).
  */
 export function assertNameRequired(
-  name: string | undefined,
-  path: (string | number)[] = ["title"],
+  name: string,
+  path: (string | number)[] = ["name"],
 ): string {
-  const t = (name ?? "").trim();
+  const t = name.trim();
+
   if (!t) {
     throw new DomainError({
       code: EC.PAGE_TITLE_REQUIRED,
@@ -37,41 +38,29 @@ export function assertNameRequired(
       details: { path },
     });
   }
+
   return t;
 }
 
 /**
  * Valide et normalise le slug d’une page.
  *
- * @param raw  - Slug brut (ou undefined).
+ * @param raw  - Slug brut.
  * @param path - Chemin logique pour `details.path` (par défaut `"slug"`).
  *
- * @returns Le slug **normalisé** (kebab-case) si tout est valide.
- *
- * @throws DomainError
- * - EC.PAGE_SLUG_REQUIRED        : slug vide après normalisation.
- * - EC.PAGE_SLUG_RESERVED        : slug appartenant aux réservés.
- * - EC.PAGE_SLUG_INVALID_FORMAT  : format invalide (hors kebab-case).
- *
- * @remarks
- * Cette fonction s’appuie sur `assertSlug` (slug générique) puis
- * remappe les erreurs `VALIDATION_ERROR` vers des codes spécialisés
- * pour le domaine Pages.
+ * @returns Le slug normalisé (kebab-case) si tout est valide.
  */
 export function assertPageSlug(
-  raw: string | undefined,
+  raw: string,
   path: (string | number)[] = ["slug"],
 ): string {
   try {
-    // Slug générique : normalisation + contrôles de base
     return assertSlug(raw, path);
   } catch (e) {
-    // Si ce n'est pas une DomainError, on relaie tel quel
     if (!isDomainErrorLike(e)) {
       throw e;
     }
 
-    // On remappe uniquement les codes liés au slug générique
     let mappedCode: ErrorCode | undefined;
 
     switch (e.code) {
@@ -85,12 +74,9 @@ export function assertPageSlug(
         mappedCode = EC.PAGE_SLUG_INVALID_FORMAT;
         break;
       default:
-        // Toute autre erreur (technique, autre validation) est relayée telle quelle
         throw e;
     }
 
-    // On jette une nouvelle DomainError spécialisée Pages,
-    // en conservant le `details` et en chaînant la cause.
     throw new DomainError({
       code: mappedCode,
       message: mappedCode,
@@ -137,14 +123,14 @@ export function assertPaginationEnabled(args: {
  * Valide que la priorité du sitemap, si fournie, est dans [0, 1].
  *
  * @param p    - Valeur de priorité éventuelle.
- * @param path - Chemin logique de l’erreur (par défaut `["sitemap","priority"]`).
- * @throws DomainError(EC.VALIDATION_ERROR) si la valeur est hors intervalle.
+ * @param path - Chemin logique de l’erreur.
  */
 export function assertPriority(
-  p?: number,
+  p: number | null,
   path: (string | number)[] = ["sitemap", "priority"],
 ): void {
-  if (p === undefined) return;
+  if (p === null) return;
+
   if (typeof p !== "number" || p < 0 || p > 1) {
     throw new DomainError({
       code: EC.VALIDATION_ERROR,
@@ -158,11 +144,6 @@ export function assertPriority(
  * Valide `parentId` :
  * - `null` => page racine
  * - `string` non vide => id d’une page parente
- *
- * @param parentId - Valeur brute.
- * @param path - Chemin logique de l’erreur.
- * @throws DomainError(EC.INVALID_ARGUMENT) si la valeur est invalide.
- * @returns La valeur normalisée (`null` ou string trimée).
  */
 export function assertParentId(
   parentId: unknown,
@@ -179,6 +160,7 @@ export function assertParentId(
   }
 
   const v = parentId.trim();
+
   if (!v) {
     throw new DomainError({
       code: EC.INVALID_ARGUMENT,
@@ -190,14 +172,71 @@ export function assertParentId(
   return v;
 }
 
-export function assertPage(p: Page): void {
-  assertNameRequired(p.name, ["page", "title"]);
-  assertPageSlug(p.slug, ["page", "slug"]);
+export function assertSeoTitle(
+  seoTitle: string | null,
+  path: (string | number)[] = ["seoTitle"],
+): void {
+  if (seoTitle !== null && typeof seoTitle !== "string") {
+    throw new DomainError({
+      code: EC.INVALID_ARGUMENT,
+      message: EC.INVALID_ARGUMENT,
+      details: { path },
+    });
+  }
+}
 
-  // ✅ parentId obligatoire : null ou string non vide
+export function assertSitemap(
+  sitemap: Page["sitemap"],
+  path: (string | number)[] = ["sitemap"],
+): void {
+  if (sitemap === null) return;
+
+  if (typeof sitemap !== "object") {
+    throw new DomainError({
+      code: EC.INVALID_ARGUMENT,
+      message: EC.INVALID_ARGUMENT,
+      details: { path },
+    });
+  }
+
+  if (typeof sitemap.include !== "boolean") {
+    throw new DomainError({
+      code: EC.INVALID_ARGUMENT,
+      message: EC.INVALID_ARGUMENT,
+      details: { path: [...path, "include"] },
+    });
+  }
+
+  if (
+    sitemap.changefreq !== null &&
+    sitemap.changefreq !== "always" &&
+    sitemap.changefreq !== "hourly" &&
+    sitemap.changefreq !== "daily" &&
+    sitemap.changefreq !== "weekly" &&
+    sitemap.changefreq !== "monthly" &&
+    sitemap.changefreq !== "yearly" &&
+    sitemap.changefreq !== "never"
+  ) {
+    throw new DomainError({
+      code: EC.INVALID_ARGUMENT,
+      message: EC.INVALID_ARGUMENT,
+      details: {
+        path: [...path, "changefreq"],
+        meta: { changefreq: sitemap.changefreq },
+      },
+    });
+  }
+
+  assertPriority(sitemap.priority, [...path, "priority"]);
+}
+
+export function assertPage(p: Page): void {
+  assertNameRequired(p.name, ["page", "name"]);
+  assertPageSlug(p.slug, ["page", "slug"]);
+  assertSeoTitle(p.seoTitle, ["page", "seoTitle"]);
+
   const normalizedParentId = assertParentId(p.parentId, ["page", "parentId"]);
 
-  // ✅ invariant simple : pas d’auto-référence
   if (normalizedParentId !== null && normalizedParentId === p.id) {
     throw new DomainError({
       code: EC.INVALID_ARGUMENT,
@@ -206,7 +245,8 @@ export function assertPage(p: Page): void {
     });
   }
 
-  assertPriority(p.sitemap?.priority, ["page", "sitemap", "priority"]);
+  assertSitemap(p.sitemap, ["page", "sitemap"]);
+
   assertPaginationEnabled({
     parentId: normalizedParentId,
     paginationEnabled: p.paginationEnabled,

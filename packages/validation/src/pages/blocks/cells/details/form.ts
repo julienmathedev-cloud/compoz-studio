@@ -27,13 +27,16 @@ export const FormFieldSchema = z
 
     type: FormFieldTypeSchema,
 
-    placeholder: z.string().trim().optional(),
-
-    required: z
-      .boolean({
-        message: ERROR_CODES.CELL_FORM_FIELD_REQUIRED_INVALID,
+    placeholder: z
+      .string({
+        message: ERROR_CODES.CELL_FORM_FIELD_PLACEHOLDER_INVALID,
       })
-      .optional(),
+      .trim()
+      .nullable(),
+
+    required: z.boolean({
+      message: ERROR_CODES.CELL_FORM_FIELD_REQUIRED_INVALID,
+    }),
   })
   .strict();
 
@@ -50,9 +53,19 @@ export const FormCellSchema = z
       .trim()
       .min(1, ERROR_CODES.CELL_FORM_SUBMIT_LABEL_REQUIRED),
 
-    successMessage: z.string().trim().optional(),
+    successMessage: z
+      .string({
+        message: ERROR_CODES.CELL_FORM_SUCCESS_MESSAGE_INVALID,
+      })
+      .trim()
+      .nullable(),
 
-    errorMessage: z.string().trim().optional(),
+    errorMessage: z
+      .string({
+        message: ERROR_CODES.CELL_FORM_ERROR_MESSAGE_INVALID,
+      })
+      .trim()
+      .nullable(),
 
     fields: z
       .array(FormFieldSchema, {

@@ -18,38 +18,33 @@ export const ImageEditorSchema = z
     id: ImageEditorIdSchema,
     src: z.string().trim().min(1, ERROR_CODES.CELL_IMAGE_SRC_REQUIRED),
     alt: z.string(),
-    caption: z.string().optional(),
+    caption: z
+      .string({
+        message: ERROR_CODES.CELL_IMAGE_CAPTION_INVALID,
+      })
+      .trim()
+      .nullable(),
     href: z
-      .string()
+      .string({
+        message: ERROR_CODES.CELL_IMAGE_HREF_INVALID,
+      })
       .trim()
       .min(1, ERROR_CODES.CELL_IMAGE_HREF_INVALID)
-      .nullable()
-      .optional(),
-    width: z.number().int().positive().optional(),
-    height: z.number().int().positive().optional(),
+      .nullable(),
+    width: z
+      .number({
+        message: ERROR_CODES.CELL_IMAGE_WIDTH_REQUIRED,
+      })
+      .int()
+      .positive(ERROR_CODES.CELL_IMAGE_WIDTH_REQUIRED),
+    height: z
+      .number({
+        message: ERROR_CODES.CELL_IMAGE_HEIGHT_REQUIRED,
+      })
+      .int()
+      .positive(ERROR_CODES.CELL_IMAGE_HEIGHT_REQUIRED),
   })
-  .strict()
-  .superRefine((data, ctx) => {
-    const hasSrc = data.src.trim().length > 0;
-
-    if (hasSrc) {
-      if (!data.width) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["width"],
-          message: ERROR_CODES.CELL_IMAGE_WIDTH_REQUIRED,
-        });
-      }
-
-      if (!data.height) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["height"],
-          message: ERROR_CODES.CELL_IMAGE_HEIGHT_REQUIRED,
-        });
-      }
-    }
-  });
+  .strict();
 
 export const ImageVariantSchema = z.enum(
   ["default", "wide", "square", "portrait"] as const,
@@ -63,6 +58,9 @@ export const ImageCellSchema = z
     id: CellIdSchema,
     kind: z.literal("image"),
     image: ImageEditorSchema,
-    variant: ImageVariantSchema.optional(),
+    variant: ImageVariantSchema,
+    reveal: z.boolean({
+      message: ERROR_CODES.IMAGE_REVEAL_INVALID,
+    }),
   })
   .strict();

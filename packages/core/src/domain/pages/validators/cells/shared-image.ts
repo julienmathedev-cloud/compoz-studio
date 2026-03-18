@@ -23,7 +23,7 @@ export function assertImageEditor(
     });
   }
 
-  const { id, src, alt, caption, href } = img as ImageEditor;
+  const { id, src, alt, caption, href, width, height } = img as ImageEditor;
 
   if (typeof id !== "string" || !id.trim()) {
     throw new DomainError({
@@ -49,7 +49,7 @@ export function assertImageEditor(
     });
   }
 
-  if (typeof caption !== "undefined" && typeof caption !== "string") {
+  if (caption !== null && typeof caption !== "string") {
     throw new DomainError({
       code: EC.CELL_IMAGE_CAPTION_INVALID,
       message: EC.CELL_IMAGE_CAPTION_INVALID,
@@ -57,14 +57,28 @@ export function assertImageEditor(
     });
   }
 
-  if (typeof href !== "undefined" && href !== null) {
-    if (typeof href !== "string" || !href.trim()) {
-      throw new DomainError({
-        code: EC.CELL_IMAGE_HREF_INVALID,
-        message: EC.CELL_IMAGE_HREF_INVALID,
-        details: { path: [...path, "href"] },
-      });
-    }
+  if (href !== null && typeof href !== "string") {
+    throw new DomainError({
+      code: EC.CELL_IMAGE_HREF_INVALID,
+      message: EC.CELL_IMAGE_HREF_INVALID,
+      details: { path: [...path, "href"] },
+    });
+  }
+
+  if (typeof width !== "number" || !Number.isFinite(width) || width <= 0) {
+    throw new DomainError({
+      code: EC.CELL_IMAGE_WIDTH_INVALID,
+      message: EC.CELL_IMAGE_WIDTH_INVALID,
+      details: { path: [...path, "width"], meta: { width } },
+    });
+  }
+
+  if (typeof height !== "number" || !Number.isFinite(height) || height <= 0) {
+    throw new DomainError({
+      code: EC.CELL_IMAGE_HEIGHT_INVALID,
+      message: EC.CELL_IMAGE_HEIGHT_INVALID,
+      details: { path: [...path, "height"], meta: { height } },
+    });
   }
 }
 

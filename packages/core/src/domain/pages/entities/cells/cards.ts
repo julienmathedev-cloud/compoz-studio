@@ -12,13 +12,14 @@ export type CardItem = {
   id: string;
   title: string;
   description: string;
-  icon?: string;
+  icon: string | null;
 };
 
 export type CardsCell = {
   id: string;
   kind: "cards";
   columns: CardsColumns;
-  align?: CardsAlign;
+  align: CardsAlign;
+  reveal: boolean;
   items: ReadonlyArray<CardItem>;
 };

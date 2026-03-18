@@ -33,9 +33,9 @@ export interface PageSitemap {
   /** La page doit-elle apparaître dans le sitemap ? */
   include: boolean;
   /** Fréquence d’actualisation suggérée. */
-  changefreq?: SitemapChangeFreq;
+  changefreq: SitemapChangeFreq | null;
   /** Priorité suggérée dans [0,1]. */
-  priority?: number;
+  priority: number | null;
 }
 
 /** Entité principale représentant une page de contenu. */
@@ -55,8 +55,8 @@ export interface Page {
   /** Nom affiché (studio, listes, éventuellement SEO). */
   name: string;
 
-  /** Titre SEO (optionnel). */
-  seoTitle?: string;
+  /** Titre SEO. */
+  seoTitle: string | null;
 
   /** Blocs de contenu associés à la page (contenu structuré). */
   blocks: ReadonlyArray<Block>;
@@ -64,8 +64,8 @@ export interface Page {
   /** Métadonnées de création/mise à jour. */
   meta: PageMeta;
 
-  /** Paramètres optionnels pour le sitemap XML. */
-  sitemap?: PageSitemap;
+  /** Paramètres pour le sitemap XML. */
+  sitemap: PageSitemap | null;
 
   /**
    * Active/désactive la pagination pour une page enfant.

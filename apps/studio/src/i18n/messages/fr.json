@@ -260,6 +260,7 @@
     "CELL_CARDS_EXTENDED_ITEM_TITLE_REQUIRED": "Un titre de carte étendue est requis.",
     "CELL_CARDS_EXTENDED_ITEM_DESCRIPTION_REQUIRED": "Une description de carte étendue est requise.",
     "CELL_CARDS_EXTENDED_ITEM_ICON_INVALID": "L’icône de la carte étendue est invalide.",
+    "CELL_CARDS_EXTENDED_REVEAL_INVALID": "La configuration de la carte étendue est invalide.",
     "CELL_CARDS_EXTENDED_ITEM_FOOTER_INVALID": "Le footer de la carte étendue est invalide.",
     "CELL_CARDS_EXTENDED_ITEM_BULLETS_INVALID": "La liste des bullet points de la carte étendue est invalide.",
     "CELL_CARDS_EXTENDED_ITEM_BULLET_INVALID": "Un bullet point de la carte étendue est invalide.",
@@ -274,6 +275,7 @@
     "CELL_CARD_ITEM_TITLE_REQUIRED": "Un titre de carte est requis.",
     "CELL_CARD_ITEM_DESCRIPTION_REQUIRED": "Une description de carte est requise.",
     "CELL_CARD_ITEM_ICON_INVALID": "L’icône de la carte est invalide.",
+    "CELL_CARDS_REVEAL_INVALID": "La configuration de la carte est invalide.",
 
     "CELL_STRUCTURED_CARD_COLUMNS_INVALID": "Le nombre de colonnes de la carte structurée est invalide.",
     "CELL_STRUCTURED_CARD_ITEMS_INVALID": "La liste des cartes structurées est invalide.",
@@ -290,6 +292,7 @@
     "CELL_STRUCTURED_CARD_SECTION_ID_REQUIRED": "Un identifiant de section est requis.",
     "CELL_STRUCTURED_CARD_SECTION_LABEL_REQUIRED": "Un label de section est requis.",
     "CELL_STRUCTURED_CARD_SECTION_CONTENT_REQUIRED": "Un contenu de section est requis.",
+    "CELL_STRUCTURED_CARD_REVEAL_INVALID": "La configuration de la carte est invalide.",
 
     "CELL_FORM_TO_REQUIRED": "L’adresse de destination du formulaire est requise.",
     "CELL_FORM_TO_INVALID": "L’adresse de destination du formulaire est invalide.",
@@ -365,18 +368,22 @@
     "IMAGE_VARIANT_INVALID": "Le format d’image est invalide.",
 
     "GALLERY_MAX_COLUMNS_INVALID": "Le nombre de colonnes de la galerie est invalide.",
+    "GALLERY_REVEAL_INVALID": "La configuration de la galerie est invalide.",
 
     "CELL_IMAGES_INVALID": "Les images sont invalides.",
     "CELL_IMAGES_MIN_1": "Au moins une image est requise.",
     "CELL_IMAGE_INVALID": "Une image est invalide.",
     "CELL_IMAGE_SRC_REQUIRED": "La source de l'image est requise.",
     "CELL_IMAGE_WIDTH_REQUIRED": "La largeur de l'image est requise.",
+    "IMAGE_REVEAL_INVALID": "La configuration de l'image est invalide.",
     "CELL_IMAGE_HEIGHT_REQUIRED": "La hauteur de l'image est requise.",
     "CELL_IMAGE_ALT_INVALID": "Le texte alternatif de l’image est invalide.",
     "CELL_IMAGE_CAPTION_INVALID": "La légende de l’image est invalide.",
     "CELL_IMAGE_ID_REQUIRED": "L’ID de l’image est requis.",
     "CELL_IMAGE_HREF_INVALID": "Le lien de l’image est invalide.",
-
+    "CELL_IMAGE_WIDTH_INVALID": "La largeur de l'image est invalide.",
+    "CELL_IMAGE_HEIGHT_INVALID": "La hauteur de l'image est invalide.",
+    "RICH_TEXT_REVEAL_INVALID": "La configuration du composant est invalide.",
     "USER_ID_REQUIRED": "L’ID de l’utilisateur est requis.",
     "USER_EMAIL_REQUIRED": "L’adresse e-mail de l’utilisateur est requise.",
     "USER_EMAIL_INVALID_FORMAT": "L’adresse e-mail de l’utilisateur est invalide (format attendu : adresse@exemple.com).",
@@ -1619,7 +1626,8 @@
         "titleLabel": "Titre",
         "titlePlaceholder": "Titre de la carte",
         "titleHelp": "Titre principal affiché dans la carte.",
-
+        "revealLabel": "Afficher avec reveal",
+        "revealHelp": "Active l’animation d’apparition de la section cards étendues.",
         "descriptionLabel": "Description",
         "descriptionPlaceholder": "Description de la carte",
         "descriptionHelp": "Texte descriptif de la carte.",
@@ -1660,7 +1668,8 @@
           "2": "2 colonnes",
           "3": "3 colonnes"
         },
-
+        "revealLabel": "Afficher avec reveal",
+        "revealHelp": "Active l’animation d’apparition de la section structured cards.",
         "imageLabel": "Image",
         "imageHelp": "Image principale utilisée pour illustrer cette carte.",
 
@@ -1751,6 +1760,8 @@
           "left": "Gauche",
           "center": "Centre"
         },
+        "revealLabel": "Afficher avec reveal",
+        "revealHelp": "Active l’animation d’apparition de la section cards.",
         "columnsLabel": "Colonnes",
         "columns": {
           "2": "2",

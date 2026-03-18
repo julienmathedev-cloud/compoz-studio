@@ -33,10 +33,10 @@ export function createEmptyImageEditor(): ImageEditorFormValues {
     id: createUiId(),
     src: "",
     alt: "",
-    caption: "",
+    caption: null,
     href: null,
-    width: undefined,
-    height: undefined,
+    width: 0,
+    height: 0,
   };
 }
 
@@ -54,7 +54,7 @@ export function createEmptyCardItem(): CardItemFormValues {
     id: createUiId(),
     title: "",
     description: "",
-    icon: "",
+    icon: null,
   };
 }
 
@@ -64,8 +64,8 @@ export function createEmptyCardsExtendedItem(): CardsExtendedItemFormValues {
     title: "",
     description: "",
     bullets: [],
-    footer: "",
-    icon: "",
+    footer: null,
+    icon: null,
   };
 }
 
@@ -82,9 +82,9 @@ export function createEmptyTimelineItem(): TimelineItemFormValues {
     id: createUiId(),
     period: "",
     title: "",
-    subtitle: "",
-    description: "",
-    badge: "",
+    subtitle: null,
+    description: null,
+    badge: null,
     keywords: [],
   };
 }
@@ -100,9 +100,9 @@ export function createEmptyStructuredCardSection(): StructuredCardSectionFormVal
 export function createEmptyStructuredCardItem(): StructuredCardItemFormValues {
   return {
     id: createUiId(),
-    image: createEmptyImageEditor(),
+    image: null,
     title: "",
-    meta: "",
+    meta: null,
     sections: [createEmptyStructuredCardSection()],
   };
 }
@@ -143,7 +143,7 @@ export function createEmptyFormField(): FormFieldFormValues {
     name: "",
     label: "",
     type: "text",
-    placeholder: "",
+    placeholder: null,
     required: true,
   };
 }
@@ -157,18 +157,23 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       kind: "heading",
       level: "h2",
       title: "",
-      subtitle: "",
+      subtitle: null,
       align: "left",
       variant: "default",
       separator: false,
-      idAnchor: "",
+      idAnchor: null,
       reveal: true,
       highlights: [],
     };
   }
 
   if (kind === "richText") {
-    return { id, kind: "richText", content: "" };
+    return {
+      id,
+      kind: "richText",
+      content: "",
+      reveal: true,
+    };
   }
 
   if (kind === "spacer") {
@@ -204,6 +209,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       kind: "cards",
       columns: 3,
       align: "left",
+      reveal: true,
       items: [createEmptyCardItem()],
     };
   }
@@ -214,6 +220,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       kind: "cardsExtended",
       columns: 2,
       align: "left",
+      reveal: true,
       items: [createEmptyCardsExtendedItem()],
     };
   }
@@ -240,6 +247,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       id,
       kind: "structuredCard",
       columns: 1,
+      reveal: true,
       items: [createEmptyStructuredCardItem()],
     };
   }
@@ -250,14 +258,20 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       kind: "form",
       to: "mailto:",
       submitLabel: "Envoyer",
-      successMessage: "",
-      errorMessage: "",
+      successMessage: null,
+      errorMessage: null,
       fields: [createEmptyFormField()],
     };
   }
 
   if (kind === "image") {
-    return { id, kind: "image", image: createEmptyImageEditor() };
+    return {
+      id,
+      kind: "image",
+      image: createEmptyImageEditor(),
+      variant: "default",
+      reveal: true,
+    };
   }
 
   if (kind === "carousel") {
@@ -277,6 +291,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     kind: "gallery",
     linksEnabled: false,
     maxColumns: 3,
+    reveal: true,
     items: [createEmptyImageEditor()],
   };
 }

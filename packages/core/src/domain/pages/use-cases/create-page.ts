@@ -34,7 +34,6 @@ export function createPage({
   nowIso = () => new Date().toISOString(),
 }: CreatePageDeps) {
   return async function run(input: CreatePageInput): Promise<CreatePageResult> {
-    // Contrat : la création se fait toujours dans l’état par défaut (draft).
     const state = DEFAULT_CONTENT_STATE;
 
     const name = assertNameRequired(input.name);
@@ -57,8 +56,6 @@ export function createPage({
       inputSlug && inputSlug.length > 0 ? inputSlug : name,
     );
 
-    // Règle "home" : si "home" existe déjà, on bloque (plutôt que suffixer).
-    // ✅ Optimisation : si existingSlugs est fourni, pas de repo call.
     const hasHome =
       input.existingSlugs instanceof Set
         ? input.existingSlugs.has(HOME_SLUG)
@@ -78,16 +75,21 @@ export function createPage({
       existingSlugs: input.existingSlugs,
     });
 
-    const sitemap =
-      input.sitemap != null ? applySitemapDefaults(input.sitemap) : undefined;
+    const seoTitle = input.seoTitle !== null ? input.seoTitle.trim() : null;
 
-    if (sitemap) assertPriority(sitemap.priority);
+    const sitemap =
+      input.sitemap !== null ? applySitemapDefaults(input.sitemap) : null;
+
+    if (sitemap !== null) {
+      assertPriority(sitemap.priority);
+    }
 
     const page = buildPageEntity({
       id: idGenerator.nextId(),
       parentId,
       slug,
       name,
+      seoTitle,
       sitemap,
       paginationEnabled,
       nowIso,
@@ -120,7 +122,6 @@ async function generateUniqueSlug({
   let slug = base;
   let suffix = 2;
 
-  // ✅ Fast path (sans scans KV) : si on a un index local de slugs, on l’utilise.
   if (existingSlugs instanceof Set) {
     while (existingSlugs.has(slug)) {
       slug = `${base}-${suffix++}`;
@@ -128,7 +129,6 @@ async function generateUniqueSlug({
     return slug;
   }
 
-  // Fallback : checks repository (peut être coûteux sur une impl KV).
   while (await pages.existsBySlug(state, slug)) {
     slug = `${base}-${suffix++}`;
   }
@@ -141,6 +141,7 @@ type BuildPageEntityProps = {
   parentId: string | null;
   slug: string;
   name: string;
+  seoTitle: string | null;
   sitemap: Page["sitemap"];
   paginationEnabled: boolean;
   nowIso: NonNullable<CreatePageDeps["nowIso"]>;
@@ -151,21 +152,22 @@ function buildPageEntity({
   parentId,
   slug,
   name,
+  seoTitle,
   sitemap,
   paginationEnabled,
   nowIso,
 }: BuildPageEntityProps): Page {
   const at = nowIso();
 
-  const base: Page = {
+  return {
     id,
     parentId,
     slug,
     name,
+    seoTitle,
     blocks: [],
     meta: { createdAt: at, updatedAt: at },
+    sitemap,
     paginationEnabled,
   };
-
-  return sitemap ? { ...base, sitemap } : base;
 }

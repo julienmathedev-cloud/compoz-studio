@@ -16,11 +16,11 @@ import type {
   UpdatePageInput,
 } from "@compoz/core/domain/pages/use-cases/update-page.types";
 import {
+  assertNameRequired,
   assertPageSlug,
   assertPaginationEnabled,
   assertParentId,
   assertPriority,
-  assertNameRequired,
 } from "@compoz/core/domain/pages/validators/pages";
 import { normalizeSlugInput } from "@compoz/core/domain/slug/utils";
 
@@ -35,34 +35,40 @@ export function applySitemapPatch({
   changed: ChangedKey[];
   input: UpdatePageInput;
 }): void {
-  if (typeof input.sitemap !== "object" || input.sitemap === null) return;
+  if (!("sitemap" in input)) return;
+
+  if (input.sitemap === null) {
+    if (existing.sitemap !== null) {
+      next.sitemap = null;
+      changed.push("sitemap");
+    }
+    return;
+  }
+
+  if (typeof input.sitemap !== "object") return;
 
   const prev = existing.sitemap ?? applySitemapDefaults();
 
   const nextChangefreq =
     "changefreq" in input.sitemap
-      ? input.sitemap.changefreq === null
-        ? undefined
-        : input.sitemap.changefreq
+      ? (input.sitemap.changefreq ?? null)
       : prev.changefreq;
 
   const nextPriority =
     "priority" in input.sitemap
-      ? input.sitemap.priority === null
-        ? undefined
-        : input.sitemap.priority
+      ? (input.sitemap.priority ?? null)
       : prev.priority;
 
-  const sNext = {
-    include: input.sitemap.include ?? prev.include ?? true,
-    changefreq: nextChangefreq,
-    priority: nextPriority,
+  const sNext: NonNullable<Page["sitemap"]> = {
+    include: input.sitemap.include ?? prev.include,
+    changefreq: nextChangefreq ?? null,
+    priority: nextPriority ?? null,
   };
 
   assertPriority(sNext.priority);
 
   const changedSitemap =
-    sNext.include !== (prev.include ?? true) ||
+    sNext.include !== prev.include ||
     sNext.changefreq !== prev.changefreq ||
     sNext.priority !== prev.priority;
 
@@ -151,7 +157,6 @@ export async function applySlugPatch({
 
   const rawSlug = String(input.slug ?? "").trim();
 
-  // Reset : slug vidé => on dérive depuis le titre courant (next.title si modifié)
   const baseSource =
     rawSlug.length === 0 ? next.name : normalizeSlugInput(rawSlug);
 

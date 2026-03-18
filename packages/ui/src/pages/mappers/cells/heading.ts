@@ -23,6 +23,6 @@ export function toHeadingCellShapeFromDTO(
     separator: cell.separator,
     idAnchor: cell.idAnchor,
     reveal: cell.reveal,
-    highlights: cell.highlights ? [...cell.highlights] : undefined,
+    highlights: [...cell.highlights],
   };
 }

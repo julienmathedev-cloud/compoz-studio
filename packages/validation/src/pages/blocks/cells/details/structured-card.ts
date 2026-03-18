@@ -34,14 +34,19 @@ export const StructuredCardItemSchema = z
   .object({
     id: CellItemIdSchema,
 
-    image: ImageEditorSchema.optional(),
+    image: ImageEditorSchema.nullable(),
 
     title: z
       .string()
       .trim()
       .min(1, ERROR_CODES.CELL_STRUCTURED_CARD_ITEM_TITLE_REQUIRED),
 
-    meta: z.string().trim().optional(),
+    meta: z
+      .string({
+        message: ERROR_CODES.CELL_STRUCTURED_CARD_ITEM_META_INVALID,
+      })
+      .trim()
+      .nullable(),
 
     sections: z
       .array(StructuredCardSectionSchema, {
@@ -65,6 +70,10 @@ export const StructuredCardCellSchema = z
     kind: z.literal("structuredCard"),
 
     columns: StructuredCardColumnsSchema,
+
+    reveal: z.boolean({
+      message: ERROR_CODES.CELL_STRUCTURED_CARD_REVEAL_INVALID,
+    }),
 
     items: z
       .array(StructuredCardItemSchema, {

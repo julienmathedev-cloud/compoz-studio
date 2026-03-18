@@ -27,7 +27,7 @@ import {
 /* Internals                                                                  */
 /* -------------------------------------------------------------------------- */
 
-function parseRobotsTokens(input: unknown): Set<string> {
+function parseRobotsTokens(input: string | null | undefined): Set<string> {
   const raw = typeof input === "string" ? input : "";
   const tokens = raw
     .toLowerCase()
@@ -54,7 +54,6 @@ function hostFromBaseUrl(baseUrl: string): string | undefined {
 /* -------------------------------------------------------------------------- */
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
-  // ✅ compat: selon ta version Next, headers() peut être sync ou async
   const h = await headers();
   const hostRaw = h.get("x-forwarded-host") ?? h.get("host") ?? "";
 
@@ -65,18 +64,18 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   });
 
   const tenantId = resolved.tenantId;
-
-  // Si le resolver tombe en fallback (vercel / host inconnu), on pointe vers /t/:tenant
   const usePathTenantFallback = resolved.kind === "fallback";
 
   const repo = getSiteRepository({ tenantId });
   const settings = await repo.readSettings(CONTENT_STATE.PUBLISHED);
 
-  const robotsTokens = parseRobotsTokens(settings?.seo?.robots);
+  const seo = settings?.seo ?? null;
+
+  const robotsTokens = parseRobotsTokens(seo?.robots ?? null);
   const disallowAll = robotsTokens.has("noindex");
 
-  const baseUrl = stripTrailingSlashes(settings?.seo?.baseUrl) || "";
-  const hostOut = hostFromBaseUrl(baseUrl);
+  const baseUrl = stripTrailingSlashes(seo?.baseUrl ?? "");
+  const hostOut = baseUrl ? hostFromBaseUrl(baseUrl) : undefined;
 
   const sitemapPath = usePathTenantFallback
     ? `/t/${encodeURIComponent(tenantId)}/sitemap.xml`
@@ -88,12 +87,10 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     rules: [
       {
         userAgent: "*",
-        allow: disallowAll ? undefined : "/",
-        disallow: disallowAll ? "/" : undefined,
+        ...(disallowAll ? { disallow: "/" } : { allow: "/" }),
       },
     ],
     host: hostOut,
-    // ✅ Absolu si baseUrl connu, sinon relatif (dev/debug)
     sitemap: sitemapAbs ?? sitemapPath,
   };
 }

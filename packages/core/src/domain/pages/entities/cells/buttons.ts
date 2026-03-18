@@ -19,7 +19,7 @@ export type ButtonItem = {
 export type ButtonsCell = {
   id: string;
   kind: "buttons";
-  align?: ButtonsAlign;
-  gap?: ButtonsGap;
+  align: ButtonsAlign;
+  gap: ButtonsGap;
   items: ReadonlyArray<ButtonItem>;
 };

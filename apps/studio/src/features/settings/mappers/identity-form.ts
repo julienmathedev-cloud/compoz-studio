@@ -23,7 +23,6 @@ import type { UpdateIdentitySettingsIntentDTO } from "@compoz/validation/site/se
 import {
   assetUiToPatch,
   assetUiToSettings,
-  emptyToUndef,
   trimKeepEmpty,
 } from "@compoz/ui/lib/form-utils";
 import { toIdentitySettingsShapeFromDTO } from "@compoz/ui/settings/mappers/identity-shape";
@@ -49,9 +48,10 @@ export function toIdentitySettingsShapeFromFormValues(
 ): IdentitySettingsShape {
   const candidate = {
     siteName: trimKeepEmpty(values.siteName),
-    tagline: emptyToUndef(values.tagline),
+    tagline:
+      values.tagline.trim().length > 0 ? trimKeepEmpty(values.tagline) : null,
     logoUrl: assetUiToSettings(values.logoUrl),
-    logoAlt: emptyToUndef(values.logoAlt),
+    logoAlt: trimKeepEmpty(values.logoAlt),
     faviconUrl: assetUiToSettings(values.faviconUrl),
   } satisfies IdentitySettingsShape;
 
@@ -95,13 +95,15 @@ export function toUpdateIdentityIntentDTOFromFormValues(
 
   if ("siteName" in p) out.siteName = trimKeepEmpty(p.siteName);
 
-  // tagline : vide => undefined (cohérent avec le domaine)
-  if ("tagline" in p) out.tagline = emptyToUndef(p.tagline);
+  if ("tagline" in p) {
+    const tagline = trimKeepEmpty(p.tagline);
+    out.tagline = tagline.length > 0 ? tagline : null;
+  }
 
   if ("logoUrl" in p) out.logoUrl = assetUiToPatch(p.logoUrl);
   if ("faviconUrl" in p) out.faviconUrl = assetUiToPatch(p.faviconUrl);
 
-  if ("logoAlt" in p) out.logoAlt = emptyToUndef(p.logoAlt);
+  if ("logoAlt" in p) out.logoAlt = trimKeepEmpty(p.logoAlt);
 
   return out;
 }

@@ -23,9 +23,14 @@ function adaptCardsExtendedItem(
     id: trimOrKeep(dto.id),
     title: trimOrKeep(dto.title),
     description: trimOrKeep(dto.description),
-    bullets: dto.bullets?.map((bullet) => trimOrKeep(bullet)).filter(Boolean),
-    footer: dto.footer ? trimOrKeep(dto.footer) : undefined,
-    icon: dto.icon ? trimOrKeep(dto.icon) : undefined,
+
+    // ❗ toujours retourner un tableau
+    bullets: (dto.bullets ?? [])
+      .map((bullet) => trimOrKeep(bullet))
+      .filter(Boolean),
+
+    footer: dto.footer ? trimOrKeep(dto.footer) : null,
+    icon: dto.icon ? trimOrKeep(dto.icon) : null,
   };
 }
 
@@ -37,6 +42,7 @@ export function adaptCardsExtendedCell(
     kind: "cardsExtended",
     columns: dto.columns,
     align: dto.align,
+    reveal: dto.reveal,
     items: dto.items.map(adaptCardsExtendedItem),
   };
 }

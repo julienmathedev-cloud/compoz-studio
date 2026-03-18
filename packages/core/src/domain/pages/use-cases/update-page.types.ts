@@ -15,14 +15,18 @@ import type { SiteRepository } from "@compoz/core/domain/site/ports/site-reposit
 
 /**
  * Entrée du use-case `updatePage`.
+ *
+ * @remarks
+ * - Les champs restent optionnels car il s’agit d’un patch partiel.
+ * - `seoTitle` et `sitemap` peuvent être explicitement remis à `null`.
  */
 export type UpdatePageInput = {
   pageId: string;
   name?: string;
-  seoTitle?: string;
+  seoTitle?: string | null;
   slug?: string;
   parentId?: string | null;
-  sitemap?: Partial<PageSitemap>;
+  sitemap?: Partial<PageSitemap> | null;
   paginationEnabled?: boolean;
 };
 

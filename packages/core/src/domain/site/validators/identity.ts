@@ -24,7 +24,7 @@ import type { IdentitySettings } from "@compoz/core/domain/site/entities/identit
  */
 export function assertIdentitySettings(identity: IdentitySettings): void {
   // Invariant : titre requis
-  const siteName = identity.siteName?.trim() ?? "";
+  const siteName = identity.siteName.trim();
   if (!siteName) {
     throw new DomainError({
       code: EC.IDENTITY_SITENAME_REQUIRED,
@@ -36,7 +36,9 @@ export function assertIdentitySettings(identity: IdentitySettings): void {
   // Invariant : logoAlt requis si un logo est défini
   const hasLogo =
     typeof identity.logoUrl === "string" && identity.logoUrl.trim() !== "";
-  const logoAlt = identity.logoAlt?.trim() ?? "";
+
+  const logoAlt = identity.logoAlt.trim();
+
   if (hasLogo && !logoAlt) {
     throw new DomainError({
       code: EC.IDENTITY_LOGO_ALT_REQUIRED,

@@ -13,14 +13,14 @@ export interface IdentitySettings {
   /** Titre principal du site (obligatoire). */
   siteName: string;
 
-  /** Slogan optionnel. */
-  tagline?: string;
+  /** Slogan du site (null si absent). */
+  tagline: string | null;
 
   /** URL du logo (null si aucun logo). */
   logoUrl: AssetUrlOrNull;
 
-  /** Texte alternatif du logo (obligatoire pour l’accessibilité). */
-  logoAlt?: string;
+  /** Texte alternatif du logo  */
+  logoAlt: string;
 
   /** URL du favicon (null si aucun favicon). */
   faviconUrl: AssetUrlOrNull;

@@ -21,11 +21,13 @@ function adaptTimelineItem(dto: TimelineItemIntentDTO): TimelineItem {
     id: trimOrKeep(dto.id),
     period: trimOrKeep(dto.period),
     title: trimOrKeep(dto.title),
-    subtitle: dto.subtitle ? trimOrKeep(dto.subtitle) : undefined,
-    description: dto.description ? trimOrKeep(dto.description) : undefined,
-    badge: dto.badge ? trimOrKeep(dto.badge) : undefined,
-    keywords: dto.keywords
-      ?.map((keyword) => trimOrKeep(keyword))
+
+    subtitle: dto.subtitle ? trimOrKeep(dto.subtitle) : null,
+    description: dto.description ? trimOrKeep(dto.description) : null,
+    badge: dto.badge ? trimOrKeep(dto.badge) : null,
+
+    keywords: (dto.keywords ?? [])
+      .map((keyword) => trimOrKeep(keyword))
       .filter(Boolean),
   };
 }

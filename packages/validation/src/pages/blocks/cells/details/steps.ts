@@ -32,7 +32,7 @@ export const StepsCellSchema = z
   .object({
     id: CellIdSchema,
     kind: z.literal("steps"),
-    variant: StepsVariantSchema.optional(),
+    variant: StepsVariantSchema,
     items: z
       .array(StepItemSchema, {
         message: ERROR_CODES.CELL_STEPS_ITEMS_INVALID,

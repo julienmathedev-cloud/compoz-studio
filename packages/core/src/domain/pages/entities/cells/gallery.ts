@@ -14,5 +14,6 @@ export type GalleryCell = {
   kind: "gallery";
   linksEnabled: boolean;
   maxColumns: GalleryMaxColumns;
+  reveal: boolean;
   items: ReadonlyArray<ImageEditor>;
 };

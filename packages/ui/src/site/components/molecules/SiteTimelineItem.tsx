@@ -14,6 +14,7 @@
 
 import type { CSSProperties } from "react";
 
+import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteTimelineItemDescription } from "@compoz/ui/site/components/atoms/SiteTimelineItemDescription";
 import type { SiteTimelineItemUi } from "@compoz/ui/site/site-ui.types";
@@ -28,6 +29,7 @@ export type SiteTimelineItemProps = Readonly<{
 export function SiteTimelineItem({ item, index, ui }: SiteTimelineItemProps) {
   const isLeft = index % 2 === 0;
   const margin = index > 0 ? -(80 + index * 10) : 0;
+  const badge = normalizeString(item.badge ?? "", "");
 
   const itemStyle = {
     "--timeline-item-mt": `${margin}px`,
@@ -56,16 +58,18 @@ export function SiteTimelineItem({ item, index, ui }: SiteTimelineItemProps) {
               isLeft ? ui.cardWrapLeft : ui.cardWrapRight,
             )}
           >
-            <div className={cn(ui.badgeWrap)}>
-              <div className={cn(ui.badge)}>{item.badge ?? ""}</div>
-            </div>
+            {badge ? (
+              <div className={cn(ui.badgeWrap)}>
+                <div className={cn(ui.badge)}>{badge}</div>
+              </div>
+            ) : null}
 
             <div className={cn(ui.card, isLeft ? ui.cardLeft : ui.cardRight)}>
               <SiteTimelineItemDescription
                 period={item.period}
                 title={item.title}
-                subtitle={item.subtitle}
-                description={item.description}
+                subtitle={item.subtitle ?? undefined}
+                description={item.description ?? undefined}
                 keywords={item.keywords}
                 isLeft={isLeft}
                 ui={ui}

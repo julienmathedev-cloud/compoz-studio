@@ -28,12 +28,12 @@ export function toSeoSettingsShapeFromDTO(
   dto: SeoSettingsDTO | null | undefined,
 ): SeoSettingsShape {
   return {
-    baseUrl: trimKeepEmpty(dto?.baseUrl),
-    defaultTitle: trimKeepEmpty(dto?.defaultTitle),
-    defaultDescription: trimKeepEmpty(dto?.defaultDescription),
-    titleTemplate: trimKeepEmpty(dto?.titleTemplate),
-    canonicalUrl: trimKeepEmpty(dto?.canonicalUrl),
-    robots: trimKeepEmpty(dto?.robots),
+    baseUrl: trimKeepEmpty(dto?.baseUrl ?? ""),
+    defaultTitle: trimKeepEmpty(dto?.defaultTitle ?? ""),
+    defaultDescription: trimKeepEmpty(dto?.defaultDescription ?? ""),
+    titleTemplate: trimKeepEmpty(dto?.titleTemplate ?? ""),
+    canonicalUrl: trimKeepEmpty(dto?.canonicalUrl ?? ""),
+    robots: trimKeepEmpty(dto?.robots ?? ""),
 
     structuredDataEnabled:
       typeof dto?.structuredDataEnabled === "boolean"
@@ -41,16 +41,16 @@ export function toSeoSettingsShapeFromDTO(
         : true,
 
     openGraph: {
-      title: trimKeepEmpty(dto?.openGraph?.title),
-      description: trimKeepEmpty(dto?.openGraph?.description),
-      defaultImageUrl: trimKeepEmpty(dto?.openGraph?.defaultImageUrl),
-      imageAlt: trimKeepEmpty(dto?.openGraph?.imageAlt),
+      title: trimKeepEmpty(dto?.openGraph?.title ?? ""),
+      description: trimKeepEmpty(dto?.openGraph?.description ?? ""),
+      defaultImageUrl: trimKeepEmpty(dto?.openGraph?.defaultImageUrl ?? ""),
+      imageAlt: trimKeepEmpty(dto?.openGraph?.imageAlt ?? ""),
     },
 
     twitter: {
       card: dto?.twitter?.card ?? DEFAULT_TWITTER_CARD,
-      site: trimKeepEmpty(dto?.twitter?.site),
-      creator: trimKeepEmpty(dto?.twitter?.creator),
+      site: trimKeepEmpty(dto?.twitter?.site ?? ""),
+      creator: trimKeepEmpty(dto?.twitter?.creator ?? ""),
     },
   } satisfies SeoSettingsShape;
 }

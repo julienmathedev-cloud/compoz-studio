@@ -47,21 +47,21 @@ export const CardsExtendedItemSchema = z
       .array(CardsExtendedBulletSchema, {
         message: ERROR_CODES.CELL_CARDS_EXTENDED_ITEM_BULLETS_INVALID,
       })
-      .optional(),
+      .nullable(),
 
     footer: z
       .string({
         message: ERROR_CODES.CELL_CARDS_EXTENDED_ITEM_FOOTER_INVALID,
       })
       .trim()
-      .optional(),
+      .nullable(),
 
     icon: z
       .string({
         message: ERROR_CODES.CELL_CARDS_EXTENDED_ITEM_ICON_INVALID,
       })
       .trim()
-      .optional(),
+      .nullable(),
   })
   .strict();
 
@@ -70,8 +70,10 @@ export const CardsExtendedCellSchema = z
     id: CellIdSchema,
     kind: z.literal("cardsExtended"),
     columns: CardsExtendedColumnsSchema,
-    align: CardsExtendedAlignSchema.optional(),
-
+    align: CardsExtendedAlignSchema,
+    reveal: z.boolean({
+      message: ERROR_CODES.CELL_CARDS_EXTENDED_REVEAL_INVALID,
+    }),
     items: z
       .array(CardsExtendedItemSchema, {
         message: ERROR_CODES.CELL_CARDS_EXTENDED_ITEMS_INVALID,

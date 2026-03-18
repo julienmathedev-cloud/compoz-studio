@@ -25,8 +25,9 @@ export function adaptHeadingCell(dto: HeadingCellIntentDTO): HeadingCell {
         ? trimOrKeep(dto.idAnchor)
         : dto.idAnchor,
     reveal: dto.reveal,
-    highlights: Array.isArray(dto.highlights)
-      ? dto.highlights.map((item) => trimOrKeep(item)).filter(Boolean)
-      : undefined,
+
+    highlights: (dto.highlights ?? [])
+      .map((item) => trimOrKeep(item))
+      .filter(Boolean),
   };
 }

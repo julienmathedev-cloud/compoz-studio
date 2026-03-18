@@ -56,14 +56,17 @@ export function normalizePageFormValues(
 ): PageFormValues {
   return {
     name: String(values.name ?? "").trim(),
-    seoTitle: String(values.seoTitle ?? "").trim(),
+    seoTitle:
+      values.seoTitle !== null ? String(values.seoTitle ?? "").trim() : null,
     parentId: values.parentId ?? null,
     slug: String(values.slug ?? "").trim(),
-    sitemap: {
-      include: values.sitemap?.include ?? DEFAULT_SITEMAP.include,
-      priority: values.sitemap?.priority ?? DEFAULT_SITEMAP.priority,
-      changefreq: values.sitemap?.changefreq ?? DEFAULT_SITEMAP.changefreq,
-    },
+    sitemap: values.sitemap
+      ? {
+          include: values.sitemap.include ?? DEFAULT_SITEMAP.include,
+          priority: values.sitemap.priority ?? DEFAULT_SITEMAP.priority,
+          changefreq: values.sitemap.changefreq ?? DEFAULT_SITEMAP.changefreq,
+        }
+      : null,
     paginationEnabled: values.paginationEnabled ?? false,
   };
 }
@@ -74,24 +77,14 @@ export function normalizePageFormValues(
 
 function toPageSitemapIntentDTOFromFormValues(
   values: PageFormValues["sitemap"],
-): CreatePageIntentDTO["sitemap"] | undefined {
-  if (!values) return undefined;
+): CreatePageIntentDTO["sitemap"] {
+  if (!values) return null;
 
-  if (!values.include) {
-    return { include: false };
-  }
-
-  const output: CreatePageIntentDTO["sitemap"] = { include: true };
-
-  if (values.changefreq) {
-    output.changefreq = values.changefreq;
-  }
-
-  if (typeof values.priority === "number") {
-    output.priority = values.priority;
-  }
-
-  return output;
+  return {
+    include: values.include,
+    changefreq: values.changefreq,
+    priority: values.priority,
+  };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -104,23 +97,14 @@ export function toCreatePageIntentDTOFromFormValues(
   const normalizedValues = normalizePageFormValues(values);
   const slug = toSlugIntentInput(normalizedValues.slug);
 
-  const output: CreatePageIntentDTO = {
+  return {
     name: normalizedValues.name,
     seoTitle: normalizedValues.seoTitle,
     parentId: normalizedValues.parentId,
     paginationEnabled: normalizedValues.paginationEnabled,
+    sitemap: toPageSitemapIntentDTOFromFormValues(normalizedValues.sitemap),
     ...(slug ? { slug } : {}),
   };
-
-  const sitemap = toPageSitemapIntentDTOFromFormValues(
-    normalizedValues.sitemap,
-  );
-
-  if (sitemap !== undefined) {
-    output.sitemap = sitemap;
-  }
-
-  return output;
 }
 
 export function toUpdatePageIntentDTOFromFormValues(
@@ -132,8 +116,11 @@ export function toUpdatePageIntentDTOFromFormValues(
     output.name = String(patch.name ?? "").trim();
   }
 
-  if ("seoTitle" in patch && patch.seoTitle !== undefined) {
-    output.seoTitle = String(patch.seoTitle ?? "").trim();
+  if ("seoTitle" in patch) {
+    output.seoTitle =
+      patch.seoTitle !== null && patch.seoTitle !== undefined
+        ? String(patch.seoTitle).trim()
+        : null;
   }
 
   if ("slug" in patch && patch.slug !== undefined) {
@@ -149,10 +136,9 @@ export function toUpdatePageIntentDTOFromFormValues(
   }
 
   if ("sitemap" in patch) {
-    const sitemap = toPageSitemapIntentDTOFromFormValues(patch.sitemap);
-    if (sitemap !== undefined) {
-      output.sitemap = sitemap;
-    }
+    output.sitemap = toPageSitemapIntentDTOFromFormValues(
+      patch.sitemap ?? null,
+    );
   }
 
   return output;

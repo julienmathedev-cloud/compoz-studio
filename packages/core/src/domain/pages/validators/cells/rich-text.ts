@@ -22,4 +22,15 @@ export function assertRichText(
       details: { path: [...path, "content"] },
     });
   }
+
+  if (typeof cell.reveal !== "boolean") {
+    throw new DomainError({
+      code: EC.RICH_TEXT_REVEAL_INVALID,
+      message: EC.RICH_TEXT_REVEAL_INVALID,
+      details: {
+        path: [...path, "reveal"],
+        meta: { reveal: cell.reveal },
+      },
+    });
+  }
 }

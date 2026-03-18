@@ -46,7 +46,7 @@ export function assertSeoSettings(
   opts: AssertSeoSettingsOptions = { isProd: false },
 ): void {
   // Invariant : `defaultTitle` requis
-  const defaultTitle = seo.defaultTitle?.trim() ?? "";
+  const defaultTitle = seo.defaultTitle !== null ? seo.defaultTitle.trim() : "";
   if (defaultTitle.length === 0) {
     throw new DomainError({
       code: EC.SEO_TITLE_REQUIRED,
@@ -56,7 +56,9 @@ export function assertSeoSettings(
   }
 
   // Invariant : si `titleTemplate` est défini, il doit contenir `%s`
-  const titleTemplate = (seo.titleTemplate ?? "").trim();
+  const titleTemplate =
+    seo.titleTemplate !== null ? seo.titleTemplate.trim() : "";
+
   if (titleTemplate && !titleTemplate.includes(TITLE_PLACEHOLDER)) {
     throw new DomainError({
       code: EC.SEO_TITLE_TEMPLATE_MISSING_PLACEHOLDER,
@@ -67,7 +69,7 @@ export function assertSeoSettings(
 
   // Invariant : si `baseUrl` est définie (non vide), URL absolue valide
   // (+ https en prod selon `opts.isProd`)
-  const baseUrl = (seo.baseUrl ?? "").trim();
+  const baseUrl = seo.baseUrl !== null ? seo.baseUrl.trim() : "";
 
   if (baseUrl) {
     let u: URL;

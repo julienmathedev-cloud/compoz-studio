@@ -9,10 +9,10 @@ export type TimelineItem = {
   id: string;
   period: string;
   title: string;
-  subtitle?: string;
-  description?: string;
-  badge?: string;
-  keywords?: ReadonlyArray<string>;
+  subtitle: string | null;
+  description: string | null;
+  badge: string | null;
+  keywords: ReadonlyArray<string>;
 };
 
 export type TimelineCell = {

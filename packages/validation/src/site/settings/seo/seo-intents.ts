@@ -24,11 +24,12 @@ import { z } from "zod";
 /*                           Helpers clearables                               */
 /* -------------------------------------------------------------------------- */
 
-const ClearableStringSchema = z.union([z.string(), z.literal("")]);
+const ClearableStringSchema = z.union([z.string(), z.literal(""), z.null()]);
 
 const AbsoluteHttpUrlPatchableSchema = z.union([
   AbsoluteHttpUrlSchema,
   z.literal(""),
+  z.null(),
 ]);
 
 const AssetUrlPatchableSchema = z.union([
@@ -49,7 +50,7 @@ const TwitterHandleClearableSchema = z.union([
 ]);
 
 /* -------------------------------------------------------------------------- */
-/*                        Patch schemas (exportés)                             */
+/*                        Patch schemas (exportés)                            */
 /* -------------------------------------------------------------------------- */
 
 export const TwitterPatchSchema = z
@@ -77,12 +78,13 @@ const UpdateSeoSettingsIntentObjectSchema = SeoSettingsObjectSchema.partial()
     baseUrl: AbsoluteHttpUrlPatchableSchema.optional(),
     canonicalUrl: AbsoluteHttpUrlPatchableSchema.optional(),
 
+    defaultTitle: ClearableStringSchema.optional(),
     defaultDescription: ClearableStringSchema.optional(),
     titleTemplate: ClearableStringSchema.optional(),
     robots: ClearableStringSchema.optional(),
 
-    openGraph: OpenGraphPatchSchema.optional(),
-    twitter: TwitterPatchSchema.optional(),
+    openGraph: z.union([OpenGraphPatchSchema, z.null()]).optional(),
+    twitter: z.union([TwitterPatchSchema, z.null()]).optional(),
 
     structuredDataEnabled: z.boolean().optional(),
   })
@@ -116,25 +118,25 @@ export function validateSeoSettingsPatchValues(
 ) {
   const requireBaseUrlHttps = opts?.requireBaseUrlHttps ?? false;
 
-  // Base minimale (évite de dépendre de defaults côté domaine).
   const base: z.infer<typeof SeoSettingsObjectSchema> = {
-    baseUrl: "",
-    canonicalUrl: "",
-    defaultTitle: "",
-    defaultDescription: undefined,
-    titleTemplate: undefined,
-    robots: undefined,
-    openGraph: undefined,
-    twitter: undefined,
-    structuredDataEnabled: undefined,
+    baseUrl: null,
+    canonicalUrl: null,
+    defaultTitle: null,
+    defaultDescription: null,
+    titleTemplate: null,
+    robots: null,
+    openGraph: null,
+    twitter: null,
+    structuredDataEnabled: false,
   };
 
   const merged = { ...base, ...patch };
 
-  // 1) defaultTitle requis uniquement si patch le contient
   if (Object.prototype.hasOwnProperty.call(patch, "defaultTitle")) {
-    const title = (merged.defaultTitle ?? "").trim();
-    if (title.length < SEO.TITLE.MIN) {
+    const title =
+      typeof merged.defaultTitle === "string" ? merged.defaultTitle.trim() : "";
+
+    if (title.length > 0 && title.length < SEO.TITLE.MIN) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["defaultTitle"],
@@ -143,10 +145,9 @@ export function validateSeoSettingsPatchValues(
     }
   }
 
-  // 2) baseUrl : si patch le contient et est non vide => doit être une URL valide.
-  //    Si option requireBaseUrlHttps = true => https requis.
   if (Object.prototype.hasOwnProperty.call(patch, "baseUrl")) {
-    const baseUrl = (merged.baseUrl ?? "").trim();
+    const baseUrl =
+      typeof merged.baseUrl === "string" ? merged.baseUrl.trim() : "";
 
     if (baseUrl.length > 0) {
       try {
@@ -169,9 +170,12 @@ export function validateSeoSettingsPatchValues(
     }
   }
 
-  // 3) defaultDescription min uniquement si patch le contient
   if (Object.prototype.hasOwnProperty.call(patch, "defaultDescription")) {
-    const desc = (merged.defaultDescription ?? "").trim();
+    const desc =
+      typeof merged.defaultDescription === "string"
+        ? merged.defaultDescription.trim()
+        : "";
+
     if (desc.length > 0 && desc.length < SEO.DESCRIPTION.MIN) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -181,9 +185,12 @@ export function validateSeoSettingsPatchValues(
     }
   }
 
-  // 4) titleTemplate min + placeholder uniquement si patch le contient
   if (Object.prototype.hasOwnProperty.call(patch, "titleTemplate")) {
-    const tpl = (merged.titleTemplate ?? "").trim();
+    const tpl =
+      typeof merged.titleTemplate === "string"
+        ? merged.titleTemplate.trim()
+        : "";
+
     if (tpl.length > 0) {
       if (tpl.length < SEO.TITLE_TEMPLATE.MIN) {
         ctx.addIssue({
@@ -192,6 +199,7 @@ export function validateSeoSettingsPatchValues(
           message: ERROR_CODES.SEO_TITLE_TEMPLATE_TOO_SHORT,
         });
       }
+
       if (!tpl.includes(TITLE_PLACEHOLDER)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

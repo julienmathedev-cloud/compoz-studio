@@ -14,11 +14,11 @@ export type HeadingCell = {
   kind: "heading";
   level: HeadingLevel;
   title: string;
-  subtitle?: string;
-  align?: HeadingAlign;
-  variant?: HeadingVariant;
-  separator?: boolean;
-  idAnchor?: string;
-  reveal?: boolean;
-  highlights?: string[];
+  subtitle: string | null;
+  align: HeadingAlign;
+  variant: HeadingVariant;
+  separator: boolean;
+  idAnchor: string | null;
+  reveal: boolean;
+  highlights: ReadonlyArray<string>;
 };

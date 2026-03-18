@@ -47,10 +47,10 @@ export type StructuredCardSection = {
  */
 export type StructuredCardItem = {
   id: string;
-  image?: ImageEditor;
+  image: ImageEditor | null;
   title: string;
-  meta?: string;
-  sections: StructuredCardSection[];
+  meta: string | null;
+  sections: ReadonlyArray<StructuredCardSection>;
 };
 
 /**
@@ -67,5 +67,6 @@ export type StructuredCardCell = {
   id: string;
   kind: "structuredCard";
   columns: StructuredCardColumns;
-  items: StructuredCardItem[];
+  reveal: boolean;
+  items: ReadonlyArray<StructuredCardItem>;
 };

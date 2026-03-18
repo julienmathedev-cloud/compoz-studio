@@ -17,6 +17,7 @@ export function toCardsCellShapeFromDTO(
     kind: "cards",
     columns: cell.columns,
     align: cell.align,
+    reveal: cell.reveal,
     items: cell.items.map((item) => ({
       id: item.id,
       title: item.title,

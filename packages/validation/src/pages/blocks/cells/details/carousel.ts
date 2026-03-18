@@ -73,4 +73,26 @@ export const CarouselCellSchema = z
       })
       .min(1, ERROR_CODES.CELL_CAROUSEL_ITEMS_MIN_1),
   })
-  .strict();
+  .strict()
+  .superRefine((cell, ctx) => {
+    const schemaMap = {
+      image: ImageEditorSchema,
+      card: CardItemSchema,
+      cardsExtended: CardsExtendedItemSchema,
+      structuredCard: StructuredCardItemSchema,
+    } as const;
+
+    const schema = schemaMap[cell.itemKind];
+
+    for (let i = 0; i < cell.items.length; i++) {
+      const result = schema.safeParse(cell.items[i]);
+
+      if (!result.success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: ERROR_CODES.CELL_CAROUSEL_ITEM_KIND_INVALID,
+          path: ["items", i],
+        });
+      }
+    }
+  });

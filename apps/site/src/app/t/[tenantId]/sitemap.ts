@@ -53,10 +53,11 @@ export default async function sitemap({
   const pages = index.pages ?? [];
   const updatedAt = index.updatedAt;
 
+  const seoBaseUrl = settings?.seo?.baseUrl ?? "";
+  const envBaseUrl = process.env["NEXT_PUBLIC_SITE_URL"] ?? "";
+
   const baseUrl =
-    stripTrailingSlashes(settings?.seo?.baseUrl) ||
-    stripTrailingSlashes(process.env["NEXT_PUBLIC_SITE_URL"]) ||
-    "";
+    stripTrailingSlashes(seoBaseUrl) || stripTrailingSlashes(envBaseUrl) || "";
 
   const lastModified =
     updatedAt && !Number.isNaN(Date.parse(updatedAt))

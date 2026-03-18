@@ -35,7 +35,7 @@ export const ButtonItemSchema = z
       .string()
       .trim()
       .min(1, ERROR_CODES.CELL_BUTTON_ITEM_LABEL_REQUIRED),
-    href: z.string().trim(),
+    href: z.string().trim().min(1, ERROR_CODES.CELL_BUTTON_ITEM_HREF_INVALID),
     variant: ButtonItemVariantSchema,
   })
   .strict();
@@ -44,8 +44,8 @@ export const ButtonsCellSchema = z
   .object({
     id: CellIdSchema,
     kind: z.literal("buttons"),
-    align: ButtonsAlignSchema.optional(),
-    gap: ButtonsGapSchema.optional(),
+    align: ButtonsAlignSchema,
+    gap: ButtonsGapSchema,
     items: z
       .array(ButtonItemSchema, {
         message: ERROR_CODES.CELL_BUTTONS_ITEMS_INVALID,

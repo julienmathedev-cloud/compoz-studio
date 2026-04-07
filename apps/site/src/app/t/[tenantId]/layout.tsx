@@ -172,10 +172,8 @@ export default async function TenantSiteLayout({
   params,
 }: TenantLayoutProps) {
   const { tenantId } = await unwrapParams(params);
-  console.log("On passe dans le layout tenant avec tenantId", tenantId);
 
   const settings = await getPublishedSettingsForTenant(tenantId);
-  console.log("On passe dans le layout tenant avec settings", settings);
   const ui = resolveSiteUi();
 
   return (

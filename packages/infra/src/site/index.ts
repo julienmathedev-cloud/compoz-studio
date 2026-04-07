@@ -3,7 +3,7 @@
  * @layer infra/site
  * @description
  * Factory et singleton(s) pour l’implémentation du `SiteRepository`.
- * Permet de choisir entre FileSystem, InMemory ou KV selon la variable d’environnement.
+ * Permet de choisir entre InMemory ou KV selon la variable d’environnement.
  * Instanciation lazy et HMR-safe.
  *
  * ✅ Multi-tenant:
@@ -39,12 +39,20 @@ export type SiteRepoOptions = {
 const repoByKey = new Map<string, SiteRepository>();
 let inited = false;
 
+/**
+ * Retourne la clé de cache de repository.
+ *
+ * @remarks
+ * - `memory` reste global et partage une seule instance.
+ * - `kv` doit être isolé par tenant pour éviter toute contamination entre sites.
+ * - Tout mode non-`memory` est traité comme tenant-aware.
+ */
 function cacheKey(impl: string, opts: SiteRepoOptions): string {
   const tenant = normalizeTenantId(opts.tenantId);
 
-  if (impl === "kv") return `kv:${tenant}`;
+  if (impl === "memory") return "memory";
 
-  return `memory`;
+  return `kv:${tenant}`;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -53,13 +61,14 @@ function cacheKey(impl: string, opts: SiteRepoOptions): string {
 
 /**
  * Crée une implémentation concrète du `SiteRepository`.
+ *
  * Contrat :
  * - `SITE_REPO_IMPL=memory` -> InMemory
- * - `SITE_REPO_IMPL=kv`     -> KV (Upstash/Vercel KV)  ✅ tenant-aware
- * - sinon -> FileSystem
+ * - `SITE_REPO_IMPL=kv`     -> KV (Upstash/Vercel KV) ✅ tenant-aware
+ * - sinon                   -> KV (fallback par défaut)
  */
 function createRepo(opts: SiteRepoOptions): SiteRepository {
-  const impl = (process.env["SITE_REPO_IMPL"] ?? "fs").toLowerCase();
+  const impl = (process.env["SITE_REPO_IMPL"] ?? "kv").toLowerCase();
 
   if (impl === "memory") {
     lg.debug("site.repository.init", { impl: "memory" });
@@ -68,6 +77,7 @@ function createRepo(opts: SiteRepoOptions): SiteRepository {
 
   const tenantId = normalizeTenantId(opts.tenantId);
   lg.debug("site.repository.init", { impl: "kv", tenantId });
+
   return new KvSiteRepository({ tenantId });
 }
 
@@ -75,29 +85,24 @@ function createRepo(opts: SiteRepoOptions): SiteRepository {
  * Retourne le repository (cache HMR-safe).
  *
  * ✅ Multi-tenant:
- * - en KV, le cache est par `tenantId`.
- * - en FS/memory, une seule instance (V0.5).
+ * - en KV, le cache est par `tenantId`
+ * - en memory, une seule instance globale
  */
 export function getSiteRepository(opts: SiteRepoOptions = {}): SiteRepository {
-  const impl = (process.env["SITE_REPO_IMPL"] ?? "fs").toLowerCase();
+  const impl = (process.env["SITE_REPO_IMPL"] ?? "kv").toLowerCase();
   const key = cacheKey(impl, opts);
-  console.log("getSiteRepository key", key);
-  console.log("getSiteRepository impl", impl);
 
   const existing = repoByKey.get(key);
-  console.log("getSiteRepository existing", existing);
   if (existing) {
     if (!inited) {
-      console.log("On init le repo");
       lg.debug("site.repository.reuse", { key });
       inited = true;
     }
-    console.log("Retourne l'existing", existing);
+
     return existing;
   }
 
   const created = createRepo(opts);
-  console.log("createRepo created", created);
   repoByKey.set(key, created);
   inited = true;
 

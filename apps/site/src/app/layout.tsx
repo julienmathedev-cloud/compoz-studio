@@ -26,7 +26,6 @@ type LayoutProps = Readonly<{
 }>;
 
 export default function RootLayout({ children }: LayoutProps) {
-  console.log("On passe dans le layout global");
   return (
     <html
       id="app-site"

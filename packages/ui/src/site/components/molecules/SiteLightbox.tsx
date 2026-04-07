@@ -260,7 +260,6 @@ export function SiteLightbox({
         }}
       >
         <Button
-          variant="ghostVanilla"
           size="icon"
           aria-label="Fermer"
           onClick={beginClose}

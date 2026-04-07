@@ -124,7 +124,7 @@ export function SignInForm({ locale: _locale, nextPath }: SignInFormProps) {
         aria-label={t("studio.login.ariaLabel")}
         className={cn("flex flex-1 mx-auto items-center justify-center")}
       >
-        <Card variant="panelStudio" className={cn("w-[420px]")}>
+        <Card variant="panel" visualMode="studio" className={cn("w-[420px]")}>
           <CardContent className={cn("space-y-8")}>
             <Heading as="h1" className="text-center">
               {t("studio.login.title")}
@@ -168,7 +168,8 @@ export function SignInForm({ locale: _locale, nextPath }: SignInFormProps) {
               {errors.form ? <ErrorText error={errors.form} /> : null}
 
               <Button
-                variant="defaultStudio"
+                variant="default"
+                visualMode="studio"
                 type="submit"
                 disabled={isPending}
                 className="w-full"

@@ -37,14 +37,14 @@ type EmptyStateProps = Readonly<{
  */
 export function EmptyState({ text, icon, className }: EmptyStateProps) {
   return (
-    <Empty className={cn(className)} variant="defaultStudio">
+    <Empty className={cn(className)} visualMode="studio">
       {/* Description centralisée, typographiée via Text */}
       <EmptyDescription>
         {/* Icône grisée si fournie */}
         {icon && <StudioIcon icon={icon} />}
 
         {text && (
-          <Text as="p" variant="muted" className="text-center">
+          <Text as="span" variant="muted" className="text-center">
             {text}
           </Text>
         )}

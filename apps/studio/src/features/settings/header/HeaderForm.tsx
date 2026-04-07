@@ -108,7 +108,6 @@ export function HeaderForm({
     onWarningKeysChange,
   });
 
-  // ✅ Badge “erreur” : ici ça restera souvent à 0, mais c’est harmonisé.
   const blockingErrorsCount = useMemo(() => {
     const fields: Array<keyof HeaderFormValues> = [
       "showLogo",
@@ -137,7 +136,7 @@ export function HeaderForm({
       onSubmit={handleSubmit(onSubmit)}
       noValidate
     >
-      <Card variant="panelStudio">
+      <Card variant="panel" visualMode="studio">
         <CardContent>
           <FormGrid>
             <SwitchField

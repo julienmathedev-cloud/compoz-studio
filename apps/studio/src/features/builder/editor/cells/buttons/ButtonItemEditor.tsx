@@ -14,6 +14,8 @@
  * - Le reorder est géré par drag and drop via dnd-kit.
  * - L’affichage des erreurs repose sur une règle unique :
  *   `showError || fieldState.isTouched`.
+ * - Aligné sur le pattern du menu légal :
+ *   l’ID sortable est passé explicitement via `sortableId`.
  */
 
 import { useSortable } from "@dnd-kit/sortable";
@@ -45,7 +47,8 @@ export type ButtonItemEditorProps = Readonly<{
   basePath: ButtonsFieldBasePath;
   index: number;
   idPrefix: string;
-  value: ButtonItemFormValues;
+  sortableId: string;
+  watchedItem?: ButtonItemFormValues;
   disabled?: boolean;
   canRemove?: boolean;
   onRemove: () => void;
@@ -57,7 +60,8 @@ export function ButtonItemEditor({
   basePath,
   index,
   idPrefix,
-  value,
+  sortableId,
+  watchedItem,
   disabled = false,
   canRemove = true,
   onRemove,
@@ -70,16 +74,19 @@ export function ButtonItemEditor({
   const labelCtrl = useController({
     name: `${itemBasePath}.label` as `${ButtonItemBasePath}.label`,
     control,
+    defaultValue: watchedItem?.label ?? "",
   });
 
   const hrefCtrl = useController({
     name: `${itemBasePath}.href` as `${ButtonItemBasePath}.href`,
     control,
+    defaultValue: watchedItem?.href ?? "",
   });
 
   const variantCtrl = useController({
     name: `${itemBasePath}.variant` as `${ButtonItemBasePath}.variant`,
     control,
+    defaultValue: watchedItem?.variant ?? "default",
   });
 
   const {
@@ -90,7 +97,7 @@ export function ButtonItemEditor({
     transition,
     isDragging,
   } = useSortable({
-    id: value.id,
+    id: sortableId,
     disabled,
   });
 
@@ -98,11 +105,6 @@ export function ButtonItemEditor({
   const variantIds = createFieldIds(idPrefix, "variant");
   const linkIdPrefix = `${idPrefix}-link`;
 
-  /**
-   * Règle unique d’affichage d’erreur :
-   * - affichage si le drawer force la révélation (`showError`)
-   * - ou si le champ a déjà été touché localement (`isTouched`)
-   */
   const shouldShowLabelError = showError || labelCtrl.fieldState.isTouched;
 
   const labelInvalid =
@@ -113,10 +115,13 @@ export function ButtonItemEditor({
       ? String(labelCtrl.fieldState.error.message)
       : undefined;
 
+  const labelValue = String(labelCtrl.field.value ?? watchedItem?.label ?? "");
+  const hrefValue = String(hrefCtrl.field.value ?? watchedItem?.href ?? "");
+
+  const rawVariant = variantCtrl.field.value ?? watchedItem?.variant;
   const currentVariant: ButtonVariant =
-    variantCtrl.field.value &&
-    BUTTON_VARIANTS.includes(variantCtrl.field.value as ButtonVariant)
-      ? (variantCtrl.field.value as ButtonVariant)
+    rawVariant && BUTTON_VARIANTS.includes(rawVariant as ButtonVariant)
+      ? (rawVariant as ButtonVariant)
       : "default";
 
   const style = {
@@ -128,7 +133,8 @@ export function ButtonItemEditor({
     <Card
       ref={setNodeRef}
       style={style}
-      variant="defaultStudio"
+      variant="default"
+      visualMode="studio"
       className={cn("relative h-full", STACK_MD, isDragging && "opacity-60")}
     >
       <CardContent>
@@ -154,10 +160,8 @@ export function ButtonItemEditor({
               ids={labelIds}
               inputRef={labelCtrl.field.ref}
               label={t("studio.cellEditorTabs.buttonsCellEditor.labelLabel")}
-              value={String(labelCtrl.field.value ?? "")}
-              onChange={(next) => {
-                labelCtrl.field.onChange(next);
-              }}
+              value={labelValue}
+              onChange={labelCtrl.field.onChange}
               onBlur={labelCtrl.field.onBlur}
               disabled={disabled}
               placeholder={t(
@@ -170,10 +174,8 @@ export function ButtonItemEditor({
 
             <LinkFieldsItem
               idPrefix={linkIdPrefix}
-              href={String(hrefCtrl.field.value ?? "")}
-              onHrefChange={(next) => {
-                hrefCtrl.field.onChange(next);
-              }}
+              href={hrefValue}
+              onHrefChange={hrefCtrl.field.onChange}
               disabled={disabled}
             />
 

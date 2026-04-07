@@ -13,6 +13,7 @@
  */
 
 import type { StepsCellShape } from "@compoz/validation/pages/blocks/cells/cell";
+import { ArrowDown } from "lucide-react";
 
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
@@ -34,7 +35,7 @@ export function StepsCellRenderer({ cell, ui }: StepsCellRendererProps) {
 
   if (items.length < 1) return null;
 
-  const align = "left";
+  const align = "center";
 
   return (
     <div className={ui.root} data-cell="steps">
@@ -42,16 +43,24 @@ export function StepsCellRenderer({ cell, ui }: StepsCellRendererProps) {
         {items.map((item, index) => {
           const title = normalizeString(item.title, "");
           const description = normalizeString(item.description, "");
+          const isLast = index === items.length - 1;
 
           return (
-            <SiteStepCard
-              key={item.id}
-              step={index + 1}
-              title={title}
-              description={description}
-              align={align}
-              ui={ui.card}
-            />
+            <div key={item.id} className="contents">
+              <SiteStepCard
+                step={index + 1}
+                title={title}
+                description={description}
+                align={align}
+                ui={ui.card}
+              />
+
+              {!isLast ? (
+                <div className={ui.connector} aria-hidden="true">
+                  <ArrowDown className={ui.connectorIcon} />
+                </div>
+              ) : null}
+            </div>
           );
         })}
       </div>

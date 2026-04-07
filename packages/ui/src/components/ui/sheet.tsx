@@ -7,11 +7,7 @@ import { Button } from "@compoz/ui/components/ui/button";
 import { cn } from "@compoz/ui/lib/utils";
 import { XIcon } from "lucide-react";
 
-type SheetButtonVariantMode = "vanilla" | "studio";
-
-function getSheetGhostVariant(mode: SheetButtonVariantMode) {
-  return mode === "studio" ? "ghostStudio" : "ghostVanilla";
-}
+type SheetVisualMode = "vanilla" | "studio";
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
@@ -56,12 +52,12 @@ function SheetContent({
   children,
   side = "right",
   showCloseButton = true,
-  buttonVariantMode = "vanilla",
+  visualMode = "vanilla",
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left";
   showCloseButton?: boolean;
-  buttonVariantMode?: SheetButtonVariantMode;
+  visualMode?: SheetVisualMode;
 }) {
   return (
     <SheetPortal>
@@ -76,10 +72,12 @@ function SheetContent({
         {...props}
       >
         {children}
-        {showCloseButton && (
+
+        {showCloseButton ? (
           <SheetPrimitive.Close data-slot="sheet-close" asChild>
             <Button
-              variant={getSheetGhostVariant(buttonVariantMode)}
+              variant="ghost"
+              visualMode={visualMode}
               className="absolute top-3 right-3"
               size="icon-sm"
             >
@@ -87,7 +85,7 @@ function SheetContent({
               <span className="sr-only">Close</span>
             </Button>
           </SheetPrimitive.Close>
-        )}
+        ) : null}
       </SheetPrimitive.Content>
     </SheetPortal>
   );

@@ -9,15 +9,14 @@
  * - Rend `null` si la liste d’items est vide.
  * - Les liens simples sont rendus via `SiteNavLink`.
  * - Les items avec enfants sont rendus via `SiteNavDropdown`.
- * - La clé de liste est stabilisée via `toStableUiKey`.
+ * - Les clés de liste utilisent désormais l’identifiant métier stable `id`.
  * - Le style est fourni par le skin/template via `ui`.
  */
 
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteNavLink } from "@compoz/ui/site/components/atoms/SiteNavLink";
 import { SiteNavDropdown } from "@compoz/ui/site/components/molecules/SiteNavDropdown";
-import type { SitePrimaryMenuUi } from "@compoz/ui/site/site-ui.types.ts";
+import type { SitePrimaryMenuUi } from "@compoz/ui/site/site-ui.types";
 import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 
 export type SitePrimaryMenuProps = Readonly<{
@@ -47,7 +46,8 @@ export function SitePrimaryMenu({
 
   return (
     <ul className={cn(ui.list)}>
-      {items.map((item, index) => {
+      {items.map((item) => {
+        const id = item.id?.trim() ?? "";
         const href = item.href?.trim() ?? "";
         const label = item.label?.trim() ?? "";
 
@@ -55,6 +55,7 @@ export function SitePrimaryMenu({
         const safeChildren = children.reduce<
           Array<
             Readonly<{
+              id: string;
               href: string;
               label: string;
               ariaLabel?: string;
@@ -62,14 +63,16 @@ export function SitePrimaryMenu({
             }>
           >
         >((acc, child) => {
+          const childId = child.id?.trim() ?? "";
           const childHref = child.href?.trim() ?? "";
           const childLabel = child.label?.trim() ?? "";
 
-          if (!childHref || !childLabel) {
+          if (!childId || !childHref || !childLabel) {
             return acc;
           }
 
           acc.push({
+            id: childId,
             href: childHref,
             label: childLabel,
             ariaLabel: childLabel,
@@ -82,15 +85,16 @@ export function SitePrimaryMenu({
         const hasChildren = safeChildren.length > 0;
         const hasLink = Boolean(href);
 
+        if (!id) {
+          return null;
+        }
+
         if (!hasChildren && !hasLink) {
           return null;
         }
 
         return (
-          <li
-            key={toStableUiKey({ href, label }, index)}
-            className={cn(ui.item)}
-          >
+          <li key={id} className={cn(ui.item)}>
             {hasChildren ? (
               <SiteNavDropdown
                 href={href || undefined}

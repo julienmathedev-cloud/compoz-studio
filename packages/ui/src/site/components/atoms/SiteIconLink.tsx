@@ -92,17 +92,19 @@ export function SiteIconLink({
   // Unsafe ou href vide : lien neutralisé (non cliquable).
   if (!normalizedHref || unsafe) {
     return (
-      <span
-        role="link"
-        className={cn(className)}
-        aria-label={computedAria}
-        aria-disabled="true"
-        data-disabled="true"
-        tabIndex={-1}
-      >
-        {/* Icône décorative */}
-        <span aria-hidden="true">{icon}</span>
-      </span>
+      <div className={cn(className)}>
+        <span
+          role="link"
+          className={cn(linkClassName)}
+          aria-label={computedAria}
+          aria-disabled="true"
+          data-disabled="true"
+          tabIndex={-1}
+        >
+          {/* Icône décorative */}
+          <span aria-hidden="true">{icon}</span>
+        </span>
+      </div>
     );
   }
 

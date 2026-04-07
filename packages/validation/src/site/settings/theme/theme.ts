@@ -1,5 +1,5 @@
 /**
- * @file packages/validation/src/site/theme/theme.ts
+ * @file packages/validation/src/site/settings/theme/theme.ts
  * @layer schemas
  * @description
  * Schémas Zod décrivant la forme frontière des réglages de thème public du site.
@@ -12,9 +12,9 @@
  * - tokens couleur light/dark
  */
 
-import { z } from "zod";
 import { THEME_FONTS } from "@compoz/core/constants/theme/theme-fonts";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
+import { z } from "zod";
 
 /* -------------------------------------------------------------------------- */
 /*                                   Constantes                               */
@@ -74,6 +74,8 @@ export const PublicThemeTokensSchema = z
   .object({
     background: requiredThemeToken(ERROR_CODES.THEME_TOKEN_BACKGROUND_REQUIRED),
     foreground: requiredThemeToken(ERROR_CODES.THEME_TOKEN_FOREGROUND_REQUIRED),
+
+    chrome: requiredThemeToken(ERROR_CODES.THEME_TOKEN_CHROME_REQUIRED),
 
     card: requiredThemeToken(ERROR_CODES.THEME_TOKEN_CARD_REQUIRED),
     "card-foreground": requiredThemeToken(

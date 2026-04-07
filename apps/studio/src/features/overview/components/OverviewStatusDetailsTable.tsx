@@ -75,12 +75,13 @@ export function OverviewStatusDetailsTable() {
   }, [details.data?.pages, collator]);
 
   return (
-    <Card variant="panelStudio">
+    <Card variant="panel" visualMode="studio">
       <CardHeader className="flex items-center justify-between gap-4">
         <Heading as="h3">{t("studio.overviewSection.details.title")}</Heading>
 
         <Button
-          variant="outlineStudio"
+          variant="outline"
+          visualMode="studio"
           onClick={() => {
             setOpenPageId(null);
             setScope((currentScope) =>
@@ -230,7 +231,9 @@ function BlocksDetailsRows({
   page,
 }: Readonly<{ page: SiteStatusPageDetailsDTO }>) {
   const t = useTranslations();
-  const { blocks, isLoading } = useListPageBlocks(page.id);
+  const { blocks, isLoading, isFetching } = useListPageBlocks(page.id);
+  console.log("isFetching", isFetching);
+  console.log("blocks", blocks);
 
   const diffByBlockId = useMemo<
     Readonly<Record<string, SiteDiffKindDTO>>
@@ -244,7 +247,9 @@ function BlocksDetailsRows({
     return output;
   }, [page.blockItems]);
 
-  if (isLoading) {
+  const showLoading = isLoading || isFetching;
+
+  if (showLoading) {
     return (
       <TableRow className="hover:bg-accent/40">
         <TableCell colSpan={4} className="bg-accent/30">
@@ -322,7 +327,8 @@ function BlocksSummary({ blocks }: BlocksSummaryProps) {
       {items.map((item) => (
         <Badge
           key={item.key}
-          variant="outlineStudio"
+          variant="outline"
+          visualMode="studio"
           className="text-xs"
           aria-label={`${item.count} ${item.label}`}
         >

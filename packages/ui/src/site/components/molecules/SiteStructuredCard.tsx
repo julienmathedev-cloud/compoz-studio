@@ -20,7 +20,14 @@ import {
 } from "@compoz/ui/components/ui/card";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
+import { SiteButton } from "@compoz/ui/site/components/atoms/SiteButton";
 import type { SiteStructuredCardUi } from "@compoz/ui/site/site-ui.types";
+
+type SiteStructuredCardButton = Readonly<{
+  label: string;
+  href: string;
+  variant?: "default" | "secondary" | "outline" | "ghost";
+}>;
 
 export type SiteStructuredCardProps = Readonly<{
   title: string;
@@ -38,6 +45,7 @@ export type SiteStructuredCardProps = Readonly<{
     height: number;
     caption?: string;
   }>;
+  button?: SiteStructuredCardButton;
   ui: SiteStructuredCardUi;
   className?: string;
 }>;
@@ -47,6 +55,7 @@ export function SiteStructuredCard({
   meta,
   sections,
   image,
+  button,
   ui,
   className,
 }: SiteStructuredCardProps) {
@@ -57,10 +66,12 @@ export function SiteStructuredCard({
     (section) => section.label.trim() && section.content.trim(),
   );
 
+  const normalizedButton = button?.label?.trim() ? button : undefined;
+
   return (
     <Card className={cn(ui.card, className)}>
       {normalizedImage ? (
-        <div className={cn(ui.mediaWrap)}>
+        <div className={cn(ui.imageWrapper)}>
           <SiteAppImage
             image={{
               src: normalizedImage.src,
@@ -85,12 +96,28 @@ export function SiteStructuredCard({
       </CardHeader>
 
       <CardContent className={cn(ui.content)}>
-        {visibleSections.map((section, index) => (
-          <section key={`${section.label}-${index}`} className={cn(ui.section)}>
-            <h3 className={cn(ui.sectionTitle)}>{section.label}</h3>
-            <p className={cn(ui.sectionText)}>{section.content}</p>
-          </section>
-        ))}
+        <div className={cn(ui.sections)}>
+          {visibleSections.map((section) => (
+            <section
+              key={`${section.label}-${section.content}`}
+              className={cn(ui.section)}
+            >
+              <h3 className={cn(ui.sectionTitle)}>{section.label}</h3>
+              <p className={cn(ui.sectionText)}>{section.content}</p>
+            </section>
+          ))}
+        </div>
+
+        {normalizedButton ? (
+          <div className={cn(ui.buttonWrapper)}>
+            <SiteButton
+              label={normalizedButton.label}
+              href={normalizedButton.href}
+              variant={normalizedButton.variant}
+              className={cn(ui.button)}
+            />
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

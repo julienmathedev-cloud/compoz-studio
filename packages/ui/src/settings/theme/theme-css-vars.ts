@@ -59,6 +59,8 @@ export function themeTokensToCssVars(
     "--background": tokens.background,
     "--foreground": tokens.foreground,
 
+    "--chrome": tokens.chrome,
+
     "--card": tokens.card,
     "--card-foreground": tokens["card-foreground"],
 

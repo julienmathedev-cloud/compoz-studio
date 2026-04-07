@@ -177,6 +177,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
         }}
       >
         <DialogContent
+          visualMode="studio"
           className="bg-card"
           aria-describedby={hasDescription ? descriptionId : undefined}
         >
@@ -203,17 +204,24 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
             </div>
           ) : null}
 
-          <DialogFooter className={cn("bg-accent/20 py-1.5")}>
-            <Button variant="ghostStudio" size="sm" onClick={onCancel}>
+          <DialogFooter
+            visualMode="studio"
+            className={cn("bg-secondary/20 py-1.5")}
+          >
+            <Button
+              variant="ghost"
+              visualMode="studio"
+              size="sm"
+              onClick={onCancel}
+            >
               {state.cancelLabel}
             </Button>
 
             <Button
               onClick={onConfirm}
               size="sm"
-              variant={
-                state.tone === "danger" ? "destructiveStudio" : "defaultVanilla"
-              }
+              variant={state.tone === "danger" ? "destructive" : "default"}
+              visualMode="studio"
               disabled={Boolean(state.requireAcknowledge) && !ack}
             >
               {state.confirmLabel}

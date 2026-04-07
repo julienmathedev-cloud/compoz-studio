@@ -3,6 +3,7 @@
  * @layer core/domain
  * @description
  * Validateur métier — invariants Social bloquants :
+ * - `id` requis et unique
  * - email ⇒ `mailto:` obligatoire
  * - autres ⇒ URL http(s) absolue (non mailto)
  * - unicité des plateformes (`kind`) dans la liste
@@ -29,12 +30,22 @@ import { isMailtoHref } from "@compoz/core/domain/urls/mailto";
  * @param index Index de l’élément dans le tableau `items`.
  *
  * @throws DomainError
+ * - `EC.SOCIAL_ID_REQUIRED`
  * - `EC.SOCIAL_INVALID_FOR_PLATFORM`
  * - `EC.SOCIAL_ABSOLUTE_REQUIRED`
  */
 function assertSocialItem(it: SocialItem, index: number): void {
+  const id = String(it.id ?? "").trim();
   const kind = it.kind;
   const href = String(it.href ?? "").trim();
+
+  if (!id) {
+    throw new DomainError({
+      code: EC.SOCIAL_ID_REQUIRED,
+      message: EC.SOCIAL_ID_REQUIRED,
+      details: { path: ["social", "items", index, "id"] },
+    });
+  }
 
   const pathBase = ["social", "items", index, "href"] as const;
 
@@ -70,24 +81,37 @@ function assertSocialItem(it: SocialItem, index: number): void {
 }
 
 /**
- * Invariants globaux : unicité des plateformes + items valides.
+ * Invariants globaux : unicité des ids, unicité des plateformes + items valides.
  *
  * @throws DomainError
+ * - `EC.SOCIAL_DUPLICATE_ID`
  * - `EC.SOCIAL_DUPLICATE_KIND`
  * - (peut lever les erreurs de `assertSocialItem`)
  */
 export function assertSocialSettings(s: SocialSettings): void {
-  const seen = new Set<SocialItem["kind"]>();
+  const seenIds = new Set<SocialItem["id"]>();
+  const seenKinds = new Set<SocialItem["kind"]>();
 
   s.items.forEach((it, i) => {
-    if (seen.has(it.kind)) {
+    const id = String(it.id ?? "").trim();
+
+    if (seenIds.has(id)) {
+      throw new DomainError({
+        code: EC.SOCIAL_DUPLICATE_ID,
+        message: EC.SOCIAL_DUPLICATE_ID,
+        details: { path: ["social", "items", i, "id"], id },
+      });
+    }
+    seenIds.add(id);
+
+    if (seenKinds.has(it.kind)) {
       throw new DomainError({
         code: EC.SOCIAL_DUPLICATE_KIND,
         message: EC.SOCIAL_DUPLICATE_KIND,
         details: { path: ["social", "items", i, "kind"], kind: it.kind },
       });
     }
-    seen.add(it.kind);
+    seenKinds.add(it.kind);
 
     assertSocialItem(it, i);
   });

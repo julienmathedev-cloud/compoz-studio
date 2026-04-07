@@ -7,6 +7,7 @@
  * - centralise `auth()`
  * - résout le tenantId "actif" (session + cookie admin)
  * - expose un sous-objet user minimal (id/email) pour les pages server
+ * - expose aussi les métadonnées utiles des sessions sandbox démo
  * - lève des erreurs HTTP standardisées via `throwHttp`
  */
 
@@ -29,9 +30,21 @@ export function isAdminRole(role: unknown): boolean {
   );
 }
 
+export function isDemoSessionUser(user: {
+  isDemo?: boolean;
+  demoInstanceId?: string;
+}): boolean {
+  return (
+    user.isDemo === true && Boolean(String(user.demoInstanceId ?? "").trim())
+  );
+}
+
 type SessionUserLite = Readonly<{
   id: string;
   email: string;
+  isDemo?: boolean;
+  demoInstanceId?: string;
+  demoExpiresAt?: string;
 }>;
 
 export type SessionTenantResult = Readonly<{
@@ -55,6 +68,11 @@ function normalizeEmail(value: unknown): string {
   return String(value ?? "")
     .trim()
     .toLowerCase();
+}
+
+function normalizeOptionalString(value: unknown): string | undefined {
+  const normalized = String(value ?? "").trim();
+  return normalized ? normalized : undefined;
 }
 
 /**
@@ -98,6 +116,12 @@ export async function getSessionWithTenantOrNull(): Promise<SessionTenantResult 
   const user: SessionUserLite = {
     id: normalizeId(session.user.id),
     email: normalizeEmail(session.user?.email),
+    isDemo:
+      typeof session.user?.isDemo === "boolean"
+        ? session.user.isDemo
+        : undefined,
+    demoInstanceId: normalizeOptionalString(session.user?.demoInstanceId),
+    demoExpiresAt: normalizeOptionalString(session.user?.demoExpiresAt),
   };
 
   // ✅ Non-admin : tenant fixé
@@ -134,6 +158,26 @@ export async function requireSessionWithTenant(): Promise<SessionTenantResult> {
     throwHttp(401, {
       code: ERROR_CODES.UNAUTHORIZED,
       message: ERROR_CODES.UNAUTHORIZED,
+    });
+  }
+
+  return session;
+}
+
+/**
+ * Exige une session active qui n'est pas une session démo.
+ */
+export async function requireNonDemoSession(): Promise<SessionTenantResult> {
+  const session = await requireSessionWithTenant();
+
+  if (isDemoSessionUser(session.user)) {
+    throwHttp(403, {
+      code: ERROR_CODES.FORBIDDEN,
+      message: ERROR_CODES.FORBIDDEN,
+      extras: {
+        where: "auth.session.user.isDemo",
+        reason: "DEMO_SESSION_FORBIDDEN",
+      },
     });
   }
 

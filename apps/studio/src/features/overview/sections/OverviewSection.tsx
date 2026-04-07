@@ -20,7 +20,11 @@ import { OverviewStatusDetailsTable } from "@compoz/studio/features/overview/com
 import { useSettingsBundle } from "@compoz/studio/features/settings/bundle/useSettingsBundle";
 import { useSiteStatus } from "@compoz/studio/features/site/status/useSiteStatus";
 
-export function OverviewSection() {
+type OverviewSectionProps = Readonly<{
+  isDemo?: boolean;
+}>;
+
+export function OverviewSection({ isDemo = false }: OverviewSectionProps) {
   const t = useTranslations();
 
   const { data, isError, isLoading, isFetching } = useSiteStatus();
@@ -41,6 +45,7 @@ export function OverviewSection() {
         data={data}
         isError={isError}
         publishedBaseUrl={publishedBaseUrl}
+        isDemo={isDemo}
       />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

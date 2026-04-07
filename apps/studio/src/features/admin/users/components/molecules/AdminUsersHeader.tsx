@@ -92,7 +92,7 @@ export function AdminUsersHeader({
   const effectiveSiteId = toTenantId(siteId) ?? safeSiteOptions[0]?.value ?? "";
 
   return (
-    <Card variant="panelStudio">
+    <Card variant="panel" visualMode="studio">
       <CardContent className={cn(STACK_SM)}>
         <FormGrid>
           {/* Site (pas de "none") */}
@@ -103,7 +103,7 @@ export function AdminUsersHeader({
             value={effectiveSiteId}
             onChange={(val) => {
               const next = toTenantId(val);
-              if (!next) return; // pas de "none"
+              if (!next) return;
               onSiteChange(next);
             }}
             items={safeSiteOptions.map((o) => ({

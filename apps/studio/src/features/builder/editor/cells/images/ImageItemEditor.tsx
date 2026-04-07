@@ -13,6 +13,10 @@
  * - Le reorder est géré par drag and drop via dnd-kit.
  * - L’affichage des erreurs repose sur une règle unique :
  *   `showError || fieldState.isTouched`.
+ * - La lecture/édition des valeurs passe par RHF (`useController`).
+ * - `sortableId` sert uniquement au drag and drop.
+ * - `watchedItem` sert de fallback visuel pour stabiliser le rendu
+ *   pendant le rebinding RHF après reorder.
  */
 
 import { useSortable } from "@dnd-kit/sortable";
@@ -46,7 +50,8 @@ export type ImageItemEditorProps = Readonly<{
   basePath: ImageFieldBasePath;
   index: number;
   idPrefix: string;
-  value: ImageEditorFormValues;
+  sortableId: string;
+  watchedItem?: ImageEditorFormValues;
   disabled?: boolean;
   canRemove?: boolean;
   onRemove: () => void;
@@ -61,7 +66,8 @@ export function ImageItemEditor({
   basePath,
   index,
   idPrefix,
-  value,
+  sortableId,
+  watchedItem,
   disabled = false,
   canRemove = true,
   onRemove,
@@ -77,31 +83,37 @@ export function ImageItemEditor({
   const srcCtrl = useController({
     name: `${itemBasePath}.src` as `${ImageItemBasePath}.src`,
     control,
+    defaultValue: watchedItem?.src ?? "",
   });
 
   const altCtrl = useController({
     name: `${itemBasePath}.alt` as `${ImageItemBasePath}.alt`,
     control,
+    defaultValue: watchedItem?.alt ?? "",
   });
 
   const captionCtrl = useController({
     name: `${itemBasePath}.caption` as `${ImageItemBasePath}.caption`,
     control,
+    defaultValue: watchedItem?.caption ?? "",
   });
 
   const hrefCtrl = useController({
     name: `${itemBasePath}.href` as `${ImageItemBasePath}.href`,
     control,
+    defaultValue: watchedItem?.href ?? null,
   });
 
   const widthCtrl = useController({
     name: `${itemBasePath}.width` as `${ImageItemBasePath}.width`,
     control,
+    defaultValue: watchedItem?.width,
   });
 
   const heightCtrl = useController({
     name: `${itemBasePath}.height` as `${ImageItemBasePath}.height`,
     control,
+    defaultValue: watchedItem?.height,
   });
 
   const {
@@ -112,7 +124,7 @@ export function ImageItemEditor({
     transition,
     isDragging,
   } = useSortable({
-    id: value.id,
+    id: sortableId,
     disabled,
   });
 
@@ -139,6 +151,13 @@ export function ImageItemEditor({
       ? String(altCtrl.fieldState.error.message)
       : undefined;
 
+  const srcValue = String(srcCtrl.field.value ?? watchedItem?.src ?? "");
+  const altValue = String(altCtrl.field.value ?? watchedItem?.alt ?? "");
+  const captionValue = String(
+    captionCtrl.field.value ?? watchedItem?.caption ?? "",
+  );
+  const hrefValue = hrefCtrl.field.value ?? watchedItem?.href ?? null;
+
   const style = {
     transform: transform ? CSS.Transform.toString(transform) : undefined,
     transition,
@@ -148,7 +167,8 @@ export function ImageItemEditor({
     <Card
       ref={setNodeRef}
       style={style}
-      variant="defaultStudio"
+      variant="default"
+      visualMode="studio"
       className={cn("relative h-full", STACK_MD, isDragging && "opacity-60")}
     >
       <CardContent>
@@ -199,7 +219,7 @@ export function ImageItemEditor({
               href: t("studio.cellEditorTabs.image.hrefHelp"),
             }}
             srcField={{
-              value: String(srcCtrl.field.value ?? ""),
+              value: srcValue,
               onChange: (next) => {
                 const nextSrc = String(next ?? "");
                 const hasSrc = nextSrc.trim().length > 0;
@@ -215,14 +235,14 @@ export function ImageItemEditor({
               onBlur: srcCtrl.field.onBlur,
             }}
             altField={{
-              value: String(altCtrl.field.value ?? ""),
+              value: altValue,
               onChange: (next) => {
                 altCtrl.field.onChange(String(next ?? ""));
               },
               onBlur: altCtrl.field.onBlur,
             }}
             captionField={{
-              value: String(captionCtrl.field.value ?? ""),
+              value: captionValue,
               onChange: (next) => {
                 captionCtrl.field.onChange(String(next ?? ""));
               },
@@ -231,7 +251,7 @@ export function ImageItemEditor({
             hrefField={
               linksEnabled
                 ? {
-                    value: hrefCtrl.field.value ?? null,
+                    value: hrefValue,
                     onChange: (next) => {
                       hrefCtrl.field.onChange(next);
                     },

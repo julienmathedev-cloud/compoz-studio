@@ -133,7 +133,8 @@ export function ColorPickerField({
 
               <Button
                 type="button"
-                variant="ghostStudio"
+                variant="ghost"
+                visualMode="studio"
                 size="icon"
                 disabled={disabled}
                 aria-label={label}

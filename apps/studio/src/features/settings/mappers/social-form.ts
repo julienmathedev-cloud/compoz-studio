@@ -1,5 +1,5 @@
 /**
- * @file apps/studio/src/mappers/site/social-form.ts
+ * @file apps/studio/src/features/settings/mappers/social-form.ts
  * @layer ui-mapper/studio
  * @description
  * Mappers UI Social (studio forms) :
@@ -28,6 +28,7 @@ export function toSocialFormValuesFromDTO(
   return {
     items: Array.isArray(dto.items)
       ? dto.items.map((it) => ({
+          id: trimKeepEmpty(String(it.id ?? "")),
           kind: it.kind,
           href: trimKeepEmpty(
             typeof it.href === "string" ? it.href : String(it.href ?? ""),
@@ -43,7 +44,12 @@ export function toSocialFormValuesFromDTO(
  */
 export function toSocialSettingsShapeFromFormValues(values: SocialFormValues) {
   return {
-    items: values.items ?? [],
+    items:
+      values.items?.map((it) => ({
+        id: trimKeepEmpty(it.id),
+        kind: it.kind,
+        href: trimKeepEmpty(it.href),
+      })) ?? [],
   };
 }
 
@@ -55,6 +61,7 @@ export function normalizeSocialFormValues(
   return {
     items: Array.isArray(i.items)
       ? i.items.map((it) => ({
+          id: trimKeepEmpty(it.id),
           kind: it.kind,
           href: trimKeepEmpty(it.href),
         }))
@@ -90,6 +97,7 @@ export function toUpdateSocialIntentDTOFromFormValues(
   if ("items" in p) {
     out.items = Array.isArray(p.items)
       ? p.items.map((it) => ({
+          id: trimKeepEmpty(it.id),
           kind: it.kind,
           href: trimKeepEmpty(it.href),
         }))

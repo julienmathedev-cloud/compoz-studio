@@ -27,6 +27,7 @@ import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.clien
 import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
+import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
 import type { SettingsHookResult } from "@compoz/studio/features/settings/hooks/useSettingsResource";
 import {
   useSettingsResource,
@@ -62,8 +63,8 @@ export function useSeoSettings(): UseSeoSettingsResult {
     defaults: DEFAULT_SEO_FORM_VALUES,
 
     /** READ (bundle) : cache-first + fetchQuery fallback. */
-    load: async (state: ContentState, opts) => {
-      const bundle = await getSettingsBundle(qc, tenantId, state, opts);
+    load: async (state: ContentState) => {
+      const bundle = await getSettingsBundle(qc, tenantId, state);
       return normalizeSeoFormValues(toSeoFormValuesFromDTO(bundle.seo));
     },
 
@@ -91,6 +92,10 @@ export function useSeoSettings(): UseSeoSettingsResult {
 
     onSaved: () => {
       void invalidateSiteStatus(qc, tenantId);
+
+      void qc.invalidateQueries({
+        queryKey: settingsBundleKey(tenantId, DEFAULT_CONTENT_STATE),
+      });
     },
   });
 

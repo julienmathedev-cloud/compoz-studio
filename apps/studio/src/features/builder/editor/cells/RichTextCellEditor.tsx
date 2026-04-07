@@ -65,6 +65,7 @@ export function RichTextCellEditor({
 
   const revealIds = createFieldIds(idPrefix, "reveal");
 
+  console.log("TIPTAP CellEditor value", contentCtrl.field.value);
   return (
     <div className={cn(STACK_MD)}>
       <SwitchField
@@ -84,8 +85,6 @@ export function RichTextCellEditor({
         value={String(contentCtrl.field.value ?? "")}
         onChange={contentCtrl.field.onChange}
         disabled={disabled}
-        placeholder={t("studio.cellEditorTabs.richText.placeholder")}
-        hint={t("studio.cellEditorTabs.richText.hint")}
       />
     </div>
   );

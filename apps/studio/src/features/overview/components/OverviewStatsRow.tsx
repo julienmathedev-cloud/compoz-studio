@@ -58,18 +58,22 @@ export function OverviewStatsRow({ data, isError }: OverviewStatsRowProps) {
 
   const pagesBreakdown: ReadonlyArray<StatBreakdownItem> = [
     {
+      key: "published",
       label: t("studio.overviewSection.stats.breakdown.published"),
       value: pagesPublished,
     },
     {
+      key: "new",
       label: t("studio.overviewSection.stats.breakdown.new"),
       value: pagesNew,
     },
     {
+      key: "modified",
       label: t("studio.overviewSection.stats.breakdown.modified"),
       value: pagesModified,
     },
     {
+      key: "deleted",
       label: t("studio.overviewSection.stats.breakdown.deleted"),
       value: pagesDeleted,
     },
@@ -77,18 +81,22 @@ export function OverviewStatsRow({ data, isError }: OverviewStatsRowProps) {
 
   const blocksBreakdown: ReadonlyArray<StatBreakdownItem> = [
     {
+      key: "published",
       label: t("studio.overviewSection.stats.breakdown.published"),
       value: blocksPublished,
     },
     {
+      key: "new",
       label: t("studio.overviewSection.stats.breakdown.new"),
       value: blocksNew,
     },
     {
+      key: "modified",
       label: t("studio.overviewSection.stats.breakdown.modified"),
       value: blocksModified,
     },
     {
+      key: "deleted",
       label: t("studio.overviewSection.stats.breakdown.deleted"),
       value: blocksDeleted,
     },

@@ -10,8 +10,7 @@
  *   2. client upload direct vers Blob
  *   3. finalize (Sharp + write final + cleanup temp)
  * - Conserve le contrat public `uploadImage(file, kind)` pour ne pas casser la UI.
- * - Le SVG garde temporairement le flux multipart existant tant que son pipeline
- *   dédié n’est pas migré.
+ * - Le SVG utilise un endpoint dédié avec extraction serveur de `width` / `height`.
  */
 
 import { upload } from "@vercel/blob/client";

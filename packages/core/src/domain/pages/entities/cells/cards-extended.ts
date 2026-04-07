@@ -5,6 +5,8 @@
  * Entité métier CardsExtendedCell.
  */
 
+import type { ContentIconKind } from "@compoz/core/constants/icons/content-icons";
+
 export type CardsExtendedColumns = 1 | 2 | 3;
 export type CardsExtendedAlign = "left" | "center";
 
@@ -14,7 +16,7 @@ export type CardsExtendedItem = {
   description: string;
   bullets: ReadonlyArray<string>;
   footer: string | null;
-  icon: string | null;
+  icon: ContentIconKind | null;
 };
 
 export type CardsExtendedCell = {

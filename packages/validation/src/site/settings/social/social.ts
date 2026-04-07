@@ -27,12 +27,14 @@ const MailtoHrefSchema = z.string().trim().refine(isMailtoHref, {
 
 /**
  * Item social — canonique (non draft).
+ * - id requis
  * - href doit être valide (pas "", pas de préfixe seul).
  * - email => mailto obligatoire
  * - autres => URL http(s) absolue obligatoire (mailto interdit)
  */
 export const SocialItemSchema = z
   .object({
+    id: z.string().trim().min(1, ERROR_CODES.SOCIAL_ID_REQUIRED),
     kind: SocialKindSchema,
     href: z.string().trim().min(1, ERROR_CODES.SOCIAL_HREF_REQUIRED),
   })

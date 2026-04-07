@@ -52,6 +52,11 @@ export type NormalizedStructuredCardItem = Readonly<{
     height: number;
     caption?: string;
   }>;
+  button?: Readonly<{
+    label: string;
+    href: string;
+    variant?: "default" | "secondary" | "outline" | "ghost";
+  }>;
 }>;
 
 export type NormalizedCarouselItem =

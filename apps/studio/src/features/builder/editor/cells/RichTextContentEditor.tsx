@@ -95,35 +95,65 @@ export type RichTextContentEditorProps = Readonly<{
 type BlockKind = "list" | "blockquote";
 
 /**
- * ✅ Tab / Shift+Tab handler.
+ * Gère explicitement Tab / Shift+Tab pour empêcher la perte de focus.
  *
- * - Dans une liste : Tab = indent, Shift+Tab = outdent
- * - Hors liste : Tab insère un caractère "\t" et empêche le focus de sortir
+ * Règles :
+ * - Dans une liste :
+ *   - Tab = indent si possible
+ *   - Shift+Tab = outdent si possible
+ * - Hors liste :
+ *   - Tab insère un caractère "\t"
+ * - Dans tous les cas gérés ici :
+ *   - on empêche le comportement natif du navigateur
  */
 const TabKeymap = Extension.create({
   name: "tabKeymap",
-  addKeyboardShortcuts() {
-    return {
-      Tab: () => {
-        if (!this.editor.isEditable) return false;
 
-        if (this.editor.isActive("listItem")) {
-          return this.editor.chain().focus().sinkListItem("listItem").run();
-        }
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey("rich-text-tab-keymap"),
+        props: {
+          handleKeyDown: (_view, event) => {
+            if (event.key !== "Tab") return false;
+            if (!this.editor.isEditable) return false;
 
-        return this.editor.chain().focus().insertContent("\t").run();
-      },
+            event.preventDefault();
 
-      "Shift-Tab": () => {
-        if (!this.editor.isEditable) return false;
+            if (this.editor.isActive("listItem")) {
+              if (event.shiftKey) {
+                const handled = this.editor
+                  .chain()
+                  .focus()
+                  .liftListItem("listItem")
+                  .run();
 
-        if (this.editor.isActive("listItem")) {
-          return this.editor.chain().focus().liftListItem("listItem").run();
-        }
+                return handled || true;
+              }
 
-        return false;
-      },
-    };
+              const handled = this.editor
+                .chain()
+                .focus()
+                .sinkListItem("listItem")
+                .run();
+
+              return handled || true;
+            }
+
+            if (event.shiftKey) {
+              return true;
+            }
+
+            this.editor
+              .chain()
+              .focus()
+              .insertContent("\u00A0\u00A0\u00A0\u00A0")
+              .run();
+            return true;
+          },
+        },
+      }),
+    ];
   },
 });
 
@@ -208,6 +238,7 @@ export function RichTextContentEditor({
   hint,
   className,
 }: RichTextContentEditorProps) {
+  console.log("TIPTAP value", value);
   const extensions = useMemo(() => buildExtensions(), []);
 
   const t = useTranslations();
@@ -254,6 +285,8 @@ export function RichTextContentEditor({
     },
     onUpdate: ({ editor }) => {
       const nextHtml = editor.getHTML();
+
+      console.log("TIPTAP getHTML()", nextHtml);
 
       const nextNorm = normalizeRichTextHtmlForCompare(nextHtml);
       const propNorm = normalizeRichTextHtmlForCompare(value || "");
@@ -396,6 +429,34 @@ export function RichTextContentEditor({
     setLinkOpen(false);
   };
 
+  const handleEditorKeyDownCapture = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+  ) => {
+    if (disabled) return;
+    if (event.key !== "Tab") return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!editor) return;
+
+    if (editor.isActive("listItem")) {
+      if (event.shiftKey) {
+        editor.chain().focus().liftListItem("listItem").run();
+        return;
+      }
+
+      editor.chain().focus().sinkListItem("listItem").run();
+      return;
+    }
+
+    if (event.shiftKey) {
+      return;
+    }
+
+    editor.chain().focus().insertContent("\u00A0\u00A0\u00A0\u00A0").run();
+  };
+
   const toolbarWrapClass = cn(
     "flex flex-wrap items-center gap-2 bg-card",
     disabled && "opacity-60",
@@ -406,7 +467,7 @@ export function RichTextContentEditor({
       className={cn(
         STUDIO_BORDER_PANEL,
         STACK_MD,
-        "shadow-accent h-[75vh] bg-card p-2",
+        "shadow-accent h-[70vh] bg-card p-2",
         className,
       )}
     >
@@ -414,7 +475,8 @@ export function RichTextContentEditor({
         <div className="flex items-center gap-1">
           <Button
             type="button"
-            variant="ghostStudio"
+            variant="ghost"
+            visualMode="studio"
             size="icon"
             disabled={disabled || !canUndo}
             onClick={() => editor.chain().focus().undo().run()}
@@ -427,7 +489,8 @@ export function RichTextContentEditor({
 
           <Button
             type="button"
-            variant="ghostStudio"
+            variant="ghost"
+            visualMode="studio"
             size="icon"
             disabled={disabled || !canRedo}
             onClick={() => editor.chain().focus().redo().run()}
@@ -454,7 +517,7 @@ export function RichTextContentEditor({
                 "relative",
                 (editor.isActive("bulletList") ||
                   editor.isActive("orderedList")) &&
-                  "bg-accent text-accent-foreground",
+                  "bg-primary text-primary-foreground",
               )}
             >
               <List className="-ml-1.5" />
@@ -596,14 +659,17 @@ export function RichTextContentEditor({
           >
             <PopoverTrigger asChild>
               <Button
-                variant="ghostStudio"
+                variant="ghost"
+                visualMode="studio"
                 size="icon"
                 aria-label={labels.link}
                 title={labels.link}
                 disabled={disabled}
                 className={cn(
-                  editor.isActive("link") && "bg-muted",
+                  editor.isActive("link") &&
+                    "bg-primary text-primary-foreground",
                   "scale-110",
+                  "active:scale-[1]!",
                 )}
               >
                 <Link2 />
@@ -617,7 +683,10 @@ export function RichTextContentEditor({
               onOpenAutoFocus={(e) => e.preventDefault()}
             >
               <div className="flex items-center gap-2">
-                <InputGroup className="flex-1 [--radius:9999px]">
+                <InputGroup
+                  visualMode="studio"
+                  className="flex-1 [--radius:9999px]"
+                >
                   <InputGroupInput
                     visualMode="studio"
                     placeholder="https://…"
@@ -634,7 +703,8 @@ export function RichTextContentEditor({
 
                 <Button
                   size="icon"
-                  variant="ghostStudio"
+                  variant="ghost"
+                  visualMode="studio"
                   aria-label={labels.applyLink}
                   title={labels.applyLink}
                   disabled={disabled}
@@ -645,7 +715,8 @@ export function RichTextContentEditor({
                 </Button>
                 <Button
                   size="icon"
-                  variant="ghostStudio"
+                  variant="ghost"
+                  visualMode="studio"
                   aria-label={labels.removeLink}
                   title={labels.removeLink}
                   disabled={disabled || !editor.isActive("link")}
@@ -772,7 +843,9 @@ export function RichTextContentEditor({
         </div>
       ) : null}
 
-      <EditorContent editor={editor} />
+      <div onKeyDownCapture={handleEditorKeyDownCapture}>
+        <EditorContent editor={editor} />
+      </div>
 
       {hint ? (
         <Text as="p" variant="meta">

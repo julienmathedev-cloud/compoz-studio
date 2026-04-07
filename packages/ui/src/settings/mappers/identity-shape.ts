@@ -22,10 +22,17 @@ export function toIdentitySettingsShapeFromDTO(
   dto: IdentitySettingsDTO | null | undefined,
 ): IdentitySettingsShape {
   return {
-    siteName: trimKeepEmpty(dto?.siteName), // peut être ""
+    siteName: trimKeepEmpty(dto?.siteName),
     tagline: dto?.tagline !== null ? trimKeepEmpty(dto?.tagline) : null,
-    logoUrl: assetUiToSettings(dto?.logoUrl),
-    logoAlt: trimKeepEmpty(dto?.logoAlt),
+    logo:
+      dto?.logo !== null && dto?.logo !== undefined
+        ? {
+            src: trimKeepEmpty(dto.logo.src),
+            alt: trimKeepEmpty(dto.logo.alt),
+            width: dto.logo.width,
+            height: dto.logo.height,
+          }
+        : null,
     faviconUrl: assetUiToSettings(dto?.faviconUrl),
   };
 }

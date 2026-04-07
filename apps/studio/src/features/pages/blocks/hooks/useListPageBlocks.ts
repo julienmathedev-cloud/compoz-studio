@@ -33,6 +33,7 @@ const lg = log.child({ ns: "hook", name: "useListPageBlocks" });
 type UseListPageBlocksResult = Readonly<{
   blocks: ReadonlyArray<BlockDTO>;
   isLoading: boolean;
+  isFetching: boolean;
 }>;
 
 export function useListPageBlocks(
@@ -95,6 +96,7 @@ export function useListPageBlocks(
   return {
     blocks: enabled ? (query.data ?? []) : [],
     isLoading: enabled ? query.isPending : false,
+    isFetching: enabled ? query.isFetching : false,
   } as const;
 }
 

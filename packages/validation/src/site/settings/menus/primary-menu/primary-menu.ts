@@ -7,7 +7,7 @@
  * Les règles UX draft-friendly appartiennent au schéma de formulaire.
  */
 
-import { MENU_LABEL, MENU_ITEM } from "@compoz/core/constants/limits/menu";
+import { MENU_ITEM, MENU_LABEL } from "@compoz/core/constants/limits/menu";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { AssetUrlSchema } from "@compoz/validation/common/url-fragments";
 import { z } from "zod";
@@ -18,6 +18,9 @@ import { z } from "zod";
 
 export const PrimaryMenuChildSchema = z
   .object({
+    /** Identifiant stable du child. */
+    id: z.string().trim().min(1, ERROR_CODES.PRIMARY_MENU_ID_REQUIRED),
+
     /** Libellé canonique : requis (min/max). */
     label: z
       .string()
@@ -39,11 +42,15 @@ export const PrimaryMenuChildSchema = z
 
 export const PrimaryMenuItemSchema = z
   .object({
+    /** Identifiant stable du parent/leaf. */
+    id: z.string().trim().min(1, ERROR_CODES.PRIMARY_MENU_ID_REQUIRED),
+
     label: z
       .string()
       .trim()
       .min(MENU_LABEL.MIN, ERROR_CODES.PRIMARY_MENU_LABEL_REQUIRED)
       .max(MENU_LABEL.MAX, ERROR_CODES.PRIMARY_MENU_LABEL_TOO_LONG),
+
     href: AssetUrlSchema.optional(),
     newTab: z.boolean(),
     children: z.array(PrimaryMenuChildSchema).optional(),

@@ -8,6 +8,7 @@
 
 import type { CardsExtendedCellShape } from "@compoz/validation/pages/blocks/cells/cell";
 
+import { renderContentIcon } from "@compoz/ui/lib/icons/content-icons";
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteExtendedCard } from "@compoz/ui/site/components/molecules/SiteExtendedCard";
@@ -40,7 +41,6 @@ export function CardsExtendedCellRenderer({
         {items.map((item) => {
           const title = normalizeString(item.title, "");
           const description = normalizeString(item.description, "");
-          const icon = normalizeString(item.icon ?? "", "");
           const footer = normalizeString(item.footer ?? "", "");
 
           const bullets = Array.isArray(item.bullets)
@@ -54,10 +54,15 @@ export function CardsExtendedCellRenderer({
               key={item.id}
               title={title}
               description={description}
-              icon={icon || undefined}
+              icon={
+                item.icon
+                  ? renderContentIcon(item.icon, { className: ui.icon })
+                  : undefined
+              }
               bullets={bullets}
               footer={footer || undefined}
               align={align}
+              ui={ui}
             />
           );
         })}

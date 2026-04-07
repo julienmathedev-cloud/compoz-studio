@@ -11,8 +11,14 @@
  *   (synchronisation onglet ↔ URL).
  */
 
+import { getServerSession } from "next-auth";
+
+import { authOptions } from "@compoz/studio/auth/auth";
 import { OverviewPage } from "@compoz/studio/features/overview/pages/OverviewPage";
 
-export default function StudioOverviewPage() {
-  return <OverviewPage />;
+export default async function StudioOverviewPage() {
+  const session = await getServerSession(authOptions);
+  const isDemo = session?.user?.isDemo === true;
+
+  return <OverviewPage isDemo={isDemo} />;
 }

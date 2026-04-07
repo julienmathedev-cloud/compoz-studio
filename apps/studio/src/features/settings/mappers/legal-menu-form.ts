@@ -52,6 +52,7 @@ function toLegalMenuItemFormValuesFromDTO(
   it: LegalMenuItemDTO,
 ): LegalMenuItemFormValues {
   return {
+    id: trimKeepEmpty(String(it.id ?? "")),
     label: trimKeepEmpty(it.label),
     href: trimKeepEmpty(String(it.href ?? "")),
     newTab: asBool(it.newTab),
@@ -66,6 +67,7 @@ export function normalizeLegalMenuItemFormValues(
   i: LegalMenuItemFormValues,
 ): LegalMenuItemFormValues {
   return {
+    id: trimKeepEmpty(i.id),
     label: trimKeepEmpty(i.label),
     href: normalizeHrefDraftKeepEmpty(i.href),
     newTab: asBool(i.newTab),
@@ -98,6 +100,7 @@ export function toLegalMenuSettingsShapeFromFormValues(
 
   return {
     items: items.map((it) => ({
+      id: trimKeepEmpty(it.id),
       label: trimKeepEmpty(it.label),
       href: normalizeHrefDraftKeepEmpty(it.href),
       newTab: asBool(it.newTab),
@@ -147,6 +150,7 @@ export function toUpdateLegalMenuIntentDTOFromFormValues(
       ? p.items.map((it) => {
           const n = normalizeLegalMenuItemFormValues(it);
           return {
+            id: n.id,
             label: n.label,
             href: n.href,
             newTab: n.newTab,

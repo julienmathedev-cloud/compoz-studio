@@ -32,6 +32,22 @@ function trimOptionalId(value: string | undefined): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+function adaptReverseOn(
+  value:
+    | {
+        mobile?: boolean;
+        tablet?: boolean;
+        desktop?: boolean;
+      }
+    | undefined,
+) {
+  return {
+    mobile: Boolean(value?.mobile),
+    tablet: Boolean(value?.tablet),
+    desktop: Boolean(value?.desktop),
+  };
+}
+
 /* -------------------------------------------------------------------------- */
 /* Create                                                                     */
 /* -------------------------------------------------------------------------- */
@@ -47,6 +63,7 @@ export function adaptCreateSectionBlockIntent(
     return {
       ...(rowId ? { id: rowId } : {}),
       columnsCount: row.columnsCount,
+      reverseOn: adaptReverseOn(row.reverseOn),
       columns: row.columns.map((col) => {
         const columnId = trimOptionalId(col.id);
 
@@ -103,6 +120,7 @@ export function adaptUpdateSectionBlockIntent(
     patch.rows = dto.patch.rows.map((row) => ({
       id: trimOrKeep(row.id),
       columnsCount: row.columnsCount,
+      reverseOn: adaptReverseOn(row.reverseOn),
       columns: row.columns.map((col) => ({
         id: trimOrKeep(col.id),
         cells: adaptCells(col.cells),

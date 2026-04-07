@@ -11,6 +11,10 @@
  * - Un parent avec enfants :
  *   - `newTab` interdit
  *   - `href` optionnel (peut être "")
+ * - Les `id` sont des identifiants métier stables :
+ *   - utilisés pour les clés React
+ *   - utilisés pour le drag and drop
+ *   - persistés dans les settings
  */
 
 import { MENU_ITEM, MENU_LABEL } from "@compoz/core/constants/limits/menu";
@@ -27,6 +31,7 @@ const isValidAssetUrl = (href: string): boolean =>
 
 export const PrimaryMenuChildFormSchema = z
   .object({
+    id: z.string().trim().min(1, ERROR_CODES.PRIMARY_MENU_ID_REQUIRED),
     label: z
       .string()
       .trim()
@@ -71,6 +76,7 @@ export const PrimaryMenuChildFormSchema = z
 
 export const PrimaryMenuItemFormSchema = z
   .object({
+    id: z.string().trim().min(1, ERROR_CODES.PRIMARY_MENU_ID_REQUIRED),
     label: z
       .string()
       .trim()
@@ -136,7 +142,7 @@ export const PrimaryMenuItemFormSchema = z
   });
 
 /* -------------------------------------------------------------------------- */
-/*                                  Settings (UI)                              */
+/*                                  Settings (UI)                             */
 /* -------------------------------------------------------------------------- */
 
 export const PrimaryMenuFormSchema = z
@@ -145,7 +151,50 @@ export const PrimaryMenuFormSchema = z
       message: ERROR_CODES.PRIMARY_MENU_TOO_MANY_ITEMS,
     }),
   })
-  .strict();
+  .strict()
+  .superRefine((val, ctx) => {
+    const firstPathById = new Map<string, string>();
+
+    for (let pIdx = 0; pIdx < val.items.length; pIdx++) {
+      const parent = val.items[pIdx];
+      const parentId = String(parent?.id ?? "").trim();
+
+      if (parentId) {
+        const currentPath = `items.${pIdx}.id`;
+        const firstPath = firstPathById.get(parentId);
+
+        if (firstPath == null) {
+          firstPathById.set(parentId, currentPath);
+        } else {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["items", pIdx, "id"],
+            message: ERROR_CODES.PRIMARY_MENU_DUPLICATE_ID,
+          });
+        }
+      }
+
+      const children = parent?.children ?? [];
+
+      for (let cIdx = 0; cIdx < children.length; cIdx++) {
+        const childId = String(children[cIdx]?.id ?? "").trim();
+        if (!childId) continue;
+
+        const currentPath = `items.${pIdx}.children.${cIdx}.id`;
+        const firstPath = firstPathById.get(childId);
+
+        if (firstPath == null) {
+          firstPathById.set(childId, currentPath);
+        } else {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["items", pIdx, "children", cIdx, "id"],
+            message: ERROR_CODES.PRIMARY_MENU_DUPLICATE_ID,
+          });
+        }
+      }
+    }
+  });
 
 export type PrimaryMenuFormValues = z.infer<typeof PrimaryMenuFormSchema>;
 export type PrimaryMenuItemFormValues = z.infer<

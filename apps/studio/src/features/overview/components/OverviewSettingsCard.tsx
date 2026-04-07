@@ -48,7 +48,8 @@ export function OverviewSettingsCard({
 
   return (
     <Card
-      variant="panelStudio"
+      variant="panel"
+      visualMode="studio"
       data-state={isError ? "error" : undefined}
       className={cn(isError ? "border-destructive/40" : undefined)}
     >

@@ -78,6 +78,7 @@ const ADVANCED_THEME_TOKEN_KEYS = [
   "popover-foreground",
   "muted",
   "muted-foreground",
+  "chrome",
   "border",
   "input",
   "ring",
@@ -192,7 +193,7 @@ export function ThemeForm({
       onSubmit={handleSubmit(onSubmit)}
       noValidate
     >
-      <Card variant="panelStudio">
+      <Card variant="panel" visualMode="studio">
         <CardContent className={cn(STACK_MD)}>
           <div className={cn(STACK_SM)}>
             <FormGrid>
@@ -248,11 +249,8 @@ export function ThemeForm({
                           key={item}
                           type="button"
                           size="sm"
-                          variant={
-                            field.value === item
-                              ? "defaultStudio"
-                              : "ghostStudio"
-                          }
+                          variant={field.value === item ? "default" : "ghost"}
+                          visualMode="studio"
                           onClick={() => field.onChange(item)}
                           disabled={disabledControls}
                         >
@@ -261,7 +259,7 @@ export function ThemeForm({
                       ))}
                     </div>
 
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-muted-foreground text-xs">
                       {t("studio.themeForm.revealPreset.help")}
                     </p>
                   </div>
@@ -283,11 +281,8 @@ export function ThemeForm({
                           key={item}
                           type="button"
                           size="sm"
-                          variant={
-                            field.value === item
-                              ? "defaultStudio"
-                              : "ghostStudio"
-                          }
+                          variant={field.value === item ? "default" : "ghost"}
+                          visualMode="studio"
                           onClick={() => field.onChange(item)}
                           disabled={disabledControls}
                         >
@@ -296,7 +291,7 @@ export function ThemeForm({
                       ))}
                     </div>
 
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-muted-foreground text-xs">
                       {t("studio.themeForm.mode.help")}
                     </p>
                   </div>

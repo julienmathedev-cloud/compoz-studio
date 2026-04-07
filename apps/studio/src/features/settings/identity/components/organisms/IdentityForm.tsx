@@ -34,10 +34,10 @@ import { FaviconFields } from "@compoz/studio/features/settings/identity/compone
 import { LogoFields } from "@compoz/studio/features/settings/identity/components/molecules/LogoFields";
 import type { IdentityWarningKey } from "@compoz/studio/features/settings/identity/validate";
 import { useIdentityUiWarnings } from "@compoz/studio/features/settings/identity/validate";
-import { focusByFieldId } from "@compoz/ui/lib/focus";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { Card, CardContent, CardFooter } from "@compoz/ui/components/ui/card";
 import { Separator } from "@compoz/ui/components/ui/separator";
+import { focusByFieldId } from "@compoz/ui/lib/focus";
 import {
   createFieldIds,
   useIdPrefix,
@@ -62,11 +62,14 @@ const NEAR_LIMIT_THRESHOLD = 10;
 
 /**
  * Priorité de focus des champs bloquants lors d’un submit invalide.
+ *
+ * @remarks
+ * - `logo` est un objet complexe.
+ * - On cible explicitement le champ `logo.alt` via l’ID généré par `LogoFields`.
  */
-const FIELD_PRIORITY: ReadonlyArray<keyof IdentityFormValues> = [
-  "siteName",
-  "logoAlt",
-];
+const FIELD_PRIORITY = ["siteName", "logo.alt"] as const;
+
+type FocusableFieldName = (typeof FIELD_PRIORITY)[number];
 
 /**
  * Props du composant `IdentityForm`.
@@ -146,12 +149,12 @@ export function IdentityForm({
   const siteNameIds = createFieldIds(idPrefix, "siteName");
   const taglineIds = createFieldIds(idPrefix, "tagline");
   const faviconIds = createFieldIds(idPrefix, "faviconUrl");
-  const logoAltIds = createFieldIds(idPrefix, "logoAlt");
+  const logoAltIds = createFieldIds(idPrefix, "logo.alt");
 
   /**
    * Valeurs RHF live :
    * - aides "near limit" (`siteName` / `tagline`)
-   * - warnings d’identité (`logoUrl` / `faviconUrl`)
+   * - warnings d’identité (`logo` / `faviconUrl`)
    * - alimentation de `LogoFields` / `FaviconFields`
    */
   const watchedValues = useWatch({ control });
@@ -187,13 +190,8 @@ export function IdentityForm({
   /**
    * Champs RHF dédiés pour les groupes Logo / Favicon.
    */
-  const logoAltCtrl = useController({
-    name: "logoAlt",
-    control,
-  });
-
-  const logoUrlCtrl = useController({
-    name: "logoUrl",
+  const logoCtrl = useController({
+    name: "logo",
     control,
   });
 
@@ -205,7 +203,7 @@ export function IdentityForm({
   const showError = isSubmitted || submitCount > 0;
 
   /**
-   * Erreurs bloquantes (siteName / logoAlt) : flags invalid + messages lisibles.
+   * Erreurs bloquantes.
    */
   const invalidSiteName =
     (showError || Boolean(touchedFields.siteName)) &&
@@ -216,25 +214,27 @@ export function IdentityForm({
       ? String(errors.siteName.message)
       : undefined;
 
-  const hasLogo =
-    typeof values.logoUrl === "string" && values.logoUrl.trim() !== "";
+  const hasLogo = values.logo !== null;
+
+  const touchedLogoAlt =
+    typeof touchedFields.logo === "object" &&
+    touchedFields.logo !== null &&
+    Boolean(touchedFields.logo.alt);
 
   const invalidLogoAlt =
     hasLogo &&
-    (showError || Boolean(touchedFields.logoAlt)) &&
-    Boolean(errors.logoAlt?.message ?? errors.logoAlt);
+    (showError || touchedLogoAlt) &&
+    Boolean(errors.logo?.alt?.message ?? errors.logo?.alt);
 
   const logoAltErrorMessage =
-    hasLogo &&
-    (showError || Boolean(touchedFields.logoAlt)) &&
-    errors.logoAlt?.message
-      ? String(errors.logoAlt.message)
+    hasLogo && (showError || touchedLogoAlt) && errors.logo?.alt?.message
+      ? String(errors.logo.alt.message)
       : undefined;
 
   /**
    * Warnings d’identité (logo / favicon) basés sur les valeurs RHF.
    */
-  const warningKeys = useIdentityUiWarnings(values.logoUrl, values.faviconUrl);
+  const warningKeys = useIdentityUiWarnings(values.logo, values.faviconUrl);
 
   useStableWarningKeys({
     warningKeys,
@@ -253,16 +253,23 @@ export function IdentityForm({
     notify.error(t("uiErrors.formHasErrors"));
 
     const firstField = FIELD_PRIORITY.find((fieldName) => {
-      if (!formErrors[fieldName]) return false;
-      if (fieldName === "logoAlt" && !hasLogo) return false;
-      return true;
+      if (fieldName === "siteName") {
+        return Boolean(formErrors.siteName);
+      }
+
+      if (fieldName === "logo.alt") {
+        if (!hasLogo) return false;
+        return Boolean(formErrors.logo?.alt);
+      }
+
+      return false;
     });
 
     if (!firstField) return;
 
-    const fieldIdByName: Partial<Record<keyof IdentityFormValues, string>> = {
+    const fieldIdByName: Record<FocusableFieldName, string> = {
       siteName: siteNameIds.fieldId,
-      logoAlt: logoAltIds.fieldId,
+      "logo.alt": logoAltIds.fieldId,
     };
 
     focusByFieldId(fieldIdByName[firstField]);
@@ -277,7 +284,7 @@ export function IdentityForm({
       )}
       noValidate
     >
-      <Card variant="panelStudio">
+      <Card variant="panel" visualMode="studio">
         <CardContent className={cn(STACK_MD)}>
           <FormGrid>
             <Controller
@@ -333,8 +340,7 @@ export function IdentityForm({
             <LogoFields
               idPrefix={idPrefix}
               siteName={values.siteName ?? ""}
-              logoAltField={logoAltCtrl.field}
-              logoUrlField={logoUrlCtrl.field}
+              logoField={logoCtrl.field}
               disabled={disabledControls}
               invalidAlt={invalidLogoAlt}
               altErrorMessage={logoAltErrorMessage}
@@ -343,7 +349,7 @@ export function IdentityForm({
 
             <FaviconFields
               siteName={values.siteName ?? ""}
-              logoAlt={values.logoAlt ?? ""}
+              logoAlt={values.logo?.alt ?? ""}
               faviconUrlField={faviconUrlCtrl.field}
               faviconIds={faviconIds}
               disabled={disabledControls}

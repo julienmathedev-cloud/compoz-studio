@@ -5,6 +5,7 @@
  * Schémas Zod de CardsCell.
  */
 
+import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
@@ -33,10 +34,9 @@ export const CardItemSchema = z
       .trim()
       .min(1, ERROR_CODES.CELL_CARD_ITEM_DESCRIPTION_REQUIRED),
     icon: z
-      .string({
+      .enum(CONTENT_ICON_KINDS, {
         message: ERROR_CODES.CELL_CARD_ITEM_ICON_INVALID,
       })
-      .trim()
       .nullable(),
   })
   .strict();

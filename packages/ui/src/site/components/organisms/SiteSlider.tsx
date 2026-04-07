@@ -41,6 +41,8 @@ export function SiteSlider({
   const count = items.length;
   const [currentSlide, setCurrentSlide] = useState<number>(0);
 
+  const hasVisibleArrows = showArrows && count > 1;
+
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
     loop: count > 1,
     slideChanged: (slider) => {
@@ -78,7 +80,7 @@ export function SiteSlider({
       aria-label="Slider"
       aria-roledescription="carousel"
     >
-      {showArrows && count > 1 ? (
+      {hasVisibleArrows ? (
         <>
           <Button
             size="icon"
@@ -100,31 +102,35 @@ export function SiteSlider({
         </>
       ) : null}
 
-      <div ref={sliderRef} className={cn("keen-slider", ui.slider.track)}>
-        {items.map((item, index) => {
-          const isActive = index === currentSlide;
+      <div
+        className={cn(hasVisibleArrows && "px-6 sm:px-10 md:px-12 lg:px-16")}
+      >
+        <div ref={sliderRef} className={cn("keen-slider", ui.slider.track)}>
+          {items.map((item, index) => {
+            const isActive = index === currentSlide;
 
-          return (
-            <div
-              key={item.id}
-              role="group"
-              tabIndex={isActive ? 0 : -1}
-              className={cn(
-                "keen-slider__slide",
-                ui.slider.slide,
-                isActive ? ui.slider.slideActive : ui.slider.slideInactive,
-              )}
-            >
-              <SiteCarouselItem
-                item={item}
-                ui={ui}
-                isFullBleed={isFullBleed}
-                priority={priority && index === 0}
-                isActive={isActive}
-              />
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={item.id}
+                role="group"
+                tabIndex={isActive ? 0 : -1}
+                className={cn(
+                  "keen-slider__slide",
+                  ui.slider.slide,
+                  isActive ? ui.slider.slideActive : ui.slider.slideInactive,
+                )}
+              >
+                <SiteCarouselItem
+                  item={item}
+                  ui={ui}
+                  isFullBleed={isFullBleed}
+                  priority={priority && index === 0}
+                  isActive={isActive}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {showDots && count > 1 ? (

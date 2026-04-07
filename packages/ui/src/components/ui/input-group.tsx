@@ -17,69 +17,29 @@ type InputGroupButtonVariant =
   | "destructive"
   | "link";
 
-function resolveInputGroupButtonVariant(
-  variant: InputGroupButtonVariant,
-  visualMode: InputGroupVisualMode,
-):
-  | "defaultVanilla"
-  | "outlineVanilla"
-  | "secondaryVanilla"
-  | "ghostVanilla"
-  | "destructiveVanilla"
-  | "linkVanilla"
-  | "defaultStudio"
-  | "outlineStudio"
-  | "secondaryStudio"
-  | "ghostStudio"
-  | "destructiveStudio"
-  | "linkStudio" {
-  if (visualMode === "studio") {
-    switch (variant) {
-      case "default":
-        return "defaultStudio";
-      case "outline":
-        return "outlineStudio";
-      case "secondary":
-        return "secondaryStudio";
-      case "ghost":
-        return "ghostStudio";
-      case "destructive":
-        return "destructiveStudio";
-      case "link":
-        return "linkStudio";
-    }
-  }
-
-  switch (variant) {
-    case "default":
-      return "defaultVanilla";
-    case "outline":
-      return "outlineVanilla";
-    case "secondary":
-      return "secondaryVanilla";
-    case "ghost":
-      return "ghostVanilla";
-    case "destructive":
-      return "destructiveVanilla";
-    case "link":
-      return "linkVanilla";
-  }
-}
-
-function resolveInputGroupFieldVariant(
-  visualMode: InputGroupVisualMode,
-): "defaultVanilla" | "defaultStudio" {
-  return visualMode === "studio" ? "defaultStudio" : "defaultVanilla";
-}
-
-function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
+function InputGroup({
+  className,
+  visualMode = "vanilla",
+  ...props
+}: React.ComponentProps<"div"> & {
+  visualMode?: InputGroupVisualMode;
+}) {
   return (
     <div
       data-slot="input-group"
+      data-visual-mode={visualMode}
       role="group"
       className={cn(
-        "border-input dark:bg-input/30 motion-safe:has-[[data-slot=input-group-control]:focus-visible]:border-ring motion-safe:has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50 has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot][aria-invalid=true]]:ring-destructive/60 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40 has-disabled:bg-input/50 dark:has-disabled:bg-input/80 h-8 rounded-lg border motion-safe:transition-colors motion-reduce:transition-none has-disabled:opacity-50 motion-safe:has-[[data-slot=input-group-control]:focus-visible]:ring-[3px] motion-safe:has-[[data-slot][aria-invalid=true]]:ring-[3px] has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-end]]:[&>input]:pt-3 has-[>[data-align=block-start]]:[&>input]:pb-3 has-[>[data-align=inline-end]]:[&>input]:pr-1.5 has-[>[data-align=inline-start]]:[&>input]:pl-1.5 [[data-slot=combobox-content]_&]:focus-within:border-inherit [[data-slot=combobox-content]_&]:focus-within:ring-0 group/input-group relative flex w-full min-w-0 items-center outline-none has-[>textarea]:h-auto",
-        "motion-safe:has-[[data-slot][aria-invalid=true]]:focus-within:border-destructive motion-safe:has-[[data-slot][aria-invalid=true]]:focus-within:ring-destructive/60 dark:motion-safe:has-[[data-slot][aria-invalid=true]]:focus-within:ring-destructive/40",
+        "border-input dark:bg-input/30 has-disabled:bg-input/50 dark:has-disabled:bg-input/80 h-8 rounded-lg border motion-safe:transition-colors motion-reduce:transition-none has-disabled:opacity-50 has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-end]]:[&>input]:pt-3 has-[>[data-align=block-start]]:[&>input]:pb-3 has-[>[data-align=inline-end]]:[&>input]:pr-1.5 has-[>[data-align=inline-start]]:[&>input]:pl-1.5 [[data-slot=combobox-content]_&]:focus-within:border-inherit [[data-slot=combobox-content]_&]:focus-within:ring-0 group/input-group relative flex w-full min-w-0 items-center outline-none has-[>textarea]:h-auto",
+        "has-[[data-slot=input-group-control]:focus-visible]:border-ring",
+        "has-[[data-slot=input-group-control]:focus-visible]:ring-2",
+        "has-[[data-slot=input-group-control]:focus-visible]:ring-ring/70",
+        "has-[[data-slot=input-group-control]:focus-visible]:ring-offset-0",
+        "has-[[data-slot][aria-invalid=true]]:border-destructive",
+        "dark:has-[[data-slot][aria-invalid=true]]:border-destructive/50",
+        "has-[[data-slot][aria-invalid=true]]:ring-2",
+        "has-[[data-slot][aria-invalid=true]]:ring-destructive/60",
+        "dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40",
         className,
       )}
       {...props}
@@ -164,7 +124,8 @@ function InputGroupButton({
     <Button
       type={type}
       data-size={size}
-      variant={resolveInputGroupButtonVariant(variant, visualMode)}
+      visualMode={visualMode}
+      variant={variant}
       className={cn(inputGroupButtonVariants({ size }), className)}
       {...props}
     />
@@ -193,9 +154,9 @@ function InputGroupInput({
   return (
     <Input
       data-slot="input-group-control"
-      variant={resolveInputGroupFieldVariant(visualMode)}
+      visualMode={visualMode}
       className={cn(
-        "rounded-none border-0 bg-transparent shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent flex-1",
+        "rounded-none border-0 bg-transparent shadow-none ring-0! focus-visible:ring-0! disabled:bg-transparent aria-invalid:ring-0! dark:bg-transparent dark:disabled:bg-transparent flex-1",
         className,
       )}
       {...props}
@@ -213,7 +174,7 @@ function InputGroupTextarea({
   return (
     <Textarea
       data-slot="input-group-control"
-      variant={resolveInputGroupFieldVariant(visualMode)}
+      visualMode={visualMode}
       className={cn(
         "rounded-none border-0 bg-transparent py-2 shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent flex-1 resize-none",
         className,

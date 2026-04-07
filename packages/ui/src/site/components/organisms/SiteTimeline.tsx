@@ -12,11 +12,12 @@
  * - Tous les styles sont pilotés par `ui`.
  * - Réutilise `SiteTimelineItem` pour le rendu d’un item individuel.
  * - Gère localement l’ouverture / fermeture de la timeline.
+ * - Mesure la hauteur réelle des items pour appliquer un léger compactage desktop.
  */
 
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@compoz/ui/components/ui/button";
 import { cn } from "@compoz/ui/lib/utils";
@@ -29,9 +30,31 @@ export type SiteTimelineProps = Readonly<{
   ui: SiteTimelineUi;
 }>;
 
+const OVERLAP_RATIO = 0.68;
+const MAX_OVERLAP_PX = 600;
+const COLLAPSE_DURATION_MS = 500;
+
 export function SiteTimeline({ items, ui }: SiteTimelineProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  /**
+   * shouldRender :
+   * garde le contenu monté pendant la fermeture
+   * pour éviter une disparition brutale.
+   */
+  const [shouldRender, setShouldRender] = useState(false);
+
+  /**
+   * canAnimate :
+   * pilote l’animation visuelle du wrapper.
+   * Permet de reproduire le léger décalage
+   * entre montage du contenu et animation.
+   */
+  const [canAnimate, setCanAnimate] = useState(false);
+
+  const [itemHeights, setItemHeights] = useState<number[]>([]);
   const anchorRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   if (!items.length) {
     return null;
@@ -48,18 +71,115 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
     if (!isOpen) {
       setIsOpen(true);
 
-      window.setTimeout(scrollToAnchor, 100);
+      window.setTimeout(() => {
+        scrollToAnchor();
+      }, 100);
+
       return;
     }
 
     setIsOpen(false);
   };
 
+  /**
+   * Reproduit la logique de useLazyCollapse :
+   * - ouverture : montage immédiat, animation au frame suivant
+   * - fermeture : arrêt de l’animation, démontage différé
+   */
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+
+      const raf = window.requestAnimationFrame(() => {
+        setCanAnimate(true);
+      });
+
+      return () => {
+        window.cancelAnimationFrame(raf);
+      };
+    }
+
+    setCanAnimate(false);
+
+    const timeout = window.setTimeout(() => {
+      setShouldRender(false);
+    }, COLLAPSE_DURATION_MS);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!shouldRender) {
+      return;
+    }
+
+    const nodes = itemRefs.current.slice(0, items.length);
+
+    const readHeights = () => {
+      const nextHeights = nodes.map((node) =>
+        node ? Math.round(node.getBoundingClientRect().height) : 0,
+      );
+
+      setItemHeights((prev) => {
+        if (
+          prev.length === nextHeights.length &&
+          prev.every((value, index) => value === nextHeights[index])
+        ) {
+          return prev;
+        }
+
+        return nextHeights;
+      });
+    };
+
+    readHeights();
+
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      readHeights();
+    });
+
+    nodes.forEach((node) => {
+      if (node) {
+        observer.observe(node);
+      }
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [shouldRender, items]);
+
+  const itemOffsets = useMemo(() => {
+    return items.map((_, index) => {
+      if (index === 0) {
+        return 0;
+      }
+
+      const previousHeight = itemHeights[index - 1];
+
+      if (!previousHeight || previousHeight <= 0) {
+        return 0;
+      }
+
+      const overlap = Math.min(
+        MAX_OVERLAP_PX,
+        Math.round(previousHeight * OVERLAP_RATIO),
+      );
+
+      return -overlap;
+    });
+  }, [itemHeights, items]);
+
   return (
     <div className={cn(ui.root)}>
       <div className={cn(ui.triggerWrap)}>
         <Button
-          type="button"
           size="icon"
           onClick={handleClickButton}
           aria-label={isOpen ? "Masquer la timeline" : "Afficher la timeline"}
@@ -80,20 +200,20 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
         </Button>
       </div>
 
-      <div ref={anchorRef} />
+      <div ref={anchorRef} className="scroll-mt-[var(--header-h)]" />
 
       <motion.div
         layout
         initial={false}
         animate={{
-          height: isOpen ? "auto" : 0,
-          opacity: isOpen ? 1 : 0,
-          paddingTop: isOpen ? "1.5rem" : "0rem",
+          height: canAnimate ? "auto" : 0,
+          opacity: canAnimate ? 1 : 0,
+          paddingTop: canAnimate ? "2rem" : "0rem",
         }}
         transition={{ duration: 0.6, ease: "easeInOut" }}
         className={cn(ui.collapse)}
       >
-        {isOpen ? (
+        {shouldRender ? (
           <div className="relative">
             <div className={cn(ui.desktopRailWrap)}>
               <div className={cn(ui.desktopStartDot)} />
@@ -102,14 +222,14 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
                 className={cn(ui.desktopLine)}
                 initial={{ scaleY: 0 }}
                 animate={{ scaleY: 1 }}
-                transition={{ duration: 1.2, ease: "easeOut" }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
               />
 
               <motion.div
                 className={cn(ui.desktopEndDot)}
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1, duration: 0.1, ease: "easeOut" }}
+                transition={{ delay: 0.8, duration: 0.1, ease: "easeOut" }}
               />
             </div>
 
@@ -121,7 +241,7 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
                   className={cn(ui.mobileLine)}
                   initial={{ scaleY: 0 }}
                   animate={{ scaleY: 1 }}
-                  transition={{ duration: 1.2, ease: "easeOut" }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
                 />
 
                 <div className={cn(ui.mobileEndDot)} />
@@ -131,6 +251,9 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
                 {items.map((item, index) => (
                   <motion.div
                     key={item.id}
+                    ref={(node) => {
+                      itemRefs.current[index] = node;
+                    }}
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{
@@ -139,7 +262,12 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
                       ease: "easeOut",
                     }}
                   >
-                    <SiteTimelineItem item={item} index={index} ui={ui.item} />
+                    <SiteTimelineItem
+                      item={item}
+                      index={index}
+                      ui={ui.item}
+                      desktopOffset={itemOffsets[index] ?? 0}
+                    />
                   </motion.div>
                 ))}
               </div>

@@ -14,6 +14,7 @@
 
 import type { CardsCellShape } from "@compoz/validation/pages/blocks/cells/cell";
 
+import { renderContentIcon } from "@compoz/ui/lib/icons/content-icons";
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteCard } from "@compoz/ui/site/components/molecules/SiteCard";
@@ -43,15 +44,19 @@ export function CardsCellRenderer({ cell, ui }: CardsCellRendererProps) {
         {items.map((item) => {
           const title = normalizeString(item.title, "");
           const description = normalizeString(item.description, "");
-          const icon = normalizeString(item.icon ?? "", "");
 
           return (
             <SiteCard
               key={item.id}
               title={title}
               description={description}
-              icon={icon || undefined}
+              icon={
+                item.icon
+                  ? renderContentIcon(item.icon, { className: ui.icon })
+                  : undefined
+              }
               align={align}
+              ui={ui}
             />
           );
         })}

@@ -12,7 +12,7 @@ import type { CarouselCell } from "@compoz/core/domain/pages/entities/cells/caro
 import type { FormCell } from "@compoz/core/domain/pages/entities/cells/form";
 import type { GalleryCell } from "@compoz/core/domain/pages/entities/cells/gallery";
 import type { HeadingCell } from "@compoz/core/domain/pages/entities/cells/heading";
-import type { ImageCell } from "@compoz/core/domain/pages/entities/cells/image";
+import type { ImageCell } from "@compoz/core/domain/pages/entities/cells/image-editor";
 import type { RichTextCell } from "@compoz/core/domain/pages/entities/cells/rich-text";
 import type { SeparatorCell } from "@compoz/core/domain/pages/entities/cells/separator";
 import type { SpacerCell } from "@compoz/core/domain/pages/entities/cells/spacer";
@@ -101,7 +101,7 @@ export type {
   ImageCell,
   ImageEditor,
   ImageRatio,
-} from "@compoz/core/domain/pages/entities/cells/image";
+} from "@compoz/core/domain/pages/entities/cells/image-editor";
 
 export type { RichTextCell } from "@compoz/core/domain/pages/entities/cells/rich-text";
 

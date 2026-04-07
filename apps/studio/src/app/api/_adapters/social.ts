@@ -26,14 +26,17 @@ import type { UpdateSocialSettingsIntentDTO } from "@compoz/validation/site/sett
  * Transforme un SocialItem DTO en SocialItem domaine.
  *
  * Contrat :
- * - href est brandé via `asBrandedHref`
+ * - `id` est propagé tel quel après trimming défensif
+ * - `href` est brandé via `asBrandedHref`
  * - trimming défensif (au cas où la source ne serait pas RHF)
  */
 function adaptSocialItem(dto: {
+  id: string;
   kind: SocialItem["kind"];
   href: string;
 }): SocialItem {
   return {
+    id: trimOrKeep(dto.id),
     kind: dto.kind,
     href: asBrandedHref(trimOrKeep(dto.href)),
   };

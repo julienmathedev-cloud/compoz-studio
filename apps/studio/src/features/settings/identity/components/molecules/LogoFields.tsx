@@ -5,11 +5,11 @@
  * @layer ui/studio/settings/identity/molecules
  *
  * @description
- * Champs logo (URL + alt) avec preview, compatible RHF (studio).
+ * Champs logo (image + alt) avec preview, compatibles RHF (studio).
  *
  * @remarks
  * - Molecule UI : compose `ImageSelector` et `InputField`.
- * - RHF-aware : reçoit directement les `field` RHF (`logoAlt`, `logoUrl`).
+ * - RHF-aware : reçoit directement le `field` RHF du logo complet (`logo`).
  * - Génère les IDs ARIA via `createFieldIds` à partir d’un `idPrefix`.
  * - Centralise les contraintes UI (formats recommandés, aide de longueur).
  * - Strictement UI-only : aucune logique métier.
@@ -55,8 +55,7 @@ const ALT_NEAR_LIMIT_THRESHOLD = 10;
 type LogoFieldsProps = Readonly<{
   idPrefix: string;
   siteName: string;
-  logoAltField: ControllerRenderProps<IdentityFormValues, "logoAlt">;
-  logoUrlField: ControllerRenderProps<IdentityFormValues, "logoUrl">;
+  logoField: ControllerRenderProps<IdentityFormValues, "logo">;
   disabled?: boolean;
   invalidAlt?: boolean;
   altErrorMessage?: string;
@@ -74,8 +73,7 @@ type LogoFieldsProps = Readonly<{
 export function LogoFields({
   idPrefix,
   siteName,
-  logoAltField,
-  logoUrlField,
+  logoField,
   disabled,
   invalidAlt,
   altErrorMessage,
@@ -87,18 +85,20 @@ export function LogoFields({
   /**
    * IDs ARIA dérivés du préfixe de champ.
    */
-  const logoAltIds = createFieldIds(idPrefix, "logoAlt");
-  const logoImageIds = createFieldIds(idPrefix, "logoUrl", { hint: true });
+  const logoAltIds = createFieldIds(idPrefix, "logo.alt");
+  const logoImageIds = createFieldIds(idPrefix, "logo.src", { hint: true });
 
   /**
-   * Valeur actuelle de l'alt (depuis RHF) — string stable.
+   * Valeur actuelle du logo (depuis RHF).
    */
-  const currentAlt = String(logoAltField.value ?? "");
+  const currentLogo = logoField.value;
+  const currentUrl = currentLogo?.src ?? "";
+  const currentAlt = currentLogo?.alt ?? "";
 
   /**
    * Alt effectif : valeur saisie → titre → fallback i18n.
    */
-  const alt = useMemo(
+  const previewAlt = useMemo(
     () => currentAlt || siteName || t("studio.logoFields.altFallback"),
     [currentAlt, siteName, t],
   );
@@ -121,10 +121,6 @@ export function LogoFields({
 
   /**
    * Adapter `onUploadLogo` → shape attendue par `ImageSelector`.
-   *
-   * @remarks
-   * - SVG : pas de dimensions fiables (et pas utiles ici) → 0/0.
-   * - Raster : si l’endpoint ne renvoie pas width/height, idem 0/0.
    */
   const handleUploadLogo = useCallback(
     async (file: File): Promise<UploadedRasterImage> => {
@@ -133,11 +129,6 @@ export function LogoFields({
       }
 
       const { url, width, height } = await onUploadLogo(file);
-
-      /**
-       * Logo : `width` / `height` non critiques (SVG ou raster).
-       * On conserve une shape de retour stable.
-       */
       return { url, width, height };
     },
     [onUploadLogo],
@@ -152,23 +143,45 @@ export function LogoFields({
       <ImageSelector
         ids={logoImageIds}
         label={t("studio.logoFields.image.label")}
-        url={String(logoUrlField.value ?? "")}
+        url={currentUrl}
         onUrlChange={(value) => {
-          const nextUrl = String(value ?? "");
+          const nextUrl = String(value ?? "").trim();
 
-          // FormValues stables : on stocke toujours une string.
-          logoUrlField.onChange(nextUrl);
-
-          // Si on vient de supprimer le logo, on vide l'alt (string stable, pas undefined).
-          if (!nextUrl.trim()) {
-            logoAltField.onChange("");
+          // Suppression du logo
+          if (!nextUrl) {
+            logoField.onChange(null);
+            return;
           }
+
+          // Mise à jour manuelle URL (cas saisie/édition textuelle)
+          // On conserve les dimensions si elles existent déjà, sinon fallback neutre.
+          logoField.onChange({
+            src: nextUrl,
+            alt: currentAlt,
+            width: currentLogo?.width ?? 1,
+            height: currentLogo?.height ?? 1,
+          });
         }}
         disabled={isBusy}
-        previewAlt={alt}
+        previewAlt={previewAlt}
         help={t("studio.logoFields.image.help")}
         accept={LOGO_ACCEPT}
-        onFileSelect={onUploadLogo ? handleUploadLogo : undefined}
+        onFileSelect={
+          onUploadLogo
+            ? async (file) => {
+                const uploaded = await handleUploadLogo(file);
+
+                logoField.onChange({
+                  src: uploaded.url,
+                  alt: currentAlt,
+                  width: uploaded.width,
+                  height: uploaded.height,
+                });
+
+                return uploaded;
+              }
+            : undefined
+        }
         preferredTypes={PREFERRED_LOGO}
         preferredTypeHint={preferredLogoHint}
         maxBytes={MAX_IMAGE_UPLOAD_BYTES}
@@ -178,12 +191,23 @@ export function LogoFields({
         ids={logoAltIds}
         label={t("studio.logoFields.alt.label")}
         value={currentAlt}
-        onChange={(value) => logoAltField.onChange(String(value ?? ""))}
-        onBlur={logoAltField.onBlur}
+        onChange={(value) => {
+          const nextAlt = String(value ?? "");
+
+          if (currentLogo === null) {
+            return;
+          }
+
+          logoField.onChange({
+            ...currentLogo,
+            alt: nextAlt,
+          });
+        }}
+        onBlur={logoField.onBlur}
         placeholder={t("studio.logoFields.alt.placeholder")}
         help={altHelpDynamic}
         required
-        disabled={isBusy}
+        disabled={isBusy || currentLogo === null}
         showCount
         maxLength={LOGO_ALT.MAX}
         autoCapitalize="sentences"

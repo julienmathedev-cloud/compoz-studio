@@ -57,8 +57,8 @@ export function SiteTimelineItemDescription({
 
         {keywords?.length ? (
           <div className={cn(ui.keywordsWrap, keywordsWrapClassName)}>
-            {keywords.map((keyword, index) => (
-              <Badge key={`${keyword}-${index}`} className={cn(ui.keyword)}>
+            {keywords.map((keyword) => (
+              <Badge key={keyword} className={cn(ui.keyword)}>
                 {keyword}
               </Badge>
             ))}

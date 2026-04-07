@@ -47,6 +47,20 @@ export const SectionBlockContainerModeSchema = z.enum(
   { message: ERROR_CODES.BLOCK_SECTION_CONTAINER_MODE_INVALID },
 );
 
+export const BlockRowReverseOnSchema = z
+  .object({
+    mobile: z.boolean({
+      message: ERROR_CODES.BLOCK_ROW_REVERSE_ON_BREAKPOINT_INVALID,
+    }),
+    tablet: z.boolean({
+      message: ERROR_CODES.BLOCK_ROW_REVERSE_ON_BREAKPOINT_INVALID,
+    }),
+    desktop: z.boolean({
+      message: ERROR_CODES.BLOCK_ROW_REVERSE_ON_BREAKPOINT_INVALID,
+    }),
+  })
+  .strict();
+
 /* -------------------------------------------------------------------------- */
 /*                                   Column                                   */
 /* -------------------------------------------------------------------------- */
@@ -66,6 +80,7 @@ export const BlockRowSchema = z
   .object({
     id: BlockRowIdSchema,
     columnsCount: BlockRowColumnsCountSchema,
+    reverseOn: BlockRowReverseOnSchema,
     columns: z.array(BlockColumnSchema),
   })
   .strict();
@@ -96,3 +111,4 @@ export type SectionBlockShape = z.infer<typeof SectionBlockSchema>;
 export type BlockRowShape = z.infer<typeof BlockRowSchema>;
 export type BlockColumnShape = z.infer<typeof BlockColumnSchema>;
 export type BlockNameShape = z.infer<typeof BlockNameSchema>;
+export type BlockRowReverseOnShape = z.infer<typeof BlockRowReverseOnSchema>;

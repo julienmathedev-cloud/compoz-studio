@@ -55,8 +55,10 @@ export function SiteCarousel({
   const [prefersReducedMotion] = useState(() => readPrefersReducedMotion());
 
   const hasAutoplay = !prefersReducedMotion && intervalMs > 0 && count > 1;
+  const hasVisibleArrows = showArrows && count > 1;
   const safeMs = Math.max(intervalMs, MIN_INTERVAL_MS);
   const safeIndex = count === 0 ? 0 : Math.min(currentIndex, count - 1);
+  const isImageOnly = items.every((item) => item.kind === "image");
 
   useEffect(() => {
     if (!hasAutoplay) {
@@ -135,7 +137,10 @@ export function SiteCarousel({
 
   return (
     <div
-      className={ui.carousel.root}
+      className={cn(
+        ui.carousel.root,
+        hasVisibleArrows && "px-6 sm:px-10 md:px-12 lg:px-16",
+      )}
       aria-roledescription="carousel"
       aria-label="Carousel"
     >
@@ -143,59 +148,65 @@ export function SiteCarousel({
         Slide {safeIndex + 1} sur {count}
       </p>
 
+      {hasVisibleArrows ? (
+        <>
+          <Button
+            size="icon-lg"
+            onClick={goPrev}
+            aria-label="Slide précédent"
+            className={cn(ui.carousel.arrowButton, "left-0")}
+          >
+            <ChevronLeft className={ui.carousel.arrowIcon} />
+          </Button>
+
+          <Button
+            size="icon-lg"
+            onClick={goNext}
+            aria-label="Slide suivant"
+            className={cn(ui.carousel.arrowButton, "right-0")}
+          >
+            <ChevronRight className={ui.carousel.arrowIcon} />
+          </Button>
+        </>
+      ) : null}
+
       <div className={ui.carousel.viewport}>
-        {showArrows && count > 1 ? (
-          <>
-            <Button
-              type="button"
-              size="icon"
-              variant="ghostVanilla"
-              onClick={goPrev}
-              aria-label="Slide précédent"
-              className={cn(ui.carousel.arrowButton, "left-0")}
-            >
-              <ChevronLeft className={ui.carousel.arrowIcon} />
-            </Button>
+        {isImageOnly ? (
+          <div className={ui.carousel.track}>
+            {items.map((item, index) => {
+              const isActive = index === safeIndex;
 
-            <Button
-              type="button"
-              size="icon"
-              variant="ghostVanilla"
-              onClick={goNext}
-              aria-label="Slide suivant"
-              className={cn(ui.carousel.arrowButton, "right-0")}
-            >
-              <ChevronRight className={ui.carousel.arrowIcon} />
-            </Button>
-          </>
-        ) : null}
-
-        <div className={ui.carousel.track}>
-          {items.map((item, index) => {
-            const isActive = index === safeIndex;
-
-            return (
-              <div
-                key={item.id}
-                className={cn(
-                  ui.carousel.slide,
-                  isActive
-                    ? ui.carousel.slideActive
-                    : ui.carousel.slideInactive,
-                )}
-                aria-hidden={!isActive}
-              >
-                <SiteCarouselItem
-                  item={item}
-                  ui={ui}
-                  isFullBleed={isFullBleed}
-                  priority={priority && index === 0}
-                  isActive={isActive}
-                />
-              </div>
-            );
-          })}
-        </div>
+              return (
+                <div
+                  key={item.id}
+                  className={cn(
+                    ui.carousel.slide,
+                    isActive
+                      ? ui.carousel.slideActive
+                      : ui.carousel.slideInactive,
+                  )}
+                  aria-hidden={!isActive}
+                >
+                  <SiteCarouselItem
+                    item={item}
+                    ui={ui}
+                    isFullBleed={isFullBleed}
+                    priority={priority && index === 0}
+                    isActive={isActive}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <SiteCarouselItem
+            item={items[safeIndex]}
+            ui={ui}
+            isFullBleed={isFullBleed}
+            priority={priority && safeIndex === 0}
+            isActive
+          />
+        )}
       </div>
 
       {showDots && count > 1 ? (

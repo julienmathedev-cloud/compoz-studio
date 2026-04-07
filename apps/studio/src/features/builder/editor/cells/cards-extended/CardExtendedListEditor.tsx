@@ -13,6 +13,9 @@
  * - Les updates métier (append/remove/move) sont déléguées à RHF.
  * - Les clés React utilisent `fieldId`, alors que le DnD s’appuie
  *   sur l’`id` métier stable de chaque card étendue.
+ * - Le reorder s’appuie sur `move()` pour conserver l’état RHF.
+ * - Les valeurs live restent lues via `watchedItems` et transmises
+ *   au sous-éditeur pour stabiliser le rendu pendant le rebinding.
  */
 
 import {
@@ -51,6 +54,7 @@ export type CardsExtendedListEditorProps = Readonly<{
   idPrefix: string;
   basePath: CardsExtendedFieldBasePath;
   fields: ReadonlyArray<CardsExtendedItemField>;
+  watchedItems: ReadonlyArray<CardsExtendedItemFormValues>;
   append: UseFieldArrayAppend<SectionBlockFormValues, CardsExtendedItemsPath>;
   remove: UseFieldArrayRemove;
   move: UseFieldArrayMove;
@@ -65,6 +69,7 @@ export function CardExtendedListEditor({
   idPrefix,
   basePath,
   fields,
+  watchedItems,
   append,
   remove,
   move,
@@ -102,6 +107,7 @@ export function CardExtendedListEditor({
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       if (disabled) return;
+      if (watchedItems.length !== fields.length) return;
 
       const { active, over } = event;
 
@@ -115,7 +121,7 @@ export function CardExtendedListEditor({
 
       move(oldIndex, newIndex);
     },
-    [disabled, fields, move],
+    [disabled, fields, watchedItems.length, move],
   );
 
   return (
@@ -132,15 +138,18 @@ export function CardExtendedListEditor({
           <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {fields.map((item, index) => {
               const itemPrefix = `${idPrefix}-card-extended-${item.id}`;
+              const watchedItem = watchedItems[index];
 
               return (
                 <li key={item.fieldId} className="min-w-0">
                   <CardExtendedItemEditor
+                    key={`${item.fieldId}-${index}`}
                     control={control}
                     basePath={basePath}
                     index={index}
                     idPrefix={itemPrefix}
-                    value={item}
+                    sortableId={item.id}
+                    watchedItem={watchedItem}
                     disabled={disabled}
                     canRemove={canRemove}
                     onRemove={() => handleRemoveAt(index)}

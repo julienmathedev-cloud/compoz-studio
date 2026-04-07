@@ -9,6 +9,8 @@
  * @remarks
  * - Le patch est validé/normalisé en amont (schemas/adapters).
  * - `repo.ensureBase()` prépare la persistance (pré-requis infra).
+ * - Le patch sur `identity` reste shallow :
+ *   si `logo` est fourni, il remplace entièrement la valeur courante.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -27,11 +29,6 @@ export function updateIdentitySettings({ repo }: UpdateIdentitySettingsDeps) {
   ): Promise<UpdateIdentitySettingsResult> {
     const patch: Partial<IdentitySettings> = input.patch ?? {};
 
-    // Invariant métier : si le logo est supprimé, on vide `logoAlt`.
-    if ("logoUrl" in patch && patch.logoUrl == null) {
-      patch.logoAlt = "";
-    }
-
     await repo.ensureBase();
 
     const current = await repo.readSettings(DEFAULT_CONTENT_STATE);
@@ -43,9 +40,13 @@ export function updateIdentitySettings({ repo }: UpdateIdentitySettingsDeps) {
       return { settings: current };
     }
 
-    const next: SiteSettings = { ...current, identity: identityNext };
+    const next: SiteSettings = {
+      ...current,
+      identity: identityNext,
+    };
 
     await repo.putSettings(DEFAULT_CONTENT_STATE, next);
+
     return { settings: next };
   };
 }

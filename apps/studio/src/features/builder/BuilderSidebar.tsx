@@ -315,6 +315,31 @@ export function BuilderSidebar({
     [clearErrors, confirmList, isBusy, isDirty, liveValues.rows, setValue, t],
   );
 
+  const handleToggleReverseOnMobile = useCallback(
+    (rowId: string, checked: boolean) => {
+      if (isBusy) return;
+
+      const nextRows = liveValues.rows.map((row) => {
+        if (row.id !== rowId) return row;
+
+        return {
+          ...row,
+          reverseOn: {
+            ...row.reverseOn,
+            mobile: checked,
+          },
+        };
+      });
+
+      setValue("rows", nextRows, {
+        shouldDirty: true,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    },
+    [isBusy, liveValues.rows, setValue],
+  );
+
   const handleAddCell = useCallback(
     (rowId: string, columnId: string) => {
       if (isBusy) return;
@@ -426,7 +451,8 @@ export function BuilderSidebar({
         <div className="flex items-center justify-start">
           <Button
             type="button"
-            variant="headerStudio"
+            variant="header"
+            visualMode="studio"
             size="icon"
             onClick={onBack}
             disabled={isBusy}
@@ -482,10 +508,9 @@ export function BuilderSidebar({
                     type="button"
                     size="sm"
                     variant={
-                      liveValues.containerMode === mode
-                        ? "defaultStudio"
-                        : "ghostStudio"
+                      liveValues.containerMode === mode ? "default" : "ghost"
                     }
+                    visualMode="studio"
                     onClick={() =>
                       setValue("containerMode", mode, {
                         shouldDirty: true,
@@ -556,6 +581,7 @@ export function BuilderSidebar({
                         onHoverCell={onHoverCell}
                         onRemoveRow={handleRemoveRow}
                         onSetRowColumnsCount={handleSetRowColumnsCount}
+                        onToggleReverseOnMobile={handleToggleReverseOnMobile}
                         onAddCell={handleAddCell}
                         onMoveCell={handleMoveCell}
                       />

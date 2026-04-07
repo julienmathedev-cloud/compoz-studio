@@ -89,6 +89,7 @@ function toDomainUser(u: UserShape): User {
     status: u.status,
     rbac: u.rbac,
     meta: u.meta,
+    demo: u.demo,
   };
 }
 

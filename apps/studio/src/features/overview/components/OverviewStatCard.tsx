@@ -24,6 +24,7 @@ import { cn } from "@compoz/ui/lib/utils";
 import { ROW_BETWEEN } from "@compoz/ui/styles/studio/layout";
 
 export type StatBreakdownItem = Readonly<{
+  key: string;
   label: ReactNode;
   value: number;
 }>;
@@ -50,7 +51,8 @@ export function OverviewStatCard({
 
   return (
     <Card
-      variant="panelStudio"
+      variant="panel"
+      visualMode="studio"
       data-state={isError ? "error" : undefined}
       className={cn(isError ? "border-destructive/40" : undefined, "h-full")}
     >
@@ -73,15 +75,15 @@ export function OverviewStatCard({
 
           <div>
             {isError ? (
-              <StatusBadge variant="errorStudio" label={t("common.error")} />
+              <StatusBadge variant="error" label={t("common.error")} />
             ) : showBreakdown ? (
               <ul
                 className={cn(
                   "grid grid-cols-2 gap-y-1 text-sm text-muted-foreground lg:grid-cols-1 xl:grid-cols-2",
                 )}
               >
-                {breakdownItems?.map((item, index) => (
-                  <li key={index} className="mr-2">
+                {breakdownItems?.map((item) => (
+                  <li key={item.key} className="mr-2">
                     <span className="font-medium tabular-nums text-foreground">
                       {item.value}
                     </span>{" "}

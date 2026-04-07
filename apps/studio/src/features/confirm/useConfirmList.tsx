@@ -70,7 +70,7 @@ export function useConfirmList(): UseConfirmList {
           <ConfirmationDialogDescription
             intro={intro}
             hints={items}
-            variant="infoStudio"
+            variant="info"
           />
         ),
         confirmLabel,

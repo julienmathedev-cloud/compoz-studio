@@ -1,32 +1,38 @@
 import { cva, type VariantProps } from "class-variance-authority";
+import * as React from "react";
 
 import { cn } from "@compoz/ui/lib/utils";
 
+type EmptyVisualMode = "vanilla" | "studio";
+
 const emptyVariants = cva(
-  "flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 border-dashed p-6 text-center text-balance",
+  "flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 border border-transparent border-dashed p-6 text-center text-balance",
   {
     variants: {
-      variant: {
-        defaultVanilla: "rounded-xl",
-        defaultStudio: "h-full rounded-lg",
+      visualMode: {
+        vanilla: "rounded-xl",
+        studio: "h-full rounded-lg",
       },
     },
     defaultVariants: {
-      variant: "defaultVanilla",
+      visualMode: "vanilla",
     },
   },
 );
 
 function Empty({
   className,
-  variant = "defaultVanilla",
+  visualMode = "vanilla",
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof emptyVariants>) {
+}: React.ComponentProps<"div"> &
+  VariantProps<typeof emptyVariants> & {
+    visualMode?: EmptyVisualMode;
+  }) {
   return (
     <div
       data-slot="empty"
-      data-variant={variant}
-      className={cn(emptyVariants({ variant }), className)}
+      data-visual-mode={visualMode}
+      className={cn(emptyVariants({ visualMode }), className)}
       {...props}
     />
   );
@@ -47,27 +53,26 @@ const emptyMediaVariants = cva(
   {
     variants: {
       variant: {
-        defaultVanilla: "bg-transparent",
-        iconVanilla:
-          "flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground [&_svg:not([class*='size-'])]:size-4",
+        default: "bg-transparent",
+        icon: "flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground [&_svg:not([class*='size-'])]:size-4",
       },
     },
     defaultVariants: {
-      variant: "defaultVanilla",
+      variant: "default",
     },
   },
 );
 
 function EmptyMedia({
   className,
-  variant = "defaultVanilla",
+  variant = "default",
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>) {
   return (
     <div
       data-slot="empty-icon"
       data-variant={variant}
-      className={cn(emptyMediaVariants({ variant, className }))}
+      className={cn(emptyMediaVariants({ variant }), className)}
       {...props}
     />
   );
@@ -85,7 +90,7 @@ function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
 
 function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
-    <div
+    <p
       data-slot="empty-description"
       className={cn(
         "text-sm/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",

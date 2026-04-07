@@ -13,16 +13,16 @@
  * - Le contenu summary est fourni via `children`.
  */
 
+import { RotateCcw } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import {
   Controller,
   type Control,
-  type UseFormReset,
   type FieldErrors,
   type FieldNamesMarkedBoolean,
+  type UseFormReset,
 } from "react-hook-form";
-import { useTranslations } from "next-intl";
-import { RotateCcw } from "lucide-react";
 
 import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
@@ -243,7 +243,8 @@ export function AdminUsersFormRbacFields({
             <div className="md:mt-[1.6rem] flex h-9 items-center justify-end">
               <TooltipButton
                 type="button"
-                variant="outlineStudio"
+                variant="outline"
+                visualMode="studio"
                 size="icon"
                 onPointerDown={(e) => {
                   e.preventDefault();

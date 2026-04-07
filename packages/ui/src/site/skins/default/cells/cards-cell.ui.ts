@@ -18,4 +18,23 @@ export const defaultCardsUi: SiteCardsUi = {
     3: "md:grid-cols-2 lg:grid-cols-3",
     4: "md:grid-cols-2 lg:grid-cols-4",
   },
+
+  align: {
+    left: "items-start text-left",
+    center: "items-center text-center",
+  },
+
+  card: "h-full border border-border ring-0 shadow-border shadow-xs transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-[1.01] hover:shadow-sm hover:border-primary",
+
+  header: "flex flex-col",
+
+  headerTop: "flex items-center! gap-5",
+
+  icon: "h-7 w-7 shrink-0 text-primary",
+
+  title: "",
+
+  content: "h-full",
+
+  description: "text-muted-foreground",
 } as const;

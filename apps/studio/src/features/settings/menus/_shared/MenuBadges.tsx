@@ -20,7 +20,6 @@ import type { ComponentType, SVGProps } from "react";
 
 import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
 import { Badge } from "@compoz/ui/components/ui/badge";
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { resolveLinkFlags } from "@compoz/ui/lib/links/helpers";
 import { cn } from "@compoz/ui/lib/utils";
 
@@ -102,14 +101,11 @@ export function MenuBadges({ item, className }: MenuBadgesProps) {
       className={cn("flex flex-wrap gap-1", className)}
       aria-label={t("studio.menuBadges.ariaLabel", { types: labelJoined })}
     >
-      {kinds.map((kind, index) => {
+      {kinds.map((kind) => {
         const Icon = ICONS[kind];
 
         return (
-          <Badge
-            key={toStableUiKey({ label: kind }, index)}
-            variant="infoStudio"
-          >
+          <Badge key={kind} variant="info" visualMode="studio">
             <StudioIcon icon={Icon} />
             <span>{t(`studio.menuBadges.kinds.${kind}`)}</span>
           </Badge>

@@ -8,9 +8,11 @@
  * @remarks
  * - Repose sur les primitives Card ShadCN.
  * - Sert de brique UI pour les grilles de type `cards`.
- * - Gère un titre, une description et une icône textuelle optionnelle.
+ * - Gère un titre, une description et une icône optionnelle.
  * - L’alignement est piloté par le parent via prop `align`.
  */
+
+import type { ReactNode } from "react";
 
 import {
   Card,
@@ -19,14 +21,16 @@ import {
   CardTitle,
 } from "@compoz/ui/components/ui/card";
 import { cn } from "@compoz/ui/lib/utils";
+import type { SiteCardsUi } from "@compoz/ui/site/site-ui.types";
 
 export type SiteCardAlign = "left" | "center";
 
 export type SiteCardProps = Readonly<{
   title: string;
   description: string;
-  icon?: string;
+  icon?: ReactNode;
   align?: SiteCardAlign;
+  ui: SiteCardsUi;
   className?: string;
 }>;
 
@@ -35,33 +39,21 @@ export function SiteCard({
   description,
   icon,
   align = "left",
+  ui,
   className,
 }: SiteCardProps) {
-  const isCentered = align === "center";
-
-  const headerAlignClassName = isCentered
-    ? "items-center text-center"
-    : "items-start text-left";
-
-  const textAlignClassName = isCentered ? "text-center" : "text-left";
-
   return (
-    <Card className={cn("h-full", className)}>
-      <CardHeader className={cn("space-y-3", headerAlignClassName)}>
-        {icon ? (
-          <div
-            className={cn("text-2xl leading-none", textAlignClassName)}
-            aria-hidden="true"
-          >
-            {icon}
-          </div>
-        ) : null}
+    <Card className={cn(ui.card, className)}>
+      <CardHeader className={cn(ui.header, ui.align[align])}>
+        <div className={cn(ui.headerTop, ui.align[align])}>
+          {icon ? <div aria-hidden="true">{icon}</div> : null}
 
-        <CardTitle className="text-lg leading-tight">{title}</CardTitle>
+          <CardTitle className={ui.title}>{title}</CardTitle>
+        </div>
       </CardHeader>
 
-      <CardContent className={cn(textAlignClassName)}>
-        <p className="text-sm leading-6 text-muted-foreground">{description}</p>
+      <CardContent className={cn(ui.content, ui.align[align])}>
+        <p className={ui.description}>{description}</p>
       </CardContent>
     </Card>
   );

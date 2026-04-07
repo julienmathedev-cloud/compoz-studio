@@ -37,7 +37,8 @@ export function StudioNotFoundClient() {
         <div className={cn(ROW_BETWEEN, "w-full gap-2")}>
           <Button
             asChild
-            variant="outlineVanilla"
+            variant="outline"
+            visualMode="vanilla"
             className={cn(ui.systemPage?.button)}
           >
             <Link href={homeHref} className="no-underline">
@@ -45,7 +46,7 @@ export function StudioNotFoundClient() {
             </Link>
           </Button>
 
-          <Button asChild variant="ghostVanilla">
+          <Button asChild variant="ghost" visualMode="vanilla">
             <Link href="/" className="no-underline">
               Retour au studio
             </Link>

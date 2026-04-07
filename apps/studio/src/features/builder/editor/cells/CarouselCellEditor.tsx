@@ -9,7 +9,7 @@
  * et rendu dynamique d’une liste homogène d’items.
  *
  * @remarks
- * - Connecté directement à RHF via `useController` et `useFieldArray`.
+ * - Connecté directement à RHF via `useController`, `useFieldArray` et `useWatch`.
  * - Le carousel porte uniquement :
  *   - `variant`
  *   - `showDots`
@@ -17,11 +17,14 @@
  *   - `itemKind`
  *   - `items`
  * - Les contenus sont édités via les ListEditors dédiés.
+ * - Le reorder des items s’appuie sur `move()` pour conserver l’état RHF.
+ * - `replace()` reste utilisé pour les remplacements volontaires de collection
+ *   (ex: changement de `itemKind`).
  */
 
 import { useTranslations } from "next-intl";
 import type { Control } from "react-hook-form";
-import { useController, useFieldArray } from "react-hook-form";
+import { useController, useFieldArray, useWatch } from "react-hook-form";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
@@ -137,7 +140,7 @@ export function CarouselCellEditor({
     control,
   });
 
-  const { fields, append, remove, move, replace } = useFieldArray<
+  const { fields, append, remove, replace, move } = useFieldArray<
     SectionBlockFormValues,
     CarouselItemsPath,
     "fieldId"
@@ -146,6 +149,16 @@ export function CarouselCellEditor({
     name: itemsPath,
     keyName: "fieldId",
   });
+
+  const watchedItems = (useWatch({
+    control,
+    name: itemsPath,
+  }) ?? []) as Array<
+    | ImageEditorFormValues
+    | CardItemFormValues
+    | CardsExtendedItemFormValues
+    | StructuredCardItemFormValues
+  >;
 
   const variant: CarouselVariant =
     variantCtrl.field.value &&
@@ -168,7 +181,7 @@ export function CarouselCellEditor({
         <p className="text-sm font-medium">
           {t("studio.cellEditorTabs.carouselCellEditor.itemsLabel")}
         </p>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-xs">
           {t("studio.cellEditorTabs.carouselCellEditor.itemsHelp")}
         </p>
       </div>
@@ -185,7 +198,8 @@ export function CarouselCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={variant === item ? "defaultStudio" : "ghostStudio"}
+                variant={variant === item ? "default" : "ghost"}
+                visualMode="studio"
                 onClick={() => {
                   variantCtrl.field.onChange(item);
                 }}
@@ -208,7 +222,8 @@ export function CarouselCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={itemKind === item ? "defaultStudio" : "ghostStudio"}
+                variant={itemKind === item ? "default" : "ghost"}
+                visualMode="studio"
                 onClick={() => {
                   itemKindCtrl.field.onChange(item);
                   replace([getEmptyItemByKind(item)]);
@@ -254,6 +269,7 @@ export function CarouselCellEditor({
           idPrefix={idPrefix}
           basePath={basePath}
           fields={fields as ImageItemField[]}
+          watchedItems={watchedItems as ImageEditorFormValues[]}
           append={append}
           remove={remove}
           move={move}
@@ -271,6 +287,7 @@ export function CarouselCellEditor({
           idPrefix={idPrefix}
           basePath={basePath}
           fields={fields as CardItemField[]}
+          watchedItems={watchedItems as CardItemFormValues[]}
           append={append}
           remove={remove}
           move={move}
@@ -287,6 +304,7 @@ export function CarouselCellEditor({
           idPrefix={idPrefix}
           basePath={basePath}
           fields={fields as CardsExtendedItemField[]}
+          watchedItems={watchedItems as CardsExtendedItemFormValues[]}
           append={append}
           remove={remove}
           move={move}
@@ -303,6 +321,7 @@ export function CarouselCellEditor({
           idPrefix={idPrefix}
           basePath={basePath}
           fields={fields as StructuredCardItemField[]}
+          watchedItems={watchedItems as StructuredCardItemFormValues[]}
           append={append}
           remove={remove}
           move={move}

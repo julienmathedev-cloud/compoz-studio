@@ -11,7 +11,8 @@
  * - Le chargement initial est géré par `SettingsSection` (shell).
  * - Monte `useHeaderSettings` (baseline + save) et câble `HeaderForm`.
  * - Affiche les warnings non bloquants (via `HeaderForm` + `computeHeaderWarnings` au submit).
- * - La preview `/preview/header` consomme plusieurs scopes : `header` (draft possible) + `identity` / `primaryMenu` / `social` (baseline-only).
+ * - La preview `/preview/header` consomme plusieurs scopes :
+ *   `header` en live + `identity` / `primaryMenu` / `social` en baseline.
  * - Strictement UI-only : aucune logique métier.
  */
 
@@ -53,14 +54,15 @@ export function HeaderSection() {
 
   const dirtyGuard = useStudioDirtyGuard();
 
-  // Hook settings : modèle UI (RHF).
   const { baseline, isLoading, isSaving, save } = useHeaderSettings();
 
   const { data: settingsBundle, isLoading: isLoadingSettingsBundle } =
     useSettingsBundle(DEFAULT_CONTENT_STATE);
 
-  const [previewMode, setPreviewMode] = useState<"baseline" | "override">(
-    "baseline",
+  const [warningKeys, setWarningKeys] = useState<HeaderWarningKey[]>([]);
+  const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
+  const [previewDraft, setPreviewDraft] = useState<HeaderSettingsShape | null>(
+    null,
   );
 
   useEffect(() => {
@@ -68,19 +70,29 @@ export function HeaderSection() {
       isLoading,
       isSaving,
       hasBaseline: Boolean(baseline),
+      hasSettingsBundle: Boolean(settingsBundle),
+      isLoadingSettingsBundle,
     });
-  }, [isLoading, isSaving, baseline]);
+  }, [isLoading, isSaving, baseline, settingsBundle, isLoadingSettingsBundle]);
 
-  // Pont UI → Preview/Public : RHF (UI) → SettingsShape (preview).
-  const baselinePreview = useMemo<HeaderSettingsShape>(
-    () => toHeaderSettingsShapeFromFormValues(baseline),
-    [baseline],
-  );
+  /**
+   * Baseline preview du header :
+   * conversion baseline RHF -> shape runtime.
+   */
+  const baselinePreview = useMemo<HeaderSettingsShape>(() => {
+    return toHeaderSettingsShapeFromFormValues(baseline);
+  }, [baseline]);
+
+  /**
+   * Valeur réellement injectée dans la preview pour le scope `header` :
+   * - draft live si le form bouge
+   * - sinon baseline persistée
+   */
+  const previewValue = previewDraft ?? baselinePreview;
 
   const identityBaselinePreview = useMemo<IdentitySettingsShape | null>(() => {
     if (!settingsBundle) return null;
 
-    // DTO -> FormValues -> Shape (tu as déjà les 2 mappers)
     return toIdentitySettingsShapeFromFormValues(
       toIdentityFormValuesFromDTO(settingsBundle.identity),
     );
@@ -97,52 +109,15 @@ export function HeaderSection() {
     return toSocialSettingsShapeFromDTO(settingsBundle.social);
   }, [settingsBundle]);
 
-  const { ready, setBaseline, frame, iframeRef, setDraft } =
-    useStudioPreview<HeaderSettingsShape>("header", baselinePreview);
+  const { ready, setBaseline, frame, iframeRef } =
+    useStudioPreview<HeaderSettingsShape>("header", {
+      baseline: previewValue,
+      liveEnabled: true,
+    });
 
   /**
-   * ✅ Empty state (dans l’iframe) :
-   * - On ne l’active qu’une fois que les chargements “data” sont terminés.
-   * - Si une baseline requise est absente => on affiche un empty preview au lieu d’un écran blanc.
+   * Scopes baseline-only nécessaires au rendu du header preview.
    */
-  const dataReady = !isLoading && !isLoadingSettingsBundle;
-
-  const hasBrand =
-    Boolean(baselinePreview?.showLogo && identityBaselinePreview?.logoUrl) ||
-    Boolean(baselinePreview?.showSiteName && identityBaselinePreview?.siteName);
-
-  const hasMenu = Boolean(primaryMenuBaselinePreview?.items?.length);
-  const hasSocial = Boolean(socialBaselinePreview?.items?.length);
-
-  const hasSomethingToRender = hasBrand || hasMenu || hasSocial;
-
-  const isEmpty =
-    dataReady &&
-    settingsBundle != null &&
-    identityBaselinePreview != null &&
-    primaryMenuBaselinePreview != null &&
-    socialBaselinePreview != null &&
-    !hasSomethingToRender;
-
-  // Libellé studio (traduit) → affiché dans l’iframe via route empty globale
-  const emptyLabel = t("studio.emptyPreview.header");
-
-  // Preview loading :
-  // - ⚠️ ne pas tester `baselinePreview` (il peut exister même si `baseline` est null/undefined)
-  // - on teste les baselines brutes + handshake scopes.
-  // - ✅ IMPORTANT : si on est en empty, on ne veut pas rester bloqué en loading.
-  const isPreviewLoading =
-    !isEmpty &&
-    (isLoading ||
-      isLoadingSettingsBundle ||
-      identityBaselinePreview == null ||
-      primaryMenuBaselinePreview == null ||
-      socialBaselinePreview == null ||
-      !ready.isReady("header") ||
-      !ready.isReady("identity") ||
-      !ready.isReady("primaryMenu") ||
-      !ready.isReady("social"));
-
   useStudioPreviewBaselineScope<IdentitySettingsShape>({
     scope: "identity",
     baseline: identityBaselinePreview,
@@ -179,23 +154,49 @@ export function HeaderSection() {
     },
   });
 
-  const handlePreviewSync = useCallback(() => {
-    frame.onSync();
-    setPreviewMode("override");
-  }, [frame]);
+  /**
+   * Empty state :
+   * - data chargée
+   * - toutes les baselines shell disponibles
+   * - mais rien à afficher
+   */
+  const dataReady = !isLoading && !isLoadingSettingsBundle;
 
-  const handlePreviewReset = useCallback(() => {
-    frame.onReset();
-    setPreviewMode("baseline");
-  }, [frame]);
+  const hasBrand =
+    Boolean(
+      baselinePreview.showLogo &&
+      identityBaselinePreview?.logo &&
+      identityBaselinePreview.logo.src.trim().length > 0,
+    ) ||
+    Boolean(baselinePreview.showSiteName && identityBaselinePreview?.siteName);
 
-  // Warnings UI (non bloquants).
-  const [warningKeys, setWarningKeys] = useState<HeaderWarningKey[]>([]);
+  const hasMenu = Boolean(primaryMenuBaselinePreview?.items?.length);
+  const hasSocial = Boolean(socialBaselinePreview?.items?.length);
 
-  // ✅ Badge “erreur” (bloquant) : harmonisé avec Identity/Social.
-  const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
+  const hasSomethingToRender = hasBrand || hasMenu || hasSocial;
 
-  // Submit : confirmation si warnings + save.
+  const isEmpty =
+    dataReady &&
+    settingsBundle != null &&
+    identityBaselinePreview != null &&
+    primaryMenuBaselinePreview != null &&
+    socialBaselinePreview != null &&
+    !hasSomethingToRender;
+
+  const emptyLabel = t("studio.emptyPreview.header");
+
+  const isPreviewLoading =
+    !isEmpty &&
+    (isLoading ||
+      isLoadingSettingsBundle ||
+      identityBaselinePreview == null ||
+      primaryMenuBaselinePreview == null ||
+      socialBaselinePreview == null ||
+      !ready.isReady("header") ||
+      !ready.isReady("identity") ||
+      !ready.isReady("primaryMenu") ||
+      !ready.isReady("social"));
+
   const handleSubmit = useCallback(
     async (values: HeaderFormValues) => {
       if (isLoading || isSaving) return;
@@ -214,20 +215,9 @@ export function HeaderSection() {
 
       await save(values);
       dirtyGuard.setDirty(false);
-      const nextBaselinePreview = toHeaderSettingsShapeFromFormValues(values);
-      setBaseline<HeaderSettingsShape>("header", nextBaselinePreview);
-      frame.onReset();
-      setPreviewMode("baseline");
+      setPreviewDraft(null);
     },
-    [
-      confirmSaveDespiteWarnings,
-      isLoading,
-      isSaving,
-      dirtyGuard,
-      save,
-      setBaseline,
-      frame,
-    ],
+    [confirmSaveDespiteWarnings, isLoading, isSaving, dirtyGuard, save],
   );
 
   return (
@@ -236,7 +226,7 @@ export function HeaderSection() {
       title={t("studio.headerSection.section.title")}
       description={t("studio.headerSection.section.description")}
       isBusy={isSaving}
-      isLoading={isLoading}
+      isLoading={isLoading || isLoadingSettingsBundle}
       isDirty={dirtyGuard.isDirty}
       blockingErrorsCount={blockingErrorsCount}
     >
@@ -255,14 +245,11 @@ export function HeaderSection() {
           setWarningKeys([]);
           dirtyGuard.setDirty(false);
           setBlockingErrorsCount(0);
-          // Reset preview sur la baseline (SettingsShape).
-          setDraft(baselinePreview);
-          handlePreviewReset();
+          setPreviewDraft(null);
         }}
         onWarningKeysChange={setWarningKeys}
         onValuesChange={(values) => {
-          // Live preview : RHF (UI) → SettingsShape.
-          setDraft(toHeaderSettingsShapeFromFormValues(values));
+          setPreviewDraft(toHeaderSettingsShapeFromFormValues(values));
         }}
         onBlockingErrorsCountChange={setBlockingErrorsCount}
         onDirtyChange={dirtyGuard.setDirty}
@@ -275,9 +262,6 @@ export function HeaderSection() {
         src="/preview/header"
         iframeRef={iframeRef}
         onLoad={frame.onLoad}
-        onSync={handlePreviewSync}
-        onReset={handlePreviewReset}
-        syncDisabled={frame.syncDisabled}
         isLoading={isPreviewLoading}
         isEmpty={isEmpty}
         emptyLabel={emptyLabel}
@@ -285,9 +269,7 @@ export function HeaderSection() {
         info={
           isEmpty
             ? t("studio.emptyPreview.header")
-            : previewMode === "override"
-              ? t("studio.shared.preview.infoOverride")
-              : t("studio.shared.preview.infoBaseline")
+            : t("studio.shared.preview.infoLive")
         }
       />
     </SettingsSection>

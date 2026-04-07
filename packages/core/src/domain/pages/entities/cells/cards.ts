@@ -4,6 +4,7 @@
  * @description
  * Entité métier CardsCell.
  */
+import type { ContentIconKind } from "@compoz/core/constants/icons/content-icons";
 
 export type CardsColumns = 2 | 3 | 4;
 export type CardsAlign = "left" | "center";
@@ -12,7 +13,7 @@ export type CardItem = {
   id: string;
   title: string;
   description: string;
-  icon: string | null;
+  icon: ContentIconKind | null;
 };
 
 export type CardsCell = {

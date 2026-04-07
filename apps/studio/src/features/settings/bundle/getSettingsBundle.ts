@@ -27,7 +27,6 @@ export async function getSettingsBundle(
   qc: QueryClient,
   tenantId: string,
   state: ContentState,
-  opts?: HttpOpts,
 ): Promise<SiteSettings> {
   const tid = requireTenantId(tenantId);
 
@@ -40,12 +39,16 @@ export async function getSettingsBundle(
     queryKey: key,
     queryFn: async ({ signal }) => {
       const dto = await settingsStudioApi.bundle.get(state, {
-        signal: opts?.signal ?? signal,
+        signal,
       });
 
       if (!dto?.settings) {
         throw new Error("settings-bundle: missing dto.settings");
       }
+
+      console.log("[getSettingsBundle] state", state);
+      console.log("[getSettingsBundle] footer", dto.settings.footer);
+      console.log("[getSettingsBundle] theme", dto.settings.theme);
 
       return dto.settings as SiteSettings;
     },

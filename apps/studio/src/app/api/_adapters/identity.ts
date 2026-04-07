@@ -29,8 +29,7 @@ export function adaptUpdateIdentityIntent(
   log.debug("studio.adapter.identity.patch.start", {
     hasSiteName: typeof dto.siteName === "string",
     hasTagline: "tagline" in dto,
-    hasLogoAlt: typeof dto.logoAlt === "string",
-    hasLogoUrl: dto.logoUrl !== undefined,
+    hasLogo: dto.logo !== undefined,
     hasFaviconUrl: dto.faviconUrl !== undefined,
   });
 
@@ -51,19 +50,29 @@ export function adaptUpdateIdentityIntent(
     }
   }
 
-  if (typeof dto.logoAlt === "string") {
-    patch.logoAlt = trimOrKeep(dto.logoAlt);
+  /* --------------------------- Logo --------------------------- */
+  // Règles :
+  // - undefined → inchangé
+  // - null → effacement
+  // - objet image → normalisation champ par champ
+  if ("logo" in dto) {
+    if (dto.logo === null) {
+      patch.logo = null;
+    } else if (dto.logo !== undefined) {
+      patch.logo = {
+        src: trimOrKeep(dto.logo.src),
+        alt: trimOrKeep(dto.logo.alt),
+        width: dto.logo.width,
+        height: dto.logo.height,
+      };
+    }
   }
 
-  /* --------------------------- Assets --------------------------- */
+  /* --------------------------- Favicon --------------------------- */
   // Règles :
   // - undefined → inchangé
   // - null / "" → effacement
   // - string → normalisation
-  if (dto.logoUrl !== undefined) {
-    patch.logoUrl = asAssetUrlOrNull(dto.logoUrl);
-  }
-
   if (dto.faviconUrl !== undefined) {
     patch.faviconUrl = asAssetUrlOrNull(dto.faviconUrl);
   }

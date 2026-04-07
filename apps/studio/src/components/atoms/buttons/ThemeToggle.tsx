@@ -32,7 +32,8 @@ export function ThemeToggle() {
   return (
     <TooltipButton
       type="button"
-      variant="headerStudio"
+      variant="header"
+      visualMode="studio"
       size="icon"
       disabled={true}
       onClick={toggle}

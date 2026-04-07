@@ -13,6 +13,7 @@ import { assertImageEditor } from "@compoz/core/domain/pages/validators/cells/sh
 type Path = ReadonlyArray<string | number>;
 
 const IMAGE_RATIOS = ["default", "wide", "square", "portrait"] as const;
+const IMAGE_SIZES = ["sm", "md", "lg", "full"] as const;
 
 export function assertSingleImageCell(
   cell: Extract<Cell, { kind: "image" }>,
@@ -28,13 +29,21 @@ export function assertSingleImageCell(
 
   assertImageEditor(cell.image, [...path, "image"]);
 
-  const { variant } = cell;
+  const { variant, size } = cell;
 
   if (!IMAGE_RATIOS.includes(variant)) {
     throw new DomainError({
       code: EC.IMAGE_VARIANT_INVALID,
       message: EC.IMAGE_VARIANT_INVALID,
       details: { path: [...path, "variant"], meta: { variant } },
+    });
+  }
+
+  if (!IMAGE_SIZES.includes(size)) {
+    throw new DomainError({
+      code: EC.IMAGE_SIZE_INVALID,
+      message: EC.IMAGE_SIZE_INVALID,
+      details: { path: [...path, "size"], meta: { size } },
     });
   }
 

@@ -35,7 +35,7 @@ export const ButtonItemSchema = z
       .string()
       .trim()
       .min(1, ERROR_CODES.CELL_BUTTON_ITEM_LABEL_REQUIRED),
-    href: z.string().trim().min(1, ERROR_CODES.CELL_BUTTON_ITEM_HREF_INVALID),
+    href: z.string().trim(),
     variant: ButtonItemVariantSchema,
   })
   .strict();

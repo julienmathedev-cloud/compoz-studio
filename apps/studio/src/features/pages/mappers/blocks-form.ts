@@ -26,6 +26,7 @@ import type {
 
 import {
   createEmptyCell,
+  normalizeCellFormValues,
   toCellFormValuesFromDTO,
 } from "@compoz/studio/features/pages/mappers/cells-form";
 
@@ -38,6 +39,7 @@ type SectionRowDTO = SectionBlockDTO["rows"][number];
 type SectionColumnDTO = SectionRowDTO["columns"][number];
 type SectionRowFormValues = SectionBlockFormValues["rows"][number];
 type SectionColumnFormValues = SectionRowFormValues["columns"][number];
+type SectionRowReverseOnFormValues = SectionRowFormValues["reverseOn"];
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
@@ -75,12 +77,22 @@ function normalizeRowId(id: string | undefined): string {
   return normalized.length > 0 ? normalized : createUiId();
 }
 
+function normalizeRowReverseOn(
+  reverseOn: Partial<SectionRowReverseOnFormValues> | undefined,
+): SectionRowReverseOnFormValues {
+  return {
+    mobile: Boolean(reverseOn?.mobile),
+    tablet: Boolean(reverseOn?.tablet),
+    desktop: Boolean(reverseOn?.desktop),
+  };
+}
+
 function normalizeColumn(
   column: SectionColumnFormValues | undefined,
 ): SectionColumnFormValues {
   return {
     id: normalizeColumnId(column?.id),
-    cells: toMutable(column?.cells),
+    cells: toMutable(column?.cells).map(normalizeCellFormValues),
   };
 }
 
@@ -112,6 +124,7 @@ function normalizeRow(
   return {
     id: normalizeRowId(row?.id),
     columnsCount,
+    reverseOn: normalizeRowReverseOn(row?.reverseOn),
     columns: normalizeColumns(row?.columns, columnsCount),
   };
 }
@@ -151,6 +164,7 @@ export function toSectionBlockFormValuesFromDTO(
           row.columnsCount === 2 || row.columnsCount === 3
             ? row.columnsCount
             : 1,
+        reverseOn: normalizeRowReverseOn(row.reverseOn),
         columns: Array.isArray(row.columns)
           ? toMutable<SectionColumnDTO>(row.columns).map((column) => ({
               id: normalizeColumnId(column.id),
@@ -284,6 +298,7 @@ export function createEmptyRow(args?: {
   return {
     id: createUiId(),
     columnsCount,
+    reverseOn: normalizeRowReverseOn(undefined),
     columns: normalizeColumns([], columnsCount),
   };
 }

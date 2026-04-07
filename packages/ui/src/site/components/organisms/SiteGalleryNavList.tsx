@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * @file packages/ui/src/site/components/organisms/SiteGalleryNavList.tsx
  * @branch main
@@ -12,13 +14,12 @@
  * - Reveal : activé par défaut (V0.5).
  */
 
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
 import { SiteNavLink } from "@compoz/ui/site/components/atoms/SiteNavLink";
 import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
-import type { SiteNavGalleryUi } from "@compoz/ui/site/site-ui.types.ts";
+import type { SiteNavGalleryUi } from "@compoz/ui/site/site-ui.types";
 import type { ImageEditorShape } from "@compoz/validation/pages/blocks/cells/cell";
 
 export type SiteGalleryNavListProps = Readonly<{
@@ -56,7 +57,6 @@ export function SiteGalleryNavList({
         }
 
         const seed = index % cols;
-        const key = getImageKey(normalized.id, index);
         const href = normalized.href;
         const ariaLabel = normalized.alt || normalized.caption || "Naviguer";
 
@@ -98,7 +98,7 @@ export function SiteGalleryNavList({
         );
 
         return (
-          <li key={key}>
+          <li key={normalized.id}>
             <SiteReveal seedOrder={seed} staggerMs={60} amount={0.1}>
               {item}
             </SiteReveal>
@@ -126,9 +126,4 @@ function normalizeImage(img: ImageEditorShape): NormalizedImage {
     width: img.width,
     height: img.height,
   } as const;
-}
-
-function getImageKey(id: string, index: number) {
-  const safeId = id.trim();
-  return toStableUiKey({ id: safeId || `gallery-${index}` }, index);
 }

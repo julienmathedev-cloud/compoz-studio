@@ -9,7 +9,7 @@
  * - UI-only.
  * - Tous les styles sont pilotés par `ui`.
  * - Reprend la logique d’alternance gauche / droite du portfolio.
- * - Gère le décalage vertical progressif en desktop.
+ * - Reçoit un décalage vertical desktop calculé à partir de la hauteur de l’item précédent.
  */
 
 import type { CSSProperties } from "react";
@@ -24,15 +24,20 @@ export type SiteTimelineItemProps = Readonly<{
   item: TimelineItemShape;
   index: number;
   ui: SiteTimelineItemUi;
+  desktopOffset?: number;
 }>;
 
-export function SiteTimelineItem({ item, index, ui }: SiteTimelineItemProps) {
+export function SiteTimelineItem({
+  item,
+  index,
+  ui,
+  desktopOffset = 0,
+}: SiteTimelineItemProps) {
   const isLeft = index % 2 === 0;
-  const margin = index > 0 ? -(80 + index * 10) : 0;
   const badge = normalizeString(item.badge ?? "", "");
 
   const itemStyle = {
-    "--timeline-item-mt": `${margin}px`,
+    "--timeline-item-mt": `${desktopOffset}px`,
   } as CSSProperties;
 
   return (

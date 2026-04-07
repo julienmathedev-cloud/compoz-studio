@@ -22,24 +22,28 @@ const DEFAULT_COLUMNS: Readonly<Record<GalleryMaxColumns, string>> = {
   5: "grid-cols-1 sm:grid-cols-3 lg:grid-cols-5",
 } as const;
 
+const DEFAULT_SIZES_BY_COLUMNS: Readonly<Record<GalleryMaxColumns, string>> = {
+  1: "100vw",
+  2: "(max-width: 640px) 100vw, 50vw",
+  3: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
+  4: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw",
+  5: "(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 20vw",
+} as const;
+
 export const defaultZoomGalleryUi: SiteZoomGalleryUi = {
-  // Grid sobre (les colonnes viennent de `columns`)
   list: "grid gap-6",
   columns: DEFAULT_COLUMNS,
+  sizesByColumns: DEFAULT_SIZES_BY_COLUMNS,
 
-  // Bouton accessible (focus visible)
   button:
     "block w-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
 
-  // Figure neutre (square + léger fond)
   figure:
     "group relative w-full aspect-square overflow-hidden rounded-lg bg-muted",
 
-  // Image cover + hover léger (PRM safe)
   image:
     "absolute inset-0 h-full w-full object-cover motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:group-hover:scale-[1.02]",
 
-  // Overlay identique à ton style (PRM safe)
   overlayPanel:
     "absolute inset-0 flex items-end p-4 bg-gradient-to-t from-black/60 to-black/0 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 motion-safe:transition-opacity [@media(hover:none)]:opacity-100 motion-safe:group-hover:[will-change:opacity] motion-reduce:transition-none",
 

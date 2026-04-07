@@ -16,5 +16,6 @@ export function toSpacerCellShapeFromDTO(
     id: cell.id,
     kind: "spacer",
     size: cell.size,
+    visibility: cell.visibility,
   };
 }

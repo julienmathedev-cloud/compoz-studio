@@ -9,6 +9,7 @@
  * - Provider Credentials (email/password) via `KvUsersRepository` (Studio users SoT).
  * - Session JWT (pas d’adapter DB).
  * - Injection RBAC + tenantIds + defaultTenantId dans le token + la session.
+ * - Propagation éventuelle des métadonnées de sandbox démo dans le token + la session.
  *
  * @remarks
  * ✅ SoT unique "Studio users" :
@@ -16,7 +17,7 @@
  * - Suppression du double store `compoz:auth:*`.
  */
 
-import type { NextAuthOptions, User } from "next-auth";
+import type { NextAuthOptions } from "next-auth";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
@@ -77,7 +78,10 @@ export const authOptions: NextAuthOptions = {
           role: rbac.role,
           tenantIds: rbac.tenantIds,
           defaultTenantId: rbac.defaultTenantId,
-        } as User;
+          isDemo: user.demo?.isDemo,
+          demoInstanceId: user.demo?.demoInstanceId,
+          demoExpiresAt: user.demo?.expiresAt,
+        };
       },
     }),
   ],
@@ -89,6 +93,9 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role;
         token.tenantIds = user.tenantIds;
         token.defaultTenantId = user.defaultTenantId;
+        token.isDemo = user.isDemo;
+        token.demoInstanceId = user.demoInstanceId;
+        token.demoExpiresAt = user.demoExpiresAt;
       }
 
       // ✅ fallback : NextAuth renseigne souvent `token.sub = user.id`.
@@ -106,7 +113,10 @@ export const authOptions: NextAuthOptions = {
         role: token.role,
         tenantIds: token.tenantIds,
         defaultTenantId: token.defaultTenantId,
-      } as User;
+        isDemo: token.isDemo,
+        demoInstanceId: token.demoInstanceId,
+        demoExpiresAt: token.demoExpiresAt,
+      };
 
       return session;
     },

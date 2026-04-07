@@ -15,12 +15,14 @@
  *   une gestion propre des valeurs, erreurs et reorder.
  * - La cellule porte uniquement les options de layout (`columns`)
  *   et la liste des items (`items`).
+ * - Le reorder s’appuie sur `move()` pour conserver l’état RHF.
+ * - Les valeurs live restent lues via `useWatch`.
  */
 
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { Control } from "react-hook-form";
-import { useController, useFieldArray } from "react-hook-form";
+import { useController, useFieldArray, useWatch } from "react-hook-form";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
@@ -103,6 +105,13 @@ export function StructuredCardCellEditor({
     keyName: "fieldId",
   });
 
+  const watchedItems = (useWatch({
+    control,
+    name: itemsPath,
+  }) ?? []) as StructuredCardItemFormValues[];
+
+  const structuredCardFields = fields as StructuredCardItemField[];
+
   const columns: StructuredCardColumns =
     columnsCtrl.field.value &&
     STRUCTURED_CARD_COLUMNS.includes(
@@ -122,7 +131,7 @@ export function StructuredCardCellEditor({
         <p className="text-sm font-medium">
           {t("studio.cellEditorTabs.structuredCardCellEditor.itemsLabel")}
         </p>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-xs">
           {t("studio.cellEditorTabs.structuredCardCellEditor.itemsHelp")}
         </p>
       </div>
@@ -139,7 +148,8 @@ export function StructuredCardCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={columns === item ? "defaultStudio" : "ghostStudio"}
+                variant={columns === item ? "default" : "ghost"}
+                visualMode="studio"
                 onClick={() => {
                   columnsCtrl.field.onChange(item);
                 }}
@@ -173,7 +183,8 @@ export function StructuredCardCellEditor({
         control={control}
         idPrefix={idPrefix}
         basePath={basePath}
-        fields={fields as StructuredCardItemField[]}
+        fields={structuredCardFields}
+        watchedItems={watchedItems}
         append={append}
         remove={remove}
         move={move}

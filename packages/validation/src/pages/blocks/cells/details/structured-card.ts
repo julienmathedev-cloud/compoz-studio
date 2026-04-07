@@ -8,11 +8,12 @@
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
+import { ButtonItemSchema } from "@compoz/validation/pages/blocks/cells/details/buttons";
 import {
   CellIdSchema,
   CellItemIdSchema,
 } from "@compoz/validation/pages/blocks/cells/details/common";
-import { ImageEditorSchema } from "@compoz/validation/pages/blocks/cells/details/image";
+import { ImageEditorSchema } from "@compoz/validation/pages/blocks/cells/details/image-editor";
 
 export const StructuredCardSectionSchema = z
   .object({
@@ -30,11 +31,31 @@ export const StructuredCardSectionSchema = z
   })
   .strict();
 
+/**
+ * Image d’une structured card.
+ *
+ * @remarks
+ * - Schéma strictement typé.
+ * - La normalisation "image vide => null" doit être faite en amont
+ *   (mapper / normalizer UI), pas ici.
+ */
+const StructuredCardImageSchema = ImageEditorSchema.nullable();
+
+/**
+ * Bouton d’une structured card.
+ *
+ * @remarks
+ * - Schéma strictement typé.
+ * - La normalisation "bouton vide => null" doit être faite en amont
+ *   (mapper / normalizer UI), pas ici.
+ */
+const StructuredCardButtonSchema = ButtonItemSchema.nullable();
+
 export const StructuredCardItemSchema = z
   .object({
     id: CellItemIdSchema,
 
-    image: ImageEditorSchema.nullable(),
+    image: StructuredCardImageSchema,
 
     title: z
       .string()
@@ -53,6 +74,8 @@ export const StructuredCardItemSchema = z
         message: ERROR_CODES.CELL_STRUCTURED_CARD_ITEM_SECTIONS_INVALID,
       })
       .min(1, ERROR_CODES.CELL_STRUCTURED_CARD_ITEM_SECTIONS_MIN_1),
+
+    button: StructuredCardButtonSchema,
   })
   .strict();
 

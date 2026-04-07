@@ -109,6 +109,11 @@ export function useSettingsSectionForm<TValues extends FieldValues>({
   }, [isDirty, onDirtyChange]);
 
   useEffect(() => {
+    console.log(
+      "[useSettingsSectionForm] reset with initialValues",
+      initialValues,
+    );
+
     rhfReset(initialValues, {
       keepDirty: false,
       keepTouched: false,

@@ -16,6 +16,7 @@ import type {
   CellFormValues,
   FormFieldFormValues,
   ImageEditorFormValues,
+  SpacerCellFormValues,
   StepItemFormValues,
   StructuredCardItemFormValues,
   StructuredCardSectionFormValues,
@@ -26,6 +27,16 @@ function createUiId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : `ui_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+function normalizeSpacerVisibility(
+  visibility: SpacerCellFormValues["visibility"] | undefined,
+): SpacerCellFormValues["visibility"] {
+  return {
+    mobile: visibility?.mobile ?? true,
+    tablet: visibility?.tablet ?? true,
+    desktop: visibility?.desktop ?? true,
+  };
 }
 
 export function createEmptyImageEditor(): ImageEditorFormValues {
@@ -100,10 +111,11 @@ export function createEmptyStructuredCardSection(): StructuredCardSectionFormVal
 export function createEmptyStructuredCardItem(): StructuredCardItemFormValues {
   return {
     id: createUiId(),
-    image: null,
+    image: createEmptyImageEditor(),
     title: "",
     meta: null,
     sections: [createEmptyStructuredCardSection()],
+    button: createEmptyButtonItem(),
   };
 }
 
@@ -181,6 +193,11 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       id,
       kind: "spacer",
       size: "md",
+      visibility: {
+        mobile: true,
+        tablet: true,
+        desktop: true,
+      },
     };
   }
 
@@ -270,6 +287,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       kind: "image",
       image: createEmptyImageEditor(),
       variant: "default",
+      size: "full",
       reveal: true,
     };
   }
@@ -311,4 +329,85 @@ export function ensureCellsLength(
   }
 
   return output;
+}
+
+export function normalizeStructuredCardButton(
+  button: StructuredCardItemFormValues["button"],
+): StructuredCardItemFormValues["button"] {
+  if (!button) return null;
+
+  const isEmptyLabel = !button.label || !button.label.trim();
+
+  // 👉 règle métier : pas de label = pas de bouton
+  if (isEmptyLabel) {
+    return null;
+  }
+
+  return {
+    ...button,
+    label: button.label.trim(),
+    href: button.href?.trim() ?? "",
+  };
+}
+
+export function normalizeStructuredCardImage(
+  image: StructuredCardItemFormValues["image"],
+): StructuredCardItemFormValues["image"] {
+  if (!image) return null;
+
+  const isEmptySrc = !image.src || !image.src.trim();
+  const isEmptyAlt = !image.alt || !image.alt.trim();
+  const isEmptyCaption = !image.caption || !image.caption.trim();
+  const isEmptyHref = !image.href || !image.href.trim();
+  const hasInvalidWidth = !image.width || image.width <= 0;
+  const hasInvalidHeight = !image.height || image.height <= 0;
+
+  const isCompletelyEmpty =
+    isEmptySrc &&
+    isEmptyAlt &&
+    isEmptyCaption &&
+    isEmptyHref &&
+    hasInvalidWidth &&
+    hasInvalidHeight;
+
+  // 👉 règle métier : image entièrement vide = pas d’image
+  if (isCompletelyEmpty) {
+    return null;
+  }
+
+  return {
+    ...image,
+    src: image.src.trim(),
+    alt: image.alt.trim(),
+    caption: image.caption?.trim() ? image.caption.trim() : null,
+    href: image.href?.trim() ? image.href.trim() : null,
+  };
+}
+
+export function normalizeStructuredCardItem(
+  item: StructuredCardItemFormValues,
+): StructuredCardItemFormValues {
+  return {
+    ...item,
+    image: normalizeStructuredCardImage(item.image),
+    button: normalizeStructuredCardButton(item.button),
+  };
+}
+
+export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
+  if (cell.kind === "structuredCard") {
+    return {
+      ...cell,
+      items: cell.items.map(normalizeStructuredCardItem),
+    };
+  }
+
+  if (cell.kind === "spacer") {
+    return {
+      ...cell,
+      visibility: normalizeSpacerVisibility(cell.visibility),
+    };
+  }
+
+  return cell;
 }

@@ -16,14 +16,13 @@
 
 import { useCallback, useMemo, useState } from "react";
 
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
 import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
 import { SiteLightbox } from "@compoz/ui/site/components/molecules/SiteLightbox";
 
-import type { SiteZoomGalleryUi } from "@compoz/ui/site/site-ui.types.ts";
+import type { SiteZoomGalleryUi } from "@compoz/ui/site/site-ui.types";
 import type { ImageEditorShape } from "@compoz/validation/pages/blocks/cells/cell";
 
 export type SiteGalleryZoomListProps = Readonly<{
@@ -102,13 +101,13 @@ export function SiteGalleryZoomList({
   }, []);
 
   const opened = openIndex != null ? normalizedImages[openIndex] : null;
-  const cols = Math.max(1, Math.floor(columns || 1));
+  const cols = clampColumns(columns);
+  const resolvedSizes = ui.sizesByColumns[cols];
 
   return (
     <>
       <ul className={cn(ui.list)}>
         {normalizedImages.map((img, index) => {
-          const key = getImageKey(img.id, index);
           const seed = index % cols;
           const isExpanded = openIndex === index;
           const ariaLabel = img.caption || img.alt || "Agrandir l'image";
@@ -130,7 +129,7 @@ export function SiteGalleryZoomList({
                     width: img.width,
                     height: img.height,
                   }}
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  sizes={resolvedSizes}
                   className={cn(ui.image)}
                   priority={priority && index === 0}
                   fetchPriority={priority && index === 0 ? "high" : "auto"}
@@ -146,7 +145,7 @@ export function SiteGalleryZoomList({
           );
 
           return (
-            <li key={key}>
+            <li key={img.id}>
               <SiteReveal seedOrder={seed} staggerMs={60} amount={0.1}>
                 {item}
               </SiteReveal>
@@ -170,7 +169,6 @@ export function SiteGalleryZoomList({
 
 SiteGalleryZoomList.displayName = "SiteGalleryZoomList";
 
-function getImageKey(id: string, index: number) {
-  const safeId = id.trim();
-  return toStableUiKey({ id: safeId || `gallery-${index}` }, index);
+function clampColumns(v: unknown): 1 | 2 | 3 | 4 | 5 {
+  return v === 1 || v === 2 || v === 3 || v === 4 || v === 5 ? v : 3;
 }

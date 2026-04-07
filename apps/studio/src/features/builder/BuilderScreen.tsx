@@ -11,7 +11,11 @@
  * - Orchestrateur principal du builder.
  * - Gère la baseline dérivée des props, la preview et la sélection de cell.
  * - Réplique la logique métier de l’ancienne édition :
- *   dirty guard, baseline ref, vrai save via hook, sync preview.
+ *   dirty guard, baseline ref, vrai save via hook.
+ * - Le builder reste en preview manuelle (`liveEnabled: false`) pour éviter
+ *   de pousser des syncs permanentes pendant l’édition dans le drawer.
+ * - La sync preview est déclenchée explicitement à la fermeture du drawer
+ *   et après save.
  * - Passe explicitement les objets RHF utiles aux sous-composants.
  * - Évite la duplication props -> state pour la baseline afin de rester
  *   aligné avec l’ancien fonctionnement et éviter les cascades de rendu.
@@ -23,6 +27,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   Control,
   FieldErrors,
+  Resolver,
   UseFormClearErrors,
   UseFormSetValue,
 } from "react-hook-form";
@@ -156,9 +161,6 @@ export function BuilderScreen({
   const backHref = `/${locale}/pages/${pageId}/blocks`;
   const previewSrc = `/preview/pages/${pageSlug}/blocks/${blockId}`;
 
-  const [previewMode, setPreviewMode] = useState<"baseline" | "override">(
-    "baseline",
-  );
   const [selectedCellId, setSelectedCellId] = useState<string | undefined>();
   const [hoveredCellId, setHoveredCellId] = useState<string | undefined>();
 
@@ -176,8 +178,23 @@ export function BuilderScreen({
   const lastDraftPreviewSigRef = useRef<string | null>(null);
   const hasLoggedPreviewReadyRef = useRef(false);
 
+  const resolver = useCallback<Resolver<SectionBlockFormValues>>(
+    async (values, context, options) => {
+      const normalizedValues = normalizeSectionBlockFormValues(values);
+
+      const result = await zodResolver(SectionBlockFormSchema)(
+        normalizedValues,
+        context,
+        options,
+      );
+
+      return result;
+    },
+    [],
+  );
+
   const form = useForm<SectionBlockFormValues>({
-    resolver: zodResolver(SectionBlockFormSchema),
+    resolver,
     defaultValues: baseline,
     mode: "onBlur",
     reValidateMode: "onChange",
@@ -252,8 +269,17 @@ export function BuilderScreen({
     return draftPreview ? JSON.stringify(draftPreview) : "null";
   }, [draftPreview]);
 
+  const selectedCellLocation = useMemo(() => {
+    return findSelectedCellLocation(liveValues, selectedCellId);
+  }, [liveValues, selectedCellId]);
+
+  const isDrawerOpen = Boolean(selectedCellLocation);
+
   const { setBaseline, ready, frame, iframeRef, setDraft } =
-    useStudioPreview<BlockShape | null>(previewScope, baselinePreview);
+    useStudioPreview<BlockShape | null>(previewScope, {
+      baseline: baselinePreview,
+      liveEnabled: !isDrawerOpen,
+    });
 
   const isPreviewReady = ready.isReady(previewScope);
   const isEmpty = baselinePreview == null;
@@ -336,13 +362,18 @@ export function BuilderScreen({
     setBaseline,
   ]);
 
+  /**
+   * En mode builder :
+   * - on garde le draft à jour localement
+   * - mais `liveEnabled: false` empêche la synchro automatique dans l’iframe
+   * - la sync sera déclenchée explicitement (fermeture drawer / save)
+   */
   useEffect(() => {
-    if (!isPreviewReady) return;
     if (lastDraftPreviewSigRef.current === draftPreviewSig) return;
 
     lastDraftPreviewSigRef.current = draftPreviewSig;
 
-    lg.info("preview.draft.push", {
+    lg.info("preview.draft.cache", {
       blockId,
       previewScope,
       isDirty,
@@ -355,7 +386,6 @@ export function BuilderScreen({
     draftPreview,
     draftPreviewSig,
     isDirty,
-    isPreviewReady,
     liveValuesSig,
     previewScope,
     setDraft,
@@ -399,26 +429,14 @@ export function BuilderScreen({
 
     target.setAttribute("data-builder-hovered", "true");
     target.style.borderRadius = "12px";
-    target.style.boxShadow = "0 0 0 6px var(--secondary)";
-    target.style.backgroundColor = "var(--accent)";
+    target.style.boxShadow = "0 0 0 1px var(--primary)";
+    target.style.backgroundColor = "var(--secondary)";
     target.style.transition = "all 150ms ease";
   }, [hoveredCellId, iframeRef, draftPreviewSig, baselinePreviewSig]);
 
   const handleBack = useCallback(async () => {
     await dirtyGuard.navigate(backHref);
   }, [backHref, dirtyGuard]);
-
-  const handlePreviewSync = useCallback(() => {
-    lg.info("preview.sync", { blockId, previewScope });
-    frame.onSync();
-    setPreviewMode("override");
-  }, [blockId, frame, previewScope]);
-
-  const handlePreviewReset = useCallback(() => {
-    lg.info("preview.reset", { blockId, previewScope });
-    frame.onReset();
-    setPreviewMode("baseline");
-  }, [blockId, frame, previewScope]);
 
   const handleSave = useCallback(
     async (values: SectionBlockFormValues) => {
@@ -486,8 +504,14 @@ export function BuilderScreen({
 
         setBaseline<SectionBlockShape>(previewScope, nextBaselinePreview);
         setDraft(nextBaselinePreview);
-        frame.onReset();
-        setPreviewMode("baseline");
+
+        /**
+         * Après save :
+         * - on remet la baseline à jour
+         * - on pousse explicitement l’override courant pour refléter immédiatement
+         *   le contenu sauvegardé
+         */
+        frame.onSync();
       } catch (error) {
         lg.error("save.failed", {
           pageId: pageIdKey,
@@ -552,20 +576,27 @@ export function BuilderScreen({
       const sig = JSON.stringify(baselinePreview);
       lastDraftPreviewSigRef.current = sig;
       setDraft(baselinePreview);
+      setBaseline(previewScope, baselinePreview);
     }
 
+    /**
+     * En mode manuel :
+     * on supprime l’override courant pour revenir à la baseline.
+     */
     frame.onReset();
-    setPreviewMode("baseline");
-  }, [baseline, baselinePreview, blockId, dirtyGuard, frame, reset, setDraft]);
-
-  const selectedCellLocation = useMemo(() => {
-    return findSelectedCellLocation(liveValues, selectedCellId);
-  }, [liveValues, selectedCellId]);
+  }, [
+    baseline,
+    baselinePreview,
+    blockId,
+    dirtyGuard,
+    frame,
+    previewScope,
+    reset,
+    setBaseline,
+    setDraft,
+  ]);
 
   const effectiveSelectedCellId = selectedCellLocation?.cellId;
-
-  const syncDisabled =
-    frame.syncDisabled || baselinePreview == null || !isDirty;
 
   const isUpdatingThisBlock = updatingBlockId === blockId;
 
@@ -575,6 +606,25 @@ export function BuilderScreen({
     if (isDirty) return "modified";
     return "saved";
   }, [blockingErrorsCount, isDirty, isSubmitting, isUpdatingThisBlock]);
+
+  const handleDrawerOpenChange = useCallback(
+    (open: boolean) => {
+      if (open) {
+        return;
+      }
+
+      setSelectedCellId(undefined);
+
+      /**
+       * Builder :
+       * on déclenche la sync explicite à la fermeture du drawer.
+       * Cela donne un ressenti "quasi-live" sans pousser des updates
+       * permanentes pendant l’édition.
+       */
+      frame.onSync();
+    },
+    [frame],
+  );
 
   return (
     <form
@@ -622,20 +672,10 @@ export function BuilderScreen({
                 src={previewSrc}
                 iframeRef={iframeRef}
                 onLoad={frame.onLoad}
-                onSync={handlePreviewSync}
-                onReset={handlePreviewReset}
-                syncDisabled={syncDisabled}
                 isLoading={isPreviewLoading}
                 isEmpty={isEmpty}
                 emptyLabel={emptyLabel}
                 heightClassName="h-[630px]"
-                info={
-                  isEmpty
-                    ? t("studio.emptyPreview.blocks")
-                    : previewMode === "override"
-                      ? t("studio.shared.preview.infoOverride")
-                      : t("studio.shared.preview.infoBaseline")
-                }
                 deviceMode="compact"
                 fitMode="responsive"
               />
@@ -652,12 +692,7 @@ export function BuilderScreen({
         open={Boolean(selectedCellLocation)}
         selectedCellLocation={selectedCellLocation}
         onUploadImage={onUploadImage}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedCellId(undefined);
-            handlePreviewSync();
-          }
-        }}
+        onOpenChange={handleDrawerOpenChange}
       />
     </form>
   );

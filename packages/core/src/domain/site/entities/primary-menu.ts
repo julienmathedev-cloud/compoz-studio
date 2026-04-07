@@ -15,6 +15,9 @@ import type { AssetUrl } from "@compoz/core/domain/urls/href";
  * Élément du menu principal (racine ou sous-item).
  */
 export interface PrimaryMenuItem {
+  /** Identifiant stable de l’item. */
+  id: string;
+
   /** Texte affiché dans le menu. */
   label: string;
 

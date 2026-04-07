@@ -11,6 +11,7 @@
 
 import type {
   Block,
+  BlockRowReverseOn,
   SectionBlock,
 } from "@compoz/core/domain/pages/entities/block";
 import type { Cell } from "@compoz/core/domain/pages/entities/cell";
@@ -41,10 +42,12 @@ export type CreateSectionBlockColumnInput = {
  * @remarks
  * - `id` est optionnel : il sera généré par le domaine si absent.
  * - Les ids des colonnes sont également optionnels.
+ * - `reverseOn` est optionnel : une valeur par défaut sera injectée si absente.
  */
 export type CreateSectionBlockRowInput = {
   id?: string;
   columnsCount: 1 | 2 | 3;
+  reverseOn?: Partial<BlockRowReverseOn>;
   columns: ReadonlyArray<CreateSectionBlockColumnInput>;
 };
 

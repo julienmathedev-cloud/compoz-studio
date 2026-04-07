@@ -14,11 +14,13 @@
  * - Les items sont gérés par RHF via `useFieldArray` pour garantir
  *   une gestion propre des valeurs, erreurs et reorder.
  * - Les erreurs near-field sont gérées au niveau des items.
+ * - Le reorder s’appuie sur `move()` pour conserver l’état RHF.
+ * - Les valeurs live restent lues via `useWatch`.
  */
 
 import { useTranslations } from "next-intl";
 import type { Control } from "react-hook-form";
-import { useController, useFieldArray } from "react-hook-form";
+import { useController, useFieldArray, useWatch } from "react-hook-form";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { StepListEditor } from "@compoz/studio/features/builder/editor/cells/steps/StepListEditor";
@@ -83,6 +85,13 @@ export function StepsCellEditor({
     keyName: "fieldId",
   });
 
+  const watchedItems = (useWatch({
+    control,
+    name: itemsPath,
+  }) ?? []) as StepItemFormValues[];
+
+  const stepFields = fields as StepItemField[];
+
   const variant: StepsVariant =
     variantCtrl.field.value &&
     STEPS_VARIANTS.includes(variantCtrl.field.value as StepsVariant)
@@ -114,7 +123,8 @@ export function StepsCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={variant === item ? "defaultStudio" : "ghostStudio"}
+                variant={variant === item ? "default" : "ghost"}
+                visualMode="studio"
                 onClick={() => {
                   variantCtrl.field.onChange(item);
                 }}
@@ -131,7 +141,8 @@ export function StepsCellEditor({
         control={control}
         idPrefix={idPrefix}
         basePath={basePath}
-        fields={fields as StepItemField[]}
+        fields={stepFields}
+        watchedItems={watchedItems}
         append={append}
         remove={remove}
         move={move}

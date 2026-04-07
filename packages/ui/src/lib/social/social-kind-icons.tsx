@@ -12,16 +12,10 @@
  * - `twitter` est un alias legacy : il est normalisé vers `x`.
  */
 
+import type { SocialKind } from "@compoz/core/constants/social/social-kinds";
 import type { ReactNode, SVGProps } from "react";
 
-import {
-  Globe,
-  Linkedin,
-  Link as LinkIcon,
-  Mail,
-  MessageCircle,
-  Phone,
-} from "lucide-react";
+import { Globe, Linkedin, Mail } from "lucide-react";
 
 import {
   siBehance,
@@ -29,30 +23,17 @@ import {
   siFacebook,
   siGithub,
   siInstagram,
+  siPinterest,
+  siSoundcloud,
+  siSpotify,
   siTiktok,
   siX,
   siYoutube,
 } from "simple-icons/icons";
 
 /* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
+/* Types                                                                      */
 /* -------------------------------------------------------------------------- */
-
-export type SocialKind =
-  | "website"
-  | "email"
-  | "phone"
-  | "custom"
-  | "github"
-  | "linkedin"
-  | "instagram"
-  | "x"
-  | "youtube"
-  | "tiktok"
-  | "facebook"
-  | "behance"
-  | "dribbble"
-  | "whatsapp";
 
 type SimpleIcon = {
   title: string;
@@ -77,9 +58,6 @@ export type SocialKindOption = Readonly<{
 export const SOCIAL_KIND_LABEL_KEYS = {
   website: "studio.social.kind.website",
   email: "studio.social.kind.email",
-  phone: "studio.social.kind.phone",
-  custom: "studio.social.kind.custom",
-  whatsapp: "studio.social.kind.whatsapp",
   github: "studio.social.kind.github",
   linkedin: "studio.social.kind.linkedin",
   instagram: "studio.social.kind.instagram",
@@ -89,31 +67,21 @@ export const SOCIAL_KIND_LABEL_KEYS = {
   facebook: "studio.social.kind.facebook",
   behance: "studio.social.kind.behance",
   dribbble: "studio.social.kind.dribbble",
+  pinterest: "studio.social.kind.pinterest",
+  soundcloud: "studio.social.kind.soundcloud",
+  spotify: "studio.social.kind.spotify",
 } as const satisfies Readonly<Record<SocialKind, string>>;
 
-/**
- * Union littérale des clés i18n possibles pour SocialKind.
- * ✅ Objectif : rendre les clés "scannables" et typées (TS + i18n Ally).
- */
 export type SocialKindLabelKey = (typeof SOCIAL_KIND_LABEL_KEYS)[SocialKind];
 
-/**
- * Traducteur pour les labels de SocialKind.
- * ✅ N'accepte que des clés connues (pas de `string` libre).
- */
 export type SocialKindTranslator = (key: SocialKindLabelKey) => string;
 
 /* -------------------------------------------------------------------------- */
-/*                           Simple Icons renderer                             */
+/* Simple Icons renderer                                                      */
 /* -------------------------------------------------------------------------- */
 
 type SimpleBrandIconProps = { icon: SimpleIcon } & SVGProps<SVGSVGElement>;
 
-/**
- * Rend une icône `simple-icons` en SVG React.
- * - Couleur = `currentColor` (hérite du texte)
- * - Décoratif par défaut (`aria-hidden`)
- */
 function SimpleBrandIcon({
   icon,
   className,
@@ -139,15 +107,12 @@ function SimpleBrandIcon({
 SimpleBrandIcon.displayName = "SimpleBrandIcon";
 
 /* -------------------------------------------------------------------------- */
-/*                              Source de vérité                               */
+/* Source de vérité                                                           */
 /* -------------------------------------------------------------------------- */
 
 export const SOCIAL_KIND_LABEL: Readonly<Record<SocialKind, string>> = {
   website: "Site web",
   email: "E-mail",
-  phone: "Téléphone",
-  custom: "Lien",
-  whatsapp: "WhatsApp",
   github: "GitHub",
   linkedin: "LinkedIn",
   instagram: "Instagram",
@@ -157,6 +122,9 @@ export const SOCIAL_KIND_LABEL: Readonly<Record<SocialKind, string>> = {
   facebook: "Facebook",
   behance: "Behance",
   dribbble: "Dribbble",
+  pinterest: "Pinterest",
+  soundcloud: "SoundCloud",
+  spotify: "Spotify",
 } as const;
 
 /**
@@ -184,10 +152,9 @@ export function buildSocialKindOptions(
     { value: "youtube", label: labelOf("youtube") },
     { value: "behance", label: labelOf("behance") },
     { value: "dribbble", label: labelOf("dribbble") },
-    // Optionnels “génériques”
-    // { value: "phone", label: labelOf("phone") },
-    // { value: "whatsapp", label: labelOf("whatsapp") },
-    // { value: "custom", label: labelOf("custom") },
+    { value: "pinterest", label: labelOf("pinterest") },
+    { value: "soundcloud", label: labelOf("soundcloud") },
+    { value: "spotify", label: labelOf("spotify") },
   ] as const;
 }
 
@@ -200,12 +167,15 @@ const BRAND_ICONS: Readonly<Partial<Record<SocialKind, SimpleIcon>>> = {
   facebook: siFacebook,
   behance: siBehance,
   dribbble: siDribbble,
+  pinterest: siPinterest,
+  soundcloud: siSoundcloud,
+  spotify: siSpotify,
 } as const;
 
 const DEFAULT_ICON_CLASS = "h-4 w-4 flex-none overflow-visible";
 
 /* -------------------------------------------------------------------------- */
-/*                                  Helpers                                   */
+/* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -239,7 +209,6 @@ export function renderSocialKindIcon(
   const k = normalizeSocialKind(kind);
   const className = props.className ?? DEFAULT_ICON_CLASS;
 
-  // Brands (simple-icons)
   if (isSocialKind(k)) {
     const brand = BRAND_ICONS[k];
     if (brand) {
@@ -247,22 +216,13 @@ export function renderSocialKindIcon(
     }
   }
 
-  // Génériques (lucide)
   switch (k) {
     case "website":
       return <Globe className={className} aria-hidden />;
     case "email":
       return <Mail className={className} aria-hidden />;
-    case "phone":
-      return <Phone className={className} aria-hidden />;
-    case "linkedin":
-      return <Linkedin className={className} aria-hidden />;
-    case "whatsapp":
-      return <MessageCircle className={className} aria-hidden />;
-    case "custom":
-      return <LinkIcon className={className} aria-hidden />;
     default:
-      return <LinkIcon className={className} aria-hidden />;
+      return <Linkedin className={className} aria-hidden />;
   }
 }
 
@@ -281,7 +241,7 @@ export function buildSocialKindSelectItems(
   return options.map((opt) => ({
     value: opt.value,
     label: (
-      <span className="inline-flex items-center gap-4 min-w-0">
+      <span className="inline-flex min-w-0 items-center gap-4">
         {renderSocialKindIcon(opt.value)}
         <span className="truncate">{opt.label}</span>
       </span>

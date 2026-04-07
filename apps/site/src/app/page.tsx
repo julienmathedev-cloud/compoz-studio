@@ -14,12 +14,12 @@ import { notFound } from "next/navigation";
 
 import { SITE_PATH } from "@compoz/core/constants/web/paths";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
-import { computeSitePager } from "@compoz/site/app/_helpers/site-pager";
 import {
   getPublishedHomePage,
   getPublishedIndex,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import { SitePageRuntimeRenderer } from "@compoz/site/lib/pages/SitePageRuntimeRenderer";
+import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
 import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";

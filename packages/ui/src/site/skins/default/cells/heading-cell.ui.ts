@@ -18,7 +18,7 @@ export const defaultHeadingUi: SiteHeadingUi = {
   /* -------------------------------------------------------------------------- */
 
   container: "flex flex-col gap-4",
-  containerHero: "flex flex-col gap-6 pt-36 pb-10",
+  containerHero: "gap-6 md:gap-8",
 
   /* -------------------------------------------------------------------------- */
   /* Title                                                                      */
@@ -33,21 +33,22 @@ export const defaultHeadingUi: SiteHeadingUi = {
     h6: "text-base font-semibold",
   },
 
-  levelHero: "text-5xl text-balance max-w-2xl",
+  levelHero:
+    "max-w-3xl text-5xl font-bold tracking-tight text-balance md:text-6xl",
 
   /* -------------------------------------------------------------------------- */
   /* Subtitle                                                                   */
   /* -------------------------------------------------------------------------- */
 
-  subtitle: "text-muted-foreground text-base max-w-prose",
-  subtitleHero: "text-lg",
+  subtitle: "max-w-prose text-base text-muted-foreground",
+  subtitleHero: "max-w-prose text-lg text-muted-foreground md:text-xl",
 
   /* -------------------------------------------------------------------------- */
   /* Separator                                                                  */
   /* -------------------------------------------------------------------------- */
 
-  separator: "",
-  separatorHero: "w-[50vh] bg-primary",
+  separator: "w-1/3 bg-border",
+  separatorHero: "w-1/4 bg-primary",
 
   /* -------------------------------------------------------------------------- */
   /* Highlight                                                                  */

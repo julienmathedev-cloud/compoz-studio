@@ -197,7 +197,7 @@ export function FormCellEditor({
           {t("studio.cellEditorTabs.formCellEditor.fieldsLabel")}
         </Text>
 
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-xs">
           {t("studio.cellEditorTabs.formCellEditor.fieldsHelp")}
         </p>
       </div>

@@ -185,6 +185,15 @@ function normalizeStructuredCardItem(
         }
       : undefined;
 
+  const button =
+    item.button && normalizeString(item.button.label, "")
+      ? {
+          label: normalizeString(item.button.label, ""),
+          href: normalizeString(item.button.href, ""),
+          variant: item.button.variant,
+        }
+      : undefined;
+
   return {
     kind: "structuredCard",
     id: item.id,
@@ -192,5 +201,6 @@ function normalizeStructuredCardItem(
     meta: normalizeString(item.meta ?? "", "") || undefined,
     sections,
     image,
+    button,
   };
 }

@@ -17,9 +17,9 @@ export const defaultSeparatorUi: SiteSeparatorUi = {
     full: "block",
   },
   size: {
-    sm: "w-16",
-    md: "w-32",
-    lg: "w-48",
+    sm: "w-1/3",
+    md: "w-1/2",
+    lg: "w-2/3",
   },
   line: "border-border border-t",
 } as const;

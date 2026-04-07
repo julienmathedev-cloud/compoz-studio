@@ -31,6 +31,7 @@ export function adaptImageCell(dto: ImageCellIntentDTO): ImageCell {
     id: trimOrKeep(dto.id),
     kind: "image",
     variant: dto.variant,
+    size: dto.size,
     reveal: dto.reveal,
     image: adaptImage(dto.image),
   };

@@ -4,35 +4,35 @@ import * as React from "react";
 
 import { cn } from "@compoz/ui/lib/utils";
 
-const buttonBaseStudio =
-  "inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap motion-safe:transition-colors motion-reduce:transition-none outline-none select-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-50 aria-invalid:ring-destructive/60 aria-invalid:ring-2 dark:aria-invalid:ring-destructive/40 dark:aria-invalid:border-destructive/50 [&_svg]:pointer-events-none group/button";
-
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap  motion-safe:transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap motion-safe:transition-all outline-none select-none focus-visible:border-ring/80 focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
-      variant: {
-        defaultVanilla:
-          "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
-        outlineVanilla:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
-        secondaryVanilla:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
-        ghostVanilla:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
-        destructiveVanilla:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        linkVanilla: "text-primary underline-offset-4 hover:underline",
-
-        defaultStudio: `${buttonBaseStudio} bg-primary text-primary-foreground hover:bg-primary/80`,
-        outlineStudio: `${buttonBaseStudio} border-border focus-visible:border-none bg-card hover:bg-secondary hover:text-secondary-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground`,
-        secondaryStudio: `${buttonBaseStudio} bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground`,
-        ghostStudio: `${buttonBaseStudio} hover:bg-secondary hover:text-secondary-foreground dark:hover:bg-muted/50 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground`,
-        destructiveStudio: `${buttonBaseStudio} bg-destructive/10 hover:bg-destructive/20 focus-visible:ring-destructive/60 aria-invalid:ring-2 dark:focus-visible:ring-destructive/40 dark:bg-destructive/20 text-destructive dark:hover:bg-destructive/30`,
-        linkStudio: `${buttonBaseStudio} text-primary underline-offset-4 hover:underline`,
-
-        headerStudio: `${buttonBaseStudio} hover:bg-primary hover:text-primary-foreground aria-expanded:bg-primary aria-expanded:text-primary-foreground`,
+      visualMode: {
+        vanilla: "motion-reduce:transition-none",
+        studio: "motion-reduce:transition-none",
       },
+
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+
+        outline:
+          "border-border bg-background hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground",
+
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+
+        ghost:
+          "hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground",
+
+        destructive:
+          "bg-destructive/10 text-destructive hover:bg-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30",
+
+        link: "text-primary underline-offset-4 hover:underline",
+
+        header: "",
+      },
+
       size: {
         default:
           "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
@@ -47,31 +47,56 @@ const buttonVariants = cva(
         "icon-lg": "size-9",
       },
     },
+
+    compoundVariants: [
+      {
+        variant: "destructive",
+        className:
+          "focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
+      },
+      {
+        variant: "header",
+        visualMode: "studio",
+        className:
+          "hover:bg-primary hover:text-primary-foreground aria-expanded:bg-primary aria-expanded:text-primary-foreground",
+      },
+      {
+        variant: "outline",
+        visualMode: "studio",
+        className: "bg-card",
+      },
+    ],
+
     defaultVariants: {
-      variant: "defaultVanilla",
+      variant: "default",
+      visualMode: "vanilla",
       size: "default",
     },
   },
 );
 
+type ButtonProps = React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean;
+  };
+
 function Button({
   className,
-  variant = "defaultVanilla",
+  variant = "default",
+  visualMode = "vanilla",
   size = "default",
   asChild = false,
   ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
-  }) {
+}: ButtonProps) {
   const Comp = asChild ? Slot.Root : "button";
 
   return (
     <Comp
       data-slot="button"
       data-variant={variant}
+      data-visual-mode={visualMode}
       data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, visualMode, size }), className)}
       {...props}
     />
   );

@@ -5,7 +5,7 @@
  * Entité métier GalleryCell.
  */
 
-import type { ImageEditor } from "@compoz/core/domain/pages/entities/cells/image";
+import type { ImageEditor } from "@compoz/core/domain/pages/entities/cells/image-editor";
 
 export type GalleryMaxColumns = 1 | 2 | 3 | 4 | 5;
 

@@ -75,12 +75,14 @@ export type SiteCellsUiOverride = DeepPartial<SiteCellsUi>;
 export type SiteBlockSectionUi = Readonly<{
   containerContained: string;
   containerFullBleed: string;
+  rows: string;
   grid: string;
   gridCols: Readonly<{
     1: string;
     2: string;
     3: string;
   }>;
+  column: string;
   cell: string;
 }>;
 
@@ -176,10 +178,15 @@ export type SiteButtonsUiOverride = DeepPartial<SiteButtonsUi>;
 
 export type SiteStepCardUi = Readonly<{
   root: string;
+
   header: string;
+
   content: string;
+
   badge: string;
+
   title: string;
+
   description: string;
 
   align: Readonly<{
@@ -191,6 +198,8 @@ export type SiteStepCardUi = Readonly<{
 export type SiteStepsUi = Readonly<{
   root: string;
   list: string;
+  connector: string;
+  connectorIcon: string;
   card: SiteStepCardUi;
 }>;
 
@@ -206,17 +215,60 @@ export type SiteCardsUi = Readonly<{
     3: string;
     4: string;
   }>;
+  align: Record<"left" | "center", string>;
+  card: string;
+  header: string;
+  headerTop: string;
+  icon: string;
+  title: string;
+  content: string;
+  description: string;
 }>;
 
 export type SiteCardsUiOverride = DeepPartial<SiteCardsUi>;
 
 export type SiteCardsExtendedUi = Readonly<{
   root: string;
+
   grid: string;
+
   columns: Readonly<{
     1: string;
     2: string;
     3: string;
+  }>;
+
+  align: Readonly<{
+    left: string;
+    center: string;
+  }>;
+
+  card: string;
+
+  header: string;
+
+  headerTop: string;
+
+  icon: string;
+
+  title: string;
+
+  content: string;
+
+  description: string;
+
+  bulletsList: string;
+
+  bulletsAlign: Readonly<{
+    left: string;
+    center: string;
+  }>;
+
+  footer: string;
+
+  footerAlign: Readonly<{
+    left: string;
+    center: string;
   }>;
 }>;
 
@@ -232,26 +284,58 @@ export type SiteStructuredCardUi = Readonly<{
   }>;
 
   card: string;
-  mediaWrap: string;
+  imageWrapper: string;
   image: string;
   header: string;
   title: string;
   caption: string;
   content: string;
+  sections: string;
   section: string;
   sectionTitle: string;
   sectionText: string;
+  buttonWrapper: string;
+  button: string;
 }>;
 
 export type SiteStructuredCardUiOverride = DeepPartial<SiteStructuredCardUi>;
 
 export type SiteImageUi = Readonly<{
-  container: string;
-  image: string;
-  imageCover: string;
-  imageDefault: string;
+  root: string;
   figure: string;
   caption: string;
+  container: string;
+  image: string;
+  imageDefault: string;
+  imageCover: string;
+
+  variantMode: Readonly<{
+    default: "default" | "cover";
+    wide: "default" | "cover";
+    square: "default" | "cover";
+    portrait: "default" | "cover";
+  }>;
+
+  variantFrame: Readonly<{
+    default: string;
+    wide: string;
+    square: string;
+    portrait: string;
+  }>;
+
+  variantSizes: Readonly<{
+    default: string;
+    wide: string;
+    square: string;
+    portrait: string;
+  }>;
+
+  size: Readonly<{
+    sm: string;
+    md: string;
+    lg: string;
+    full: string;
+  }>;
 }>;
 
 export type SiteImageUiOverride = DeepPartial<SiteImageUi>;
@@ -300,7 +384,9 @@ export type SiteCarouselUi = Readonly<{
     inactive: string;
   }>;
 
+  card: SiteCardsUi;
   structuredCard: SiteStructuredCardUi;
+  extendedCard: SiteCardsExtendedUi;
 }>;
 
 export type SiteCarouselUiOverride = DeepPartial<SiteCarouselUi>;
@@ -319,12 +405,17 @@ export type SiteNavGalleryUiOverride = DeepPartial<SiteNavGalleryUi>;
 
 export type SiteZoomGalleryUi = Readonly<{
   list: string;
+
+  columns: Readonly<Record<1 | 2 | 3 | 4 | 5, string>>;
+
+  sizesByColumns: Readonly<Record<1 | 2 | 3 | 4 | 5, string>>;
+
   button: string;
   figure: string;
   image: string;
   overlayPanel: string;
   overlayContent: string;
-  columns: Readonly<Record<GalleryMaxColumns, string>>;
+
   lightbox: SiteLightboxUi;
 }>;
 
@@ -424,6 +515,7 @@ export type SiteMobileMenuUi = Readonly<{
   interactive: string;
   link: string;
   details: string;
+  chevron: string;
   summary: string;
   dropdownList: string;
   childItem: string;
@@ -440,6 +532,7 @@ export type SiteMobileMenuUiOverride = DeepPartial<SiteMobileMenuUi>;
 export type SiteLogoUi = Readonly<{
   link: string;
   image: string;
+  sizes: string;
 }>;
 
 export type SiteLogoUiOverride = DeepPartial<SiteLogoUi>;

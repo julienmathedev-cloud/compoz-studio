@@ -113,6 +113,18 @@ export const TenantIdsSchema = z
     }
   });
 
+/**
+ * Id technique d'une sandbox démo.
+ *
+ * Contrat :
+ * - trim
+ * - non vide
+ *
+ * @remarks
+ * À ce stade on ne contraint pas le format exact.
+ */
+export const DemoInstanceIdSchema = z.string().trim().min(1);
+
 /* -------------------------------------------------------------------------- */
 /*                                   RBAC                                     */
 /* -------------------------------------------------------------------------- */
@@ -148,6 +160,17 @@ export const UserMetaSchema = z
   })
   .strict();
 
+/**
+ * Métadonnées de sandbox démo associées à un utilisateur temporaire.
+ */
+export const UserDemoMetaSchema = z
+  .object({
+    isDemo: z.boolean(),
+    demoInstanceId: DemoInstanceIdSchema,
+    expiresAt: IsoDateStringSchema,
+  })
+  .strict();
+
 /* -------------------------------------------------------------------------- */
 /*                                  Params                                    */
 /* -------------------------------------------------------------------------- */
@@ -166,6 +189,7 @@ export const UserSchema = z
     status: UserStatusSchema,
     rbac: UserRbacSchema,
     meta: UserMetaSchema,
+    demo: UserDemoMetaSchema.optional(),
   })
   .strict();
 
@@ -195,3 +219,5 @@ export type UserIdShape = z.infer<typeof UserIdSchema>;
 export type UserIdParamShape = z.infer<typeof UserIdParamSchema>;
 export type TenantIdShape = z.infer<typeof TenantIdSchema>;
 export type TenantIdsShape = z.infer<typeof TenantIdsSchema>;
+export type DemoInstanceIdShape = z.infer<typeof DemoInstanceIdSchema>;
+export type UserDemoMetaShape = z.infer<typeof UserDemoMetaSchema>;

@@ -19,7 +19,7 @@ import { SitePrimaryMenu } from "@compoz/ui/site/components/organisms/SitePrimar
 import type {
   SitePrimaryMenuUi,
   SiteSocialMenuUi,
-} from "@compoz/ui/site/site-ui.types.ts";
+} from "@compoz/ui/site/site-ui.types";
 
 import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 import type { SocialSettingsShape } from "@compoz/validation/site/settings/social/social";

@@ -81,7 +81,7 @@ export function SitePageRenderer({
   );
 
   return (
-    <div className={cn(ui.body.surface)}>
+    <div className={cn(ui.body.surface, "flex flex-1 flex-col")}>
       {content}
 
       {pager?.enabled ? (

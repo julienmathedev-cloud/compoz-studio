@@ -41,7 +41,7 @@ import { SeparatorCellEditor } from "@compoz/studio/features/builder/editor/cell
 import { SpacerCellEditor } from "@compoz/studio/features/builder/editor/cells/SpacerCellEditor";
 import { StepsCellEditor } from "@compoz/studio/features/builder/editor/cells/steps/StepsCellEditor";
 import { StructuredCardCellEditor } from "@compoz/studio/features/builder/editor/cells/structured-cards/StructuredCardCellEditor";
-import { TimelineCellEditor } from "@compoz/studio/features/builder/editor/cells/timeline/TimelineCellEditor";
+import { TimelineCellEditor } from "@compoz/studio/features/builder/editor/cells/timeline/TimelinesCellEditor";
 import { createEmptyCell } from "@compoz/studio/features/pages/mappers/cells-form";
 import {
   Drawer,
@@ -200,6 +200,12 @@ export function BuilderCellDrawer({
     onOpenChange(false);
   };
 
+  function waitForNextFrame(): Promise<void> {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
+  }
+
   const handleDrawerOpenChange = async (nextOpen: boolean) => {
     if (nextOpen) {
       setForceShowErrors(false);
@@ -211,6 +217,13 @@ export function BuilderCellDrawer({
       setForceShowErrors(false);
       onOpenChange(false);
       return;
+    }
+
+    const activeElement = document.activeElement;
+
+    if (activeElement instanceof HTMLElement) {
+      activeElement.blur();
+      await waitForNextFrame();
     }
 
     const basePath = getCellBasePath(selectedCellLocation);

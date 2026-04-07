@@ -21,7 +21,7 @@ function adaptCardItem(dto: CardItemIntentDTO): CardItem {
     id: trimOrKeep(dto.id),
     title: trimOrKeep(dto.title),
     description: trimOrKeep(dto.description),
-    icon: dto.icon ? trimOrKeep(dto.icon) : null,
+    icon: dto.icon ? (trimOrKeep(dto.icon) as CardItem["icon"]) : null,
   };
 }
 

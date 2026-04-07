@@ -27,7 +27,6 @@ import type {
   MutableRefObject,
   PointerEvent,
   ReactNode,
-  Ref,
   RefObject,
   SetStateAction,
 } from "react";
@@ -43,7 +42,6 @@ import {
 import { createPortal } from "react-dom";
 
 import { getAriaLabel } from "@compoz/ui/lib/a11y/helpers";
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import {
   isActiveLink,
   resolveInternalHref,
@@ -54,6 +52,7 @@ import { cn } from "@compoz/ui/lib/utils";
 import { SiteNavLink } from "@compoz/ui/site/components/atoms/SiteNavLink";
 
 type SiteNavItem = Readonly<{
+  id: string;
   href: string;
   label: string;
   ariaLabel?: string;
@@ -122,7 +121,10 @@ export function SiteNavDropdown({
 
   const safeItems = useMemo(() => {
     return items.filter(
-      (item) => normalizeString(item.href) && normalizeString(item.label),
+      (item) =>
+        normalizeString(item.id) &&
+        normalizeString(item.href) &&
+        normalizeString(item.label),
     );
   }, [items]);
 
@@ -263,7 +265,7 @@ export function SiteNavDropdown({
         </button>
       ) : (
         <SiteNavLink
-          ref={setTriggerEl as unknown as Ref<HTMLAnchorElement>}
+          ref={setTriggerEl}
           id={triggerId}
           href={triggerHref || normalizedHref}
           ariaLabel={ariaLabel}
@@ -296,7 +298,7 @@ export function SiteNavDropdown({
               suppressNextClickRef,
             )
           }
-          className={cn(className, itemContainerClass, itemLinkClass)}
+          className={cn(className, itemContainerClass)}
           linkClassName={cn(itemLinkClass)}
           data-section-active={sectionActive || undefined}
         >
@@ -335,12 +337,8 @@ export function SiteNavDropdown({
             )}
           >
             <ul>
-              {safeItems.map((item, index) => (
-                <li
-                  key={getDropdownItemKey(item, index)}
-                  className={cn("list-none")}
-                  role="none"
-                >
+              {safeItems.map((item) => (
+                <li key={item.id} className={cn("list-none")} role="none">
                   <SiteNavLink
                     href={item.href}
                     label={item.label}
@@ -359,12 +357,6 @@ export function SiteNavDropdown({
         )}
     </div>
   );
-}
-
-function getDropdownItemKey(item: SiteNavItem, index: number) {
-  const href = normalizeString(item.href);
-  const label = normalizeString(item.label);
-  return toStableUiKey({ href, label }, index);
 }
 
 function handleTriggerKeyDown(

@@ -32,10 +32,9 @@ import {
   FieldLabel,
 } from "@compoz/ui/components/ui/field";
 
-import { Input } from "@compoz/ui/components/ui/input";
-
 import {
   InputGroup,
+  InputGroupInput,
   InputGroupText,
 } from "@compoz/ui/components/ui/input-group";
 
@@ -120,7 +119,6 @@ export function NewSocialLinkField({
 
   const isInvalid = Boolean(error) || Boolean(invalid);
 
-  // aria-describedby = help + error (si présents)
   const describedByIds: string[] = [];
 
   if (help && helpId) describedByIds.push(helpId);
@@ -131,7 +129,6 @@ export function NewSocialLinkField({
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
-      // On évite le submit du form parent et on déclenche le blur
       e.preventDefault();
       onBlur?.();
     }
@@ -145,10 +142,10 @@ export function NewSocialLinkField({
         {t("studio.socialLinkField.label")}
       </FieldLabel>
 
-      <InputGroup className="pl-2">
+      <InputGroup visualMode="studio" className="pl-2">
         <InputGroupText>{prefix}</InputGroupText>
 
-        <Input
+        <InputGroupInput
           id={fieldId}
           type={inputType}
           inputMode={inputMode}
@@ -160,8 +157,8 @@ export function NewSocialLinkField({
           aria-invalid={isInvalid ? true : undefined}
           aria-describedby={describedBy}
           disabled={disabled}
-          variant="defaultStudio"
-          className="rounded-l-none border-l-0 pl-0.5"
+          visualMode="studio"
+          className="pl-0.5"
         />
       </InputGroup>
 

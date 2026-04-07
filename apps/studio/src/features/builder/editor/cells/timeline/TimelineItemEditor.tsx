@@ -13,6 +13,10 @@
  * - Le reorder est géré par drag and drop via dnd-kit.
  * - L’affichage des erreurs repose sur une règle unique :
  *   `showError || fieldState.isTouched`.
+ * - La lecture/édition des valeurs passe par RHF (`useController`).
+ * - `sortableId` sert uniquement au drag and drop.
+ * - `watchedItem` sert de fallback visuel pour stabiliser le rendu
+ *   pendant le rebinding RHF après reorder.
  */
 
 import { useSortable } from "@dnd-kit/sortable";
@@ -41,7 +45,8 @@ export type TimelineItemEditorProps = Readonly<{
   basePath: TimelineFieldBasePath;
   index: number;
   idPrefix: string;
-  value: TimelineItemFormValues;
+  sortableId: string;
+  watchedItem?: TimelineItemFormValues;
   disabled?: boolean;
   canRemove?: boolean;
   onRemove: () => void;
@@ -53,7 +58,8 @@ export function TimelineItemEditor({
   basePath,
   index,
   idPrefix,
-  value,
+  sortableId,
+  watchedItem,
   disabled = false,
   canRemove = true,
   onRemove,
@@ -66,31 +72,37 @@ export function TimelineItemEditor({
   const periodCtrl = useController({
     name: `${itemBasePath}.period` as `${TimelineItemBasePath}.period`,
     control,
+    defaultValue: watchedItem?.period ?? "",
   });
 
   const titleCtrl = useController({
     name: `${itemBasePath}.title` as `${TimelineItemBasePath}.title`,
     control,
+    defaultValue: watchedItem?.title ?? "",
   });
 
   const subtitleCtrl = useController({
     name: `${itemBasePath}.subtitle` as `${TimelineItemBasePath}.subtitle`,
     control,
+    defaultValue: watchedItem?.subtitle ?? "",
   });
 
   const descriptionCtrl = useController({
     name: `${itemBasePath}.description` as `${TimelineItemBasePath}.description`,
     control,
+    defaultValue: watchedItem?.description ?? "",
   });
 
   const badgeCtrl = useController({
     name: `${itemBasePath}.badge` as `${TimelineItemBasePath}.badge`,
     control,
+    defaultValue: watchedItem?.badge ?? "",
   });
 
   const keywordsCtrl = useController({
     name: `${itemBasePath}.keywords` as `${TimelineItemBasePath}.keywords`,
     control,
+    defaultValue: watchedItem?.keywords ?? [],
   });
 
   const {
@@ -101,7 +113,7 @@ export function TimelineItemEditor({
     transition,
     isDragging,
   } = useSortable({
-    id: value.id,
+    id: sortableId,
     disabled,
   });
 
@@ -131,9 +143,25 @@ export function TimelineItemEditor({
       ? String(titleCtrl.fieldState.error.message)
       : undefined;
 
-  const keywordsValue = Array.isArray(keywordsCtrl.field.value)
-    ? keywordsCtrl.field.value.join("\n")
-    : "";
+  const periodValue = String(
+    periodCtrl.field.value ?? watchedItem?.period ?? "",
+  );
+  const badgeValue = String(badgeCtrl.field.value ?? watchedItem?.badge ?? "");
+  const titleValue = String(titleCtrl.field.value ?? watchedItem?.title ?? "");
+  const subtitleValue = String(
+    subtitleCtrl.field.value ?? watchedItem?.subtitle ?? "",
+  );
+  const descriptionValue = String(
+    descriptionCtrl.field.value ?? watchedItem?.description ?? "",
+  );
+
+  const keywordsArray = Array.isArray(keywordsCtrl.field.value)
+    ? keywordsCtrl.field.value
+    : Array.isArray(watchedItem?.keywords)
+      ? watchedItem.keywords
+      : [];
+
+  const keywordsValue = keywordsArray.join("\n");
 
   const style = {
     transform: transform ? CSS.Transform.toString(transform) : undefined,
@@ -144,7 +172,8 @@ export function TimelineItemEditor({
     <Card
       ref={setNodeRef}
       style={style}
-      variant="defaultStudio"
+      variant="default"
+      visualMode="studio"
       className={cn("relative h-full", STACK_MD, isDragging && "opacity-60")}
     >
       <CardContent>
@@ -169,7 +198,7 @@ export function TimelineItemEditor({
             ids={periodIds}
             inputRef={periodCtrl.field.ref}
             label={t("studio.cellEditorTabs.timelineCellEditor.periodLabel")}
-            value={String(periodCtrl.field.value ?? "")}
+            value={periodValue}
             onChange={(next) => {
               periodCtrl.field.onChange(next);
             }}
@@ -187,7 +216,7 @@ export function TimelineItemEditor({
             ids={badgeIds}
             inputRef={badgeCtrl.field.ref}
             label={t("studio.cellEditorTabs.timelineCellEditor.badgeLabel")}
-            value={String(badgeCtrl.field.value ?? "")}
+            value={badgeValue}
             onChange={(next) => {
               badgeCtrl.field.onChange(next);
             }}
@@ -203,7 +232,7 @@ export function TimelineItemEditor({
             ids={titleIds}
             inputRef={titleCtrl.field.ref}
             label={t("studio.cellEditorTabs.timelineCellEditor.titleLabel")}
-            value={String(titleCtrl.field.value ?? "")}
+            value={titleValue}
             onChange={(next) => {
               titleCtrl.field.onChange(next);
             }}
@@ -221,7 +250,7 @@ export function TimelineItemEditor({
             ids={subtitleIds}
             inputRef={subtitleCtrl.field.ref}
             label={t("studio.cellEditorTabs.timelineCellEditor.subtitleLabel")}
-            value={String(subtitleCtrl.field.value ?? "")}
+            value={subtitleValue}
             onChange={(next) => {
               subtitleCtrl.field.onChange(next);
             }}
@@ -238,7 +267,7 @@ export function TimelineItemEditor({
             label={t(
               "studio.cellEditorTabs.timelineCellEditor.descriptionLabel",
             )}
-            value={String(descriptionCtrl.field.value ?? "")}
+            value={descriptionValue}
             onChange={(next) => {
               descriptionCtrl.field.onChange(next);
             }}
@@ -256,12 +285,7 @@ export function TimelineItemEditor({
             label={t("studio.cellEditorTabs.timelineCellEditor.keywordsLabel")}
             value={keywordsValue}
             onChange={(next) => {
-              const parsedKeywords = next
-                .split("\n")
-                .map((item) => item.trim())
-                .filter(Boolean);
-
-              keywordsCtrl.field.onChange(parsedKeywords);
+              keywordsCtrl.field.onChange(next.split("\n"));
             }}
             onBlur={keywordsCtrl.field.onBlur}
             disabled={disabled}

@@ -14,7 +14,6 @@
  *          └ cells[]
  */
 
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { cn } from "@compoz/ui/lib/utils";
 import { cellRegistry } from "@compoz/ui/renderer/cells/cellRegistry";
 
@@ -23,7 +22,10 @@ import type {
   SiteCellsUi,
 } from "@compoz/ui/site/site-ui.types";
 
-import type { SectionBlockShape } from "@compoz/validation/pages/blocks/block";
+import type {
+  BlockRowShape,
+  SectionBlockShape,
+} from "@compoz/validation/pages/blocks/block";
 import type { CellShape } from "@compoz/validation/pages/blocks/cells/cell";
 import type { ReactNode } from "react";
 
@@ -66,52 +68,56 @@ export function SectionBlockRenderer({
       data-variant={variant}
       data-container={containerMode}
     >
-      {block.rows.map((row, rowIndex) => {
-        const colsKey = row.columnsCount as 1 | 2 | 3;
-        const colsClass = blockUi.gridCols[colsKey];
+      <div className={cn(blockUi.rows)}>
+        {block.rows.map((row, rowIndex) => {
+          const colsKey = row.columnsCount as 1 | 2 | 3;
+          const colsClass = blockUi.gridCols[colsKey];
 
-        return (
-          <div
-            key={toStableUiKey({ id: row.id }, rowIndex)}
-            className={cn(blockUi.grid, colsClass)}
-            data-row
-          >
-            {row.columns.map((column, colIndex) => {
-              return (
-                <div
-                  key={toStableUiKey({ id: column.id }, colIndex)}
-                  className={blockUi.cell}
-                  data-column
-                >
-                  {column.cells.map((cell, cellIndex) => {
-                    const isLcpMedia =
-                      lcpTarget !== null &&
-                      lcpTarget.rowIndex === rowIndex &&
-                      lcpTarget.colIndex === colIndex &&
-                      lcpTarget.cellIndex === cellIndex;
+          return (
+            <div key={row.id} className={cn(blockUi.grid, colsClass)} data-row>
+              {row.columns.map((column, colIndex) => {
+                const columnOrderClass = getColumnOrderClass(row, colIndex);
 
-                    return (
-                      <div
-                        key={__cellKey(cell, cellIndex)}
-                        data-cell-id={cell.id}
-                        data-cell-kind={cell.kind}
-                        className="relative min-w-0"
-                      >
-                        {renderCellFromRegistry(
-                          cell,
-                          containerMode === "fullBleed",
-                          cellsUi,
-                          isLcpMedia,
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
+                return (
+                  <div
+                    key={column.id}
+                    className={cn(blockUi.column, columnOrderClass)}
+                    data-column
+                  >
+                    {column.cells.map((cell, cellIndex) => {
+                      const isLcpMedia =
+                        lcpTarget !== null &&
+                        lcpTarget.rowIndex === rowIndex &&
+                        lcpTarget.colIndex === colIndex &&
+                        lcpTarget.cellIndex === cellIndex;
+
+                      return (
+                        <div
+                          key={cell.id}
+                          data-cell-id={cell.id}
+                          data-cell-kind={cell.kind}
+                          className={cn(
+                            blockUi.cell,
+                            "relative",
+                            getSpacerWrapperVisibilityClass(cell),
+                          )}
+                        >
+                          {renderCellFromRegistry(
+                            cell,
+                            containerMode === "fullBleed",
+                            cellsUi,
+                            isLcpMedia,
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
     </section>
   );
 }
@@ -121,10 +127,6 @@ SectionBlockRenderer.displayName = "SectionBlockRenderer";
 /* -------------------------------------------------------------------------- */
 /* Internals                                                                  */
 /* -------------------------------------------------------------------------- */
-
-function __cellKey(cell: CellShape, index: number) {
-  return toStableUiKey({ id: cell.id }, index);
-}
 
 function isMediaCell(cell: CellShape): boolean {
   return (
@@ -158,6 +160,57 @@ function findFirstMediaCellPosition(
   return null;
 }
 
+function getColumnOrderClass(
+  row: BlockRowShape,
+  colIndex: number,
+): string | undefined {
+  const columnsLength = row.columns.length;
+
+  if (columnsLength <= 1) {
+    return undefined;
+  }
+
+  const mobileOrderMap = {
+    2: ["order-2", "order-1"],
+    3: ["order-3", "order-2", "order-1"],
+  } as const;
+
+  const tabletOrderMap = {
+    2: ["md:order-2", "md:order-1"],
+    3: ["md:order-3", "md:order-2", "md:order-1"],
+  } as const;
+
+  const desktopOrderMap = {
+    2: ["lg:order-2", "lg:order-1"],
+    3: ["lg:order-3", "lg:order-2", "lg:order-1"],
+  } as const;
+
+  const classes: string[] = [];
+
+  // MOBILE
+  if (row.reverseOn.mobile) {
+    classes.push(mobileOrderMap[columnsLength as 2 | 3][colIndex]);
+  }
+
+  // TABLET
+  if (row.reverseOn.tablet) {
+    classes.push(tabletOrderMap[columnsLength as 2 | 3][colIndex]);
+  } else if (row.reverseOn.mobile) {
+    // reset si mobile actif mais pas tablet
+    classes.push("md:order-none");
+  }
+
+  // DESKTOP
+  if (row.reverseOn.desktop) {
+    classes.push(desktopOrderMap[columnsLength as 2 | 3][colIndex]);
+  } else if (row.reverseOn.tablet) {
+    // reset si tablet actif mais pas desktop
+    classes.push("lg:order-none");
+  }
+
+  return classes.length > 0 ? classes.join(" ") : undefined;
+}
+
 function renderCellFromRegistry(
   cell: CellShape,
   isFull: boolean,
@@ -174,4 +227,23 @@ function renderCellFromRegistry(
     isFullBleed: isFull,
     isLcpMedia,
   });
+}
+
+function getSpacerWrapperVisibilityClass(cell: CellShape): string | undefined {
+  if (cell.kind !== "spacer") {
+    return undefined;
+  }
+
+  const visibility = cell.visibility;
+  const v = {
+    mobile: visibility?.mobile ?? true,
+    tablet: visibility?.tablet ?? true,
+    desktop: visibility?.desktop ?? true,
+  };
+
+  return cn(
+    v.mobile ? "block" : "hidden",
+    v.tablet ? "md:block" : "md:hidden",
+    v.desktop ? "lg:block" : "lg:hidden",
+  );
 }

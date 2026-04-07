@@ -5,13 +5,14 @@
  * @layer ui/studio/pages/blocks/editor/cells
  *
  * @description
- * Éditeur UI d’une SpacerCell avec sélection directe de la taille.
+ * Éditeur UI d’une SpacerCell avec sélection directe de la taille
+ * et contrôle de visibilité responsive par device.
  *
  * @remarks
  * - UI-only : aucune logique métier.
  * - Modèle contrôlé (value/onChange).
- * - Utilise des boutons plutôt qu’un select pour une sélection plus directe
- *   et cohérente avec les autres editors Studio.
+ * - Utilise des boutons pour la taille et la visibilité responsive
+ *   afin de rester cohérent avec les autres editors Studio.
  */
 
 import { useTranslations } from "next-intl";
@@ -32,6 +33,19 @@ export type SpacerCellEditorProps = Readonly<{
 const SIZES = ["sm", "md", "lg", "xl"] as const;
 type SpacerSize = (typeof SIZES)[number];
 
+const DEVICES = ["mobile", "tablet", "desktop"] as const;
+type SpacerDevice = (typeof DEVICES)[number];
+
+function normalizeVisibility(
+  visibility: SpacerCellFormValues["visibility"] | undefined,
+): NonNullable<SpacerCellFormValues["visibility"]> {
+  return {
+    mobile: visibility?.mobile ?? true,
+    tablet: visibility?.tablet ?? true,
+    desktop: visibility?.desktop ?? true,
+  };
+}
+
 export function SpacerCellEditor({
   value,
   onChange,
@@ -43,6 +57,18 @@ export function SpacerCellEditor({
     value.size && SIZES.includes(value.size as SpacerSize)
       ? (value.size as SpacerSize)
       : "md";
+
+  const visibility = normalizeVisibility(value.visibility);
+
+  const handleToggleDevice = (device: SpacerDevice) => {
+    onChange({
+      ...value,
+      visibility: {
+        ...visibility,
+        [device]: !visibility[device],
+      },
+    });
+  };
 
   return (
     <div className={cn(STACK_MD)}>
@@ -57,12 +83,14 @@ export function SpacerCellEditor({
               key={item}
               type="button"
               size="sm"
-              variant={size === item ? "defaultStudio" : "ghostStudio"}
+              variant={size === item ? "default" : "ghost"}
+              visualMode="studio"
               disabled={disabled}
               onClick={() => {
                 onChange({
                   ...value,
                   size: item,
+                  visibility,
                 });
               }}
             >
@@ -73,6 +101,32 @@ export function SpacerCellEditor({
 
         <Text as="p" variant="meta">
           {t("studio.cellEditorTabs.spacerCellEditor.sizeHelp")}
+        </Text>
+      </div>
+
+      <div className={cn(STACK_SM)}>
+        <Text as="p" className="font-medium">
+          {t("studio.cellEditorTabs.spacerCellEditor.visibilityLabel")}
+        </Text>
+
+        <div className={cn(ROW_SM)}>
+          {DEVICES.map((device) => (
+            <Button
+              key={device}
+              type="button"
+              size="sm"
+              variant={visibility[device] ? "default" : "ghost"}
+              visualMode="studio"
+              disabled={disabled}
+              onClick={() => handleToggleDevice(device)}
+            >
+              {t(`studio.cellEditorTabs.spacerCellEditor.devices.${device}`)}
+            </Button>
+          ))}
+        </div>
+
+        <Text as="p" variant="meta">
+          {t("studio.cellEditorTabs.spacerCellEditor.visibilityHelp")}
         </Text>
       </div>
     </div>

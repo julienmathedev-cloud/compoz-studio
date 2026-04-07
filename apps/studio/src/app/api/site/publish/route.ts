@@ -30,7 +30,7 @@ import type { PublishSiteResponse } from "@compoz/infra/http/studio/site.types";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { requireNonDemoSession } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import {
@@ -127,7 +127,7 @@ export async function POST(req: Request) {
   const NS = "api.studio.site.publish.POST" as const;
 
   return handleRoute(NS, req, async () => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { tenantId } = await requireNonDemoSession();
 
     return logSpan(
       NS,

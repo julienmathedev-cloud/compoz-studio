@@ -9,7 +9,7 @@
  * - UI-only : consomme une shape déjà validée (schema).
  * - Ignore la cellule si aucun item exploitable n’est présent.
  * - La cellule porte le layout (`columns`), les items portent le contenu.
- * - Utilise `SiteCaseStudyCard` comme composant de rendu visuel
+ * - Utilise `SiteStructuredCard` pour le rendu visuel.
  *   en attendant son renommage éventuel.
  */
 
@@ -81,6 +81,15 @@ export function StructuredCardCellRenderer({
                 }
               : undefined;
 
+          const button =
+            item.button && normalizeString(item.button.label, "")
+              ? {
+                  label: normalizeString(item.button.label, ""),
+                  href: normalizeString(item.button.href, ""),
+                  variant: item.button.variant,
+                }
+              : undefined;
+
           return (
             <SiteStructuredCard
               key={item.id}
@@ -88,6 +97,7 @@ export function StructuredCardCellRenderer({
               meta={meta}
               sections={sections}
               image={image}
+              button={button}
               ui={ui}
             />
           );

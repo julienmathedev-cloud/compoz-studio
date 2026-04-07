@@ -21,9 +21,16 @@ import { cn } from "@compoz/ui/lib/utils";
 import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 
 /**
+ * Props de la page Overview.
+ */
+type OverviewPageProps = Readonly<{
+  isDemo?: boolean;
+}>;
+
+/**
  * Page Overview (admin).
  */
-export function OverviewPage() {
+export function OverviewPage({ isDemo = false }: OverviewPageProps) {
   const t = useTranslations();
 
   return (
@@ -32,7 +39,7 @@ export function OverviewPage() {
         {t("studio.shared.entities.overview")}
       </Heading>
 
-      <OverviewSection />
+      <OverviewSection isDemo={isDemo} />
     </div>
   );
 }

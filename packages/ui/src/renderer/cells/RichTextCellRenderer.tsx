@@ -40,7 +40,10 @@ export function RichTextCellRenderer({ cell, ui }: RichTextCellRendererProps) {
 
   return (
     <div
-      className={cn(ui.root, "whitespace-pre-wrap")}
+      className={cn(
+        ui.root,
+        "whitespace-pre-wrap [&_p:empty]:min-h-[1em] [&_p:empty]:my-1",
+      )}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

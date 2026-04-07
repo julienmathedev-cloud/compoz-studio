@@ -12,11 +12,7 @@
 
 import { Badge } from "@compoz/ui/components/ui/badge";
 
-export type StatusBadgeVariant =
-  | "successStudio"
-  | "warningStudio"
-  | "infoStudio"
-  | "errorStudio";
+export type StatusBadgeVariant = "success" | "warning" | "info" | "error";
 
 export type StatusBadgeProps = Readonly<{
   variant: StatusBadgeVariant;
@@ -35,7 +31,7 @@ export function StatusBadge({ variant, label, className }: StatusBadgeProps) {
   if (!text) return null;
 
   return (
-    <Badge variant={variant} className={className}>
+    <Badge visualMode="studio" variant={variant} className={className}>
       {text}
     </Badge>
   );

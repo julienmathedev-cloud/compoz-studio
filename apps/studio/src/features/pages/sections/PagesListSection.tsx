@@ -31,7 +31,6 @@ import { PageListItem } from "@compoz/studio/features/pages/components/molecules
 import { useDeletePage } from "@compoz/studio/features/pages/hooks/useDeletePage";
 import { Card, CardContent } from "@compoz/ui/components/ui/card";
 import { Separator } from "@compoz/ui/components/ui/separator";
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { cn } from "@compoz/ui/lib/utils";
 import { EMPTY_CARD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 
@@ -147,7 +146,7 @@ export function PagesListSection({
           className={cn(EMPTY_CARD)}
         />
       ) : (
-        <Card variant="panelStudio">
+        <Card variant="panel" visualMode="studio">
           <CardContent>
             <ul className={cn(STACK_SM)}>
               {groups.parents.map((parent, parentIndex) => {
@@ -155,13 +154,7 @@ export function PagesListSection({
                 const hasChildren = children.length > 0;
 
                 return (
-                  <li
-                    key={toStableUiKey(
-                      { id: parent.id, label: parent.slug },
-                      parentIndex,
-                    )}
-                    className={cn(STACK_SM)}
-                  >
+                  <li key={parent.id} className={cn(STACK_SM)}>
                     {renderRow(parent)}
 
                     {hasChildren ? (
@@ -176,19 +169,14 @@ export function PagesListSection({
                           triggerClassName="text-muted-foreground"
                         >
                           <Card
-                            variant="panelStudio"
-                            className="bg-accent/10 shadow-xs shadow-accent"
+                            variant="panel"
+                            visualMode="studio"
+                            className="bg-secondary/10 shadow-xs shadow-accent"
                           >
                             <CardContent className="flex flex-col">
                               <ul className={cn(STACK_SM)}>
                                 {children.map((child, childIndex) => (
-                                  <li
-                                    key={toStableUiKey(
-                                      { id: child.id, label: child.slug },
-                                      childIndex,
-                                    )}
-                                    className={cn(STACK_SM)}
-                                  >
+                                  <li key={child.id} className={cn(STACK_SM)}>
                                     {renderRow(child)}
                                     {childIndex < children.length - 1 ? (
                                       <Separator />

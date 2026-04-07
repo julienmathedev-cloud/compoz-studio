@@ -68,7 +68,8 @@ export function SeparatorCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={align === item ? "defaultStudio" : "ghostStudio"}
+                variant={align === item ? "default" : "ghost"}
+                visualMode="studio"
                 disabled={disabled}
                 onClick={() => {
                   onChange({
@@ -98,7 +99,8 @@ export function SeparatorCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={size === item ? "defaultStudio" : "ghostStudio"}
+                variant={size === item ? "default" : "ghost"}
+                visualMode="studio"
                 disabled={disabled}
                 onClick={() => {
                   onChange({

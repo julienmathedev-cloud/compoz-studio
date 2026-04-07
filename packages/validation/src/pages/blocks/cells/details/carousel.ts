@@ -8,24 +8,15 @@
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
-import { CellIdSchema } from "@compoz/validation/pages/blocks/cells/details/common";
-
 import { CardItemSchema } from "@compoz/validation/pages/blocks/cells/details/cards";
 import { CardsExtendedItemSchema } from "@compoz/validation/pages/blocks/cells/details/cards-extended";
-import { ImageEditorSchema } from "@compoz/validation/pages/blocks/cells/details/image";
+import { CellIdSchema } from "@compoz/validation/pages/blocks/cells/details/common";
+import { ImageEditorSchema } from "@compoz/validation/pages/blocks/cells/details/image-editor";
 import { StructuredCardItemSchema } from "@compoz/validation/pages/blocks/cells/details/structured-card";
-
-/* ------------------------------------------------------------------ */
-/* Variant                                                            */
-/* ------------------------------------------------------------------ */
 
 export const CarouselVariantSchema = z.enum(["carousel", "slider"], {
   message: ERROR_CODES.CELL_CAROUSEL_VARIANT_INVALID,
 });
-
-/* ------------------------------------------------------------------ */
-/* Item kind                                                          */
-/* ------------------------------------------------------------------ */
 
 export const CarouselItemKindSchema = z.enum(
   ["image", "card", "cardsExtended", "structuredCard"],
@@ -34,20 +25,20 @@ export const CarouselItemKindSchema = z.enum(
   },
 );
 
-/* ------------------------------------------------------------------ */
-/* Items                                                              */
-/* ------------------------------------------------------------------ */
-
+/**
+ * Schéma générique d’un item de carousel.
+ *
+ * @remarks
+ * - Représente l’union de tous les items autorisés dans une carousel cell.
+ * - Ne suffit pas à lui seul à valider la cohérence avec `itemKind`.
+ * - Cette cohérence reste validée dans `CarouselCellSchema.superRefine`.
+ */
 export const CarouselItemSchema = z.union([
   ImageEditorSchema,
   CardItemSchema,
   CardsExtendedItemSchema,
   StructuredCardItemSchema,
 ]);
-
-/* ------------------------------------------------------------------ */
-/* Cell                                                               */
-/* ------------------------------------------------------------------ */
 
 export const CarouselCellSchema = z
   .object({
@@ -68,7 +59,7 @@ export const CarouselCellSchema = z
     itemKind: CarouselItemKindSchema,
 
     items: z
-      .array(CarouselItemSchema, {
+      .array(z.unknown(), {
         message: ERROR_CODES.CELL_CAROUSEL_ITEMS_INVALID,
       })
       .min(1, ERROR_CODES.CELL_CAROUSEL_ITEMS_MIN_1),
@@ -87,11 +78,12 @@ export const CarouselCellSchema = z
     for (let i = 0; i < cell.items.length; i++) {
       const result = schema.safeParse(cell.items[i]);
 
-      if (!result.success) {
+      if (result.success) continue;
+
+      for (const issue of result.error.issues) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: ERROR_CODES.CELL_CAROUSEL_ITEM_KIND_INVALID,
-          path: ["items", i],
+          ...issue,
+          path: ["items", i, ...issue.path],
         });
       }
     }

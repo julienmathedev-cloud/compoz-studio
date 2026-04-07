@@ -4,11 +4,6 @@
  *
  * @description
  * Cell renderer site/preview : rendu d’un spacer vertical.
- *
- * @remarks
- * - UI-only : consomme une shape déjà validée (schema).
- * - Le rendu repose uniquement sur la taille (`size`) et le skin.
- * - Aucun contenu visuel, uniquement un espace de mise en page.
  */
 
 import type { SpacerCellShape } from "@compoz/validation/pages/blocks/cells/cell";
@@ -21,17 +16,40 @@ export type SpacerCellRendererProps = Readonly<{
   ui: SiteSpacerUi;
 }>;
 
+function getVisibilityClasses(
+  visibility: SpacerCellShape["visibility"] | undefined,
+) {
+  const v = {
+    mobile: visibility?.mobile ?? true,
+    tablet: visibility?.tablet ?? true,
+    desktop: visibility?.desktop ?? true,
+  };
+
+  return cn(
+    // base = mobile
+    v.mobile ? "block" : "hidden",
+
+    // tablet
+    v.tablet ? "md:block" : "md:hidden",
+
+    // desktop
+    v.desktop ? "lg:block" : "lg:hidden",
+  );
+}
+
 export function SpacerCellRenderer({ cell, ui }: SpacerCellRendererProps) {
   if (!cell) return null;
 
   const size = cell.size ?? "md";
+
+  const visibilityClasses = getVisibilityClasses(cell.visibility);
 
   return (
     <div
       aria-hidden="true"
       data-cell="spacer"
       data-size={size}
-      className={cn(ui.root, ui.size[size])}
+      className={cn(ui.root, ui.size[size], visibilityClasses)}
     />
   );
 }

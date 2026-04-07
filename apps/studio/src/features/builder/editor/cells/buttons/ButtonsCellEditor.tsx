@@ -18,7 +18,7 @@
 
 import { useTranslations } from "next-intl";
 import type { Control } from "react-hook-form";
-import { useController, useFieldArray } from "react-hook-form";
+import { useController, useFieldArray, useWatch } from "react-hook-form";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { ButtonListEditor } from "@compoz/studio/features/builder/editor/cells/buttons/ButtonListEditor";
@@ -80,12 +80,6 @@ export function ButtonsCellEditor({
     control,
   });
 
-  /**
-   * `useFieldArray` est la source de vérité RHF pour la liste des boutons.
-   *
-   * `keyName: "fieldId"` évite d’entrer en collision avec notre `id` métier
-   * déjà présent dans `ButtonItemFormValues`.
-   */
   const { fields, append, remove, move } = useFieldArray<
     SectionBlockFormValues,
     ButtonsItemsPath,
@@ -95,6 +89,13 @@ export function ButtonsCellEditor({
     name: itemsPath,
     keyName: "fieldId",
   });
+
+  const watchedItems = (useWatch({
+    control,
+    name: itemsPath,
+  }) ?? []) as ButtonItemFormValues[];
+
+  const buttonFields = fields as ButtonItemField[];
 
   const align: ButtonsAlign =
     alignCtrl.field.value &&
@@ -114,7 +115,7 @@ export function ButtonsCellEditor({
         <p className="text-sm font-medium">
           {t("studio.cellEditorTabs.buttonsCellEditor.itemsLabel")}
         </p>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-xs">
           {t("studio.cellEditorTabs.buttonsCellEditor.itemsHelp")}
         </p>
       </div>
@@ -133,7 +134,8 @@ export function ButtonsCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={align === item ? "defaultStudio" : "ghostStudio"}
+                variant={align === item ? "default" : "ghost"}
+                visualMode="studio"
                 onClick={() => {
                   alignCtrl.field.onChange(item);
                 }}
@@ -156,7 +158,8 @@ export function ButtonsCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={gap === item ? "defaultStudio" : "ghostStudio"}
+                variant={gap === item ? "default" : "ghost"}
+                visualMode="studio"
                 onClick={() => {
                   gapCtrl.field.onChange(item);
                 }}
@@ -173,7 +176,8 @@ export function ButtonsCellEditor({
         control={control}
         idPrefix={idPrefix}
         basePath={basePath}
-        fields={fields as ButtonItemField[]}
+        fields={buttonFields}
+        watchedItems={watchedItems}
         append={append}
         remove={remove}
         move={move}

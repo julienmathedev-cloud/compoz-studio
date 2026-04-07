@@ -14,10 +14,25 @@ export const SpacerSizeSchema = z.enum(["sm", "md", "lg", "xl"], {
   message: ERROR_CODES.CELL_SPACER_SIZE_INVALID,
 });
 
+export const SpacerVisibilitySchema = z
+  .object({
+    mobile: z.boolean({
+      message: ERROR_CODES.CELL_SPACER_VISIBILITY_INVALID,
+    }),
+    tablet: z.boolean({
+      message: ERROR_CODES.CELL_SPACER_VISIBILITY_INVALID,
+    }),
+    desktop: z.boolean({
+      message: ERROR_CODES.CELL_SPACER_VISIBILITY_INVALID,
+    }),
+  })
+  .strict();
+
 export const SpacerCellSchema = z
   .object({
     id: CellIdSchema,
     kind: z.literal("spacer"),
     size: SpacerSizeSchema,
+    visibility: SpacerVisibilitySchema,
   })
   .strict();

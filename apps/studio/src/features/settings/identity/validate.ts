@@ -32,11 +32,11 @@ export type IdentityWarningKey =
  * Calcule les warnings UI associés à un brouillon d’identité.
  */
 export function computeIdentityWarnings(
-  s: Pick<IdentityFormValues, "logoUrl" | "faviconUrl">,
+  s: Pick<IdentityFormValues, "logo" | "faviconUrl">,
 ): IdentityWarningKey[] {
   const out = new Set<IdentityWarningKey>();
 
-  const hasLogo = Boolean((s.logoUrl ?? "").trim());
+  const hasLogo = s.logo !== null;
   const hasFavicon = Boolean((s.faviconUrl ?? "").trim());
 
   if (!hasLogo && !hasFavicon) {
@@ -55,11 +55,11 @@ export function computeIdentityWarnings(
  * Hook retournant les warnings UI de l’identité à partir des valeurs courantes.
  */
 export function useIdentityUiWarnings(
-  logoUrl: IdentityFormValues["logoUrl"],
+  logo: IdentityFormValues["logo"],
   faviconUrl: IdentityFormValues["faviconUrl"],
 ): IdentityWarningKey[] {
   return useMemo(
-    () => computeIdentityWarnings({ logoUrl, faviconUrl }),
-    [logoUrl, faviconUrl],
+    () => computeIdentityWarnings({ logo, faviconUrl }),
+    [logo, faviconUrl],
   );
 }

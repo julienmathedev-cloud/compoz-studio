@@ -13,20 +13,24 @@
 import type { SiteBlockSectionUi } from "@compoz/ui/site/site-ui.types";
 
 export const defaultBlockSectionUi: SiteBlockSectionUi = {
-  // ✅ Canonique : même cadre que header/footer
   containerContained: "w-full mx-auto max-w-screen-xl px-3 md:px-4 lg:px-6",
-
-  // Full bleed : sort du cadre, mais garde un rythme vertical
   containerFullBleed: "w-full",
 
-  // Grid : plus de inline → gap ici
+  // Espacement entre les rows d’un même block
+  rows: "space-y-6 md:space-y-8",
+
+  // Base de la row
   grid: "grid",
 
+  // Espacement entre colonnes
   gridCols: {
     1: "grid-cols-1",
     2: "grid-cols-1 md:grid-cols-2 gap-6",
-    3: "grid-cols-1 md:grid-cols-3 gap-4",
+    3: "grid-cols-1 md:grid-cols-3 gap-3 md:gap-4",
   },
+
+  // Espacement entre les cells dans une colonne
+  column: "flex min-w-0 flex-col gap-3 md:gap-4",
 
   cell: "min-w-0",
 } as const;

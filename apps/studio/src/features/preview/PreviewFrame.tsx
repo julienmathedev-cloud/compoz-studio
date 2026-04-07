@@ -5,17 +5,18 @@
  * @layer ui/studio/preview
  *
  * @description
- * Iframe de preview réutilisable (studio) avec toolbar (device, sync/reset).
+ * Iframe de preview réutilisable (studio) avec toolbar device-only.
  *
  * @remarks
  * - Gère un mode “empty preview” en pointant vers une route dédiée.
  * - Supporte deux stratégies d’ajustement : `responsive` et `scale`.
  * - Le rechargement de l’iframe est forcé quand `resolvedSrc` change.
+ * - La preview est désormais pensée pour fonctionner en live :
+ *   pas de boutons sync / reset dans cette toolbar.
  * - Strictement UI-only : aucune logique métier.
  */
 
 import {
-  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -26,14 +27,11 @@ import {
 
 import { useTranslations } from "next-intl";
 
-import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
 import { Heading } from "@compoz/studio/components/atoms/typography/Heading";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { SectionLoader } from "@compoz/studio/components/loading/SectionLoader";
 import { Button } from "@compoz/ui/components/ui/button";
 import { Card, CardContent } from "@compoz/ui/components/ui/card";
-import { Separator } from "@compoz/ui/components/ui/separator";
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { cn } from "@compoz/ui/lib/utils";
 import {
   ROW_BETWEEN,
@@ -41,13 +39,7 @@ import {
   STACK_SM,
   STUDIO_SHADOW_PANEL,
 } from "@compoz/ui/styles/studio/layout";
-import {
-  Monitor,
-  RefreshCw,
-  RotateCcw,
-  Smartphone,
-  Tablet,
-} from "lucide-react";
+import { Monitor, Smartphone, Tablet } from "lucide-react";
 
 export type PreviewDevice =
   | "mobile"
@@ -62,9 +54,6 @@ type PreviewFitMode = "responsive" | "scale";
 type PreviewFrameProps = Readonly<{
   title: string;
   src: string;
-  onSync?: () => void | Promise<void>;
-  onReset?: () => void | Promise<void>;
-  syncDisabled?: boolean;
   isBusy?: boolean;
   isLoading?: boolean;
   info?: ReactNode;
@@ -109,9 +98,6 @@ const DEVICE_ICON: Readonly<Record<PreviewDevice, ReactNode>> = {
 export function PreviewFrame({
   title,
   src,
-  onSync,
-  onReset,
-  syncDisabled,
   isBusy,
   isLoading,
   info,
@@ -173,6 +159,7 @@ export function PreviewFrame({
     });
 
     ro.observe(el);
+
     return () => ro.disconnect();
   }, []);
 
@@ -193,9 +180,6 @@ export function PreviewFrame({
     return Number.isFinite(next) ? next : 1;
   }, [availableWidth, deviceWidth, fitMode]);
 
-  const handleSync = useCallback(() => onSync?.(), [onSync]);
-  const handleReset = useCallback(() => onReset?.(), [onReset]);
-
   const uiDisabled = Boolean(isBusy || isLoading);
 
   return (
@@ -206,11 +190,12 @@ export function PreviewFrame({
         <Text>{t("studio.shared.preview.navDisabled")}</Text>
 
         <Card
-          variant="defaultStudio"
+          variant="default"
+          visualMode="studio"
           className={cn(STUDIO_SHADOW_PANEL, "p-0 shadow-accent")}
         >
           <CardContent className={cn(ROW_CENTER, "gap-1 p-1")}>
-            {availableDevices.map((currentDevice, index) => {
+            {availableDevices.map((currentDevice) => {
               const deviceLabel = t(
                 `studio.previewFrame.devices.${currentDevice}`,
               );
@@ -218,13 +203,11 @@ export function PreviewFrame({
 
               return (
                 <Button
-                  key={toStableUiKey(
-                    { keyId: currentDevice, label: deviceLabel },
-                    index,
-                  )}
+                  key={currentDevice}
                   type="button"
                   size="icon"
-                  variant={isActive ? "defaultStudio" : "ghostStudio"}
+                  variant={isActive ? "default" : "ghost"}
+                  visualMode="studio"
                   onClick={() => setDevice(currentDevice)}
                   disabled={uiDisabled}
                   aria-label={deviceLabel}
@@ -238,38 +221,6 @@ export function PreviewFrame({
                 </Button>
               );
             })}
-
-            {onReset || onSync ? (
-              <Separator orientation="vertical" className="h-10" />
-            ) : null}
-
-            {onReset ? (
-              <TooltipButton
-                type="button"
-                variant="ghostStudio"
-                size="icon"
-                onClick={handleReset}
-                disabled={uiDisabled}
-                tooltip={t("common.reset")}
-                aria-label={t("common.reset")}
-              >
-                <RotateCcw aria-hidden="true" />
-              </TooltipButton>
-            ) : null}
-
-            {onSync ? (
-              <TooltipButton
-                type="button"
-                variant="ghostStudio"
-                size="icon"
-                onClick={handleSync}
-                disabled={uiDisabled || Boolean(syncDisabled)}
-                tooltip={t("common.sync")}
-                aria-label={t("common.sync")}
-              >
-                <RefreshCw aria-hidden="true" />
-              </TooltipButton>
-            ) : null}
           </CardContent>
         </Card>
       </div>

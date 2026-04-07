@@ -11,6 +11,7 @@ import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type {
   BlockColumn,
   BlockRow,
+  BlockRowReverseOn,
   SectionBlock,
 } from "@compoz/core/domain/pages/entities/block";
 import type {
@@ -141,6 +142,16 @@ function resolveBlockName(value: string | undefined, position: number): string {
   return trimmed || `Bloc ${position}`;
 }
 
+function resolveRowReverseOn(
+  value: Partial<BlockRowReverseOn> | undefined,
+): BlockRowReverseOn {
+  return {
+    mobile: Boolean(value?.mobile),
+    tablet: Boolean(value?.tablet),
+    desktop: Boolean(value?.desktop),
+  };
+}
+
 function buildSectionRows(
   rows: ReadonlyArray<CreateSectionBlockRowInput>,
   idGenerator: IdGenerator,
@@ -148,6 +159,7 @@ function buildSectionRows(
   return rows.map((row) => ({
     id: ensureId(row.id, idGenerator),
     columnsCount: row.columnsCount,
+    reverseOn: resolveRowReverseOn(row.reverseOn),
     columns: buildSectionColumns(row.columns, idGenerator),
   }));
 }

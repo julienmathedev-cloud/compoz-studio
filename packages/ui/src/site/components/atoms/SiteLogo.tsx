@@ -8,7 +8,7 @@
  * Atome site : logo cliquable (SiteAppImage + Next/Link) avec garde-fous a11y et UI injectée.
  *
  * @remarks
- * - Rend `null` si `identity.logoUrl` est vide.
+ * - Rend `null` si `identity.logo` est vide.
  * - A11y :
  *   - Le lien porte un nom accessible (`aria-label`), l’image est décorative (`alt=""`).
  * - Preview iframe : logo non cliquable.
@@ -37,9 +37,9 @@ export type SiteLogoProps = Readonly<{
 
 export function SiteLogo({ identity, ui }: SiteLogoProps) {
   const pathname = usePathname() || "/";
-  const logoUrl = normalizeString(identity.logoUrl);
+  const logo = identity.logo;
 
-  if (!logoUrl) {
+  if (!logo || !normalizeString(logo.src)) {
     return null;
   }
 
@@ -50,14 +50,14 @@ export function SiteLogo({ identity, ui }: SiteLogoProps) {
   const logoImage = (
     <SiteAppImage
       image={{
-        src: logoUrl,
+        src: logo.src,
         alt: "",
-        width: 240,
-        height: 60,
+        width: logo.width,
+        height: logo.height,
       }}
       priority={false}
       fetchPriority="auto"
-      sizes="240px"
+      sizes={ui.sizes}
       className={cn(ui.image)}
     />
   );

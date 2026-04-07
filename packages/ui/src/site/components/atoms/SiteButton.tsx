@@ -28,11 +28,7 @@ import {
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 
-type SiteButtonVariant =
-  | "defaultVanilla"
-  | "secondaryVanilla"
-  | "outlineVanilla"
-  | "ghostVanilla";
+type SiteButtonVariant = "default" | "secondary" | "outline" | "ghost";
 
 export type SiteButtonProps = Readonly<{
   label: string;
@@ -44,7 +40,7 @@ export type SiteButtonProps = Readonly<{
 export function SiteButton({
   label,
   href,
-  variant = "defaultVanilla",
+  variant = "default",
   className,
 }: SiteButtonProps) {
   const pathname = usePathname() || "/";
@@ -56,6 +52,14 @@ export function SiteButton({
     return null;
   }
 
+  /**
+   * Bouton visuellement non cliquable uniquement pour les cas réellement invalides :
+   * - pas de href
+   * - href unsafe
+   *
+   * @remarks
+   * On ne l’utilise PAS pour la preview, afin de conserver les hover styles.
+   */
   const disabledButton = (
     <Button
       type="button"
@@ -68,11 +72,11 @@ export function SiteButton({
     </Button>
   );
 
-  if (!normalizedHref) {
+  const disableAllLinks = shouldDisableLinksInPreview(pathname);
+
+  if (!disableAllLinks && !normalizedHref) {
     return disabledButton;
   }
-
-  const disableAllLinks = shouldDisableLinksInPreview(pathname);
   const { special, external, rawExternal, unsafe } =
     resolveLinkFlags(normalizedHref);
 
@@ -86,8 +90,28 @@ export function SiteButton({
     return disabledButton;
   }
 
+  /**
+   * Preview Studio :
+   * - on autorise les ancres (#...) car elles restent dans la même page
+   * - on bloque toute autre navigation
+   * - MAIS on garde l’apparence normale du bouton (hover inclus)
+   */
   if (disableAllLinks && !isHashAnchor) {
-    return disabledButton;
+    return (
+      <Button asChild variant={variant} className={cn(className)}>
+        <a
+          href={normalizedHref}
+          aria-disabled="true"
+          data-preview-disabled="true"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+        >
+          {normalizedLabel}
+        </a>
+      </Button>
+    );
   }
 
   if (rawExternal || isHashAnchor) {

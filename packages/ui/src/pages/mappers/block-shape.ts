@@ -19,6 +19,7 @@
 import type { BlockDTO } from "@compoz/core/domain/pages/dto";
 
 import type {
+  BlockRowReverseOnShape,
   BlockShape,
   SectionBlockShape,
 } from "@compoz/validation/pages/blocks/block";
@@ -43,6 +44,19 @@ function normalizeName(input: unknown): string {
 
 function normalizeContainerMode(input: unknown): ContainerMode {
   return input === "fullBleed" ? "fullBleed" : "contained";
+}
+
+function normalizeReverseOn(input: unknown): BlockRowReverseOnShape {
+  const value =
+    input && typeof input === "object" && !Array.isArray(input)
+      ? (input as Partial<BlockRowReverseOnShape>)
+      : undefined;
+
+  return {
+    mobile: Boolean(value?.mobile),
+    tablet: Boolean(value?.tablet),
+    desktop: Boolean(value?.desktop),
+  };
 }
 
 function normalizeColumn(
@@ -74,6 +88,7 @@ function normalizeRow(
   return {
     id: String(row?.id ?? "").trim(),
     columnsCount,
+    reverseOn: normalizeReverseOn(row?.reverseOn),
     columns: normalizeColumns(row?.columns, columnsCount),
   };
 }
@@ -143,7 +158,10 @@ export function toSectionBlockShapeFromDTO(
     lcpPriority:
       typeof block.lcpPriority === "boolean" ? block.lcpPriority : false,
     rows: Array.isArray(block.rows)
-      ? (block.rows as SectionBlockShape["rows"])
+      ? block.rows.map((row) => ({
+          ...row,
+          reverseOn: normalizeReverseOn(row?.reverseOn),
+        }))
       : [],
   };
 }

@@ -11,7 +11,7 @@
  * - Le chargement initial est géré par `SettingsSection` (shell).
  * - Monte `usePrimaryMenuSettings` (baseline + save) et câble `PrimaryMenuForm`.
  * - Affiche les warnings non bloquants (via `PrimaryMenuForm` + `computePrimaryMenuWarnings` au submit).
- * - La preview `/preview/primary-menu` consomme le scope `primaryMenu` (draft possible).
+ * - La preview `/preview/primary-menu` consomme le scope `primaryMenu` en mise à jour live.
  * - Strictement UI-only : aucune logique métier.
  */
 
@@ -42,22 +42,34 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
   const { confirmSaveDespiteWarnings } = useStudioSaveDespiteWarningsConfirm();
 
   const [isDirty, setIsDirty] = useState(false);
+  const [warningKeys, setWarningKeys] = useState<PrimaryMenuWarningKey[]>([]);
+  const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
+  const [previewDraft, setPreviewDraft] =
+    useState<PrimaryMenuSettingsShape | null>(null);
 
   // Hook settings : modèle UI (RHF).
   const { baseline, isLoading, isSaving, save } = usePrimaryMenuSettings();
 
-  const [previewMode, setPreviewMode] = useState<"baseline" | "override">(
-    "baseline",
-  );
+  /**
+   * Baseline preview :
+   * - conversion directe de la baseline RHF en shape runtime
+   */
+  const baselinePreview = useMemo<PrimaryMenuSettingsShape>(() => {
+    return toPrimaryMenuSettingsShapeFromFormValues(baseline);
+  }, [baseline]);
 
-  // Pont UI → Preview/Public : RHF (UI) → SettingsShape (preview).
-  const baselinePreview = useMemo<PrimaryMenuSettingsShape>(
-    () => toPrimaryMenuSettingsShapeFromFormValues(baseline),
-    [baseline],
-  );
+  /**
+   * Valeur affichée dans la preview :
+   * - draft live si le form change
+   * - sinon baseline persistée
+   */
+  const previewValue = previewDraft ?? baselinePreview;
 
-  const { ready, frame, setBaseline, setDraft, iframeRef } =
-    useStudioPreview<PrimaryMenuSettingsShape>("primaryMenu", baselinePreview);
+  const { ready, frame, iframeRef } =
+    useStudioPreview<PrimaryMenuSettingsShape>("primaryMenu", {
+      baseline: previewValue,
+      liveEnabled: true,
+    });
 
   /**
    * internalPageOptions : via hook SoT (plus de mapping local depuis useReadSiteIndex)
@@ -80,44 +92,25 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
     return set;
   }, [internalPageOptions]);
 
-  // Warnings UI (non bloquants).
-  const [warningKeys, setWarningKeys] = useState<PrimaryMenuWarningKey[]>([]);
-  const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
-
   // Preview empty/loader
-  const dataReady = !isLoading && baseline != null;
+  const dataReady = !isLoading;
   const isEmpty = dataReady && (baseline?.items?.length ?? 0) === 0;
 
   const emptyLabel = t("studio.emptyPreview.primaryMenu");
 
-  // Preview loading : on attend la baseline primaryMenu + le handshake du scope principal.
-  // si empty => pas de loader
   const isPreviewLoading =
-    !isEmpty &&
-    (isLoading || baseline == null || !ready.isReady("primaryMenu"));
-
-  const handlePreviewSync = useCallback(() => {
-    frame.onSync();
-    setPreviewMode("override");
-  }, [frame]);
-
-  const handlePreviewReset = useCallback(() => {
-    frame.onReset();
-    setPreviewMode("baseline");
-  }, [frame]);
+    !isEmpty && (isLoading || !ready.isReady("primaryMenu"));
 
   // Submit : confirmation si warnings + save.
   const handleSubmit = useCallback(
     async (values: PrimaryMenuFormValues) => {
       if (isLoading || isSaving) return;
 
-      // 1) Warnings recalculés au submit (source de vérité).
       const warningKeysNow = computePrimaryMenuWarnings({
         items: values.items ?? [],
         hrefSet,
       });
 
-      // 2) Confirmation si warnings.
       const ok = await confirmSaveDespiteWarnings(
         warningKeysNow,
         "studio.primaryMenuSection.warnings",
@@ -125,12 +118,9 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
 
       if (!ok) return;
 
-      // 3) Save.
       await save(values);
-      const nextBaseline = toPrimaryMenuSettingsShapeFromFormValues(values);
-      setBaseline<PrimaryMenuSettingsShape>("primaryMenu", nextBaseline);
-      frame.onReset();
-      setPreviewMode("baseline");
+
+      setPreviewDraft(null);
       setIsDirty(false);
       onDirtyChange?.(false);
     },
@@ -141,8 +131,6 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
       hrefSet,
       save,
       onDirtyChange,
-      frame,
-      setBaseline,
     ],
   );
 
@@ -173,14 +161,14 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
         onSubmit={handleSubmit}
         onReset={() => {
           setWarningKeys([]);
-          // Reset preview sur la baseline (SettingsShape).
-          setDraft(baselinePreview);
-          handlePreviewReset();
+          setBlockingErrorsCount(0);
+          setIsDirty(false);
+          setPreviewDraft(null);
+          onDirtyChange?.(false);
         }}
         onWarningKeysChange={setWarningKeys}
         onValuesChange={(values) => {
-          // Live preview : RHF (UI) → SettingsShape.
-          setDraft(toPrimaryMenuSettingsShapeFromFormValues(values));
+          setPreviewDraft(toPrimaryMenuSettingsShapeFromFormValues(values));
         }}
         onBlockingErrorsCountChange={setBlockingErrorsCount}
         onDirtyChange={(dirty) => {
@@ -196,9 +184,6 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
         src="/preview/primary-menu"
         iframeRef={iframeRef}
         onLoad={frame.onLoad}
-        onSync={handlePreviewSync}
-        onReset={handlePreviewReset}
-        syncDisabled={frame.syncDisabled}
         isLoading={isPreviewLoading}
         isEmpty={isEmpty}
         emptyLabel={emptyLabel}
@@ -206,9 +191,7 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
         info={
           isEmpty
             ? t("studio.emptyPreview.primaryMenu")
-            : previewMode === "override"
-              ? t("studio.shared.preview.infoOverride")
-              : t("studio.shared.preview.infoBaseline")
+            : t("studio.shared.preview.infoLive")
         }
       />
     </SettingsSection>

@@ -381,7 +381,10 @@ export function PageBlocksListSection({
   }, [orderedBlocks, page]);
 
   const { ready, setBaseline, frame, iframeRef } =
-    useStudioPreview<PageRenderShape>(previewScope, pageBaselinePreview);
+    useStudioPreview<PageRenderShape>(previewScope, {
+      baseline: pageBaselinePreview,
+      liveEnabled: false,
+    });
 
   const hasAllBaselines =
     settingsBundle != null &&
@@ -608,7 +611,8 @@ export function PageBlocksListSection({
       <Button
         asChild
         type="button"
-        variant="outlineStudio"
+        variant="outline"
+        visualMode="studio"
         size="sm"
         className="gap-2"
         aria-label={t("studio.pageBlocksListSection.bloc.back")}
@@ -635,7 +639,7 @@ export function PageBlocksListSection({
         </Link>
       </Button>
 
-      <Card variant="panelStudio">
+      <Card variant="panel" visualMode="studio">
         <CardContent className="flex flex-col gap-2">
           {orderedBlocks.length > 0 ? (
             <DndContext
@@ -699,7 +703,7 @@ export function PageBlocksListSection({
         disabled={orderedChildren.length === 0}
       >
         {orderedChildren.length > 0 ? (
-          <Card variant="panelStudio">
+          <Card variant="panel" visualMode="studio">
             <CardContent>
               <Text as="p" variant="muted">
                 {t("studio.pageForm.childrens.help")}
@@ -774,7 +778,6 @@ export function PageBlocksListSection({
         src={`/preview/pages/${slug}`}
         iframeRef={iframeRef}
         onLoad={frame.onLoad}
-        syncDisabled
         isLoading={isPreviewLoading}
         isEmpty={isEmpty}
         emptyLabel={emptyLabel}

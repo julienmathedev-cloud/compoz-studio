@@ -36,6 +36,31 @@ export type BlockType = "section";
 export type SectionBlockContainerMode = "contained" | "fullBleed";
 
 /**
+ * Breakpoints sur lesquels l’ordre visuel d’une row peut être inversé.
+ *
+ * @remarks
+ * - `mobile` : petit viewport, empilement vertical prioritaire
+ * - `tablet` : viewport intermédiaire
+ * - `desktop` : viewport large
+ */
+export interface BlockRowReverseOn {
+  /**
+   * Inverse l’ordre visuel des colonnes sur mobile.
+   */
+  mobile: boolean;
+
+  /**
+   * Inverse l’ordre visuel des colonnes sur tablette.
+   */
+  tablet: boolean;
+
+  /**
+   * Inverse l’ordre visuel des colonnes sur desktop.
+   */
+  desktop: boolean;
+}
+
+/**
  * Row d'une section.
  *
  * Une row définit une ligne horizontale contenant
@@ -47,6 +72,16 @@ export interface BlockRow {
 
   /** Nombre de colonnes dans la row. */
   columnsCount: 1 | 2 | 3;
+
+  /**
+   * Configuration responsive d’inversion d’ordre des colonnes.
+   *
+   * @remarks
+   * - utile pour conserver un ordre de lecture naturel selon le viewport,
+   * - l’intention est purement layout,
+   * - les valeurs par défaut sont `false` sur tous les breakpoints.
+   */
+  reverseOn: BlockRowReverseOn;
 
   /**
    * Colonnes de la row.

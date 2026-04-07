@@ -19,6 +19,20 @@ export interface UserMeta {
 }
 
 /**
+ * Métadonnées de sandbox démo associées à un utilisateur temporaire.
+ *
+ * Remarques :
+ * - Présent uniquement pour les utilisateurs de démo.
+ * - `demoInstanceId` permet de rattacher le user à une sandbox isolée.
+ * - `expiresAt` permet de déterminer si la sandbox est encore valide.
+ */
+export interface UserDemoMeta {
+  readonly isDemo: boolean;
+  readonly demoInstanceId: string;
+  readonly expiresAt: string;
+}
+
+/**
  * RBAC + multi-tenant associé à un utilisateur.
  *
  * Remarques :
@@ -37,6 +51,7 @@ export interface UserRbac {
  * Notes :
  * - Le mot de passe n'appartient pas au domaine (stockage/crypto = infra).
  * - L'email est canonisé en lower-case côté infra/validation.
+ * - `demo` est présent uniquement pour les utilisateurs créés pour une sandbox démo.
  */
 export interface User {
   readonly id: string;
@@ -45,6 +60,7 @@ export interface User {
   readonly status: UserStatus;
   readonly rbac: UserRbac;
   readonly meta: UserMeta;
+  readonly demo?: UserDemoMeta;
 }
 
 export type UserSummary = Pick<User, "id" | "email" | "name" | "status">;

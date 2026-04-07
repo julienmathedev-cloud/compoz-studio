@@ -36,7 +36,8 @@ export function SiteNotFoundClient() {
       actions={
         <Button
           asChild
-          variant="outlineVanilla"
+          variant="outline"
+          visualMode="vanilla"
           className={cn(ui.systemPage?.button)}
         >
           <Link href={homeHref} className="no-underline">

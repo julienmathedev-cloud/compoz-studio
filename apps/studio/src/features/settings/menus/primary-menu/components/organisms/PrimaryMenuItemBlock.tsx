@@ -15,6 +15,10 @@
  * - Ce composant factorise uniquement le rendu et les callbacks locaux d’un item parent.
  * - Le formulaire parent reste l’orchestrateur RHF global (`useForm`, `useFieldArray`, warnings, submit, reset, etc.).
  * - Les rows spécialisées (`PrimaryMenuParentRow`, `PrimaryMenuChildRow`) restent séparées.
+ * - Les enfants utilisent désormais `id` comme identifiant métier stable :
+ *   - clés React
+ *   - drag and drop
+ *   - stabilité du reorder sans dépendre de l’index
  */
 
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
@@ -22,7 +26,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Fragment, useCallback } from "react";
+import { Fragment, useCallback, useMemo } from "react";
 import type { Control, UseFormSetFocus, UseFormTrigger } from "react-hook-form";
 
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
@@ -90,7 +94,7 @@ export function PrimaryMenuItemBlock({
   isSortingParents,
 }: PrimaryMenuItemBlockProps) {
   const parentIdPrefix = `${formIdPrefix}-parent-${pIdx}`;
-  const children = parent.children ?? [];
+  const children = useMemo(() => parent.children ?? [], [parent.children]);
 
   const handleChildDragEnd = useCallback(
     async (event: DragEndEvent) => {
@@ -99,12 +103,11 @@ export function PrimaryMenuItemBlock({
       if (!over || active.id === over.id) return;
       if (disabled || isSortingParents) return;
 
-      const oldIndex = children.findIndex(
-        (_, index) => `pm-child-${pIdx}-${index}` === active.id,
-      );
-      const newIndex = children.findIndex(
-        (_, index) => `pm-child-${pIdx}-${index}` === over.id,
-      );
+      const activeId = String(active.id);
+      const overId = String(over.id);
+
+      const oldIndex = children.findIndex((child) => child.id === activeId);
+      const newIndex = children.findIndex((child) => child.id === overId);
 
       if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return;
 
@@ -131,17 +134,17 @@ export function PrimaryMenuItemBlock({
       onDragEnd={handleChildDragEnd}
     >
       <SortableContext
-        items={children.map((_, cIdx) => `pm-child-${pIdx}-${cIdx}`)}
+        items={children.map((child) => child.id)}
         strategy={verticalListSortingStrategy}
       >
         <ul className={cn(STACK_MD)}>
-          {children.map((_, cIdx) => {
+          {children.map((child, cIdx) => {
             const childIdPrefix = `${formIdPrefix}-child-${pIdx}-${cIdx}`;
 
             return (
               <PrimaryMenuChildRow
-                key={`pm-child-${pIdx}-${cIdx}`}
-                sortableId={`pm-child-${pIdx}-${cIdx}`}
+                key={child.id}
+                sortableId={child.id}
                 pIdx={pIdx}
                 cIdx={cIdx}
                 control={control}

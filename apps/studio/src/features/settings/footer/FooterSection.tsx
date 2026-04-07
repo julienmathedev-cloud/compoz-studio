@@ -11,7 +11,9 @@
  * - Le chargement initial est géré par `SettingsSection` (shell).
  * - Monte `useFooterSettings` (baseline + save) et câble `FooterForm`.
  * - Affiche les warnings non bloquants (via `FooterForm` + `computeFooterWarnings` au submit).
- * - La preview `/preview/footer` consomme deux scopes : `footer` (draft possible) et `legalMenu` (baseline-only).
+ * - La preview `/preview/footer` consomme deux scopes :
+ *   - `footer` en live
+ *   - `legalMenu` en baseline-only
  * - Strictement UI-only : aucune logique métier.
  */
 
@@ -44,18 +46,17 @@ const lg = log.child({ ns: "ui", area: "studio", name: "FooterSection" });
 export function FooterSection() {
   const t = useTranslations();
   const { confirmSaveDespiteWarnings } = useStudioSaveDespiteWarningsConfirm();
-
   const dirtyGuard = useStudioDirtyGuard();
 
-  // Hook settings : modèle UI (RHF).
   const { baseline, isLoading, isSaving, save } = useFooterSettings();
 
-  // Baseline du menu légal : injectée dans la preview `/preview/footer` (baseline-only).
   const { data: settingsBundle, isLoading: isLoadingSettingsBundle } =
     useSettingsBundle(DEFAULT_CONTENT_STATE);
 
-  const [previewMode, setPreviewMode] = useState<"baseline" | "override">(
-    "baseline",
+  const [warningKeys, setWarningKeys] = useState<FooterWarningKey[]>([]);
+  const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
+  const [previewDraft, setPreviewDraft] = useState<FooterSettingsShape | null>(
+    null,
   );
 
   useEffect(() => {
@@ -64,56 +65,44 @@ export function FooterSection() {
       isSaving,
       hasBaseline: Boolean(baseline),
       baseline,
+      hasSettingsBundle: Boolean(settingsBundle),
+      isLoadingSettingsBundle,
     });
-  }, [isLoading, isSaving, baseline]);
+  }, [isLoading, isSaving, baseline, settingsBundle, isLoadingSettingsBundle]);
 
-  // ✅ Badges section : compteur d’erreurs bloquantes (remonté par le form).
-  const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
+  /**
+   * Baseline footer pour la preview.
+   * On garde toujours une shape runtime dérivée de la baseline RHF.
+   */
+  const baselinePreview = useMemo<FooterSettingsShape>(() => {
+    return toFooterSettingsShapeFromFormValues(baseline);
+  }, [baseline]);
 
-  // Pont UI → Preview/Public : RHF (UI) → SettingsShape (preview).
-  const baselinePreview = useMemo<FooterSettingsShape>(
-    () => toFooterSettingsShapeFromFormValues(baseline),
-    [baseline],
-  );
+  /**
+   * Valeur réellement injectée dans la preview pour le scope `footer` :
+   * - draft live si le form bouge
+   * - sinon baseline persistée
+   */
+  const previewValue = previewDraft ?? baselinePreview;
 
-  // Pont UI → Preview/Public : legalMenu baseline-only.
+  /**
+   * legalMenu reste en baseline-only pour la preview footer.
+   */
   const legalMenuBaselinePreview =
     useMemo<LegalMenuSettingsShape | null>(() => {
       if (!settingsBundle) return null;
       return toLegalMenuSettingsShapeFromDTO(settingsBundle.legalMenu);
     }, [settingsBundle]);
 
-  const { ready, setBaseline, setDraft, frame, iframeRef } =
-    useStudioPreview<FooterSettingsShape>("footer", baselinePreview);
+  const { ready, setBaseline, frame, iframeRef } =
+    useStudioPreview<FooterSettingsShape>("footer", {
+      baseline: previewValue,
+      liveEnabled: true,
+    });
 
   /**
-   * ✅ Empty state (dans l’iframe) :
-   * - On ne l’active qu’une fois que les chargements “data” sont terminés.
-   * - Si une baseline requise est absente => on affiche un empty preview au lieu d’un écran blanc.
+   * Scope baseline-only : legalMenu
    */
-  const dataReady = !isLoading && !isLoadingSettingsBundle;
-  const isEmpty =
-    dataReady &&
-    (baseline == null ||
-      settingsBundle == null ||
-      legalMenuBaselinePreview == null);
-
-  const emptyLabel = t("studio.emptyPreview.footer");
-
-  // Preview loading :
-  // - ⚠️ ne pas tester `baselinePreview` (il peut exister même si `baseline` est null/undefined)
-  // - on teste les baselines brutes + handshake scopes.
-  // - ✅ IMPORTANT : si on est en empty, on ne veut pas rester bloqué en loading.
-  const isPreviewLoading =
-    !isEmpty &&
-    (isLoading ||
-      isLoadingSettingsBundle ||
-      baseline == null ||
-      settingsBundle == null ||
-      legalMenuBaselinePreview == null ||
-      !ready.isReady("footer") ||
-      !ready.isReady("legalMenu"));
-
   useStudioPreviewBaselineScope<LegalMenuSettingsShape>({
     scope: "legalMenu",
     baseline: legalMenuBaselinePreview,
@@ -126,30 +115,31 @@ export function FooterSection() {
     },
   });
 
-  const handlePreviewSync = useCallback(() => {
-    frame.onSync();
-    setPreviewMode("override");
-  }, [frame]);
+  /**
+   * Empty state :
+   * - on attend que les données dépendantes soient chargées
+   * - si une baseline nécessaire manque, on passe en empty
+   */
+  const dataReady = !isLoading && !isLoadingSettingsBundle;
 
-  const handlePreviewReset = useCallback(() => {
-    frame.onReset();
-    setPreviewMode("baseline");
-  }, [frame]);
+  const isEmpty = dataReady && legalMenuBaselinePreview == null;
 
-  // Warnings UI (non bloquants).
+  const emptyLabel = t("studio.emptyPreview.footer");
 
-  // Warnings live dérivés des valeurs RHF (affichage uniquement).
-  const [warningKeys, setWarningKeys] = useState<FooterWarningKey[]>([]);
+  const isPreviewLoading =
+    !isEmpty &&
+    (isLoading ||
+      isLoadingSettingsBundle ||
+      legalMenuBaselinePreview == null ||
+      !ready.isReady("footer") ||
+      !ready.isReady("legalMenu"));
 
-  // Submit : confirmation si warnings + save.
   const handleSubmit = useCallback(
     async (values: FooterFormValues) => {
       if (isLoading || isSaving) return;
 
-      // 1) Warnings recalculés au submit (source de vérité).
       const warningKeysNow = computeFooterWarnings(values);
 
-      // 2) Confirmation si warnings.
       const ok = await confirmSaveDespiteWarnings(
         warningKeysNow,
         "studio.footerSection.warnings",
@@ -157,23 +147,11 @@ export function FooterSection() {
 
       if (!ok) return;
 
-      // 3) Save.
       await save(values);
       dirtyGuard.setDirty(false);
-      const nextBaselinePreview = toFooterSettingsShapeFromFormValues(values);
-      setBaseline<FooterSettingsShape>("footer", nextBaselinePreview);
-      frame.onReset();
-      setPreviewMode("baseline");
+      setPreviewDraft(null);
     },
-    [
-      confirmSaveDespiteWarnings,
-      isLoading,
-      isSaving,
-      dirtyGuard,
-      save,
-      setBaseline,
-      frame,
-    ],
+    [confirmSaveDespiteWarnings, isLoading, isSaving, dirtyGuard, save],
   );
 
   return (
@@ -182,7 +160,7 @@ export function FooterSection() {
       title={t("studio.footerSection.section.title")}
       description={t("studio.footerSection.section.description")}
       isBusy={isSaving}
-      isLoading={isLoading}
+      isLoading={isLoading || isLoadingSettingsBundle}
       isDirty={dirtyGuard.isDirty}
       blockingErrorsCount={blockingErrorsCount}
     >
@@ -201,14 +179,11 @@ export function FooterSection() {
           setWarningKeys([]);
           setBlockingErrorsCount(0);
           dirtyGuard.setDirty(false);
-          // Reset preview sur la baseline (SettingsShape).
-          setDraft(baselinePreview);
-          handlePreviewReset();
+          setPreviewDraft(null);
         }}
         onWarningKeysChange={setWarningKeys}
         onValuesChange={(values) => {
-          // Live preview : RHF (UI) → SettingsShape.
-          setDraft(toFooterSettingsShapeFromFormValues(values));
+          setPreviewDraft(toFooterSettingsShapeFromFormValues(values));
         }}
         onBlockingErrorsCountChange={setBlockingErrorsCount}
         onDirtyChange={dirtyGuard.setDirty}
@@ -221,9 +196,6 @@ export function FooterSection() {
         src="/preview/footer"
         iframeRef={iframeRef}
         onLoad={frame.onLoad}
-        onSync={handlePreviewSync}
-        onReset={handlePreviewReset}
-        syncDisabled={frame.syncDisabled}
         isLoading={isPreviewLoading}
         isEmpty={isEmpty}
         emptyLabel={emptyLabel}
@@ -231,9 +203,7 @@ export function FooterSection() {
         info={
           isEmpty
             ? t("studio.emptyPreview.footer")
-            : previewMode === "override"
-              ? t("studio.shared.preview.infoOverride")
-              : t("studio.shared.preview.infoBaseline")
+            : t("studio.shared.preview.infoLive")
         }
       />
     </SettingsSection>

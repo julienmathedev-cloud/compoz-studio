@@ -15,11 +15,12 @@
  * @remarks
  * - Utilise `useStudioPreview` pour piloter l’iframe et le bridge preview.
  * - Injecte chaque baseline via `useStudioPreviewBaselineScope`.
+ * - La preview fonctionne en live : plus de mode baseline/override ni de boutons sync/reset.
  * - Strictement UI-only : aucune logique métier.
  */
 
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
@@ -74,10 +75,6 @@ export function ThemePreviewCard({
   isLoadingTheme = false,
 }: ThemePreviewCardProps) {
   const t = useTranslations();
-
-  const [previewMode, setPreviewMode] = useState<"baseline" | "override">(
-    "baseline",
-  );
 
   /* ---------------------------------------------------------------------- */
   /* Settings baselines (shell public)                                      */
@@ -183,7 +180,10 @@ export function ThemePreviewCard({
   /* ---------------------------------------------------------------------- */
 
   const { ready, setBaseline, iframeRef, frame } =
-    useStudioPreview<PageRenderShape>(previewScope, pageBaselinePreview);
+    useStudioPreview<PageRenderShape>(previewScope, {
+      baseline: pageBaselinePreview,
+      liveEnabled: true,
+    });
 
   useStudioPreviewBaselineScope<ThemeSettingsShape>({
     scope: "theme",
@@ -269,16 +269,6 @@ export function ThemePreviewCard({
     ready,
   ]);
 
-  const handlePreviewSync = () => {
-    frame.onSync();
-    setPreviewMode("override");
-  };
-
-  const handlePreviewReset = () => {
-    frame.onReset();
-    setPreviewMode("baseline");
-  };
-
   const isIndexReady = !isLoadingIndex && Boolean(siteIndex);
   const hasHome = Boolean(homePageId);
 
@@ -318,9 +308,6 @@ export function ThemePreviewCard({
       src={`/preview/pages/${slug}`}
       iframeRef={iframeRef}
       onLoad={frame.onLoad}
-      onSync={handlePreviewSync}
-      onReset={handlePreviewReset}
-      syncDisabled={frame.syncDisabled}
       isLoading={isPreviewLoading}
       heightClassName="h-[800px]"
       isEmpty={isEmpty}
@@ -328,9 +315,7 @@ export function ThemePreviewCard({
       info={
         isEmpty
           ? t("studio.emptyPreview.homeMissing")
-          : previewMode === "override"
-            ? t("studio.shared.preview.infoOverride")
-            : t("studio.shared.preview.infoBaseline")
+          : t("studio.shared.preview.infoLive")
       }
     />
   );

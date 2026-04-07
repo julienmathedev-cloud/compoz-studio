@@ -55,7 +55,6 @@ export function ThemeFontSelectField({
       error={error}
       invalid={invalid}
       disabled={disabled}
-      renderValue={(item) => item.label}
     />
   );
 }

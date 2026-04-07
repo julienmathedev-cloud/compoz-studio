@@ -13,6 +13,10 @@
  * - Le reorder est géré par drag and drop via dnd-kit.
  * - L’affichage des erreurs repose sur une règle unique :
  *   `showError || fieldState.isTouched`.
+ * - La lecture/édition des valeurs passe par RHF (`useController`).
+ * - `sortableId` sert uniquement au drag and drop.
+ * - `watchedItem` sert de fallback visuel pour stabiliser le rendu
+ *   pendant le rebinding RHF après reorder.
  */
 
 import { useSortable } from "@dnd-kit/sortable";
@@ -22,6 +26,8 @@ import type { Control } from "react-hook-form";
 import { useController } from "react-hook-form";
 
 import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
+import { Text } from "@compoz/studio/components/atoms/typography/Text";
+import { IconPicker } from "@compoz/studio/components/molecules/fields/IconPicker";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
 import { DragHandle } from "@compoz/studio/features/dnd/DragHandle";
@@ -42,7 +48,8 @@ export type CardsExtendedItemEditorProps = Readonly<{
   basePath: CardsExtendedFieldBasePath;
   index: number;
   idPrefix: string;
-  value: CardsExtendedItemFormValues;
+  sortableId: string;
+  watchedItem?: CardsExtendedItemFormValues;
   disabled?: boolean;
   canRemove?: boolean;
   onRemove: () => void;
@@ -54,7 +61,8 @@ export function CardExtendedItemEditor({
   basePath,
   index,
   idPrefix,
-  value,
+  sortableId,
+  watchedItem,
   disabled = false,
   canRemove = true,
   onRemove,
@@ -68,26 +76,31 @@ export function CardExtendedItemEditor({
   const titleCtrl = useController({
     name: `${itemBasePath}.title` as `${CardsExtendedItemBasePath}.title`,
     control,
+    defaultValue: watchedItem?.title ?? "",
   });
 
   const descriptionCtrl = useController({
     name: `${itemBasePath}.description` as `${CardsExtendedItemBasePath}.description`,
     control,
+    defaultValue: watchedItem?.description ?? "",
   });
 
   const iconCtrl = useController({
     name: `${itemBasePath}.icon` as `${CardsExtendedItemBasePath}.icon`,
     control,
+    defaultValue: watchedItem?.icon ?? null,
   });
 
   const footerCtrl = useController({
     name: `${itemBasePath}.footer` as `${CardsExtendedItemBasePath}.footer`,
     control,
+    defaultValue: watchedItem?.footer ?? "",
   });
 
   const bulletsCtrl = useController({
     name: `${itemBasePath}.bullets` as `${CardsExtendedItemBasePath}.bullets`,
     control,
+    defaultValue: watchedItem?.bullets ?? [],
   });
 
   const {
@@ -98,13 +111,12 @@ export function CardExtendedItemEditor({
     transition,
     isDragging,
   } = useSortable({
-    id: value.id,
+    id: sortableId,
     disabled,
   });
 
   const titleIds = createFieldIds(idPrefix, "title");
   const descriptionIds = createFieldIds(idPrefix, "description");
-  const iconIds = createFieldIds(idPrefix, "icon");
   const footerIds = createFieldIds(idPrefix, "footer");
   const bulletsIds = createFieldIds(idPrefix, "bullets");
 
@@ -129,9 +141,24 @@ export function CardExtendedItemEditor({
       ? String(descriptionCtrl.fieldState.error.message)
       : undefined;
 
-  const bulletsValue = Array.isArray(bulletsCtrl.field.value)
-    ? bulletsCtrl.field.value.join("\n")
-    : "";
+  const titleValue = String(titleCtrl.field.value ?? watchedItem?.title ?? "");
+  const descriptionValue = String(
+    descriptionCtrl.field.value ?? watchedItem?.description ?? "",
+  );
+  const footerValue = String(
+    footerCtrl.field.value ?? watchedItem?.footer ?? "",
+  );
+
+  const bulletsArray = Array.isArray(bulletsCtrl.field.value)
+    ? bulletsCtrl.field.value
+    : Array.isArray(watchedItem?.bullets)
+      ? watchedItem.bullets
+      : [];
+
+  const bulletsValue = bulletsArray.join("\n");
+
+  const iconValue: string | null =
+    iconCtrl.field.value ?? watchedItem?.icon ?? null;
 
   const style = {
     transform: transform ? CSS.Transform.toString(transform) : undefined,
@@ -142,7 +169,8 @@ export function CardExtendedItemEditor({
     <Card
       ref={setNodeRef}
       style={style}
-      variant="defaultStudio"
+      variant="default"
+      visualMode="studio"
       className={cn("relative h-full", STACK_MD, isDragging && "opacity-60")}
     >
       <CardContent>
@@ -170,7 +198,7 @@ export function CardExtendedItemEditor({
               label={t(
                 "studio.cellEditorTabs.cardsExtendedCellEditor.titleLabel",
               )}
-              value={String(titleCtrl.field.value ?? "")}
+              value={titleValue}
               onChange={(next) => {
                 titleCtrl.field.onChange(next);
               }}
@@ -191,7 +219,7 @@ export function CardExtendedItemEditor({
               label={t(
                 "studio.cellEditorTabs.cardsExtendedCellEditor.descriptionLabel",
               )}
-              value={String(descriptionCtrl.field.value ?? "")}
+              value={descriptionValue}
               onChange={(next) => {
                 descriptionCtrl.field.onChange(next);
               }}
@@ -216,7 +244,6 @@ export function CardExtendedItemEditor({
               value={bulletsValue}
               onChange={(next) => {
                 const parsedBullets = next.split("\n");
-
                 bulletsCtrl.field.onChange(parsedBullets);
               }}
               onBlur={bulletsCtrl.field.onBlur}
@@ -236,7 +263,7 @@ export function CardExtendedItemEditor({
               label={t(
                 "studio.cellEditorTabs.cardsExtendedCellEditor.footerLabel",
               )}
-              value={String(footerCtrl.field.value ?? "")}
+              value={footerValue}
               onChange={(next) => {
                 footerCtrl.field.onChange(next);
               }}
@@ -250,23 +277,23 @@ export function CardExtendedItemEditor({
               )}
             />
 
-            <InputField
-              ids={iconIds}
-              inputRef={iconCtrl.field.ref}
-              label={t(
-                "studio.cellEditorTabs.cardsExtendedCellEditor.iconLabel",
-              )}
-              value={String(iconCtrl.field.value ?? "")}
-              onChange={(next) => {
-                iconCtrl.field.onChange(next);
-              }}
-              onBlur={iconCtrl.field.onBlur}
-              disabled={disabled}
-              placeholder={t(
-                "studio.cellEditorTabs.cardsExtendedCellEditor.iconPlaceholder",
-              )}
-              help={t("studio.cellEditorTabs.cardsExtendedCellEditor.iconHelp")}
-            />
+            <div className={cn(STACK_MD)}>
+              <Text as="p">
+                {t("studio.cellEditorTabs.cardsExtendedCellEditor.iconLabel")}
+              </Text>
+
+              <IconPicker
+                value={iconValue}
+                onChange={(next) => {
+                  iconCtrl.field.onChange(next);
+                }}
+                disabled={disabled}
+              />
+
+              <Text as="p" variant="meta">
+                {t("studio.cellEditorTabs.cardsExtendedCellEditor.iconHelp")}
+              </Text>
+            </div>
           </div>
         </div>
       </CardContent>

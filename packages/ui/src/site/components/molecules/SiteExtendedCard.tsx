@@ -5,17 +5,9 @@
  * @description
  * Carte étendue utilisée pour afficher des contenus riches
  * dans les cells `cardsExtended`.
- *
- * @remarks
- * - UI-only.
- * - Utilisé par `CardsExtendedCellRenderer`.
- * - Supporte :
- *   - icon
- *   - title
- *   - description
- *   - bullets
- *   - footer
  */
+
+import type { ReactNode } from "react";
 
 import {
   Card,
@@ -25,14 +17,16 @@ import {
   CardTitle,
 } from "@compoz/ui/components/ui/card";
 import { cn } from "@compoz/ui/lib/utils";
+import type { SiteCardsExtendedUi } from "@compoz/ui/site/site-ui.types";
 
 export type SiteExtendedCardProps = Readonly<{
   title: string;
   description?: string;
-  icon?: string;
+  icon?: ReactNode;
   bullets?: readonly string[];
   footer?: string;
   align?: "left" | "center";
+  ui: SiteCardsExtendedUi;
   className?: string;
 }>;
 
@@ -43,54 +37,33 @@ export function SiteExtendedCard({
   bullets,
   footer,
   align = "left",
+  ui,
   className,
 }: SiteExtendedCardProps) {
-  const isCentered = align === "center";
-
   return (
-    <Card className={cn("h-full", className)}>
-      <CardHeader
-        className={cn(
-          "flex flex-col gap-2",
-          isCentered && "items-center text-center",
-        )}
-      >
-        {icon ? <div className="text-2xl">{icon}</div> : null}
+    <Card className={cn(ui.card, className)}>
+      <CardHeader className={cn(ui.header, ui.align[align])}>
+        <div className={cn(ui.headerTop, ui.align[align])}>
+          {icon ? <div aria-hidden="true">{icon}</div> : null}
 
-        <CardTitle>{title}</CardTitle>
+          <CardTitle className={ui.title}>{title}</CardTitle>
+        </div>
       </CardHeader>
 
-      <CardContent
-        className={cn(
-          "flex flex-col gap-3",
-          isCentered && "items-center text-center",
-        )}
-      >
-        {description ? (
-          <p className="text-muted-foreground">{description}</p>
-        ) : null}
+      <CardContent className={cn(ui.content, ui.align[align])}>
+        {description ? <p className={ui.description}>{description}</p> : null}
 
         {bullets && bullets.length > 0 ? (
-          <ul
-            className={cn(
-              "flex flex-col gap-1 text-sm",
-              isCentered ? "items-center" : "items-start",
-            )}
-          >
-            {bullets.map((bullet, index) => (
-              <li key={index}>• {bullet}</li>
+          <ul className={cn(ui.bulletsList, ui.bulletsAlign[align])}>
+            {bullets.map((bullet) => (
+              <li key={bullet}>• {bullet}</li>
             ))}
           </ul>
         ) : null}
       </CardContent>
 
       {footer ? (
-        <CardFooter
-          className={cn(
-            "text-sm text-muted-foreground",
-            isCentered && "justify-center text-center",
-          )}
-        >
+        <CardFooter className={cn(ui.footer, ui.footerAlign[align])}>
           {footer}
         </CardFooter>
       ) : null}

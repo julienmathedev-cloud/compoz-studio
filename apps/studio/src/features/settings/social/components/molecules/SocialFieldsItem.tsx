@@ -36,8 +36,6 @@ import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { ControllerRenderProps, FieldValues } from "react-hook-form";
 
-// Types UI locaux (erreurs / invalid par champ).
-
 type RowErrorMessages = Partial<Record<"kind" | "href", string | undefined>>;
 type RowInvalidFlags = Partial<Record<"kind" | "href", boolean>>;
 
@@ -79,8 +77,6 @@ type SocialFieldsItemProps = Readonly<{
   /** Désactive l’édition et les actions. */
   disabled?: boolean;
 }>;
-
-// Helpers (UI) : conversion entre href canonique et valeur affichée.
 
 /**
  * Extrait la partie affichable à partir d’un href canonique.
@@ -167,7 +163,6 @@ export function SocialFieldsItem({
 
   return (
     <div className={cn(MENU_ITEM_LAYOUT)}>
-      {/* Col 1 — plateforme */}
       <SelectField
         ids={kindIds}
         label={t("studio.socialFieldsItem.kind.label")}
@@ -181,7 +176,6 @@ export function SocialFieldsItem({
 
           kindField.onChange(nextKind);
 
-          // email <-> url : reset href sans toucher/valider
           if (prevIsEmail !== nextIsEmail) {
             clearHrefBySwitch();
           }
@@ -194,7 +188,6 @@ export function SocialFieldsItem({
         help={t("studio.socialFieldsItem.kind.help")}
       />
 
-      {/* Col 2 — lien social (avec help + erreurs) */}
       <NewSocialLinkField
         ids={hrefIds}
         isEmail={isEmail}
@@ -212,13 +205,13 @@ export function SocialFieldsItem({
         helpUrl={t("studio.socialFieldsItem.href.helpUrl")}
       />
 
-      {/* Col 3 — actions (icon-only, même sizing que MenuFieldsItem) */}
       <div className={cn(ROW_END)}>
         <div className="mt-[1.6rem] flex h-9 items-center">
           <StudioButtonGroup className="shrink-0">
             <TooltipButton
               type="button"
-              variant="ghostStudio"
+              variant="ghost"
+              visualMode="studio"
               size="icon"
               onClick={onMoveUp}
               disabled={disabled || isFirst}
@@ -236,7 +229,8 @@ export function SocialFieldsItem({
 
             <TooltipButton
               type="button"
-              variant="ghostStudio"
+              variant="ghost"
+              visualMode="studio"
               size="icon"
               onClick={onMoveDown}
               disabled={disabled || isLast}

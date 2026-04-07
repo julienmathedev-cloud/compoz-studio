@@ -105,26 +105,18 @@ export function ActionsBar({
 }: ActionsBarProps) {
   const t = useTranslations();
 
-  // Flag global de désactivation des contrôles
   const baseDisabled = disabled || isSaving;
 
-  // Submit désactivé :
-  // - si `submitDisabled` explicite
-  // - sinon si baseDisabled
-  // - sinon si `isDirty` est fourni et faux
   const computedSubmitDisabled =
     submitDisabled ??
     (baseDisabled || (isDirty === undefined ? false : !isDirty));
 
-  // Reset désactivé (même logique que Submit)
   const computedResetDisabled =
     resetDisabled ??
     (baseDisabled || (isDirty === undefined ? false : !isDirty));
 
-  // Ajouter désactivé si baseDisabled, sauf override explicite
   const computedAddDisabled = addDisabled ?? baseDisabled;
 
-  // Libellés calculés
   const submitText = isSaving
     ? (submitLoadingLabel ?? t("common.saving"))
     : (submitLabel ?? t("common.save"));
@@ -132,7 +124,6 @@ export function ActionsBar({
   const resetText = resetLabel ?? t("common.reset");
   const addText = addLabel ?? t("common.add");
 
-  // Tooltips explicatifs (uniquement quand le bouton est désactivé)
   const submitDisabledTooltip = isSaving
     ? t("common.saving")
     : isDirty === false
@@ -150,13 +141,7 @@ export function ActionsBar({
     : t("common.actionUnavailable");
 
   return (
-    <div
-      className={cn(
-        // Barre d’actions alignée à droite
-        "w-full",
-      )}
-      aria-busy={isSaving || undefined}
-    >
+    <div className={cn("w-full")} aria-busy={isSaving || undefined}>
       {isSaving && (
         <LoadingStatus
           label={t("common.saving")}
@@ -166,11 +151,11 @@ export function ActionsBar({
       )}
 
       {variant === "addResetSubmit" ? (
-        // Variante : bouton Ajouter à gauche, Reset + Submit à droite
         <div className={cn(ROW_BETWEEN, "w-full")}>
           <TooltipButton
             type="button"
-            variant="outlineStudio"
+            variant="outline"
+            visualMode="studio"
             size="lg"
             onClick={onAdd}
             disabled={computedAddDisabled}
@@ -183,14 +168,13 @@ export function ActionsBar({
           <StudioButtonGroup className="flex">
             <TooltipButton
               type="button"
-              variant="ghostStudio"
+              variant="ghost"
+              visualMode="studio"
               size="lg"
               onPointerDown={(e) => {
-                // ✅ empêche la perte de focus => évite le blur des inputs
                 e.preventDefault();
               }}
               onClick={(e) => {
-                // On empêche la soumission automatique du formulaire parent
                 e.preventDefault();
                 e.stopPropagation();
                 onReset?.();
@@ -205,7 +189,8 @@ export function ActionsBar({
             <TooltipButton
               size="lg"
               type={submitType}
-              variant="defaultStudio"
+              variant="default"
+              visualMode="studio"
               onClick={submitType === "button" ? onSubmit : undefined}
               disabled={computedSubmitDisabled}
               tooltip={
@@ -225,12 +210,12 @@ export function ActionsBar({
           </StudioButtonGroup>
         </div>
       ) : variant === "submitOnly" ? (
-        // Variante : uniquement le bouton Submit (ex: modale simple)
         <div className={cn(ROW_END)}>
           <TooltipButton
             size="lg"
             type={submitType}
-            variant="defaultStudio"
+            variant="default"
+            visualMode="studio"
             onClick={submitType === "button" ? onSubmit : undefined}
             disabled={computedSubmitDisabled}
             tooltip={
@@ -246,15 +231,14 @@ export function ActionsBar({
           </TooltipButton>
         </div>
       ) : (
-        // Variante par défaut : Reset + Submit groupés à droite
         <div className={cn(ROW_END)}>
           <StudioButtonGroup>
             <TooltipButton
               type="button"
-              variant="ghostStudio"
+              variant="ghost"
+              visualMode="studio"
               size="lg"
               onPointerDown={(e) => {
-                // ✅ empêche la perte de focus => évite le blur des inputs
                 e.preventDefault();
               }}
               onClick={(e) => {
@@ -271,7 +255,8 @@ export function ActionsBar({
 
             <TooltipButton
               type={submitType}
-              variant="defaultStudio"
+              variant="default"
+              visualMode="studio"
               onClick={submitType === "button" ? onSubmit : undefined}
               disabled={computedSubmitDisabled}
               size="lg"

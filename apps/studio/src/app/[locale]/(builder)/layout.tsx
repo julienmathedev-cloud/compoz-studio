@@ -26,6 +26,7 @@ import { StudioShell } from "@compoz/studio/features/shell/components/StudioShel
 import { routing } from "@compoz/studio/i18n/routing";
 import { ReactQueryProvider } from "@compoz/studio/lib/react-query/ReactQueryProvider";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
+import { TooltipProvider } from "@compoz/ui/components/ui/tooltip";
 import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 type Locale = (typeof routing.locales)[number];
@@ -72,12 +73,14 @@ export default async function LocaleLayout({
   return (
     <ReactQueryProvider>
       <NextIntlClientProvider messages={messages}>
-        <StudioClientProviders tenantId={tenantId} hasSidebar={false}>
-          <main className="flex h-dvh min-h-0 min-w-0">
-            <StudioShell>{children}</StudioShell>
-          </main>
-          <Toaster />
-        </StudioClientProviders>
+        <TooltipProvider delayDuration={400} skipDelayDuration={100}>
+          <StudioClientProviders tenantId={tenantId} hasSidebar={false}>
+            <main className="flex h-dvh min-h-0 min-w-0">
+              <StudioShell>{children}</StudioShell>
+            </main>
+            <Toaster position="top-center" />
+          </StudioClientProviders>
+        </TooltipProvider>
       </NextIntlClientProvider>
     </ReactQueryProvider>
   );

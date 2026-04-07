@@ -16,9 +16,10 @@
  */
 
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { uploadImage, uploadSvg } from "@compoz/infra/http/studio/media.client";
+import { log } from "@compoz/infra/lib/log";
 import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
 import { StudioWarningsPanel } from "@compoz/studio/features/_shared/components/StudioWarningsPanel";
 import { useStudioSaveDespiteWarningsConfirm } from "@compoz/studio/features/_shared/hooks/useStudioSaveDespiteWarningsConfirm";
@@ -39,6 +40,8 @@ type UploadedRasterImage = Readonly<{
   height: number;
 }>;
 
+const lg = log.child({ ns: "ui", area: "studio", name: "IdentitySection" });
+
 export function IdentitySection() {
   const t = useTranslations();
   const { confirmSaveDespiteWarnings } = useStudioSaveDespiteWarningsConfirm();
@@ -47,14 +50,29 @@ export function IdentitySection() {
 
   const { baseline, isLoading, isSaving, save } = useIdentitySettings();
 
+  useEffect(() => {
+    lg.debug("identity.settings", {
+      isLoading,
+      isSaving,
+      hasBaseline: Boolean(baseline),
+      baseline,
+    });
+  }, [isLoading, isSaving, baseline]);
+
   /**
-   * Upload logo : SVG only (endpoint dédié).
+   * Upload logo : raster ou SVG.
+   * Le serveur renvoie désormais toujours des dimensions exploitables.
    */
   const onUploadLogo = useCallback(
     async (file: File): Promise<UploadedRasterImage> => {
       if (file.type === "image/svg+xml") {
-        const { url } = await uploadSvg(file);
-        return { url, width: 0, height: 0 };
+        const res = await uploadSvg(file);
+
+        return {
+          url: res.url,
+          width: res.width,
+          height: res.height,
+        };
       }
 
       const res = await uploadImage(file, "logo");
@@ -102,18 +120,15 @@ export function IdentitySection() {
     [t],
   );
 
-  // Warnings UI (non bloquants).
   const [warningKeys, setWarningKeys] = useState<IdentityWarningKey[]>([]);
-
   const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
 
-  // Submit : confirmation si warnings + save.
   const handleSubmit = useCallback(
     async (values: IdentityFormValues) => {
       if (isLoading || isSaving) return;
 
       const warningKeysNow = computeIdentityWarnings({
-        logoUrl: values.logoUrl,
+        logo: values.logo,
         faviconUrl: values.faviconUrl,
       });
 
@@ -154,6 +169,7 @@ export function IdentitySection() {
         onSubmit={handleSubmit}
         onReset={() => {
           setWarningKeys([]);
+          setBlockingErrorsCount(0);
           dirtyGuard.setDirty(false);
         }}
         onUploadLogo={onUploadLogo}

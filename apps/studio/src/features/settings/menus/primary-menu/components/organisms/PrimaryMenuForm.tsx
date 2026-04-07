@@ -115,9 +115,14 @@ export function PrimaryMenuForm({
    */
   const [isSortingParents, setIsSortingParents] = useState(false);
 
-  const { fields, append, remove, move } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray<
+    PrimaryMenuFormValues,
+    "items",
+    "fieldId"
+  >({
     control,
     name: "items",
+    keyName: "fieldId",
   });
 
   const formIdPrefix = useIdPrefix("primary-menu-form");
@@ -133,6 +138,7 @@ export function PrimaryMenuForm({
   });
 
   const createEmptyParent = (): PrimaryMenuItemFormValues => ({
+    id: crypto.randomUUID(),
     label: "",
     href: "/",
     newTab: false,
@@ -140,6 +146,7 @@ export function PrimaryMenuForm({
   });
 
   const createEmptyChild = (): PrimaryMenuChildFormValues => ({
+    id: crypto.randomUUID(),
     label: "",
     href: "/",
     newTab: false,
@@ -321,7 +328,7 @@ export function PrimaryMenuForm({
       }, handleSubmitErrors)}
       noValidate
     >
-      <Card variant="panelStudio">
+      <Card variant="panel" visualMode="studio">
         <CardContent className={cn(STACK_SM)}>
           {fields.length === 0 ? (
             <EmptyState text={t("studio.primaryMenuForm.empty.primary")} />
@@ -342,7 +349,7 @@ export function PrimaryMenuForm({
               >
                 {fields.map((field, pIdx) => (
                   <PrimaryMenuItemBlock
-                    key={field.id}
+                    key={field.fieldId}
                     sortableId={field.id}
                     pIdx={pIdx}
                     totalParents={fields.length}

@@ -32,6 +32,7 @@ import { routing } from "@compoz/studio/i18n/routing";
 import { ReactQueryProvider } from "@compoz/studio/lib/react-query/ReactQueryProvider";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import { SidebarInset, SidebarTrigger } from "@compoz/ui/components/ui/sidebar";
+import { TooltipProvider } from "@compoz/ui/components/ui/tooltip";
 import { toTenantId } from "@compoz/ui/lib/tenant-id";
 import { cn } from "@compoz/ui/lib/utils";
 import { STUDIO_CONTAINER, STUDIO_PAGE } from "@compoz/ui/styles/studio/layout";
@@ -83,29 +84,31 @@ export default async function LocaleLayout({
     <ReactQueryProvider>
       <NextIntlClientProvider messages={messages}>
         <div className="flex h-dvh min-h-0 min-w-0">
-          <StudioClientProviders tenantId={tenantId}>
-            <StudioShell>
-              <aside className="shrink-0">
-                <StudioSidebar locale={locale} isAdmin={isAdmin} />
-              </aside>
+          <TooltipProvider delayDuration={400} skipDelayDuration={100}>
+            <StudioClientProviders tenantId={tenantId}>
+              <StudioShell>
+                <aside className="shrink-0">
+                  <StudioSidebar locale={locale} isAdmin={isAdmin} />
+                </aside>
 
-              <SidebarInset className="flex min-h-0 min-w-0 h-full flex-col bg-sidebar">
-                <Header leftSlot={<SidebarTrigger visualMode="studio" />} />
+                <SidebarInset className="flex min-h-0 min-w-0 h-full flex-col bg-sidebar">
+                  <Header leftSlot={<SidebarTrigger visualMode="studio" />} />
 
-                <div
-                  id="main"
-                  className="ml-2 mr-2 mb-2 flex-1 overflow-y-auto rounded-sm border border-primary/10 bg-background md:ml-0"
-                  tabIndex={-1}
-                >
-                  <div className={cn(STUDIO_CONTAINER)}>
-                    <div className={cn(STUDIO_PAGE)}>{children}</div>
+                  <div
+                    id="main"
+                    className="ml-2 mr-2 mb-2 flex-1 overflow-y-auto rounded-sm border border-primary/10 bg-background md:ml-0"
+                    tabIndex={-1}
+                  >
+                    <div className={cn(STUDIO_CONTAINER)}>
+                      <div className={cn(STUDIO_PAGE)}>{children}</div>
+                    </div>
                   </div>
-                </div>
 
-                <Toaster />
-              </SidebarInset>
-            </StudioShell>
-          </StudioClientProviders>
+                  <Toaster position="top-center" />
+                </SidebarInset>
+              </StudioShell>
+            </StudioClientProviders>
+          </TooltipProvider>
         </div>
       </NextIntlClientProvider>
     </ReactQueryProvider>

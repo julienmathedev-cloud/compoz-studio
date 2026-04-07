@@ -5,6 +5,7 @@
  * Validateur partagé des images de cells.
  */
 
+import { assertImage } from "@compoz/core/domain/assets/validators/image";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type { ImageEditor } from "@compoz/core/domain/pages/entities/cell";
@@ -23,29 +24,15 @@ export function assertImageEditor(
     });
   }
 
-  const { id, src, alt, caption, href, width, height } = img as ImageEditor;
+  assertImage(img, path);
+
+  const { id, caption, href } = img as ImageEditor;
 
   if (typeof id !== "string" || !id.trim()) {
     throw new DomainError({
       code: EC.CELL_IMAGE_ID_REQUIRED,
       message: EC.CELL_IMAGE_ID_REQUIRED,
       details: { path: [...path, "id"] },
-    });
-  }
-
-  if (typeof src !== "string" || !src.trim()) {
-    throw new DomainError({
-      code: EC.CELL_IMAGE_SRC_REQUIRED,
-      message: EC.CELL_IMAGE_SRC_REQUIRED,
-      details: { path: [...path, "src"] },
-    });
-  }
-
-  if (typeof alt !== "string") {
-    throw new DomainError({
-      code: EC.CELL_IMAGE_ALT_INVALID,
-      message: EC.CELL_IMAGE_ALT_INVALID,
-      details: { path: [...path, "alt"] },
     });
   }
 
@@ -62,22 +49,6 @@ export function assertImageEditor(
       code: EC.CELL_IMAGE_HREF_INVALID,
       message: EC.CELL_IMAGE_HREF_INVALID,
       details: { path: [...path, "href"] },
-    });
-  }
-
-  if (typeof width !== "number" || !Number.isFinite(width) || width <= 0) {
-    throw new DomainError({
-      code: EC.CELL_IMAGE_WIDTH_INVALID,
-      message: EC.CELL_IMAGE_WIDTH_INVALID,
-      details: { path: [...path, "width"], meta: { width } },
-    });
-  }
-
-  if (typeof height !== "number" || !Number.isFinite(height) || height <= 0) {
-    throw new DomainError({
-      code: EC.CELL_IMAGE_HEIGHT_INVALID,
-      message: EC.CELL_IMAGE_HEIGHT_INVALID,
-      details: { path: [...path, "height"], meta: { height } },
     });
   }
 }

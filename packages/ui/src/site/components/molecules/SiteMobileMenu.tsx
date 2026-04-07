@@ -25,7 +25,6 @@ import type { SocialSettingsShape } from "@compoz/validation/site/settings/socia
 import { DynamicIcon } from "lucide-react/dynamic";
 import type dynamicIconImports from "lucide-react/dynamicIconImports";
 
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { renderSocialKindIcon } from "@compoz/ui/lib/social/social-kind-icons";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteIconLink } from "@compoz/ui/site/components/atoms/SiteIconLink";
@@ -43,7 +42,7 @@ export type SiteMobileMenuProps = Readonly<{
 
 const ICON_MENU: keyof typeof dynamicIconImports = "menu";
 const ICON_CLOSE: keyof typeof dynamicIconImports = "x";
-const ICON_CHEVRON: keyof typeof dynamicIconImports = "chevron-down";
+const ICON_CHEVRON: keyof typeof dynamicIconImports = "chevron-right";
 
 const MENU_ID = "site-mobile-menu";
 
@@ -191,7 +190,7 @@ export function SiteMobileMenu({
           >
             <DynamicIcon
               name={ICON_CLOSE}
-              size={20}
+              size={24}
               aria-hidden
               focusable="false"
             />
@@ -201,13 +200,17 @@ export function SiteMobileMenu({
         <nav className={cn(ui.scrollArea)}>
           {hasMenu ? (
             <ul className={cn(ui.list)}>
-              {items.map((item, index) => {
+              {items.map((item) => {
+                const id = item.id?.trim() ?? "";
                 const children = Array.isArray(item.children)
                   ? item.children
                   : [];
                 const href = item.href?.trim() ?? "";
                 const label = item.label?.trim() ?? "";
-                const key = toStableUiKey({ href: item.href, label }, index);
+
+                if (!id) {
+                  return null;
+                }
 
                 if (children.length > 0) {
                   const hasActiveChild = children.some((child) =>
@@ -215,7 +218,7 @@ export function SiteMobileMenu({
                   );
 
                   return (
-                    <li key={key} className={cn(ui.item)}>
+                    <li key={id} className={cn(ui.item)}>
                       <details
                         className={cn(ui.details)}
                         {...(hasActiveChild ? { open: true } : {})}
@@ -235,25 +238,25 @@ export function SiteMobileMenu({
                             size={18}
                             aria-hidden
                             focusable="false"
-                            className="shrink-0"
+                            className={cn(ui.chevron)}
                           />
                         </summary>
 
                         <ul className={cn(ui.dropdownList)}>
                           {children
-                            .filter((child) => Boolean(child.href?.trim()))
-                            .map((child, childIndex) => {
+                            .filter(
+                              (child) =>
+                                Boolean(child.id?.trim()) &&
+                                Boolean(child.href?.trim()),
+                            )
+                            .map((child) => {
+                              const childId = child.id.trim();
                               const childHref = child.href!.trim();
                               const childLabel =
                                 child.label?.trim() ?? childHref;
 
-                              const childKey = toStableUiKey(
-                                { href: childHref, label: childLabel },
-                                childIndex,
-                              );
-
                               return (
-                                <li key={childKey} className={cn(ui.childItem)}>
+                                <li key={childId} className={cn(ui.childItem)}>
                                   <SiteNavLink
                                     href={childHref}
                                     label={childLabel}
@@ -273,7 +276,7 @@ export function SiteMobileMenu({
 
                 if (href) {
                   return (
-                    <li key={key} className={cn(ui.item)}>
+                    <li key={id} className={cn(ui.item)}>
                       <SiteNavLink
                         href={href}
                         label={label || href}
@@ -293,21 +296,23 @@ export function SiteMobileMenu({
 
           {hasSocial ? (
             <div className={cn(ui.socialsRow)}>
-              {socials.map((item, index) => (
-                <SiteIconLink
-                  key={toStableUiKey(
-                    { keyId: `${item.kind}:${index}`, href: item.href },
-                    index,
-                  )}
-                  href={item.href}
-                  ariaLabel={item.kind}
-                  className={cn(ui.socialLink, ui.focusRing)}
-                  linkClassName={cn(ui.socialLink)}
-                  icon={renderSocialKindIcon(item.kind, {
-                    className: cn(ui.socialIcon),
-                  })}
-                />
-              ))}
+              {socials
+                .filter(
+                  (item) =>
+                    Boolean(item.id?.trim()) && Boolean(item.href?.trim()),
+                )
+                .map((item) => (
+                  <SiteIconLink
+                    key={item.id}
+                    href={item.href}
+                    ariaLabel={item.kind}
+                    className={cn(ui.socialLink, ui.focusRing)}
+                    linkClassName={cn(ui.socialLink)}
+                    icon={renderSocialKindIcon(item.kind, {
+                      className: cn(ui.socialIcon),
+                    })}
+                  />
+                ))}
             </div>
           ) : null}
         </nav>

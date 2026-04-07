@@ -14,12 +14,14 @@
  * - Les items sont gérés par RHF via `useFieldArray` pour garantir
  *   une gestion propre des valeurs, erreurs et reorder.
  * - Les erreurs near-field sont gérées au niveau des items.
+ * - Le reorder s’appuie sur les valeurs live (`useWatch`) + `move`
+ *   pour conserver l’état RHF, avec fallback visuel côté item editor.
  */
 
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { Control } from "react-hook-form";
-import { useController, useFieldArray } from "react-hook-form";
+import { useController, useFieldArray, useWatch } from "react-hook-form";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
@@ -98,6 +100,13 @@ export function CardsCellEditor({
     keyName: "fieldId",
   });
 
+  const watchedItems = (useWatch({
+    control,
+    name: itemsPath,
+  }) ?? []) as CardItemFormValues[];
+
+  const cardFields = fields as CardItemField[];
+
   const align: CardsAlign =
     alignCtrl.field.value &&
     CARDS_ALIGNS.includes(alignCtrl.field.value as CardsAlign)
@@ -140,7 +149,8 @@ export function CardsCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={align === item ? "defaultStudio" : "ghostStudio"}
+                variant={align === item ? "default" : "ghost"}
+                visualMode="studio"
                 onClick={() => {
                   alignCtrl.field.onChange(item);
                 }}
@@ -163,7 +173,8 @@ export function CardsCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={columns === item ? "defaultStudio" : "ghostStudio"}
+                variant={columns === item ? "default" : "ghost"}
+                visualMode="studio"
                 onClick={() => {
                   columnsCtrl.field.onChange(item);
                 }}
@@ -193,7 +204,8 @@ export function CardsCellEditor({
         control={control}
         idPrefix={idPrefix}
         basePath={basePath}
-        fields={fields as CardItemField[]}
+        fields={cardFields}
+        watchedItems={watchedItems}
         append={append}
         remove={remove}
         move={move}

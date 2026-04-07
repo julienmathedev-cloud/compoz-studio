@@ -8,10 +8,10 @@
  * @remarks
  * - Rend `null` si aucun item n’est disponible.
  * - Délègue le rendu du lien à `SiteFooterLink` (garde-fous href + a11y).
+ * - Les clés de liste utilisent désormais l’identifiant métier stable `id`.
  * - Le style est fourni par le skin/template via `ui`.
  */
 
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteFooterLink } from "@compoz/ui/site/components/atoms/SiteFooterLink";
 import type { SiteLegalMenuUi } from "@compoz/ui/site/site-ui.types";
@@ -31,15 +31,13 @@ export function SiteLegalMenu({ legalMenu, ui }: SiteLegalMenuProps) {
   return (
     <nav aria-label="Mentions légales" className={cn(ui.nav)}>
       <ul className={cn(ui.list)}>
-        {items.map((it, index) => {
+        {items.map((it) => {
+          const id = it.id;
           const label = it.label;
           const href = it.href;
 
           return (
-            <li
-              key={toStableUiKey({ href, label }, index)}
-              className={cn(ui.item)}
-            >
+            <li key={id} className={cn(ui.item)}>
               <SiteFooterLink
                 label={label}
                 href={href}

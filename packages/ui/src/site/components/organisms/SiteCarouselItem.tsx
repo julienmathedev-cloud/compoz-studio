@@ -63,6 +63,7 @@ export function SiteCarouselItem({
           title={item.title}
           description={item.description}
           icon={item.icon}
+          ui={ui.card}
         />
       </div>
     );
@@ -78,10 +79,13 @@ export function SiteCarouselItem({
           footer={item.footer}
           icon={item.icon}
           align="left"
+          ui={ui.extendedCard}
         />
       </div>
     );
   }
+
+  console.log("carousel structuredCard item", item);
 
   return (
     <div className={contentStateClassName}>
@@ -90,6 +94,7 @@ export function SiteCarouselItem({
         meta={item.meta}
         sections={item.sections}
         image={item.image}
+        button={item.button}
         ui={ui.structuredCard}
       />
     </div>

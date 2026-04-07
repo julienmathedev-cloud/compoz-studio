@@ -34,6 +34,8 @@ function normalizeThemeTokens(
     background: trimKeepEmpty(tokens.background),
     foreground: trimKeepEmpty(tokens.foreground),
 
+    chrome: trimKeepEmpty(tokens.chrome),
+
     card: trimKeepEmpty(tokens.card),
     "card-foreground": trimKeepEmpty(tokens["card-foreground"]),
 

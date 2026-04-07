@@ -4,7 +4,7 @@
  * @file apps/studio/src/features/builder/editor/cells/images/ImageCellEditor.tsx
  * @description
  * Éditeur RHF-aware d’une ImageCell avec gestion de la source,
- * de l’alt, de la caption et de la variante d’affichage.
+ * de l’alt, de la caption, de la variante d’affichage et de la taille visuelle.
  *
  * @remarks
  * - Connecté directement à RHF via `useController`.
@@ -45,7 +45,10 @@ type SelectedCellLocation = Readonly<{
 }>;
 
 const VARIANTS = ["default", "wide", "portrait", "square"] as const;
+const SIZES = ["sm", "md", "lg", "full"] as const;
+
 type Variant = (typeof VARIANTS)[number];
+type Size = (typeof SIZES)[number];
 type ImageFieldBasePath = `rows.${number}.columns.${number}.cells.${number}`;
 
 export type ImageCellEditorProps = Readonly<{
@@ -100,6 +103,11 @@ export function ImageCellEditor({
     control,
   });
 
+  const sizeCtrl = useController({
+    name: `${basePath}.size` as `${ImageFieldBasePath}.size`,
+    control,
+  });
+
   const revealCtrl = useController({
     name: `${basePath}.reveal` as `${ImageFieldBasePath}.reveal`,
     control,
@@ -112,6 +120,11 @@ export function ImageCellEditor({
     VARIANTS.includes(variantCtrl.field.value as Variant)
       ? (variantCtrl.field.value as Variant)
       : "default";
+
+  const size: Size =
+    sizeCtrl.field.value && SIZES.includes(sizeCtrl.field.value as Size)
+      ? (sizeCtrl.field.value as Size)
+      : "full";
 
   const shouldShowSrcError = showError || srcCtrl.fieldState.isTouched;
   const shouldShowAltError = showError || altCtrl.fieldState.isTouched;
@@ -137,30 +150,7 @@ export function ImageCellEditor({
       : undefined;
 
   const variantSlot = (
-    <div className={cn(STACK_SM)}>
-      <div className={cn(STACK_SM)}>
-        <Text as="p" className="font-medium">
-          {t("studio.cellEditorTabs.imageCellEditor.variantLabel")}
-        </Text>
-
-        <div className={cn(ROW_SM)}>
-          {VARIANTS.map((v) => (
-            <Button
-              key={v}
-              type="button"
-              size="sm"
-              variant={variant === v ? "defaultStudio" : "ghostStudio"}
-              disabled={disabled}
-              onClick={() => {
-                variantCtrl.field.onChange(v);
-              }}
-            >
-              {t(`studio.cellEditorTabs.imageCellEditor.variants.${v}`)}
-            </Button>
-          ))}
-        </div>
-      </div>
-
+    <>
       <SwitchField
         ids={revealIds}
         label={t("studio.cellEditorTabs.imageCellEditor.revealLabel")}
@@ -173,7 +163,55 @@ export function ImageCellEditor({
         disabled={disabled}
         help={t("studio.cellEditorTabs.imageCellEditor.revealHelp")}
       />
-    </div>
+
+      <div className={cn(STACK_SM)}>
+        <Text as="p" className="font-medium">
+          {t("studio.cellEditorTabs.imageCellEditor.variantLabel")}
+        </Text>
+
+        <div className={cn(ROW_SM)}>
+          {VARIANTS.map((v) => (
+            <Button
+              key={v}
+              type="button"
+              size="sm"
+              variant={variant === v ? "default" : "ghost"}
+              visualMode="studio"
+              disabled={disabled}
+              onClick={() => {
+                variantCtrl.field.onChange(v);
+              }}
+            >
+              {t(`studio.cellEditorTabs.imageCellEditor.variants.${v}`)}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div className={cn(STACK_SM)}>
+        <Text as="p" className="font-medium">
+          {t("studio.cellEditorTabs.imageCellEditor.sizeLabel")}
+        </Text>
+
+        <div className={cn(ROW_SM)}>
+          {SIZES.map((s) => (
+            <Button
+              key={s}
+              type="button"
+              size="sm"
+              variant={size === s ? "default" : "ghost"}
+              visualMode="studio"
+              disabled={disabled}
+              onClick={() => {
+                sizeCtrl.field.onChange(s);
+              }}
+            >
+              {t(`studio.cellEditorTabs.imageCellEditor.sizes.${s}`)}
+            </Button>
+          ))}
+        </div>
+      </div>
+    </>
   );
 
   return (

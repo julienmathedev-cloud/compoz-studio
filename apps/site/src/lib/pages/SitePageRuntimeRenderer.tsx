@@ -1,6 +1,5 @@
 "use client";
 
-import type { SitePager } from "@compoz/site/app/_helpers/site-pager";
 /**
  * @file apps/site/src/lib/pages/SitePageRuntimeRenderer.tsx
  * @layer site/features/pages
@@ -9,6 +8,7 @@ import type { SitePager } from "@compoz/site/app/_helpers/site-pager";
  * Renderer client d’une page publique en s’appuyant sur le runtime global du site.
  */
 
+import type { SitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
 import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";

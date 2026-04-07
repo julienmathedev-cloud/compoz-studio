@@ -24,4 +24,36 @@ export function assertSpacerCell(
       details: { path: [...path, "size"], meta: { size: cell.size } },
     });
   }
+
+  /**
+   * Validation visibility responsive
+   */
+  const visibility = cell.visibility;
+
+  if (!visibility || typeof visibility !== "object") {
+    throw new DomainError({
+      code: EC.CELL_SPACER_VISIBILITY_INVALID,
+      message: EC.CELL_SPACER_VISIBILITY_INVALID,
+      details: { path: [...path, "visibility"] },
+    });
+  }
+
+  const devices: Array<keyof typeof visibility> = [
+    "mobile",
+    "tablet",
+    "desktop",
+  ];
+
+  for (const device of devices) {
+    if (typeof visibility[device] !== "boolean") {
+      throw new DomainError({
+        code: EC.CELL_SPACER_VISIBILITY_INVALID,
+        message: EC.CELL_SPACER_VISIBILITY_INVALID,
+        details: {
+          path: [...path, "visibility", device],
+          meta: { value: visibility[device] },
+        },
+      });
+    }
+  }
 }

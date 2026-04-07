@@ -15,6 +15,9 @@ import type { BrandedHref } from "@compoz/core/domain/urls/href";
 
 /** Élément individuel d’un lien social. */
 export interface SocialItem {
+  /** Identifiant stable de l’item. */
+  id: string;
+
   /** Plateforme supportée (GitHub, X, LinkedIn, etc.). */
   kind: SocialKind;
 

@@ -9,6 +9,7 @@
  *
  * @remarks
  * - Injecte le thème CSS du site via le scope preview `theme`.
+ * - Utilise un fallback global `initialTheme` chargé côté serveur.
  * - Injecte le skin UI public (`resolveSiteUi`).
  * - Évite la répétition dans chaque preview page.
  */
@@ -22,13 +23,17 @@ import type { ThemeSettingsShape } from "@compoz/validation/site/settings/theme/
 
 type PreviewProvidersProps = Readonly<{
   children: ReactNode;
+  initialTheme?: ThemeSettingsShape | null;
 }>;
 
-export function PreviewProviders({ children }: PreviewProvidersProps) {
+export function PreviewProviders({
+  children,
+  initialTheme = null,
+}: PreviewProvidersProps) {
   const ui = resolveSiteUi();
 
   const theme = usePreviewOverride<ThemeSettingsShape>("theme");
-  const visibleTheme = theme.override ?? theme.baseline ?? null;
+  const visibleTheme = theme.override ?? theme.baseline ?? initialTheme ?? null;
 
   return (
     <SiteRuntimeProvider ui={ui} theme={visibleTheme}>

@@ -163,7 +163,10 @@ export function OverviewPreviewCard() {
   /* ---------------------------------------------------------------------- */
 
   const { ready, setBaseline, iframeRef, frame } =
-    useStudioPreview<PageRenderShape>(previewScope, pageBaselinePreview);
+    useStudioPreview<PageRenderShape>(previewScope, {
+      baseline: pageBaselinePreview,
+      liveEnabled: false,
+    });
 
   useStudioPreviewBaselineScope<HeaderSettingsShape>({
     scope: "header",
@@ -315,7 +318,6 @@ export function OverviewPreviewCard() {
       src={`/preview/pages/${slug}`}
       iframeRef={iframeRef}
       onLoad={frame.onLoad}
-      syncDisabled
       isLoading={isPreviewLoading}
       heightClassName="h-[800px]"
       isEmpty={isEmpty}

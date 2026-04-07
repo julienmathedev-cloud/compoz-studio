@@ -13,6 +13,8 @@
  * - Les updates métier (append/remove/move) sont déléguées à RHF.
  * - Les clés React utilisent `fieldId`, alors que le DnD s’appuie
  *   sur l’`id` métier stable de chaque bouton.
+ * - Aligné sur le pattern du menu légal :
+ *   React = `fieldId`, DnD = `sortableId`.
  */
 
 import {
@@ -50,6 +52,7 @@ export type ButtonListEditorProps = Readonly<{
   idPrefix: string;
   basePath: ButtonsFieldBasePath;
   fields: ReadonlyArray<ButtonItemField>;
+  watchedItems: ReadonlyArray<ButtonItemFormValues>;
   append: UseFieldArrayAppend<SectionBlockFormValues, ButtonsItemsPath>;
   remove: UseFieldArrayRemove;
   move: UseFieldArrayMove;
@@ -64,6 +67,7 @@ export function ButtonListEditor({
   idPrefix,
   basePath,
   fields,
+  watchedItems,
   append,
   remove,
   move,
@@ -101,6 +105,7 @@ export function ButtonListEditor({
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       if (disabled) return;
+      if (watchedItems.length !== fields.length) return;
 
       const { active, over } = event;
 
@@ -114,7 +119,7 @@ export function ButtonListEditor({
 
       move(oldIndex, newIndex);
     },
-    [disabled, fields, move],
+    [disabled, fields, watchedItems.length, move],
   );
 
   return (
@@ -131,15 +136,18 @@ export function ButtonListEditor({
           <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {fields.map((item, index) => {
               const itemPrefix = `${idPrefix}-btn-${item.id}`;
+              const watchedItem = watchedItems[index];
 
               return (
                 <li key={item.fieldId} className="min-w-0">
                   <ButtonItemEditor
+                    key={`${item.fieldId}-${index}`}
                     control={control}
                     basePath={basePath}
                     index={index}
                     idPrefix={itemPrefix}
-                    value={item}
+                    sortableId={item.id}
+                    watchedItem={watchedItem}
                     disabled={disabled}
                     canRemove={canRemove}
                     onRemove={() => handleRemoveAt(index)}

@@ -13,7 +13,6 @@
  */
 
 import { SOCIAL_ITEM } from "@compoz/core/constants/limits/social";
-
 import { SOCIAL_KINDS } from "@compoz/core/constants/social/social-kinds";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import {
@@ -28,6 +27,7 @@ import { z } from "zod";
 
 export const SocialItemFormSchema = z
   .object({
+    id: z.string().trim().min(1, ERROR_CODES.SOCIAL_ID_REQUIRED),
     kind: z.enum(SOCIAL_KINDS),
     href: z.string().trim(),
   })
@@ -54,14 +54,30 @@ export const SocialFormSchema = z
   })
   .strict()
   .superRefine((val, ctx) => {
+    const firstIndexById = new Map<string, number>();
     const firstIndexByKind = new Map<string, number>();
 
     for (let i = 0; i < val.items.length; i++) {
+      const id = String(val.items[i]?.id ?? "").trim();
       const kind = val.items[i]?.kind;
+
+      if (id) {
+        const firstIdxForId = firstIndexById.get(id);
+        if (firstIdxForId == null) {
+          firstIndexById.set(id, i);
+        } else {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["items", i, "id"],
+            message: ERROR_CODES.SOCIAL_DUPLICATE_ID,
+          });
+        }
+      }
+
       if (!kind) continue;
 
-      const firstIdx = firstIndexByKind.get(kind);
-      if (firstIdx == null) {
+      const firstIdxForKind = firstIndexByKind.get(kind);
+      if (firstIdxForKind == null) {
         firstIndexByKind.set(kind, i);
         continue;
       }

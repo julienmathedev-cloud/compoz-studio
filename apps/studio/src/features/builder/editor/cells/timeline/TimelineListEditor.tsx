@@ -13,6 +13,9 @@
  * - Les updates métier (append/remove/move) sont déléguées à RHF.
  * - Les clés React utilisent `fieldId`, alors que le DnD s’appuie
  *   sur l’`id` métier stable de chaque item timeline.
+ * - Le reorder s’appuie sur `move()` pour conserver l’état RHF.
+ * - Les valeurs live restent lues via `watchedItems` et transmises
+ *   au sous-éditeur pour stabiliser le rendu pendant le rebinding.
  */
 
 import {
@@ -50,6 +53,7 @@ export type TimelineListEditorProps = Readonly<{
   idPrefix: string;
   basePath: TimelineFieldBasePath;
   fields: ReadonlyArray<TimelineItemField>;
+  watchedItems: ReadonlyArray<TimelineItemFormValues>;
   append: UseFieldArrayAppend<SectionBlockFormValues, TimelineItemsPath>;
   remove: UseFieldArrayRemove;
   move: UseFieldArrayMove;
@@ -64,6 +68,7 @@ export function TimelineListEditor({
   idPrefix,
   basePath,
   fields,
+  watchedItems,
   append,
   remove,
   move,
@@ -101,6 +106,7 @@ export function TimelineListEditor({
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       if (disabled) return;
+      if (watchedItems.length !== fields.length) return;
 
       const { active, over } = event;
 
@@ -114,7 +120,7 @@ export function TimelineListEditor({
 
       move(oldIndex, newIndex);
     },
-    [disabled, fields, move],
+    [disabled, fields, watchedItems.length, move],
   );
 
   return (
@@ -131,15 +137,18 @@ export function TimelineListEditor({
           <ul className="grid grid-cols-1 gap-4">
             {fields.map((item, index) => {
               const itemPrefix = `${idPrefix}-timeline-${item.id}`;
+              const watchedItem = watchedItems[index];
 
               return (
                 <li key={item.fieldId} className="min-w-0">
                   <TimelineItemEditor
+                    key={`${item.fieldId}-${index}`}
                     control={control}
                     basePath={basePath}
                     index={index}
                     idPrefix={itemPrefix}
-                    value={item}
+                    sortableId={item.id}
+                    watchedItem={watchedItem}
                     disabled={disabled}
                     canRemove={canRemove}
                     onRemove={() => handleRemoveAt(index)}

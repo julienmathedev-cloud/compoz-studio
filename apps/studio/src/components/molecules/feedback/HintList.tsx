@@ -24,13 +24,13 @@ import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 
 import { Card, CardContent, CardHeader } from "@compoz/ui/components/ui/card";
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
+import { toReactListKey } from "@compoz/ui/lib/keys/toReactListKey";
 import { cn } from "@compoz/ui/lib/utils";
 
 /**
  * Variantes disponibles pour les messages.
  */
-type Variant = "infoStudio" | "warningStudio" | "successStudio" | "errorStudio";
+type Variant = "info" | "warning" | "success" | "error";
 
 /**
  * Props du composant `HintList`.
@@ -52,10 +52,10 @@ export type HintListProps = Readonly<{
 
 /** Mapping `Variant` → icône Lucide. */
 const ICON_BY_VARIANT: Record<Variant, LucideIcon> = {
-  infoStudio: Info,
-  warningStudio: AlertTriangle,
-  successStudio: CheckCircle2,
-  errorStudio: XCircle,
+  info: Info,
+  warning: AlertTriangle,
+  success: CheckCircle2,
+  error: XCircle,
 };
 
 function assertNever(x: never): never {
@@ -64,12 +64,12 @@ function assertNever(x: never): never {
 
 function alertToneClasses(variant: Variant) {
   switch (variant) {
-    case "warningStudio":
-      return "border-t-[color:var(--warning-border)]/45 border-b-[color:var(--warning-border)]/55 text-warning/70 shadow-warning/15";
-    case "successStudio":
-    case "infoStudio":
+    case "warning":
+      return "border-t-[color:var(--warning-border)]/45 border-b-[color:var(--warning-border)]/55 border-l-[color:var(--warning-border)]/15 border-r-[color:var(--warning-border)]/15 text-warning/70 shadow-warning/15";
+    case "success":
+    case "info":
       return "text-foreground";
-    case "errorStudio":
+    case "error":
       return "";
     default:
       return assertNever(variant);
@@ -82,7 +82,7 @@ function alertToneClasses(variant: Variant) {
 export function HintList({
   hints = [],
   title,
-  variant = "warningStudio",
+  variant = "warning",
   className,
   role,
   ariaLive,
@@ -93,15 +93,16 @@ export function HintList({
   if (hints.length === 0) return null;
 
   const computedRole: "status" | "alert" =
-    role ?? (variant === "errorStudio" ? "alert" : "status");
+    role ?? (variant === "error" ? "alert" : "status");
 
-  const live = ariaLive ?? (variant === "errorStudio" ? "assertive" : "polite");
+  const live = ariaLive ?? (variant === "error" ? "assertive" : "polite");
 
   const Icon = ICON_BY_VARIANT[variant];
 
   return (
     <Card
-      variant="panelStudio"
+      variant="panel"
+      visualMode="studio"
       className={cn(alertToneClasses(variant), className, "gap-2")}
       aria-live={live}
       role={computedRole}
@@ -122,8 +123,8 @@ export function HintList({
           {hints.map((h, i) => {
             const key =
               typeof h === "string"
-                ? `hint-${toStableUiKey({ label: h }, i)}`
-                : `hint-${i}`;
+                ? `hint-${toReactListKey({ label: h }, i)}`
+                : `hint-node-${i}`;
 
             return (
               <li key={key}>

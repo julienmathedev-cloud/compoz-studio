@@ -348,7 +348,7 @@ export function ImageSelector({
       />
 
       {/* Zone interactive : placeholder (empty) → preview (filled) */}
-      <div className="relative w-full h-full">
+      <div className="relative w-full">
         <TooltipButton
           type="button"
           disabled={uploading}
@@ -356,13 +356,14 @@ export function ImageSelector({
           tabIndex={isLocked ? -1 : 0}
           onClick={openPicker}
           aria-disabled={isLocked || undefined}
-          variant="defaultStudio"
+          variant="default"
+          visualMode="studio"
           className={cn(
             EMPTY_CARD,
             hasPreview && "pr-10 pl-10",
-            "flex w-full bg-accent/20",
+            "flex w-full bg-muted/20",
             !isLocked &&
-              "cursor-pointer hover:bg-accent/50 hover:border-primary focus-visible:ring-offset-2",
+              "cursor-pointer hover:bg-muted/50 hover:border-primary",
             isLocked && "cursor-not-allowed",
             uploading && "opacity-70",
           )}

@@ -16,7 +16,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { SITE_PATH } from "@compoz/core/constants/web/paths";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
-import { computeSitePager } from "@compoz/site/app/_helpers/site-pager";
+import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import {
   getPublishedIndex,
   getPublishedPageBySlug,

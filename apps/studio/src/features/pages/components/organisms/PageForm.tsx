@@ -501,7 +501,7 @@ export function PageForm({
       )}
       noValidate
     >
-      <Card variant="panelStudio">
+      <Card variant="panel" visualMode="studio">
         <CardContent>
           <ExpandableLayout
             id={`${formIdPrefix}-sitemap`}
@@ -642,7 +642,8 @@ export function PageForm({
                   <div className="flex h-9 items-center justify-end md:mt-[1.6rem]">
                     <TooltipButton
                       type="button"
-                      variant="outlineStudio"
+                      variant="outline"
+                      visualMode="studio"
                       size="icon"
                       onPointerDown={(event) => {
                         event.preventDefault();

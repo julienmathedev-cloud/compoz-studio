@@ -56,6 +56,7 @@ async function getResponse<TResponse>(
 ): Promise<TResponse> {
   const res = await apiFetch<TResponse>(withState(endpoint, state), {
     method: "GET",
+    cache: "no-store",
     ...(opts ?? {}),
   });
 
@@ -77,7 +78,15 @@ async function patchResponse<TResponse, TPayload>(
     },
   );
 
-  return assertJsonResponse(res, ctx);
+  const json = await assertJsonResponse(res, ctx);
+
+  console.log("[settings.client.patchResponse]", {
+    endpoint,
+    payload,
+    json,
+  });
+
+  return json;
 }
 
 /* -------------------------------------------------------------------------- */

@@ -11,7 +11,7 @@
  * - Le chargement initial est géré par `SettingsSection` (shell).
  * - Monte `useSocialSettings` (baseline + save) et câble `SocialForm`.
  * - Affiche les warnings non bloquants (via `SocialForm` + `computeSocialWarnings` au submit).
- * - La preview `/preview/social` consomme le scope `social` (draft possible).
+ * - La preview `/preview/social` consomme le scope `social` en mise à jour live.
  * - Strictement UI-only : aucune logique métier.
  */
 
@@ -39,87 +39,75 @@ export function SocialSection() {
   const { confirmSaveDespiteWarnings } = useStudioSaveDespiteWarningsConfirm();
 
   const dirtyGuard = useStudioDirtyGuard();
-
   const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
+  const [warningKeys, setWarningKeys] = useState<SocialWarningKey[]>([]);
+  const [previewDraft, setPreviewDraft] = useState<SocialSettingsShape | null>(
+    null,
+  );
 
   // Hook settings : modèle UI (RHF).
   const { baseline, isLoading, isSaving, save } = useSocialSettings();
 
-  // Preview (iframe).
-
-  // Pont UI → Preview/Public : RHF (UI) → SettingsShape (preview).
+  /**
+   * Baseline preview :
+   * - toujours dérivée de la baseline courante du hook
+   * - plus de gating sur `hasLoadedOnce`
+   */
   const baselinePreview = useMemo<SocialSettingsShape>(
     () => toSocialSettingsShapeFromFormValues(baseline),
     [baseline],
   );
 
-  const { ready, frame, setBaseline, setDraft, iframeRef } =
-    useStudioPreview<SocialSettingsShape>("social", baselinePreview);
+  /**
+   * Valeur effectivement affichée dans la preview :
+   * - draft live si l’utilisateur modifie le form
+   * - sinon baseline persistée
+   */
+  const previewValue = previewDraft ?? baselinePreview;
+
+  const { ready, iframeRef, frame } = useStudioPreview<SocialSettingsShape>(
+    "social",
+    {
+      baseline: previewValue,
+      liveEnabled: true,
+    },
+  );
 
   // Empty state : on considère "empty" une fois la data prête et sans items.
-  // (on se base sur la baseline brute RHF, pas sur baselinePreview, pour éviter les defaults du mapper)
-  const dataReady = !isLoading && baseline != null;
+  const dataReady = !isLoading;
   const isEmpty = dataReady && (baseline?.items?.length ?? 0) === 0;
 
   const emptyLabel = t("studio.emptyPreview.social");
 
   // Preview loading : on attend la baseline social + le handshake du scope principal.
-  // si empty => pas de loader (sinon impression de bug)
-  const isPreviewLoading =
-    !isEmpty && (isLoading || baseline == null || !ready.isReady("social"));
-
-  // État UI local du panel preview : baseline vs override (après Sync).
-  const [previewMode, setPreviewMode] = useState<"baseline" | "override">(
-    "baseline",
-  );
-
-  const handlePreviewSync = useCallback(() => {
-    frame.onSync();
-    setPreviewMode("override");
-  }, [frame]);
-
-  const handlePreviewReset = useCallback(() => {
-    frame.onReset();
-    setPreviewMode("baseline");
-  }, [frame]);
-
-  // Warnings UI (non bloquants).
-  const [warningKeys, setWarningKeys] = useState<SocialWarningKey[]>([]);
+  const isPreviewLoading = !isEmpty && (isLoading || !ready.isReady("social"));
 
   // Submit : confirmation si warnings + save.
   const handleSubmit = useCallback(
     async (values: SocialFormValues) => {
       if (isLoading || isSaving) return;
 
-      // 1) Warnings recalculés au submit (source de vérité).
       const warningKeysNow = computeSocialWarnings({
         items: values.items ?? [],
       });
 
-      // 2) Confirmation si warnings.
       const ok = await confirmSaveDespiteWarnings(
         warningKeysNow,
         "studio.socialSection.warnings",
       );
       if (!ok) return;
 
-      // 3) Save.
       await save(values);
       dirtyGuard.setDirty(false);
-      const nextBaselinePreview = toSocialSettingsShapeFromFormValues(values);
-      setBaseline<SocialSettingsShape>("social", nextBaselinePreview);
-      frame.onReset();
-      setPreviewMode("baseline");
+
+      /**
+       * Après save :
+       * - on efface le draft live
+       * - la preview retombe naturellement sur la nouvelle baseline persistée
+       */
+      setPreviewDraft(null);
     },
-    [
-      confirmSaveDespiteWarnings,
-      isLoading,
-      isSaving,
-      dirtyGuard,
-      save,
-      setBaseline,
-      frame,
-    ],
+    [confirmSaveDespiteWarnings, isLoading, isSaving, dirtyGuard, save],
   );
 
   const description = t("studio.socialSection.section.description");
@@ -146,15 +134,13 @@ export function SocialSection() {
         onSubmit={handleSubmit}
         onReset={() => {
           setWarningKeys([]);
+          setBlockingErrorsCount(0);
           dirtyGuard.setDirty(false);
-          // Reset preview sur la baseline (SettingsShape).
-          setDraft(baselinePreview);
-          handlePreviewReset();
+          setPreviewDraft(null);
         }}
         onWarningKeysChange={setWarningKeys}
         onValuesChange={(values) => {
-          // Live preview : RHF (UI) → SettingsShape.
-          setDraft(toSocialSettingsShapeFromFormValues(values));
+          setPreviewDraft(toSocialSettingsShapeFromFormValues(values));
         }}
         onBlockingErrorsCountChange={setBlockingErrorsCount}
         onDirtyChange={dirtyGuard.setDirty}
@@ -167,9 +153,6 @@ export function SocialSection() {
         src="/preview/social"
         iframeRef={iframeRef}
         onLoad={frame.onLoad}
-        onSync={handlePreviewSync}
-        onReset={handlePreviewReset}
-        syncDisabled={frame.syncDisabled}
         isLoading={isPreviewLoading}
         isEmpty={isEmpty}
         emptyLabel={emptyLabel}
@@ -177,9 +160,7 @@ export function SocialSection() {
         info={
           isEmpty
             ? t("studio.emptyPreview.social")
-            : previewMode === "override"
-              ? t("studio.shared.preview.infoOverride")
-              : t("studio.shared.preview.infoBaseline")
+            : t("studio.shared.preview.infoLive")
         }
       />
     </SettingsSection>

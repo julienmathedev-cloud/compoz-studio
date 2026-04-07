@@ -42,7 +42,11 @@ export function ImageCellRenderer({
   if (!src) return null;
 
   const variant = cell.variant ?? "default";
-  const { frameClass, sizes, mode } = resolveImageVariant(variant);
+  const size = cell.size ?? "full";
+
+  const mode = ui.variantMode[variant];
+  const frameClass = ui.variantFrame[variant];
+  const resolvedSizes = ui.variantSizes[variant];
 
   const imageNode = (
     <SiteAppImage
@@ -52,7 +56,7 @@ export function ImageCellRenderer({
         width: cell.image.width,
         height: cell.image.height,
       }}
-      sizes={sizes}
+      sizes={resolvedSizes}
       priority={priority}
       fetchPriority={priority ? "high" : "auto"}
       className={cn(
@@ -62,12 +66,17 @@ export function ImageCellRenderer({
     />
   );
 
-  const visual =
-    mode === "default" ? (
-      imageNode
-    ) : (
-      <div className={cn(frameClass, ui.container)}>{imageNode}</div>
-    );
+  const visual = (
+    <div className={cn(ui.root)}>
+      <div className={cn(ui.size[size])}>
+        {mode === "default" ? (
+          imageNode
+        ) : (
+          <div className={cn(frameClass, ui.container)}>{imageNode}</div>
+        )}
+      </div>
+    </div>
+  );
 
   const content = caption ? (
     <figure className={cn(ui.figure)}>
@@ -78,51 +87,7 @@ export function ImageCellRenderer({
     visual
   );
 
-  return <SiteReveal>{content}</SiteReveal>;
+  return cell.reveal ? <SiteReveal>{content}</SiteReveal> : content;
 }
 
 ImageCellRenderer.displayName = "ImageCellRenderer";
-
-/* -------------------------------------------------------------------------- */
-/* Internals                                                                  */
-/* -------------------------------------------------------------------------- */
-
-type ResolvedImageVariant = Readonly<{
-  mode: "default" | "cover";
-  frameClass: string;
-  sizes: string;
-}>;
-
-function resolveImageVariant(variant: unknown): ResolvedImageVariant {
-  const v = typeof variant === "string" ? variant : "default";
-
-  switch (v) {
-    case "wide":
-      return {
-        mode: "cover",
-        frameClass: "w-full aspect-[16/9]",
-        sizes: "(max-width: 1024px) 100vw, 1024px",
-      };
-
-    case "square":
-      return {
-        mode: "cover",
-        frameClass: "w-full aspect-square",
-        sizes: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
-      };
-
-    case "portrait":
-      return {
-        mode: "cover",
-        frameClass: "w-full aspect-[4/5]",
-        sizes: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
-      };
-
-    default:
-      return {
-        mode: "default",
-        frameClass: "",
-        sizes: "(max-width: 1024px) 100vw, 1024px",
-      };
-  }
-}

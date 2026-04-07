@@ -49,7 +49,8 @@ export function LocaleSwitch() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="headerStudio"
+          variant="header"
+          visualMode="studio"
           size="icon"
           aria-label={t("common.language")}
         >

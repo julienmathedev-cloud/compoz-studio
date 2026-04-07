@@ -11,6 +11,7 @@
  * @remarks
  * - DTO -> Shape runtime (shared, renderer) : `toPrimaryMenuSettingsShapeFromDTO` (package ui).
  * - Ici, la normalisation `href` est "draft-friendly" (internal/external) pour le studio.
+ * - Les `id` sont des identifiants métier stables, persistés côté domaine / API.
  */
 
 import type { PrimaryMenuSettingsDTO } from "@compoz/core/domain/site/dto";
@@ -31,6 +32,18 @@ import { toExternalDraft, toInternalDraft } from "@compoz/ui/lib/normalize";
 import { toPrimaryMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/primary-menu-shape";
 
 /* --------------------------------- helpers --------------------------------- */
+
+/**
+ * Génère un identifiant stable.
+ *
+ * @remarks
+ * - Utilisé comme fallback défensif pendant la migration si un ancien DTO
+ *   ne contient pas encore d’id.
+ * - La source de vérité reste ensuite le champ `id` persisté.
+ */
+function createId(): string {
+  return crypto.randomUUID();
+}
 
 /**
  * Normalise un href en draft interne/externe.
@@ -75,6 +88,7 @@ function toChildFormValuesFromDTO(
   it: PrimaryMenuDTOChild,
 ): PrimaryMenuChildFormValues {
   return {
+    id: trimKeepEmpty(String(it.id ?? "")) || createId(),
     label: trimKeepEmpty(it.label),
     href: String(it.href ?? ""),
     newTab: asBool(it.newTab),
@@ -86,6 +100,7 @@ function toTopItemFormValuesFromDTO(
   it: PrimaryMenuDTOItem,
 ): PrimaryMenuItemFormValues {
   const base: PrimaryMenuItemFormValues = {
+    id: trimKeepEmpty(String(it.id ?? "")) || createId(),
     label: trimKeepEmpty(it.label),
     href: String(it.href ?? ""),
     newTab: asBool(it.newTab),
@@ -98,7 +113,6 @@ function toTopItemFormValuesFromDTO(
 
   return {
     ...base,
-    // `children` peut être readonly => `.map` OK, retourne un nouvel Array
     children: children.map(toChildFormValuesFromDTO),
   };
 }
@@ -109,6 +123,7 @@ function normalizeChildFormValues(
   i: PrimaryMenuChildFormValues,
 ): PrimaryMenuChildFormValues {
   return {
+    id: trimKeepEmpty(i.id) || createId(),
     label: trimKeepEmpty(i.label),
     href: normalizeHrefDraftKeepEmpty(i.href),
     newTab: asBool(i.newTab),
@@ -122,6 +137,7 @@ function normalizeTopItemFormValues(
   const hasChildren = Array.isArray(children) && children.length > 0;
 
   return {
+    id: trimKeepEmpty(i.id) || createId(),
     label: trimKeepEmpty(i.label),
     href: normalizeHrefDraftKeepEmpty(i.href),
     // UX: parent + enfants => jamais newTab
@@ -156,7 +172,23 @@ export function toPrimaryMenuSettingsShapeFromFormValues(
   values: PrimaryMenuFormValues,
 ): PrimaryMenuSettingsShape {
   return {
-    items: values.items ?? [],
+    items:
+      values.items?.map((item) => ({
+        id: trimKeepEmpty(item.id) || createId(),
+        label: trimKeepEmpty(item.label),
+        href: normalizeHrefDraftKeepEmpty(item.href),
+        newTab:
+          Array.isArray(item.children) && item.children.length > 0
+            ? false
+            : asBool(item.newTab),
+        children:
+          item.children?.map((child) => ({
+            id: trimKeepEmpty(child.id) || createId(),
+            label: trimKeepEmpty(child.label),
+            href: normalizeHrefDraftKeepEmpty(child.href),
+            newTab: asBool(child.newTab),
+          })) ?? [],
+      })) ?? [],
   };
 }
 
@@ -206,6 +238,7 @@ function normalizeIntentDTOChild(
   c: PrimaryMenuChildFormValues,
 ): PrimaryMenuIntentDTOChild {
   return {
+    id: trimKeepEmpty(c.id) || createId(),
     label: trimKeepEmpty(c.label),
     href: normalizeHrefDraftKeepEmpty(c.href),
     newTab: asBool(c.newTab),
@@ -226,6 +259,7 @@ function normalizeIntentDTOTopItem(
       parentHrefDraft.trim().length === 0 ? "/" : parentHrefDraft;
 
     return {
+      id: trimKeepEmpty(it.id) || createId(),
       label: trimKeepEmpty(it.label),
       href: parentHref,
       newTab: false,
@@ -234,6 +268,7 @@ function normalizeIntentDTOTopItem(
   }
 
   return {
+    id: trimKeepEmpty(it.id) || createId(),
     label: trimKeepEmpty(it.label),
     href: normalizeHrefDraftKeepEmpty(it.href),
     newTab: asBool(it.newTab),

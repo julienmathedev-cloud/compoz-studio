@@ -134,7 +134,8 @@ export function PageBlockListItem({
           <TooltipButton
             type="button"
             size="icon"
-            variant="defaultStudio"
+            variant="default"
+            visualMode="studio"
             onClick={onEdit}
             disabled={!canEdit}
             aria-label={t("studio.pageBlocksListSection.bloc.edit")}

@@ -12,9 +12,7 @@
 import {
   PROSE_BASE,
   PROSE_CLASSNAME,
-  PROSE_HEADINGS,
 } from "@compoz/ui/styles/shared/typography";
 
 export const SITE_PROSE_BASE = PROSE_BASE.join(" ");
-export const SITE_PROSE_HEADINGS = PROSE_HEADINGS.join(" ");
 export const SITE_PROSE = PROSE_CLASSNAME;

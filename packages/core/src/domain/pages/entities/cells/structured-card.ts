@@ -14,13 +14,15 @@
  *   - un titre
  *   - un meta optionnel
  *   - une liste de sections label/content
+ *   - un bouton CTA optionnel
  * - Cela permet :
  *   - un usage solo avec `items.length = 1`
  *   - un usage en grille
  *   - une future réutilisation dans un carousel / slider
  */
 
-import type { ImageEditor } from "@compoz/core/domain/pages/entities/cells/image";
+import type { ButtonItem } from "@compoz/core/domain/pages/entities/cells/buttons";
+import type { ImageEditor } from "@compoz/core/domain/pages/entities/cells/image-editor";
 
 /**
  * Colonnes autorisées pour l’affichage d’une liste de structured cards.
@@ -51,6 +53,7 @@ export type StructuredCardItem = {
   title: string;
   meta: string | null;
   sections: ReadonlyArray<StructuredCardSection>;
+  button: ButtonItem | null;
 };
 
 /**

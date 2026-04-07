@@ -86,6 +86,7 @@
     "THEME_TOKEN_CARD_REQUIRED": "La couleur de fond des cartes est requise.",
     "THEME_TOKEN_CARD_FOREGROUND_REQUIRED": "La couleur du texte des cartes est requise.",
 
+    "THEME_TOKEN_CHROME_REQUIRED": "La couleur de fond du header et du footer est requise.",
     "THEME_TOKEN_POPOVER_REQUIRED": "La couleur de fond des popovers est requise.",
     "THEME_TOKEN_POPOVER_FOREGROUND_REQUIRED": "La couleur du texte des popovers est requise.",
 
@@ -161,6 +162,11 @@
     "LEGAL_MENU_HREF_REQUIRED": "Le lien (URL ou chemin) est requis.",
     "LEGAL_MENU_HREF_INVALID": "Le lien (URL ou chemin) est invalide.",
     "LEGAL_MENU_TOO_MANY_ITEMS": "Vous avez ajouté trop de liens dans le menu légal.",
+    "LEGAL_MENU_ID_REQUIRED": "L’identifiant de l’élément est requis.",
+    "LEGAL_MENU_DUPLICATE_ID": "Des identifiants de liens sont identiques (doublons).",
+
+    "PRIMARY_MENU_ID_REQUIRED": "L’identifiant de l’élément est requis.",
+    "PRIMARY_MENU_DUPLICATE_ID": "Des identifiants de liens sont identiques (doublons).",
 
     "PRIMARY_MENU_LABEL_TOO_LONG": "Le libellé du menu principal est trop long.",
     "PRIMARY_MENU_LABEL_REQUIRED": "Le libellé du menu principal est requis.",
@@ -199,7 +205,9 @@
     "SEO_TITLE_TEMPLATE_TOO_LONG": "Le champ titleTemplate est trop long.",
 
     "SITE_INDEX_DUPLICATE_SLUGS": "Des slugs (identifiants de l'URL) en double ont été détectés dans l’index du site.",
+    "SOCIAL_ID_REQUIRED": "L’identifiant de l’élément est requis.",
     "SOCIAL_DUPLICATE_KIND": "Certaines plateformes sociales sont renseignées plusieurs fois (doublons).",
+    "SOCIAL_DUPLICATE_ID": "Des identifiants de liens sont identiques (doublons).",
     "SOCIAL_INVALID_FOR_PLATFORM": "Le lien renseigné ne correspond pas au format attendu pour cette plateforme.",
     "SOCIAL_ABSOLUTE_REQUIRED": "Le lien doit être une URL http(s) absolue.",
     "SOCIAL_HREF_REQUIRED": "Le lien est requis.",
@@ -234,6 +242,8 @@
     "BLOCK_COLUMN_ID_REQUIRED": "L’ID de colonne est requis.",
     "BLOCK_COLUMN_ID_DUPLICATE": "L’ID de colonne est déjà utilisé dans la ligne.",
     "BLOCK_COLUMNS_COUNT_MISMATCH": "Le nombre de colonnes de la ligne ne correspond pas à la déclaration.",
+    "BLOCK_ROW_REVERSE_ON_INVALID": "La configuration de l’inversion d’ordre des colonnes est invalide.",
+    "BLOCK_ROW_REVERSE_ON_BREAKPOINT_INVALID": "La valeur de l’inversion d’ordre des colonnes est invalide.",
 
     "CELL_INVALID": "Une cellule est invalide.",
     "CELL_KIND_UNSUPPORTED": "Ce type de cellule n’est pas supporté.",
@@ -327,7 +337,8 @@
     "CELL_SEPARATOR_ALIGN_INVALID": "L’alignement du séparateur est invalide.",
     "CELL_SEPARATOR_SIZE_INVALID": "La taille du séparateur est invalide.",
 
-    "CELL_SPACER_SIZE_INVALID": "La taille de l’espace est invalide.",
+    "CELL_SPACER_SIZE_INVALID": "La taille de l’espacement est invalide.",
+    "CELL_SPACER_VISIBILITY_INVALID": "La visibilité de l’espacement est invalide.",
 
     "CELL_STEPS_VARIANT_INVALID": "La variante des étapes est invalide.",
     "CELL_STEPS_ITEMS_INVALID": "La liste des étapes est invalide.",
@@ -376,6 +387,7 @@
     "CELL_IMAGE_SRC_REQUIRED": "La source de l'image est requise.",
     "CELL_IMAGE_WIDTH_REQUIRED": "La largeur de l'image est requise.",
     "IMAGE_REVEAL_INVALID": "La configuration de l'image est invalide.",
+    "IMAGE_SIZE_INVALID": "La taille de l'image est invalide.",
     "CELL_IMAGE_HEIGHT_REQUIRED": "La hauteur de l'image est requise.",
     "CELL_IMAGE_ALT_INVALID": "Le texte alternatif de l’image est invalide.",
     "CELL_IMAGE_CAPTION_INVALID": "La légende de l’image est invalide.",
@@ -511,7 +523,8 @@
         "title": "Apercu — {entity}",
         "navDisabled": "La navigation est désactivée en mode aperçu.",
         "infoOverride": "Modifications en cours (non enregistrées)",
-        "infoBaseline": "Version enregistrée"
+        "infoBaseline": "Version enregistrée",
+        "infoLive": "Version en cours d’édition"
       }
     },
 
@@ -530,6 +543,11 @@
       "section": {
         "title": "Thème",
         "description": "Personnalise l’apparence globale du site : mode clair/sombre, police, animation de reveal et couleurs principales."
+      },
+      "warnings": {
+        "destructiveContrastLow": "Le contraste de la couleur de premier plan est trop faible pour être considéré comme étant conforme à la norme WCAG AA.",
+        "accentContrastLow": "Le contraste de la couleur d’accent est trop faible pour être considéré comme étant conforme à la norme WCAG AA.",
+        "secondaryContrastLow": "Le contraste de la couleur de premier plan est trop faible pour être considéré comme étant conforme à la norme WCAG AA."
       }
     },
 
@@ -602,7 +620,8 @@
           "destructive-foreground": "Destructive foreground",
           "border": "Border",
           "input": "Input",
-          "ring": "Ring"
+          "ring": "Ring",
+          "chrome": "Chrome"
         },
 
         "placeholders": {
@@ -624,7 +643,8 @@
           "destructive-foreground": "white",
           "border": "var(--indigo-4)",
           "input": "var(--indigo-4)",
-          "ring": "var(--indigo-9)"
+          "ring": "var(--indigo-9)",
+          "chrome": "var(--slate-1)"
         },
 
         "help": {
@@ -646,7 +666,8 @@
           "destructive-foreground": "Couleur de texte utilisée sur destructive.",
           "border": "Couleur des bordures principales.",
           "input": "Couleur des bordures ou fonds d’inputs selon les composants.",
-          "ring": "Couleur du focus ring."
+          "ring": "Couleur du focus ring.",
+          "chrome": "Couleur de fond du header et du footer."
         }
       }
     },
@@ -796,7 +817,11 @@
           "tooltips": {
             "unavailableWhileBusy": "Action indisponible pendant une opération."
           },
-          "reorderCells": "Réorganiser les cellules"
+          "reorderCells": "Réorganiser les cellules",
+          "reverseOnMobile": {
+            "label": "Inverser sur mobile",
+            "help": "Permet d'inverser les colonnes sur mobile."
+          }
         }
       },
       "drawer": {
@@ -872,7 +897,10 @@
         "tiktok": "TikTok",
         "facebook": "Facebook",
         "behance": "Behance",
-        "dribbble": "Dribbble"
+        "dribbble": "Dribbble",
+        "pinterest": "Pinterest",
+        "soundcloud": "SoundCloud",
+        "spotify": "Spotify"
       }
     },
 
@@ -1103,7 +1131,8 @@
       },
       "childrens": {
         "label": "Pages enfants ({count})",
-        "help": "Les pages enfants peuvent être réordonnées depuis la liste ci-dessous. Cet ordre est utilisé pour la navigation entre les pages."
+        "help": "Les pages enfants peuvent être réordonnées depuis la liste ci-dessous. Cet ordre est utilisé pour la navigation entre les pages.",
+        "position": "Position {current} sur {total}"
       },
       "sitemap": {
         "expandableLabel": "Options SEO : Sitemap",
@@ -1668,6 +1697,7 @@
           "2": "2 colonnes",
           "3": "3 colonnes"
         },
+        "buttonLabel": "Bouton",
         "revealLabel": "Afficher avec reveal",
         "revealHelp": "Active l’animation d’apparition de la section structured cards.",
         "imageLabel": "Image",
@@ -1872,6 +1902,13 @@
       "spacerCellEditor": {
         "sizeLabel": "Taille de l'espacement",
         "sizeHelp": "Définit la hauteur verticale ajoutée dans la colonne.",
+        "visibilityLabel": "Actif sur les appareils",
+        "visibilityHelp": "Définit si l'espacement est visible sur les appareils spécifiques.",
+        "devices": {
+          "mobile": "Mobile",
+          "tablet": "Tablette",
+          "desktop": "Ordinateur"
+        },
         "sizes": {
           "sm": "Petit",
           "md": "Moyen",
@@ -1880,6 +1917,8 @@
         }
       },
       "richText": {
+        "revealLabel": "Effet d'apparition",
+        "revealHelp": "Définit l'effet d'apparition du texte.",
         "undo": "Annuler",
         "redo": "Rétablir",
         "heading": "Titre",
@@ -1913,6 +1952,15 @@
           "wide": "Large",
           "portrait": "Portrait",
           "square": "Carré"
+        },
+        "revealLabel": "Effet d'apparition",
+        "revealHelp": "Active l'empêchement de l'affichage de l'image.",
+        "sizeLabel": "Taille",
+        "sizes": {
+          "sm": "Petite",
+          "md": "Moyenne",
+          "lg": "Grande",
+          "full": "Pleine largeur"
         }
       },
       "image": {
@@ -1937,6 +1985,10 @@
       "maxColumns": {
         "label": "Nombre de colonnes",
         "help": "Nombre maximum de colonnes à afficher dans la gallerie."
+      },
+      "reveal": {
+        "label": "Effet d'apparition",
+        "help": "Choisir l'effet d'apparition de la cellule de la gallerie"
       }
     },
 

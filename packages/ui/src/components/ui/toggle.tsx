@@ -12,14 +12,15 @@ const toggleVariants = cva(
     variants: {
       visualMode: {
         vanilla:
-          "motion-safe:transition-[color,background-color,border-color,box-shadow] motion-reduce:transition-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-pressed:bg-muted data-[state=on]:bg-muted dark:aria-invalid:ring-destructive/40",
+          "motion-safe:transition-[color,background-color,border-color,box-shadow] motion-reduce:transition-none hover:bg-accent hover:text-accent-foreground focus-visible:border-ring/80 focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-0 aria-pressed:bg-accent data-[state=on]:bg-accent data-[state=on]:text-accent-foreground",
+
         studio:
-          "motion-safe:transition-[color,background-color,border-color,box-shadow] motion-reduce:transition-none motion-safe:hover:bg-secondary motion-safe:hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-0 aria-invalid:ring-destructive/60 aria-invalid:ring-2 dark:aria-invalid:ring-destructive/40 aria-pressed:bg-secondary data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground",
+          "motion-safe:transition-[color,background-color,border-color,box-shadow] motion-reduce:transition-none hover:bg-accent hover:text-accent-foreground focus-visible:border-ring/80 focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-0 aria-pressed:bg-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground",
       },
       variant: {
         default: "bg-transparent",
         outline:
-          "border border-input bg-transparent data-[visual-mode=vanilla]:hover:bg-muted data-[visual-mode=studio]:motion-safe:hover:bg-muted",
+          "border border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
       },
       size: {
         default: "h-8 min-w-8 px-2",
@@ -47,7 +48,7 @@ function Toggle({
     <TogglePrimitive.Root
       data-slot="toggle"
       data-visual-mode={visualMode}
-      className={cn(toggleVariants({ visualMode, variant, size, className }))}
+      className={cn(toggleVariants({ visualMode, variant, size }), className)}
       {...props}
     />
   );

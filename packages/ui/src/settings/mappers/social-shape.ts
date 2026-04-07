@@ -32,6 +32,7 @@ function toHrefString(v: unknown): string {
 /** DTO -> Shape : item (renderer). */
 function toSocialSettingsItemShapeFromDTO(it: SocialItemDTO): SocialItemShape {
   return {
+    id: trimKeepEmpty(String(it.id ?? "")),
     kind: it.kind,
     href: trimKeepEmpty(toHrefString(it.href)),
   };

@@ -13,7 +13,6 @@
 
 import type { ReactNode } from "react";
 
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { blockRegistry } from "@compoz/ui/renderer/blockRegistry";
 import type {
   SiteBlockSectionUi,
@@ -62,8 +61,6 @@ export function BlocksRenderer({
   return (
     <div data-renderer="blocks" data-variant={variant} className={className}>
       {blocks.map((block, index) => {
-        const key = toStableUiKey({ id: String(block.id) }, index);
-
         const Renderer = blockRegistry[block.type];
 
         if (!Renderer) {
@@ -72,7 +69,7 @@ export function BlocksRenderer({
 
         return (
           <Renderer
-            key={key}
+            key={block.id}
             block={block}
             variant={variant}
             blockUi={blockUi}

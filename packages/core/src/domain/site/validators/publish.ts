@@ -102,13 +102,17 @@ export function publishWarnings(
       });
     }
 
-    const logoUrl = (settings.identity?.logoUrl ?? "").trim();
+    const hasLogo =
+      settings.identity?.logo !== null &&
+      settings.identity?.logo !== undefined &&
+      settings.identity.logo.src.trim().length > 0;
+
     const faviconUrl = (settings.identity?.faviconUrl ?? "").trim();
 
-    if (!logoUrl) {
+    if (!hasLogo) {
       warnings.push({
         code: EC.PUBLISH_IDENTITY_LOGO_MISSING,
-        path: ["identity", "logoUrl"],
+        path: ["identity", "logo"],
       });
     }
 

@@ -12,6 +12,7 @@ import type {
   StructuredCardItem,
   StructuredCardSection,
 } from "@compoz/core/domain/pages/entities/cell";
+import { assertButtonItem } from "@compoz/core/domain/pages/validators/cells/button";
 import { assertImageEditor } from "@compoz/core/domain/pages/validators/cells/shared-image";
 
 type Path = ReadonlyArray<string | number>;
@@ -108,6 +109,10 @@ export function assertStructuredCardItem(item: StructuredCardItem, path: Path) {
 
   if (item.image !== null) {
     assertImageEditor(item.image, [...path, "image"]);
+  }
+
+  if (item.button !== null) {
+    assertButtonItem(item.button, [...path, "button"]);
   }
 }
 

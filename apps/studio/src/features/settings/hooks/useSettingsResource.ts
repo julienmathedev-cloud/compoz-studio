@@ -140,11 +140,10 @@ export function useSettingsResource<T extends object>({
   autoLoad = true,
 }: UseSettingsResourceParams<T>): SettingsHookResult<T> {
   const [baseline, setBaseline] = useState<T>(defaults);
-  const [isLoading, setIsLoading] = useState<boolean>(!!autoLoad);
+  const [isLoading, setIsLoading] = useState<boolean>(Boolean(autoLoad));
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const ctrlRef = useRef<AbortController | null>(null);
-  const hasLoadedOnceRef = useRef<boolean>(false);
   const pendingLoadsRef = useRef<number>(0);
 
   /**
@@ -220,9 +219,7 @@ export function useSettingsResource<T extends object>({
       ctrlRef.current = abortController;
 
       pendingLoadsRef.current += 1;
-      if (!hasLoadedOnceRef.current) {
-        setIsLoading(true);
-      }
+      setIsLoading(true);
 
       const promise = (async () => {
         try {
@@ -235,20 +232,10 @@ export function useSettingsResource<T extends object>({
           const normalized = (onLoadedRef.current?.(data) ?? data) as T;
           setBaseline(normalized);
 
-          if (!hasLoadedOnceRef.current) {
-            hasLoadedOnceRef.current = true;
-            setIsLoading(false);
-          }
-
           return normalized;
         } catch (error: unknown) {
           if (!isAbortError(error)) {
             notify.fromError(error);
-
-            if (!hasLoadedOnceRef.current) {
-              hasLoadedOnceRef.current = true;
-              setIsLoading(false);
-            }
           }
 
           throw error;

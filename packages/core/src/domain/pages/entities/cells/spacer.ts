@@ -7,8 +7,15 @@
 
 export type SpacerSize = "sm" | "md" | "lg" | "xl";
 
+export type SpacerVisibility = {
+  mobile: boolean;
+  tablet: boolean;
+  desktop: boolean;
+};
+
 export type SpacerCell = {
   id: string;
   kind: "spacer";
   size: SpacerSize;
+  visibility: SpacerVisibility;
 };

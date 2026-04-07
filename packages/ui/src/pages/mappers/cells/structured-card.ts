@@ -27,6 +27,14 @@ export function toStructuredCardCellShapeFromDTO(
         label: section.label,
         content: section.content,
       })),
+      button: item.button
+        ? {
+            id: item.button.id,
+            label: item.button.label,
+            href: item.button.href,
+            variant: item.button.variant,
+          }
+        : null,
     })),
   };
 }

@@ -38,6 +38,8 @@ export const DEFAULT_LIGHT_THEME_TOKENS: PublicThemeTokens = {
   card: "#FDFCFD",
   "card-foreground": "#211F26",
 
+  chrome: "#FDFCFD",
+
   popover: "#FDFCFD",
   "popover-foreground": "#211F26",
 
@@ -76,6 +78,8 @@ export const DEFAULT_DARK_THEME_TOKENS: PublicThemeTokens = {
 
   card: "#FFFFFF",
   "card-foreground": "#1C2024",
+
+  chrome: "#FCFCFD",
 
   popover: "#F9F9FB",
   "popover-foreground": "#1C2024",

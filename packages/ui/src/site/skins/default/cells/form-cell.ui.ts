@@ -16,7 +16,7 @@ export const defaultFormUi: SiteFormUi = {
   card: "w-full max-w-2xl mx-auto",
   form: "flex flex-col",
   header: "flex flex-col gap-2",
-  content: "flex flex-col gap-6",
+  content: "flex flex-col gap-6 pb-4",
   fields: "flex flex-col gap-4",
   field: "flex flex-col gap-2",
   label: "text-sm font-medium",

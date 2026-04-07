@@ -64,12 +64,13 @@ export function AddEmptyCardButton({
       disabled={disabled}
       aria-label={ariaLabel}
       tooltip={disabled ? (disabledTooltip ?? tooltip) : tooltip}
-      variant="defaultStudio"
+      variant="default"
+      visualMode="studio"
       className={cn(
         EMPTY_CARD,
-        "flex w-full items-center bg-accent/20 text-left",
+        "flex w-full items-center bg-muted/20 text-left",
         !disabled
-          ? "cursor-pointer hover:bg-accent/50 hover:border-primary focus-visible:ring-offset-2"
+          ? "cursor-pointer hover:bg-muted/50 hover:border-primary focus-visible:ring-offset-2"
           : "cursor-not-allowed opacity-70",
         className,
       )}

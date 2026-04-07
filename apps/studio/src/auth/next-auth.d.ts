@@ -5,6 +5,7 @@
  * @description
  * Module augmentation NextAuth/Auth.js :
  * - Ajoute les champs RBAC/tenants au User, Session et JWT.
+ * - Prépare aussi les champs de session liés aux sandboxes démo.
  *
  * @remarks
  * - Fichier .d.ts inclus par TypeScript (via tsconfig "include").
@@ -24,6 +25,9 @@ declare module "next-auth" {
     role: AuthRole;
     tenantIds: string[];
     defaultTenantId: string;
+    isDemo?: boolean;
+    demoInstanceId?: string;
+    demoExpiresAt?: string;
   }
 
   interface Session {
@@ -32,6 +36,9 @@ declare module "next-auth" {
       role: AuthRole;
       tenantIds: string[];
       defaultTenantId: string;
+      isDemo?: boolean;
+      demoInstanceId?: string;
+      demoExpiresAt?: string;
     };
   }
 }
@@ -42,5 +49,8 @@ declare module "next-auth/jwt" {
     role: AuthRole;
     tenantIds: string[];
     defaultTenantId: string;
+    isDemo?: boolean;
+    demoInstanceId?: string;
+    demoExpiresAt?: string;
   }
 }

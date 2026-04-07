@@ -42,18 +42,3 @@ export const PROSE_HEADINGS = [
 
 export const PROSE = [...PROSE_BASE, ...PROSE_HEADINGS] as const;
 export const PROSE_CLASSNAME = PROSE.join(" ");
-
-/**
- * Styles “orphans” : quand tu rends un <SiteHeading /> hors d’un container `prose`.
- * On aligne sur les tailles/marges de PROSE_HEADINGS.
- */
-export const SITE_HEADING = {
-  h1: ["text-4xl", "font-bold", "leading-tight", "mt-3", "mb-2"] as const,
-  h2: ["text-3xl", "font-bold", "leading-tight", "mt-3", "mb-2"] as const,
-  h3: ["text-2xl", "font-bold", "mt-3", "mb-2"] as const,
-  h4: ["text-xl", "font-semibold", "mt-3", "mb-2"] as const,
-  h5: ["text-lg", "font-semibold", "mt-3", "mb-2"] as const,
-  h6: ["text-base", "font-semibold", "mt-3", "mb-2"] as const,
-} as const;
-
-export type SiteHeadingTag = keyof typeof SITE_HEADING;

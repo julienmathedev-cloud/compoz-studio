@@ -14,12 +14,15 @@
  * - Les images sont gérées par RHF via `useFieldArray`.
  * - Les options de cellule (`maxColumns`, `linksEnabled`) restent portées
  *   au niveau de la cellule gallery.
+ * - Le reorder s’appuie sur `move()` pour conserver l’état RHF.
+ * - `replace()` reste utilisé pour les normalisations métier globales
+ *   (ex: suppression des href quand `linksEnabled` est désactivé).
  */
 
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { Control } from "react-hook-form";
-import { useController, useFieldArray } from "react-hook-form";
+import { useController, useFieldArray, useWatch } from "react-hook-form";
 
 import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
@@ -132,7 +135,7 @@ export function GalleryCellEditor({
     control,
   });
 
-  const { fields, append, remove, move, replace } = useFieldArray<
+  const { fields, append, remove, replace, move } = useFieldArray<
     SectionBlockFormValues,
     GalleryItemsPath,
     "fieldId"
@@ -141,6 +144,13 @@ export function GalleryCellEditor({
     name: itemsPath,
     keyName: "fieldId",
   });
+
+  const watchedItems = (useWatch({
+    control,
+    name: itemsPath,
+  }) ?? []) as ImageEditorFormValues[];
+
+  const galleryFields = fields as GalleryImageField[];
 
   const linksEnabled = Boolean(linksEnabledCtrl.field.value);
   const maxColumns = clampMaxColumns(maxColumnsCtrl.field.value);
@@ -188,10 +198,10 @@ export function GalleryCellEditor({
             linksEnabledCtrl.field.onChange(checked);
 
             if (!checked) {
-              const normalized = fields.map((img) => ({
+              const normalized = watchedItems.map((img) => ({
                 ...img,
                 href: null,
-              })) as ImageEditorFormValues[];
+              }));
 
               replace(normalized);
             }
@@ -216,7 +226,8 @@ export function GalleryCellEditor({
         control={control}
         idPrefix={idPrefix}
         basePath={basePath}
-        fields={fields as GalleryImageField[]}
+        fields={galleryFields}
+        watchedItems={watchedItems}
         append={append}
         remove={remove}
         move={move}

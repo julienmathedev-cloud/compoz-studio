@@ -64,6 +64,77 @@ function normalizeSlug(slug: unknown): string {
   return String(slug ?? "").trim();
 }
 
+function normalizeRowReverseOn(value: unknown): {
+  mobile: boolean;
+  tablet: boolean;
+  desktop: boolean;
+} {
+  const safe =
+    value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Partial<{
+          mobile: boolean;
+          tablet: boolean;
+          desktop: boolean;
+        }>)
+      : undefined;
+
+  return {
+    mobile: Boolean(safe?.mobile),
+    tablet: Boolean(safe?.tablet),
+    desktop: Boolean(safe?.desktop),
+  };
+}
+
+function normalizePageLegacyBlocks(input: unknown): unknown {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    return input;
+  }
+
+  const page = input as {
+    blocks?: unknown;
+  };
+
+  if (!Array.isArray(page.blocks)) {
+    return input;
+  }
+
+  return {
+    ...page,
+    blocks: page.blocks.map((block) => {
+      if (!block || typeof block !== "object" || Array.isArray(block)) {
+        return block;
+      }
+
+      const safeBlock = block as {
+        type?: unknown;
+        rows?: unknown;
+      };
+
+      if (safeBlock.type !== "section" || !Array.isArray(safeBlock.rows)) {
+        return block;
+      }
+
+      return {
+        ...safeBlock,
+        rows: safeBlock.rows.map((row) => {
+          if (!row || typeof row !== "object" || Array.isArray(row)) {
+            return row;
+          }
+
+          const safeRow = row as {
+            reverseOn?: unknown;
+          };
+
+          return {
+            ...safeRow,
+            reverseOn: normalizeRowReverseOn(safeRow.reverseOn),
+          };
+        }),
+      };
+    }),
+  };
+}
+
 function toDomainPage(p: PageShape): Page {
   const meta: PageMeta = {
     createdAt: p.meta.createdAt,
@@ -163,7 +234,9 @@ export class KvPagesRepository implements PagesRepository {
     const json = parseRedisJson<unknown>(raw);
     if (!json) return null;
 
-    const parsed = PageSchema.parse(json);
+    const normalized = normalizePageLegacyBlocks(json);
+    const parsed = PageSchema.parse(normalized);
+
     return toDomainPage(parsed);
   }
 
@@ -413,7 +486,8 @@ export class KvPagesRepository implements PagesRepository {
       }
 
       try {
-        const parsed = PageSchema.parse(json);
+        const normalized = normalizePageLegacyBlocks(json);
+        const parsed = PageSchema.parse(normalized);
         out.push(toDomainPage(parsed));
       } catch {
         out.push(null);

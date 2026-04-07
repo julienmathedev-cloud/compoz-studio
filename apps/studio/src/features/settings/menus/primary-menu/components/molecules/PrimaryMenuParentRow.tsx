@@ -256,8 +256,9 @@ export function PrimaryMenuParentRow({
             />
           ) : (
             <Card
-              variant="panelStudio"
-              className="bg-accent/10 shadow-xs shadow-accent"
+              variant="panel"
+              visualMode="studio"
+              className="bg-secondary/10 shadow-xs shadow-accent"
             >
               <CardContent className="flex flex-col gap-2">
                 {renderChildren}

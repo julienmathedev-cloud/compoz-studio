@@ -9,17 +9,20 @@
  * - Rend `null` si la liste est vide.
  * - Délègue le rendu du lien à `SiteIconLink` (a11y + garde-fous href).
  * - L’icône est rendue via `renderSocialKindIcon`.
- * - La clé de liste est stabilisée via `toStableUiKey`.
+ * - Les clés de liste utilisent désormais l’identifiant métier stable `id`.
  * - Le style est fourni par le skin/template via `ui`.
  */
 
-import { toStableUiKey } from "@compoz/ui/lib/keys/toStableUiKey";
 import { renderSocialKindIcon } from "@compoz/ui/lib/social/social-kind-icons";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteIconLink } from "@compoz/ui/site/components/atoms/SiteIconLink";
-import type { SiteSocialMenuUi } from "@compoz/ui/site/site-ui.types.ts";
+import type { SiteSocialMenuUi } from "@compoz/ui/site/site-ui.types";
 
-export type SiteSocialMenuItem = Readonly<{ kind: string; href: string }>;
+export type SiteSocialMenuItem = Readonly<{
+  id: string;
+  kind: string;
+  href: string;
+}>;
 
 export type SiteSocialMenuProps = Readonly<{
   settings?: Readonly<{ items?: ReadonlyArray<SiteSocialMenuItem> }>;
@@ -35,14 +38,8 @@ export function SiteSocialMenu({ settings, ui }: SiteSocialMenuProps) {
 
   return (
     <ul className={cn(ui.list)}>
-      {items.map((item, index) => (
-        <li
-          key={toStableUiKey(
-            { keyId: `${item.kind}:${index}`, href: item.href },
-            index,
-          )}
-          className={cn(ui.item)}
-        >
+      {items.map((item) => (
+        <li key={item.id} className={cn(ui.item)}>
           <SiteIconLink
             href={item.href}
             ariaLabel={item.kind}

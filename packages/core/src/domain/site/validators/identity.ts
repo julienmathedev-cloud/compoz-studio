@@ -11,6 +11,7 @@
  * - Utilisé notamment par le use-case `publishSite`.
  */
 
+import { assertImage } from "@compoz/core/domain/assets/validators/image";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type { IdentitySettings } from "@compoz/core/domain/site/entities/identity";
@@ -20,11 +21,11 @@ import type { IdentitySettings } from "@compoz/core/domain/site/entities/identit
  *
  * @throws DomainError
  * - `EC.IDENTITY_SITENAME_REQUIRED`
- * - `EC.IDENTITY_LOGO_ALT_REQUIRED`
  */
 export function assertIdentitySettings(identity: IdentitySettings): void {
   // Invariant : titre requis
   const siteName = identity.siteName.trim();
+
   if (!siteName) {
     throw new DomainError({
       code: EC.IDENTITY_SITENAME_REQUIRED,
@@ -33,17 +34,8 @@ export function assertIdentitySettings(identity: IdentitySettings): void {
     });
   }
 
-  // Invariant : logoAlt requis si un logo est défini
-  const hasLogo =
-    typeof identity.logoUrl === "string" && identity.logoUrl.trim() !== "";
-
-  const logoAlt = identity.logoAlt.trim();
-
-  if (hasLogo && !logoAlt) {
-    throw new DomainError({
-      code: EC.IDENTITY_LOGO_ALT_REQUIRED,
-      message: EC.IDENTITY_LOGO_ALT_REQUIRED,
-      details: { path: ["identity", "logoAlt"] },
-    });
+  // Invariant : le logo doit être une image valide s'il est défini
+  if (identity.logo !== null) {
+    assertImage(identity.logo, ["identity", "logo"]);
   }
 }

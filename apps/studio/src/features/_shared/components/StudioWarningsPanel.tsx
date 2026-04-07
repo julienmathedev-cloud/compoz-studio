@@ -48,9 +48,7 @@ export function StudioWarningsPanel<TWarningKey extends string>({
     [warningKeys, warningMessageKeyPrefix, t],
   );
 
-  return (
-    <StudioHintsPanel id={id} hints={warningHints} variant="warningStudio" />
-  );
+  return <StudioHintsPanel id={id} hints={warningHints} variant="warning" />;
 }
 
 StudioWarningsPanel.displayName = "StudioWarningsPanel";

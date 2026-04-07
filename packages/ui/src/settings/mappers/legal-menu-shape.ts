@@ -28,6 +28,7 @@ import { trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 /** DTO -> Shape : item (renderer). */
 function toLegalMenuItemShapeFromDTO(it: LegalMenuItemDTO): LegalMenuItemShape {
   return {
+    id: trimKeepEmpty(String(it.id ?? "")),
     label: trimKeepEmpty(it.label),
     // DTO attendu string | null | undefined. Si jamais "dirty", on force string de façon best-effort.
     href: trimKeepEmpty(

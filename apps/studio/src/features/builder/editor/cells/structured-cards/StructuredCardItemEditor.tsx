@@ -14,7 +14,13 @@
  * - L’affichage des erreurs repose sur une règle unique :
  *   `showError || fieldState.isTouched`.
  * - Chaque item édite son propre contenu :
- *   image, title, meta et liste de sections.
+ *   image, title, meta, bouton CTA et liste de sections.
+ * - Le layout est pensé pour une édition plus lisible :
+ *   image à gauche / textes image à droite, puis blocs 2 colonnes.
+ * - La lecture/édition des valeurs passe par RHF (`useController`).
+ * - `sortableId` sert uniquement au drag and drop.
+ * - `watchedItem` sert de fallback visuel pour stabiliser le rendu
+ *   pendant le rebinding RHF après reorder.
  */
 
 import { useSortable } from "@dnd-kit/sortable";
@@ -24,8 +30,12 @@ import type { Control } from "react-hook-form";
 import { useController, useFieldArray } from "react-hook-form";
 
 import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
+import { Text } from "@compoz/studio/components/atoms/typography/Text";
+import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 import { AddEmptyCardButton } from "@compoz/studio/components/molecules/controls/AddEmptyCardButton";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
+import { LinkFieldsItem } from "@compoz/studio/components/molecules/fields/LinkFieldsItem";
+import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { ImageFields } from "@compoz/studio/features/_shared/components/ImageFields";
 import { StructuredCardSectionEditor } from "@compoz/studio/features/builder/editor/cells/structured-cards/StructuredCardSectionEditor";
 import { DragHandle } from "@compoz/studio/features/dnd/DragHandle";
@@ -37,6 +47,10 @@ import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 import type { StructuredCardItemFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
+
+const BUTTON_VARIANTS = ["default", "secondary", "outline", "ghost"] as const;
+
+type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
 
 type UploadedRasterImage = Readonly<{
   url: string;
@@ -55,7 +69,8 @@ export type StructuredCardItemEditorProps = Readonly<{
   basePath: StructuredCardFieldBasePath;
   index: number;
   idPrefix: string;
-  value: StructuredCardItemFormValues;
+  sortableId: string;
+  watchedItem?: StructuredCardItemFormValues;
   disabled?: boolean;
   canRemove?: boolean;
   onRemove: () => void;
@@ -68,7 +83,8 @@ export function StructuredCardItemEditor({
   basePath,
   index,
   idPrefix,
-  value,
+  sortableId,
+  watchedItem,
   disabled = false,
   canRemove = true,
   onRemove,
@@ -84,36 +100,61 @@ export function StructuredCardItemEditor({
   const imageSrcCtrl = useController({
     name: `${itemBasePath}.image.src` as `${StructuredCardItemBasePath}.image.src`,
     control,
+    defaultValue: watchedItem?.image?.src ?? "",
   });
 
   const imageAltCtrl = useController({
     name: `${itemBasePath}.image.alt` as `${StructuredCardItemBasePath}.image.alt`,
     control,
+    defaultValue: watchedItem?.image?.alt ?? "",
   });
 
   const imageCaptionCtrl = useController({
     name: `${itemBasePath}.image.caption` as `${StructuredCardItemBasePath}.image.caption`,
     control,
+    defaultValue: watchedItem?.image?.caption ?? "",
   });
 
   const imageWidthCtrl = useController({
     name: `${itemBasePath}.image.width` as `${StructuredCardItemBasePath}.image.width`,
     control,
+    defaultValue: watchedItem?.image?.width,
   });
 
   const imageHeightCtrl = useController({
     name: `${itemBasePath}.image.height` as `${StructuredCardItemBasePath}.image.height`,
     control,
+    defaultValue: watchedItem?.image?.height,
   });
 
   const titleCtrl = useController({
     name: `${itemBasePath}.title` as `${StructuredCardItemBasePath}.title`,
     control,
+    defaultValue: watchedItem?.title ?? "",
   });
 
   const metaCtrl = useController({
     name: `${itemBasePath}.meta` as `${StructuredCardItemBasePath}.meta`,
     control,
+    defaultValue: watchedItem?.meta ?? "",
+  });
+
+  const buttonLabelCtrl = useController({
+    name: `${itemBasePath}.button.label` as `${StructuredCardItemBasePath}.button.label`,
+    control,
+    defaultValue: watchedItem?.button?.label ?? "",
+  });
+
+  const buttonHrefCtrl = useController({
+    name: `${itemBasePath}.button.href` as `${StructuredCardItemBasePath}.button.href`,
+    control,
+    defaultValue: watchedItem?.button?.href ?? "",
+  });
+
+  const buttonVariantCtrl = useController({
+    name: `${itemBasePath}.button.variant` as `${StructuredCardItemBasePath}.button.variant`,
+    control,
+    defaultValue: watchedItem?.button?.variant ?? "default",
   });
 
   const {
@@ -138,12 +179,15 @@ export function StructuredCardItemEditor({
     transition,
     isDragging,
   } = useSortable({
-    id: value.id,
+    id: sortableId,
     disabled,
   });
 
   const titleIds = createFieldIds(idPrefix, "title");
   const metaIds = createFieldIds(idPrefix, "meta");
+  const buttonLabelIds = createFieldIds(idPrefix, "button-label");
+  const buttonVariantIds = createFieldIds(idPrefix, "button-variant");
+  const buttonLinkIdPrefix = `${idPrefix}-button-link`;
 
   const shouldShowImageSrcError =
     showError || imageSrcCtrl.fieldState.isTouched;
@@ -151,6 +195,8 @@ export function StructuredCardItemEditor({
     showError || imageAltCtrl.fieldState.isTouched;
   const shouldShowTitleError = showError || titleCtrl.fieldState.isTouched;
   const shouldShowMetaError = showError || metaCtrl.fieldState.isTouched;
+  const shouldShowButtonLabelError =
+    showError || buttonLabelCtrl.fieldState.isTouched;
 
   const imageSrcErrorMessage = shouldShowImageSrcError
     ? imageSrcCtrl.fieldState.error?.message
@@ -188,6 +234,42 @@ export function StructuredCardItemEditor({
       ? String(metaCtrl.fieldState.error.message)
       : undefined;
 
+  const buttonLabelInvalid =
+    shouldShowButtonLabelError &&
+    Boolean(buttonLabelCtrl.fieldState.error?.message);
+
+  const buttonLabelError =
+    shouldShowButtonLabelError && buttonLabelCtrl.fieldState.error?.message
+      ? String(buttonLabelCtrl.fieldState.error.message)
+      : undefined;
+
+  const currentButtonVariantRaw =
+    buttonVariantCtrl.field.value ?? watchedItem?.button?.variant;
+
+  const currentButtonVariant: ButtonVariant =
+    currentButtonVariantRaw &&
+    BUTTON_VARIANTS.includes(currentButtonVariantRaw as ButtonVariant)
+      ? (currentButtonVariantRaw as ButtonVariant)
+      : "default";
+
+  const imageSrcValue = String(
+    imageSrcCtrl.field.value ?? watchedItem?.image?.src ?? "",
+  );
+  const imageAltValue = String(
+    imageAltCtrl.field.value ?? watchedItem?.image?.alt ?? "",
+  );
+  const imageCaptionValue = String(
+    imageCaptionCtrl.field.value ?? watchedItem?.image?.caption ?? "",
+  );
+  const titleValue = String(titleCtrl.field.value ?? watchedItem?.title ?? "");
+  const metaValue = String(metaCtrl.field.value ?? watchedItem?.meta ?? "");
+  const buttonLabelValue = String(
+    buttonLabelCtrl.field.value ?? watchedItem?.button?.label ?? "",
+  );
+  const buttonHrefValue = String(
+    buttonHrefCtrl.field.value ?? watchedItem?.button?.href ?? "",
+  );
+
   const style = {
     transform: transform ? CSS.Transform.toString(transform) : undefined,
     transition,
@@ -197,7 +279,8 @@ export function StructuredCardItemEditor({
     <Card
       ref={setNodeRef}
       style={style}
-      variant="defaultStudio"
+      variant="default"
+      visualMode="studio"
       className={cn("relative h-full", STACK_MD, isDragging && "opacity-60")}
     >
       <CardContent>
@@ -219,115 +302,177 @@ export function StructuredCardItemEditor({
 
         <div className="pt-1">
           <div className={cn(STACK_MD)}>
-            <ImageFields
-              idPrefix={`${idPrefix}-image`}
-              srcField={{
-                value: String(imageSrcCtrl.field.value ?? ""),
-                onChange: (next) => {
-                  const nextSrc = String(next ?? "");
+            <div className="min-w-0">
+              <ImageFields
+                idPrefix={`${idPrefix}-image`}
+                srcField={{
+                  value: imageSrcValue,
+                  onChange: (next) => {
+                    const nextSrc = String(next ?? "");
 
-                  if (!nextSrc.trim()) {
-                    imageSrcCtrl.field.onChange("");
-                    imageAltCtrl.field.onChange("");
-                    imageCaptionCtrl.field.onChange("");
-                    imageWidthCtrl.field.onChange(undefined);
-                    imageHeightCtrl.field.onChange(undefined);
-                    return;
-                  }
+                    if (!nextSrc.trim()) {
+                      imageSrcCtrl.field.onChange("");
+                      imageAltCtrl.field.onChange("");
+                      imageCaptionCtrl.field.onChange("");
+                      imageWidthCtrl.field.onChange(undefined);
+                      imageHeightCtrl.field.onChange(undefined);
+                      return;
+                    }
 
-                  imageSrcCtrl.field.onChange(nextSrc);
-                },
-                onBlur: imageSrcCtrl.field.onBlur,
-              }}
-              altField={{
-                value: String(imageAltCtrl.field.value ?? ""),
-                onChange: (next) => {
-                  imageAltCtrl.field.onChange(String(next ?? ""));
-                },
-                onBlur: imageAltCtrl.field.onBlur,
-              }}
-              captionField={{
-                value: String(imageCaptionCtrl.field.value ?? ""),
-                onChange: (next) => {
-                  imageCaptionCtrl.field.onChange(String(next ?? ""));
-                },
-                onBlur: imageCaptionCtrl.field.onBlur,
-              }}
-              disabled={disabled}
-              onUploadImage={onUploadImage}
-              onUploaded={(meta) => {
-                imageSrcCtrl.field.onChange(meta.url);
-                imageWidthCtrl.field.onChange(meta.width);
-                imageHeightCtrl.field.onChange(meta.height);
-              }}
-              accept="image/jpeg,image/png,image/webp,image/avif"
-              preferredTypes={["image/webp", "image/avif"]}
-              preferredTypeHint={t(
-                "studio.imageSelector.hints.notRecommendedType",
-                {
-                  types: "WEBP, AVIF",
-                },
-              )}
-              labels={{
-                image: t(
-                  "studio.cellEditorTabs.structuredCardCellEditor.imageLabel",
-                ),
-                alt: t("studio.cellEditorTabs.image.altLabel"),
-                caption: t("studio.cellEditorTabs.image.captionLabel"),
-              }}
-              help={{
-                image: t(
-                  "studio.cellEditorTabs.structuredCardCellEditor.imageHelp",
-                ),
-                alt: t("studio.cellEditorTabs.image.altHelp"),
-                caption: t("studio.cellEditorTabs.image.captionHelp"),
-              }}
-              layout="stack"
-              srcInvalid={imageSrcInvalid}
-              srcErrorMessage={imageSrcErrorMessage}
-              invalidAlt={imageAltInvalid}
-              altErrorMessage={imageAltErrorMessage}
-            />
+                    imageSrcCtrl.field.onChange(nextSrc);
+                  },
+                  onBlur: imageSrcCtrl.field.onBlur,
+                }}
+                altField={{
+                  value: imageAltValue,
+                  onChange: (next) => {
+                    imageAltCtrl.field.onChange(String(next ?? ""));
+                  },
+                  onBlur: imageAltCtrl.field.onBlur,
+                }}
+                captionField={{
+                  value: imageCaptionValue,
+                  onChange: (next) => {
+                    imageCaptionCtrl.field.onChange(String(next ?? ""));
+                  },
+                  onBlur: imageCaptionCtrl.field.onBlur,
+                }}
+                disabled={disabled}
+                onUploadImage={onUploadImage}
+                onUploaded={(meta) => {
+                  imageSrcCtrl.field.onChange(meta.url);
+                  imageWidthCtrl.field.onChange(meta.width);
+                  imageHeightCtrl.field.onChange(meta.height);
+                }}
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                preferredTypes={["image/webp", "image/avif"]}
+                preferredTypeHint={t(
+                  "studio.imageSelector.hints.notRecommendedType",
+                  {
+                    types: "WEBP, AVIF",
+                  },
+                )}
+                labels={{
+                  image: t(
+                    "studio.cellEditorTabs.structuredCardCellEditor.imageLabel",
+                  ),
+                  alt: t("studio.cellEditorTabs.image.altLabel"),
+                  caption: t("studio.cellEditorTabs.image.captionLabel"),
+                }}
+                help={{
+                  image: t(
+                    "studio.cellEditorTabs.structuredCardCellEditor.imageHelp",
+                  ),
+                  alt: t("studio.cellEditorTabs.image.altHelp"),
+                  caption: t("studio.cellEditorTabs.image.captionHelp"),
+                }}
+                layout="split"
+                srcInvalid={imageSrcInvalid}
+                srcErrorMessage={imageSrcErrorMessage}
+                invalidAlt={imageAltInvalid}
+                altErrorMessage={imageAltErrorMessage}
+              />
+            </div>
 
-            <InputField
-              ids={titleIds}
-              inputRef={titleCtrl.field.ref}
-              label={t(
-                "studio.cellEditorTabs.structuredCardCellEditor.titleLabel",
-              )}
-              value={String(titleCtrl.field.value ?? "")}
-              onChange={titleCtrl.field.onChange}
-              onBlur={titleCtrl.field.onBlur}
-              placeholder={t(
-                "studio.cellEditorTabs.structuredCardCellEditor.titlePlaceholder",
-              )}
-              disabled={disabled}
-              help={t(
-                "studio.cellEditorTabs.structuredCardCellEditor.titleHelp",
-              )}
-              invalid={titleInvalid}
-              error={titleError}
-            />
+            <FormGrid>
+              <div className="min-w-0">
+                <InputField
+                  ids={titleIds}
+                  inputRef={titleCtrl.field.ref}
+                  label={t(
+                    "studio.cellEditorTabs.structuredCardCellEditor.titleLabel",
+                  )}
+                  value={titleValue}
+                  onChange={titleCtrl.field.onChange}
+                  onBlur={titleCtrl.field.onBlur}
+                  placeholder={t(
+                    "studio.cellEditorTabs.structuredCardCellEditor.titlePlaceholder",
+                  )}
+                  disabled={disabled}
+                  help={t(
+                    "studio.cellEditorTabs.structuredCardCellEditor.titleHelp",
+                  )}
+                  invalid={titleInvalid}
+                  error={titleError}
+                />
+              </div>
 
-            <InputField
-              ids={metaIds}
-              inputRef={metaCtrl.field.ref}
-              label={t(
-                "studio.cellEditorTabs.structuredCardCellEditor.metaLabel",
-              )}
-              value={String(metaCtrl.field.value ?? "")}
-              onChange={metaCtrl.field.onChange}
-              onBlur={metaCtrl.field.onBlur}
-              placeholder={t(
-                "studio.cellEditorTabs.structuredCardCellEditor.metaPlaceholder",
-              )}
-              disabled={disabled}
-              help={t(
-                "studio.cellEditorTabs.structuredCardCellEditor.metaHelp",
-              )}
-              invalid={metaInvalid}
-              error={metaError}
-            />
+              <div className="min-w-0">
+                <InputField
+                  ids={metaIds}
+                  inputRef={metaCtrl.field.ref}
+                  label={t(
+                    "studio.cellEditorTabs.structuredCardCellEditor.metaLabel",
+                  )}
+                  value={metaValue}
+                  onChange={metaCtrl.field.onChange}
+                  onBlur={metaCtrl.field.onBlur}
+                  placeholder={t(
+                    "studio.cellEditorTabs.structuredCardCellEditor.metaPlaceholder",
+                  )}
+                  disabled={disabled}
+                  help={t(
+                    "studio.cellEditorTabs.structuredCardCellEditor.metaHelp",
+                  )}
+                  invalid={metaInvalid}
+                  error={metaError}
+                />
+              </div>
+            </FormGrid>
+
+            <Separator />
+
+            <FormGrid>
+              <Text className="text-sm font-semibold">
+                {t(
+                  "studio.cellEditorTabs.structuredCardCellEditor.buttonLabel",
+                )}
+              </Text>
+              <InputField
+                ids={buttonLabelIds}
+                inputRef={buttonLabelCtrl.field.ref}
+                label={t("studio.cellEditorTabs.buttonsCellEditor.labelLabel")}
+                value={buttonLabelValue}
+                onChange={(next) => {
+                  buttonLabelCtrl.field.onChange(next);
+                }}
+                onBlur={buttonLabelCtrl.field.onBlur}
+                disabled={disabled}
+                placeholder={t(
+                  "studio.cellEditorTabs.buttonsCellEditor.labelPlaceholder",
+                )}
+                help={t("studio.cellEditorTabs.buttonsCellEditor.labelHelp")}
+                invalid={buttonLabelInvalid}
+                error={buttonLabelError}
+              />
+              <LinkFieldsItem
+                idPrefix={buttonLinkIdPrefix}
+                href={buttonHrefValue}
+                onHrefChange={(next) => {
+                  buttonHrefCtrl.field.onChange(next);
+                }}
+                disabled={disabled}
+              />
+
+              <SelectField
+                ids={buttonVariantIds}
+                label={t(
+                  "studio.cellEditorTabs.buttonsCellEditor.variantLabel",
+                )}
+                value={currentButtonVariant}
+                onChange={(next) => {
+                  buttonVariantCtrl.field.onChange(next as ButtonVariant);
+                }}
+                items={BUTTON_VARIANTS.map((variant) => ({
+                  value: variant,
+                  label: t(
+                    `studio.cellEditorTabs.buttonsCellEditor.variants.${variant}`,
+                  ),
+                }))}
+                disabled={disabled}
+                help={t("studio.cellEditorTabs.buttonsCellEditor.variantHelp")}
+              />
+            </FormGrid>
 
             <Separator />
 

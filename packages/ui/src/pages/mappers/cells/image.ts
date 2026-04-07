@@ -25,6 +25,7 @@ export function toImageCellShapeFromDTO(
       height: cell.image.height,
     },
     variant: cell.variant,
+    size: cell.size,
     reveal: cell.reveal,
   };
 }

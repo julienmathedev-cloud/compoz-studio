@@ -15,7 +15,6 @@
 import type { ReactNode } from "react";
 
 import { cn } from "@compoz/ui/lib/utils";
-import { SiteHeading } from "@compoz/ui/site/components/atoms/SiteHeading";
 import type { SiteSystemPageUi } from "@compoz/ui/site/site-ui.types";
 
 export type SiteSystemPageProps = Readonly<{
@@ -41,9 +40,7 @@ export function SiteSystemPage({
   return (
     <main className={cn(ui.main)}>
       <div className={cn(ui.prose)}>
-        <SiteHeading level={1} className={cn(ui.title)}>
-          {title}
-        </SiteHeading>
+        <h1 className={cn(ui.title)}>{title}</h1>
 
         {description ? (
           <p className={cn(ui.description)}>{description}</p>

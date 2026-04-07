@@ -21,6 +21,7 @@ import { z } from "zod";
 
 export const LegalMenuItemFormSchema = z
   .object({
+    id: z.string().trim().min(1, ERROR_CODES.LEGAL_MENU_ID_REQUIRED),
     label: z
       .string()
       .trim()
@@ -71,7 +72,27 @@ export const LegalMenuFormSchema = z
       message: ERROR_CODES.LEGAL_MENU_TOO_MANY_ITEMS,
     }),
   })
-  .strict();
+  .strict()
+  .superRefine((val, ctx) => {
+    const firstIndexById = new Map<string, number>();
+
+    for (let i = 0; i < val.items.length; i++) {
+      const id = String(val.items[i]?.id ?? "").trim();
+      if (!id) continue;
+
+      const firstIdx = firstIndexById.get(id);
+      if (firstIdx == null) {
+        firstIndexById.set(id, i);
+        continue;
+      }
+
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["items", i, "id"],
+        message: ERROR_CODES.LEGAL_MENU_DUPLICATE_ID,
+      });
+    }
+  });
 
 export type LegalMenuItemFormValues = z.infer<typeof LegalMenuItemFormSchema>;
 export type LegalMenuFormValues = z.infer<typeof LegalMenuFormSchema>;

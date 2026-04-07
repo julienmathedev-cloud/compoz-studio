@@ -155,6 +155,8 @@ function assertRows(
       });
     }
 
+    assertRowReverseOn(row, rowPath);
+
     if (!Array.isArray(row.columns)) {
       throw new DomainError({
         code: EC.BLOCK_COLUMNS_INVALID,
@@ -175,6 +177,51 @@ function assertRows(
     }
 
     assertColumns(row.columns, [...rowPath, "columns"], pageCells);
+  }
+}
+
+function assertRowReverseOn(row: BlockRow, rowPath: Path): void {
+  const reverseOn = row.reverseOn;
+
+  if (!reverseOn || typeof reverseOn !== "object" || Array.isArray(reverseOn)) {
+    throw new DomainError({
+      code: EC.BLOCK_ROW_REVERSE_ON_INVALID,
+      message: EC.BLOCK_ROW_REVERSE_ON_INVALID,
+      details: { path: [...rowPath, "reverseOn"] },
+    });
+  }
+
+  assertReverseOnBreakpoint(
+    reverseOn.mobile,
+    [...rowPath, "reverseOn", "mobile"],
+    "mobile",
+  );
+  assertReverseOnBreakpoint(
+    reverseOn.tablet,
+    [...rowPath, "reverseOn", "tablet"],
+    "tablet",
+  );
+  assertReverseOnBreakpoint(
+    reverseOn.desktop,
+    [...rowPath, "reverseOn", "desktop"],
+    "desktop",
+  );
+}
+
+function assertReverseOnBreakpoint(
+  value: unknown,
+  path: Path,
+  breakpoint: "mobile" | "tablet" | "desktop",
+): void {
+  if (typeof value !== "boolean") {
+    throw new DomainError({
+      code: EC.BLOCK_ROW_REVERSE_ON_BREAKPOINT_INVALID,
+      message: EC.BLOCK_ROW_REVERSE_ON_BREAKPOINT_INVALID,
+      details: {
+        path,
+        meta: { breakpoint },
+      },
+    });
   }
 }
 

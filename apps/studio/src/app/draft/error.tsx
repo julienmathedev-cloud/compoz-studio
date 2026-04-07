@@ -30,7 +30,6 @@ type DraftErrorProps = Readonly<{
 export default function DraftError({ reset }: DraftErrorProps) {
   const ui = useSiteUi();
 
-  // ✅ Convention : home draft preview = "/draft"
   return (
     <SiteSystemPage
       ui={ui.systemPage}
@@ -40,7 +39,8 @@ export default function DraftError({ reset }: DraftErrorProps) {
         <>
           <Button
             type="button"
-            variant="outlineVanilla"
+            variant="outline"
+            visualMode="vanilla"
             className={cn(ui.systemPage.button)}
             onClick={reset}
           >
@@ -49,7 +49,8 @@ export default function DraftError({ reset }: DraftErrorProps) {
 
           <Button
             type="button"
-            variant="outlineVanilla"
+            variant="outline"
+            visualMode="vanilla"
             className={cn(ui.systemPage.button)}
             asChild
           >

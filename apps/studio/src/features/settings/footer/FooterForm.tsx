@@ -41,34 +41,16 @@ import {
  * Props du composant `FooterForm`.
  */
 type FooterFormProps = Readonly<{
-  /** Valeurs initiales (baseline) fournies par la section. */
   initialValues: FooterFormValues;
-
-  /** Indique qu’une sauvegarde côté parent est en cours. */
   isSaving?: boolean;
-
-  /** Callback appelé avec des valeurs validées par Zod. */
   onSubmit: (values: FooterFormValues) => void | Promise<void>;
-
-  /** Handler optionnel : permet au parent de réagir à un reset UI. */
   onReset?: () => void;
-
-  /** Handler optionnel : remonte les warnings UI (non bloquants). */
   onWarningKeysChange?: (keys: FooterWarningKey[]) => void;
-
-  /** Handler optionnel : remonte les valeurs live (preview draft). */
   onValuesChange?: (values: FooterFormValues) => void;
-
-  /** Handler optionnel : remonte le nombre d’erreurs bloquantes (badges section). */
   onBlockingErrorsCountChange?: (count: number) => void;
-
-  /** Handler optionnel : remonte l’état dirty (guard / navigation). */
   onDirtyChange?: (dirty: boolean) => void;
 }>;
 
-/**
- * Formulaire de configuration du pied de page (studio).
- */
 export function FooterForm({
   initialValues,
   isSaving,
@@ -101,22 +83,14 @@ export function FooterForm({
 
   const t = useTranslations();
 
-  // Préfixe d’ID stable pour ce formulaire
   const idPrefix = useIdPrefix("footer-form");
 
-  // IDs de champs dérivés du préfixe
   const showYearIds = createFieldIds(idPrefix, "showYear");
   const copyrightIds = createFieldIds(idPrefix, "copyright");
 
-  /**
-   * RHF controllers (Identity-style).
-   */
   const showYearCtrl = useController({ name: "showYear", control });
   const copyrightCtrl = useController({ name: "copyright", control });
 
-  /**
-   * Warnings live basés sur les valeurs RHF.
-   */
   const [showYearWatch, copyrightWatch] = useWatch({
     control,
     name: ["showYear", "copyright"],
@@ -132,9 +106,6 @@ export function FooterForm({
     onWarningKeysChange,
   });
 
-  /**
-   * Affichage d’erreur UX : Identity-style.
-   */
   const showError = isSubmitted || submitCount > 0;
 
   const invalidCopyright =
@@ -146,7 +117,6 @@ export function FooterForm({
       ? String(errors.copyright.message)
       : undefined;
 
-  // ✅ Compteur erreurs bloquantes (pour badge de section).
   const blockingErrorsCount = useMemo(() => {
     return [invalidCopyright].filter(Boolean).length;
   }, [invalidCopyright]);
@@ -155,9 +125,6 @@ export function FooterForm({
     onBlockingErrorsCountChange?.(blockingErrorsCount);
   }, [blockingErrorsCount, onBlockingErrorsCountChange]);
 
-  /**
-   * Helper : cast strict vers boolean.
-   */
   const toBool = (v: boolean | "indeterminate") => v === true;
 
   return (
@@ -166,7 +133,7 @@ export function FooterForm({
       onSubmit={handleSubmit(onSubmit)}
       noValidate
     >
-      <Card variant="panelStudio">
+      <Card variant="panel" visualMode="studio">
         <CardContent>
           <FormGrid>
             <InputField

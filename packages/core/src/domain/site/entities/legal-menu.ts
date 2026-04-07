@@ -13,6 +13,9 @@ import type { AssetUrl } from "@compoz/core/domain/urls/href";
  * Item individuel du menu légal.
  */
 export interface LegalMenuItem {
+  /** Identifiant stable de l’item. */
+  id: string;
+
   /** Libellé affiché dans le menu. */
   label: string;
 

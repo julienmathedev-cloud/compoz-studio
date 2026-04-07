@@ -18,4 +18,35 @@ export const defaultCardsExtendedUi: SiteCardsExtendedUi = {
     2: "md:grid-cols-2",
     3: "md:grid-cols-2 lg:grid-cols-3",
   },
+
+  align: {
+    left: "items-start text-left",
+    center: "items-center text-center",
+  },
+
+  card: "h-full border border-border ring-0 shadow-border shadow-xs transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-[1.01] hover:shadow-sm hover:border-primary",
+
+  header: "flex flex-col",
+
+  headerTop: "flex items-center! gap-5",
+
+  icon: "h-7 w-7 shrink-0 text-primary",
+
+  title: "",
+
+  content: "flex flex-col gap-3 h-full",
+
+  description: "text-muted-foreground",
+
+  bulletsList: "flex flex-col gap-1",
+  bulletsAlign: {
+    left: "items-start",
+    center: "items-center",
+  },
+
+  footer: "text-sm text-muted-foreground",
+  footerAlign: {
+    left: "",
+    center: "justify-center text-center",
+  },
 } as const;

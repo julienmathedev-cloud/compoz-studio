@@ -13,10 +13,8 @@ import type { z } from "zod";
 /**
  * Intention de mise à jour des réglages Social (draft-only).
  *
- *
  * On définit donc explicitement le payload patchable : `{ items?: ... }`.
  */
-
 export const UpdateSocialSettingsIntentSchema =
   SocialSettingsSchema.partial().strict();
 

@@ -94,7 +94,6 @@ export function TextareaField({
 
   const isInvalid = Boolean(error) || Boolean(invalid);
 
-  // A11y : aria-describedby construit à partir des IDs fournis + contenu présent
   const describedByIds: string[] = [];
 
   if (help && helpId) {
@@ -110,12 +109,10 @@ export function TextareaField({
 
   return (
     <Field data-invalid={isInvalid || undefined}>
-      {/* Label principal */}
       <FieldLabel visualMode="studio" htmlFor={fieldId}>
         {label}
       </FieldLabel>
 
-      {/* Contrôle principal */}
       <Textarea
         id={fieldId}
         rows={rows}
@@ -125,11 +122,11 @@ export function TextareaField({
         aria-describedby={describedBy}
         aria-invalid={isInvalid ? true : undefined}
         disabled={disabled}
-        variant="defaultStudio"
+        variant="default"
+        visualMode="studio"
         {...textareaProps}
       />
 
-      {/* Aide + compteur (non bloquants) */}
       {(help || showCount) && (
         <FieldDescription visualMode="studio">
           <FieldMetaBar
@@ -141,7 +138,6 @@ export function TextareaField({
         </FieldDescription>
       )}
 
-      {/* Erreur bloquante */}
       {error && (
         <FieldError id={errorId}>
           <ErrorText error={error} />

@@ -50,6 +50,7 @@ type OverviewPublishCardProps = Readonly<{
   isError?: boolean;
   className?: string;
   publishedBaseUrl?: string | null;
+  isDemo?: boolean;
 }>;
 
 type AnyWarningLike = Readonly<{
@@ -98,6 +99,7 @@ export function OverviewPublishCard({
   isError,
   className,
   publishedBaseUrl,
+  isDemo = false,
 }: OverviewPublishCardProps) {
   const t = useTranslations();
   const tenantId = useTenantId();
@@ -204,7 +206,7 @@ export function OverviewPublishCard({
       : prePublishWarningHints;
 
   const handlePublish = useCallback(async () => {
-    if (isPublishing) return;
+    if (isPublishing || isDemo) return;
 
     setPublishWarnings([]);
 
@@ -231,11 +233,12 @@ export function OverviewPublishCard({
 
     setLast(result);
     setPublishWarnings(result.warnings ?? []);
-  }, [confirmList, isPublishing, prePublishWarningHints, publish, t]);
+  }, [confirmList, isDemo, isPublishing, prePublishWarningHints, publish, t]);
 
   return (
     <Card
-      variant="panelStudio"
+      variant="panel"
+      visualMode="studio"
       data-state={isError ? "error" : undefined}
       className={className}
     >
@@ -290,7 +293,7 @@ export function OverviewPublishCard({
           <StudioHintsPanel
             id="publish-warnings"
             hints={visibleWarningHints}
-            variant="warningStudio"
+            variant="warning"
           />
 
           {last ? (
@@ -306,9 +309,10 @@ export function OverviewPublishCard({
 
           <div className={cn(ROW_BETWEEN, "mt-auto gap-3")}>
             <Button
-              variant="defaultStudio"
+              variant="default"
+              visualMode="studio"
               onClick={handlePublish}
-              disabled={isPublishing}
+              disabled={isPublishing || isDemo}
             >
               {isPublishing ? (
                 <LoadingStatus
@@ -320,40 +324,52 @@ export function OverviewPublishCard({
               )}
             </Button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outlineStudio">
-                  {t("studio.overviewSection.publish.view")}
-                </Button>
-              </DropdownMenuTrigger>
+            {isDemo ? (
+              <Button variant="outline" visualMode="studio" asChild>
+                <Link href="/draft" target="_blank" rel="noopener noreferrer">
+                  {t("studio.shared.visualize.draft")}
+                </Link>
+              </Button>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" visualMode="studio">
+                    {t("studio.overviewSection.publish.view")}
+                  </Button>
+                </DropdownMenuTrigger>
 
-              <DropdownMenuContent
-                visualMode="studio"
-                align="end"
-                className="w-24"
-              >
-                <DropdownMenuLabel visualMode="studio">
-                  {t("studio.overviewSection.publish.view")}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
+                <DropdownMenuContent
+                  visualMode="studio"
+                  align="end"
+                  className="w-24"
+                >
+                  <DropdownMenuLabel visualMode="studio">
+                    {t("studio.overviewSection.publish.view")}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
 
-                <DropdownMenuItem visualMode="studio" asChild>
-                  <Link href="/draft" target="_blank" rel="noopener noreferrer">
-                    {t("studio.shared.visualize.draft")}
-                  </Link>
-                </DropdownMenuItem>
+                  <DropdownMenuItem visualMode="studio" asChild>
+                    <Link
+                      href="/draft"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {t("studio.shared.visualize.draft")}
+                    </Link>
+                  </DropdownMenuItem>
 
-                <DropdownMenuItem visualMode="studio" asChild>
-                  <Link
-                    href={publishedUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {t("studio.shared.visualize.published")}
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuItem visualMode="studio" asChild>
+                    <Link
+                      href={publishedUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {t("studio.shared.visualize.published")}
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </CardContent>

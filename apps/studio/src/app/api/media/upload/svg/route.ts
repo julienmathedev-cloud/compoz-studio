@@ -40,6 +40,75 @@ function buildStorageKey(args: {
   return `tenants/${args.tenantId}/${args.year}/${args.month}/${args.filename}`;
 }
 
+function parseSvgLength(raw: string | null | undefined): number | null {
+  if (!raw) return null;
+
+  const value = raw.trim().toLowerCase();
+  if (!value) return null;
+
+  /**
+   * On accepte uniquement des longueurs en unités CSS/px raisonnables
+   * ou unitless (interprétées comme px).
+   *
+   * Exemples acceptés :
+   * - "240"
+   * - "240px"
+   */
+  const match = value.match(/^([0-9]+(?:\.[0-9]+)?)(px)?$/);
+  if (!match) return null;
+
+  const n = Number(match[1]);
+  if (!Number.isFinite(n) || n <= 0) return null;
+
+  return n;
+}
+
+function extractSvgDimensions(
+  svg: string,
+): { width: number; height: number } | null {
+  const svgTagMatch = svg.match(/<svg\b[^>]*>/i);
+  if (!svgTagMatch) return null;
+
+  const svgTag = svgTagMatch[0];
+
+  const widthAttr = svgTag.match(/\bwidth\s*=\s*["']([^"']+)["']/i)?.[1];
+  const heightAttr = svgTag.match(/\bheight\s*=\s*["']([^"']+)["']/i)?.[1];
+
+  const width = parseSvgLength(widthAttr);
+  const height = parseSvgLength(heightAttr);
+
+  if (width && height) {
+    return {
+      width: Math.round(width),
+      height: Math.round(height),
+    };
+  }
+
+  const viewBoxAttr = svgTag.match(/\bviewBox\s*=\s*["']([^"']+)["']/i)?.[1];
+  if (!viewBoxAttr) return null;
+
+  const parts = viewBoxAttr
+    .trim()
+    .split(/[\s,]+/)
+    .map((part) => Number(part));
+
+  if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n))) {
+    return null;
+  }
+
+  const vbWidth = parts[2];
+  const vbHeight = parts[3];
+
+  if (vbWidth <= 0 || vbHeight <= 0) {
+    return null;
+  }
+
+  return {
+    width: Math.round(vbWidth),
+    height: Math.round(vbHeight),
+  };
+}
+
 export async function POST(req: Request) {
   const NS = "api.studio.media.upload.svg.POST" as const;
 
@@ -124,6 +193,17 @@ export async function POST(req: Request) {
           });
         }
 
+        const dimensions = extractSvgDimensions(text);
+        if (!dimensions) {
+          throwHttp(422, {
+            code: EC.INVALID_ARGUMENT,
+            message: EC.UPLOAD_SVG_NOT_SAFE,
+            details: {
+              reason: "svg_dimensions_missing_or_invalid",
+            },
+          });
+        }
+
         const origName = file.name || "logo";
         const safeBase = sanitizeFilename(origName.replace(/\.[^.]+$/, ""));
 
@@ -146,6 +226,8 @@ export async function POST(req: Request) {
           tenantId,
           contentType,
           size,
+          width: dimensions.width,
+          height: dimensions.height,
           url: stored.url,
         });
 
@@ -153,6 +235,8 @@ export async function POST(req: Request) {
           url: stored.url,
           filename,
           size,
+          width: dimensions.width,
+          height: dimensions.height,
           contentType,
         };
 

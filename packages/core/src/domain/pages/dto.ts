@@ -7,6 +7,7 @@
  * et restent immuables (`Readonly<>`).
  */
 
+import type { Image } from "@compoz/core/domain/assets/entities/image";
 import type { Block } from "@compoz/core/domain/pages/entities/block";
 import type {
   ButtonItem,
@@ -16,13 +17,13 @@ import type {
   CarouselItem,
   CarouselItemKind,
   CarouselVariant,
-  StructuredCardItem,
   Cell,
   ImageEditor,
-  TimelineItem,
-  StructuredCardColumns,
   StructuredCardCell,
+  StructuredCardColumns,
+  StructuredCardItem,
   StructuredCardSection,
+  TimelineItem,
 } from "@compoz/core/domain/pages/entities/cell";
 import type {
   InternalPageOption,
@@ -59,6 +60,8 @@ export type PageSitemapDTO = Readonly<PageSitemap>;
  * importer directement l’entité.
  */
 export type SitemapChangeFreqDTO = SitemapChangeFreq;
+
+export type ImageDTO = Readonly<Image>;
 
 /** DTO représentant un Block (aligné sur l’entité métier `Block`). */
 export type BlockDTO = Readonly<Block>;

@@ -19,7 +19,7 @@ import { twMerge } from "tailwind-merge";
 import type {
   SiteGlobalUi,
   SiteGlobalUiOverride,
-} from "@compoz/ui/site/site-ui.types.ts";
+} from "@compoz/ui/site/site-ui.types";
 
 type AnyRecord = Record<string, unknown>;
 

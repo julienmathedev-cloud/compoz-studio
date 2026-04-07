@@ -6,6 +6,7 @@
 import type { ReactNode } from "react";
 
 import { PreviewProviders } from "@compoz/studio/features/preview/PreviewProviders";
+import { getDraftSettings } from "@compoz/studio/lib/pages/draft-page-loaders";
 import { fontVariablesClassName } from "@compoz/ui/lib/fonts";
 import { cn } from "@compoz/ui/lib/utils";
 import { SITE_APP_SHELL } from "@compoz/ui/styles/site/layout";
@@ -20,13 +21,16 @@ export default async function PreviewLayout({ children }: PreviewLayoutProps) {
   const locale = await getLocale();
   const messages = await getMessages({ locale });
 
+  const settings = await getDraftSettings();
+  const initialTheme = settings?.theme ?? null;
+
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <PreviewProviders>
-        <div className={cn(SITE_APP_SHELL, fontVariablesClassName)}>
+      <div className={cn(SITE_APP_SHELL, fontVariablesClassName)}>
+        <PreviewProviders initialTheme={initialTheme}>
           {children}
-        </div>
-      </PreviewProviders>
+        </PreviewProviders>
+      </div>
     </NextIntlClientProvider>
   );
 }

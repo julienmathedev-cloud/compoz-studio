@@ -9,20 +9,50 @@
 import type { SiteImageUi } from "@compoz/ui/site/site-ui.types";
 
 export const defaultImageUi: SiteImageUi = {
-  // frame: évite les débordements en cover
+  // Wrapper global : permet de contrôler la largeur visuelle
+  root: "flex w-full items-center justify-center",
+
+  // Figure + caption
+  figure: "flex flex-col gap-3 items-center",
+  caption: "text-sm text-muted-foreground",
+
+  // Frame : évite les débordements en cover
   container: "overflow-hidden",
 
-  // base image
+  // Base image
   image: "",
 
-  // variante default : rendu naturel responsive
+  // Modes de rendu
   imageDefault: "h-auto w-full",
-
-  // variantes cover : remplit la frame
   imageCover: "h-full w-full object-cover",
 
-  // figure + caption
-  figure: "flex flex-col gap-3",
+  // Ratio / comportement visuel
+  variantMode: {
+    default: "default",
+    wide: "cover",
+    square: "cover",
+    portrait: "cover",
+  },
 
-  caption: "text-muted-foreground text-sm",
+  variantFrame: {
+    default: "",
+    wide: "aspect-[16/9] w-full",
+    square: "aspect-square w-full",
+    portrait: "aspect-[4/5] w-full",
+  },
+
+  variantSizes: {
+    default: "(max-width: 1024px) 100vw, 1024px",
+    wide: "(max-width: 1024px) 100vw, 1024px",
+    square: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
+    portrait: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
+  },
+
+  // Présence visuelle dans le layout
+  size: {
+    sm: "w-1/2",
+    md: "w-2/3",
+    lg: "w-3/4",
+    full: "w-full",
+  },
 } as const;

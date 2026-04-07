@@ -190,6 +190,8 @@
     "BLOCK_COLUMN_ID_REQUIRED": "Column id is required.",
     "BLOCK_COLUMN_ID_DUPLICATE": "Duplicate column id detected in row.",
     "BLOCK_COLUMNS_COUNT_MISMATCH": "Row columns count does not match declared columnsCount.",
+    "BLOCK_ROW_REVERSE_ON_INVALID": "The reverse on configuration is invalid.",
+    "BLOCK_ROW_REVERSE_ON_BREAKPOINT_INVALID": "The reverse on breakpoint value is invalid.",
 
     "CELL_INVALID": "A cell is invalid.",
     "CELL_KIND_UNSUPPORTED": "This cell type is not supported.",

@@ -5,6 +5,7 @@
  * Validateur métier de CardsExtendedCell.
  */
 
+import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type {
@@ -102,11 +103,17 @@ export function assertCardsExtendedItem(item: CardsExtendedItem, path: Path) {
     });
   }
 
-  if (item.icon !== null && typeof item.icon !== "string") {
+  if (
+    item.icon !== null &&
+    (typeof item.icon !== "string" || !CONTENT_ICON_KINDS.includes(item.icon))
+  ) {
     throw new DomainError({
       code: EC.CELL_CARDS_EXTENDED_ITEM_ICON_INVALID,
       message: EC.CELL_CARDS_EXTENDED_ITEM_ICON_INVALID,
-      details: { path: [...path, "icon"] },
+      details: {
+        path: [...path, "icon"],
+        meta: { icon: item.icon },
+      },
     });
   }
 

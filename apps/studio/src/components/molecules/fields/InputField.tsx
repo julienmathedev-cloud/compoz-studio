@@ -47,36 +47,21 @@ export type InputFieldProps = Readonly<
     InputHTMLAttributes<HTMLInputElement>,
     "id" | "value" | "onChange" | "type" | "placeholder" | "disabled"
   > & {
-    /** Ensemble des IDs ARIA du champ (fournis par le parent). */
     ids: FieldIds;
-    /** Libellé visible associé à l’input. */
     label: string;
-    /** Valeur actuelle (contrôlée). */
     value: string;
-    /** Callback appelé avec la prochaine valeur. */
     onChange: (v: string) => void;
-    /** Placeholder optionnel. */
     placeholder?: string;
-    /** Type d’input HTML (défaut: "text"). */
     type?: HTMLInputTypeAttribute;
-    /** Texte d’aide optionnel (string ou JSX). */
     help?: string | ReactNode;
-    /** Message d’erreur bloquant affiché sous le champ. */
     error?: string;
-    /** Marque le champ invalide (complète `error`). */
     invalid?: boolean;
-    /** Désactive l’input. */
     disabled?: boolean;
-    /** Affiche le compteur de caractères (non bloquant). */
     showCount?: boolean;
-    /** Ref optionnelle vers l’input (focus, RHF, etc.). */
     inputRef?: Ref<HTMLInputElement>;
   }
 >;
 
-/**
- * Champ texte contrôlé standardisé pour le Studio.
- */
 export function InputField({
   ids,
   label,
@@ -96,11 +81,9 @@ export function InputField({
 
   const isInvalid = Boolean(error) || Boolean(invalid);
 
-  // Si maxLength est fourni, on le récupère pour alimenter le compteur
   const max =
     typeof inputProps.maxLength === "number" ? inputProps.maxLength : undefined;
 
-  // A11y : aria-describedby construit à partir des IDs fournis + contenu présent
   const describedByIds: string[] = [];
 
   if (help && helpId) {
@@ -115,17 +98,11 @@ export function InputField({
     describedByIds.length > 0 ? describedByIds.join(" ") : undefined;
 
   return (
-    <Field
-      // Permet de cibler visuellement le groupe (bordures, couleurs, etc.)
-      data-invalid={isInvalid || undefined}
-      className="min-w-0"
-    >
-      {/* Label accessible associé à l’input via htmlFor */}
+    <Field data-invalid={isInvalid || undefined} className="min-w-0">
       <FieldLabel visualMode="studio" htmlFor={fieldId}>
         {label}
       </FieldLabel>
 
-      {/* Contrôle principal : input contrôlé */}
       <Input
         id={fieldId}
         ref={inputRef}
@@ -136,11 +113,11 @@ export function InputField({
         aria-invalid={isInvalid ? true : undefined}
         aria-describedby={describedBy}
         disabled={disabled}
-        variant="defaultStudio"
+        variant="default"
+        visualMode="studio"
         {...inputProps}
       />
 
-      {/* Description + barre meta (aide + compteur) */}
       {(help || showCount) && (
         <FieldDescription visualMode="studio">
           <FieldMetaBar
@@ -152,7 +129,6 @@ export function InputField({
         </FieldDescription>
       )}
 
-      {/* Erreur bloquante sous le champ */}
       {error && (
         <FieldError id={errorId}>
           <ErrorText error={error} />

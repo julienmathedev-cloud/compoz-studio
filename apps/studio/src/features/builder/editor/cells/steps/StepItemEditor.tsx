@@ -13,6 +13,10 @@
  * - Le reorder est géré par drag and drop via dnd-kit.
  * - L’affichage des erreurs repose sur une règle unique :
  *   `showError || fieldState.isTouched`.
+ * - La lecture/édition des valeurs passe par RHF (`useController`).
+ * - `sortableId` sert uniquement au drag and drop.
+ * - `watchedItem` sert de fallback visuel pour stabiliser le rendu
+ *   pendant le rebinding RHF après reorder.
  */
 
 import { useSortable } from "@dnd-kit/sortable";
@@ -40,7 +44,8 @@ export type StepItemEditorProps = Readonly<{
   basePath: StepsFieldBasePath;
   index: number;
   idPrefix: string;
-  value: StepItemFormValues;
+  sortableId: string;
+  watchedItem?: StepItemFormValues;
   disabled?: boolean;
   canRemove?: boolean;
   onRemove: () => void;
@@ -52,7 +57,8 @@ export function StepItemEditor({
   basePath,
   index,
   idPrefix,
-  value,
+  sortableId,
+  watchedItem,
   disabled = false,
   canRemove = true,
   onRemove,
@@ -65,11 +71,13 @@ export function StepItemEditor({
   const titleCtrl = useController({
     name: `${itemBasePath}.title` as `${StepItemBasePath}.title`,
     control,
+    defaultValue: watchedItem?.title ?? "",
   });
 
   const descriptionCtrl = useController({
     name: `${itemBasePath}.description` as `${StepItemBasePath}.description`,
     control,
+    defaultValue: watchedItem?.description ?? "",
   });
 
   const {
@@ -80,7 +88,7 @@ export function StepItemEditor({
     transition,
     isDragging,
   } = useSortable({
-    id: value.id,
+    id: sortableId,
     disabled,
   });
 
@@ -108,6 +116,11 @@ export function StepItemEditor({
       ? String(descriptionCtrl.fieldState.error.message)
       : undefined;
 
+  const titleValue = String(titleCtrl.field.value ?? watchedItem?.title ?? "");
+  const descriptionValue = String(
+    descriptionCtrl.field.value ?? watchedItem?.description ?? "",
+  );
+
   const style = {
     transform: transform ? CSS.Transform.toString(transform) : undefined,
     transition,
@@ -117,7 +130,8 @@ export function StepItemEditor({
     <Card
       ref={setNodeRef}
       style={style}
-      variant="defaultStudio"
+      variant="default"
+      visualMode="studio"
       className={cn("relative h-full", STACK_MD, isDragging && "opacity-60")}
     >
       <CardContent>
@@ -143,7 +157,7 @@ export function StepItemEditor({
               ids={titleIds}
               inputRef={titleCtrl.field.ref}
               label={t("studio.cellEditorTabs.stepsCellEditor.titleLabel")}
-              value={String(titleCtrl.field.value ?? "")}
+              value={titleValue}
               onChange={(next) => {
                 titleCtrl.field.onChange(next);
               }}
@@ -162,7 +176,7 @@ export function StepItemEditor({
               label={t(
                 "studio.cellEditorTabs.stepsCellEditor.descriptionLabel",
               )}
-              value={String(descriptionCtrl.field.value ?? "")}
+              value={descriptionValue}
               onChange={(next) => {
                 descriptionCtrl.field.onChange(next);
               }}

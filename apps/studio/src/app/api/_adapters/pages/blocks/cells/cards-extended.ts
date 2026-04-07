@@ -24,13 +24,12 @@ function adaptCardsExtendedItem(
     title: trimOrKeep(dto.title),
     description: trimOrKeep(dto.description),
 
-    // ❗ toujours retourner un tableau
     bullets: (dto.bullets ?? [])
       .map((bullet) => trimOrKeep(bullet))
       .filter(Boolean),
 
     footer: dto.footer ? trimOrKeep(dto.footer) : null,
-    icon: dto.icon ? trimOrKeep(dto.icon) : null,
+    icon: dto.icon ? (trimOrKeep(dto.icon) as CardsExtendedItem["icon"]) : null,
   };
 }
 

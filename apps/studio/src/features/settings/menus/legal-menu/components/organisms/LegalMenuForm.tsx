@@ -134,9 +134,14 @@ export function LegalMenuForm({
 
   const t = useTranslations();
 
-  const { fields, append, remove, move } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray<
+    LegalMenuFormValues,
+    "items",
+    "fieldId"
+  >({
     control,
     name: "items",
+    keyName: "fieldId",
   });
 
   const itemsState = useFormState({ control, name: "items" });
@@ -163,6 +168,7 @@ export function LegalMenuForm({
 
   function createEmptyItem(): LegalMenuItemFormValues {
     return {
+      id: crypto.randomUUID(),
       label: "",
       href: "/",
       newTab: false,
@@ -214,7 +220,7 @@ export function LegalMenuForm({
       }, handleSubmitErrors)}
       noValidate
     >
-      <Card variant="panelStudio">
+      <Card variant="panel" visualMode="studio">
         <CardContent className={cn(STACK_MD)}>
           {fields.length === 0 ? (
             <EmptyState text={t("studio.legalMenuForm.empty")} />
@@ -231,7 +237,7 @@ export function LegalMenuForm({
                   const rowIdPrefix = `${formIdPrefix}-item-${index}`;
 
                   return (
-                    <Fragment key={field.id}>
+                    <Fragment key={field.fieldId}>
                       <div>
                         <LegalMenuItemRow
                           sortableId={field.id}

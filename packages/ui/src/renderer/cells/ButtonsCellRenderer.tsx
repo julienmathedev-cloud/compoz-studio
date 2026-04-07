@@ -26,26 +26,24 @@ export type ButtonsCellRendererProps = Readonly<{
   ui: SiteButtonsUi;
 }>;
 
-/**
- * Mappe la variante métier publique d’un bouton
- * vers la variante UI concrète rendue par `SiteButton`.
- */
-function mapPublicButtonVariantToSiteVariant(
+type PublicButtonVariant = "default" | "secondary" | "outline" | "ghost";
+
+function normalizePublicButtonVariant(
   variant: string | null | undefined,
-): "defaultVanilla" | "secondaryVanilla" | "outlineVanilla" | "ghostVanilla" {
+): PublicButtonVariant {
   switch (variant) {
     case "secondary":
-      return "secondaryVanilla";
+      return "secondary";
 
     case "outline":
-      return "outlineVanilla";
+      return "outline";
 
     case "ghost":
-      return "ghostVanilla";
+      return "ghost";
 
     case "default":
     default:
-      return "defaultVanilla";
+      return "default";
   }
 }
 
@@ -68,7 +66,7 @@ export function ButtonsCellRenderer({ cell, ui }: ButtonsCellRendererProps) {
         {items.map((item) => {
           const label = normalizeString(item.label, "");
           const href = normalizeString(item.href, "");
-          const variant = mapPublicButtonVariantToSiteVariant(item.variant);
+          const variant = normalizePublicButtonVariant(item.variant);
 
           return (
             <SiteButton

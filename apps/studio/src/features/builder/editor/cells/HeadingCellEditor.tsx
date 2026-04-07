@@ -5,7 +5,7 @@
  */
 
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Control } from "react-hook-form";
 import { useController } from "react-hook-form";
 
@@ -141,6 +141,13 @@ export function HeadingCellEditor({
     [highlightsCtrl.field.value],
   );
 
+  const [highlightsInputValue, setHighlightsInputValue] =
+    useState(highlightsValue);
+
+  useEffect(() => {
+    setHighlightsInputValue(highlightsValue);
+  }, [highlightsValue]);
+
   const titleInvalid =
     (showError || titleCtrl.fieldState.isTouched) &&
     Boolean(titleCtrl.fieldState.error?.message);
@@ -214,11 +221,14 @@ export function HeadingCellEditor({
         <InputField
           ids={highlightsIds}
           label={t("studio.cellEditorTabs.headingCellEditor.highlightsLabel")}
-          value={highlightsValue}
-          onChange={(next) => {
-            highlightsCtrl.field.onChange(parseHighlights(next));
+          value={highlightsInputValue}
+          onChange={setHighlightsInputValue}
+          onBlur={() => {
+            highlightsCtrl.field.onChange(
+              parseHighlights(highlightsInputValue),
+            );
+            highlightsCtrl.field.onBlur();
           }}
-          onBlur={highlightsCtrl.field.onBlur}
           placeholder={t(
             "studio.cellEditorTabs.headingCellEditor.highlightsPlaceholder",
           )}
@@ -255,7 +265,8 @@ export function HeadingCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={align === item ? "defaultStudio" : "ghostStudio"}
+                variant={align === item ? "default" : "ghost"}
+                visualMode="studio"
                 onClick={() => alignCtrl.field.onChange(item)}
                 disabled={disabled}
               >
@@ -276,7 +287,8 @@ export function HeadingCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={variant === item ? "defaultStudio" : "ghostStudio"}
+                variant={variant === item ? "default" : "ghost"}
+                visualMode="studio"
                 onClick={() => variantCtrl.field.onChange(item)}
                 disabled={disabled}
               >

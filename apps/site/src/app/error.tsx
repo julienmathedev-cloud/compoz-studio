@@ -35,7 +35,6 @@ export default function SiteError({ error, reset }: SiteErrorProps) {
   const homeHref = resolveInternalHref(pathname, "/");
 
   useEffect(() => {
-    // Hook utile si tu veux logger plus tard
     void error;
   }, [error]);
 
@@ -48,7 +47,8 @@ export default function SiteError({ error, reset }: SiteErrorProps) {
         <>
           <Button
             type="button"
-            variant="outlineVanilla"
+            variant="outline"
+            visualMode="vanilla"
             className={cn(ui.systemPage.button)}
             onClick={reset}
           >
@@ -57,7 +57,8 @@ export default function SiteError({ error, reset }: SiteErrorProps) {
 
           <Button
             type="button"
-            variant="outlineVanilla"
+            variant="outline"
+            visualMode="vanilla"
             className={cn(ui.systemPage.button)}
             asChild
           >

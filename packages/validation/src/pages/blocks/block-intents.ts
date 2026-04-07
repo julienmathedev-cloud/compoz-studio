@@ -12,6 +12,7 @@ import {
   BlockIdSchema,
   BlockNameSchema,
   BlockRowColumnsCountSchema,
+  BlockRowReverseOnSchema,
   BlockRowSchema,
   SectionBlockContainerModeSchema,
 } from "@compoz/validation/pages/blocks/block";
@@ -45,12 +46,14 @@ const CreateBlockColumnIntentSchema = z
  * Ligne de création :
  * - `id` optionnel (généré côté domaine si absent)
  * - `columnsCount` requis
+ * - `reverseOn` optionnel (normalisé côté domaine si absent)
  * - `columns` requis
  */
 const CreateBlockRowIntentSchema = z
   .object({
     id: z.string().trim().optional(),
     columnsCount: BlockRowColumnsCountSchema,
+    reverseOn: BlockRowReverseOnSchema.partial().optional(),
     columns: z.array(CreateBlockColumnIntentSchema),
   })
   .strict();

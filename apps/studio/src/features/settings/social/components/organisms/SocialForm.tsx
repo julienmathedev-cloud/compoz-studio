@@ -96,7 +96,7 @@ type RowInvalidFlags = Partial<Record<"kind" | "href", boolean>>;
  */
 type SocialItemRowProps = Readonly<{
   index: number;
-  field: FieldArrayWithId<SocialFormValues, "items", "id">;
+  field: FieldArrayWithId<SocialFormValues, "items", "fieldId">;
   control: Control<SocialFormValues>;
   trigger: UseFormTrigger<SocialFormValues>;
   setValue: UseFormSetValue<SocialFormValues>;
@@ -184,7 +184,7 @@ function SocialItemRow({
 
   return (
     <SocialFieldsItem
-      key={field.id}
+      key={field.fieldId}
       idPrefix={rowIdPrefix}
       disabled={disabled}
       isFirst={isFirst}
@@ -251,9 +251,14 @@ export function SocialForm({
   const [hasSubmittedOnce, setHasSubmittedOnce] = useState(false);
   const t = useTranslations();
 
-  const { fields, append, remove, move } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray<
+    SocialFormValues,
+    "items",
+    "fieldId"
+  >({
     control,
     name: "items",
+    keyName: "fieldId",
   });
 
   const formIdPrefix = useIdPrefix("social-form");
@@ -269,6 +274,7 @@ export function SocialForm({
   });
 
   const createEmptyItem = (): SocialItemFormValues => ({
+    id: crypto.randomUUID(),
     kind: DEFAULT_SOCIAL_KIND,
     href: "",
   });
@@ -319,7 +325,7 @@ export function SocialForm({
       )}
       noValidate
     >
-      <Card variant="panelStudio">
+      <Card variant="panel" visualMode="studio">
         <CardContent className={cn(STACK_MD)}>
           {fields.length === 0 ? (
             <EmptyState text={t("studio.socialForm.empty")} />
@@ -328,7 +334,7 @@ export function SocialForm({
               const rowIdPrefix = `${formIdPrefix}-item-${index}`;
 
               return (
-                <Fragment key={field.id}>
+                <Fragment key={field.fieldId}>
                   <SocialItemRow
                     index={index}
                     field={field}

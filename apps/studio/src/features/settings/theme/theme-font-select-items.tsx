@@ -23,26 +23,33 @@ export type ThemeFontSelectItem = Readonly<{
 }>;
 
 export function buildThemeFontSelectItems(): ReadonlyArray<ThemeFontSelectItem> {
-  return THEME_FONTS.map((font) => ({
-    value: font.id,
-    textLabel: `${THEME_FONT_CATEGORY_LABEL[font.category]} — ${font.label}`,
-    label: (
-      <div className="flex min-w-0 items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{font.label}</p>
-          <p className="text-muted-foreground truncate text-xs">
-            {THEME_FONT_CATEGORY_LABEL[font.category]} · {font.description}
-          </p>
-        </div>
+  return THEME_FONTS.map((font) => {
+    const textLabel = `${font.label} · ${THEME_FONT_CATEGORY_LABEL[font.category]} · ${font.description}`;
 
-        <span
-          className="text-muted-foreground shrink-0 text-sm"
-          style={{ fontFamily: font.fontFamily }}
-          aria-hidden="true"
-        >
-          Abc
+    return {
+      value: font.id,
+      textLabel,
+      label: (
+        <span className="inline-flex min-w-0 items-center gap-3">
+          <span className="truncate">
+            <span className="font-medium">{font.label}</span>
+            <span className="text-muted-foreground">
+              {" · "}
+              {THEME_FONT_CATEGORY_LABEL[font.category]}
+              {" · "}
+              {font.description}
+            </span>
+          </span>
+
+          <span
+            className="text-muted-foreground shrink-0 text-sm"
+            style={{ fontFamily: font.fontFamily }}
+            aria-hidden="true"
+          >
+            Abc
+          </span>
         </span>
-      </div>
-    ),
-  }));
+      ),
+    };
+  });
 }

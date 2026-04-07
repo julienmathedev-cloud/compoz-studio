@@ -19,6 +19,11 @@ import { z } from "zod";
 export const LegalMenuItemSchema = z
   .object({
     /**
+     * Identifiant stable de l’item.
+     */
+    id: z.string().trim().min(1, ERROR_CODES.LEGAL_MENU_ID_REQUIRED),
+
+    /**
      * Libellé du lien.
      * - Côté settings : valeur canonique, donc requis (min/max).
      */

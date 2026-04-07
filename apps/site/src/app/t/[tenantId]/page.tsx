@@ -10,7 +10,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
-import { computeSitePager } from "@compoz/site/app/_helpers/site-pager";
+import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import {
   getPublishedHomePageForTenant,
   getPublishedIndexForTenant,

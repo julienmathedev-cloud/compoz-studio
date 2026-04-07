@@ -32,12 +32,31 @@ function adaptStructuredCardSection(
 function adaptStructuredCardItem(
   dto: StructuredCardItemIntentDTO,
 ): StructuredCardItem {
+  const hasImage =
+    dto.image != null && typeof dto.image.src === "string"
+      ? trimOrKeep(dto.image.src).length > 0
+      : false;
+
+  const hasButtonHref =
+    dto.button != null && typeof dto.button.href === "string"
+      ? trimOrKeep(dto.button.href).length > 0
+      : false;
+
   return {
     id: trimOrKeep(dto.id),
-    image: dto.image ? adaptImage(dto.image) : null,
+    image: hasImage && dto.image ? adaptImage(dto.image) : null,
     title: trimOrKeep(dto.title),
     meta: dto.meta ? trimOrKeep(dto.meta) : null,
     sections: dto.sections.map(adaptStructuredCardSection),
+    button:
+      hasButtonHref && dto.button
+        ? {
+            id: trimOrKeep(dto.button.id),
+            label: trimOrKeep(dto.button.label),
+            href: trimOrKeep(dto.button.href),
+            variant: dto.button.variant,
+          }
+        : null,
   };
 }
 

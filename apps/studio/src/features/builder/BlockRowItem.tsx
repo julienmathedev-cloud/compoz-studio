@@ -39,10 +39,12 @@ import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButt
 import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { AddEmptyCardButton } from "@compoz/studio/components/molecules/controls/AddEmptyCardButton";
+import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
 import { DragHandle } from "@compoz/studio/features/dnd/DragHandle";
 import { getCellKindMeta } from "@compoz/studio/lib/pages/blocks/cell-kind-meta";
 import { Badge } from "@compoz/ui/components/ui/badge";
 import { Button } from "@compoz/ui/components/ui/button";
+import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_SM } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
@@ -66,6 +68,7 @@ type BlockRowItemProps = Readonly<{
     rowId: string,
     next: 1 | 2 | 3,
   ) => void | Promise<void>;
+  onToggleReverseOnMobile: (rowId: string, checked: boolean) => void;
   onAddCell: (rowId: string, columnId: string) => void;
   onMoveCell: (args: {
     rowId: string;
@@ -88,6 +91,7 @@ export function BlockRowItem({
   onHoverCell,
   onRemoveRow,
   onSetRowColumnsCount,
+  onToggleReverseOnMobile,
   onAddCell,
   onMoveCell,
 }: BlockRowItemProps) {
@@ -95,6 +99,10 @@ export function BlockRowItem({
   const [open, setOpen] = useState(true);
   const [isSortingCells, setIsSortingCells] = useState(false);
   const contentId = useId();
+  const reverseOnMobileIds = createFieldIds(
+    `builder-row-${row.id}`,
+    "reverse-on-mobile",
+  );
 
   const {
     attributes,
@@ -186,7 +194,7 @@ export function BlockRowItem({
           className={cn(
             "flex min-w-0 flex-1 items-center gap-2 rounded-md px-1 py-1 text-left",
             "outline-none transition-colors",
-            !toggleDisabled && "hover:bg-accent/50",
+            !toggleDisabled && "hover:bg-secondary/50",
             "focus-visible:ring-2 focus-visible:ring-ring/70",
             toggleDisabled && "cursor-not-allowed opacity-60",
           )}
@@ -227,11 +235,8 @@ export function BlockRowItem({
                     key={count}
                     type="button"
                     size="sm"
-                    variant={
-                      row.columnsCount === count
-                        ? "defaultStudio"
-                        : "ghostStudio"
-                    }
+                    variant={row.columnsCount === count ? "default" : "ghost"}
+                    visualMode="studio"
                     onClick={() => void onSetRowColumnsCount(row.id, count)}
                     disabled={isBusy}
                   >
@@ -244,7 +249,8 @@ export function BlockRowItem({
             <TooltipButton
               type="button"
               size="icon"
-              variant={isSortingCells ? "defaultStudio" : "ghostStudio"}
+              variant={isSortingCells ? "default" : "ghost"}
+              visualMode="studio"
               tooltip={t("studio.builder.sidebar.rows.reorderCells")}
               aria-label={t("studio.builder.sidebar.rows.reorderCells")}
               onClick={() => setIsSortingCells((prev) => !prev)}
@@ -253,6 +259,17 @@ export function BlockRowItem({
               <ArrowUpDown className="h-4 w-4" />
             </TooltipButton>
           </div>
+
+          <SwitchField
+            ids={reverseOnMobileIds}
+            label={t("studio.builder.sidebar.rows.reverseOnMobile.label")}
+            help={t("studio.builder.sidebar.rows.reverseOnMobile.help")}
+            checked={Boolean(row.reverseOn.mobile)}
+            onCheckedChange={(checked) => {
+              onToggleReverseOnMobile(row.id, checked);
+            }}
+            disabled={isBusy}
+          />
 
           <DndContext
             sensors={sensors}
@@ -308,7 +325,7 @@ export function BlockRowItem({
                           );
                         })
                       ) : (
-                        <Badge variant="infoStudio">
+                        <Badge variant="info" visualMode="studio">
                           {t("studio.pageBlocksListSection.bloc.empty")}
                         </Badge>
                       )}
@@ -387,7 +404,8 @@ function SortableCellTile({
       onFocus={() => onHoverChange(true)}
       onBlur={() => onHoverChange(false)}
       disabled={disabled}
-      variant={isSelected ? "defaultStudio" : "ghostStudio"}
+      variant={isSelected ? "default" : "ghost"}
+      visualMode="studio"
       tooltip={label}
       className={cn(
         "flex h-12 w-12 shrink-0 items-center justify-center p-0",

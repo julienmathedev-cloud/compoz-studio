@@ -47,6 +47,7 @@ function toPrimaryMenuSettingsShapeChildFromDTO(
   it: PrimaryMenuDTOChild,
 ): PrimaryMenuShapeChild {
   return {
+    id: trimKeepEmpty(String(it.id ?? "")),
     label: trimKeepEmpty(it.label),
     href: trimKeepEmpty(toHrefString(it.href)),
     newTab: toStrictBool(it.newTab),
@@ -68,6 +69,7 @@ function toPrimaryMenuSettingsShapeItemFromDTO(
   const href = hrefRaw.length > 0 ? hrefRaw : undefined;
 
   return {
+    id: trimKeepEmpty(String(it.id ?? "")),
     label: trimKeepEmpty(it.label),
     href,
     // Parent avec children => jamais newTab (contrat schema)

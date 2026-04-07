@@ -20,7 +20,6 @@ import { resolveLinkFlags, slugifyPath } from "@compoz/ui/lib/links/helpers";
 import { cn } from "@compoz/ui/lib/utils";
 import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-form";
 import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import type {
   Control,
   ControllerRenderProps,

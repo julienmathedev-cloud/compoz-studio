@@ -14,12 +14,14 @@
  * - Les items sont gérés par RHF via `useFieldArray` pour garantir
  *   une gestion propre des valeurs, erreurs et reorder.
  * - Les erreurs near-field sont gérées au niveau des items.
+ * - Le reorder s’appuie sur `move()` pour conserver l’état RHF.
+ * - Les valeurs live restent lues via `useWatch`.
  */
 
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { Control } from "react-hook-form";
-import { useController, useFieldArray } from "react-hook-form";
+import { useController, useFieldArray, useWatch } from "react-hook-form";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
@@ -101,6 +103,13 @@ export function CardsExtendedCellEditor({
     keyName: "fieldId",
   });
 
+  const watchedItems = (useWatch({
+    control,
+    name: itemsPath,
+  }) ?? []) as CardsExtendedItemFormValues[];
+
+  const cardsExtendedFields = fields as CardsExtendedItemField[];
+
   const align: CardsExtendedAlign =
     alignCtrl.field.value &&
     CARDS_EXTENDED_ALIGNS.includes(alignCtrl.field.value as CardsExtendedAlign)
@@ -145,7 +154,8 @@ export function CardsExtendedCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={align === item ? "defaultStudio" : "ghostStudio"}
+                variant={align === item ? "default" : "ghost"}
+                visualMode="studio"
                 onClick={() => {
                   alignCtrl.field.onChange(item);
                 }}
@@ -170,7 +180,8 @@ export function CardsExtendedCellEditor({
                 key={item}
                 type="button"
                 size="sm"
-                variant={columns === item ? "defaultStudio" : "ghostStudio"}
+                variant={columns === item ? "default" : "ghost"}
+                visualMode="studio"
                 onClick={() => {
                   columnsCtrl.field.onChange(item);
                 }}
@@ -202,7 +213,8 @@ export function CardsExtendedCellEditor({
         control={control}
         idPrefix={idPrefix}
         basePath={basePath}
-        fields={fields as CardsExtendedItemField[]}
+        fields={cardsExtendedFields}
+        watchedItems={watchedItems}
         append={append}
         remove={remove}
         move={move}

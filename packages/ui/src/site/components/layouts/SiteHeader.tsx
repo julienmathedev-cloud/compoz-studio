@@ -49,7 +49,8 @@ export function SiteHeader({
 
   const headerRef = useHeaderHeightVar();
 
-  const hasLogo = showLogo && Boolean(identity.logoUrl);
+  const logoSrc = identity.logo?.src?.trim() ?? "";
+  const hasLogo = showLogo && logoSrc.length > 0;
   const hasSiteName = showSiteName && Boolean(identity.siteName);
   const hasMenu = (primaryMenu.items?.length ?? 0) > 0;
   const hasSocial = (social?.items?.length ?? 0) > 0;

@@ -7,6 +7,7 @@
  * ni valeurs par défaut (voir `defaults/identity.ts`).
  */
 
+import type { Image } from "@compoz/core/domain/assets/entities/image";
 import type { AssetUrlOrNull } from "@compoz/core/domain/urls/href";
 
 export interface IdentitySettings {
@@ -16,11 +17,8 @@ export interface IdentitySettings {
   /** Slogan du site (null si absent). */
   tagline: string | null;
 
-  /** URL du logo (null si aucun logo). */
-  logoUrl: AssetUrlOrNull;
-
-  /** Texte alternatif du logo  */
-  logoAlt: string;
+  /** Image du logo (null si aucun logo). */
+  logo: Image | null;
 
   /** URL du favicon (null si aucun favicon). */
   faviconUrl: AssetUrlOrNull;

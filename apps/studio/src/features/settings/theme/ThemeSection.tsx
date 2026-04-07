@@ -51,10 +51,10 @@ export function ThemeSection() {
     "light",
   );
 
-  const baselinePreview = useMemo<ThemeSettingsShape | null>(() => {
-    if (!baseline) return null;
-    return toThemeSettingsShapeFromFormValues(baseline);
-  }, [baseline]);
+  const baselinePreview = useMemo<ThemeSettingsShape>(
+    () => toThemeSettingsShapeFromFormValues(baseline),
+    [baseline],
+  );
 
   const previewValue = previewDraft ?? baselinePreview;
 

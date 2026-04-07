@@ -18,7 +18,7 @@ import type { ReactNode } from "react";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { HintList } from "@compoz/studio/components/molecules/feedback/HintList";
 
-type Variant = "infoStudio" | "warningStudio" | "successStudio" | "errorStudio";
+type Variant = "info" | "warning" | "success" | "error";
 
 export type ConfirmationDialogProps = Readonly<{
   /** Intro optionnelle (contenu déjà rédigé). */
@@ -35,7 +35,7 @@ export type ConfirmationDialogProps = Readonly<{
 export function ConfirmationDialogDescription({
   intro,
   hints,
-  variant = "infoStudio",
+  variant = "info",
 }: ConfirmationDialogProps) {
   return (
     <div className="flex flex-col gap-2">

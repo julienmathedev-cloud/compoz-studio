@@ -32,6 +32,9 @@ function isPublicPath(pathname: string): boolean {
   // NextAuth endpoints
   if (pathname.startsWith("/api/auth")) return true;
 
+  // Demo bootstrap endpoint
+  if (pathname === "/api/demo/start") return true;
+
   // Next static/assets
   if (pathname.startsWith("/_next")) return true;
   if (pathname === "/favicon.ico") return true;
@@ -39,7 +42,6 @@ function isPublicPath(pathname: string): boolean {
   // Signin localisé
   if (/^\/[a-z]{2}\/signin(\/|$)/.test(pathname)) return true;
 
-  // Optionnels (si tu les utilises côté Studio)
   if (pathname === "/robots.txt") return true;
   if (pathname === "/sitemap.xml") return true;
   if (pathname === "/manifest.webmanifest") return true;

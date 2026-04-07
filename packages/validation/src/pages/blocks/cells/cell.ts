@@ -26,8 +26,8 @@ import type {
 import { FormCellSchema } from "@compoz/validation/pages/blocks/cells/details/form";
 import { GalleryCellSchema } from "@compoz/validation/pages/blocks/cells/details/gallery";
 import { HeadingCellSchema } from "@compoz/validation/pages/blocks/cells/details/heading";
-import type { ImageEditorSchema } from "@compoz/validation/pages/blocks/cells/details/image";
-import { ImageCellSchema } from "@compoz/validation/pages/blocks/cells/details/image";
+import type { ImageEditorSchema } from "@compoz/validation/pages/blocks/cells/details/image-editor";
+import { ImageCellSchema } from "@compoz/validation/pages/blocks/cells/details/image-editor";
 import { RichTextCellSchema } from "@compoz/validation/pages/blocks/cells/details/rich-text";
 import { SeparatorCellSchema } from "@compoz/validation/pages/blocks/cells/details/separator";
 import { SpacerCellSchema } from "@compoz/validation/pages/blocks/cells/details/spacer";
@@ -157,7 +157,7 @@ export {
   ImageCellSchema,
   ImageEditorSchema,
   ImageVariantSchema,
-} from "@compoz/validation/pages/blocks/cells/details/image";
+} from "@compoz/validation/pages/blocks/cells/details/image-editor";
 export { RichTextCellSchema } from "@compoz/validation/pages/blocks/cells/details/rich-text";
 export { SeparatorCellSchema } from "@compoz/validation/pages/blocks/cells/details/separator";
 export { SpacerCellSchema } from "@compoz/validation/pages/blocks/cells/details/spacer";

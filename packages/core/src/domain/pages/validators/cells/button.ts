@@ -56,7 +56,7 @@ export function assertButtonsCell(
   }
 }
 
-function assertButtonItem(item: ButtonItem, path: Path) {
+export function assertButtonItem(item: ButtonItem, path: Path) {
   if (!item || typeof item !== "object") {
     throw new DomainError({
       code: EC.CELL_BUTTON_ITEM_INVALID,

@@ -9,10 +9,11 @@
  *
  * @remarks
  * - Gating strict : ne rend rien tant que l’index et la page courante ne sont pas disponibles.
- * - Preview : navigation/pager désactivés (pas de liens prev/next).
  * - Le rendu final est délégué à `SitePageRenderer`.
  * - Le skin UI est récupéré ici puis transmis au renderer en props.
  * - Le thème CSS est fourni par `ThemeProvider` monté dans `PreviewProviders`.
+ * - Le pager est calculé via le helper partagé pour rester aligné
+ *   avec le site public et les routes draft.
  */
 
 import { useEffect, useMemo } from "react";
@@ -23,6 +24,8 @@ import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { log } from "@compoz/infra/lib/log";
 import { PreviewShell } from "@compoz/studio/features/preview/PreviewShell";
 import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePreviewOverride";
+import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
+import { toSlug } from "@compoz/ui/lib/routing/slug";
 import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
 import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
 import type { PageRenderShape } from "@compoz/validation/pages/page";
@@ -36,6 +39,20 @@ const lg = log.child({
   area: "page",
   name: "PagePreviewClient",
 });
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function hrefForDraftSlug(slug: string): string {
+  const s = toSlug(slug);
+
+  if (!s || s === HOME_SLUG) {
+    return "/draft";
+  }
+
+  return `/draft/${encodeURIComponent(s)}`;
+}
 
 /* -------------------------------------------------------------------------- */
 /* Component                                                                  */
@@ -61,11 +78,33 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
     }
 
     const found = (visibleIndex.pages ?? []).find(
-      (p) => p.slug === slug || (slug === HOME_SLUG && p.slug === ""),
+      (item) => item.slug === slug || (slug === HOME_SLUG && item.slug === ""),
     );
 
     return found ?? null;
   }, [slug, visibleIndex]);
+
+  const pager = useMemo(() => {
+    if (!visibleIndex || !visiblePage || !currentFromIndex) {
+      return {
+        enabled: false,
+        prev: null,
+        next: null,
+      };
+    }
+
+    return computeSitePager({
+      page: {
+        id: currentFromIndex.id,
+        parentId: currentFromIndex.parentId ?? null,
+        slug: currentFromIndex.slug,
+        name: currentFromIndex.name,
+        paginationEnabled: Boolean(visiblePage.paginationEnabled),
+      },
+      index: visibleIndex,
+      hrefForSlug: hrefForDraftSlug,
+    });
+  }, [visibleIndex, visiblePage, currentFromIndex]);
 
   const flags = useMemo(
     () => ({
@@ -78,6 +117,11 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
         blocks: blocks.length,
         paginationEnabled: Boolean(visiblePage?.paginationEnabled),
       },
+      pager: {
+        enabled: pager.enabled,
+        hasPrev: Boolean(pager.prev),
+        hasNext: Boolean(pager.next),
+      },
       fromIndex: { hasCurrent: Boolean(currentFromIndex) },
     }),
     [
@@ -88,6 +132,9 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
       visiblePage?.name,
       visiblePage?.paginationEnabled,
       blocks.length,
+      pager.enabled,
+      pager.prev,
+      pager.next,
       currentFromIndex,
     ],
   );
@@ -108,7 +155,7 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
 
   return (
     <PreviewShell ui={ui}>
-      <SitePageRenderer ui={ui} blocks={blocks} />
+      <SitePageRenderer ui={ui} blocks={blocks} pager={pager} />
     </PreviewShell>
   );
 }

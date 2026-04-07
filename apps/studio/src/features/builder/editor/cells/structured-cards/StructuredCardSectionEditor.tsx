@@ -89,7 +89,7 @@ export function StructuredCardSectionEditor({
       : undefined;
 
   return (
-    <Card variant="defaultStudio" className="relative">
+    <Card variant="default" visualMode="studio" className="relative">
       <CardContent className={cn(STACK_SM)}>
         <div className="absolute right-2 top-2">
           <DeleteButton

@@ -20,6 +20,16 @@ export type PublicThemeTokens = {
   background: string;
   foreground: string;
 
+  /**
+   * Surface structurelle partagée par le header et le footer.
+   *
+   * @remarks
+   * Ce token permet de distinguer les zones de chrome applicatif
+   * du fond principal (`background`) et des surfaces de contenu (`card`).
+   * En V1, il est utilisé comme couleur commune pour le header et le footer.
+   */
+  chrome: string;
+
   card: string;
   "card-foreground": string;
 

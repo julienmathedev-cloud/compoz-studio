@@ -24,14 +24,14 @@
   --secondary: var(--mauve-1);
   --secondary-foreground: var(--mauve-12);
 
-  --muted: var(--mauve-3);
+  --muted: var(--indigo-2);
   --muted-foreground: var(--mauve-11);
 
-  --accent: var(--indigo-3);
+  --accent: var(--indigo-4);
   --accent-foreground: var(--indigo-11);
 
   --border: var(--indigo-4);
-  --input: var(--indigo-4);
+  --input: var(--indigo-5);
 
   --primary: var(--indigo-9);
   --primary-foreground: white;

@@ -11,7 +11,7 @@
  * - Le chargement initial est géré par `SettingsSection` (shell).
  * - Monte `useLegalMenuSettings` (baseline + save) et câble `LegalMenuForm`.
  * - Affiche les warnings non bloquants (via `LegalMenuForm` + `computeLegalMenuWarnings` au submit).
- * - La preview `/preview/legal-menu` consomme le scope `legalMenu` (draft possible).
+ * - La preview `/preview/legal-menu` consomme le scope `legalMenu` en mise à jour live.
  * - Strictement UI-only : aucune logique métier.
  */
 
@@ -44,61 +44,48 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
   const { confirmSaveDespiteWarnings } = useStudioSaveDespiteWarningsConfirm();
 
   const [isDirty, setIsDirty] = useState(false);
+  const [warningKeys, setWarningKeys] = useState<LegalMenuWarningKey[]>([]);
+  const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
+  const [previewDraft, setPreviewDraft] =
+    useState<LegalMenuSettingsShape | null>(null);
 
-  // Hook settings : modèle UI (RHF).
   const { baseline, isLoading, isSaving, save } = useLegalMenuSettings();
 
-  const [previewMode, setPreviewMode] = useState<"baseline" | "override">(
-    "baseline",
-  );
-
-  // Options internes (picker) — centralisées via hook (SoT = SiteIndex).
   const { options: internalPageOptions, isLoading: isIndexLoading } =
     useInternalPageOptions();
 
-  // Preview (iframe).
-
-  // Pont UI → Preview/Public : RHF (UI) → SettingsShape (preview).
-  const baselinePreview = useMemo<LegalMenuSettingsShape>(
-    () => toLegalMenuSettingsShapeFromFormValues(baseline),
-    [baseline],
-  );
-
-  const { ready, frame, setBaseline, setDraft, iframeRef } =
-    useStudioPreview<LegalMenuSettingsShape>("legalMenu", baselinePreview);
+  /**
+   * Baseline preview :
+   * - conversion directe de la baseline RHF en shape runtime
+   */
+  const baselinePreview = useMemo<LegalMenuSettingsShape>(() => {
+    return toLegalMenuSettingsShapeFromFormValues(baseline);
+  }, [baseline]);
 
   /**
-   * Empty state (dans l’iframe) :
-   * - On ne l’active qu’une fois les chargements data terminés.
-   * - Si la baseline est absente => empty preview au lieu d’un écran blanc.
+   * Valeur affichée dans la preview :
+   * - draft live si le form change
+   * - sinon baseline persistée
    */
-  const dataReady = !isLoading && !isIndexLoading && baseline != null;
+  const previewValue = previewDraft ?? baselinePreview;
 
-  // Empty = baseline chargée mais aucun item.
+  const { ready, frame, iframeRef } = useStudioPreview<LegalMenuSettingsShape>(
+    "legalMenu",
+    {
+      baseline: previewValue,
+      liveEnabled: true,
+    },
+  );
+
+  const dataReady = !isLoading && !isIndexLoading;
+
   const isEmpty = dataReady && (baseline?.items?.length ?? 0) === 0;
 
   const emptyLabel = t("studio.emptyPreview.legalMenu");
 
-  // Preview loading : si empty => pas de loader
   const isPreviewLoading =
-    !isEmpty &&
-    (isLoading ||
-      isIndexLoading ||
-      baseline == null ||
-      !ready.isReady("legalMenu"));
+    !isEmpty && (isLoading || isIndexLoading || !ready.isReady("legalMenu"));
 
-  const handlePreviewSync = useCallback(() => {
-    frame.onSync();
-    setPreviewMode("override");
-  }, [frame]);
-
-  const handlePreviewReset = useCallback(() => {
-    frame.onReset();
-    setPreviewMode("baseline");
-  }, [frame]);
-
-  // Ensemble des href internes connus (warnings UI).
-  // On se base sur les options (déjà normalisées via formatPagePath dans le hook).
   const hrefSet = useMemo(() => {
     const set = new Set<string>();
     set.add("/");
@@ -112,25 +99,15 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
     return set;
   }, [internalPageOptions]);
 
-  // Warnings UI (non bloquants).
-
-  // Warnings live dérivés des valeurs RHF (affichage uniquement).
-  const [warningKeys, setWarningKeys] = useState<LegalMenuWarningKey[]>([]);
-
-  const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
-
-  // Submit : confirmation si warnings + save.
   const handleSubmit = useCallback(
     async (values: LegalMenuFormValues) => {
       if (isLoading || isSaving) return;
 
-      // 1) Warnings recalculés au submit (source de vérité).
       const warningKeysNow = computeLegalMenuWarnings({
         items: values.items ?? [],
         hrefSet,
       });
 
-      // 2) Confirmation si warnings.
       const ok = await confirmSaveDespiteWarnings(
         warningKeysNow,
         "studio.legalMenuSection.warnings",
@@ -138,12 +115,9 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
 
       if (!ok) return;
 
-      // 3) Save.
       await save(values);
-      const nextBaseline = toLegalMenuSettingsShapeFromFormValues(values);
-      setBaseline<LegalMenuSettingsShape>("legalMenu", nextBaseline);
-      frame.onReset();
-      setPreviewMode("baseline");
+
+      setPreviewDraft(null);
       setIsDirty(false);
       onDirtyChange?.(false);
     },
@@ -154,8 +128,6 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
       isSaving,
       save,
       onDirtyChange,
-      setBaseline,
-      frame,
     ],
   );
 
@@ -186,18 +158,19 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
         onSubmit={handleSubmit}
         onReset={() => {
           setWarningKeys([]);
-          setDraft(baselinePreview);
-          handlePreviewReset();
+          setBlockingErrorsCount(0);
+          setIsDirty(false);
+          setPreviewDraft(null);
+          onDirtyChange?.(false);
         }}
         onWarningKeysChange={setWarningKeys}
         onValuesChange={(values) => {
-          // Live preview : RHF (UI) → SettingsShape.
-          setDraft(toLegalMenuSettingsShapeFromFormValues(values));
+          setPreviewDraft(toLegalMenuSettingsShapeFromFormValues(values));
         }}
         onBlockingErrorsCountChange={setBlockingErrorsCount}
         onDirtyChange={(dirty) => {
-          setIsDirty(dirty); // badge local
-          onDirtyChange?.(dirty); // remonte à MenuPage
+          setIsDirty(dirty);
+          onDirtyChange?.(dirty);
         }}
       />
 
@@ -208,9 +181,6 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
         src="/preview/legal-menu"
         iframeRef={iframeRef}
         onLoad={frame.onLoad}
-        onSync={handlePreviewSync}
-        onReset={handlePreviewReset}
-        syncDisabled={frame.syncDisabled}
         isLoading={isPreviewLoading}
         isEmpty={isEmpty}
         emptyLabel={emptyLabel}
@@ -218,9 +188,7 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
         info={
           isEmpty
             ? t("studio.emptyPreview.legalMenu")
-            : previewMode === "override"
-              ? t("studio.shared.preview.infoOverride")
-              : t("studio.shared.preview.infoBaseline")
+            : t("studio.shared.preview.infoLive")
         }
       />
     </SettingsSection>

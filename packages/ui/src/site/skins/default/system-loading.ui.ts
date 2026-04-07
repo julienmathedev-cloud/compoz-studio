@@ -9,6 +9,6 @@
 import type { SiteSystemLoadingUi } from "@compoz/ui/site/site-ui.types";
 
 export const defaultSystemLoadingUi: SiteSystemLoadingUi = {
-  container: "flex flex-1 items-center justify-center",
-  spinner: "size-10 text-muted-foreground",
+  container: "flex min-h-screen items-center justify-center",
+  spinner: "size-15",
 } as const;

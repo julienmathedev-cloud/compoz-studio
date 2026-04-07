@@ -140,7 +140,6 @@ export const CONTENT_ICON_DEFS: ReadonlyArray<{
   { value: "building-2", label: "Entreprise", icon: Building2 },
   { value: "calendar", label: "Calendrier", icon: Calendar },
   { value: "camera", label: "Photo", icon: Camera },
-  { value: "chart-column", label: "Colonnes", icon: ChartColumn },
   { value: "chart-pie", label: "Répartition", icon: ChartPie },
   { value: "check-check", label: "Contrôle", icon: CheckCheck },
   { value: "check-circle-2", label: "Succès", icon: CheckCircle2 },

@@ -36,11 +36,27 @@ export function SiteStepCard({
   return (
     <Card className={ui.root}>
       <CardHeader className={cn(ui.header, alignClassName)}>
-        <div className={ui.badge} aria-hidden="true">
-          {step}
-        </div>
+        {isCentered ? (
+          <div className={ui.headerBalanced}>
+            <div className={ui.headerBadgeSlot}>
+              <div className={ui.badge} aria-hidden="true">
+                {step}
+              </div>
+            </div>
 
-        <CardTitle className={ui.title}>{title}</CardTitle>
+            <CardTitle className={ui.title}>{title}</CardTitle>
+
+            <div className={ui.headerSpacerSlot} aria-hidden="true" />
+          </div>
+        ) : (
+          <>
+            <div className={ui.badge} aria-hidden="true">
+              {step}
+            </div>
+
+            <CardTitle className={ui.title}>{title}</CardTitle>
+          </>
+        )}
       </CardHeader>
 
       {description ? (

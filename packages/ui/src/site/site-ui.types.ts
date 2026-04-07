@@ -193,6 +193,13 @@ export type SiteStepCardUi = Readonly<{
     left: string;
     center: string;
   }>;
+
+  /**
+   * Layout balanced (optionnel)
+   */
+  headerBalanced?: string;
+  headerBadgeSlot?: string;
+  headerSpacerSlot?: string;
 }>;
 
 export type SiteStepsUi = Readonly<{

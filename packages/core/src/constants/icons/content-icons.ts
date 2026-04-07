@@ -25,7 +25,6 @@ export const CONTENT_ICON_KINDS = [
   "building-2",
   "calendar",
   "camera",
-  "chart-column",
   "chart-pie",
   "check-check",
   "check-circle-2",

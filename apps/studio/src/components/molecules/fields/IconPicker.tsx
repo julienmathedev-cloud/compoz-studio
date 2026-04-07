@@ -7,6 +7,7 @@
  * Picker d’icônes de contenu basé sur une whitelist + recherche.
  */
 
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { SearchInputField } from "@compoz/studio/components/molecules/fields/SearchInputField";
@@ -33,6 +34,8 @@ export function IconPicker({
   disabled,
   className,
 }: IconPickerProps) {
+  const t = useTranslations();
+
   const [query, setQuery] = useState("");
 
   const options = useMemo(() => {
@@ -44,7 +47,7 @@ export function IconPicker({
       <SearchInputField
         value={query}
         onChange={setQuery}
-        placeholder="Rechercher une icône..."
+        placeholder={t("studio.iconPicker.searchPlaceholder")}
         resultsCount={options.length}
         disabled={disabled}
       />

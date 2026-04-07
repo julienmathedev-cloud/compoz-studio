@@ -528,6 +528,10 @@
       }
     },
 
+    "iconPicker": {
+      "searchPlaceholder": "Rechercher une icône..."
+    },
+
     "emptyPreview": {
       "footer": "Aucune donnée à prévisualiser pour le footer.",
       "header": "Aucune donnée à prévisualiser pour le header.",

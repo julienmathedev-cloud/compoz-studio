@@ -362,6 +362,10 @@
       }
     },
 
+    "iconPicker": {
+      "searchPlaceholder": "Search an icon..."
+    },
+
     "emptyPreview": {
       "footer": "No footer data to preview.",
       "header": "No header data to preview.",

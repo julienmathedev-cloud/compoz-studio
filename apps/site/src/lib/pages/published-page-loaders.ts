@@ -53,6 +53,7 @@ export const getTenantId = cache(resolveTenantIdFromRequest);
 /* -------------------------------------------------------------------------- */
 
 const readPublishedSettingsCached = cache(async (tenantId: string) => {
+  console.log("readPublishedSettingsCached avec tenantID", tenantId);
   const repo = getSiteRepository({ tenantId });
   return repo.readSettings(CONTENT_STATE.PUBLISHED);
 });
@@ -98,6 +99,7 @@ export async function getPublishedHomePage() {
 /* -------------------------------------------------------------------------- */
 
 export async function getPublishedSettingsForTenant(tenantId: string) {
+  console.log("getPublishedSettingsForTenant", tenantId);
   const t = toTenantId(tenantId);
   if (!t) return null;
 

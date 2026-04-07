@@ -81,17 +81,23 @@ function createRepo(opts: SiteRepoOptions): SiteRepository {
 export function getSiteRepository(opts: SiteRepoOptions = {}): SiteRepository {
   const impl = (process.env["SITE_REPO_IMPL"] ?? "fs").toLowerCase();
   const key = cacheKey(impl, opts);
+  console.log("getSiteRepository key", key);
+  console.log("getSiteRepository impl", impl);
 
   const existing = repoByKey.get(key);
+  console.log("getSiteRepository existing", existing);
   if (existing) {
     if (!inited) {
+      console.log("On init le repo");
       lg.debug("site.repository.reuse", { key });
       inited = true;
     }
+    console.log("Retourne l'existing", existing);
     return existing;
   }
 
   const created = createRepo(opts);
+  console.log("createRepo created", created);
   repoByKey.set(key, created);
   inited = true;
 

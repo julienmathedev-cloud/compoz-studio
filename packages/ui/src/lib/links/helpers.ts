@@ -150,14 +150,9 @@ export function isActiveLink(
  * (espaces/contrôles), sans essayer de “réparer” l’URL.
  */
 function normalizeUnsafeCandidate(href: string): string {
-  // 1) strip contrôles + espaces au début (classique)
   const leadingStripped = href.replace(/^[\s\u0000-\u001F]+/, "");
-
-  // 2) lowercase (case-insensitive)
   const lower = leadingStripped.toLowerCase();
 
-  // 3) version “collapsée” : retire contrôles/espaces partout.
-  //    Permet de détecter `java\u0000script:` ou `java script:`.
   return lower.replace(/[\s\u0000-\u001F]+/g, "");
 }
 
@@ -169,15 +164,12 @@ function isUnsafeHref(href?: string | null): UnsafeHrefResult {
 
   const cleaned = normalizeUnsafeCandidate(href);
 
-  // 1) Schéma explicite (ex: "javascript:").
   for (const proto of UNSAFE_PROTOCOLS) {
     if (cleaned.startsWith(`${proto}:`)) {
       return { unsafe: true, reason: proto };
     }
   }
 
-  // 2) Encodages courants du ":" après protocole (ex: "javascript%3A", "javascript&#58;")
-  // Politique stricte : si ça ressemble à un protocole dangereux encodé → on bloque.
   const encodedProtoRe = new RegExp(
     `^(${UNSAFE_PROTOCOLS.join("|")})(%3a|&#58;|&#x3a;)`,
   );
@@ -201,11 +193,8 @@ export function resolveLinkFlags(href: string): LinkFlags {
   const raw = String(href ?? "").trim();
   const { unsafe, reason } = isUnsafeHref(raw);
 
-  // External “brut” = URL absolue http(s) OU protocole spécial (mailto/tel)
   const special = isSpecialProtocol(raw);
   const rawExternal = isAbsoluteUrl(raw) || special;
-
-  // External “classique” = rawExternal mais pas special
   const external = rawExternal && !special;
 
   return {
@@ -221,28 +210,24 @@ export function resolveLinkFlags(href: string): LinkFlags {
 /*                          Mount / preview helpers                            */
 /* -------------------------------------------------------------------------- */
 
-export type SiteMountBase = "/preview" | "/draft" | "/site" | "/";
-
-/**
- * Helper interne : vrai si `path` est exactement `mount` ou sous-chemin de `mount`.
- */
-function isMountPath(
-  path: string,
-  mount: Exclude<SiteMountBase, "/">,
-): boolean {
+function isMountPath(path: string, mount: string): boolean {
   return path === mount || path.startsWith(mount + "/");
 }
 
-/**
- * Détecte si l'on est en mode preview Studio.
- *
- * @remarks
- * - "preview" est un concept UI (ok côté UI)
- * - côté domaine, l'état canonique reste `draft`
- */
 function isPreviewPath(path: string): boolean {
   const current = normalizePath(path);
   return isMountPath(current, "/preview");
+}
+
+function resolveTenantMountBase(currentPath: string): string | null {
+  const current = normalizePath(currentPath);
+  const match = /^\/t\/([^/]+)(?:\/.*)?$/.exec(current);
+
+  if (!match?.[1]) {
+    return null;
+  }
+
+  return `/t/${match[1]}`;
 }
 
 export function shouldDisableLinksInPreview(currentPath: string): boolean {
@@ -251,15 +236,19 @@ export function shouldDisableLinksInPreview(currentPath: string): boolean {
 
 /**
  * Résout la base de mount site selon le chemin courant.
- * - /preview/* => /preview
- * - /draft/*   => /draft
- * - sinon      => /
+ * - /preview/*     => /preview
+ * - /draft/*       => /draft
+ * - /t/:tenant/*   => /t/:tenant
+ * - sinon          => /
  */
-export function resolveSiteMountBase(currentPath: string): SiteMountBase {
+export function resolveSiteMountBase(currentPath: string): string {
   const p = normalizePath(currentPath || "/");
 
   if (isMountPath(p, STUDIO_PATH.preview)) return STUDIO_PATH.preview;
   if (isMountPath(p, STUDIO_PATH.draft)) return STUDIO_PATH.draft;
+
+  const tenantMountBase = resolveTenantMountBase(p);
+  if (tenantMountBase) return tenantMountBase;
 
   return SITE_PATH.home;
 }
@@ -268,8 +257,8 @@ export function resolveSiteMountBase(currentPath: string): SiteMountBase {
  * Préfixe un href interne (commençant par "/") avec la base de mount.
  *
  * Exemples:
- * - current="/site/abc", href="/contact" => "/site/contact"
- * - current="/draft", href="/" => "/draft"
+ * - current="/draft/contact", href="/contact" => "/draft/contact"
+ * - current="/t/default/contact", href="/contact" => "/t/default/contact"
  * - current="/", href="/contact" => "/contact"
  *
  * Invariants:

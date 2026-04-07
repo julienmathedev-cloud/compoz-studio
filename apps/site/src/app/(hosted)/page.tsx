@@ -1,5 +1,5 @@
 /**
- * @file apps/site/src/app/page.tsx
+ * @file apps/site/src/app/(hosted)/page.tsx
  * @layer site/app
  *
  * @description

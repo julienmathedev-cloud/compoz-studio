@@ -11,9 +11,17 @@
  */
 
 import { SiteNotFoundClient } from "@compoz/site/components/system/SiteNotFoundClient";
+import { SiteRuntimeProvider } from "@compoz/ui/site/providers/SiteRuntimeProvider";
+import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 
 export default function SiteNotFound() {
-  return <SiteNotFoundClient />;
+  const ui = resolveSiteUi();
+
+  return (
+    <SiteRuntimeProvider ui={ui} theme={null}>
+      <SiteNotFoundClient />
+    </SiteRuntimeProvider>
+  );
 }
 
 SiteNotFound.displayName = "SiteNotFound";

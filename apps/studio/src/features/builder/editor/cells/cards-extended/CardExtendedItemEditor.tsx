@@ -246,7 +246,18 @@ export function CardExtendedItemEditor({
                 const parsedBullets = next.split("\n");
                 bulletsCtrl.field.onChange(parsedBullets);
               }}
-              onBlur={bulletsCtrl.field.onBlur}
+              onBlur={() => {
+                const rawBullets = Array.isArray(bulletsCtrl.field.value)
+                  ? bulletsCtrl.field.value
+                  : [];
+
+                const normalizedBullets = rawBullets
+                  .map((bullet) => String(bullet).trim())
+                  .filter((bullet) => bullet.length > 0);
+
+                bulletsCtrl.field.onChange(normalizedBullets);
+                bulletsCtrl.field.onBlur();
+              }}
               disabled={disabled}
               placeholder={t(
                 "studio.cellEditorTabs.cardsExtendedCellEditor.bulletsPlaceholder",

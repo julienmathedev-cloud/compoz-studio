@@ -287,7 +287,18 @@ export function TimelineItemEditor({
             onChange={(next) => {
               keywordsCtrl.field.onChange(next.split("\n"));
             }}
-            onBlur={keywordsCtrl.field.onBlur}
+            onBlur={() => {
+              const rawKeywords = Array.isArray(keywordsCtrl.field.value)
+                ? keywordsCtrl.field.value
+                : [];
+
+              const normalizedKeywords = rawKeywords
+                .map((keyword) => String(keyword).trim())
+                .filter((keyword) => keyword.length > 0);
+
+              keywordsCtrl.field.onChange(normalizedKeywords);
+              keywordsCtrl.field.onBlur();
+            }}
             disabled={disabled}
             placeholder={t(
               "studio.cellEditorTabs.timelineCellEditor.keywordsPlaceholder",

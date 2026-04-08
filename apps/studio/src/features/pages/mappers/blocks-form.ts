@@ -27,6 +27,7 @@ import type {
 import {
   createEmptyCell,
   normalizeCellFormValues,
+  toCellFormValuesForValidation,
   toCellFormValuesFromDTO,
 } from "@compoz/studio/features/pages/mappers/cells-form";
 
@@ -96,11 +97,41 @@ function normalizeColumn(
   };
 }
 
+function normalizeColumnForValidation(
+  column: SectionColumnFormValues | undefined,
+): SectionColumnFormValues {
+  console.log("debut normalizeColumnForValidation", column);
+  return {
+    id: normalizeColumnId(column?.id),
+    cells: toMutable(column?.cells).map(toCellFormValuesForValidation),
+  };
+}
+
 function normalizeColumns(
   columns: ReadonlyArray<SectionColumnFormValues> | undefined,
   columnsCount: 1 | 2 | 3,
 ): SectionColumnFormValues[] {
   const safeColumns = toMutable(columns).map(normalizeColumn);
+
+  if (safeColumns.length === columnsCount) {
+    return safeColumns;
+  }
+
+  const next = [...safeColumns];
+
+  while (next.length < columnsCount) {
+    next.push(createEmptyColumn());
+  }
+
+  return next.slice(0, columnsCount);
+}
+
+function normalizeColumnsForValidation(
+  columns: ReadonlyArray<SectionColumnFormValues> | undefined,
+  columnsCount: 1 | 2 | 3,
+): SectionColumnFormValues[] {
+  console.log("debut normalizeColumnsForValidation", columns);
+  const safeColumns = toMutable(columns).map(normalizeColumnForValidation);
 
   if (safeColumns.length === columnsCount) {
     return safeColumns;
@@ -129,6 +160,21 @@ function normalizeRow(
   };
 }
 
+function normalizeRowForValidation(
+  row: SectionRowFormValues | undefined,
+): SectionRowFormValues {
+  console.log("debut normalizeRowForValidation", row);
+  const columnsCount =
+    row?.columnsCount === 2 || row?.columnsCount === 3 ? row.columnsCount : 1;
+
+  return {
+    id: normalizeRowId(row?.id),
+    columnsCount,
+    reverseOn: normalizeRowReverseOn(row?.reverseOn),
+    columns: normalizeColumnsForValidation(row?.columns, columnsCount),
+  };
+}
+
 function normalizeRows(
   rows: ReadonlyArray<SectionRowFormValues> | undefined,
 ): SectionRowFormValues[] {
@@ -137,6 +183,17 @@ function normalizeRows(
   }
 
   return toMutable(rows).map(normalizeRow);
+}
+
+function normalizeRowsForValidation(
+  rows: ReadonlyArray<SectionRowFormValues> | undefined,
+): SectionRowFormValues[] {
+  console.log("debut normalizeRowsForValidation", rows);
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return [createEmptyRow()];
+  }
+
+  return toMutable(rows).map(normalizeRowForValidation);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -200,6 +257,18 @@ export function normalizeSectionBlockFormValues(
   };
 }
 
+export function normalizeSectionBlockFormValuesForValidation(
+  values: SectionBlockFormValues,
+): SectionBlockFormValues {
+  console.log("debut normalizeSectionBlockFormValuesForValidation", values);
+  return {
+    name: normalizeName(values.name),
+    containerMode: normalizeContainerMode(values.containerMode),
+    lcpPriority: Boolean(values.lcpPriority),
+    rows: normalizeRowsForValidation(values.rows),
+  };
+}
+
 /* -------------------------------------------------------------------------- */
 /* UI -> INTENTS (API)                                                        */
 /* -------------------------------------------------------------------------- */
@@ -213,7 +282,7 @@ export function toCreateSectionBlockIntentDTOFromFormValues(args: {
   insertAt?: number;
 }): CreateSectionBlockIntentDTO {
   const { values, insertAt } = args;
-  const normalized = normalizeSectionBlockFormValues(values);
+  const normalized = normalizeSectionBlockFormValuesForValidation(values);
 
   return {
     ...(normalized.name ? { name: normalized.name } : {}),
@@ -242,7 +311,7 @@ function toSectionBlockPatch(
   }
 
   if ("rows" in patch && patch.rows !== undefined) {
-    output.rows = normalizeRows(patch.rows);
+    output.rows = normalizeRowsForValidation(patch.rows);
   }
 
   return output;

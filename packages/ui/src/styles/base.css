@@ -87,6 +87,11 @@
     @apply border-border outline-ring/50;
   }
 
+  html,
+  [data-scroll-root] {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -151,7 +156,8 @@
       animation: none !important;
     }
 
-    html:focus-within {
+    html,
+    [data-scroll-root] {
       scroll-behavior: auto;
     }
 
@@ -177,3 +183,7 @@
 @custom-variant data-inactive (&[data-state="inactive"], &[data-inactive]);
 
 @custom-variant data-disabled (&[data-disabled], &[aria-disabled="true"]);
+
+:where(main, [data-site-content]) :where([id]) {
+  scroll-margin-top: calc(var(--header-h, 0px) + 2rem);
+}

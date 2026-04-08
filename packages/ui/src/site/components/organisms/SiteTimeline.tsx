@@ -13,6 +13,7 @@
  * - Réutilise `SiteTimelineItem` pour le rendu d’un item individuel.
  * - Gère localement l’ouverture / fermeture de la timeline.
  * - Mesure la hauteur réelle des items pour appliquer un léger compactage desktop.
+ * - Le scroll d’ouverture tient compte de la hauteur du header sticky via `--header-h`.
  */
 
 import { motion } from "framer-motion";
@@ -20,6 +21,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@compoz/ui/components/ui/button";
+import { scrollToElement } from "@compoz/ui/lib/scrollToElement";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteTimelineItem } from "@compoz/ui/site/components/molecules/SiteTimelineItem";
 import type { SiteTimelineUi } from "@compoz/ui/site/site-ui.types";
@@ -60,9 +62,14 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
     return null;
   }
 
+  /**
+   * Scrolle vers l’ancre d’ouverture de la timeline
+   * en tenant compte du header sticky.
+   */
   const scrollToAnchor = () => {
-    anchorRef.current?.scrollIntoView({
-      behavior: "smooth",
+    if (!anchorRef.current) return;
+
+    scrollToElement(anchorRef.current, {
       block: "start",
     });
   };
@@ -200,7 +207,7 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
         </Button>
       </div>
 
-      <div ref={anchorRef} className="scroll-mt-[var(--header-h)]" />
+      <div ref={anchorRef} />
 
       <motion.div
         layout

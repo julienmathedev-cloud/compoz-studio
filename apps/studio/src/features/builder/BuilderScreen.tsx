@@ -46,6 +46,7 @@ import { useListPageBlocks } from "@compoz/studio/features/pages/blocks/hooks/us
 import { useUpdateBlock } from "@compoz/studio/features/pages/blocks/hooks/useUpdateBlock";
 import {
   normalizeSectionBlockFormValues,
+  normalizeSectionBlockFormValuesForValidation,
   toSectionBlockFormValuesFromDTO,
 } from "@compoz/studio/features/pages/mappers/blocks-form";
 import { useStudioPreview } from "@compoz/studio/features/preview/hooks/useStudioPreview";
@@ -180,7 +181,10 @@ export function BuilderScreen({
 
   const resolver = useCallback<Resolver<SectionBlockFormValues>>(
     async (values, context, options) => {
-      const normalizedValues = normalizeSectionBlockFormValues(values);
+      console.log("values", values);
+      const normalizedValues =
+        normalizeSectionBlockFormValuesForValidation(values);
+      console.log("normalizedValues", normalizedValues);
 
       const result = await zodResolver(SectionBlockFormSchema)(
         normalizedValues,
@@ -250,7 +254,7 @@ export function BuilderScreen({
   const baselinePreview = useMemo<SectionBlockShape | null>(() => {
     return toSectionBlockShapeFromFormValues({
       blockId,
-      values: baseline,
+      values: normalizeSectionBlockFormValuesForValidation(baseline),
     });
   }, [baseline, blockId]);
 
@@ -261,7 +265,7 @@ export function BuilderScreen({
   const draftPreview = useMemo<SectionBlockShape | null>(() => {
     return toSectionBlockShapeFromFormValues({
       blockId,
-      values: liveValues,
+      values: normalizeSectionBlockFormValuesForValidation(liveValues),
     });
   }, [blockId, liveValues]);
 
@@ -295,7 +299,8 @@ export function BuilderScreen({
   }, [pageId, pageSlug, blockId]);
 
   useEffect(() => {
-    baselineRef.current = baseline;
+    baselineRef.current =
+      normalizeSectionBlockFormValuesForValidation(baseline);
   }, [baseline]);
 
   useEffect(() => {
@@ -452,7 +457,9 @@ export function BuilderScreen({
         return;
       }
 
-      const normalizedNext = normalizeSectionBlockFormValues(values);
+      const normalizedNextForm = normalizeSectionBlockFormValues(values);
+      const normalizedNextForValidation =
+        normalizeSectionBlockFormValuesForValidation(values);
 
       const hasOtherLcpPriority = (blocks ?? []).some((block) => {
         if (!block || block.id === blockIdKey) return false;
@@ -473,7 +480,7 @@ export function BuilderScreen({
           pageIdKey,
           blockIdKey,
           baselineForPatch,
-          normalizedNext,
+          normalizedNextForValidation,
           hasOtherLcpPriority,
         );
 
@@ -482,9 +489,9 @@ export function BuilderScreen({
           blockId: blockIdKey,
         });
 
-        baselineRef.current = normalizedNext;
+        baselineRef.current = normalizedNextForValidation;
 
-        reset(normalizedNext, {
+        reset(normalizedNextForm, {
           keepDirty: false,
           keepTouched: false,
           keepErrors: false,
@@ -494,7 +501,7 @@ export function BuilderScreen({
 
         const nextBaselinePreview = toSectionBlockShapeFromFormValues({
           blockId,
-          values: normalizedNext,
+          values: normalizedNextForValidation,
         });
 
         const nextBaselinePreviewSig = JSON.stringify(nextBaselinePreview);
@@ -662,10 +669,10 @@ export function BuilderScreen({
 
         <div
           id="main"
-          className="mb-2 mr-2 flex-1 overflow-y-auto rounded-sm border border-primary/10 bg-background"
+          className="mb-2 mr-2 h-full flex-1 overflow-y-auto rounded-sm border border-primary/10 bg-background"
           tabIndex={-1}
         >
-          <div className={cn(STUDIO_CONTAINER)}>
+          <div className={cn(STUDIO_CONTAINER, "h-full")}>
             <div className={cn(STUDIO_PAGE)}>
               <PreviewFrame
                 title={t("studio.builder.preview.frame.title")}
@@ -675,7 +682,7 @@ export function BuilderScreen({
                 isLoading={isPreviewLoading}
                 isEmpty={isEmpty}
                 emptyLabel={emptyLabel}
-                heightClassName="h-[630px]"
+                heightClassName="h-[78vh]"
                 deviceMode="compact"
                 fitMode="responsive"
               />

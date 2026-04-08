@@ -198,6 +198,7 @@ function buildExtensions() {
       heading: false,
       blockquote: {},
       horizontalRule: {},
+      link: false,
     }),
     Underline,
     Superscript,
@@ -228,6 +229,12 @@ function normalizeRichTextHtmlForCompare(html: string): string {
   }
 
   return raw;
+}
+
+function cleanupRichTextHtml(html: string): string {
+  if (!html) return "";
+
+  return html.replace(/(?:<p>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>)+$/gi, "").trim();
 }
 
 export function RichTextContentEditor({
@@ -284,14 +291,12 @@ export function RichTextContentEditor({
       },
     },
     onUpdate: ({ editor }) => {
-      const nextHtml = editor.getHTML();
+      const nextHtml = cleanupRichTextHtml(editor.getHTML());
+      const currentValue = String(value ?? "");
 
       console.log("TIPTAP getHTML()", nextHtml);
 
-      const nextNorm = normalizeRichTextHtmlForCompare(nextHtml);
-      const propNorm = normalizeRichTextHtmlForCompare(value || "");
-
-      if (nextNorm === propNorm) return;
+      if (nextHtml === currentValue) return;
 
       onChange(nextHtml);
     },
@@ -316,8 +321,10 @@ export function RichTextContentEditor({
   useEffect(() => {
     if (!editor) return;
 
-    const current = editor.getHTML();
-    const next = value || "";
+    const current = cleanupRichTextHtml(editor.getHTML());
+    console.log("TIPTAP current useEffect", current);
+    const next = cleanupRichTextHtml(value || "");
+    console.log("TIPTAP next useEffect", next);
 
     const currentNorm = normalizeRichTextHtmlForCompare(current);
     const nextNorm = normalizeRichTextHtmlForCompare(next);

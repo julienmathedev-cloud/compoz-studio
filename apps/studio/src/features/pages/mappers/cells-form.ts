@@ -331,56 +331,41 @@ export function ensureCellsLength(
   return output;
 }
 
+/* -------------------------------------------------------------------------- */
+/* StructuredCard - normalisation UI-safe                                     */
+/* -------------------------------------------------------------------------- */
+
 export function normalizeStructuredCardButton(
   button: StructuredCardItemFormValues["button"],
 ): StructuredCardItemFormValues["button"] {
-  if (!button) return null;
-
-  const isEmptyLabel = !button.label || !button.label.trim();
-
-  // 👉 règle métier : pas de label = pas de bouton
-  if (isEmptyLabel) {
-    return null;
+  if (!button) {
+    return createEmptyButtonItem();
   }
 
   return {
     ...button,
-    label: button.label.trim(),
+    label: button.label?.trim() ?? "",
     href: button.href?.trim() ?? "",
+    variant: button.variant ?? "default",
   };
 }
 
 export function normalizeStructuredCardImage(
   image: StructuredCardItemFormValues["image"],
 ): StructuredCardItemFormValues["image"] {
-  if (!image) return null;
-
-  const isEmptySrc = !image.src || !image.src.trim();
-  const isEmptyAlt = !image.alt || !image.alt.trim();
-  const isEmptyCaption = !image.caption || !image.caption.trim();
-  const isEmptyHref = !image.href || !image.href.trim();
-  const hasInvalidWidth = !image.width || image.width <= 0;
-  const hasInvalidHeight = !image.height || image.height <= 0;
-
-  const isCompletelyEmpty =
-    isEmptySrc &&
-    isEmptyAlt &&
-    isEmptyCaption &&
-    isEmptyHref &&
-    hasInvalidWidth &&
-    hasInvalidHeight;
-
-  // 👉 règle métier : image entièrement vide = pas d’image
-  if (isCompletelyEmpty) {
-    return null;
+  if (!image) {
+    return createEmptyImageEditor();
   }
 
   return {
     ...image,
-    src: image.src.trim(),
-    alt: image.alt.trim(),
+    src: image.src?.trim() ?? "",
+    alt: image.alt?.trim() ?? "",
     caption: image.caption?.trim() ? image.caption.trim() : null,
     href: image.href?.trim() ? image.href.trim() : null,
+    width: typeof image.width === "number" && image.width > 0 ? image.width : 0,
+    height:
+      typeof image.height === "number" && image.height > 0 ? image.height : 0,
   };
 }
 
@@ -394,11 +379,152 @@ export function normalizeStructuredCardItem(
   };
 }
 
+/* -------------------------------------------------------------------------- */
+/* StructuredCard - normalisation for validation                              */
+/* -------------------------------------------------------------------------- */
+
+export function toStructuredCardButtonForValidation(
+  button: StructuredCardItemFormValues["button"],
+): StructuredCardItemFormValues["button"] {
+  if (!button) return null;
+
+  const label = button.label?.trim() ?? "";
+  const href = button.href?.trim() ?? "";
+  const variant = button.variant ?? "default";
+
+  if (!label) {
+    return null;
+  }
+
+  return {
+    ...button,
+    label,
+    href,
+    variant,
+  };
+}
+
+export function toStructuredCardImageForValidation(
+  image: StructuredCardItemFormValues["image"],
+): StructuredCardItemFormValues["image"] {
+  if (!image) return null;
+
+  const src = image.src?.trim() ?? "";
+  const alt = image.alt?.trim() ?? "";
+  const caption = image.caption?.trim() ? image.caption.trim() : null;
+  const href = image.href?.trim() ? image.href.trim() : null;
+  const width =
+    typeof image.width === "number" && image.width > 0 ? image.width : 0;
+  const height =
+    typeof image.height === "number" && image.height > 0 ? image.height : 0;
+
+  const isCompletelyEmpty =
+    src.length === 0 &&
+    alt.length === 0 &&
+    !caption &&
+    !href &&
+    width <= 0 &&
+    height <= 0;
+
+  if (isCompletelyEmpty) {
+    return null;
+  }
+
+  return {
+    ...image,
+    src,
+    alt,
+    caption,
+    href,
+    width,
+    height,
+  };
+}
+
+export function toStructuredCardItemForValidation(
+  item: StructuredCardItemFormValues,
+): StructuredCardItemFormValues {
+  return {
+    ...item,
+    image: toStructuredCardImageForValidation(item.image),
+    button: toStructuredCardButtonForValidation(item.button),
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Carousel helpers                                                           */
+/* -------------------------------------------------------------------------- */
+
+function normalizeCarouselItem(
+  itemKind: "image" | "card" | "cardsExtended" | "structuredCard",
+  item: CarouselItemFormValues,
+): CarouselItemFormValues {
+  if (itemKind === "structuredCard") {
+    return normalizeStructuredCardItem(item as StructuredCardItemFormValues);
+  }
+
+  return item;
+}
+
+function normalizeCarouselItemForValidation(
+  itemKind: "image" | "card" | "cardsExtended" | "structuredCard",
+  item: CarouselItemFormValues,
+): CarouselItemFormValues {
+  if (itemKind === "structuredCard") {
+    return toStructuredCardItemForValidation(
+      item as StructuredCardItemFormValues,
+    );
+  }
+
+  return item;
+}
+
+export function toCellFormValuesForValidation(
+  cell: CellFormValues,
+): CellFormValues {
+  if (cell.kind === "structuredCard") {
+    return {
+      ...cell,
+      items: cell.items.map(toStructuredCardItemForValidation),
+    };
+  }
+
+  if (cell.kind === "carousel") {
+    return {
+      ...cell,
+      items: cell.items.map((item) =>
+        normalizeCarouselItemForValidation(
+          cell.itemKind,
+          item as CarouselItemFormValues,
+        ),
+      ),
+    };
+  }
+
+  if (cell.kind === "spacer") {
+    return {
+      ...cell,
+      visibility: normalizeSpacerVisibility(cell.visibility),
+    };
+  }
+
+  return cell;
+}
+
 export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
   if (cell.kind === "structuredCard") {
     return {
       ...cell,
       items: cell.items.map(normalizeStructuredCardItem),
+    };
+  }
+
+  if (cell.kind === "carousel") {
+    return {
+      ...cell,
+      items: cell.items.map((item) =>
+        normalizeCarouselItem(cell.itemKind, item as CarouselItemFormValues),
+      ),
     };
   }
 

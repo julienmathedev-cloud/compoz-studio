@@ -102,7 +102,10 @@ export default async function DraftLayout({ children }: LayoutProps) {
   const ui = resolveSiteUi();
 
   return (
-    <div className={cn(SITE_APP_SHELL, fontVariablesClassName)}>
+    <div
+      className={cn(SITE_APP_SHELL, fontVariablesClassName)}
+      data-scroll-root
+    >
       <SiteRuntimeProvider ui={ui} theme={settings.theme}>
         <ScrollTopOnRouteChange />
         <div className={cn(SITE_APP_COLUMN)}>

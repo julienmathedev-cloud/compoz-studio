@@ -13,7 +13,7 @@
 import type { SiteFormUi } from "@compoz/ui/site/site-ui.types";
 
 export const defaultFormUi: SiteFormUi = {
-  card: "w-full max-w-2xl mx-auto",
+  card: "w-full max-w-2xl mx-auto border border-border ring-0 shadow-border shadow-xs",
   form: "flex flex-col",
   header: "flex flex-col gap-2",
   content: "flex flex-col gap-6 pb-4",

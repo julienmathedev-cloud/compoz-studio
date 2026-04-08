@@ -13,7 +13,7 @@ import "keen-slider/keen-slider.min.css";
 
 import { useKeenSlider } from "keen-slider/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@compoz/ui/components/ui/button";
 import { cn } from "@compoz/ui/lib/utils";
@@ -43,6 +43,10 @@ export function SiteSlider({
 
   const hasVisibleArrows = showArrows && count > 1;
 
+  const itemsSignature = useMemo(() => {
+    return items.map((item) => item.id).join("|");
+  }, [items]);
+
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
     loop: count > 1,
     slideChanged: (slider) => {
@@ -68,6 +72,28 @@ export function SiteSlider({
       },
     },
   });
+
+  useEffect(() => {
+    const slider = instanceRef.current;
+    if (!slider) return;
+
+    const raf = requestAnimationFrame(() => {
+      slider.update();
+
+      const maxIndex = Math.max(0, count - 1);
+      const nextIndex = Math.min(currentSlide, maxIndex);
+
+      if (nextIndex !== currentSlide) {
+        setCurrentSlide(nextIndex);
+      }
+
+      slider.moveToIdx(nextIndex, true, { duration: 0 });
+    });
+
+    return () => {
+      cancelAnimationFrame(raf);
+    };
+  }, [count, currentSlide, instanceRef, itemsSignature]);
 
   if (count === 0) {
     return null;

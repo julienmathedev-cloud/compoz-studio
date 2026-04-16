@@ -112,7 +112,11 @@ export function SiteReveal({
   return (
     <Comp
       ref={ref}
-      className={cn(!prefersReduced && "will-change-transform", className)}
+      className={cn(
+        !prefersReduced && "will-change-transform",
+        "relative h-full",
+        className,
+      )}
       initial={false}
       animate={inView ? "visible" : "hidden"}
       variants={variants}

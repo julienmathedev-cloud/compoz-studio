@@ -12,15 +12,16 @@ import {
   FileText,
   GalleryHorizontal,
   Heading,
+  History,
   Image as ImageIcon,
   Images,
   LayoutGrid,
+  LayoutList,
   ListOrdered,
   Mail,
   Minus,
   MousePointerClick,
   SeparatorHorizontal,
-  History,
   Type,
 } from "lucide-react";
 import type { useTranslations } from "next-intl";
@@ -63,11 +64,11 @@ export function getCellKind(value: unknown): CellKind | null {
 export function getCellKindIcon(kind: CellKind): LucideIcon {
   if (kind === "heading") return Heading;
   if (kind === "richText") return Type;
-  if (kind === "spacer") return Minus;
-  if (kind === "separator") return SeparatorHorizontal;
+  if (kind === "spacer") return SeparatorHorizontal;
+  if (kind === "separator") return Minus;
   if (kind === "buttons") return MousePointerClick;
   if (kind === "cards") return LayoutGrid;
-  if (kind === "cardsExtended") return LayoutGrid;
+  if (kind === "cardsExtended") return LayoutList;
   if (kind === "steps") return ListOrdered;
   if (kind === "timeline") return History;
   if (kind === "structuredCard") return FileText;

@@ -16,7 +16,7 @@ export function assertGalleryMaxColumns(maxColumns: unknown, path: Path) {
     typeof maxColumns !== "number" ||
     !Number.isInteger(maxColumns) ||
     maxColumns < 1 ||
-    maxColumns > 5
+    maxColumns > 6
   ) {
     throw new DomainError({
       code: EC.GALLERY_MAX_COLUMNS_INVALID,

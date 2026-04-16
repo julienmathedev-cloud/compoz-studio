@@ -12,12 +12,14 @@
  * - Style 100% piloté par `ui` (skin).
  * - Le composant conserve uniquement la logique + a11y.
  * - Reveal : activable/désactivable via prop.
+ * - Les tailles responsive des images sont pilotées par `ui.sizesByColumns`.
  */
+
+import Link from "next/link";
 
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
-import { SiteNavLink } from "@compoz/ui/site/components/atoms/SiteNavLink";
 import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
 import type { SiteNavGalleryUi } from "@compoz/ui/site/site-ui.types";
 import type { ImageEditorShape } from "@compoz/validation/pages/blocks/cells/cell";
@@ -47,7 +49,8 @@ export function SiteGalleryNavList({
   priority = false,
   reveal = true,
 }: SiteGalleryNavListProps) {
-  const cols = Math.max(1, Math.floor(columns || 1));
+  const cols = clampColumns(columns);
+  const resolvedSizes = ui.sizesByColumns[cols];
 
   return (
     <ul className={cn(ui.list)} data-reveal={reveal ? "true" : "false"}>
@@ -71,7 +74,7 @@ export function SiteGalleryNavList({
                 width: normalized.width,
                 height: normalized.height,
               }}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              sizes={resolvedSizes}
               className={cn(ui.image)}
               priority={priority && index === 0}
               fetchPriority={priority && index === 0 ? "high" : "auto"}
@@ -88,13 +91,9 @@ export function SiteGalleryNavList({
         );
 
         const item = href ? (
-          <SiteNavLink
-            href={href}
-            ariaLabel={ariaLabel}
-            linkClassName={cn(ui.link)}
-          >
+          <Link href={href} aria-label={ariaLabel} className={cn(ui.link)}>
             {figure}
-          </SiteNavLink>
+          </Link>
         ) : (
           figure
         );
@@ -132,4 +131,8 @@ function normalizeImage(img: ImageEditorShape): NormalizedImage {
     width: img.width,
     height: img.height,
   } as const;
+}
+
+function clampColumns(v: unknown): 1 | 2 | 3 | 4 | 5 | 6 {
+  return v === 1 || v === 2 || v === 3 || v === 4 || v === 5 || v === 6 ? v : 3;
 }

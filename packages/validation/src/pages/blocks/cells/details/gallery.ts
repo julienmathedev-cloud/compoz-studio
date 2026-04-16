@@ -18,6 +18,7 @@ export const GalleryMaxColumnsSchema = z.union(
     z.literal(3),
     z.literal(4),
     z.literal(5),
+    z.literal(6),
   ] as const,
   { message: ERROR_CODES.GALLERY_MAX_COLUMNS_INVALID },
 );

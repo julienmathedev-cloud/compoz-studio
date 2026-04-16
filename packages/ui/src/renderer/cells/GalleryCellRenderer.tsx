@@ -73,5 +73,5 @@ export function GalleryCellRenderer({
 GalleryCellRenderer.displayName = "GalleryCellRenderer";
 
 function clampMaxColumns(v: unknown): GalleryMaxColumns {
-  return v === 1 || v === 2 || v === 3 || v === 4 || v === 5 ? v : 3;
+  return v === 1 || v === 2 || v === 3 || v === 4 || v === 5 || v === 6 ? v : 3;
 }

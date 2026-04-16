@@ -175,6 +175,6 @@ export function SiteGalleryZoomList({
 
 SiteGalleryZoomList.displayName = "SiteGalleryZoomList";
 
-function clampColumns(v: unknown): 1 | 2 | 3 | 4 | 5 {
-  return v === 1 || v === 2 || v === 3 || v === 4 || v === 5 ? v : 3;
+function clampColumns(v: unknown): 1 | 2 | 3 | 4 | 5 | 6 {
+  return v === 1 || v === 2 || v === 3 || v === 4 || v === 5 || v === 6 ? v : 3;
 }

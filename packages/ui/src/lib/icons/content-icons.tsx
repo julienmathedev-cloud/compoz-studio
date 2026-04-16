@@ -23,7 +23,6 @@ import {
   Building2,
   Calendar,
   Camera,
-  ChartColumn,
   ChartPie,
   CheckCheck,
   CheckCircle2,

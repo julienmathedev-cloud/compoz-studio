@@ -76,10 +76,11 @@ const MAX_COLUMNS_ITEMS = [
   { value: "3", label: "3" },
   { value: "4", label: "4" },
   { value: "5", label: "5" },
+  { value: "6", label: "6" },
 ] as const;
 
 function clampMaxColumns(v: unknown): GalleryMaxColumns {
-  if (v === 1 || v === 2 || v === 3 || v === 4 || v === 5) return v;
+  if (v === 1 || v === 2 || v === 3 || v === 4 || v === 5 || v === 6) return v;
   return 3;
 }
 
@@ -95,6 +96,8 @@ function toMaxColumnsFromSelectValue(v: string): GalleryMaxColumns {
       return 4;
     case "5":
       return 5;
+    case "6":
+      return 6;
     default:
       return 3;
   }

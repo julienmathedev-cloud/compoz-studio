@@ -7,7 +7,7 @@
 
 import type { ImageEditor } from "@compoz/core/domain/pages/entities/cells/image-editor";
 
-export type GalleryMaxColumns = 1 | 2 | 3 | 4 | 5;
+export type GalleryMaxColumns = 1 | 2 | 3 | 4 | 5 | 6;
 
 export type GalleryCell = {
   id: string;

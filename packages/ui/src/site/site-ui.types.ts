@@ -407,6 +407,7 @@ export type SiteNavGalleryUi = Readonly<{
   overlayPanel: string;
   overlayContent: string;
   columns: Readonly<Record<GalleryMaxColumns, string>>;
+  sizesByColumns: Readonly<Record<GalleryMaxColumns, string>>;
 }>;
 
 export type SiteNavGalleryUiOverride = DeepPartial<SiteNavGalleryUi>;
@@ -414,9 +415,9 @@ export type SiteNavGalleryUiOverride = DeepPartial<SiteNavGalleryUi>;
 export type SiteZoomGalleryUi = Readonly<{
   list: string;
 
-  columns: Readonly<Record<1 | 2 | 3 | 4 | 5, string>>;
+  columns: Readonly<Record<GalleryMaxColumns, string>>;
 
-  sizesByColumns: Readonly<Record<1 | 2 | 3 | 4 | 5, string>>;
+  sizesByColumns: Readonly<Record<GalleryMaxColumns, string>>;
 
   button: string;
   figure: string;

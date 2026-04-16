@@ -184,7 +184,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       id,
       kind: "richText",
       content: "",
-      reveal: true,
+      reveal: false,
     };
   }
 

@@ -16,13 +16,14 @@ export const defaultCarouselUi: SiteCarouselUi = {
     root: "relative w-full",
     viewport: "relative overflow-hidden rounded-xl aspect-[16/9]",
     track: "",
-    slide: "absolute inset-0 tr-opacity",
+    slide:
+      "absolute inset-0 motion-safe:transition-opacity motion-safe:duration-300 motion-safe:ease-out",
     slideActive: "z-10 opacity-100",
     slideInactive: "pointer-events-none z-0 opacity-0",
     arrowButton:
-      "absolute top-1/2 z-20 h-8 w-8 hidden rounded-full sm:inline-flex scale-120 md:scale-120 lg:scale-140",
+      "absolute top-1/2 z-20 hidden h-8 w-8 rounded-full sm:inline-flex cursor-pointer",
     arrowIcon: "h-8 w-8",
-    dots: "mt-6 flex justify-center gap-2",
+    dots: "flex justify-center gap-2",
     dot: "h-2.5 w-2.5 rounded-full p-0 transition-colors cursor-pointer",
     dotActive: "bg-primary",
     dotInactive: "bg-primary/30",
@@ -31,14 +32,13 @@ export const defaultCarouselUi: SiteCarouselUi = {
   slider: {
     root: "relative",
     track: "cursor-grab active:cursor-grabbing",
-    slide:
-      "mt-4 mb-4 flex justify-center tr-opacity tr-transform tr-shadow outline-none",
-    slideActive: "opacity-100 translate-y-0 p-1",
-    slideInactive: "opacity-40 translate-y-2 shadow-none p-1",
+    slide: "mt-4 mb-4 flex justify-center outline-none",
+    slideActive: "opacity-100 p-2",
+    slideInactive: "opacity-60 p-2",
     arrowButton:
-      "absolute top-9/20 z-20 h-8 w-8 hidden rounded-full sm:inline-flex scale-120 md:scale-120 lg:scale-140",
+      "absolute top-9/20 z-20 hidden h-8 w-8 rounded-full sm:inline-flex cursor-pointer",
     arrowIcon: "h-8 w-8",
-    dots: "mt-6 flex justify-center gap-2",
+    dots: "flex justify-center gap-2",
     dot: "h-2.5 w-2.5 rounded-full p-0 transition-colors cursor-pointer",
     dotActive: "bg-primary",
     dotInactive: "bg-primary/30",

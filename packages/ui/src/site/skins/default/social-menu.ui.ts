@@ -13,11 +13,9 @@ export const defaultSocialMenuUi: SiteSocialMenuUi = {
 
   item: "shrink-0",
 
-  interactive:
-    "inline-flex items-center cursor-pointer motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-out motion-safe:hover:opacity-90 motion-safe:hover:scale-[1.03] motion-safe:active:scale-[0.97]",
+  interactive: "inline-flex items-center cursor-pointer",
 
-  // ✅ PRM : transition + hover uniquement si motion autorisé
-  link: "inline-flex text-foreground items-center justify-center p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+  link: "inline-flex items-center justify-center p-2 text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
 
   icon: "h-5 w-5",
 } as const;

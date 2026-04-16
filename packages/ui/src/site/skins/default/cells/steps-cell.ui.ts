@@ -18,7 +18,7 @@ export const defaultStepsUi: SiteStepsUi = {
   connectorIcon: "h-10 w-10 text-primary",
 
   card: {
-    root: "h-full border border-border ring-0 w-3/4 md:w-2/3 lg:w-5/9 shadow-border shadow-xs transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-[1.01] hover:shadow-sm hover:border-primary",
+    root: "h-full w-3/4 md:w-2/3 lg:w-5/9 border border-border shadow-xs",
 
     header: "flex flex-row items-center justify-center",
 
@@ -31,7 +31,7 @@ export const defaultStepsUi: SiteStepsUi = {
     content: "flex flex-col gap-2 h-full text-center",
 
     badge:
-      "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary bg-primary text-base font-bold text-primary-foreground",
+      "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-background text-base font-bold text-foreground",
 
     title: "text-center",
 

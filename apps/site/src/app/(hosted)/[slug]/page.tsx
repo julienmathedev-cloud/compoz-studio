@@ -7,8 +7,8 @@
  *
  * @remarks
  * Multi-tenant host-based:
- * - dépend de `headers()` via getPublished* loaders
- * - donc pas compatible avec SSG (`generateStaticParams`) au build
+ * - tenantId résolu explicitement
+ * - loaders explicites (pas de dépendance implicite à headers)
  */
 
 import type { Metadata } from "next";
@@ -16,13 +16,14 @@ import { notFound, redirect } from "next/navigation";
 
 import { SITE_PATH } from "@compoz/core/constants/web/paths";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
-import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import {
-  getPublishedIndex,
-  getPublishedPageBySlug,
+  getPublishedIndexByTenantId,
+  getPublishedPageBySlugByTenantId,
+  getTenantId,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import { SitePageRuntimeRenderer } from "@compoz/site/lib/pages/SitePageRuntimeRenderer";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
+import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
 import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
@@ -44,7 +45,9 @@ export async function generateMetadata({
 
   if (slug === HOME_SLUG) return {};
 
-  const page = await getPublishedPageBySlug(slug);
+  const tenantId = await getTenantId();
+  const page = await getPublishedPageBySlugByTenantId(tenantId, slug);
+
   if (!page) return {};
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
@@ -71,10 +74,12 @@ export default async function SitePage({ params }: PageParams) {
 
   if (slug === HOME_SLUG) return redirect(SITE_PATH.home);
 
-  const index = await getPublishedIndex();
+  const tenantId = await getTenantId();
+
+  const index = await getPublishedIndexByTenantId(tenantId);
   if (!index) return notFound();
 
-  const page = await getPublishedPageBySlug(slug);
+  const page = await getPublishedPageBySlugByTenantId(tenantId, slug);
   if (!page) return notFound();
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])

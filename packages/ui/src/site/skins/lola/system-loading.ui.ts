@@ -9,5 +9,4 @@
 import type { SiteSystemLoadingUiOverride } from "@compoz/ui/site/site-ui.types";
 
 export const lolaSystemLoadingUi: SiteSystemLoadingUiOverride = {
-  spinner: "size-10 text-zinc-500",
 } as const;

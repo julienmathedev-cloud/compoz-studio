@@ -1,16 +1,6 @@
 /**
  * @file apps/site/src/app/t/[tenantId]/layout.tsx
  * @layer site/app
- *
- * @description
- * Layout public du fallback multi-tenant explicite `/t/[tenantId]`.
- *
- * @remarks
- * - Charge les settings publiés à partir du tenant explicite fourni dans l’URL.
- * - Évite tout conflit avec la résolution host-based.
- * - Sert de shell public pour :
- *   - `/t/[tenantId]`
- *   - `/t/[tenantId]/[slug]`
  */
 
 import type { Metadata } from "next";
@@ -18,7 +8,7 @@ import type { Icons } from "next/dist/lib/metadata/types/metadata-types";
 import type { ReactNode } from "react";
 
 import { SiteNotFoundClient } from "@compoz/site/components/system/SiteNotFoundClient";
-import { getPublishedSettingsForTenant } from "@compoz/site/lib/pages/published-page-loaders";
+import { getPublishedSettingsByTenantId } from "@compoz/site/lib/pages/published-page-loaders";
 import { resolveSiteBaseUrl } from "@compoz/site/lib/seo/resolveSiteBaseUrl";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
 import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
@@ -106,7 +96,7 @@ export async function generateMetadata({
 }: Omit<TenantLayoutProps, "children">): Promise<Metadata> {
   const { tenantId } = await unwrapParams(params);
 
-  const settings = await getPublishedSettingsForTenant(tenantId);
+  const settings = await getPublishedSettingsByTenantId(tenantId);
   if (!settings) return {};
 
   const brandTitle = (settings.identity?.siteName ?? "").trim() || "Site";
@@ -173,8 +163,8 @@ export default async function TenantSiteLayout({
 }: TenantLayoutProps) {
   const { tenantId } = await unwrapParams(params);
 
-  const settings = await getPublishedSettingsForTenant(tenantId);
-  const ui = resolveSiteUi();
+  const settings = await getPublishedSettingsByTenantId(tenantId);
+  const ui = resolveSiteUi(tenantId);
 
   return (
     <SiteRuntimeProvider ui={ui} theme={settings?.theme}>

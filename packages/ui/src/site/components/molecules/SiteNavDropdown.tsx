@@ -69,6 +69,7 @@ export type SiteNavDropdownProps = Readonly<{
   items: ReadonlyArray<SiteNavItem>;
   itemContainerClass?: string;
   itemLinkClass?: string;
+  itemLabelClass?: string;
   panelClass?: string;
 }>;
 
@@ -82,6 +83,7 @@ export function SiteNavDropdown({
   items,
   itemContainerClass,
   itemLinkClass,
+  itemLabelClass,
   panelClass,
 }: SiteNavDropdownProps) {
   const [open, setOpen] = useState(false);
@@ -300,6 +302,7 @@ export function SiteNavDropdown({
           }
           className={cn(className, itemContainerClass)}
           linkClassName={cn(itemLinkClass)}
+          labelClassName={cn(itemLabelClass)}
           data-section-active={sectionActive || undefined}
         >
           {triggerText}

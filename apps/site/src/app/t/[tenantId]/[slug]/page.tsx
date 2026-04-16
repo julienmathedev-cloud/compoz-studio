@@ -10,12 +10,12 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
-import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import {
-  getPublishedIndexForTenant,
-  getPublishedPageBySlugForTenant,
+  getPublishedIndexByTenantId,
+  getPublishedPageBySlugByTenantId,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
+import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
 import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
 import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
@@ -44,7 +44,7 @@ export async function generateMetadata({
     return {};
   }
 
-  const page = await getPublishedPageBySlugForTenant(tenantId, slug);
+  const page = await getPublishedPageBySlugByTenantId(tenantId, slug);
   if (!page) {
     return {};
   }
@@ -77,12 +77,12 @@ export default async function SiteTenantPage({ params }: PageParams) {
     return redirect(`/t/${encodeURIComponent(tenantId)}`);
   }
 
-  const index = await getPublishedIndexForTenant(tenantId);
+  const index = await getPublishedIndexByTenantId(tenantId);
   if (!index) {
     return notFound();
   }
 
-  const page = await getPublishedPageBySlugForTenant(tenantId, slug);
+  const page = await getPublishedPageBySlugByTenantId(tenantId, slug);
   if (!page) {
     return notFound();
   }
@@ -100,9 +100,9 @@ export default async function SiteTenantPage({ params }: PageParams) {
       s === HOME_SLUG ? tenantPrefix : `${tenantPrefix}/${s}`,
   });
 
-  return (
-    <SitePageRenderer ui={resolveSiteUi()} blocks={blocks} pager={pager} />
-  );
+  const ui = resolveSiteUi(tenantId);
+
+  return <SitePageRenderer ui={ui} blocks={blocks} pager={pager} />;
 }
 
 SiteTenantPage.displayName = "SiteTenantPage";

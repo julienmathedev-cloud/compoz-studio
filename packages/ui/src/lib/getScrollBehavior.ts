@@ -1,6 +1,6 @@
 /**
  * @file packages/ui/src/lib/getScrollBehavior.ts
- * @layer ui/lib/motion
+ * @layer ui/lib
  *
  * @description
  * Détermine la valeur de `scroll-behavior` à appliquer.

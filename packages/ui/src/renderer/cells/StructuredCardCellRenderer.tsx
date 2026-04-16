@@ -10,13 +10,14 @@
  * - Ignore la cellule si aucun item exploitable n’est présent.
  * - La cellule porte le layout (`columns`), les items portent le contenu.
  * - Utilise `SiteStructuredCard` pour le rendu visuel.
- *   en attendant son renommage éventuel.
+ * - `reveal` active/désactive l’enrobage `SiteReveal` item par item.
  */
 
 import type { StructuredCardCellShape } from "@compoz/validation/pages/blocks/cells/cell";
 
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
+import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
 import { SiteStructuredCard } from "@compoz/ui/site/components/molecules/SiteStructuredCard";
 import type { SiteStructuredCardUi } from "@compoz/ui/site/site-ui.types";
 
@@ -47,11 +48,17 @@ export function StructuredCardCellRenderer({
   if (items.length < 1) return null;
 
   const columns = cell.columns ?? 1;
+  const reveal = cell.reveal === true;
+  const cols = Math.max(1, Math.floor(columns || 1));
 
   return (
-    <div className={ui.root} data-cell="structuredCard">
+    <div
+      className={ui.root}
+      data-cell="structuredCard"
+      data-reveal={reveal ? "true" : "false"}
+    >
       <div className={cn(ui.grid, ui.columns[columns])}>
-        {items.map((item) => {
+        {items.map((item, index) => {
           const title = normalizeString(item.title, "");
           const meta = normalizeString(item.meta ?? "", "") || undefined;
 
@@ -90,9 +97,10 @@ export function StructuredCardCellRenderer({
                 }
               : undefined;
 
-          return (
+          const seed = index % cols;
+
+          const card = (
             <SiteStructuredCard
-              key={item.id}
               title={title}
               meta={meta}
               sections={sections}
@@ -100,6 +108,23 @@ export function StructuredCardCellRenderer({
               button={button}
               ui={ui}
             />
+          );
+
+          return (
+            <div key={item.id}>
+              {reveal ? (
+                <SiteReveal
+                  seedOrder={seed}
+                  staggerMs={60}
+                  amount={0.1}
+                  className={cn(ui.content)}
+                >
+                  {card}
+                </SiteReveal>
+              ) : (
+                card
+              )}
+            </div>
           );
         })}
       </div>

@@ -103,7 +103,7 @@ export function SiteTextLink({
 
   if (disableAllLinks) {
     return (
-      <span className={cn(className, "cursor-default")}>{disabledContent}</span>
+      <span className={cn(className, "cursor-pointer")}>{disabledContent}</span>
     );
   }
 

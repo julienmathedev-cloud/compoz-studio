@@ -32,19 +32,6 @@ export type SitePageRendererProps = Readonly<{
   ui: SiteGlobalUi;
 }>;
 
-/**
- * Détermine si un block est fullBleed.
- *
- * @remarks
- * V0.9 : seul type = "section".
- */
-function isFullBleedBlock(block: BlockShape | undefined) {
-  if (!block) return false;
-  if (block.type !== "section") return false;
-
-  return block.containerMode === "fullBleed";
-}
-
 export function SitePageRenderer({
   blocks,
   children,
@@ -55,25 +42,11 @@ export function SitePageRenderer({
 
   const b = blocks ?? [];
 
-  const firstIsFull = isBlocksMode && isFullBleedBlock(b[0]);
-  const lastIsFull = isBlocksMode && isFullBleedBlock(b[b.length - 1]);
-
-  /**
-   * ⚠️ Important
-   * On ne met PAS de max-width/padding global ici sinon on casse
-   * les sections fullBleed.
-   */
-  const paddingClass = cn(
-    firstIsFull ? "pt-0" : ui.body.paddingTop,
-    lastIsFull ? "pb-0" : ui.body.paddingBottom,
-  );
-
   const content = isBlocksMode ? (
     <BlocksRenderer
       blocks={b}
       cellsUi={ui.cells}
       blockUi={ui.blockSection}
-      className={cn(ui.body.spacing, paddingClass)}
       variant="site"
     />
   ) : (

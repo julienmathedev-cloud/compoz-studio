@@ -42,9 +42,6 @@ export const defaultGlobalUi: SiteGlobalUi = {
   body: {
     // Neutre : pas de fond par défaut (laisse le layout décider).
     surface: "bg-background",
-    spacing: "space-y-12 md:space-y-16",
-    paddingTop: "pt-12 md:pt-16",
-    paddingBottom: "pb-12 md:pb-16",
   },
 
   cells: {

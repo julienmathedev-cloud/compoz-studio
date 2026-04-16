@@ -181,10 +181,8 @@ export function BuilderScreen({
 
   const resolver = useCallback<Resolver<SectionBlockFormValues>>(
     async (values, context, options) => {
-      console.log("values", values);
       const normalizedValues =
         normalizeSectionBlockFormValuesForValidation(values);
-      console.log("normalizedValues", normalizedValues);
 
       const result = await zodResolver(SectionBlockFormSchema)(
         normalizedValues,

@@ -17,7 +17,10 @@ import type { Icons } from "next/dist/lib/metadata/types/metadata-types";
 import type { ReactNode } from "react";
 
 import { SiteNotFoundClient } from "@compoz/site/components/system/SiteNotFoundClient";
-import { getPublishedSettings } from "@compoz/site/lib/pages/published-page-loaders";
+import {
+  getPublishedSettingsByTenantId,
+  getTenantId,
+} from "@compoz/site/lib/pages/published-page-loaders";
 import { resolveSiteBaseUrl } from "@compoz/site/lib/seo/resolveSiteBaseUrl";
 import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
 import {
@@ -95,7 +98,9 @@ function buildFaviconIcons(favicon: string): Icons {
 /* -------------------------------------------------------------------------- */
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getPublishedSettings();
+  const tenantId = await getTenantId();
+  const settings = await getPublishedSettingsByTenantId(tenantId);
+
   if (!settings) return {};
 
   const brandTitle = (settings.identity?.siteName ?? "").trim() || "Site";
@@ -157,8 +162,9 @@ export async function generateMetadata(): Promise<Metadata> {
 /* -------------------------------------------------------------------------- */
 
 export default async function HostedSiteLayout({ children }: LayoutProps) {
-  const settings = await getPublishedSettings();
-  const ui = resolveSiteUi();
+  const tenantId = await getTenantId();
+  const settings = await getPublishedSettingsByTenantId(tenantId);
+  const ui = resolveSiteUi(tenantId);
 
   return (
     <SiteRuntimeProvider ui={ui} theme={settings?.theme}>

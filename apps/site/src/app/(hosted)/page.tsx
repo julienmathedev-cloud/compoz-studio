@@ -15,8 +15,9 @@ import { notFound } from "next/navigation";
 import { SITE_PATH } from "@compoz/core/constants/web/paths";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import {
-  getPublishedHomePage,
-  getPublishedIndex,
+  getPublishedHomePageByTenantId,
+  getPublishedIndexByTenantId,
+  getTenantId,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import { SitePageRuntimeRenderer } from "@compoz/site/lib/pages/SitePageRuntimeRenderer";
 import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
@@ -29,7 +30,9 @@ import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 /* -------------------------------------------------------------------------- */
 
 export async function generateMetadata(): Promise<Metadata> {
-  const page = await getPublishedHomePage();
+  const tenantId = await getTenantId();
+  const page = await getPublishedHomePageByTenantId(tenantId);
+
   if (!page) return {};
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
@@ -52,10 +55,12 @@ export async function generateMetadata(): Promise<Metadata> {
 /* -------------------------------------------------------------------------- */
 
 export default async function SiteRootPage() {
-  const index = await getPublishedIndex();
+  const tenantId = await getTenantId();
+
+  const index = await getPublishedIndexByTenantId(tenantId);
   if (!index) return notFound();
 
-  const page = await getPublishedHomePage();
+  const page = await getPublishedHomePageByTenantId(tenantId);
   if (!page) return notFound();
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])

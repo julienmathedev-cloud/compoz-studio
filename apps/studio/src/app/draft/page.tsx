@@ -13,8 +13,9 @@ import { STUDIO_PATH } from "@compoz/core/constants/web/paths";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { DraftPageRenderer } from "@compoz/studio/features/draft/DraftPageRenderer";
 import {
-  getDraftHomePage,
-  getDraftIndex,
+  getDraftHomePageByTenantId,
+  getDraftIndexByTenantId,
+  getTenantId,
 } from "@compoz/studio/lib/pages/draft-page-loaders";
 import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { toSlug } from "@compoz/ui/lib/routing/slug";
@@ -27,7 +28,9 @@ import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 /* -------------------------------------------------------------------------- */
 
 export async function generateMetadata(): Promise<Metadata> {
-  const page = await getDraftHomePage();
+  const tenantId = await getTenantId();
+  const page = await getDraftHomePageByTenantId(tenantId);
+
   if (!page) return {};
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
@@ -57,10 +60,12 @@ function hrefForDraftSlug(slug: string): string {
 /* -------------------------------------------------------------------------- */
 
 export default async function DraftRootPage() {
-  const index = await getDraftIndex();
+  const tenantId = await getTenantId();
+
+  const index = await getDraftIndexByTenantId(tenantId);
   if (!index) notFound();
 
-  const page = await getDraftHomePage();
+  const page = await getDraftHomePageByTenantId(tenantId);
   if (!page) notFound();
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])

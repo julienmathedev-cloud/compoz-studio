@@ -71,6 +71,7 @@ export function BlocksRenderer({
           <Renderer
             key={block.id}
             block={block}
+            index={index}
             variant={variant}
             blockUi={blockUi}
             cellsUi={cellsUi}

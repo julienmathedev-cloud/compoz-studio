@@ -13,11 +13,11 @@ export const defaultPrimaryMenuUi: SitePrimaryMenuUi = {
 
   item: "shrink-0",
 
-  // ✅ PRM : transition + hover uniquement si motion autorisé
-  interactive:
-    "inline-flex items-center motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-out motion-safe:hover:opacity-90 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.98]",
+  interactive: "inline-flex cursor-pointer items-center",
 
-  link: "inline-flex text-foreground px-2 py-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background no-underline aria-[current=page]:underline aria-[current=page]:decoration-1 aria-[current=page]:underline-offset-4 data-[section-active=true]:underline data-[section-active=true]:decoration-1 data-[section-active=true]:underline-offset-4",
+  link: "inline-flex cursor-pointer text-foreground px-2 py-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background no-underline aria-[current=page]:underline aria-[current=page]:decoration-1 aria-[current=page]:underline-offset-4 data-[section-active=true]:underline data-[section-active=true]:decoration-1 data-[section-active=true]:underline-offset-4",
+
+  label: "",
 
   dropdownPanel:
     "z-[80] p-2 rounded-md border border-border bg-background shadow-sm",

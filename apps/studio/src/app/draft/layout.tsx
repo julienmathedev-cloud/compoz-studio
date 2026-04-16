@@ -16,7 +16,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { getDraftSettings } from "@compoz/studio/lib/pages/draft-page-loaders";
+import {
+  getDraftSettingsByTenantId,
+  getTenantId,
+} from "@compoz/studio/lib/pages/draft-page-loaders";
 import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
 import { fontVariablesClassName } from "@compoz/ui/lib/fonts";
 import {
@@ -42,8 +45,14 @@ type LayoutProps = Readonly<{
   children: ReactNode;
 }>;
 
+/* -------------------------------------------------------------------------- */
+/* Metadata                                                                   */
+/* -------------------------------------------------------------------------- */
+
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getDraftSettings();
+  const tenantId = await getTenantId();
+  const settings = await getDraftSettingsByTenantId(tenantId);
+
   if (!settings) return {};
 
   const brandTitle = (settings.identity?.siteName ?? "").trim() || "Site";
@@ -95,11 +104,17 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/* -------------------------------------------------------------------------- */
+/* Layout                                                                     */
+/* -------------------------------------------------------------------------- */
+
 export default async function DraftLayout({ children }: LayoutProps) {
-  const settings = await getDraftSettings();
+  const tenantId = await getTenantId();
+
+  const settings = await getDraftSettingsByTenantId(tenantId);
   if (!settings) notFound();
 
-  const ui = resolveSiteUi();
+  const ui = resolveSiteUi(tenantId);
 
   return (
     <div

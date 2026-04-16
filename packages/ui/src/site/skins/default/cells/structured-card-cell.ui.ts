@@ -19,10 +19,10 @@ export const defaultStructuredCardUi: SiteStructuredCardUi = {
     3: "grid-cols-1 md:grid-cols-2 xl:grid-cols-3",
   },
 
-  card: "h-full border border-border ring-0 shadow-border shadow-xs transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-[1.01] hover:shadow-sm hover:border-primary",
+  card: "h-full border border-border shadow-xs",
 
   imageWrapper:
-    "relative aspect-[16/9] w-2/3 overflow-hidden rounded-md mx-auto",
+    "relative mx-auto aspect-[16/9] w-2/3 overflow-hidden rounded-md",
 
   image: "h-full w-full object-cover",
 
@@ -32,7 +32,7 @@ export const defaultStructuredCardUi: SiteStructuredCardUi = {
 
   caption: "text-sm text-muted-foreground",
 
-  content: "flex flex-col gap-4 p-4 pt-0",
+  content: "flex flex-col gap-4 p-4 pt-0 flex-1",
 
   sections: "flex flex-col gap-3",
 
@@ -41,9 +41,9 @@ export const defaultStructuredCardUi: SiteStructuredCardUi = {
   sectionTitle:
     "text-sm font-semibold uppercase tracking-wide text-muted-foreground",
 
-  sectionText: "text-sm text-foreground",
+  sectionText: "text-sm text-foreground text-justify",
 
-  buttonWrapper: "pt-2 flex justify-center",
+  buttonWrapper: "pt-2 flex justify-center mt-auto",
 
   button: "",
 } as const;

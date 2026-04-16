@@ -6,7 +6,8 @@
  * Skin UI par défaut pour styler l'en-tête du site (thème Default).
  *
  * @remarks
- * - Header sobre, basé sur `bg-chrome` + blur pour différenciation.
+ * - Header sobre, basé sur `bg-chrome`.
+ * - Peut appliquer un léger blur si activé côté settings.
  * - Aucun token custom hors thème public.
  * - La hauteur est pilotée par le container (padding), pas par le header.
  */
@@ -34,12 +35,12 @@ export const defaultHeaderUi: SiteHeaderUi = {
     sticky: "sticky top-0 z-50",
 
     /**
-     * Effet blur (si activé côté settings).
+     * Effet blur léger (si activé côté settings).
      *
-     * - opacité légèrement réduite pour laisser passer le contenu
-     * - blur pour lisibilité
+     * - légère translucidité pour conserver une surface stable
+     * - blur discret pour améliorer la lisibilité sans rendu trop expressif
      */
-    blur: "supports-[backdrop-filter]:bg-chrome/75 supports-[backdrop-filter]:backdrop-blur-md",
+    blur: "supports-[backdrop-filter]:bg-chrome/90 supports-[backdrop-filter]:backdrop-blur-sm",
   },
 
   /**
@@ -56,7 +57,7 @@ export const defaultHeaderUi: SiteHeaderUi = {
    * Skip link accessibilité.
    */
   skipLink:
-    "sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[9999] rounded-md bg-background px-3 py-2 text-foreground shadow focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background",
+    "sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[9999] rounded-md bg-chrome px-3 py-2 text-foreground shadow focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background",
 
   /**
    * Slot logo + nom.

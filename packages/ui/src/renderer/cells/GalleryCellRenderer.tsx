@@ -8,6 +8,7 @@
  * @remarks
  * - Le style est 100% piloté par `ui` (skin).
  * - `maxColumns` est data-driven (cell) : on sélectionne une variante fournie par le skin.
+ * - `reveal` est piloté par la cell et propagé aux listes gallery.
  */
 
 import type { GalleryMaxColumns } from "@compoz/core/domain/pages/entities/cell";
@@ -38,6 +39,7 @@ export function GalleryCellRenderer({
   if (items.length === 0) return null;
 
   const max = clampMaxColumns(cell.maxColumns);
+  const reveal = cell.reveal === true;
 
   const resolvedNavUi: SiteNavGalleryUi = {
     ...navUi,
@@ -55,6 +57,7 @@ export function GalleryCellRenderer({
       ui={resolvedNavUi}
       columns={max}
       priority={priority}
+      reveal={reveal}
     />
   ) : (
     <SiteGalleryZoomList
@@ -62,6 +65,7 @@ export function GalleryCellRenderer({
       ui={resolvedZoomUi}
       columns={max}
       priority={priority}
+      reveal={reveal}
     />
   );
 }

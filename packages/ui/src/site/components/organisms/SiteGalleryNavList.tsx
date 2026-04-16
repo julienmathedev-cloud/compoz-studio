@@ -11,7 +11,7 @@
  * @remarks
  * - Style 100% piloté par `ui` (skin).
  * - Le composant conserve uniquement la logique + a11y.
- * - Reveal : activé par défaut (V0.5).
+ * - Reveal : activable/désactivable via prop.
  */
 
 import { normalizeString } from "@compoz/ui/lib/normalize";
@@ -27,6 +27,7 @@ export type SiteGalleryNavListProps = Readonly<{
   ui: SiteNavGalleryUi;
   columns: number;
   priority?: boolean;
+  reveal?: boolean;
 }>;
 
 type NormalizedImage = Readonly<{
@@ -44,11 +45,12 @@ export function SiteGalleryNavList({
   ui,
   columns,
   priority = false,
+  reveal = true,
 }: SiteGalleryNavListProps) {
   const cols = Math.max(1, Math.floor(columns || 1));
 
   return (
-    <ul className={cn(ui.list)}>
+    <ul className={cn(ui.list)} data-reveal={reveal ? "true" : "false"}>
       {images.map((img, index) => {
         const normalized = normalizeImage(img);
 
@@ -99,9 +101,13 @@ export function SiteGalleryNavList({
 
         return (
           <li key={normalized.id}>
-            <SiteReveal seedOrder={seed} staggerMs={60} amount={0.1}>
-              {item}
-            </SiteReveal>
+            {reveal ? (
+              <SiteReveal seedOrder={seed} staggerMs={60} amount={0.1}>
+                {item}
+              </SiteReveal>
+            ) : (
+              item
+            )}
           </li>
         );
       })}

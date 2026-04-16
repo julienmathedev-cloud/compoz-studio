@@ -3,18 +3,13 @@
  * @layer site/lib/pages
  *
  * @description
- * Loaders server (Next/React) pour les pages du site (PUBLISHED-only) basées sur l’index :
- * - request-dedupe via `cache()` (tenant-aware)
- * - résolution slug -> pageId via helpers core
- *
- * ✅ Multi-tenant:
- * - Mode host-based (dev lvh.me + mapping env)
- * - Mode fallback /t/:tenant (force tenant via param)
+ * Loaders server (Next/React) pour les pages PUBLISHED
  *
  * @remarks
- * - Dépend volontairement de React (`cache`) et du runtime server.
- * - Ne doit pas aller dans `@compoz/core`.
+ * - API principale : `...ByTenantId`
+ * - Façade host-based conservée
  */
+
 import { headers } from "next/headers";
 import { cache } from "react";
 import "server-only";
@@ -28,11 +23,10 @@ import { toSlug } from "@compoz/ui/lib/routing/slug";
 import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 /* -------------------------------------------------------------------------- */
-/* Tenant resolution (host-based)                                             */
+/* Tenant resolution                                                          */
 /* -------------------------------------------------------------------------- */
 
 async function resolveTenantIdFromRequest(): Promise<string> {
-  // ✅ compat: selon ta version Next, headers() peut être sync ou async
   const h = await headers();
 
   const hostRaw = h.get("x-forwarded-host") ?? h.get("host") ?? "";
@@ -49,7 +43,7 @@ async function resolveTenantIdFromRequest(): Promise<string> {
 export const getTenantId = cache(resolveTenantIdFromRequest);
 
 /* -------------------------------------------------------------------------- */
-/* Internal cached loaders (tenant-aware, PUBLISHED-only)                     */
+/* Internal cached loaders                                                    */
 /* -------------------------------------------------------------------------- */
 
 const readPublishedSettingsCached = cache(async (tenantId: string) => {
@@ -70,47 +64,41 @@ const readPublishedPageByIdCached = cache(
 );
 
 /* -------------------------------------------------------------------------- */
-/* Public exports (host-based)                                                */
+/* Core helpers                                                               */
 /* -------------------------------------------------------------------------- */
 
-export async function getPublishedSettings() {
-  const tenantId = await getTenantId();
-  return readPublishedSettingsCached(tenantId);
-}
+async function getPublishedPageByResolvedSlugForTenant(
+  tenantId: string,
+  slug: string,
+) {
+  const index = await readPublishedIndexCached(tenantId);
+  if (!index) return null;
 
-export async function getPublishedIndex() {
-  const tenantId = await getTenantId();
-  return readPublishedIndexCached(tenantId);
-}
+  const pageId = resolvePageIdFromIndex({ slug, index });
+  if (!pageId) return null;
 
-export async function getPublishedPageBySlug(slug: string) {
-  const tenantId = await getTenantId();
-  return getPublishedPageBySlugForTenant(tenantId, slug);
-}
-
-export async function getPublishedHomePage() {
-  const tenantId = await getTenantId();
-  return getPublishedHomePageForTenant(tenantId);
+  return readPublishedPageByIdCached(tenantId, pageId);
 }
 
 /* -------------------------------------------------------------------------- */
-/* Public exports (explicit tenant: /t/:tenant)                               */
+/* Public API (tenant explicite)                                              */
 /* -------------------------------------------------------------------------- */
 
-export async function getPublishedSettingsForTenant(tenantId: string) {
+export async function getPublishedSettingsByTenantId(tenantId: string) {
   const t = toTenantId(tenantId);
   if (!t) return null;
+
   return readPublishedSettingsCached(t);
 }
 
-export async function getPublishedIndexForTenant(tenantId: string) {
+export async function getPublishedIndexByTenantId(tenantId: string) {
   const t = toTenantId(tenantId);
   if (!t) return null;
 
   return readPublishedIndexCached(t);
 }
 
-export async function getPublishedPageBySlugForTenant(
+export async function getPublishedPageBySlugByTenantId(
   tenantId: string,
   slug: string,
 ) {
@@ -120,24 +108,12 @@ export async function getPublishedPageBySlugForTenant(
   const s = toSlug(slug);
   if (!s || s === "home") return null;
 
-  const index = await readPublishedIndexCached(t);
-  if (!index) return null;
-
-  const pageId = resolvePageIdFromIndex({ slug: s, index });
-  if (!pageId) return null;
-
-  return readPublishedPageByIdCached(t, pageId);
+  return getPublishedPageByResolvedSlugForTenant(t, s);
 }
 
-export async function getPublishedHomePageForTenant(tenantId: string) {
+export async function getPublishedHomePageByTenantId(tenantId: string) {
   const t = toTenantId(tenantId);
   if (!t) return null;
 
-  const index = await readPublishedIndexCached(t);
-  if (!index) return null;
-
-  const pageId = resolvePageIdFromIndex({ slug: "home", index });
-  if (!pageId) return null;
-
-  return readPublishedPageByIdCached(t, pageId);
+  return getPublishedPageByResolvedSlugForTenant(t, "home");
 }

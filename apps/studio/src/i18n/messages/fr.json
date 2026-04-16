@@ -6,7 +6,7 @@
     "modified": "Modifié",
     "published": "Publié",
     "publishing": "Publication…",
-    "saved": "Sauvegardé",
+    "saved": "Enregistré",
     "cancel": "Annuler",
     "reset": "Réinitialiser",
     "retry": "Réessayer",
@@ -17,7 +17,7 @@
     "error": "Erreur",
     "oneError": "{count} erreur",
     "multipleErrors": "{count} erreurs",
-    "selectPlaceholder": "Sélectionner une option",
+    "selectPlaceholder": "Sélectionnez une option",
     "add": "Ajouter",
     "addLink": "Ajouter un lien",
     "addSubLink": "Ajouter un sous-lien",
@@ -33,14 +33,14 @@
     "status": "État",
     "create": "Créer",
     "creating": "Création…",
-    "availableInNextVersion": "Disponible dans la prochaine version",
+    "availableInNextVersion": "Disponible dans une prochaine version",
     "chooseColor": "Choisir une couleur"
   },
 
   "notifications": {
     "noChanges": {
       "title": "Aucun changement",
-      "description": "Aucun changement détecté sur {entity}."
+      "description": "Aucun changement détecté pour {entity}."
     },
     "updated": {
       "title": "{entity} mis à jour",
@@ -60,17 +60,17 @@
     "NOT_FOUND": "La ressource demandée est introuvable.",
     "VALIDATION_ERROR": "Certains champs sont invalides.",
     "INTERNAL": "Une erreur interne est survenue.",
-    "CONFLICT": "Un conflit a été détecté. L’opération ne peut pas être effectuée.",
+    "CONFLICT": "Un conflit a été détecté. Cette action ne peut pas être effectuée.",
     "FORBIDDEN": "Vous n’avez pas les droits nécessaires pour effectuer cette action.",
-    "INVALID_ARGUMENT": "Un paramètre fourni est invalide.",
+    "INVALID_ARGUMENT": "Un paramètre est invalide.",
     "UNAUTHORIZED": "Votre session a expiré. Veuillez vous reconnecter.",
-    "UNSUPPORTED_MEDIA_TYPE": "Type de média non pris en charge.",
-    "JSON_INVALID": "Le corps de la requête n’est pas un JSON valide.",
-    "JSON_OBJECT_EXPECTED": "Le corps de la requête doit être un objet JSON.",
+    "UNSUPPORTED_MEDIA_TYPE": "Le type de fichier n’est pas pris en charge.",
+    "JSON_INVALID": "Le contenu envoyé n’est pas un JSON valide.",
+    "JSON_OBJECT_EXPECTED": "Le contenu envoyé doit être un objet JSON.",
 
     "HREF_RELATIVE_INVALID": "Le lien doit être un chemin relatif (ex. /contact).",
     "HREF_ABSOLUTE_HTTP_INVALID": "Le lien doit être une URL absolue http(s).",
-    "HREF_MAILTO_INVALID": "Le lien email est invalide (ex. mailto:adresse@exemple.com).",
+    "HREF_MAILTO_INVALID": "Le lien e-mail est invalide (ex. : mailto:adresse@exemple.com).",
 
     "THEME_MODE_INVALID": "Mode de thème invalide.",
 
@@ -78,7 +78,7 @@
 
     "THEME_REVEAL_PRESET_INVALID": "Le preset d’animation sélectionné est invalide.",
 
-    "THEME_DARK_MODE_DISABLED_INVALID_MODE": "Le mode sombre est désactivé, ce mode de thème n'est pas autorisé.",
+    "THEME_DARK_MODE_DISABLED_INVALID_MODE": "Le mode sombre est désactivé. Ce mode de thème n’est pas autorisé.",
 
     "THEME_TOKEN_BACKGROUND_REQUIRED": "La couleur de fond du site est requise.",
     "THEME_TOKEN_FOREGROUND_REQUIRED": "La couleur principale du texte est requise.",
@@ -107,7 +107,7 @@
 
     "THEME_TOKEN_BORDER_REQUIRED": "La couleur des bordures est requise.",
     "THEME_TOKEN_INPUT_REQUIRED": "La couleur de fond des champs de saisie est requise.",
-    "THEME_TOKEN_RING_REQUIRED": "La couleur de focus (ring) est requise.",
+    "THEME_TOKEN_RING_REQUIRED": "La couleur de mise en focus est requise.",
 
     "THEME_FONT_UNSUPPORTED": "Le type de police n’est pas pris en charge.",
     "THEME_DARK_MODE_DISABLED": "Le thème sombre est désactivé.",
@@ -117,13 +117,13 @@
     "UPLOAD_IMAGE_REQUIRED": "Le fichier doit être une image.",
     "UPLOAD_MIME_NOT_ALLOWED": "Le type de fichier n’est pas autorisé.",
     "UPLOAD_EMPTY_FILE": "Le fichier est vide.",
-    "UPLOAD_IMAGE_DIMENSIONS_INVALID": "Les dimensions de l'image sont invalides.",
+    "UPLOAD_IMAGE_DIMENSIONS_INVALID": "Les dimensions de l’image sont invalides.",
     "UPLOAD_FILE_TOO_LARGE": "Le fichier est trop volumineux.",
     "UPLOAD_SVG_NOT_SAFE": "Ce fichier SVG n’est pas autorisé (contenu potentiellement dangereux).",
 
     "PUBLISH_EMPTY_INDEX": "Avertissement : aucune page n’est définie. Le site publié sera vide.",
     "PUBLISH_PAGE_MISSING": "Avertissement : une page référencée n’a pas pu être copiée.",
-    "PUBLISH_PAGE_DELETE_FAILED": "Avertissement : une page n'a pas pu être supprimée pendant la publication.",
+    "PUBLISH_PAGE_DELETE_FAILED": "Avertissement : une page n’a pas pu être supprimée pendant la publication.",
     "PUBLISH_PAGE_H1_MISSING": "Avertissement : une page n’a pas de titre de niveau H1.",
     "PUBLISH_SETTINGS_COPY_FAILED": "Avertissement : échec lors de la copie des réglages pendant la publication.",
     "PUBLISH_IDENTICAL_STATES": "Publication inutile : les états source et cible sont identiques.",
@@ -137,24 +137,24 @@
     "PUBLISH_SEO_ROBOTS_NOINDEX": "Avertissement : robots contient “noindex” (le site risque de ne pas être indexé).",
     "PUBLISH_SEO_BASEURL_MISSING": "Avertissement : l’URL de base du site est manquante.",
 
-    "SLUG_REQUIRED": "Le slug (identifiant de l'URL) est requis.",
-    "SLUG_INVALID_FORMAT": "Le slug (identifiant de l'URL) est invalide (format attendu : kebab-case).",
-    "SLUG_RESERVED": "Ce slug (identifiant de l'URL) est réservé et ne peut pas être utilisé.",
+    "SLUG_REQUIRED": "Le slug est requis.",
+    "SLUG_INVALID_FORMAT": "Le slug est invalide (format attendu : kebab-case).",
+    "SLUG_RESERVED": "Ce slug est réservé et ne peut pas être utilisé.",
     "SLUG_NORMALIZED_DIFFERENT": "Le slug a été normalisé automatiquement.",
     "SLUG_RESERVED_HINT": "Ce slug est réservé, veuillez en choisir un autre.",
 
     "PAGE_TITLE_REQUIRED": "Le titre de la page est requis.",
     "PAGE_TITLE_TOO_SHORT": "Le titre est trop court.",
     "PAGE_TITLE_TOO_LONG": "Le titre est trop long.",
-    "PAGE_SLUG_REQUIRED": "Le slug (identifiant de l'URL) de la page est requis.",
-    "PAGE_SLUG_RESERVED": "Ce slug (identifiant de l'URL) est réservé et ne peut pas être utilisé.",
-    "PAGE_SLUG_INVALID_FORMAT": "Le slug (identifiant de l'URL) doit être au format kebab-case (ex. \"ma-page\").",
+    "PAGE_SLUG_REQUIRED": "Le slug de la page est requis.",
+    "PAGE_SLUG_RESERVED": "Ce slug de page est réservé et ne peut pas être utilisé.",
+    "PAGE_SLUG_INVALID_FORMAT": "Le slug de la page doit être au format kebab-case (ex. : \"ma-page\").",
+    "PAGE_SLUG_CONFLICT": "Ce slug de page est déjà utilisé par une autre page.",
 
     "FOOTER_COPYRIGHT_TOO_LONG": "Le texte de copyright est trop long.",
 
     "PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE": "La priorité du sitemap doit être comprise entre 0 et 1.",
     "PAGE_NOT_FOUND": "La page demandée est introuvable.",
-    "PAGE_SLUG_CONFLICT": "Ce slug (identifiant de l'URL) est déjà utilisé par une autre page.",
     "PAGE_ID_REQUIRED": "L’identifiant de la page est requis.",
 
     "LEGAL_MENU_LABEL_REQUIRED": "Le libellé du lien légal est requis.",
@@ -163,10 +163,10 @@
     "LEGAL_MENU_HREF_INVALID": "Le lien (URL ou chemin) est invalide.",
     "LEGAL_MENU_TOO_MANY_ITEMS": "Vous avez ajouté trop de liens dans le menu légal.",
     "LEGAL_MENU_ID_REQUIRED": "L’identifiant de l’élément est requis.",
-    "LEGAL_MENU_DUPLICATE_ID": "Des identifiants de liens sont identiques (doublons).",
+    "LEGAL_MENU_DUPLICATE_ID": "Plusieurs liens partagent le même identifiant.",
 
     "PRIMARY_MENU_ID_REQUIRED": "L’identifiant de l’élément est requis.",
-    "PRIMARY_MENU_DUPLICATE_ID": "Des identifiants de liens sont identiques (doublons).",
+    "PRIMARY_MENU_DUPLICATE_ID": "Plusieurs liens partagent le même identifiant.",
 
     "PRIMARY_MENU_LABEL_TOO_LONG": "Le libellé du menu principal est trop long.",
     "PRIMARY_MENU_LABEL_REQUIRED": "Le libellé du menu principal est requis.",
@@ -197,56 +197,56 @@
     "SEO_BASEURL_REQUIRED": "L’URL de base du site est requise.",
     "SEO_BASEURL_HTTPS_REQUIRED": "En production, l’URL de base du site doit être en https.",
     "SEO_ROBOTS_TOO_LONG": "Le champ robots est trop long.",
-    "SEO_OPEN_GRAPH_TITLE_TOO_LONG": "Le champ title est trop long.",
-    "SEO_OPEN_GRAPH_DESCRIPTION_TOO_LONG": "Le champ description est trop long.",
-    "SEO_OPEN_GRAPH_IMAGE_ALT_TOO_LONG": "Le champ imageAlt est trop long.",
-    "SEO_TITLE_TOO_LONG": "Le champ title est trop long.",
-    "SEO_DESCRIPTION_TOO_LONG": "Le champ description est trop long.",
-    "SEO_TITLE_TEMPLATE_TOO_LONG": "Le champ titleTemplate est trop long.",
+    "SEO_OPEN_GRAPH_TITLE_TOO_LONG": "Le titre Open Graph est trop long.",
+    "SEO_OPEN_GRAPH_DESCRIPTION_TOO_LONG": "La description Open Graph est trop longue.",
+    "SEO_OPEN_GRAPH_IMAGE_ALT_TOO_LONG": "Le texte alternatif de l’image Open Graph est trop long.",
+    "SEO_TITLE_TOO_LONG": "Le titre SEO est trop long.",
+    "SEO_DESCRIPTION_TOO_LONG": "La description SEO est trop longue.",
+    "SEO_TITLE_TEMPLATE_TOO_LONG": "Le template de titre est trop long.",
 
-    "SITE_INDEX_DUPLICATE_SLUGS": "Des slugs (identifiants de l'URL) en double ont été détectés dans l’index du site.",
+    "SITE_INDEX_DUPLICATE_SLUGS": "Des slugs en double ont été détectés dans l’index du site.",
     "SOCIAL_ID_REQUIRED": "L’identifiant de l’élément est requis.",
     "SOCIAL_DUPLICATE_KIND": "Certaines plateformes sociales sont renseignées plusieurs fois (doublons).",
-    "SOCIAL_DUPLICATE_ID": "Des identifiants de liens sont identiques (doublons).",
+    "SOCIAL_DUPLICATE_ID": "Plusieurs liens partagent le même identifiant.",
     "SOCIAL_INVALID_FOR_PLATFORM": "Le lien renseigné ne correspond pas au format attendu pour cette plateforme.",
     "SOCIAL_ABSOLUTE_REQUIRED": "Le lien doit être une URL http(s) absolue.",
     "SOCIAL_HREF_REQUIRED": "Le lien est requis.",
     "SOCIAL_TOO_MANY_ITEMS": "Vous avez ajouté trop de liens sociaux.",
-    "SOCIAL_MAILTO_INVALID": "Le lien mailto est invalide (ex. mailto:adresse@exemple.com).",
-    "SOCIAL_EMAIL_REQUIRES_MAILTO": "Pour un email, utilisez le format mailto:adresse@exemple.com.",
-    "SOCIAL_MAILTO_RESERVED_FOR_EMAIL": "Le format mailto: est réservé au type Email.",
+    "SOCIAL_MAILTO_INVALID": "Le lien e-mail est invalide (ex. : mailto:adresse@exemple.com).",
+    "SOCIAL_EMAIL_REQUIRES_MAILTO": "Pour un e-mail, utilisez le format mailto:adresse@exemple.com.",
+    "SOCIAL_MAILTO_RESERVED_FOR_EMAIL": "Le format mailto: est réservé au type e-mail.",
 
     "SEO_TWITTER_HANDLE_INVALID": "Le handle Twitter est invalide (ex. @monsite).",
     "SEO_DEFAULT_DESCRIPTION_TOO_SHORT": "La description par défaut est trop courte.",
     "SEO_TITLE_TEMPLATE_TOO_SHORT": "Le template de titre est trop court.",
-    "SEO_ASSET_URL_INVALID": "L’URL de l'image est invalide.",
+    "SEO_ASSET_URL_INVALID": "L’URL de l’image est invalide.",
 
-    "BLOCKS_INVALID": "Liste de blocs invalide.",
+    "BLOCKS_INVALID": "La liste des blocs est invalide.",
     "BLOCK_ID_REQUIRED": "Un identifiant de bloc est requis.",
     "BLOCK_NAME_REQUIRED": "Un nom de bloc est requis.",
     "BLOCK_ID_DUPLICATE": "Cet identifiant de bloc est déjà utilisé.",
     "BLOCKS_MULTIPLE_LCP_DETECTED": "Plusieurs blocs LCP détectés pour cette page.",
-    "BLOCK_TYPE_UNSUPPORTED": "Ce type de bloc n’est pas supporté.",
+    "BLOCK_TYPE_UNSUPPORTED": "Ce type de bloc n’est pas pris en charge.",
     "BLOCK_NOT_FOUND": "Ce bloc est introuvable.",
     "BLOCK_ID_MISMATCH": "L’identifiant du bloc dans l’URL ne correspond pas à celui des données envoyées.",
     "BLOCK_CELLS_INVALID": "La liste des cellules du bloc est invalide.",
-    "BLOCK_INSERT_AT_INVALID": "L'insertion à l'index est invalide.",
-    "BLOCK_ORDER_INVALID": "L'ordre des blocs est invalide.",
+    "BLOCK_INSERT_AT_INVALID": "La position d’insertion est invalide.",
+    "BLOCK_ORDER_INVALID": "L’ordre des blocs est invalide.",
 
     "BLOCK_SECTION_COLUMNS_INVALID": "Le nombre de colonnes de la section est invalide (attendu : 1 à 3).",
-    "BLOCK_SECTION_CONTAINER_MODE_INVALID": "Le mode de conteneur de la section n'est pas valide.",
+    "BLOCK_SECTION_CONTAINER_MODE_INVALID": "Le mode de conteneur de la section est invalide.",
     "BLOCK_ROWS_INVALID": "La structure des lignes de bloc est invalide.",
-    "BLOCK_ROW_ID_REQUIRED": "L’ID de ligne est requis.",
-    "BLOCK_ROW_ID_DUPLICATE": "L’ID de ligne est déjà utilisé dans le bloc.",
+    "BLOCK_ROW_ID_REQUIRED": "L’identifiant de ligne est requis.",
+    "BLOCK_ROW_ID_DUPLICATE": "L’identifiant de ligne est déjà utilisé dans le bloc.",
     "BLOCK_COLUMNS_INVALID": "La structure des colonnes de la ligne est invalide.",
-    "BLOCK_COLUMN_ID_REQUIRED": "L’ID de colonne est requis.",
-    "BLOCK_COLUMN_ID_DUPLICATE": "L’ID de colonne est déjà utilisé dans la ligne.",
-    "BLOCK_COLUMNS_COUNT_MISMATCH": "Le nombre de colonnes de la ligne ne correspond pas à la déclaration.",
+    "BLOCK_COLUMN_ID_REQUIRED": "L’identifiant de colonne est requis.",
+    "BLOCK_COLUMN_ID_DUPLICATE": "L’identifiant de colonne est déjà utilisé dans la ligne.",
+    "BLOCK_COLUMNS_COUNT_MISMATCH": "Le nombre de colonnes de la ligne ne correspond pas à la configuration attendue.",
     "BLOCK_ROW_REVERSE_ON_INVALID": "La configuration de l’inversion d’ordre des colonnes est invalide.",
     "BLOCK_ROW_REVERSE_ON_BREAKPOINT_INVALID": "La valeur de l’inversion d’ordre des colonnes est invalide.",
 
     "CELL_INVALID": "Une cellule est invalide.",
-    "CELL_KIND_UNSUPPORTED": "Ce type de cellule n’est pas supporté.",
+    "CELL_KIND_UNSUPPORTED": "Ce type de cellule n’est pas pris en charge.",
     "CELL_SHAPE_INVALID": "La structure de la cellule est invalide.",
     "CELL_ID_REQUIRED": "Un identifiant de cellule est requis.",
     "CELL_BUTTONS_ALIGN_INVALID": "L’alignement des boutons est invalide.",
@@ -271,9 +271,9 @@
     "CELL_CARDS_EXTENDED_ITEM_DESCRIPTION_REQUIRED": "Une description de carte étendue est requise.",
     "CELL_CARDS_EXTENDED_ITEM_ICON_INVALID": "L’icône de la carte étendue est invalide.",
     "CELL_CARDS_EXTENDED_REVEAL_INVALID": "La configuration de la carte étendue est invalide.",
-    "CELL_CARDS_EXTENDED_ITEM_FOOTER_INVALID": "Le footer de la carte étendue est invalide.",
-    "CELL_CARDS_EXTENDED_ITEM_BULLETS_INVALID": "La liste des bullet points de la carte étendue est invalide.",
-    "CELL_CARDS_EXTENDED_ITEM_BULLET_INVALID": "Un bullet point de la carte étendue est invalide.",
+    "CELL_CARDS_EXTENDED_ITEM_FOOTER_INVALID": "Le pied de carte de la carte étendue est invalide.",
+    "CELL_CARDS_EXTENDED_ITEM_BULLETS_INVALID": "La liste des puces de la carte étendue est invalide.",
+    "CELL_CARDS_EXTENDED_ITEM_BULLET_INVALID": "Une puce de la carte étendue est invalide.",
 
     "CELL_CARDS_COLUMNS_INVALID": "Le nombre de colonnes des cartes est invalide.",
     "CELL_CARDS_ALIGN_INVALID": "L’alignement des cartes est invalide.",
@@ -300,7 +300,7 @@
 
     "CELL_STRUCTURED_CARD_SECTION_INVALID": "La section de la carte est invalide.",
     "CELL_STRUCTURED_CARD_SECTION_ID_REQUIRED": "Un identifiant de section est requis.",
-    "CELL_STRUCTURED_CARD_SECTION_LABEL_REQUIRED": "Un label de section est requis.",
+    "CELL_STRUCTURED_CARD_SECTION_LABEL_REQUIRED": "Un libellé de section est requis.",
     "CELL_STRUCTURED_CARD_SECTION_CONTENT_REQUIRED": "Un contenu de section est requis.",
     "CELL_STRUCTURED_CARD_REVEAL_INVALID": "La configuration de la carte est invalide.",
 
@@ -320,8 +320,8 @@
     "CELL_FORM_FIELD_NAME_REQUIRED": "Un nom de champ est requis.",
     "CELL_FORM_FIELD_LABEL_REQUIRED": "Un libellé de champ est requis.",
     "CELL_FORM_FIELD_TYPE_INVALID": "Le type de champ est invalide.",
-    "CELL_FORM_FIELD_PLACEHOLDER_INVALID": "Le placeholder du champ est invalide.",
-    "CELL_FORM_FIELD_REQUIRED_INVALID": "La valeur \"required\" du champ est invalide.",
+    "CELL_FORM_FIELD_PLACEHOLDER_INVALID": "Le texte indicatif du champ est invalide.",
+    "CELL_FORM_FIELD_REQUIRED_INVALID": "La valeur du champ « requis » est invalide.",
 
     "CELL_HEADING_LEVEL_INVALID": "Le niveau du titre est invalide.",
     "CELL_HEADING_TITLE_REQUIRED": "Le titre est requis.",
@@ -331,8 +331,8 @@
     "CELL_HEADING_SEPARATOR_INVALID": "La valeur du séparateur du titre est invalide.",
     "CELL_HEADING_ID_ANCHOR_INVALID": "L’identifiant d’ancre du titre est invalide.",
     "CELL_HEADING_REVEAL_INVALID": "La configuration d’animation du titre est invalide.",
-    "CELL_HEADING_HIGHLIGHTS_INVALID": "La liste des highlights du titre est invalide.",
-    "CELL_HEADING_HIGHLIGHT_INVALID": "Un highlight du titre est invalide.",
+    "CELL_HEADING_HIGHLIGHTS_INVALID": "La liste des mises en avant du titre est invalide.",
+    "CELL_HEADING_HIGHLIGHT_INVALID": "Une mise en avant du titre est invalide.",
 
     "CELL_SEPARATOR_ALIGN_INVALID": "L’alignement du séparateur est invalide.",
     "CELL_SEPARATOR_SIZE_INVALID": "La taille du séparateur est invalide.",
@@ -362,17 +362,17 @@
     "CELL_TIMELINE_ITEM_KEYWORDS_INVALID": "La liste des mots-clés de l’élément de timeline est invalide.",
     "CELL_TIMELINE_ITEM_KEYWORD_INVALID": "Un mot-clé de l’élément de timeline est invalide.",
 
-    "CELL_CAROUSEL_VARIANT_INVALID": "La variante du carousel est invalide.",
-    "CELL_CAROUSEL_SHOW_DOTS_INVALID": "La valeur d’affichage des points du carousel est invalide.",
-    "CELL_CAROUSEL_SHOW_ARROWS_INVALID": "La valeur d’affichage des flèches du carousel est invalide.",
-    "CELL_CAROUSEL_ITEM_KIND_INVALID": "Le type d’item du carousel est invalide.",
-    "CELL_CAROUSEL_ITEMS_INVALID": "La liste des items du carousel est invalide.",
-    "CELL_CAROUSEL_ITEMS_MIN_1": "Au moins un item est requis dans le carousel.",
+    "CELL_CAROUSEL_VARIANT_INVALID": "La variante du carrousel est invalide.",
+    "CELL_CAROUSEL_SHOW_DOTS_INVALID": "La valeur d’affichage des points du carrousel est invalide.",
+    "CELL_CAROUSEL_SHOW_ARROWS_INVALID": "La valeur d’affichage des flèches du carrousel est invalide.",
+    "CELL_CAROUSEL_ITEM_KIND_INVALID": "Le type d’élément du carrousel est invalide.",
+    "CELL_CAROUSEL_ITEMS_INVALID": "La liste des éléments du carrousel est invalide.",
+    "CELL_CAROUSEL_ITEMS_MIN_1": "Au moins un élément est requis dans le carrousel.",
 
-    "CELL_ITEM_ID_REQUIRED": "Un identifiant d’item de cellule est requis.",
+    "CELL_ITEM_ID_REQUIRED": "Un identifiant d’élément de cellule est requis.",
 
     "RICH_TEXT_CONTENT_INVALID": "Le contenu du texte riche est invalide.",
-    "HEADING_CELL_UNIQUE_H1": "Il doit y avoir un seul cellule H1 dans un bloc.",
+    "HEADING_CELL_UNIQUE_H1": "Un bloc ne peut contenir qu’une seule cellule H1.",
 
     "IMAGE_SRC_REQUIRED": "La source de l’image est requise.",
     "IMAGE_ALT_INVALID": "Le texte alternatif de l’image est invalide.",
@@ -384,30 +384,30 @@
     "CELL_IMAGES_INVALID": "Les images sont invalides.",
     "CELL_IMAGES_MIN_1": "Au moins une image est requise.",
     "CELL_IMAGE_INVALID": "Une image est invalide.",
-    "CELL_IMAGE_SRC_REQUIRED": "La source de l'image est requise.",
-    "CELL_IMAGE_WIDTH_REQUIRED": "La largeur de l'image est requise.",
-    "IMAGE_REVEAL_INVALID": "La configuration de l'image est invalide.",
-    "IMAGE_SIZE_INVALID": "La taille de l'image est invalide.",
-    "CELL_IMAGE_HEIGHT_REQUIRED": "La hauteur de l'image est requise.",
+    "CELL_IMAGE_SRC_REQUIRED": "La source de l’image est requise.",
+    "CELL_IMAGE_WIDTH_REQUIRED": "La largeur de l’image est requise.",
+    "IMAGE_REVEAL_INVALID": "La configuration de l’image est invalide.",
+    "IMAGE_SIZE_INVALID": "La taille de l’image est invalide.",
+    "CELL_IMAGE_HEIGHT_REQUIRED": "La hauteur de l’image est requise.",
     "CELL_IMAGE_ALT_INVALID": "Le texte alternatif de l’image est invalide.",
     "CELL_IMAGE_CAPTION_INVALID": "La légende de l’image est invalide.",
-    "CELL_IMAGE_ID_REQUIRED": "L’ID de l’image est requis.",
+    "CELL_IMAGE_ID_REQUIRED": "L’identifiant de l’image est requis.",
     "CELL_IMAGE_HREF_INVALID": "Le lien de l’image est invalide.",
-    "CELL_IMAGE_WIDTH_INVALID": "La largeur de l'image est invalide.",
-    "CELL_IMAGE_HEIGHT_INVALID": "La hauteur de l'image est invalide.",
+    "CELL_IMAGE_WIDTH_INVALID": "La largeur de l’image est invalide.",
+    "CELL_IMAGE_HEIGHT_INVALID": "La hauteur de l’image est invalide.",
     "RICH_TEXT_REVEAL_INVALID": "La configuration du composant est invalide.",
-    "USER_ID_REQUIRED": "L’ID de l’utilisateur est requis.",
+    "USER_ID_REQUIRED": "L’identifiant de l’utilisateur est requis.",
     "USER_EMAIL_REQUIRED": "L’adresse e-mail de l’utilisateur est requise.",
     "USER_EMAIL_INVALID_FORMAT": "L’adresse e-mail de l’utilisateur est invalide (format attendu : adresse@exemple.com).",
     "USER_NAME_REQUIRED": "Le nom de l’utilisateur est requis.",
     "USER_ROLE_REQUIRED": "Le rôle de l’utilisateur est requis.",
     "USER_ROLE_INVALID": "Le rôle de l’utilisateur est invalide.",
-    "USER_TENANT_IDS_INVALID": "Les IDs de tenant de l’utilisateur sont invalides.",
+    "USER_TENANT_IDS_INVALID": "Les identifiants de tenant de l’utilisateur sont invalides.",
     "USER_DEFAULT_TENANT_REQUIRED": "Le tenant par défaut de l’utilisateur est requis.",
-    "USER_DEFAULT_TENANT_NOT_ALLOWED": "Le tenant par défaut de l’utilisateur ne peut pas être le même que celui de l’utilisateur.",
+    "USER_DEFAULT_TENANT_NOT_ALLOWED": "Le tenant par défaut sélectionné n’est pas autorisé pour cet utilisateur.",
     "USER_RBAC_INVALID": "Le RBAC de l’utilisateur est invalide.",
     "USER_STATUS_INVALID": "Le statut de l’utilisateur est invalide.",
-    "USER_TENANT_IDS_REQUIRED": "Les IDs de tenant de l’utilisateur sont requis.",
+    "USER_TENANT_IDS_REQUIRED": "Les identifiants de tenant de l’utilisateur sont requis.",
     "USER_PASSWORD_REQUIRED": "Le mot de passe de l’utilisateur est requis.",
     "USER_EMAIL_CONFLICT": "L’adresse e-mail de l’utilisateur est déjà utilisée.",
     "USER_NOT_FOUND": "L’utilisateur est introuvable."
@@ -417,7 +417,7 @@
     "errorGeneric": "Une erreur est survenue.",
     "error": "Erreur",
     "networkError": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
-    "operationCancelled": "Opération annulée",
+    "operationCancelled": "Opération annulée.",
     "requestAborted": "La requête a été annulée.",
     "serverError": "Erreur serveur",
     "unexpectedSave": "Une erreur inattendue est survenue lors de l’enregistrement.",
@@ -431,7 +431,7 @@
     "http404Title": "Introuvable",
     "http405": "Cette action n’est pas autorisée.",
     "http405Title": "Action non autorisée",
-    "http409": "Un conflit a été détecté. Veuillez actualiser et réessayer.",
+    "http409": "Un conflit a été détecté. Veuillez actualiser la page et réessayer.",
     "http409Title": "Conflit",
     "http422": "Certaines données sont invalides. Veuillez vérifier votre saisie.",
     "http422Title": "Erreur de validation",
@@ -441,8 +441,8 @@
     "formHasErrors": "Le formulaire contient des erreurs.",
 
     "notImage": "Le fichier sélectionné n’est pas une image.",
-    "uploadFailed": "Échec de l’envoi du fichier. Veuillez réessayer.",
-    "fileTooLarge": "Le fichier sélectionné est trop volumineux. La taille maximale autorisée est de {max}"
+    "uploadFailed": "L’envoi du fichier a échoué. Veuillez réessayer.",
+    "fileTooLarge": "Le fichier sélectionné est trop volumineux. La taille maximale autorisée est de {max}."
   },
 
   "studio": {
@@ -457,9 +457,9 @@
         "menus": "Menus",
         "primaryMenu": "Menu principal",
         "legalMenu": "Menu légal",
-        "header": "Header",
-        "footer": "Footer",
-        "social": "Social",
+        "header": "En-tête",
+        "footer": "Pied de page",
+        "social": "Réseaux sociaux",
         "page": "Page",
         "pages": "Pages",
         "blocks": "Blocs",
@@ -481,7 +481,7 @@
 
       "loading": {
         "section": "Chargement : {title}…",
-        "preview": "Chargement de l'apercu…"
+        "preview": "Chargement de l’aperçu…"
       },
 
       "warningsPanel": {
@@ -495,7 +495,7 @@
           "title": "Enregistrer malgré les avertissements ?",
           "intro": "Certains éléments peuvent être améliorés. Vous pouvez continuer si vous avez vérifié ces points.",
           "confirmLabel": "Enregistrer quand même",
-          "requireAckLabel": "J'ai compris : je souhaite continuer"
+          "requireAckLabel": "J’ai compris : je souhaite continuer"
         },
         "delete": {
           "title": "Supprimer ?",
@@ -503,7 +503,7 @@
         },
         "destructiveChange": {
           "title": "Modifications non enregistrées",
-          "intro": "Cette action peut entraîner une perte de contenu non sauvegardé.",
+          "intro": "Cette action peut entraîner une perte de contenu non enregistré.",
           "items": "Le contenu supprimé ne pourra pas être récupéré.",
           "confirmLabel": "Continuer",
           "cancelLabel": "Annuler",
@@ -520,7 +520,7 @@
       },
 
       "preview": {
-        "title": "Apercu — {entity}",
+        "title": "Aperçu — {entity}",
         "navDisabled": "La navigation est désactivée en mode aperçu.",
         "infoOverride": "Modifications en cours (non enregistrées)",
         "infoBaseline": "Version enregistrée",
@@ -529,29 +529,31 @@
     },
 
     "iconPicker": {
-      "searchPlaceholder": "Rechercher une icône..."
+      "searchPlaceholder": "Rechercher une icône…"
     },
 
     "emptyPreview": {
-      "footer": "Aucune donnée à prévisualiser pour le footer.",
-      "header": "Aucune donnée à prévisualiser pour le header.",
+      "footer": "Aucune donnée à prévisualiser pour le pied de page.",
+      "header": "Aucune donnée à prévisualiser pour l’en-tête.",
       "legalMenu": "Aucune donnée à prévisualiser pour le menu légal.",
       "primaryMenu": "Aucune donnée à prévisualiser pour le menu principal.",
       "social": "Aucune donnée à prévisualiser pour les réseaux sociaux.",
-      "homeMissing": "Aucune page d'accueil n’est définie.",
-      "pageEmpty": "Cette page n'a pas encore de contenu",
+      "homeMissing": "Aucune page d’accueil n’est définie.",
+      "pageEmpty": "Cette page n’a pas encore de contenu.",
       "blocks": "Aucun bloc n’est défini."
     },
 
     "themeSection": {
       "section": {
         "title": "Thème",
-        "description": "Personnalise l’apparence globale du site : mode clair/sombre, police, animation de reveal et couleurs principales."
+        "description": "Personnalisez l’apparence globale du site : mode clair/sombre, police, animations de révélation et couleurs principales."
       },
       "warnings": {
-        "destructiveContrastLow": "Le contraste de la couleur de premier plan est trop faible pour être considéré comme étant conforme à la norme WCAG AA.",
-        "accentContrastLow": "Le contraste de la couleur d’accent est trop faible pour être considéré comme étant conforme à la norme WCAG AA.",
-        "secondaryContrastLow": "Le contraste de la couleur de premier plan est trop faible pour être considéré comme étant conforme à la norme WCAG AA."
+        "backgroundForegroundContrastLow": "Le contraste entre le texte principal et l’arrière-plan est insuffisant pour respecter le niveau AA des normes WCAG.",
+        "primaryContrastLow": "Le contraste entre la couleur principale et son texte est insuffisant pour respecter le niveau AA des normes WCAG.",
+        "secondaryContrastLow": "Le contraste entre la couleur secondaire et son texte est insuffisant pour respecter le niveau AA des normes WCAG.",
+        "accentContrastLow": "Le contraste entre la couleur d’accent et son texte est insuffisant pour respecter le niveau AA des normes WCAG.",
+        "destructiveContrastLow": "Le contraste entre la couleur destructive et son texte est insuffisant pour respecter le niveau AA des normes WCAG."
       }
     },
 
@@ -582,13 +584,13 @@
       },
 
       "revealPreset": {
-        "label": "Animation de reveal",
-        "help": "Choisit le preset d’animation utilisé pour les entrées en reveal.",
+        "label": "Animation de révélation",
+        "help": "Choisit l’animation utilisée pour les apparitions des éléments.",
         "items": {
-          "fade": "Fade",
-          "fade-up": "Fade up",
-          "scale-in": "Scale in",
-          "slide-up": "Slide up"
+          "fade": "Fondu",
+          "fade-up": "Fondu vers le haut",
+          "scale-in": "Zoom entrant",
+          "slide-up": "Glissement vers le haut"
         }
       },
 
@@ -604,74 +606,74 @@
 
       "tokens": {
         "title": "Couleurs du thème",
-        "description": "Définis les couleurs globales utilisées par le site pour les surfaces, textes, actions et états.",
+        "description": "Définit les couleurs globales utilisées par le site pour les surfaces, les textes, les actions et les états.",
         "labels": {
-          "background": "Background",
-          "foreground": "Foreground",
-          "card": "Card",
-          "card-foreground": "Card foreground",
+          "background": "Arrière-plan",
+          "foreground": "Texte principal",
+          "card": "Carte",
+          "card-foreground": "Texte de carte",
           "popover": "Popover",
-          "popover-foreground": "Popover foreground",
-          "primary": "Primary",
-          "primary-foreground": "Primary foreground",
-          "secondary": "Secondary",
-          "secondary-foreground": "Secondary foreground",
-          "muted": "Muted",
-          "muted-foreground": "Muted foreground",
+          "popover-foreground": "Texte de popover",
+          "primary": "Couleur principale",
+          "primary-foreground": "Texte sur couleur principale",
+          "secondary": "Couleur secondaire",
+          "secondary-foreground": "Texte sur couleur secondaire",
+          "muted": "Couleur atténuée",
+          "muted-foreground": "Texte atténué",
           "accent": "Accent",
-          "accent-foreground": "Accent foreground",
+          "accent-foreground": "Texte sur accent",
           "destructive": "Destructive",
-          "destructive-foreground": "Destructive foreground",
-          "border": "Border",
-          "input": "Input",
-          "ring": "Ring",
-          "chrome": "Chrome"
+          "destructive-foreground": "Texte sur destructive",
+          "border": "Bordure",
+          "input": "Champ de saisie",
+          "ring": "Focus",
+          "chrome": "En-tête et pied de page"
         },
 
         "placeholders": {
-          "background": "var(--mauve-2)",
-          "foreground": "var(--mauve-12)",
-          "card": "var(--mauve-1)",
-          "card-foreground": "var(--mauve-12)",
-          "popover": "var(--mauve-1)",
-          "popover-foreground": "var(--mauve-12)",
-          "primary": "var(--indigo-9)",
-          "primary-foreground": "white",
-          "secondary": "var(--mauve-1)",
-          "secondary-foreground": "var(--mauve-12)",
-          "muted": "var(--mauve-3)",
-          "muted-foreground": "var(--mauve-11)",
-          "accent": "var(--indigo-3)",
-          "accent-foreground": "var(--indigo-11)",
-          "destructive": "oklch(0.577 0.245 27.325)",
-          "destructive-foreground": "white",
-          "border": "var(--indigo-4)",
-          "input": "var(--indigo-4)",
-          "ring": "var(--indigo-9)",
-          "chrome": "var(--slate-1)"
+          "background": "#f8f9fb",
+          "foreground": "#111827",
+          "card": "#ffffff",
+          "card-foreground": "#111827",
+          "popover": "#ffffff",
+          "popover-foreground": "#111827",
+          "primary": "#4f46e5",
+          "primary-foreground": "#ffffff",
+          "secondary": "#eef2ff",
+          "secondary-foreground": "#312e81",
+          "muted": "#f3f4f6",
+          "muted-foreground": "#6b7280",
+          "accent": "#e0e7ff",
+          "accent-foreground": "#3730a3",
+          "destructive": "#dc2626",
+          "destructive-foreground": "#ffffff",
+          "border": "#d1d5db",
+          "input": "#d1d5db",
+          "ring": "#6366f1",
+          "chrome": "#ffffff"
         },
 
         "help": {
           "background": "Couleur de fond principale du site.",
           "foreground": "Couleur de texte principale.",
-          "card": "Couleur de fond des cartes et surfaces élevées.",
+          "card": "Couleur de fond des cartes et des surfaces surélevées.",
           "card-foreground": "Couleur de texte utilisée sur les cartes.",
-          "popover": "Couleur de fond des popovers et panneaux flottants.",
+          "popover": "Couleur de fond des popovers et des panneaux flottants.",
           "popover-foreground": "Couleur de texte utilisée dans les popovers.",
           "primary": "Couleur d’action principale.",
-          "primary-foreground": "Couleur de texte utilisée sur primary.",
-          "secondary": "Couleur secondaire utilisée pour certaines surfaces ou boutons.",
-          "secondary-foreground": "Couleur de texte utilisée sur secondary.",
+          "primary-foreground": "Couleur de texte utilisée sur la couleur principale.",
+          "secondary": "Couleur secondaire utilisée pour certaines surfaces ou certains boutons.",
+          "secondary-foreground": "Couleur de texte utilisée sur la couleur secondaire.",
           "muted": "Couleur utilisée pour les zones atténuées.",
-          "muted-foreground": "Couleur de texte utilisée sur muted.",
+          "muted-foreground": "Couleur de texte utilisée sur les zones atténuées.",
           "accent": "Couleur d’accent visuelle.",
-          "accent-foreground": "Couleur de texte utilisée sur accent.",
+          "accent-foreground": "Couleur de texte utilisée sur l’accent.",
           "destructive": "Couleur utilisée pour les actions dangereuses.",
-          "destructive-foreground": "Couleur de texte utilisée sur destructive.",
+          "destructive-foreground": "Couleur de texte utilisée sur les actions destructives.",
           "border": "Couleur des bordures principales.",
-          "input": "Couleur des bordures ou fonds d’inputs selon les composants.",
-          "ring": "Couleur du focus ring.",
-          "chrome": "Couleur de fond du header et du footer."
+          "input": "Couleur des bordures ou des fonds des champs de saisie selon les composants.",
+          "ring": "Couleur de l’indicateur de focus.",
+          "chrome": "Couleur de fond de l’en-tête et du pied de page."
         }
       }
     },
@@ -679,7 +681,7 @@
     "login": {
       "title": "Connexion",
       "ariaLabel": "Connexion à l’interface d’administration",
-      "tagline": "Accédez à Compoz Studio afin d'administrer votre site.",
+      "tagline": "Accédez à Compoz Studio pour administrer votre site.",
       "email": "Adresse e-mail",
       "password": "Mot de passe",
       "signin": "Se connecter",
@@ -689,7 +691,7 @@
         "unexpected": "Une erreur inattendue est survenue.",
         "emailRequired": "L’adresse e-mail est requise.",
         "passwordRequired": "Le mot de passe est requis.",
-        "emailNotFound": "L’adresse e-mail n’existe pas.",
+        "emailNotFound": "Aucun compte n’est associé à cette adresse e-mail.",
         "invalidPassword": "Le mot de passe est incorrect.",
         "invalidCredentials": "L’adresse e-mail ou le mot de passe est incorrect."
       }
@@ -698,76 +700,76 @@
     "users": {
       "section": {
         "title": "Utilisateurs",
-        "description": "Page d'administration des utilisateurs (Studio).",
-        "titleEdit": "Éditer l’utilisateur",
-        "descriptionEdit": "Modifier l'utilisateur en utilisant le formulaire ci-dessous",
+        "description": "Gérez les utilisateurs de votre site.",
+        "titleEdit": "Modifier l’utilisateur",
+        "descriptionEdit": "Modifiez l’utilisateur à l’aide du formulaire ci-dessous.",
         "titleCreate": "Créer un utilisateur",
-        "descriptionCreate": "Créer un utilisateur en utilisant le formulaire ci-dessous"
+        "descriptionCreate": "Créez un utilisateur à l’aide du formulaire ci-dessous."
       },
       "header": {
         "site": {
           "label": "Site",
-          "help": "Choisissez ici le site à éditer"
+          "help": "Choisissez le site à modifier."
         },
         "user": {
           "label": "Utilisateur",
-          "help": "Choisissez ici l’utilisateur à éditer",
-          "placeholder": "Aucun utilisateur"
+          "help": "Choisissez l’utilisateur à modifier.",
+          "placeholder": "Aucun utilisateur sélectionné"
         }
       },
       "form": {
         "email": {
-          "label": "Email",
+          "label": "Adresse e-mail",
           "placeholder": "adresse@exemple.com",
-          "help": "L’email est utilisé pour se connecter et pour la communication.",
-          "placeholderEdit": "Modifier l’email",
-          "placeholderCreate": "Adresse email",
-          "helpNearLimit": "Email {{remaining}} caractères restants."
+          "help": "Cette adresse e-mail est utilisée pour la connexion et les communications.",
+          "placeholderEdit": "Modifier l’adresse e-mail",
+          "placeholderCreate": "Adresse e-mail",
+          "helpNearLimit": "Il vous reste {{remaining}} caractères."
         },
         "name": {
           "label": "Nom",
           "placeholder": "John Doe",
-          "help": "Le nom est affiché dans l’interface d’administration.",
+          "help": "Ce nom est affiché dans l’interface d’administration.",
           "placeholderEdit": "Modifier le nom",
           "placeholderCreate": "Nom",
-          "helpNearLimit": "Nom {{remaining}} caractères restants."
+          "helpNearLimit": "Il vous reste {{remaining}} caractères."
         },
         "password": {
           "label": "Mot de passe",
           "placeholder": "Mot de passe",
-          "help": "Le mot de passe est utilisé pour se connecter.",
+          "help": "Le mot de passe permet de se connecter.",
           "placeholderEdit": "Modifier le mot de passe",
           "placeholderCreate": "Mot de passe",
-          "helpNearLimit": "Mot de passe {{remaining}} caractères restants.",
-          "helpCreate": "Le mot de passe est utilisé pour se connecter.",
-          "helpEdit": "Modifier le mot de passe"
+          "helpNearLimit": "Il vous reste {{remaining}} caractères.",
+          "helpCreate": "Le mot de passe permet de se connecter.",
+          "helpEdit": "Modifiez le mot de passe"
         },
         "rbac": {
           "role": {
             "label": "Rôle",
-            "placeholder": "Sélectionner un rôle",
-            "help": "Sélectionner le rôle de l’utilisateur.",
+            "placeholder": "Sélectionnez un rôle",
+            "help": "Sélectionnez le rôle de l’utilisateur.",
             "options": {
               "admin": "Administrateur",
               "editor": "Éditeur"
             }
           },
           "tenantIds": {
-            "label": "Tenants",
-            "placeholder": "Sélectionner un tenant",
-            "help": "Sélectionner les tenants autorisés pour l’utilisateur."
+            "label": "Sites",
+            "placeholder": "Sélectionnez un site",
+            "help": "Sélectionnez les sites autorisés pour l’utilisateur."
           },
           "defaultTenantId": {
-            "label": "Tenant par défaut",
-            "placeholder": "Sélectionner un tenant",
-            "help": "Le tenant utilisé par défaut lorsqu’aucun tenant spécifique n’est défini."
+            "label": "Site par défaut",
+            "placeholder": "Sélectionnez un site",
+            "help": "Site utilisé par défaut lorsqu’aucun site spécifique n’est défini."
           },
-          "expandableLabel": "RBAC"
+          "expandableLabel": "Accès et rôles"
         },
-        "label": "RBAC",
-        "help": "Configurer les rôles et les tenants autorisés pour l’utilisateur.",
-        "placeholderEdit": "Modifier les rôles et les tenants",
-        "placeholderCreate": "Rôles et tenants"
+        "label": "Accès et rôles",
+        "help": "Configurez les rôles et les sites autorisés pour l’utilisateur.",
+        "placeholderEdit": "Modifier les accès et rôles",
+        "placeholderCreate": "Accès et rôles"
       }
     },
 
@@ -793,7 +795,7 @@
           "name": {
             "label": "Nom du bloc",
             "help": "Nom interne pour identifier ce bloc dans le studio.",
-            "placeholder": "Ex : Hero accueil"
+            "placeholder": "Ex. : Hero accueil"
           },
           "containerMode": {
             "label": "Mode de conteneur",
@@ -824,18 +826,18 @@
           "reorderCells": "Réorganiser les cellules",
           "reverseOnMobile": {
             "label": "Inverser sur mobile",
-            "help": "Permet d'inverser les colonnes sur mobile."
+            "help": "Permet d’inverser l’ordre des colonnes sur mobile."
           }
         }
       },
       "drawer": {
-        "title": "Éditer le contenu",
+        "title": "Modifier le contenu",
         "description": "Modifiez le contenu de cet élément.",
         "kind": {
           "label": "Type de contenu",
           "help": "Sélectionnez le type de contenu à afficher.",
           "options": {
-            "heading": "Heading",
+            "heading": "Titre",
             "richText": "Texte riche",
             "image": "Image",
             "gallery": "Galerie",
@@ -848,7 +850,7 @@
             "steps": "Étapes",
             "structuredCard": "Carte structurée",
             "form": "Formulaire",
-            "timeline": "Timeline"
+            "timeline": "Frise chronologique"
           }
         }
       }
@@ -859,37 +861,37 @@
         "title": "Liste des blocs"
       },
       "blocksEdit": {
-        "title": "Édition d'un bloc"
+        "title": "Modification d’un bloc"
       },
       "error": {
         "ariaLabel": "Erreur dans l’interface d’administration",
         "title": "Une erreur est survenue",
-        "description": "Impossible de charger cette section. Vous pouvez réessayer.",
+        "description": "Impossible de charger cette section. Veuillez réessayer.",
         "retry": "Réessayer",
         "errorCode": "Code d’erreur :",
-        "backToAdmin": "Retour à l’admin"
+        "backToAdmin": "Retour à l’administration"
       },
       "notFound": {
         "ariaLabel": "Page d’administration introuvable",
         "title": "Page introuvable",
         "description": "La page d’administration que vous recherchez n’existe pas ou a été déplacée.",
-        "backToAdmin": "Retour à l’admin"
+        "backToAdmin": "Retour à l’administration"
       }
     },
 
     "theme": {
-      "toLight": "Passer en thème clair",
-      "toDark": "Passer en thème sombre"
+      "toLight": "Passer en mode clair",
+      "toDark": "Passer en mode sombre"
     },
 
     "shell": {
-      "loading": "Chargement de l’interface d’administration"
+      "loading": "Chargement de l’interface d’administration…"
     },
 
     "social": {
       "kind": {
         "website": "Site web",
-        "email": "Email",
+        "email": "E-mail",
         "phone": "Téléphone",
         "custom": "Personnalisé",
         "whatsapp": "WhatsApp",
@@ -923,8 +925,8 @@
     "header": {
       "ariaLabel": "En-tête de l’interface d’administration",
       "skipToContent": "Aller au contenu principal",
-      "title": "Compoz — Admin",
-      "comingSoon": "Bientôt dispo",
+      "title": "Compoz — Administration",
+      "comingSoon": "Bientôt disponible",
       "comingSoonTooltip": "Fonctionnalité en cours de développement",
       "comingSoonAria": "Fonctionnalité bientôt disponible"
     },
@@ -943,7 +945,7 @@
       },
       "confirm": {
         "title": "Supprimer l’image ?",
-        "description": "Cette action réinitialise l’URL et l’aperçu actuel."
+        "description": "Cette action réinitialise l’URL et l’aperçu actuels."
       },
       "hints": {
         "notRecommendedType": "Le type de fichier choisi n’est pas recommandé pour cet usage. Préférez {types}."
@@ -963,7 +965,7 @@
       "altFallback": "Favicon",
       "label": "Favicon",
       "help": "Téléchargez une icône 512×512 : les formats nécessaires sont générés automatiquement.",
-      "preferredTypeHint": "PNG (512×512) ou ICO. SVG possible selon compatibilité navigateur."
+      "preferredTypeHint": "PNG (512×512) ou ICO. SVG possible selon la compatibilité des navigateurs."
     },
 
     "logoFields": {
@@ -971,13 +973,13 @@
       "preferredTypeHint": "Format recommandé : SVG pour un rendu net sur tous les écrans.",
       "image": {
         "label": "Logo principal",
-        "help": "Télécharger votre logo (format recommandé : SVG)."
+        "help": "Téléchargez votre logo (format recommandé : SVG)."
       },
       "alt": {
         "label": "Texte alternatif du logo",
         "placeholder": "Décrivez brièvement votre logo (accessibilité)",
         "help": "Texte alternatif utilisé par les lecteurs d’écran. Décrivez brièvement le logo.",
-        "helpNearLimit": "Texte proche de la limite : il vous reste {remaining} caractère(s)."
+        "helpNearLimit": "Il vous reste {remaining} caractère(s)."
       }
     },
 
@@ -993,11 +995,11 @@
     "menuFieldsItem": {
       "labelField": {
         "label": "Libellé du lien",
-        "placeholder": "Texte du lien (ex. Accueil)"
+        "placeholder": "Texte du lien (ex. : Accueil)"
       },
       "confirmDelete": {
         "title": "Supprimer ce lien ?",
-        "description": "Cette action retirera ce lien du menu."
+        "description": "Cette action supprimera ce lien du menu."
       }
     },
 
@@ -1005,13 +1007,13 @@
       "expandableLabel": "Options du lien",
       "href": {
         "label": "Lien (URL ou chemin)",
-        "placeholder": "URL externe ou chemin interne (ex. /contact)"
+        "placeholder": "URL externe ou chemin interne (ex. : /contact)"
       },
-      "hasChildrenHelp": "Cet élément contient des sous-liens. Le lien principal est ignoré.",
+      "hasChildrenHelp": "Cet élément contient des sous-liens. Le lien principal sera ignoré.",
       "defaultHelp": "Définissez le lien associé à cet élément du menu.",
       "internalPicker": {
         "label": "Lier à une page interne",
-        "placeholder": "Choisir une page interne…"
+        "placeholder": "Choisissez une page interne…"
       },
       "externalSwitch": {
         "label": "Lien externe",
@@ -1025,36 +1027,36 @@
 
     "pageListItem": {
       "editMeta": "Modifier les métadonnées",
-      "editContent": "Éditer le contenu",
+      "editContent": "Modifier le contenu",
       "deletePage": "Supprimer la page"
     },
 
     "socialFieldsItem": {
       "kind": {
         "label": "Plateforme",
-        "placeholder": "Sélectionner une plateforme",
+        "placeholder": "Sélectionnez une plateforme",
         "help": "Choisissez la plateforme associée à ce lien."
       },
       "href": {
         "placeholderEmail": "adresse@exemple.com",
         "placeholderUrl": "exemple.com/profil",
         "helpEmail": "Adresse e-mail utilisée pour ce contact (un mailto: sera généré).",
-        "helpUrl": "Chemin ou domaine de votre profil (le https:// est préfixé automatiquement)."
+        "helpUrl": "Chemin ou domaine de votre profil (le https:// sera ajouté automatiquement)."
       },
       "confirmDelete": {
         "title": "Supprimer ce lien social ?",
-        "description": "Cette action retirera ce lien social de la liste."
+        "description": "Cette action supprimera ce lien social de la liste."
       }
     },
 
     "footerForm": {
       "showYear": {
-        "label": "Afficher l’année courante",
+        "label": "Afficher l’année en cours",
         "help": "Ajoute automatiquement l’année en cours dans la ligne de copyright."
       },
       "copyright": {
         "label": "Texte de copyright",
-        "help": "S’affiche dans le pied de page. Tu peux utiliser le nom de ton activité, ta raison sociale, etc.",
+        "help": "S’affiche dans le pied de page. Vous pouvez utiliser le nom de votre activité, votre raison sociale, etc.",
         "placeholder": "© 2025 Mon activité. Tous droits réservés."
       }
     },
@@ -1104,38 +1106,38 @@
     "pageForm": {
       "title": {
         "label": "Titre de la page",
-        "help": "Choisissez un titre clair et descriptif (par ex. “Accueil”, “Galerie”, “Contact”).",
+        "help": "Choisissez un titre clair et descriptif (par ex. : “Accueil”, “Galerie”, “Contact”).",
         "helpNearLimit": "Il ne reste plus que {remaining} caractères disponibles pour le titre.",
         "placeholderEdit": "Modifier le titre de la page",
-        "placeholderCreate": "Titre de la page (ex. Accueil)"
+        "placeholderCreate": "Titre de la page (ex. : Accueil)"
       },
       "slug": {
-        "label": "Slug (identifiant de l'URL)",
+        "label": "Slug (identifiant de l’URL)",
         "helpEmpty": "Si vous laissez ce champ vide, le slug sera généré automatiquement à partir du titre.",
         "helpWillNormalize": "Le slug sera automatiquement normalisé (minuscules, tirets).",
-        "help": "Le slug doit être court, descriptif et unique (ex: “contact”). Pour l'accueil, utilisez simplement “/”.",
+        "help": "Le slug doit être court, descriptif et unique (ex. : “contact”). Pour l’accueil, utilisez simplement “/”.",
         "placeholderEdit": "Modifier le slug de la page",
         "placeholderCreate": "Laisser vide pour le dériver du titre",
-        "inputTitle": "Le slug doit contenir uniquement des lettres minuscules, chiffres et tirets."
+        "inputTitle": "Le slug doit contenir uniquement des lettres minuscules, des chiffres et des tirets."
       },
       "seoTitle": {
         "label": "Titre SEO",
         "placeholder": "Titre affiché dans les résultats de recherche",
-        "help": "Optionnel. Laisse vide pour utiliser un fallback automatique basé sur le contenu de la page."
+        "help": "Optionnel. Laissez vide pour utiliser un fallback automatique basé sur le contenu de la page."
       },
       "parent": {
         "label": "Page parente",
-        "help": "Selectionner une page afin d'associer celle-ci en tant que parente.",
+        "help": "Sélectionnez une page pour la définir comme parente.",
         "none": "Aucune page parente"
       },
       "pagination": {
         "label": "Activer la pagination",
-        "help": "Les pages filles pourront être navigables via un module de pagination.",
-        "helpRootForcedOff": "La pagination est désactivée car la page n'a pas de parente."
+        "help": "Les pages enfants pourront être parcourues via un module de pagination.",
+        "helpRootForcedOff": "La pagination est désactivée car la page n’a pas de parente."
       },
       "childrens": {
         "label": "Pages enfants ({count})",
-        "help": "Les pages enfants peuvent être réordonnées depuis la liste ci-dessous. Cet ordre est utilisé pour la navigation entre les pages.",
+        "help": "Les pages enfants peuvent être réorganisées depuis la liste ci-dessous. Cet ordre est utilisé pour la navigation entre les pages.",
         "position": "Position {current} sur {total}"
       },
       "sitemap": {
@@ -1145,12 +1147,12 @@
           "help": "Décochez pour exclure cette page du sitemap.xml."
         },
         "priority": {
-          "label": "Priorité (0.0 à 1.0)",
-          "placeholder": "Ex : 0.8",
+          "label": "Priorité (0,0 à 1,0)",
+          "placeholder": "Ex. : 0,8",
           "help": "Laissez vide pour utiliser la priorité par défaut."
         },
         "changefreq": {
-          "label": "Fréquence de changement",
+          "label": "Fréquence de mise à jour",
           "help": "Optionnel — utile uniquement si vous souhaitez surcharger le comportement par défaut.",
           "options": {
             "always": "Toujours",
@@ -1178,7 +1180,7 @@
         "labelWithCount": "Sous-liens ({count})",
         "empty": "Aucun sous-lien pour le moment.",
         "tooltips": {
-          "unavailableWhileBusy": "Action indisponible pendant l’édition/sauvegarde."
+          "unavailableWhileBusy": "Action indisponible pendant l’édition ou la sauvegarde."
         }
       }
     },
@@ -1187,17 +1189,17 @@
       "base": {
         "defaultTitle": {
           "label": "Titre par défaut du site",
-          "placeholder": "Ex. Mon porfolio",
-          "help": "Titre utilisé par défaut quand aucune meta spécifique n’est définie."
+          "placeholder": "Ex. : Mon portfolio",
+          "help": "Titre utilisé par défaut lorsqu’aucune méta spécifique n’est définie."
         },
         "titleTemplate": {
-          "label": "Template de titre",
+          "label": "Modèle de titre",
           "placeholder": "%s — Nom du site",
           "help": "Utilisez \"%s\" comme placeholder pour le titre de la page."
         },
         "defaultDescription": {
           "label": "Description par défaut",
-          "placeholder": "Description générale de votre site utilisée quand aucune description spécifique n’est fournie.",
+          "placeholder": "Description générale de votre site utilisée lorsqu’aucune description spécifique n’est fournie.",
           "help": "Essayez de rester entre 140 et 160 caractères pour un affichage optimal dans Google."
         }
       },
@@ -1210,12 +1212,12 @@
         "canonicalUrl": {
           "label": "URL canonique par défaut",
           "placeholder": "https://www.exemple.com",
-          "help": "L’URL canonique utilisée quand aucune URL spécifique n’est définie."
+          "help": "L’URL canonique utilisée lorsqu’aucune URL spécifique n’est définie."
         },
         "robots": {
           "label": "Directive robots",
           "placeholder": "index,follow",
-          "help": "Contrôle l’indexation (ex: index,follow, noindex, nofollow…)."
+          "help": "Contrôle l’indexation (ex. : index,follow, noindex, nofollow…)."
         },
         "structuredData": {
           "label": "Données structurées JSON-LD",
@@ -1224,9 +1226,9 @@
       },
       "twitter": {
         "card": {
-          "label": "Twitter card",
-          "placeholder": "Sélectionner un type de carte",
-          "help": "Sélectionnez le type de carte Twitter qui sera utilisé pour le site."
+          "label": "Carte Twitter",
+          "placeholder": "Sélectionnez un type de carte",
+          "help": "Sélectionnez le type de carte Twitter à utiliser pour le site."
         },
         "site": {
           "label": "Compte Twitter du site",
@@ -1245,7 +1247,7 @@
           "placeholder": "https://…/og-default.jpg",
           "help": "Image utilisée par défaut lors du partage sur les réseaux sociaux.",
           "altFallback": "Image Open Graph par défaut",
-          "preferredTypeHint": "Formats recommandés : jpg, png, webp"
+          "preferredTypeHint": "Formats recommandés : JPG, PNG, WebP"
         },
         "title": {
           "label": "Titre Open Graph",
@@ -1255,7 +1257,7 @@
         "imageAlt": {
           "label": "Texte alternatif de l’image OG",
           "placeholder": "Description de l’image pour l’accessibilité.",
-          "help": "Améliore l’accessibilité et le SEO image."
+          "help": "Améliore l’accessibilité et le SEO des images."
         },
         "description": {
           "label": "Description Open Graph",
@@ -1278,8 +1280,8 @@
         "identity": "Identité",
         "menu": "Menus",
         "social": "Réseaux sociaux",
-        "header": "Header",
-        "footer": "Footer",
+        "header": "En-tête",
+        "footer": "Pied de page",
         "pages": "Pages",
         "blocks": "Blocs",
         "seo": "SEO",
@@ -1291,8 +1293,8 @@
       "devices": {
         "mobile": "Mobile",
         "tablet": "Tablette",
-        "laptop": "Laptop (1024)",
-        "desktop": "Desktop (1440)",
+        "laptop": "Portable (1024)",
+        "desktop": "Bureau (1440)",
         "wqhd": "WQHD (2560)",
         "uhd": "4K (3840)"
       }
@@ -1300,22 +1302,22 @@
 
     "footerSection": {
       "section": {
-        "title": "Réglages du footer",
+        "title": "Réglages du pied de page",
         "description": "Configurez ici le texte de copyright et l’affichage de l’année dans le pied de page de votre site."
       },
       "warnings": {
         "copyrightEmpty": "Vous n’avez pas renseigné de texte de copyright. Cela peut nuire à la crédibilité du site.",
-        "footerLooksEmpty": "Votre footer est quasiment vide (ni année ni texte). Pensez à y ajouter des informations utiles."
+        "footerLooksEmpty": "Votre pied de page est quasiment vide (ni année ni texte). Pensez à y ajouter des informations utiles."
       }
     },
 
     "headerSection": {
       "section": {
-        "title": "Réglages du header",
-        "description": "Configurez l’affichage du logo et du titre dans l’entête de votre site."
+        "title": "Réglages de l’en-tête",
+        "description": "Configurez l’affichage du logo et du titre dans l’en-tête de votre site."
       },
       "warnings": {
-        "noBranding": "Ni logo ni titre ne sont affichés dans le header. Le visiteur risque de ne pas identifier clairement le site."
+        "noBranding": "Ni logo ni titre ne sont affichés dans l’en-tête. Le visiteur risque de ne pas identifier clairement le site."
       }
     },
 
@@ -1340,8 +1342,8 @@
         "legalMenuEmpty": "Aucun lien légal n’est défini dans le menu.",
         "dupLabelsTop": "Plusieurs liens du menu légal partagent le même libellé.",
         "dupLinksTop": "Plusieurs liens du menu légal pointent vers la même URL.",
-        "externalNoNewTab": "Certains liens externes ne sont pas ouverts dans un nouvel onglet.",
-        "externalPrefixOnly": "Certains liens externes semblent incomplets (préfixe http(s) seulement).",
+        "externalNoNewTab": "Certains liens externes ne s’ouvrent pas dans un nouvel onglet.",
+        "externalPrefixOnly": "Certains liens externes semblent incomplets (préfixe http(s) uniquement).",
         "internalHrefNotFound": "Certains liens internes ne correspondent à aucune page connue."
       }
     },
@@ -1359,10 +1361,10 @@
         "payloadInvalidHint": "Impossible de déterminer l’état du site. Les données reçues sont incomplètes."
       },
       "details": {
-        "title": "Vue d'ensemble des pages",
+        "title": "Vue d’ensemble des pages",
         "showAll": "Tout afficher",
         "showDirty": "Afficher les pages modifiées",
-        "empty": "Aucune page modifiées."
+        "empty": "Aucune page modifiée."
       },
 
       "section": {
@@ -1377,8 +1379,8 @@
           "valueHint": "Configurées (brouillon)"
         },
         "blocks": {
-          "description": "Sections utilisées dans les pages publiées.",
-          "valueHint": "Utilisés (brouillon)"
+          "description": "Sections utilisées dans les pages publiées",
+          "valueHint": "Utilisées (brouillon)"
         },
         "breakdown": {
           "published": "publiés",
@@ -1402,11 +1404,11 @@
         "view": "Visualiser",
         "success": {
           "title": "Publication réussie",
-          "description": "Les contenus de l’espace brouillon ont été copiés vers la version publiée."
+          "description": "Les contenus du brouillon ont été copiés vers la version publiée."
         },
         "warning": {
           "title": "Publication avec avertissements",
-          "description": "{count} avertissements ont été détectés pendant la publication :"
+          "description": "{count} avertissement(s) détecté(s) pendant la publication :"
         },
         "last": "Dernière publication : {pages} pages copiées · réglages {settings}.",
         "settingsUpdated": "mis à jour",
@@ -1414,7 +1416,7 @@
       },
       "preview": {
         "cardTitle": "Aperçu du site",
-        "cardDescription": "Vérifiez rapidement le rendu global (header + footer) via l'apercu.",
+        "cardDescription": "Vérifiez rapidement le rendu global (en-tête + pied de page) via l’aperçu.",
         "ready": "Baselines chargées",
         "loading": "Chargement des baselines…"
       }
@@ -1424,12 +1426,12 @@
       "section": {
         "titleCreate": "Créer une nouvelle page",
         "titleEdit": "Modifier la page « {title} »",
-        "descriptionCreate": "Créez une nouvelle page en définissant son titre et son slug (identifiant de l'URL).",
-        "descriptionEdit": "Modifiez le titre et le slug (identifiant de l'URL) de la page sélectionnée."
+        "descriptionCreate": "Créez une nouvelle page en définissant son titre et son slug (identifiant de l’URL).",
+        "descriptionEdit": "Modifiez le titre et le slug (identifiant de l’URL) de la page sélectionnée."
       },
       "warnings": {
         "titleLooksThin": "Le titre est très court. Un titre plus descriptif peut aider les visiteurs et le SEO.",
-        "slugNotNormalized": "Le slug (identifiant de l'URL) sera normalisé (minuscules, tirets). Vérifiez qu’il reste lisible après normalisation."
+        "slugNotNormalized": "Le slug (identifiant de l’URL) sera normalisé (minuscules, tirets). Vérifiez qu’il reste lisible après normalisation."
       },
       "errors": {
         "originalMissing": "Impossible d’enregistrer : la page d’origine est introuvable. Rechargez l’index et réessayez."
@@ -1445,7 +1447,7 @@
       "empty": "Aucune page n’a encore été créée.",
       "confirm": {
         "title": "Supprimer cette page ?",
-        "intro": "Cette action est irréversible. La page sera supprimée ainsi que son contenu.",
+        "intro": "Cette action est irréversible. La page et son contenu seront supprimés.",
         "requireAckLabel": "Je confirme la suppression"
       }
     },
@@ -1453,7 +1455,7 @@
     "primaryMenuSection": {
       "section": {
         "title": "Menu principal",
-        "description": "Configurez les liens de navigation affichés dans le header de votre site, ainsi que leurs sous-menus éventuels."
+        "description": "Configurez les liens de navigation affichés dans l’en-tête de votre site, ainsi que leurs sous-menus éventuels."
       },
       "warnings": {
         "primaryMenuEmpty": "Aucun élément n’est défini dans le menu principal.",
@@ -1461,8 +1463,8 @@
         "dupLinksTop": "Plusieurs éléments de niveau 1 pointent vers la même URL.",
         "dupLabelsChildren": "Certains sous-liens partagent le même libellé.",
         "dupLinksChildren": "Certains sous-liens pointent vers la même URL.",
-        "externalNoNewTab": "Certains liens externes ne sont pas ouverts dans un nouvel onglet.",
-        "externalPrefixOnly": "Certains liens externes semblent incomplets (préfixe http(s) seulement).",
+        "externalNoNewTab": "Certains liens externes ne s’ouvrent pas dans un nouvel onglet.",
+        "externalPrefixOnly": "Certains liens externes semblent incomplets (préfixe http(s) uniquement).",
         "internalHrefNotFound": "Certains liens internes ne correspondent à aucune page connue."
       }
     },
@@ -1474,13 +1476,13 @@
       },
       "warnings": {
         "description": {
-          "length": "La description SEO semble trop courte ou trop longue (idéalement entre les bornes recommandées)."
+          "length": "La description SEO semble trop courte ou trop longue (idéalement dans les bornes recommandées)."
         },
         "titleTemplate": {
-          "placeholderMissing": "Le template de titre ne contient pas le placeholder %s (ex: “%s — Mon site”)."
+          "placeholderMissing": "Le modèle de titre ne contient pas le placeholder %s (ex. : “%s — Mon site”)."
         },
         "robots": {
-          "noindex": "Le robots contient “noindex” : votre site risque de ne pas apparaître dans les moteurs de recherche."
+          "noindex": "Le champ robots contient “noindex” : votre site risque de ne pas apparaître dans les moteurs de recherche."
         },
         "openGraph": {
           "image": {
@@ -1493,7 +1495,7 @@
     "socialSection": {
       "section": {
         "title": "Réseaux sociaux",
-        "description": "Configurez ici les liens vers vos réseaux sociaux. Ils seront affichés sur la version publique de votre site, généralement dans le footer ou l’en-tête."
+        "description": "Configurez ici les liens vers vos réseaux sociaux. Ils seront affichés sur la version publique de votre site, généralement dans le pied de page ou l’en-tête."
       },
       "warnings": {
         "socialEmpty": "Aucun lien social n’est défini pour le moment.",
@@ -1504,7 +1506,7 @@
     "pageBlocksListSection": {
       "section": {
         "title": "Blocs - Page {title}",
-        "description": "Configurez ici les blocs qui apparaitront sur la page.",
+        "description": "Configurez ici les blocs qui apparaîtront sur la page.",
         "empty": "Aucun bloc n’a encore été créé.",
         "pageSettings": "Réglages de la page"
       },
@@ -1550,24 +1552,24 @@
       "blockTitle": {
         "label": "Titre du bloc",
         "switchLabel": "Activer le titre",
-        "switchHelp": "Le bloc possède un titre visible ou SR-only.",
+        "switchHelp": "Le bloc possède un titre visible ou uniquement accessible (SR-only).",
         "displayLabel": "Affichage du titre",
-        "placeholder": "Titre du bloc (ex. “Mon bloc”)",
-        "help": "Le titre sera de niveau H2 si actif.",
+        "placeholder": "Titre du bloc (ex. : “Mon bloc”)",
+        "help": "Le titre sera de niveau H2 s’il est actif.",
         "none": "Aucun titre",
         "visible": "Visible",
         "srOnly": "SR-only",
-        "displayHelp": "Visible : affiché à l’écran. SR-only : uniquement pour l’accessibilité/SEO."
+        "displayHelp": "Visible : affiché à l’écran. SR-only : uniquement pour l’accessibilité et le SEO."
       },
       "lcpPriority": {
         "label": "Bloc prioritaire (LCP)",
         "helpEnabled": "Ce bloc sera prioritaire pour le Largest Contentful Paint.",
-        "helpDisabled": "Activez si ce bloc contient l’élément principal visible.",
-        "replacedInfo": "L'ancien bloc prioritaire a été remplacé par celui-ci."
+        "helpDisabled": "Activez cette option si ce bloc contient l’élément principal visible.",
+        "replacedInfo": "L’ancien bloc prioritaire a été remplacé par celui-ci."
       },
       "columns": {
         "label": "Nombre de colonnes",
-        "hint": "Les colonnes sont réparties automatiquement selon le nombre de colonnes configuré.",
+        "hint": "Les colonnes sont réparties automatiquement selon le nombre configuré.",
         "options": {
           "1": "1 colonne",
           "2": "2 colonnes",
@@ -1577,7 +1579,7 @@
       "containerMode": {
         "label": "Désactiver les marges du bloc",
         "helpFullBleed": "Aucune marge ne sera appliquée.",
-        "helpContained": "Marge par defaut appliquée."
+        "helpContained": "Marges par défaut appliquées."
       }
     },
 
@@ -1607,41 +1609,41 @@
         "itemsHelp": "Ajoutez, modifiez et réorganisez les étapes de votre parcours.",
 
         "periodLabel": "Période",
-        "periodPlaceholder": "2019 - 2024",
+        "periodPlaceholder": "2020 - 2023",
         "periodHelp": "Période ou année affichée pour cette étape.",
 
         "titleLabel": "Titre",
-        "titlePlaceholder": "Analyste développeur",
+        "titlePlaceholder": "Chef de projet",
         "titleHelp": "Titre principal de l’étape.",
 
         "subtitleLabel": "Sous-titre",
-        "subtitlePlaceholder": "Innovative Diagnostics",
+        "subtitlePlaceholder": "Entreprise ou organisation",
         "subtitleHelp": "Contexte, structure ou entreprise associée à l’étape.",
 
         "descriptionLabel": "Description",
-        "descriptionPlaceholder": "Développement d’outils métier et accompagnement des équipes sur les besoins internes.",
+        "descriptionPlaceholder": "Pilotage des projets, coordination des équipes et suivi des objectifs métier.",
         "descriptionHelp": "Texte descriptif affiché sous le titre de l’étape.",
 
-        "badgeLabel": "Badge / Sigle",
-        "badgePlaceholder": "ID",
+        "badgeLabel": "Badge / sigle",
+        "badgePlaceholder": "CDP",
         "badgeHelp": "Petit sigle ou libellé court affiché visuellement dans la timeline.",
 
         "keywordsLabel": "Mots-clés",
-        "keywordsPlaceholder": "WinDev\nSQL Server\nGestion de projet",
+        "keywordsPlaceholder": "Gestion de projet\nCoordination\nOrganisation",
         "keywordsHelp": "Un mot-clé par ligne. Ils pourront être affichés sous forme de badges."
       },
 
       "carouselCellEditor": {
-        "itemsLabel": "Éléments du carousel",
-        "itemsHelp": "Ajoutez, réorganisez et modifiez les éléments affichés dans le carousel.",
+        "itemsLabel": "Éléments du carrousel",
+        "itemsHelp": "Ajoutez, réorganisez et modifiez les éléments affichés dans le carrousel.",
         "variantLabel": "Affichage",
         "itemKindLabel": "Type de contenu",
         "showDotsLabel": "Afficher les points",
-        "showDotsHelp": "Affiche des indicateurs de pagination sous le carousel.",
+        "showDotsHelp": "Affiche des indicateurs de pagination sous le carrousel.",
         "showArrowsLabel": "Afficher les flèches",
-        "showArrowsHelp": "Affiche des flèches de navigation sur le carousel.",
+        "showArrowsHelp": "Affiche des flèches de navigation sur le carrousel.",
         "variants": {
-          "carousel": "Carousel",
+          "carousel": "Carrousel",
           "slider": "Slider"
         },
         "itemKinds": {
@@ -1659,8 +1661,8 @@
         "titleLabel": "Titre",
         "titlePlaceholder": "Titre de la carte",
         "titleHelp": "Titre principal affiché dans la carte.",
-        "revealLabel": "Afficher avec reveal",
-        "revealHelp": "Active l’animation d’apparition de la section cards étendues.",
+        "revealLabel": "Afficher avec un effet d’apparition",
+        "revealHelp": "Active l’animation d’apparition de la section de cartes étendues.",
         "descriptionLabel": "Description",
         "descriptionPlaceholder": "Description de la carte",
         "descriptionHelp": "Texte descriptif de la carte.",
@@ -1669,7 +1671,7 @@
         "bulletsPlaceholder": "Une ligne par élément",
         "bulletsHelp": "Chaque ligne sera affichée comme un élément de liste.",
 
-        "footerLabel": "Texte de pied",
+        "footerLabel": "Texte de pied de carte",
         "footerPlaceholder": "Texte complémentaire",
         "footerHelp": "Texte affiché en bas de la carte.",
 
@@ -1693,7 +1695,7 @@
 
       "structuredCardCellEditor": {
         "itemsLabel": "Cartes structurées",
-        "itemsHelp": "Ajoutez, réorganisez et éditez les cartes structurées affichées dans cette cellule.",
+        "itemsHelp": "Ajoutez, réorganisez et modifiez les cartes structurées affichées dans cette cellule.",
 
         "columnsLabel": "Colonnes",
         "columns": {
@@ -1702,8 +1704,8 @@
           "3": "3 colonnes"
         },
         "buttonLabel": "Bouton",
-        "revealLabel": "Afficher avec reveal",
-        "revealHelp": "Active l’animation d’apparition de la section structured cards.",
+        "revealLabel": "Afficher avec un effet d’apparition",
+        "revealHelp": "Active l’animation d’apparition de la section de cartes structurées.",
         "imageLabel": "Image",
         "imageHelp": "Image principale utilisée pour illustrer cette carte.",
 
@@ -1715,18 +1717,18 @@
         "metaPlaceholder": "Sous-information, contexte court, date, client…",
         "metaHelp": "Texte secondaire optionnel affiché sous le titre.",
 
-        "sectionLabelLabel": "Label de section",
-        "sectionLabelPlaceholder": "Ex. Contexte, Solution, Résultat",
-        "sectionContentLabel": "Contenu de section",
+        "sectionLabelLabel": "Libellé de section",
+        "sectionLabelPlaceholder": "Ex. : Contexte, Solution, Résultat",
+        "sectionContentLabel": "Contenu de la section",
         "sectionContentPlaceholder": "Décrivez le contenu de cette section",
 
         "addSection": "Ajouter une section"
       },
 
       "formCellEditor": {
-        "toLabel": "Email de destination",
+        "toLabel": "Adresse e-mail de destination",
         "toPlaceholder": "contact@monsite.com",
-        "toHelp": "Adresse email de réception du formulaire. Elle sera enregistrée au format mailto:.",
+        "toHelp": "Adresse e-mail de réception du formulaire. Elle sera enregistrée au format mailto:.",
 
         "submitLabelLabel": "Texte du bouton",
         "submitLabelPlaceholder": "Envoyer",
@@ -1763,7 +1765,7 @@
 
         "fieldTypes": {
           "text": "Texte",
-          "email": "Email",
+          "email": "E-mail",
           "textarea": "Texte long"
         }
       },
@@ -1794,8 +1796,8 @@
           "left": "Gauche",
           "center": "Centre"
         },
-        "revealLabel": "Afficher avec reveal",
-        "revealHelp": "Active l’animation d’apparition de la section cards.",
+        "revealLabel": "Afficher avec un effet d’apparition",
+        "revealHelp": "Active l’animation d’apparition de la section de cartes.",
         "columnsLabel": "Colonnes",
         "columns": {
           "2": "2",
@@ -1803,13 +1805,13 @@
           "4": "4"
         },
         "titleLabel": "Titre",
-        "titlePlaceholder": "Ex. Votre site est difficile à modifier",
-        "titleHelp": "Titre court et scannable de la carte.",
+        "titlePlaceholder": "Ex. : Votre site est difficile à modifier",
+        "titleHelp": "Titre court et facile à parcourir de la carte.",
         "descriptionLabel": "Description",
-        "descriptionPlaceholder": "Ex. Chaque changement nécessite l’intervention d’un prestataire.",
+        "descriptionPlaceholder": "Ex. : Chaque changement nécessite l’intervention d’un prestataire.",
         "descriptionHelp": "Texte court pour expliquer l’idée principale.",
         "iconLabel": "Icône",
-        "iconPlaceholder": "Ex. ⚡",
+        "iconPlaceholder": "Ex. : ⚡",
         "iconHelp": "Icône ou emoji optionnel pour renforcer la lecture visuelle."
       },
 
@@ -1835,11 +1837,11 @@
         "levelHelp": "Choisissez le niveau hiérarchique du titre.",
 
         "titleLabel": "Titre",
-        "titlePlaceholder": "Saisir le titre",
+        "titlePlaceholder": "Saisissez le titre",
         "titleHelp": "Texte principal du titre.",
 
         "subtitleLabel": "Sous-titre",
-        "subtitlePlaceholder": "Saisir un sous-titre",
+        "subtitlePlaceholder": "Saisissez un sous-titre",
         "subtitleHelp": "Texte complémentaire affiché sous le titre.",
 
         "alignLabel": "Alignement",
@@ -1853,11 +1855,11 @@
         "highlightsHelp": "Liste des segments à mettre en avant, séparés par des virgules.",
         "separatorLabel": "Séparateur",
         "separatorHelp": "Affiche un séparateur entre le titre et le sous-titre.",
-        "idAnchorLabel": "Identifiant d'Ancre",
+        "idAnchorLabel": "Identifiant d’ancre",
         "idAnchorPlaceholder": "mon-ancre",
-        "idAnchorHelp": "Définit l'identifiant d'ancre permettant d'être accessible depuis un lien.",
-        "revealLabel": "Effet d'apparition",
-        "revealHelp": "Active/désactive l'effet d'apparition du titre.",
+        "idAnchorHelp": "Définit l’identifiant d’ancre permettant d’accéder à ce contenu depuis un lien.",
+        "revealLabel": "Effet d’apparition",
+        "revealHelp": "Active ou désactive l’effet d’apparition du titre.",
         "aligns": {
           "left": "Gauche",
           "center": "Centre"
@@ -1870,14 +1872,14 @@
       },
       "buttonsCellEditor": {
         "itemsLabel": "Boutons",
-        "itemsHelp": "Ajoute et organise les CTA affichés dans cette cellule.",
+        "itemsHelp": "Ajoutez et organisez les CTA affichés dans cette cellule.",
         "addButton": "Ajouter un bouton",
         "removeButton": "Supprimer le bouton",
         "moveUp": "Monter",
         "moveDown": "Descendre",
         "buttonTitle": "Bouton {number}",
         "labelLabel": "Libellé",
-        "labelPlaceholder": "Ex: Voir mes projets",
+        "labelPlaceholder": "Ex. : Voir mes projets",
         "labelHelp": "Texte affiché sur le bouton.",
         "hrefLabel": "Lien",
         "hrefPlaceholder": "/contact ou https://...",
@@ -1897,17 +1899,17 @@
           "lg": "Grand"
         },
         "variants": {
-          "default": "Défaut",
+          "default": "Par défaut",
           "secondary": "Secondaire",
           "outline": "Contour",
           "ghost": "Ghost"
         }
       },
       "spacerCellEditor": {
-        "sizeLabel": "Taille de l'espacement",
+        "sizeLabel": "Taille de l’espacement",
         "sizeHelp": "Définit la hauteur verticale ajoutée dans la colonne.",
         "visibilityLabel": "Actif sur les appareils",
-        "visibilityHelp": "Définit si l'espacement est visible sur les appareils spécifiques.",
+        "visibilityHelp": "Définit si l’espacement est visible sur certains appareils.",
         "devices": {
           "mobile": "Mobile",
           "tablet": "Tablette",
@@ -1921,8 +1923,8 @@
         }
       },
       "richText": {
-        "revealLabel": "Effet d'apparition",
-        "revealHelp": "Définit l'effet d'apparition du texte.",
+        "revealLabel": "Effet d’apparition",
+        "revealHelp": "Définit l’effet d’apparition du texte.",
         "undo": "Annuler",
         "redo": "Rétablir",
         "heading": "Titre",
@@ -1957,8 +1959,8 @@
           "portrait": "Portrait",
           "square": "Carré"
         },
-        "revealLabel": "Effet d'apparition",
-        "revealHelp": "Active l'empêchement de l'affichage de l'image.",
+        "revealLabel": "Effet d’apparition",
+        "revealHelp": "Active l’effet d’apparition de l’image.",
         "sizeLabel": "Taille",
         "sizes": {
           "sm": "Petite",
@@ -1969,30 +1971,29 @@
       },
       "image": {
         "srcLabel": "Sélectionner une image",
-        "srcHelp": "Télécharger votre image (format recommandé : .webp).",
+        "srcHelp": "Téléchargez votre image (format recommandé : .webp).",
         "altLabel": "Texte descriptif",
         "altPlaceholder": "Décrivez brièvement votre image (accessibilité)",
-        "altHelp": "Décrivez brièvement votre image. Laisser vide si elle est purement décorative.",
+        "altHelp": "Décrivez brièvement votre image. Laissez vide si elle est purement décorative.",
         "hrefLabel": "Lien",
         "hrefHelp": "Lien vers une page interne.",
         "captionLabel": "Légende",
         "captionPlaceholder": "Légende de l’image",
-        "captionHelp": "Légende de l’image (accessibilité)."
-      }
-    },
-
-    "galleryCellEditor": {
-      "linksEnabled": {
-        "label": "Activer la navigation",
-        "help": "Activer la navigation permet de transformer une gallerie en menu"
+        "captionHelp": "Légende de l’image."
       },
-      "maxColumns": {
-        "label": "Nombre de colonnes",
-        "help": "Nombre maximum de colonnes à afficher dans la gallerie."
-      },
-      "reveal": {
-        "label": "Effet d'apparition",
-        "help": "Choisir l'effet d'apparition de la cellule de la gallerie"
+      "galleryCellEditor": {
+        "linksEnabled": {
+          "label": "Activer la navigation",
+          "help": "Active la navigation pour transformer la galerie en menu."
+        },
+        "maxColumns": {
+          "label": "Nombre de colonnes",
+          "help": "Nombre maximal de colonnes à afficher dans la galerie."
+        },
+        "reveal": {
+          "label": "Effet d’apparition",
+          "help": "Choisissez l’effet d’apparition de la cellule de galerie."
+        }
       }
     },
 
@@ -2004,7 +2005,7 @@
         "sections": {
           "data": {
             "title": "Données collectées",
-            "p1": "Compoz Studio collecte uniquement les données nécessaires au fonctionnement de l’interface (ex. contenus que vous saisissez, paramètres du site, journaux techniques liés aux erreurs).",
+            "p1": "Compoz Studio collecte uniquement les données nécessaires au fonctionnement du service (ex. contenus que vous saisissez, paramètres du site, journaux techniques liés aux erreurs).",
             "note": "Aucune donnée n’est vendue ni partagée à des fins publicitaires."
           },
           "purposes": {
@@ -2021,7 +2022,7 @@
           },
           "rights": {
             "title": "Vos droits",
-            "p1": "Conformément au RGPD, vous disposez de droits sur vos données :",
+            "p1": "Conformément au RGPD, vous disposez des droits suivants :",
             "items": [
               "Accès à vos données",
               "Rectification",
@@ -2031,7 +2032,7 @@
           },
           "contact": {
             "title": "Contact",
-            "p1": "Pour toute question relative à la protection des données, vous pouvez nous contacter à l’adresse suivante : <email>{emailAdress}</email>."
+            "p1": "Pour toute question relative à la protection des données, vous pouvez nous contacter à l’adresse suivante : <email>{emailAddress}</email>."
           }
         }
       },
@@ -2042,7 +2043,7 @@
         "sections": {
           "editor": {
             "title": "Éditeur du site",
-            "p1": "Le présent site est édité par Julien Mathé, entrepreneur individuel exerçant en micro-entreprise.",
+            "p1": "Le présent service est édité par Julien Mathé, entrepreneur individuel exerçant en micro-entreprise.",
             "p2": "Le service est exploité sous l’appellation Compoz Studio."
           },
           "legalStatus": {
@@ -2057,7 +2058,7 @@
           },
           "hosting": {
             "title": "Hébergement",
-            "p1": "Le site est hébergé par Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis."
+            "p1": "Le service est hébergé par Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis."
           },
           "activity": {
             "title": "Activité",
@@ -2086,7 +2087,7 @@
         "sections": {
           "intro": {
             "title": "Qu’est-ce qu’un cookie ?",
-            "p1": "Un cookie est un petit fichier texte déposé sur votre terminal (ordinateur, tablette ou smartphone) lors de la consultation d’un site internet."
+            "p1": "Un cookie est un petit fichier texte déposé sur votre terminal (ordinateur, tablette ou smartphone) lors de la consultation d’un service en ligne."
           },
           "usage": {
             "title": "Utilisation des cookies",

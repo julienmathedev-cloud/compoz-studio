@@ -11,7 +11,7 @@
  * - UI-only : aucun style inline, tout vient du skin via `ui`.
  * - Défensif : ignore les images sans src.
  * - Index fiable : on filtre AVANT le render.
- * - Reveal : activé par défaut (V0.5).
+ * - Reveal : activable/désactivable via prop.
  */
 
 import { useCallback, useMemo, useState } from "react";
@@ -30,6 +30,7 @@ export type SiteGalleryZoomListProps = Readonly<{
   ui: SiteZoomGalleryUi;
   columns: number;
   priority?: boolean;
+  reveal?: boolean;
   onOpenAtIndex?: (index: number) => void;
 }>;
 
@@ -47,6 +48,7 @@ export function SiteGalleryZoomList({
   ui,
   columns,
   priority = false,
+  reveal = true,
   onOpenAtIndex,
 }: SiteGalleryZoomListProps) {
   const normalizedImages = useMemo<readonly NormalizedImage[]>(() => {
@@ -106,7 +108,7 @@ export function SiteGalleryZoomList({
 
   return (
     <>
-      <ul className={cn(ui.list)}>
+      <ul className={cn(ui.list)} data-reveal={reveal ? "true" : "false"}>
         {normalizedImages.map((img, index) => {
           const seed = index % cols;
           const isExpanded = openIndex === index;
@@ -146,9 +148,13 @@ export function SiteGalleryZoomList({
 
           return (
             <li key={img.id}>
-              <SiteReveal seedOrder={seed} staggerMs={60} amount={0.1}>
-                {item}
-              </SiteReveal>
+              {reveal ? (
+                <SiteReveal seedOrder={seed} staggerMs={60} amount={0.1}>
+                  {item}
+                </SiteReveal>
+              ) : (
+                item
+              )}
             </li>
           );
         })}

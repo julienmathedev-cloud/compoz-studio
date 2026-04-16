@@ -245,7 +245,6 @@ export function RichTextContentEditor({
   hint,
   className,
 }: RichTextContentEditorProps) {
-  console.log("TIPTAP value", value);
   const extensions = useMemo(() => buildExtensions(), []);
 
   const t = useTranslations();
@@ -294,8 +293,6 @@ export function RichTextContentEditor({
       const nextHtml = cleanupRichTextHtml(editor.getHTML());
       const currentValue = String(value ?? "");
 
-      console.log("TIPTAP getHTML()", nextHtml);
-
       if (nextHtml === currentValue) return;
 
       onChange(nextHtml);
@@ -322,9 +319,8 @@ export function RichTextContentEditor({
     if (!editor) return;
 
     const current = cleanupRichTextHtml(editor.getHTML());
-    console.log("TIPTAP current useEffect", current);
+
     const next = cleanupRichTextHtml(value || "");
-    console.log("TIPTAP next useEffect", next);
 
     const currentNorm = normalizeRichTextHtmlForCompare(current);
     const nextNorm = normalizeRichTextHtmlForCompare(next);

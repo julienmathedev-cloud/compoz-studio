@@ -65,7 +65,7 @@ export function SiteLogo({ identity, ui }: SiteLogoProps) {
   if (disableAllLinks) {
     return (
       <span
-        className={cn(ui.link, "cursor-default")}
+        className={cn(ui.link, "cursor-pointer")}
         aria-disabled="true"
         data-disabled="true"
       >

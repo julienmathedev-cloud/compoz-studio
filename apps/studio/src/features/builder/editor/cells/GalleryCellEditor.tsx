@@ -176,8 +176,8 @@ export function GalleryCellEditor({
       <FormGrid>
         <SelectField
           ids={maxColumnsIds}
-          label={t("studio.galleryCellEditor.maxColumns.label")}
-          help={t("studio.galleryCellEditor.maxColumns.help")}
+          label={t("studio.cellEditorTabs.galleryCellEditor.maxColumns.label")}
+          help={t("studio.cellEditorTabs.galleryCellEditor.maxColumns.help")}
           disabled={disabled}
           value={maxColumnsSelectValue}
           items={MAX_COLUMNS_ITEMS}
@@ -190,8 +190,10 @@ export function GalleryCellEditor({
 
         <SwitchField
           ids={linksEnabledIds}
-          label={t("studio.galleryCellEditor.linksEnabled.label")}
-          help={t("studio.galleryCellEditor.linksEnabled.help")}
+          label={t(
+            "studio.cellEditorTabs.galleryCellEditor.linksEnabled.label",
+          )}
+          help={t("studio.cellEditorTabs.galleryCellEditor.linksEnabled.help")}
           checked={linksEnabled}
           disabled={disabled}
           onCheckedChange={(checked) => {
@@ -210,8 +212,8 @@ export function GalleryCellEditor({
 
         <SwitchField
           ids={revealIds}
-          label={t("studio.galleryCellEditor.reveal.label")}
-          help={t("studio.galleryCellEditor.reveal.help")}
+          label={t("studio.cellEditorTabs.galleryCellEditor.reveal.label")}
+          help={t("studio.cellEditorTabs.galleryCellEditor.reveal.help")}
           checked={
             typeof revealCtrl.field.value === "boolean"
               ? revealCtrl.field.value

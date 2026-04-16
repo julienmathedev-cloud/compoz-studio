@@ -5,7 +5,8 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "migrate:default-to-demo": "tsx src/scripts/migrate-default-to-demo.ts"
   },
   "dependencies": {
     "@compoz/core": "workspace:*",

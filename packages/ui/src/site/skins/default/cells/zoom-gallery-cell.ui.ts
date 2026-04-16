@@ -41,14 +41,13 @@ export const defaultZoomGalleryUi: SiteZoomGalleryUi = {
   figure:
     "group relative w-full aspect-square overflow-hidden rounded-lg bg-muted",
 
-  image:
-    "absolute inset-0 h-full w-full object-cover motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:group-hover:scale-[1.02]",
+  image: "absolute inset-0 h-full w-full object-cover",
 
   overlayPanel:
-    "absolute inset-0 flex items-end p-4 bg-gradient-to-t from-black/60 to-black/0 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 motion-safe:transition-opacity [@media(hover:none)]:opacity-100 motion-safe:group-hover:[will-change:opacity] motion-reduce:transition-none",
+    "absolute inset-x-0 bottom-0 flex items-end p-4 bg-popover/90 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 motion-safe:transition-opacity motion-safe:duration-200 motion-safe:ease-out",
 
   overlayContent:
-    "pointer-events-none text-white text-2xl font-bold leading-tight",
+    "pointer-events-none text-popover-foreground text-xl font-semibold leading-tight",
 
   lightbox: defaultLightboxUi,
 } as const;

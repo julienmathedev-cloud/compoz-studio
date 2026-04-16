@@ -104,6 +104,7 @@ export function SitePrimaryMenu({
                 blurClassName={blurClassName}
                 itemContainerClass={ui.interactive}
                 itemLinkClass={ui.link}
+                itemLabelClass={ui.label}
                 panelClass={ui.dropdownPanel}
               />
             ) : (
@@ -114,6 +115,7 @@ export function SitePrimaryMenu({
                 newTab={Boolean(item.newTab)}
                 className={cn(ui.interactive)}
                 linkClassName={cn(ui.link)}
+                labelClassName={cn(ui.label)}
               />
             )}
           </li>

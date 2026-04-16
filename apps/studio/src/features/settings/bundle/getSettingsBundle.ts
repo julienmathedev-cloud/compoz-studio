@@ -46,10 +46,6 @@ export async function getSettingsBundle(
         throw new Error("settings-bundle: missing dto.settings");
       }
 
-      console.log("[getSettingsBundle] state", state);
-      console.log("[getSettingsBundle] footer", dto.settings.footer);
-      console.log("[getSettingsBundle] theme", dto.settings.theme);
-
       return dto.settings as SiteSettings;
     },
   });

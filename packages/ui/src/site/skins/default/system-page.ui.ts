@@ -23,7 +23,6 @@ export const defaultSystemPageUi: SiteSystemPageUi = {
 
   actions: "flex flex-wrap items-center gap-3 pt-4",
 
-  // ✅ PRM : transition + hover uniquement si motion autorisé
   button:
-    "inline-flex items-center rounded-md border border-border bg-background px-4 py-2 text-sm font-medium motion-safe:transition-colors motion-safe:duration-200 motion-safe:hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    "inline-flex items-center rounded-md border border-border bg-background px-4 py-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
 } as const;

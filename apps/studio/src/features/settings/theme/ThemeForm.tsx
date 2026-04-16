@@ -226,8 +226,10 @@ export function ThemeForm({
                   <SwitchField
                     ids={enableDarkModeIds}
                     label={t("studio.themeForm.enableDarkMode.label")}
-                    help={t("studio.themeForm.enableDarkMode.help")}
-                    checked={Boolean(field.value)}
+                    //help={t("studio.themeForm.enableDarkMode.help")}
+                    help={t("common.availableInNextVersion")}
+                    //checked={Boolean(field.value)}
+                    checked={false}
                     onCheckedChange={(v) => field.onChange(toBool(v))}
                     disabled={disabledControls}
                   />
@@ -284,7 +286,8 @@ export function ThemeForm({
                           variant={field.value === item ? "default" : "ghost"}
                           visualMode="studio"
                           onClick={() => field.onChange(item)}
-                          disabled={disabledControls}
+                          //disabled={disabledControls}
+                          disabled={true}
                         >
                           {t(`studio.themeForm.mode.items.${item}`)}
                         </Button>
@@ -292,7 +295,8 @@ export function ThemeForm({
                     </div>
 
                     <p className="text-muted-foreground text-xs">
-                      {t("studio.themeForm.mode.help")}
+                      {/* {t("studio.themeForm.mode.help")} */}
+                      {t("common.availableInNextVersion")}
                     </p>
                   </div>
                 )}

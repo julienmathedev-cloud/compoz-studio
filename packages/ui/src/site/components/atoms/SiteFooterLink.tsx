@@ -97,7 +97,7 @@ export function SiteFooterLink({
 
   if (rawExternal) {
     return (
-      <div className={cn(className, "cursor-pointer")}>
+      <div className={cn(className)}>
         <a
           href={normalizedHref}
           aria-label={ariaLabel}

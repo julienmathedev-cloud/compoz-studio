@@ -74,6 +74,7 @@ export function ButtonsCellRenderer({ cell, ui }: ButtonsCellRendererProps) {
               label={label}
               href={href}
               variant={variant}
+              className={ui.button}
             />
           );
         })}

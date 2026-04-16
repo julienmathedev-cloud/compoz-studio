@@ -11,7 +11,9 @@
  * - Respecte `prefers-reduced-motion` via `getScrollBehavior()`.
  * - Évite `scrollIntoView()` car celui-ci ne permet pas de gérer proprement
  *   un offset de header sticky/global.
- * - Prévu pour les scrolls "page" sur `window`, pas pour un conteneur custom.
+ * - Supporte à la fois :
+ *   - les scrolls portés par `window`
+ *   - les scrolls portés par un conteneur `[data-scroll-root]`
  */
 
 import { getScrollBehavior } from "@compoz/ui/lib/getScrollBehavior";
@@ -52,6 +54,31 @@ export type ScrollToElementOptions = Readonly<{
   block?: ScrollToElementBlock;
 }>;
 
+type ScrollRoot = Window | HTMLElement;
+
+/**
+ * Résout la racine de scroll principale de la page.
+ *
+ * @returns
+ * - le conteneur `[data-scroll-root]` s’il existe ;
+ * - sinon `window`.
+ */
+function getScrollRoot(): ScrollRoot {
+  if (typeof document === "undefined") {
+    return window;
+  }
+
+  const root = document.querySelector<HTMLElement>("[data-scroll-root]");
+  return root ?? window;
+}
+
+/**
+ * Indique si la racine de scroll est `window`.
+ */
+function isWindowScrollRoot(root: ScrollRoot): root is Window {
+  return typeof Window !== "undefined" && root instanceof Window;
+}
+
 /**
  * Lit la hauteur du header sticky depuis la variable CSS `--header-h`.
  *
@@ -82,7 +109,7 @@ export function getHeaderOffset(): number {
  * @param options Options de scroll.
  *
  * @remarks
- * - Utilise `window.scrollTo()` pour contrôler précisément la position finale.
+ * - Utilise la racine de scroll résolue (`window` ou `[data-scroll-root]`).
  * - Clamp la cible à `0` pour éviter les positions négatives.
  */
 export function scrollToElement(
@@ -95,19 +122,42 @@ export function scrollToElement(
   const behavior = options?.behavior ?? getScrollBehavior();
   const offset = options?.offset ?? getHeaderOffset();
   const block = options?.block ?? "start";
+  const root = getScrollRoot();
 
-  const rect = element.getBoundingClientRect();
-  const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+  const elementRect = element.getBoundingClientRect();
 
-  let nextTop = rect.top + scrollTop;
+  if (isWindowScrollRoot(root)) {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+
+    let nextTop = elementRect.top + scrollTop;
+
+    if (block === "center") {
+      nextTop = nextTop - window.innerHeight / 2 + elementRect.height / 2;
+    }
+
+    nextTop = Math.max(0, nextTop - offset);
+
+    window.scrollTo({
+      top: nextTop,
+      left: 0,
+      behavior,
+    });
+
+    return;
+  }
+
+  const rootRect = root.getBoundingClientRect();
+  const currentScrollTop = root.scrollTop;
+
+  let nextTop = elementRect.top - rootRect.top + currentScrollTop;
 
   if (block === "center") {
-    nextTop = nextTop - window.innerHeight / 2 + rect.height / 2;
+    nextTop = nextTop - root.clientHeight / 2 + elementRect.height / 2;
   }
 
   nextTop = Math.max(0, nextTop - offset);
 
-  window.scrollTo({
+  root.scrollTo({
     top: nextTop,
     left: 0,
     behavior,

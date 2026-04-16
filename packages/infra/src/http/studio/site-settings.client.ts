@@ -80,12 +80,6 @@ async function patchResponse<TResponse, TPayload>(
 
   const json = await assertJsonResponse(res, ctx);
 
-  console.log("[settings.client.patchResponse]", {
-    endpoint,
-    payload,
-    json,
-  });
-
   return json;
 }
 

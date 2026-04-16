@@ -16,6 +16,8 @@ export const defaultBlockSectionUi: SiteBlockSectionUi = {
   containerContained: "w-full mx-auto max-w-screen-xl px-3 md:px-4 lg:px-6",
   containerFullBleed: "w-full",
 
+  sectionSpacingContained: "py-6 md:py-12 lg:py-18",
+
   // Espacement entre les rows d’un même block
   rows: "space-y-6 md:space-y-8",
 
@@ -33,4 +35,6 @@ export const defaultBlockSectionUi: SiteBlockSectionUi = {
   column: "flex min-w-0 flex-col gap-3 md:gap-4",
 
   cell: "min-w-0",
+  backgroundOdd: "",
+  backgroundEven: "",
 } as const;

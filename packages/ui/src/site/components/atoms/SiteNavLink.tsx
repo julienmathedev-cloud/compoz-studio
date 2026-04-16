@@ -44,6 +44,7 @@ export type SiteNavLinkProps = Readonly<
     activeMode?: "startsWith" | "exact";
     className?: string;
     linkClassName?: string;
+    labelClassName?: string;
     externalTarget?: "_blank";
     externalRel?: string;
   }
@@ -57,6 +58,7 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
       ariaLabel,
       className,
       linkClassName,
+      labelClassName,
       newTab = false,
       prefetch = true,
       showNewTabHint,
@@ -107,7 +109,7 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
         data-disabled="true"
         tabIndex={-1}
       >
-        {content}
+        <span className={cn(labelClassName)}>{content}</span>
       </span>
     );
 
@@ -131,7 +133,7 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
             className={cn(linkClassName)}
             {...rest}
           >
-            {content}
+            <span className={cn(labelClassName)}>{content}</span>
           </a>
         </div>
       );
@@ -150,7 +152,7 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
             data-external="true"
             {...rest}
           >
-            {content}
+            <span className={cn(labelClassName)}>{content}</span>
           </a>
         </div>
       );
@@ -187,7 +189,7 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
             onClick?.(event);
           }}
         >
-          {content}
+          <span className={cn(labelClassName)}>{content}</span>
         </Link>
       </div>
     );

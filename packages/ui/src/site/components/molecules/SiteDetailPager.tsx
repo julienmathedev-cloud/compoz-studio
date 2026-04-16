@@ -63,6 +63,7 @@ export function SiteDetailPager({
           href={prev!.href}
           ariaLabel={prevAria}
           linkClassName={cn(ui.link)}
+          labelClassName={cn(ui.wrapper)}
         >
           <ArrowLeft aria-hidden="true" className={cn(ui.icon)} />
           <span className={cn(ui.label)}>{prevLabel}</span>
@@ -77,6 +78,7 @@ export function SiteDetailPager({
           href={next!.href}
           ariaLabel={nextAria}
           linkClassName={cn(ui.link)}
+          labelClassName={cn(ui.wrapper)}
         >
           <span className={cn(ui.label)}>{nextLabel}</span>
           <ArrowRight aria-hidden="true" className={cn(ui.icon)} />

@@ -48,12 +48,11 @@ export const defaultHeadingUi: SiteHeadingUi = {
   /* -------------------------------------------------------------------------- */
 
   separator: "w-1/3 bg-border",
-  separatorHero: "w-1/4 bg-primary",
+  separatorHero: "w-1/4 bg-border",
 
   /* -------------------------------------------------------------------------- */
   /* Highlight                                                                  */
   /* -------------------------------------------------------------------------- */
 
-  highlight:
-    "bg-gradient-to-l from-primary to-primary/50 bg-clip-text text-transparent",
+  highlight: "text-primary",
 } as const;

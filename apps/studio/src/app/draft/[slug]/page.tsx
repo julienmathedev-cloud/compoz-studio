@@ -12,8 +12,9 @@ import { notFound, redirect } from "next/navigation";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { DraftPageRenderer } from "@compoz/studio/features/draft/DraftPageRenderer";
 import {
-  getDraftIndex,
-  getDraftPageBySlug,
+  getDraftIndexByTenantId,
+  getDraftPageBySlugByTenantId,
+  getTenantId,
 } from "@compoz/studio/lib/pages/draft-page-loaders";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
@@ -48,7 +49,9 @@ export async function generateMetadata({
   const s = toSlug(slug);
   if (!s || s === HOME_SLUG) return {};
 
-  const page = await getDraftPageBySlug(s);
+  const tenantId = await getTenantId();
+  const page = await getDraftPageBySlugByTenantId(tenantId, s);
+
   if (!page) return {};
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
@@ -73,10 +76,12 @@ export default async function DraftPage({ params }: PageParams) {
   const s = toSlug(slug);
   if (!s || s === HOME_SLUG) redirect("/draft");
 
-  const index = await getDraftIndex();
+  const tenantId = await getTenantId();
+
+  const index = await getDraftIndexByTenantId(tenantId);
   if (!index) notFound();
 
-  const page = await getDraftPageBySlug(s);
+  const page = await getDraftPageBySlugByTenantId(tenantId, s);
   if (!page) notFound();
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])

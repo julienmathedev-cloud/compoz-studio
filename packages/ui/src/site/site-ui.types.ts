@@ -28,9 +28,6 @@ export type SiteGlobalUi = Readonly<{
 
   body: Readonly<{
     surface: string;
-    spacing: string;
-    paddingTop: string;
-    paddingBottom: string;
   }>;
 
   blockSection: SiteBlockSectionUi;
@@ -75,6 +72,7 @@ export type SiteCellsUiOverride = DeepPartial<SiteCellsUi>;
 export type SiteBlockSectionUi = Readonly<{
   containerContained: string;
   containerFullBleed: string;
+  sectionSpacingContained: string;
   rows: string;
   grid: string;
   gridCols: Readonly<{
@@ -84,6 +82,8 @@ export type SiteBlockSectionUi = Readonly<{
   }>;
   column: string;
   cell: string;
+  backgroundOdd: string;
+  backgroundEven: string;
 }>;
 
 export type SiteBlockSectionUiOverride = DeepPartial<SiteBlockSectionUi>;
@@ -172,6 +172,7 @@ export type SiteButtonsUi = Readonly<{
     md: string;
     lg: string;
   }>;
+  button: string;
 }>;
 
 export type SiteButtonsUiOverride = DeepPartial<SiteButtonsUi>;
@@ -489,6 +490,7 @@ export type SitePrimaryMenuUi = Readonly<{
   list: string;
   item: string;
   link: string;
+  label: string;
   interactive: string;
   dropdownPanel: string;
 }>;
@@ -551,6 +553,7 @@ export type SiteLogoUiOverride = DeepPartial<SiteLogoUi>;
 export type SiteDetailPagerUi = Readonly<{
   nav: string;
   link: string;
+  wrapper: string;
   label: string;
   icon: string;
 }>;

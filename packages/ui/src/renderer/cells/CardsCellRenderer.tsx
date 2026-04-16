@@ -10,6 +10,7 @@
  * - Rend une grille de `SiteCard`.
  * - Ignore les items sans titre.
  * - Les colonnes et l’alignement sont pilotés par la cell.
+ * - `reveal` active/désactive l’enrobage `SiteReveal` item par item.
  */
 
 import type { CardsCellShape } from "@compoz/validation/pages/blocks/cells/cell";
@@ -17,6 +18,7 @@ import type { CardsCellShape } from "@compoz/validation/pages/blocks/cells/cell"
 import { renderContentIcon } from "@compoz/ui/lib/icons/content-icons";
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
+import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
 import { SiteCard } from "@compoz/ui/site/components/molecules/SiteCard";
 import type { SiteCardsUi } from "@compoz/ui/site/site-ui.types";
 
@@ -37,17 +39,23 @@ export function CardsCellRenderer({ cell, ui }: CardsCellRendererProps) {
 
   const columns = cell.columns ?? 3;
   const align = cell.align ?? "left";
+  const reveal = cell.reveal === true;
+  const cols = Math.max(1, Math.floor(columns || 1));
 
   return (
-    <div className={ui.root} data-cell="cards">
+    <div
+      className={ui.root}
+      data-cell="cards"
+      data-reveal={reveal ? "true" : "false"}
+    >
       <div className={cn(ui.grid, ui.columns[columns])}>
-        {items.map((item) => {
+        {items.map((item, index) => {
           const title = normalizeString(item.title, "");
           const description = normalizeString(item.description, "");
+          const seed = index % cols;
 
-          return (
+          const card = (
             <SiteCard
-              key={item.id}
               title={title}
               description={description}
               icon={
@@ -58,6 +66,23 @@ export function CardsCellRenderer({ cell, ui }: CardsCellRendererProps) {
               align={align}
               ui={ui}
             />
+          );
+
+          return (
+            <div key={item.id}>
+              {reveal ? (
+                <SiteReveal
+                  seedOrder={seed}
+                  staggerMs={60}
+                  amount={0.1}
+                  className={cn(ui.content)}
+                >
+                  {card}
+                </SiteReveal>
+              ) : (
+                card
+              )}
+            </div>
           );
         })}
       </div>

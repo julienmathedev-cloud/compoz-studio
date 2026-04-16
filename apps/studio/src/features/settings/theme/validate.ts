@@ -10,6 +10,8 @@
  * @remarks
  * - Validation métier assurée par le domaine (Zod + use-cases serveur).
  * - Ici : UX uniquement (warnings légers de contraste).
+ * - Le contrat reste volontairement simple pour s’aligner
+ *   sur le socle commun de warnings Studio.
  */
 
 import { useMemo } from "react";
@@ -89,7 +91,10 @@ function isContrastInsufficient(
   minRatio = 4.5,
 ): boolean {
   const ratio = contrastRatio(fg, bg);
-  if (ratio == null) return false;
+
+  if (ratio == null) {
+    return false;
+  }
 
   return ratio < minRatio;
 }
@@ -101,7 +106,6 @@ export function computeThemeWarnings(
   mode: "light" | "dark",
 ): ThemeWarningKey[] {
   const out = new Set<ThemeWarningKey>();
-
   const tokens = mode === "dark" ? values.darkTokens : values.lightTokens;
 
   if (isContrastInsufficient(tokens.foreground, tokens.background)) {

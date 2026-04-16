@@ -18,6 +18,7 @@ import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 export type BlockRenderer = ComponentType<{
   block: BlockShape;
+  index?: number;
   variant?: "site" | "preview";
   blockUi: SiteBlockSectionUi;
   cellsUi: SiteCellsUi;

@@ -1,21 +1,20 @@
 /**
  * @file apps/site/src/app/manifest.ts
  * @layer site/app
- *
- * @description
- * Web manifest dynamique du site public publié.
- *
- * @remarks
- * - Multi-tenant : résolu à partir des settings publiés du tenant courant.
- * - Utilise l’identité publiée (nom, favicon).
- * - Fournit un fallback safe si aucun settings publié n’est disponible.
  */
 
 import type { MetadataRoute } from "next";
 
-import { getPublishedSettings } from "@compoz/site/lib/pages/published-page-loaders";
+import {
+  getPublishedSettingsByTenantId,
+  getTenantId,
+} from "@compoz/site/lib/pages/published-page-loaders";
 import { resolveSiteBaseUrl } from "@compoz/site/lib/seo/resolveSiteBaseUrl";
 import { resolveIconHref } from "@compoz/ui/lib/seo/metadata-helpers";
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
 
 function buildManifestIcons(favicon: string): MetadataRoute.Manifest["icons"] {
   if (favicon.includes("-32.png")) {
@@ -47,8 +46,13 @@ function buildManifestIcons(favicon: string): MetadataRoute.Manifest["icons"] {
   ];
 }
 
+/* -------------------------------------------------------------------------- */
+/* Manifest                                                                   */
+/* -------------------------------------------------------------------------- */
+
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
-  const settings = await getPublishedSettings();
+  const tenantId = await getTenantId();
+  const settings = await getPublishedSettingsByTenantId(tenantId);
 
   if (!settings) {
     return {
@@ -64,11 +68,13 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   }
 
   const siteName = (settings.identity?.siteName ?? "").trim() || "Site";
+
   const description =
     (settings.seo?.defaultDescription ?? "").trim() ||
     `${siteName} — Site officiel.`;
 
   const favicon = resolveIconHref(settings.identity?.faviconUrl);
+
   const metadataBase = resolveSiteBaseUrl(settings.seo?.baseUrl);
 
   return {

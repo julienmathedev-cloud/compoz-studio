@@ -8,13 +8,11 @@
  * - résolution slug -> pageId via helpers core
  *
  * ✅ Multi-tenant (Studio)
- * - Le tenant est résolu via la session (auth) :
- *   - user normal : defaultTenantId
- *   - admin : cookie "tenant actif" (si défini) sinon defaultTenantId
+ * - Le tenant est résolu via la session
  *
  * @remarks
- * - Dépend volontairement de React (`cache`) et du runtime server.
- * - Ne doit pas aller dans `@compoz/core`.
+ * - API principale : fonctions `...ByTenantId`
+ * - Les fonctions sans suffixe sont des façades
  */
 
 import "server-only";
@@ -29,7 +27,7 @@ import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { toSlug } from "@compoz/ui/lib/routing/slug";
 
 /* -------------------------------------------------------------------------- */
-/* Tenant resolution (via session)                                            */
+/* Tenant resolution                                                          */
 /* -------------------------------------------------------------------------- */
 
 export const getTenantId = cache(async (): Promise<string> => {
@@ -38,7 +36,7 @@ export const getTenantId = cache(async (): Promise<string> => {
 });
 
 /* -------------------------------------------------------------------------- */
-/* Internal cached loaders (tenant-aware)                                     */
+/* Internal cached loaders                                                    */
 /* -------------------------------------------------------------------------- */
 
 const getSiteRepoCached = cache(async (tenantId: string) => {
@@ -67,11 +65,13 @@ const readDraftPageByIdCached = cache(
 );
 
 /* -------------------------------------------------------------------------- */
-/* Helpers                                                                     */
+/* Core helpers (tenant explicite)                                            */
 /* -------------------------------------------------------------------------- */
-async function getDraftPageByResolvedSlug(slug: string) {
-  const tenantId = await getTenantId();
 
+async function getDraftPageByResolvedSlugForTenant(
+  tenantId: string,
+  slug: string,
+) {
   const index = await readDraftIndexCached(tenantId);
   if (!index) return null;
 
@@ -82,26 +82,27 @@ async function getDraftPageByResolvedSlug(slug: string) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Public loaders                                                              */
+/* Public API (tenant explicite)                                              */
 /* -------------------------------------------------------------------------- */
 
-export async function getDraftSettings() {
-  const tenantId = await getTenantId();
+export async function getDraftSettingsByTenantId(tenantId: string) {
   return readDraftSettingsCached(tenantId);
 }
 
-export async function getDraftIndex() {
-  const tenantId = await getTenantId();
+export async function getDraftIndexByTenantId(tenantId: string) {
   return readDraftIndexCached(tenantId);
 }
 
-export async function getDraftPageBySlug(slug: string) {
+export async function getDraftPageBySlugByTenantId(
+  tenantId: string,
+  slug: string,
+) {
   const s = toSlug(slug);
   if (!s || s === HOME_SLUG) return null;
 
-  return getDraftPageByResolvedSlug(s);
+  return getDraftPageByResolvedSlugForTenant(tenantId, s);
 }
 
-export async function getDraftHomePage() {
-  return getDraftPageByResolvedSlug(HOME_SLUG);
+export async function getDraftHomePageByTenantId(tenantId: string) {
+  return getDraftPageByResolvedSlugForTenant(tenantId, HOME_SLUG);
 }

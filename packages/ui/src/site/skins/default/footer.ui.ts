@@ -13,7 +13,7 @@ export const defaultFooterUi: SiteFooterUi = {
   footer: "w-full border-t border-border bg-chrome",
 
   footerContainer:
-    "mx-auto max-w-screen-xl px-1 py-1 md:px-2 md:py-2 grid grid-cols-1 lg:[grid-template-columns:1fr_auto_1fr] items-center gap-4 text-sm",
+    "mx-auto max-w-screen-xl px-2 py-1 md:px-4 md:py-2 grid grid-cols-1 lg:[grid-template-columns:1fr_auto_1fr] items-center gap-4 text-sm",
   // Centré sur desktop
   copyright:
     "lg:col-start-2 justify-self-center text-center text-muted-foreground",

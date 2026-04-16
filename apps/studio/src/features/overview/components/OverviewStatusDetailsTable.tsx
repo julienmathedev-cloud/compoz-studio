@@ -232,8 +232,6 @@ function BlocksDetailsRows({
 }: Readonly<{ page: SiteStatusPageDetailsDTO }>) {
   const t = useTranslations();
   const { blocks, isLoading, isFetching } = useListPageBlocks(page.id);
-  console.log("isFetching", isFetching);
-  console.log("blocks", blocks);
 
   const diffByBlockId = useMemo<
     Readonly<Record<string, SiteDiffKindDTO>>

@@ -31,6 +31,7 @@ import type { ReactNode } from "react";
 
 export type SectionRendererProps = Readonly<{
   block: SectionBlockShape;
+  index?: number;
   variant?: "site" | "preview";
   className?: string;
   blockUi: SiteBlockSectionUi;
@@ -45,6 +46,7 @@ type CellPosition = Readonly<{
 
 export function SectionBlockRenderer({
   block,
+  index = 0,
   variant = "site",
   className,
   blockUi,
@@ -57,66 +59,79 @@ export function SectionBlockRenderer({
       ? blockUi.containerFullBleed
       : blockUi.containerContained;
 
+  const backgroundClass =
+    index % 2 === 0 ? blockUi.backgroundEven : blockUi.backgroundOdd;
+
+  const spacingClass =
+    containerMode === "fullBleed" ? undefined : blockUi.sectionSpacingContained;
+
   const lcpTarget = block.lcpPriority
     ? findFirstMediaCellPosition(block)
     : null;
 
   return (
     <section
-      className={cn(containerClass, className)}
+      className={cn(backgroundClass)}
       data-block="section"
       data-variant={variant}
       data-container={containerMode}
+      data-block-index={index}
     >
-      <div className={cn(blockUi.rows)}>
-        {block.rows.map((row, rowIndex) => {
-          const colsKey = row.columnsCount as 1 | 2 | 3;
-          const colsClass = blockUi.gridCols[colsKey];
+      <div className={cn(containerClass, spacingClass, className)}>
+        <div className={cn(blockUi.rows)}>
+          {block.rows.map((row, rowIndex) => {
+            const colsKey = row.columnsCount as 1 | 2 | 3;
+            const colsClass = blockUi.gridCols[colsKey];
 
-          return (
-            <div key={row.id} className={cn(blockUi.grid, colsClass)} data-row>
-              {row.columns.map((column, colIndex) => {
-                const columnOrderClass = getColumnOrderClass(row, colIndex);
+            return (
+              <div
+                key={row.id}
+                className={cn(blockUi.grid, colsClass)}
+                data-row
+              >
+                {row.columns.map((column, colIndex) => {
+                  const columnOrderClass = getColumnOrderClass(row, colIndex);
 
-                return (
-                  <div
-                    key={column.id}
-                    className={cn(blockUi.column, columnOrderClass)}
-                    data-column
-                  >
-                    {column.cells.map((cell, cellIndex) => {
-                      const isLcpMedia =
-                        lcpTarget !== null &&
-                        lcpTarget.rowIndex === rowIndex &&
-                        lcpTarget.colIndex === colIndex &&
-                        lcpTarget.cellIndex === cellIndex;
+                  return (
+                    <div
+                      key={column.id}
+                      className={cn(blockUi.column, columnOrderClass)}
+                      data-column
+                    >
+                      {column.cells.map((cell, cellIndex) => {
+                        const isLcpMedia =
+                          lcpTarget !== null &&
+                          lcpTarget.rowIndex === rowIndex &&
+                          lcpTarget.colIndex === colIndex &&
+                          lcpTarget.cellIndex === cellIndex;
 
-                      return (
-                        <div
-                          key={cell.id}
-                          data-cell-id={cell.id}
-                          data-cell-kind={cell.kind}
-                          className={cn(
-                            blockUi.cell,
-                            "relative",
-                            getSpacerWrapperVisibilityClass(cell),
-                          )}
-                        >
-                          {renderCellFromRegistry(
-                            cell,
-                            containerMode === "fullBleed",
-                            cellsUi,
-                            isLcpMedia,
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
+                        return (
+                          <div
+                            key={cell.id}
+                            data-cell-id={cell.id}
+                            data-cell-kind={cell.kind}
+                            className={cn(
+                              blockUi.cell,
+                              "relative",
+                              getSpacerWrapperVisibilityClass(cell),
+                            )}
+                          >
+                            {renderCellFromRegistry(
+                              cell,
+                              containerMode === "fullBleed",
+                              cellsUi,
+                              isLcpMedia,
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

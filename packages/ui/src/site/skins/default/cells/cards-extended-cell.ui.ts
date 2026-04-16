@@ -24,7 +24,7 @@ export const defaultCardsExtendedUi: SiteCardsExtendedUi = {
     center: "items-center text-center",
   },
 
-  card: "h-full border border-border ring-0 shadow-border shadow-xs transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-[1.01] hover:shadow-sm hover:border-primary",
+  card: "h-full border border-border shadow-xs",
 
   header: "flex flex-col",
 

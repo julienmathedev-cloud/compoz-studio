@@ -13,7 +13,7 @@
 /**
  * Tenant seed source de vérité utilisé pour cloner une sandbox démo.
  */
-export const DEMO_SEED_TENANT_ID = "default" as const;
+export const DEMO_SEED_TENANT_ID = "demo" as const;
 
 /**
  * Cookie permettant d’identifier l’instance sandbox associée au visiteur.

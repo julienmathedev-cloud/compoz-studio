@@ -18,16 +18,4 @@ import { lolaMobileMenuUi } from "@compoz/ui/site/skins/lola/mobile-menu.ui";
 import { lolaPrimaryMenuUi } from "@compoz/ui/site/skins/lola/primary-menu.ui";
 import { lolaSocialMenuUi } from "@compoz/ui/site/skins/lola/social-menu.ui";
 
-export const lolaHeaderUi: SiteHeaderUiOverride = {
-  header: {
-    base: "border-b border-zinc-100 bg-white motion-safe:transition-colors motion-safe:duration-300 min-h-[50px]",
-    blur: "supports-[backdrop-filter]:backdrop-blur-md supports-[backdrop-filter]:bg-white/60",
-  },
-
-  nav: "inline-flex items-center gap-4 md:gap-7 lg:gap-10",
-
-  logo: lolaLogoUi,
-  mobileMenu: lolaMobileMenuUi,
-  menu: lolaPrimaryMenuUi,
-  social: lolaSocialMenuUi,
-} as const;
+export const lolaHeaderUi: SiteHeaderUiOverride = {} as const;

@@ -13,9 +13,4 @@
 import type { SiteFooterUiOverride } from "@compoz/ui/site/site-ui.types";
 import { lolaLegalMenuUi } from "@compoz/ui/site/skins/lola/legal-menu.ui";
 
-export const lolaFooterUi: SiteFooterUiOverride = {
-  // Surface full width (border + fond éventuel)
-  footer: "w-full border-t border-zinc-100 bg-white/80",
-
-  legalMenu: lolaLegalMenuUi,
-} as const;
+export const lolaFooterUi: SiteFooterUiOverride = {} as const;

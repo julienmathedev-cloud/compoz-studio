@@ -100,7 +100,6 @@ function normalizeColumn(
 function normalizeColumnForValidation(
   column: SectionColumnFormValues | undefined,
 ): SectionColumnFormValues {
-  console.log("debut normalizeColumnForValidation", column);
   return {
     id: normalizeColumnId(column?.id),
     cells: toMutable(column?.cells).map(toCellFormValuesForValidation),
@@ -130,7 +129,6 @@ function normalizeColumnsForValidation(
   columns: ReadonlyArray<SectionColumnFormValues> | undefined,
   columnsCount: 1 | 2 | 3,
 ): SectionColumnFormValues[] {
-  console.log("debut normalizeColumnsForValidation", columns);
   const safeColumns = toMutable(columns).map(normalizeColumnForValidation);
 
   if (safeColumns.length === columnsCount) {
@@ -163,7 +161,6 @@ function normalizeRow(
 function normalizeRowForValidation(
   row: SectionRowFormValues | undefined,
 ): SectionRowFormValues {
-  console.log("debut normalizeRowForValidation", row);
   const columnsCount =
     row?.columnsCount === 2 || row?.columnsCount === 3 ? row.columnsCount : 1;
 
@@ -188,7 +185,6 @@ function normalizeRows(
 function normalizeRowsForValidation(
   rows: ReadonlyArray<SectionRowFormValues> | undefined,
 ): SectionRowFormValues[] {
-  console.log("debut normalizeRowsForValidation", rows);
   if (!Array.isArray(rows) || rows.length === 0) {
     return [createEmptyRow()];
   }
@@ -260,7 +256,6 @@ export function normalizeSectionBlockFormValues(
 export function normalizeSectionBlockFormValuesForValidation(
   values: SectionBlockFormValues,
 ): SectionBlockFormValues {
-  console.log("debut normalizeSectionBlockFormValuesForValidation", values);
   return {
     name: normalizeName(values.name),
     containerMode: normalizeContainerMode(values.containerMode),

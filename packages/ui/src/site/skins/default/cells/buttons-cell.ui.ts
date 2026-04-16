@@ -21,4 +21,5 @@ export const defaultButtonsUi: SiteButtonsUi = {
     md: "gap-6",
     lg: "gap-12",
   },
+  button: "",
 } as const;

@@ -85,8 +85,6 @@ export function SiteCarouselItem({
     );
   }
 
-  console.log("carousel structuredCard item", item);
-
   return (
     <div className={contentStateClassName}>
       <SiteStructuredCard

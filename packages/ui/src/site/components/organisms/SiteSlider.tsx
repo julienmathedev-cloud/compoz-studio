@@ -13,7 +13,7 @@ import "keen-slider/keen-slider.min.css";
 
 import { useKeenSlider } from "keen-slider/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@compoz/ui/components/ui/button";
 import { cn } from "@compoz/ui/lib/utils";
@@ -30,6 +30,11 @@ export type SiteSliderProps = Readonly<{
   priority?: boolean;
 }>;
 
+function shouldNormalizeLoopAbsIndex(abs: number, count: number): boolean {
+  if (count <= 1) return false;
+  return Math.abs(abs) >= count;
+}
+
 export function SiteSlider({
   items,
   ui,
@@ -40,6 +45,8 @@ export function SiteSlider({
 }: SiteSliderProps) {
   const count = items.length;
   const [currentSlide, setCurrentSlide] = useState<number>(0);
+  const isAnimatingRef = useRef(false);
+  const isRebasingRef = useRef(false);
 
   const hasVisibleArrows = showArrows && count > 1;
 
@@ -49,8 +56,39 @@ export function SiteSlider({
 
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
     loop: count > 1,
+    created: (slider) => {
+      isAnimatingRef.current = false;
+      setCurrentSlide(slider.track.details.rel);
+    },
     slideChanged: (slider) => {
       setCurrentSlide(slider.track.details.rel);
+    },
+    animationStarted: () => {
+      isAnimatingRef.current = true;
+    },
+    animationEnded: (slider) => {
+      isAnimatingRef.current = false;
+
+      const rel = slider.track.details.rel;
+      const abs = slider.track.details.abs;
+
+      if (isRebasingRef.current) {
+        return;
+      }
+
+      if (!shouldNormalizeLoopAbsIndex(abs, count)) {
+        return;
+      }
+
+      isRebasingRef.current = true;
+
+      requestAnimationFrame(() => {
+        slider.moveToIdx(rel, true, { duration: 0 });
+
+        requestAnimationFrame(() => {
+          isRebasingRef.current = false;
+        });
+      });
     },
     slides: {
       origin: "center",
@@ -79,25 +117,59 @@ export function SiteSlider({
 
     const raf = requestAnimationFrame(() => {
       slider.update();
-
-      const maxIndex = Math.max(0, count - 1);
-      const nextIndex = Math.min(currentSlide, maxIndex);
-
-      if (nextIndex !== currentSlide) {
-        setCurrentSlide(nextIndex);
-      }
-
-      slider.moveToIdx(nextIndex, true, { duration: 0 });
+      setCurrentSlide(slider.track.details.rel);
+      isAnimatingRef.current = false;
+      isRebasingRef.current = false;
     });
 
     return () => {
       cancelAnimationFrame(raf);
     };
-  }, [count, currentSlide, instanceRef, itemsSignature]);
+  }, [count, itemsSignature, instanceRef]);
 
   if (count === 0) {
     return null;
   }
+
+  const handlePrev = () => {
+    const slider = instanceRef.current;
+    if (!slider) return;
+
+    const blocked =
+      isAnimatingRef.current || isRebasingRef.current || slider.animator.active;
+    const abs = slider.track.details.abs;
+    const targetAbs = abs - 1;
+
+    if (blocked) return;
+
+    slider.moveToIdx(targetAbs, true);
+  };
+
+  const handleNext = () => {
+    const slider = instanceRef.current;
+    if (!slider) return;
+
+    const blocked =
+      isAnimatingRef.current || isRebasingRef.current || slider.animator.active;
+    const abs = slider.track.details.abs;
+    const targetAbs = abs + 1;
+
+    if (blocked) return;
+
+    slider.moveToIdx(targetAbs, true);
+  };
+
+  const handleDotClick = (index: number) => {
+    const slider = instanceRef.current;
+    if (!slider) return;
+
+    const blocked =
+      isAnimatingRef.current || isRebasingRef.current || slider.animator.active;
+
+    if (blocked) return;
+
+    slider.moveToIdx(index);
+  };
 
   return (
     <div
@@ -110,7 +182,7 @@ export function SiteSlider({
         <>
           <Button
             size="icon"
-            onClick={() => instanceRef.current?.prev()}
+            onClick={handlePrev}
             aria-label="Slide précédent"
             className={cn(ui.slider.arrowButton, "left-0")}
           >
@@ -119,7 +191,7 @@ export function SiteSlider({
 
           <Button
             size="icon"
-            onClick={() => instanceRef.current?.next()}
+            onClick={handleNext}
             aria-label="Slide suivant"
             className={cn(ui.slider.arrowButton, "right-0")}
           >
@@ -140,6 +212,8 @@ export function SiteSlider({
                 key={item.id}
                 role="group"
                 tabIndex={isActive ? 0 : -1}
+                data-slide-index={index}
+                data-slide-active={isActive ? "true" : "false"}
                 className={cn(
                   "keen-slider__slide",
                   ui.slider.slide,
@@ -174,7 +248,7 @@ export function SiteSlider({
                   ui.slider.dot,
                   isActive ? ui.slider.dotActive : ui.slider.dotInactive,
                 )}
-                onClick={() => instanceRef.current?.moveToIdx(index)}
+                onClick={() => handleDotClick(index)}
               />
             );
           })}

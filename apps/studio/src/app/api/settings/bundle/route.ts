@@ -49,10 +49,6 @@ export async function GET(req: Request) {
       await repo.ensureBase(); // no-op KV, mais garde le contrat (FS en a besoin)
       const settings = await repo.readSettings(state);
 
-      console.log("[api.settings.bundle.GET] state", state);
-      console.log("[api.settings.bundle.GET] settings.footer", settings.footer);
-      console.log("[api.settings.bundle.GET] settings.theme", settings.theme);
-
       const res: GetSettingsBundleResponse = { settings };
       return res;
     });

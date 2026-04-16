@@ -8,14 +8,14 @@
  * @remarks
  * - Aligné visuellement avec le header desktop default.
  * - Surface sobre basée sur les tokens Tailwind/ShadCN.
- * - Micro-interactions cohérentes avec logo / primary / social.
+ * - Interactions discrètes pour rester dans un socle générique.
  */
 
 import type { SiteMobileMenuUi } from "@compoz/ui/site/site-ui.types";
 
 export const defaultMobileMenuUi: SiteMobileMenuUi = {
   triggerButton:
-    "inline-flex h-10 w-10 items-center justify-center rounded-md cursor-pointer motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-out motion-safe:hover:opacity-90 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.98]",
+    "inline-flex h-10 w-10 items-center justify-center rounded-md cursor-pointer",
 
   triggerIcon: "text-foreground",
 
@@ -32,7 +32,7 @@ export const defaultMobileMenuUi: SiteMobileMenuUi = {
   topBar:
     "flex h-[var(--header-h,64px)] shrink-0 items-center border-b border-border px-3 md:px-4 lg:px-6",
   closeButton:
-    "ml-auto inline-flex h-10 w-10 items-center justify-center rounded-md cursor-pointer motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-out motion-safe:hover:opacity-90 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.98] text-foreground",
+    "ml-auto inline-flex h-10 w-10 items-center justify-center rounded-md cursor-pointer text-foreground",
 
   scrollArea:
     "flex-1 overflow-y-auto px-4 pb-[max(env(safe-area-inset-bottom),1rem)]",
@@ -40,8 +40,7 @@ export const defaultMobileMenuUi: SiteMobileMenuUi = {
   list: "flex flex-col gap-1 pt-4",
   item: "w-full",
 
-  interactive:
-    "inline-flex w-full items-center justify-center cursor-pointer motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-out motion-safe:hover:opacity-90 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.98]",
+  interactive: "inline-flex w-full items-center justify-center cursor-pointer",
 
   link: "inline-flex w-full items-center justify-center rounded-md px-3 py-3 text-base font-medium no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background aria-[current=page]:underline aria-[current=page]:decoration-1 aria-[current=page]:underline-offset-4 data-[section-active=true]:underline data-[section-active=true]:decoration-1 data-[section-active=true]:underline-offset-4",
 
@@ -56,13 +55,13 @@ export const defaultMobileMenuUi: SiteMobileMenuUi = {
 
   childItem: "w-full",
   childInteractive:
-    "inline-flex w-full items-center justify-center cursor-pointer motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-out motion-safe:hover:opacity-90 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.98]",
+    "inline-flex w-full items-center justify-center cursor-pointer",
 
   socialsRow:
     "mt-6 flex items-center justify-center gap-3 border-t border-border pt-5",
 
   socialLink:
-    "inline-flex items-center justify-center rounded-md p-2 cursor-pointer motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-out motion-safe:hover:opacity-90 motion-safe:hover:scale-[1.03] motion-safe:active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    "inline-flex items-center justify-center rounded-md p-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
 
   socialIcon: "h-5 w-5 text-foreground",
 

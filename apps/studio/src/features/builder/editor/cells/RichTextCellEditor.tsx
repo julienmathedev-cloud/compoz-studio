@@ -65,7 +65,6 @@ export function RichTextCellEditor({
 
   const revealIds = createFieldIds(idPrefix, "reveal");
 
-  console.log("TIPTAP CellEditor value", contentCtrl.field.value);
   return (
     <div className={cn(STACK_MD)}>
       <SwitchField
@@ -74,7 +73,7 @@ export function RichTextCellEditor({
         checked={
           typeof revealCtrl.field.value === "boolean"
             ? revealCtrl.field.value
-            : true
+            : false
         }
         onCheckedChange={revealCtrl.field.onChange}
         disabled={disabled}

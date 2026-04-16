@@ -10,12 +10,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
-import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import {
-  getPublishedHomePageForTenant,
-  getPublishedIndexForTenant,
+  getPublishedHomePageByTenantId,
+  getPublishedIndexByTenantId,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
+import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
 import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
 import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
@@ -26,12 +26,16 @@ type PageParams = Readonly<{
   params: Promise<Readonly<{ tenantId: string }>>;
 }>;
 
+/* -------------------------------------------------------------------------- */
+/* Metadata                                                                   */
+/* -------------------------------------------------------------------------- */
+
 export async function generateMetadata({
   params,
 }: PageParams): Promise<Metadata> {
   const { tenantId } = await unwrapParams(params);
 
-  const page = await getPublishedHomePageForTenant(tenantId);
+  const page = await getPublishedHomePageByTenantId(tenantId);
   if (!page) return {};
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
@@ -49,13 +53,17 @@ export async function generateMetadata({
   };
 }
 
+/* -------------------------------------------------------------------------- */
+/* Page                                                                       */
+/* -------------------------------------------------------------------------- */
+
 export default async function SiteTenantRootPage({ params }: PageParams) {
   const { tenantId } = await unwrapParams(params);
 
-  const index = await getPublishedIndexForTenant(tenantId);
+  const index = await getPublishedIndexByTenantId(tenantId);
   if (!index) return notFound();
 
-  const page = await getPublishedHomePageForTenant(tenantId);
+  const page = await getPublishedHomePageByTenantId(tenantId);
   if (!page) return notFound();
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
@@ -71,7 +79,7 @@ export default async function SiteTenantRootPage({ params }: PageParams) {
       slug === HOME_SLUG ? tenantPrefix : `${tenantPrefix}/${slug}`,
   });
 
-  return (
-    <SitePageRenderer ui={resolveSiteUi()} blocks={blocks} pager={pager} />
-  );
+  const ui = resolveSiteUi(tenantId);
+
+  return <SitePageRenderer ui={ui} blocks={blocks} pager={pager} />;
 }

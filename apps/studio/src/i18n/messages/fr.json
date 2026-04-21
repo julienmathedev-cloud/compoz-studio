@@ -34,7 +34,8 @@
     "create": "Créer",
     "creating": "Création…",
     "availableInNextVersion": "Disponible dans une prochaine version",
-    "chooseColor": "Choisir une couleur"
+    "chooseColor": "Choisir une couleur",
+    "choose": "Choisir"
   },
 
   "notifications": {

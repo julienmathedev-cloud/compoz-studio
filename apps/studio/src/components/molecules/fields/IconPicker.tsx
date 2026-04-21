@@ -5,17 +5,10 @@
  * @layer ui/studio/molecules
  * @description
  * Picker d’icônes de contenu basé sur une whitelist + recherche.
- *
- * @remarks
- * - Recherche différée via `useDeferredValue` pour limiter les recalculs
- *   et lisser la saisie.
- * - Les tuiles d’icônes sont mémorisées pour éviter des re-renders inutiles
- *   lorsque la recherche évolue.
- * - Aucune virtualisation pour le moment : on garde une implémentation simple.
  */
 
 import { useTranslations } from "next-intl";
-import { memo, useDeferredValue, useMemo, useState } from "react";
+import { memo, useDeferredValue, useId, useMemo, useState } from "react";
 
 import { SearchInputField } from "@compoz/studio/components/molecules/fields/SearchInputField";
 import { Button } from "@compoz/ui/components/ui/button";
@@ -45,6 +38,10 @@ export function IconPicker({
 
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
+  const baseId = useId();
+
+  const searchInputId = `${baseId}-search`;
+  const searchInputName = `${baseId}-search`;
 
   const options = useMemo(() => {
     return filterContentIconOptions(deferredQuery);
@@ -53,14 +50,14 @@ export function IconPicker({
   return (
     <div className={cn(STACK_SM, className)}>
       <SearchInputField
-        id="icon-picker-search"
-        name="iconPickerSearch"
-        autoComplete="off"
+        id={searchInputId}
+        name={searchInputName}
         value={query}
         onChange={setQuery}
         placeholder={t("studio.iconPicker.searchPlaceholder")}
         resultsCount={options.length}
         disabled={disabled}
+        autoComplete="off"
       />
 
       <ScrollArea className="h-64 rounded-md border border-border p-2">
@@ -69,11 +66,11 @@ export function IconPicker({
             const isSelected = item.value === value;
 
             return (
-              <MemoizedIconPickerItem
+              <MemoizedIconOptionButton
                 key={item.value}
                 value={item.value}
                 label={item.label}
-                selected={isSelected}
+                isSelected={isSelected}
                 disabled={disabled}
                 onSelect={onChange}
               />
@@ -94,29 +91,29 @@ export function IconPicker({
 
 IconPicker.displayName = "IconPicker";
 
-type IconPickerItemProps = Readonly<{
+/* -------------------------------------------------------------------------- */
+/* Internals                                                                  */
+/* -------------------------------------------------------------------------- */
+
+type IconOptionButtonProps = Readonly<{
   value: string;
   label: string;
-  selected: boolean;
+  isSelected: boolean;
   disabled?: boolean;
   onSelect: (value: string) => void;
 }>;
 
-/**
- * Tuile d’icône mémorisée pour éviter des re-renders inutiles
- * lorsque le parent se met à jour pendant la saisie.
- */
-const MemoizedIconPickerItem = memo(function IconPickerItem({
+const MemoizedIconOptionButton = memo(function IconOptionButton({
   value,
   label,
-  selected,
+  isSelected,
   disabled,
   onSelect,
-}: IconPickerItemProps) {
+}: IconOptionButtonProps) {
   return (
     <Button
       type="button"
-      variant={selected ? "default" : "ghost"}
+      variant={isSelected ? "default" : "ghost"}
       visualMode="studio"
       disabled={disabled}
       onClick={() => onSelect(value)}
@@ -131,4 +128,4 @@ const MemoizedIconPickerItem = memo(function IconPickerItem({
   );
 });
 
-MemoizedIconPickerItem.displayName = "MemoizedIconPickerItem";
+MemoizedIconOptionButton.displayName = "MemoizedIconOptionButton";

@@ -398,7 +398,14 @@ function SortableCellTile({
     <TooltipButton
       ref={setNodeRef}
       type="button"
-      onClick={isSortingCells ? undefined : onSelect}
+      onClick={
+        isSortingCells
+          ? undefined
+          : (event) => {
+              event.currentTarget.blur();
+              onSelect();
+            }
+      }
       onMouseEnter={() => onHoverChange(true)}
       onMouseLeave={() => onHoverChange(false)}
       onFocus={() => onHoverChange(true)}

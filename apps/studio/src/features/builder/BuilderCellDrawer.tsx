@@ -46,6 +46,7 @@ import { createEmptyCell } from "@compoz/studio/features/pages/mappers/cells-for
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "@compoz/ui/components/ui/drawer";
@@ -249,6 +250,9 @@ export function BuilderCellDrawer({
         <DrawerHeader>
           <div className="flex items-center justify-between gap-4">
             <DrawerTitle>{t("studio.builder.drawer.title")}</DrawerTitle>
+            <DrawerDescription className="sr-only">
+              {t("studio.builder.drawer.description")}
+            </DrawerDescription>
             <DeleteButton
               size="icon"
               disabled={!canDeleteSelectedCell || isSubmitting}

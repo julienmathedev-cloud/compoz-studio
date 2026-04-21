@@ -12,8 +12,8 @@
  * - `sortableId` sert uniquement au drag and drop.
  * - `watchedItem` sert de fallback visuel pour stabiliser le rendu
  *   pendant le rebinding RHF après reorder.
- * - L’`IconPicker` est monté à la demande dans un `Popover`
- *   pour limiter le coût de layout dans les listes de cards.
+ * - L’`IconPicker` est monté à la demande pour limiter le coût de layout
+ *   lorsqu’une liste contient plusieurs cards ouvertes simultanément.
  */
 
 import { useSortable } from "@dnd-kit/sortable";
@@ -30,13 +30,7 @@ import { IconPicker } from "@compoz/studio/components/molecules/fields/IconPicke
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
 import { DragHandle } from "@compoz/studio/features/dnd/DragHandle";
-import { Button } from "@compoz/ui/components/ui/button";
 import { Card, CardContent } from "@compoz/ui/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@compoz/ui/components/ui/popover";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import {
   getContentIconLabel,
@@ -221,55 +215,52 @@ export function CardItemEditor({
                 {t("studio.cellEditorTabs.cardsCellEditor.iconLabel")}
               </Text>
 
-              <Popover
-                open={isIconPickerOpen}
-                onOpenChange={(nextOpen) => {
-                  setIsIconPickerOpen(nextOpen);
-                }}
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => setIsIconPickerOpen((prev) => !prev)}
+                className={cn(
+                  "flex w-full items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-left",
+                  "transition-colors",
+                  "hover:bg-accent/50",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-0",
+                  disabled && "cursor-not-allowed opacity-60",
+                )}
+                aria-expanded={isIconPickerOpen}
+                aria-label={t(
+                  "studio.cellEditorTabs.cardsCellEditor.iconLabel",
+                )}
               >
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    visualMode="studio"
-                    disabled={disabled}
-                    className="h-auto w-full justify-between rounded-lg border border-border px-3 py-2"
-                  >
-                    <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
-                      {selectedIconPreview ? (
-                        <>
-                          {selectedIconPreview}
-                          <span className="truncate">{selectedIconLabel}</span>
-                        </>
-                      ) : (
-                        <span className="truncate">{t("common.choose")}</span>
-                      )}
-                    </div>
+                <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+                  {selectedIconPreview ? (
+                    <>
+                      {selectedIconPreview}
+                      <span className="truncate">{selectedIconLabel}</span>
+                    </>
+                  ) : (
+                    <span className="truncate">
+                      {t("studio.cellEditorTabs.cardsCellEditor.iconHelp")}
+                    </span>
+                  )}
+                </div>
 
-                    <ChevronDown
-                      className={cn(
-                        "ml-3 h-4 w-4 shrink-0 transition-transform",
-                        isIconPickerOpen && "rotate-180",
-                      )}
-                    />
-                  </Button>
-                </PopoverTrigger>
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-transform",
+                    isIconPickerOpen && "rotate-180",
+                  )}
+                />
+              </button>
 
-                <PopoverContent
-                  align="start"
-                  sideOffset={6}
-                  className="w-[min(720px,calc(100vw-3rem))] p-3"
-                >
-                  <IconPicker
-                    value={iconValue}
-                    onChange={(next) => {
-                      iconCtrl.field.onChange(next);
-                      setIsIconPickerOpen(false);
-                    }}
-                    disabled={disabled}
-                  />
-                </PopoverContent>
-              </Popover>
+              {isIconPickerOpen ? (
+                <IconPicker
+                  value={iconValue}
+                  onChange={(next) => {
+                    iconCtrl.field.onChange(next);
+                  }}
+                  disabled={disabled}
+                />
+              ) : null}
 
               <Text as="p" className="text-xs text-muted-foreground">
                 {t("studio.cellEditorTabs.cardsCellEditor.iconHelp")}

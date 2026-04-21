@@ -5,6 +5,11 @@
  * @layer ui/studio/molecules
  * @description
  * Champ de recherche réutilisable avec InputGroup.
+ *
+ * @remarks
+ * - Supporte `id`, `name` et `autoComplete` pour éviter les warnings navigateur
+ *   liés aux champs reconnus par l’autofill.
+ * - Le composant reste purement UI.
  */
 
 import { Search } from "lucide-react";
@@ -22,6 +27,9 @@ export type SearchInputFieldProps = Readonly<{
   resultsCount?: number;
   disabled?: boolean;
   className?: string;
+  id?: string;
+  name?: string;
+  autoComplete?: string;
 }>;
 
 export function SearchInputField({
@@ -31,10 +39,16 @@ export function SearchInputField({
   resultsCount,
   disabled,
   className,
+  id,
+  name,
+  autoComplete,
 }: SearchInputFieldProps) {
   return (
     <InputGroup visualMode="studio" className={className}>
       <InputGroupInput
+        id={id}
+        name={name}
+        autoComplete={autoComplete}
         visualMode="studio"
         value={value}
         onChange={(event) => onChange(event.target.value)}

@@ -41,7 +41,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { Button } from "@compoz/ui/components/ui/button";
@@ -298,6 +298,7 @@ export function RichTextContentEditor({
   });
 
   const [, forceToolbarRender] = useState(0);
+  const linkInputId = useId();
 
   useEffect(() => {
     if (!editor) return;
@@ -689,7 +690,15 @@ export function RichTextContentEditor({
                   className="flex-1 [--radius:9999px]"
                 >
                   <InputGroupInput
+                    id={linkInputId}
+                    name="rich-text-link-url"
                     visualMode="studio"
+                    type="url"
+                    inputMode="url"
+                    autoComplete="url"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     placeholder="https://…"
                     disabled={disabled}
                     value={linkDraft}

@@ -66,6 +66,7 @@ export function SeoTwitterFields({
           <div className={cn(STACK_MD)}>
             <SelectField
               ids={twitterCardIds}
+              name="twitter.card"
               label={t("studio.seoForm.twitter.card.label")}
               value={card}
               onChange={(v) =>
@@ -82,6 +83,7 @@ export function SeoTwitterFields({
 
             <InputField
               ids={twitterSiteIds}
+              name="twitter.site"
               label={t("studio.seoForm.twitter.site.label")}
               value={twitter.site ?? ""}
               onChange={(v) =>
@@ -97,6 +99,7 @@ export function SeoTwitterFields({
 
             <InputField
               ids={twitterCreatorIds}
+              name="twitter.creator"
               label={t("studio.seoForm.twitter.creator.label")}
               value={twitter.creator ?? ""}
               onChange={(v) =>

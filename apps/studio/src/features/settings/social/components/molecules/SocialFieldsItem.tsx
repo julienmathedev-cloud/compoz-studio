@@ -165,6 +165,7 @@ export function SocialFieldsItem({
     <div className={cn(MENU_ITEM_LAYOUT)}>
       <SelectField
         ids={kindIds}
+        name={kindField.name}
         label={t("studio.socialFieldsItem.kind.label")}
         value={kindValue}
         onChange={(v) => {
@@ -190,6 +191,7 @@ export function SocialFieldsItem({
 
       <NewSocialLinkField
         ids={hrefIds}
+        name={hrefField.name}
         isEmail={isEmail}
         value={hrefDisplay}
         onChange={(raw) => {

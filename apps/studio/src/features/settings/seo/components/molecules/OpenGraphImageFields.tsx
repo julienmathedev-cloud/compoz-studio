@@ -87,6 +87,7 @@ export function OpenGraphImageFields({
     >
       <ImageSelector
         ids={imageUrlIds}
+        name={imageUrlField.name}
         label={t("studio.seoForm.openGraph.defaultImageUrl.label")}
         url={currentUrl}
         onUrlChange={(v) => {
@@ -113,6 +114,7 @@ export function OpenGraphImageFields({
 
       <InputField
         ids={imageAltIds}
+        name={imageAltField.name}
         label={t("studio.seoForm.openGraph.imageAlt.label")}
         value={currentAlt}
         onChange={(v) => imageAltField.onChange(String(v ?? ""))}

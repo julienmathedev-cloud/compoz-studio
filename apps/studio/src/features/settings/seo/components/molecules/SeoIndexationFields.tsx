@@ -109,6 +109,7 @@ export function SeoIndexationFields({
         render={({ field }) => (
           <InputField
             ids={baseUrlIds}
+            name={field.name}
             label={t("studio.seoForm.indexing.baseUrl.label")}
             value={field.value ?? ""}
             onChange={(v) => field.onChange(v)}
@@ -132,6 +133,7 @@ export function SeoIndexationFields({
         render={({ field }) => (
           <InputField
             ids={canonicalUrlIds}
+            name={field.name}
             label={t("studio.seoForm.indexing.canonicalUrl.label")}
             value={field.value ?? ""}
             onChange={(v) => field.onChange(v)}
@@ -155,6 +157,7 @@ export function SeoIndexationFields({
           <>
             <InputField
               ids={robotsIds}
+              name={field.name}
               label={t("studio.seoForm.indexing.robots.label")}
               value={field.value ?? ""}
               onChange={(v) => field.onChange(v)}
@@ -190,6 +193,7 @@ export function SeoIndexationFields({
         render={({ field }) => (
           <SwitchField
             ids={structuredDataIds}
+            name={field.name}
             label={t("studio.seoForm.indexing.structuredData.label")}
             help={t("studio.seoForm.indexing.structuredData.help")}
             checked={Boolean(field.value)}

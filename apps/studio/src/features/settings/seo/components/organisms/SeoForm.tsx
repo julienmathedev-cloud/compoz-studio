@@ -325,6 +325,7 @@ export function SeoForm({
                 render={({ field }) => (
                   <InputField
                     ids={defaultTitleIds}
+                    name={field.name}
                     label={t("studio.seoForm.base.defaultTitle.label")}
                     value={field.value ?? ""}
                     onChange={(v) => field.onChange(v)}
@@ -347,6 +348,7 @@ export function SeoForm({
                   <div className={cn(STACK_MD)}>
                     <InputField
                       ids={titleTemplateIds}
+                      name={field.name}
                       label={t("studio.seoForm.base.titleTemplate.label")}
                       value={field.value ?? ""}
                       onChange={(v) => field.onChange(v)}
@@ -376,6 +378,7 @@ export function SeoForm({
                 render={({ field }) => (
                   <TextareaField
                     ids={defaultDescriptionIds}
+                    name={field.name}
                     label={t("studio.seoForm.base.defaultDescription.label")}
                     value={field.value ?? ""}
                     onChange={(v) => field.onChange(v)}

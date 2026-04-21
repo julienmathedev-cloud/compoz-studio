@@ -46,6 +46,7 @@ import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 type NewSocialLinkFieldProps = Readonly<{
   /** Ensemble des IDs ARIA du champ (fournis par le parent). */
   ids: FieldIds;
+  name?: string;
 
   /** Mode email (`mailto:`) si `true`, sinon URL (`https://`). */
   isEmail: boolean;
@@ -89,6 +90,7 @@ type NewSocialLinkFieldProps = Readonly<{
  */
 export function NewSocialLinkField({
   ids,
+  name,
   isEmail,
   value,
   onChange,
@@ -147,6 +149,7 @@ export function NewSocialLinkField({
 
         <InputGroupInput
           id={fieldId}
+          name={name}
           type={inputType}
           inputMode={inputMode}
           placeholder={placeholder}

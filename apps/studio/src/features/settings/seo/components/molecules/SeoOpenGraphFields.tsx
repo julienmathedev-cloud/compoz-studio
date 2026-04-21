@@ -100,6 +100,7 @@ export function SeoOpenGraphFields({
           render={({ field }) => (
             <InputField
               ids={ogTitleIds}
+              name={field.name}
               label={t("studio.seoForm.openGraph.title.label")}
               value={field.value ?? ""}
               onChange={(v) => field.onChange(String(v ?? ""))}
@@ -119,6 +120,7 @@ export function SeoOpenGraphFields({
           render={({ field }) => (
             <TextareaField
               ids={ogDescriptionIds}
+              name={field.name}
               label={t("studio.seoForm.openGraph.description.label")}
               value={field.value ?? ""}
               onChange={(v) => field.onChange(String(v ?? ""))}

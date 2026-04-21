@@ -33,6 +33,7 @@ import { ROW_BETWEEN } from "@compoz/ui/styles/studio/layout";
 type SwitchFieldProps = Readonly<{
   /** Ensemble des IDs ARIA du champ (fournis par le parent). */
   ids: FieldIds;
+  name?: string;
   /** Libellé affiché à gauche du switch. */
   label: string;
   /** Texte d’aide optionnel sous le label. */
@@ -53,6 +54,7 @@ type SwitchFieldProps = Readonly<{
  */
 export function SwitchField({
   ids,
+  name,
   label,
   help,
   checked,
@@ -87,6 +89,7 @@ export function SwitchField({
         {/* Switch aligné à droite */}
         <Switch
           id={fieldId}
+          name={name}
           checked={checked}
           onCheckedChange={onCheckedChange}
           aria-describedby={describedBy}

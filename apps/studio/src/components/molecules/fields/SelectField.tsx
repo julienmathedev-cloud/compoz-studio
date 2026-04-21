@@ -54,6 +54,8 @@ type SelectOption = Readonly<{
 type SelectFieldProps = Readonly<{
   /** Ensemble des IDs ARIA du champ (fournis par le parent). */
   ids: FieldIds;
+  /** Nom du champ pour le select natif caché généré par Radix. */
+  name?: string;
   /** Libellé visible associé au Select. */
   label: string;
   /** Valeur actuelle sélectionnée (contrôlée). */
@@ -81,6 +83,7 @@ type SelectFieldProps = Readonly<{
  */
 export function SelectField({
   ids,
+  name,
   label,
   value,
   onChange,
@@ -100,7 +103,6 @@ export function SelectField({
 
   const isInvalid = Boolean(error) || Boolean(invalid);
 
-  // ✅ aria-describedby = help + error (si présents)
   const describedByIds: string[] = [];
   if (help && helpId) describedByIds.push(helpId);
   if (error && errorId) describedByIds.push(errorId);
@@ -108,7 +110,6 @@ export function SelectField({
   const describedBy =
     describedByIds.length > 0 ? describedByIds.join(" ") : undefined;
 
-  // Option sélectionnée (pour render custom)
   const selected = items.find((it) => it.value === value);
 
   return (
@@ -117,7 +118,12 @@ export function SelectField({
         {label}
       </FieldLabel>
 
-      <Select value={value} onValueChange={onChange} disabled={disabled}>
+      <Select
+        name={name}
+        value={value}
+        onValueChange={onChange}
+        disabled={disabled}
+      >
         <SelectTrigger
           id={fieldId}
           visualMode="studio"

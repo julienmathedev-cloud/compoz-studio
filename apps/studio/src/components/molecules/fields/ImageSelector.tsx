@@ -53,6 +53,7 @@ type ImageSelectorPreviewMode = "fill" | "icon";
 type ImageSelectorProps = Readonly<{
   /** Ensemble des IDs ARIA pour ce champ (fournis par le parent). */
   ids: FieldIds;
+  name?: string;
   /** Libellé du champ. */
   label: string;
   /** URL actuelle de l’image (contrôlée par le parent). */
@@ -110,6 +111,7 @@ type ImageSelectorProps = Readonly<{
 
 export function ImageSelector({
   ids,
+  name,
   label,
   url,
   onUrlChange,
@@ -333,6 +335,7 @@ export function ImageSelector({
       <input
         ref={fileInputRef}
         id={fieldId}
+        name={name}
         type="file"
         accept={accept}
         disabled={isLocked}

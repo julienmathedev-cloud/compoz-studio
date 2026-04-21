@@ -18,7 +18,6 @@ import Link from "@tiptap/extension-link";
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import TextAlign from "@tiptap/extension-text-align";
-import Underline from "@tiptap/extension-underline";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -200,7 +199,6 @@ function buildExtensions() {
       horizontalRule: {},
       link: false,
     }),
-    Underline,
     Superscript,
     Subscript,
     EnhancedLink.configure({

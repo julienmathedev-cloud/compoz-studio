@@ -203,6 +203,7 @@ export function ThemeForm({
                 render={({ field }) => (
                   <ThemeFontSelectField
                     ids={fontFamilyIds}
+                    name={field.name}
                     label={t("studio.themeForm.fontFamily.label")}
                     value={field.value ?? ""}
                     onChange={(value) => field.onChange(value)}
@@ -225,6 +226,7 @@ export function ThemeForm({
                 render={({ field }) => (
                   <SwitchField
                     ids={enableDarkModeIds}
+                    name={field.name}
                     label={t("studio.themeForm.enableDarkMode.label")}
                     //help={t("studio.themeForm.enableDarkMode.help")}
                     help={t("common.availableInNextVersion")}
@@ -423,6 +425,7 @@ function ThemeTokensSection({
             render={({ field }) => (
               <ColorPickerField
                 ids={ids}
+                name={field.name}
                 label={t(`studio.themeForm.tokens.labels.${tokenKey}`)}
                 value={field.value ?? ""}
                 onChange={(value) => field.onChange(value)}

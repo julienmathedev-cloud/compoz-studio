@@ -39,6 +39,7 @@ import { cn } from "@compoz/ui/lib/utils";
 
 type ColorPickerFieldProps = Readonly<{
   ids: FieldIds;
+  name?: string;
   label: string;
   value: string;
   onChange: (next: string) => void;
@@ -54,6 +55,7 @@ type ColorPickerFieldProps = Readonly<{
 
 export function ColorPickerField({
   ids,
+  name,
   label,
   value,
   onChange,
@@ -96,6 +98,7 @@ export function ColorPickerField({
         <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-start gap-2">
           <InputField
             ids={ids}
+            name={name}
             label={label}
             value={draft}
             onChange={(next) => {

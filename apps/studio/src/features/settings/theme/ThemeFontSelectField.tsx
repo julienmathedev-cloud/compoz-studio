@@ -20,6 +20,7 @@ import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 
 type ThemeFontSelectFieldProps = Readonly<{
   ids: FieldIds;
+  name?: string;
   label: string;
   value: string;
   onChange: (value: ThemeFontId) => void;
@@ -34,6 +35,7 @@ const FONT_ITEMS = buildThemeFontSelectItems();
 
 export function ThemeFontSelectField({
   ids,
+  name,
   label,
   value,
   onChange,
@@ -46,6 +48,7 @@ export function ThemeFontSelectField({
   return (
     <SelectField
       ids={ids}
+      name={name}
       label={label}
       value={value}
       onChange={(nextValue) => onChange(nextValue as ThemeFontId)}

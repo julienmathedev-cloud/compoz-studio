@@ -43,7 +43,7 @@ export function useSetActiveTenant(): UseSetActiveTenantResult {
     },
 
     onSuccess: (res) => {
-      lg.info("hook.admin.tenant.setActiveTenant.done", {
+      lg.debug("hook.admin.tenant.setActiveTenant.done", {
         tenantId: res.tenantId,
       });
     },

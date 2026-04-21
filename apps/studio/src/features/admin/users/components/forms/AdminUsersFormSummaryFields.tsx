@@ -13,8 +13,8 @@
  * - Les états d’erreur (invalid/message) sont fournis par le shell.
  */
 
-import { Controller, type Control } from "react-hook-form";
 import { useTranslations } from "next-intl";
+import { Controller, type Control } from "react-hook-form";
 
 import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import type { UserFormValues } from "@compoz/validation/users/user-form";
@@ -71,6 +71,7 @@ export function AdminUsersFormSummaryFields({
         render={({ field }) => (
           <InputField
             ids={emailIds}
+            name={field.name}
             inputRef={field.ref}
             label={t("studio.users.form.email.label")}
             value={field.value ?? ""}
@@ -83,6 +84,7 @@ export function AdminUsersFormSummaryFields({
             }
             help={t("studio.users.form.email.help")}
             required
+            autoComplete="email"
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
@@ -99,6 +101,7 @@ export function AdminUsersFormSummaryFields({
         render={({ field }) => (
           <InputField
             ids={nameIds}
+            name={field.name}
             inputRef={field.ref}
             label={t("studio.users.form.name.label")}
             value={field.value ?? ""}
@@ -111,6 +114,7 @@ export function AdminUsersFormSummaryFields({
             }
             help={t("studio.users.form.name.help")}
             required
+            autoComplete="name"
             autoCapitalize="words"
             spellCheck={false}
             disabled={isBusy}
@@ -126,6 +130,7 @@ export function AdminUsersFormSummaryFields({
         render={({ field }) => (
           <InputField
             ids={passwordIds}
+            name={field.name}
             inputRef={field.ref}
             label={t("studio.users.form.password.label")}
             value={field.value ?? ""}
@@ -138,6 +143,7 @@ export function AdminUsersFormSummaryFields({
             }
             help={safePasswordHelp}
             type="password"
+            autoComplete={isEdit ? "new-password" : "new-password"}
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}

@@ -9,12 +9,15 @@
  * @remarks
  * - Centralise l’instrumentation des opérations `load` et `save`.
  * - Fournit des wrappers compatibles avec des fonctions acceptant ou non un `AbortSignal`.
- * - UI-only : pas de dépendance vers `@compoz/infra`.
+ * - S’appuie sur le nano-logger partagé pour respecter le niveau de logs
+ *   configuré via `NEXT_PUBLIC_LOG_LEVEL`.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
+import { log } from "@compoz/infra/lib/log";
 
 const NS = "compoz:shared:ui:hooks";
+const lg = log.child({ ns: NS });
 
 type FnOpts = Readonly<{ signal?: AbortSignal }>;
 type MaybeSignalFn<T> = ((opts: FnOpts) => Promise<T>) | (() => Promise<T>);
@@ -25,24 +28,22 @@ function writeLog(
   meta?: Record<string, unknown>,
 ): void {
   try {
-    const payload = meta ? { ns: NS, event, ...meta } : { ns: NS, event };
-
     if (level === "debug") {
-      console.debug(payload);
+      lg.debug(event, meta);
       return;
     }
 
     if (level === "info") {
-      console.info(payload);
+      lg.info(event, meta);
       return;
     }
 
     if (level === "warn") {
-      console.warn(payload);
+      lg.warn(event, meta);
       return;
     }
 
-    console.error(payload);
+    lg.error(event, meta);
   } catch {
     // noop
   }
@@ -61,7 +62,6 @@ async function logSpan<T>(
     writeLog("debug", `${name}.ok`, { ...meta, ms: Date.now() - start });
     return result;
   } catch (e) {
-    // Abort/cancel normal → pas une vraie erreur
     if (isAbortError(e)) {
       writeLog("debug", `${name}.abort`, {
         ...meta,
@@ -70,7 +70,6 @@ async function logSpan<T>(
       throw e;
     }
 
-    // vraie erreur
     writeLog("error", `${name}.error`, {
       ...meta,
       ms: Date.now() - start,
@@ -84,13 +83,11 @@ async function logSpan<T>(
 function isAbortError(e: unknown, signal?: AbortSignal): boolean {
   if (signal?.aborted) return true;
 
-  // DOMException("AbortError") dans certains environnements
   if (typeof DOMException !== "undefined" && e instanceof DOMException) {
     return e.name === "AbortError";
   }
 
   if (e instanceof Error) {
-    // fetch abort (node/undici/browsers) varie selon runtime
     return e.name === "AbortError" || /aborted|abort/i.test(e.message);
   }
 
@@ -109,10 +106,10 @@ export function errorMessage(e: unknown): string {
  * Exécute une fonction asynchrone pouvant accepter optionnellement un `AbortSignal`.
  */
 async function runMaybeSignalFn<T>(fn: MaybeSignalFn<T>, opts: FnOpts) {
-  // Si la fonction attend des args, on lui passe { signal }.
   if (fn.length >= 1) {
     return await (fn as (o: FnOpts) => Promise<T>)(opts);
   }
+
   return await (fn as () => Promise<T>)();
 }
 
@@ -136,11 +133,7 @@ export async function withLoadLogs<T>(
     `${scope}.load`,
     { scope, op: "load", state, ...(meta ?? {}) },
     async () => {
-      try {
-        return await runMaybeSignalFn(fn, opts);
-      } catch (e: unknown) {
-        throw e;
-      }
+      return await runMaybeSignalFn(fn, opts);
     },
   );
 }
@@ -165,11 +158,7 @@ export async function withSaveLogs<T>(
     `${scope}.save`,
     { scope, op: "save", state, ...(meta ?? {}) },
     async () => {
-      try {
-        return await runMaybeSignalFn(fn, opts);
-      } catch (e: unknown) {
-        throw e;
-      }
+      return await runMaybeSignalFn(fn, opts);
     },
   );
 }

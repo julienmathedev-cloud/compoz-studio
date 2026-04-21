@@ -22,7 +22,6 @@ import { Checkbox } from "@compoz/ui/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -85,7 +84,6 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
   // Préfixe d’ID stable (a11y + anti-collision).
   const providerId = useIdPrefix("confirm-dialog");
   const acknowledgeId = `${providerId}-acknowledge`;
-  const descriptionId = `${providerId}-description`;
 
   const hasDescription = Boolean(state.description);
 
@@ -179,17 +177,13 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
         <DialogContent
           visualMode="studio"
           className="bg-card"
-          aria-describedby={hasDescription ? descriptionId : undefined}
+          aria-describedby={undefined}
         >
           <DialogHeader>
             <DialogTitle>{state.title}</DialogTitle>
-
-            {hasDescription ? (
-              <DialogDescription id={descriptionId} asChild>
-                <div>{state.description}</div>
-              </DialogDescription>
-            ) : null}
           </DialogHeader>
+
+          {hasDescription ? <div>{state.description}</div> : null}
 
           {state.requireAcknowledge ? (
             <div className={cn(ROW_CENTER, "text-sm")}>

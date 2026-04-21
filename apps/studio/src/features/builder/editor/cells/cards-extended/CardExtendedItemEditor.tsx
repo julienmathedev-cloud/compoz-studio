@@ -17,11 +17,15 @@
  * - `sortableId` sert uniquement au drag and drop.
  * - `watchedItem` sert de fallback visuel pour stabiliser le rendu
  *   pendant le rebinding RHF après reorder.
+ * - L’`IconPicker` est monté à la demande pour limiter le coût de layout
+ *   lorsqu’une liste contient plusieurs cards ouvertes simultanément.
  */
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useState, type ReactNode } from "react";
 import type { Control } from "react-hook-form";
 import { useController } from "react-hook-form";
 
@@ -33,6 +37,10 @@ import { TextareaField } from "@compoz/studio/components/molecules/fields/Textar
 import { DragHandle } from "@compoz/studio/features/dnd/DragHandle";
 import { Card, CardContent } from "@compoz/ui/components/ui/card";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
+import {
+  getContentIconLabel,
+  renderContentIcon,
+} from "@compoz/ui/lib/icons/content-icons";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
@@ -69,6 +77,7 @@ export function CardExtendedItemEditor({
   showError = false,
 }: CardsExtendedItemEditorProps) {
   const t = useTranslations();
+  const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
   const itemBasePath =
     `${basePath}.items.${index}` as CardsExtendedItemBasePath;
@@ -164,6 +173,12 @@ export function CardExtendedItemEditor({
     transform: transform ? CSS.Transform.toString(transform) : undefined,
     transition,
   };
+
+  const selectedIconPreview: ReactNode = iconValue
+    ? renderContentIcon(iconValue, { className: "h-4 w-4" })
+    : null;
+
+  const selectedIconLabel = iconValue ? getContentIconLabel(iconValue) : null;
 
   return (
     <Card
@@ -293,13 +308,54 @@ export function CardExtendedItemEditor({
                 {t("studio.cellEditorTabs.cardsExtendedCellEditor.iconLabel")}
               </Text>
 
-              <IconPicker
-                value={iconValue}
-                onChange={(next) => {
-                  iconCtrl.field.onChange(next);
-                }}
+              <button
+                type="button"
                 disabled={disabled}
-              />
+                onClick={() => setIsIconPickerOpen((prev) => !prev)}
+                className={cn(
+                  "flex w-full items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-left",
+                  "transition-colors",
+                  "hover:bg-accent/50",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-0",
+                  disabled && "cursor-not-allowed opacity-60",
+                )}
+                aria-expanded={isIconPickerOpen}
+                aria-label={t(
+                  "studio.cellEditorTabs.cardsExtendedCellEditor.iconLabel",
+                )}
+              >
+                <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+                  {selectedIconPreview ? (
+                    <>
+                      {selectedIconPreview}
+                      <span className="truncate">{selectedIconLabel}</span>
+                    </>
+                  ) : (
+                    <span className="truncate">
+                      {t(
+                        "studio.cellEditorTabs.cardsExtendedCellEditor.iconHelp",
+                      )}
+                    </span>
+                  )}
+                </div>
+
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-transform",
+                    isIconPickerOpen && "rotate-180",
+                  )}
+                />
+              </button>
+
+              {isIconPickerOpen ? (
+                <IconPicker
+                  value={iconValue}
+                  onChange={(next) => {
+                    iconCtrl.field.onChange(next);
+                  }}
+                  disabled={disabled}
+                />
+              ) : null}
 
               <Text as="p" variant="meta">
                 {t("studio.cellEditorTabs.cardsExtendedCellEditor.iconHelp")}

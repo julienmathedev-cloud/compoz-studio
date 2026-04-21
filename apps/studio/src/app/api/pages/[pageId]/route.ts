@@ -190,7 +190,7 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
 
         // ✅ Invalidation KV snapshots (best-effort)
         try {
-          lg.info?.("route.statusCache.invalidate.start", {
+          lg.debug?.("route.statusCache.invalidate.start", {
             invalidateStatus: true,
             invalidateStatusDetails: true,
           });
@@ -200,7 +200,7 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
             statusCache.invalidateStatusDetails(),
           ]);
 
-          lg.info?.("route.statusCache.invalidate.done", {
+          lg.debug?.("route.statusCache.invalidate.done", {
             invalidateStatus: true,
             invalidateStatusDetails: true,
           });
@@ -307,7 +307,7 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
 
         // ✅ Invalidation KV snapshots (best-effort)
         try {
-          lg.info?.("route.statusCache.invalidate.start", {
+          lg.debug?.("route.statusCache.invalidate.start", {
             invalidateStatus: true,
             invalidateStatusDetails: true,
           });
@@ -317,7 +317,7 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
             statusCache.invalidateStatusDetails(),
           ]);
 
-          lg.info?.("route.statusCache.invalidate.done", {
+          lg.debug?.("route.statusCache.invalidate.done", {
             invalidateStatus: true,
             invalidateStatusDetails: true,
           });

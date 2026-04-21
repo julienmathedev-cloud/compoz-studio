@@ -55,7 +55,7 @@ export async function PATCH(req: Request) {
 
       const raw = await readJsonOr400(req);
 
-      lg.info?.("route.header.patch.start", {
+      lg.debug?.("route.header.patch.start", {
         tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
@@ -79,15 +79,15 @@ export async function PATCH(req: Request) {
       const run = updateHeaderSettings({ repo });
       const { settings } = await run(input);
 
-      lg.info?.("route.header.patch.afterWrite", {
+      lg.debug?.("route.header.patch.afterWrite", {
         tenantId,
         headerKeys: settings?.header ? Object.keys(settings.header) : [],
       });
 
       try {
-        lg.info?.("route.header.patch.invalidate.start", { tenantId });
+        lg.debug?.("route.header.patch.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        lg.info?.("route.header.patch.invalidate.done", { tenantId });
+        lg.debug?.("route.header.patch.invalidate.done", { tenantId });
       } catch (e) {
         lg.error?.("route.header.patch.invalidate.failed", {
           tenantId,

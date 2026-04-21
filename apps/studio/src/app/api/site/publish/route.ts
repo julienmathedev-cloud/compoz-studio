@@ -188,7 +188,7 @@ export async function POST(req: Request) {
           cleanOrphans: dto.cleanOrphans,
         });
 
-        lg.info?.("publish.metrics", {
+        lg.debug?.("publish.metrics", {
           tenantId,
           from: result.from,
           to: result.to,
@@ -200,9 +200,9 @@ export async function POST(req: Request) {
         // ✅ Invalidation snapshots (route-level, best-effort)
         const statusCache = getSiteStatusCache({ tenantId });
         try {
-          lg.info?.("route.statusCache.invalidateAll.start", {});
+          lg.debug?.("route.statusCache.invalidateAll.start", {});
           await statusCache.invalidateAll();
-          lg.info?.("route.statusCache.invalidateAll.done", {});
+          lg.debug?.("route.statusCache.invalidateAll.done", {});
         } catch (e) {
           lg.error?.("route.statusCache.invalidateAll.failed", {
             err: String(e),

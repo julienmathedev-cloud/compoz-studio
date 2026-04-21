@@ -103,7 +103,7 @@ export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
         invalidatePageStatusViews(qc, tenantId),
       ]);
 
-      lg.info("delete.ok", {
+      lg.debug("delete.ok", {
         tenantId,
         pageId: args.pageId,
         pagesInIndex: args.nextIndex?.pages?.length ?? undefined,

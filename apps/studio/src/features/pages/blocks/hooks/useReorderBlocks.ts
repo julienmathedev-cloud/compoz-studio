@@ -154,7 +154,7 @@ export function useReorderBlocks(
         invalidateBlockStatusViews(qc, tenantId, pageId),
       ]);
 
-      lg.info("reorder.ok", {
+      lg.debug("reorder.ok", {
         tenantId,
         pageId,
         count: payload.orderedBlockIds.length,

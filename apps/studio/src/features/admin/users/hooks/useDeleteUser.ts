@@ -79,7 +79,7 @@ export function useDeleteUser(onSuccess?: () => void): UseDeleteUserResult {
       // 2) refresh liste (simple & safe)
       await qc.invalidateQueries({ queryKey: usersListKey() });
 
-      lg.info("delete.ok", { userId: args.userId, fields: args.fields });
+      lg.debug("delete.ok", { userId: args.userId, fields: args.fields });
 
       onSuccess?.();
     },

@@ -118,14 +118,14 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
         });
 
         try {
-          lg.info?.("route.statusCache.invalidate.start", {});
+          lg.debug?.("route.statusCache.invalidate.start", {});
 
           await Promise.all([
             statusCache.invalidateStatus(),
             statusCache.invalidateStatusDetails(),
           ]);
 
-          lg.info?.("route.statusCache.invalidate.done", {});
+          lg.debug?.("route.statusCache.invalidate.done", {});
         } catch (e) {
           lg.error?.("route.statusCache.invalidate.failed", {
             err: String(e),
@@ -184,14 +184,14 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
         });
 
         try {
-          lg.info?.("route.statusCache.invalidate.start", {});
+          lg.debug?.("route.statusCache.invalidate.start", {});
 
           await Promise.all([
             statusCache.invalidateStatus(),
             statusCache.invalidateStatusDetails(),
           ]);
 
-          lg.info?.("route.statusCache.invalidate.done", {});
+          lg.debug?.("route.statusCache.invalidate.done", {});
         } catch (e) {
           lg.error?.("route.statusCache.invalidate.failed", {
             err: String(e),

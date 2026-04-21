@@ -128,7 +128,7 @@ export function useUpdateUser(onSuccess?: () => void): UseUpdateUserResult {
       // ✅ refresh list users (SoT)
       await qc.invalidateQueries({ queryKey: usersListKey() });
 
-      lg.info("update.ok", { userId, fields });
+      lg.debug("update.ok", { userId, fields });
       onSuccess?.();
     },
 

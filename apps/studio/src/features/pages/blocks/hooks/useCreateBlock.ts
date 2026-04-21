@@ -129,7 +129,7 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
         invalidateBlockStatusViews(qc, tenantId, pageIdKey),
       ]);
 
-      lg.info("create.ok", {
+      lg.debug("create.ok", {
         tenantId,
         pageId,
         fields,

@@ -55,7 +55,7 @@ export async function PATCH(req: Request) {
 
       const raw = await readJsonOr400(req);
 
-      lg.info?.("route.footer.patch.start", {
+      lg.debug?.("route.footer.patch.start", {
         tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
@@ -78,15 +78,15 @@ export async function PATCH(req: Request) {
       const run = updateFooterSettings({ repo });
       const { settings } = await run(input);
 
-      lg.info?.("route.footer.patch.afterWrite", {
+      lg.debug?.("route.footer.patch.afterWrite", {
         tenantId,
         footerKeys: settings?.footer ? Object.keys(settings.footer) : [],
       });
 
       try {
-        lg.info?.("route.footer.patch.invalidate.start", { tenantId });
+        lg.debug?.("route.footer.patch.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        lg.info?.("route.footer.patch.invalidate.done", { tenantId });
+        lg.debug?.("route.footer.patch.invalidate.done", { tenantId });
       } catch (e) {
         lg.error?.("route.footer.patch.invalidate.failed", {
           tenantId,

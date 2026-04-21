@@ -55,7 +55,7 @@ export async function PATCH(req: Request) {
 
       const raw = await readJsonOr400(req);
 
-      lg.info?.("route.identity.patch.start", {
+      lg.debug?.("route.identity.patch.start", {
         tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
@@ -79,15 +79,15 @@ export async function PATCH(req: Request) {
       const run = updateIdentitySettings({ repo });
       const { settings } = await run(input);
 
-      lg.info?.("route.identity.patch.afterWrite", {
+      lg.debug?.("route.identity.patch.afterWrite", {
         tenantId,
         identityKeys: settings?.identity ? Object.keys(settings.identity) : [],
       });
 
       try {
-        lg.info?.("route.identity.patch.invalidate.start", { tenantId });
+        lg.debug?.("route.identity.patch.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        lg.info?.("route.identity.patch.invalidate.done", { tenantId });
+        lg.debug?.("route.identity.patch.invalidate.done", { tenantId });
       } catch (e) {
         lg.error?.("route.identity.patch.invalidate.failed", {
           tenantId,

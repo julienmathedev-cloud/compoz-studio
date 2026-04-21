@@ -55,7 +55,7 @@ export async function PATCH(req: Request) {
 
       const raw = await readJsonOr400(req);
 
-      lg.info?.("route.primaryMenu.patch.start", {
+      lg.debug?.("route.primaryMenu.patch.start", {
         tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
@@ -78,7 +78,7 @@ export async function PATCH(req: Request) {
       const run = updatePrimaryMenuSettings({ repo });
       const { settings } = await run(input);
 
-      lg.info?.("route.primaryMenu.patch.afterWrite", {
+      lg.debug?.("route.primaryMenu.patch.afterWrite", {
         tenantId,
         primaryMenuKeys: settings?.primaryMenu
           ? Object.keys(settings.primaryMenu)
@@ -86,9 +86,9 @@ export async function PATCH(req: Request) {
       });
 
       try {
-        lg.info?.("route.primaryMenu.patch.invalidate.start", { tenantId });
+        lg.debug?.("route.primaryMenu.patch.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        lg.info?.("route.primaryMenu.patch.invalidate.done", { tenantId });
+        lg.debug?.("route.primaryMenu.patch.invalidate.done", { tenantId });
       } catch (e) {
         lg.error?.("route.primaryMenu.patch.invalidate.failed", {
           tenantId,

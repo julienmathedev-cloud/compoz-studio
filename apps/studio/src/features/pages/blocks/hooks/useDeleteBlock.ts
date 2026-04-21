@@ -113,7 +113,7 @@ export function useDeleteBlock(onSuccess?: () => void): UseDeleteBlockResult {
         invalidateBlockStatusViews(qc, tenantId, pageIdKey),
       ]);
 
-      lg.info("delete.ok", { tenantId, pageId, blockId });
+      lg.debug("delete.ok", { tenantId, pageId, blockId });
       onSuccess?.();
     },
 

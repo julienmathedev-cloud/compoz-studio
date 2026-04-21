@@ -125,7 +125,7 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
         invalidatePageStatusViews(qc, tenantId),
       ]);
 
-      lg.info("update.ok", { tenantId, pageId, nextSlug, fields });
+      lg.debug("update.ok", { tenantId, pageId, nextSlug, fields });
       onSuccess?.();
     },
 

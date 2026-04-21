@@ -76,7 +76,7 @@ export function useReorderPageChildren(
     onSuccess: async (nextIndex, variables) => {
       setSiteIndexCache(qc, tenantId, state, nextIndex);
 
-      lg.info("reorder.ok", {
+      lg.debug("reorder.ok", {
         state,
         parentId: variables.parentId,
         count: variables.childIds.length,

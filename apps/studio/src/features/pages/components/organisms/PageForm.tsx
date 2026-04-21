@@ -340,6 +340,7 @@ export function PageForm({
         render={({ field }) => (
           <InputField
             ids={nameIds}
+            name={field.name}
             inputRef={field.ref}
             label={t("studio.pageForm.title.label")}
             value={field.value ?? ""}
@@ -378,6 +379,7 @@ export function PageForm({
         render={({ field }) => (
           <InputField
             ids={slugIds}
+            name={field.name}
             inputRef={field.ref}
             label={t("studio.pageForm.slug.label")}
             value={field.value ?? ""}
@@ -422,6 +424,7 @@ export function PageForm({
         render={({ field }) => (
           <SelectField
             ids={parentIds}
+            name={field.name}
             label={t("studio.pageForm.parent.label")}
             help={t("studio.pageForm.parent.help")}
             value={field.value ?? NO_PARENT_VALUE}
@@ -470,6 +473,7 @@ export function PageForm({
         render={({ field }) => (
           <SwitchField
             ids={paginationEnabledIds}
+            name={field.name}
             label={t("studio.pageForm.pagination.label")}
             help={
               isRootPage
@@ -517,6 +521,7 @@ export function PageForm({
                 render={({ field }) => (
                   <SwitchField
                     ids={sitemapIncludeIds}
+                    name={field.name}
                     label={t("studio.pageForm.sitemap.include.label")}
                     help={t("studio.pageForm.sitemap.include.help")}
                     checked={Boolean(field.value)}
@@ -548,6 +553,7 @@ export function PageForm({
                 render={({ field }) => (
                   <InputField
                     ids={seoTitleIds}
+                    name={field.name}
                     inputRef={field.ref}
                     label={t("studio.pageForm.seoTitle.label")}
                     value={field.value ?? ""}
@@ -582,6 +588,7 @@ export function PageForm({
                     return (
                       <InputField
                         ids={sitemapPriorityIds}
+                        name={field.name}
                         label={t("studio.pageForm.sitemap.priority.label")}
                         value={value}
                         onChange={(nextValue) => {
@@ -626,6 +633,7 @@ export function PageForm({
                   render={({ field }) => (
                     <SelectField
                       ids={sitemapChangefreqIds}
+                      name={field.name}
                       label={t("studio.pageForm.sitemap.changefreq.label")}
                       value={field.value ?? ""}
                       help={t("studio.pageForm.sitemap.changefreq.help")}

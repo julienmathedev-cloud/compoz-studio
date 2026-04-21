@@ -55,7 +55,7 @@ export async function PATCH(req: Request) {
 
       const raw = await readJsonOr400(req);
 
-      lg.info?.("route.social.patch.start", {
+      lg.debug?.("route.social.patch.start", {
         tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
@@ -78,15 +78,15 @@ export async function PATCH(req: Request) {
       const run = updateSocialSettings({ repo });
       const { settings } = await run(input);
 
-      lg.info?.("route.social.patch.afterWrite", {
+      lg.debug?.("route.social.patch.afterWrite", {
         tenantId,
         socialKeys: settings?.social ? Object.keys(settings.social) : [],
       });
 
       try {
-        lg.info?.("route.social.patch.invalidate.start", { tenantId });
+        lg.debug?.("route.social.patch.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        lg.info?.("route.social.patch.invalidate.done", { tenantId });
+        lg.debug?.("route.social.patch.invalidate.done", { tenantId });
       } catch (e) {
         lg.error?.("route.social.patch.invalidate.failed", {
           tenantId,

@@ -55,7 +55,7 @@ export async function PATCH(req: Request) {
 
       const raw = await readJsonOr400(req);
 
-      lg.info?.("route.legalMenu.patch.start", {
+      lg.debug?.("route.legalMenu.patch.start", {
         tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
@@ -78,7 +78,7 @@ export async function PATCH(req: Request) {
       const run = updateLegalMenuSettings({ repo });
       const { settings } = await run(input);
 
-      lg.info?.("route.legalMenu.patch.afterWrite", {
+      lg.debug?.("route.legalMenu.patch.afterWrite", {
         tenantId,
         legalMenuKeys: settings?.legalMenu
           ? Object.keys(settings.legalMenu)
@@ -86,9 +86,9 @@ export async function PATCH(req: Request) {
       });
 
       try {
-        lg.info?.("route.legalMenu.patch.invalidate.start", { tenantId });
+        lg.debug?.("route.legalMenu.patch.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        lg.info?.("route.legalMenu.patch.invalidate.done", { tenantId });
+        lg.debug?.("route.legalMenu.patch.invalidate.done", { tenantId });
       } catch (e) {
         lg.error?.("route.legalMenu.patch.invalidate.failed", {
           tenantId,

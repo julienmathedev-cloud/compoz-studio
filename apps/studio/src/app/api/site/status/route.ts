@@ -39,13 +39,13 @@ export async function GET(req: Request) {
 
       const run = getSiteStatus({ pages, site, cache });
 
-      lg.info?.("route.status.get.start", { tenantId });
+      lg.debug?.("route.status.get.start", { tenantId });
 
       const { status } = await run();
 
       const res: GetSiteStatusResponse = { status };
 
-      lg.info?.("route.status.get.done", {
+      lg.debug?.("route.status.get.done", {
         tenantId,
         hasChanges: res.status?.hasChanges?.site,
         lastPublishedAt: res.status?.published?.lastPublishedAt ?? null,

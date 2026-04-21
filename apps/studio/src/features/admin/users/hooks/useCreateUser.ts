@@ -66,7 +66,7 @@ export function useCreateUser(onSuccess?: () => void): UseCreateUserResult {
         }),
       );
 
-      lg.info("create.ok", {
+      lg.debug("create.ok", {
         userId: user?.id,
         email: user?.email,
         role: user?.rbac?.role,

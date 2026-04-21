@@ -74,7 +74,7 @@ export function useCreatePage(onSuccess?: () => void): UseCreatePageResult {
         }),
       );
 
-      lg.info("create.ok", {
+      lg.debug("create.ok", {
         pageId: page?.id,
         slug: page?.slug,
         fields,

@@ -289,10 +289,10 @@ export function BuilderScreen({
   const isPreviewLoading = !isEmpty && !isPreviewReady;
 
   useEffect(() => {
-    lg.info("mount", { pageId, pageSlug, blockId });
+    lg.debug("mount", { pageId, pageSlug, blockId });
 
     return () => {
-      lg.info("unmount", { pageId, pageSlug, blockId });
+      lg.debug("unmount", { pageId, pageSlug, blockId });
     };
   }, [pageId, pageSlug, blockId]);
 
@@ -308,7 +308,7 @@ export function BuilderScreen({
     if (prevSig == null) return;
     if (prevSig === baselineSig) return;
 
-    lg.info("baseline.sync.from-props", {
+    lg.debug("baseline.sync.from-props", {
       blockId,
       previousSig: prevSig,
       nextSig: baselineSig,
@@ -335,7 +335,7 @@ export function BuilderScreen({
 
     hasLoggedPreviewReadyRef.current = true;
 
-    lg.info("preview.ready", {
+    lg.debug("preview.ready", {
       blockId,
       previewScope,
     });
@@ -348,7 +348,7 @@ export function BuilderScreen({
 
     lastBaselinePreviewSigRef.current = baselinePreviewSig;
 
-    lg.info("preview.baseline.push", {
+    lg.debug("preview.baseline.push", {
       blockId,
       previewScope,
       baselineSig,
@@ -376,7 +376,7 @@ export function BuilderScreen({
 
     lastDraftPreviewSigRef.current = draftPreviewSig;
 
-    lg.info("preview.draft.cache", {
+    lg.debug("preview.draft.cache", {
       blockId,
       previewScope,
       isDirty,
@@ -467,7 +467,7 @@ export function BuilderScreen({
         return formValues.lcpPriority === true;
       });
 
-      lg.info("save.start", {
+      lg.debug("save.start", {
         pageId: pageIdKey,
         blockId: blockIdKey,
         hasOtherLcpPriority,
@@ -482,7 +482,7 @@ export function BuilderScreen({
           hasOtherLcpPriority,
         );
 
-        lg.info("save.success", {
+        lg.debug("save.success", {
           pageId: pageIdKey,
           blockId: blockIdKey,
         });
@@ -565,7 +565,7 @@ export function BuilderScreen({
   );
 
   const handleReset = useCallback(() => {
-    lg.info("form.reset", { blockId });
+    lg.debug("form.reset", { blockId });
 
     reset(baseline, {
       keepDirty: false,

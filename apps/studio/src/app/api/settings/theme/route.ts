@@ -55,7 +55,7 @@ export async function PATCH(req: Request) {
 
       const raw = await readJsonOr400(req);
 
-      lg.info?.("route.theme.patch.start", {
+      lg.debug?.("route.theme.patch.start", {
         tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
@@ -78,15 +78,15 @@ export async function PATCH(req: Request) {
       const run = updateThemeSettings({ repo });
       const { settings } = await run(input);
 
-      lg.info?.("route.theme.patch.afterWrite", {
+      lg.debug?.("route.theme.patch.afterWrite", {
         tenantId,
         themeKeys: settings?.theme ? Object.keys(settings.theme) : [],
       });
 
       try {
-        lg.info?.("route.theme.patch.invalidate.start", { tenantId });
+        lg.debug?.("route.theme.patch.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        lg.info?.("route.theme.patch.invalidate.done", { tenantId });
+        lg.debug?.("route.theme.patch.invalidate.done", { tenantId });
       } catch (e) {
         lg.error?.("route.theme.patch.invalidate.failed", {
           tenantId,

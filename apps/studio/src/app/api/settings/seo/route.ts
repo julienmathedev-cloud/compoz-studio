@@ -55,7 +55,7 @@ export async function PATCH(req: Request) {
 
       const raw = await readJsonOr400(req);
 
-      lg.info?.("route.seo.patch.start", {
+      lg.debug?.("route.seo.patch.start", {
         tenantId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
@@ -84,15 +84,15 @@ export async function PATCH(req: Request) {
       const run = updateSeoSettings({ repo });
       const { settings } = await run(input);
 
-      lg.info?.("route.seo.patch.afterWrite", {
+      lg.debug?.("route.seo.patch.afterWrite", {
         tenantId,
         seoKeys: settings?.seo ? Object.keys(settings.seo) : [],
       });
 
       try {
-        lg.info?.("route.seo.patch.invalidate.start", { tenantId });
+        lg.debug?.("route.seo.patch.invalidate.start", { tenantId });
         await statusCache.invalidateStatus();
-        lg.info?.("route.seo.patch.invalidate.done", { tenantId });
+        lg.debug?.("route.seo.patch.invalidate.done", { tenantId });
       } catch (e) {
         lg.error?.("route.seo.patch.invalidate.failed", {
           tenantId,

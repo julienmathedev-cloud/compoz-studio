@@ -83,7 +83,7 @@ export function usePublishSite(onSuccess?: () => void): UsePublishSiteResult {
         invalidateSiteStatusDetails(qc, tenantId),
       ]);
 
-      lg.info("publish.ok", {
+      lg.debug("publish.ok", {
         tenantId,
         from: publishResult.from,
         to: publishResult.to,

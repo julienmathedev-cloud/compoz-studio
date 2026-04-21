@@ -134,7 +134,7 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
         invalidateBlockStatusViews(qc, tenantId, pageIdKey),
       ]);
 
-      lg.info("update.ok", {
+      lg.debug("update.ok", {
         tenantId,
         pageId: pageIdKey,
         blockId,

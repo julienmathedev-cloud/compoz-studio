@@ -23,7 +23,7 @@ export const defaultCarouselUi: SiteCarouselUi = {
     arrowButton:
       "absolute top-1/2 z-20 hidden h-8 w-8 rounded-full sm:inline-flex cursor-pointer",
     arrowIcon: "h-8 w-8",
-    dots: "flex justify-center gap-2",
+    dots: "pt-4 flex justify-center gap-2",
     dot: "h-2.5 w-2.5 rounded-full p-0 transition-colors cursor-pointer",
     dotActive: "bg-primary",
     dotInactive: "bg-primary/30",
@@ -45,9 +45,11 @@ export const defaultCarouselUi: SiteCarouselUi = {
   },
 
   imageItem: {
-    ratioContainer: "relative aspect-[16/9]",
+    ratioContainer: "relative aspect-[16/9] bg-muted",
     fillContainer: "relative w-full h-full",
-    image: "object-cover",
+    containedImage: "object-contain",
+    coverImage: "object-cover",
+    caption: "pt-3 text-center text-sm text-muted-foreground",
   },
 
   contentItem: {

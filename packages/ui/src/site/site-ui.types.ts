@@ -314,6 +314,8 @@ export type SiteImageUi = Readonly<{
   caption: string;
   container: string;
   image: string;
+  button: string;
+  lightbox: SiteLightboxUi;
   imageDefault: string;
   imageCover: string;
 
@@ -384,7 +386,9 @@ export type SiteCarouselUi = Readonly<{
   imageItem: Readonly<{
     ratioContainer: string;
     fillContainer: string;
-    image: string;
+    containedImage: string;
+    coverImage: string;
+    caption: string;
   }>;
 
   contentItem: Readonly<{
@@ -452,6 +456,8 @@ export type SiteLightboxUiOverride = DeepPartial<SiteLightboxUi>;
 export type SiteFooterUi = Readonly<{
   footer: string;
   footerContainer: string;
+  poweredBy: string;
+  poweredByLink: string;
   copyright: string;
   legalMenu: SiteLegalMenuUi;
 }>;

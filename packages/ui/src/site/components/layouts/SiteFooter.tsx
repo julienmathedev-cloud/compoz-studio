@@ -3,17 +3,19 @@
  * @layer ui/site/components
  *
  * @description
- * Footer site : copyright (année optionnelle) + navigation secondaire (menu légal).
+ * Footer site : powered by, copyright (année optionnelle) + navigation secondaire (menu légal).
  *
  * @remarks
- * - Rend `null` si aucune information n’est affichable (ni copyright, ni liens).
+ * - Rend `null` si aucune information n’est affichable.
  * - Les items du menu légal sont normalisés localement pour déterminer si un rendu est nécessaire.
  * - Le style est fourni par le skin/template via `ui`.
  *
  * @accessibility
  * - Le footer porte un `aria-label` (landmark explicite).
- * - Les liens légaux sont rendus via `SiteLegalMenu` (qui délègue à `SiteNavLink`).
+ * - Les liens légaux sont rendus via `SiteLegalMenu`.
  */
+
+import Link from "next/link";
 
 import { normalizeArray, normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
@@ -37,8 +39,9 @@ export function SiteFooter({ footer, legalMenu, ui }: SiteFooterProps) {
 
   const hasLinks = links.length > 0;
   const hasCopyrightLine = showYear || Boolean(rawCopyright);
+  const hasPoweredBy = true;
 
-  if (!hasCopyrightLine && !hasLinks) {
+  if (!hasPoweredBy && !hasCopyrightLine && !hasLinks) {
     return null;
   }
 
@@ -47,6 +50,20 @@ export function SiteFooter({ footer, legalMenu, ui }: SiteFooterProps) {
   return (
     <footer className={cn(ui.footer)} aria-label="Pied de page">
       <div className={cn(ui.footerContainer)}>
+        {hasPoweredBy ? (
+          <div className={cn(ui.poweredBy)}>
+            Powered by{" "}
+            <Link
+              href=""
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(ui.poweredByLink)}
+            >
+              Compoz Studio
+            </Link>
+          </div>
+        ) : null}
+
         {hasCopyrightLine ? (
           <div className={cn(ui.copyright)}>
             {showYear && rawCopyright ? (

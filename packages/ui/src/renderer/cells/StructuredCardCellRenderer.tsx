@@ -26,6 +26,8 @@ export type StructuredCardCellRendererProps = Readonly<{
   ui: SiteStructuredCardUi;
 }>;
 
+type StructuredCardColumns = 1 | 2 | 3;
+
 export function StructuredCardCellRenderer({
   cell,
   ui,
@@ -47,9 +49,19 @@ export function StructuredCardCellRenderer({
 
   if (items.length < 1) return null;
 
-  const columns = cell.columns ?? 1;
+  const requestedColumns = clampColumns(cell.columns ?? 1);
   const reveal = cell.reveal === true;
-  const cols = Math.max(1, Math.floor(columns || 1));
+
+  /**
+   * On limite le layout au nombre réel d’items pour obtenir :
+   * - 1 item  -> layout 1
+   * - 2 items -> layout 2
+   * - 3+      -> layout 3 (dans la limite du layout demandé)
+   */
+  const effectiveColumns = Math.min(
+    requestedColumns,
+    items.length,
+  ) as StructuredCardColumns;
 
   return (
     <div
@@ -57,7 +69,7 @@ export function StructuredCardCellRenderer({
       data-cell="structuredCard"
       data-reveal={reveal ? "true" : "false"}
     >
-      <div className={cn(ui.grid, ui.columns[columns])}>
+      <div className={cn(ui.grid, ui.columns[effectiveColumns])}>
         {items.map((item, index) => {
           const title = normalizeString(item.title, "");
           const meta = normalizeString(item.meta ?? "", "") || undefined;
@@ -97,7 +109,7 @@ export function StructuredCardCellRenderer({
                 }
               : undefined;
 
-          const seed = index % cols;
+          const seed = index % effectiveColumns;
 
           const card = (
             <SiteStructuredCard
@@ -111,14 +123,9 @@ export function StructuredCardCellRenderer({
           );
 
           return (
-            <div key={item.id}>
+            <div key={item.id} className="h-full">
               {reveal ? (
-                <SiteReveal
-                  seedOrder={seed}
-                  staggerMs={60}
-                  amount={0.1}
-                  className={cn(ui.content)}
-                >
+                <SiteReveal seedOrder={seed} staggerMs={60} amount={0.1}>
                   {card}
                 </SiteReveal>
               ) : (
@@ -133,3 +140,7 @@ export function StructuredCardCellRenderer({
 }
 
 StructuredCardCellRenderer.displayName = "StructuredCardCellRenderer";
+
+function clampColumns(value: unknown): StructuredCardColumns {
+  return value === 1 || value === 2 || value === 3 ? value : 1;
+}

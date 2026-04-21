@@ -212,15 +212,15 @@ export function OverviewPublishCard({
 
     if (prePublishWarningHints.length > 0) {
       const ok = await confirmList({
-        title: t("studio.shared.confirm.saveDespiteWarnings.title"),
-        intro: t("studio.shared.confirm.saveDespiteWarnings.intro"),
+        title: t("studio.shared.confirm.publishDespiteWarnings.title"),
+        intro: t("studio.shared.confirm.publishDespiteWarnings.intro"),
         items: prePublishWarningHints,
         confirmLabel: t(
-          "studio.shared.confirm.saveDespiteWarnings.confirmLabel",
+          "studio.shared.confirm.publishDespiteWarnings.confirmLabel",
         ),
         cancelLabel: t("common.cancel"),
         requireAckLabel: t(
-          "studio.shared.confirm.saveDespiteWarnings.requireAckLabel",
+          "studio.shared.confirm.publishDespiteWarnings.requireAckLabel",
         ),
         tone: "default",
       });

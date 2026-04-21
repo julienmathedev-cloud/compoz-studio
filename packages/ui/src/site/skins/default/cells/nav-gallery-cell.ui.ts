@@ -45,7 +45,7 @@ export const defaultNavGalleryUi: SiteNavGalleryUi = {
     "pointer-events-none absolute inset-0 h-full w-full object-cover motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:group-hover:scale-[1.02]",
 
   overlayPanel:
-    "pointer-events-none absolute inset-x-0 bottom-0 flex items-end p-4 bg-gradient-to-t from-popover/60 to-popover/0 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:opacity-100 motion-safe:transition-opacity motion-safe:duration-200 motion-safe:ease-out motion-safe:group-hover:[will-change:opacity] motion-reduce:transition-none",
+    "pointer-events-none absolute inset-0 flex items-end p-4 bg-gradient-to-t from-popover/80 via-popover/20 to-transparent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:opacity-100 motion-safe:transition-opacity motion-safe:duration-200 motion-safe:ease-out motion-safe:group-hover:[will-change:opacity] motion-reduce:transition-none",
 
   overlayContent:
     "pointer-events-none text-popover-foreground text-xl font-semibold leading-tight",

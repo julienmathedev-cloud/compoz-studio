@@ -13,10 +13,18 @@
  * - Le composant conserve uniquement la logique + a11y.
  * - Reveal : activable/désactivable via prop.
  * - Les tailles responsive des images sont pilotées par `ui.sizesByColumns`.
+ * - Les liens internes sont résolus relativement au pathname courant.
+ * - Les liens externes / spéciaux conservent leur comportement natif.
+ * - Les liens unsafe sont neutralisés.
  */
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
+import {
+  resolveInternalHref,
+  resolveLinkFlags,
+} from "@compoz/ui/lib/links/helpers";
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
@@ -49,6 +57,7 @@ export function SiteGalleryNavList({
   priority = false,
   reveal = true,
 }: SiteGalleryNavListProps) {
+  const pathname = usePathname() || "/";
   const cols = clampColumns(columns);
   const resolvedSizes = ui.sizesByColumns[cols];
 
@@ -90,13 +99,58 @@ export function SiteGalleryNavList({
           </figure>
         );
 
-        const item = href ? (
-          <Link href={href} aria-label={ariaLabel} className={cn(ui.link)}>
-            {figure}
-          </Link>
-        ) : (
-          figure
-        );
+        let item = figure;
+
+        if (href) {
+          const { special, external, rawExternal, unsafe } =
+            resolveLinkFlags(href);
+
+          const isHashAnchor = href.startsWith("#");
+          const shouldOpenNewTab = external && !special;
+          const target = shouldOpenNewTab ? "_blank" : undefined;
+          const rel = shouldOpenNewTab
+            ? "noopener noreferrer external"
+            : undefined;
+
+          if (unsafe) {
+            item = (
+              <span
+                aria-label={ariaLabel}
+                className={cn(ui.link)}
+                aria-disabled="true"
+                data-disabled="true"
+              >
+                {figure}
+              </span>
+            );
+          } else if (rawExternal || isHashAnchor) {
+            item = (
+              <a
+                href={href}
+                aria-label={ariaLabel}
+                className={cn(ui.link)}
+                target={!isHashAnchor ? target : undefined}
+                rel={!isHashAnchor ? rel : undefined}
+                data-external={!special && !isHashAnchor ? true : undefined}
+              >
+                {figure}
+              </a>
+            );
+          } else {
+            const internalHref = resolveInternalHref(pathname, href);
+
+            item = (
+              <Link
+                href={internalHref}
+                aria-label={ariaLabel}
+                className={cn(ui.link)}
+                scroll={false}
+              >
+                {figure}
+              </Link>
+            );
+          }
+        }
 
         return (
           <li key={normalized.id}>

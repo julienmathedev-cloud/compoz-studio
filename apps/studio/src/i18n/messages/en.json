@@ -497,6 +497,12 @@
           "confirmLabel": "Save anyway",
           "requireAckLabel": "I understand: I want to continue"
         },
+        "publishDespiteWarnings": {
+          "title": "Publish despite warnings?",
+          "intro": "Some items could be improved. You can continue if you have reviewed these points.",
+          "confirmLabel": "Publish anyway",
+          "requireAckLabel": "I understand: I want to continue"
+        },
         "delete": {
           "title": "Delete?",
           "intro": "This action is irreversible."

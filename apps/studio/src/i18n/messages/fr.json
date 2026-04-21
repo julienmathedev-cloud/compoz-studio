@@ -497,6 +497,12 @@
           "confirmLabel": "Enregistrer quand même",
           "requireAckLabel": "J’ai compris : je souhaite continuer"
         },
+        "publishDespiteWarnings": {
+          "title": "Publier malgré les avertissements ?",
+          "intro": "Certains éléments peuvent être améliorés. Vous pouvez continuer si vous avez vérifié ces points.",
+          "confirmLabel": "Publier quand même",
+          "requireAckLabel": "J’ai compris : je souhaite continuer"
+        },
         "delete": {
           "title": "Supprimer ?",
           "intro": "Cette action est irréversible."

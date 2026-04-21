@@ -59,6 +59,12 @@ export function SiteCarousel({
   const safeMs = Math.max(intervalMs, MIN_INTERVAL_MS);
   const safeIndex = count === 0 ? 0 : Math.min(currentIndex, count - 1);
   const isImageOnly = items.every((item) => item.kind === "image");
+  const activeItem = items[safeIndex];
+
+  const activeCaption =
+    activeItem?.kind === "image" && typeof activeItem.caption === "string"
+      ? activeItem.caption.trim()
+      : "";
 
   useEffect(() => {
     if (!hasAutoplay) {
@@ -208,6 +214,10 @@ export function SiteCarousel({
           />
         )}
       </div>
+
+      {activeCaption && !isFullBleed ? (
+        <p className={ui.imageItem.caption}>{activeCaption}</p>
+      ) : null}
 
       {showDots && count > 1 ? (
         <div className={ui.carousel.dots}>

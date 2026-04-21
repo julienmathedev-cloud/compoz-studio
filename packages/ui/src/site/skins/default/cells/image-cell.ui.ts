@@ -7,6 +7,7 @@
  */
 
 import type { SiteImageUi } from "@compoz/ui/site/site-ui.types";
+import { defaultLightboxUi } from "@compoz/ui/site/skins/default/molecules/lightbox.ui";
 
 export const defaultImageUi: SiteImageUi = {
   // Wrapper global : permet de contrôler la largeur visuelle
@@ -21,6 +22,11 @@ export const defaultImageUi: SiteImageUi = {
 
   // Base image
   image: "",
+
+  button:
+    "block w-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+
+  lightbox: defaultLightboxUi,
 
   // Modes de rendu
   imageDefault: "h-auto w-full",

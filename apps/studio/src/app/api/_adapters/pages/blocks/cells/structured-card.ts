@@ -37,9 +37,9 @@ function adaptStructuredCardItem(
       ? trimOrKeep(dto.image.src).length > 0
       : false;
 
-  const hasButtonHref =
-    dto.button != null && typeof dto.button.href === "string"
-      ? trimOrKeep(dto.button.href).length > 0
+  const hasButtonLabel =
+    dto.button != null && typeof dto.button.label === "string"
+      ? trimOrKeep(dto.button.label).length > 0
       : false;
 
   return {
@@ -49,7 +49,7 @@ function adaptStructuredCardItem(
     meta: dto.meta ? trimOrKeep(dto.meta) : null,
     sections: dto.sections.map(adaptStructuredCardSection),
     button:
-      hasButtonHref && dto.button
+      hasButtonLabel && dto.button
         ? {
             id: trimOrKeep(dto.button.id),
             label: trimOrKeep(dto.button.label),

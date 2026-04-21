@@ -3,11 +3,11 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer site/preview : rendu d’une image via `SiteAppImage`.
+ * Cell renderer site/preview : rendu d’une image zoomable via `SiteZoomableImage`.
  *
  * @remarks
  * - UI-only : consomme une shape déjà validée (schema).
- * - Délègue A11y + perf à `SiteAppImage`.
+ * - Délègue A11y + perf à `SiteZoomableImage` / `SiteAppImage`.
  * - Style piloté par le skin via `ui`.
  * - Reveal : activé par défaut (V0.5).
  * - Si une caption est présente, l’image est rendue dans un `figure`
@@ -18,8 +18,8 @@ import type { ImageCellShape } from "@compoz/validation/pages/blocks/cells/cell"
 
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
-import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
 import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
+import { SiteZoomableImage } from "@compoz/ui/site/components/molecules/SiteZoomableImage";
 import type { SiteImageUi } from "@compoz/ui/site/site-ui.types";
 
 export type ImageCellRendererProps = Readonly<{
@@ -49,20 +49,23 @@ export function ImageCellRenderer({
   const resolvedSizes = ui.variantSizes[variant];
 
   const imageNode = (
-    <SiteAppImage
+    <SiteZoomableImage
       image={{
         src,
         alt,
         width: cell.image.width,
         height: cell.image.height,
       }}
+      caption={caption || undefined}
       sizes={resolvedSizes}
       priority={priority}
       fetchPriority={priority ? "high" : "auto"}
-      className={cn(
+      buttonClassName={cn(ui.button)}
+      imageClassName={cn(
         ui.image,
         mode === "default" ? ui.imageDefault : ui.imageCover,
       )}
+      lightboxUi={ui.lightbox}
     />
   );
 

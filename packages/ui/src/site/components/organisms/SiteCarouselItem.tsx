@@ -48,7 +48,9 @@ export function SiteCarouselItem({
           }}
           fill
           sizes="100vw"
-          className={ui.imageItem.image}
+          className={
+            isFullBleed ? ui.imageItem.coverImage : ui.imageItem.containedImage
+          }
           priority={priority}
           fetchPriority={priority ? "high" : "auto"}
         />

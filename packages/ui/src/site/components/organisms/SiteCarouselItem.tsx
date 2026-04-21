@@ -6,6 +6,7 @@
  * Rendu partagé d’un item de carousel / slider.
  */
 
+import { renderContentIcon } from "@compoz/ui/lib/icons/content-icons";
 import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
 import { SiteCard } from "@compoz/ui/site/components/molecules/SiteCard";
 import { SiteExtendedCard } from "@compoz/ui/site/components/molecules/SiteExtendedCard";
@@ -64,7 +65,11 @@ export function SiteCarouselItem({
         <SiteCard
           title={item.title}
           description={item.description}
-          icon={item.icon}
+          icon={
+            item.icon
+              ? renderContentIcon(item.icon, { className: ui.card.icon })
+              : undefined
+          }
           ui={ui.card}
         />
       </div>
@@ -79,7 +84,13 @@ export function SiteCarouselItem({
           description={item.description}
           bullets={item.bullets}
           footer={item.footer}
-          icon={item.icon}
+          icon={
+            item.icon
+              ? renderContentIcon(item.icon, {
+                  className: ui.extendedCard.icon,
+                })
+              : undefined
+          }
           align="left"
           ui={ui.extendedCard}
         />

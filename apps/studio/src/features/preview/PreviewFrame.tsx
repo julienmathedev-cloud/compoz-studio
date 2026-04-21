@@ -72,7 +72,7 @@ type PreviewFrameProps = Readonly<{
 }>;
 
 const DEVICE_PRESETS: Readonly<Record<PreviewDevice, { width: number }>> = {
-  mobile: { width: 640 },
+  mobile: { width: 430 },
   tablet: { width: 780 },
   laptop: { width: 1028 },
   desktop: { width: 1280 },

@@ -112,6 +112,9 @@ export function SiteContactForm({
                       id={field.id}
                       name={field.name}
                       type={field.type === "email" ? "email" : "text"}
+                      autoComplete={
+                        field.type === "email" ? "email" : undefined
+                      }
                       value={value}
                       onChange={(event) =>
                         handleChange(field.name, event.target.value)

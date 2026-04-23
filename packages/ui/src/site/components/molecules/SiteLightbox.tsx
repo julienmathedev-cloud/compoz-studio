@@ -10,9 +10,9 @@
  * @remarks
  * - UI-only : pas de logique métier.
  * - A11y : role="dialog", aria-modal="true", fermeture Esc, overlay click.
- * - UX : lock scroll (html overflow).
+ * - UX : lock scroll sans saut de page via body fixed.
  * - Animations : classes (enter/from/active/exit) + motion-reduce.
- * - Focus : trap clavier (Tab/Shift+Tab) + restore focus au close.
+ * - Focus : trap clavier (Tab/Shift+Tab) à l’intérieur de la lightbox.
  * - Skinnable : toutes les classes viennent du contrat `ui`.
  */
 
@@ -99,7 +99,6 @@ export function SiteLightbox({
   const didCloseRef = useRef(false);
 
   const panelRef = useRef<HTMLDivElement | null>(null);
-  const restoreFocusRef = useRef<HTMLElement | null>(null);
 
   const finalizeClose = useCallback(() => {
     if (didCloseRef.current) {
@@ -126,9 +125,6 @@ export function SiteLightbox({
   }, [finalizeClose, prefersReducedMotion]);
 
   useEffect(() => {
-    restoreFocusRef.current =
-      (document.activeElement as HTMLElement | null) ?? null;
-
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         beginClose();
@@ -173,24 +169,46 @@ export function SiteLightbox({
 
     window.addEventListener("keydown", onKey);
 
-    const prev = document.documentElement.style.overflow;
-    document.documentElement.style.overflow = "hidden";
+    const body = document.body;
+    const scrollY = window.scrollY;
+
+    const prevPosition = body.style.position;
+    const prevTop = body.style.top;
+    const prevLeft = body.style.left;
+    const prevRight = body.style.right;
+    const prevWidth = body.style.width;
+    const prevOverflow = body.style.overflow;
+
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
 
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.documentElement.style.overflow = prev;
 
-      const el = restoreFocusRef.current;
+      const html = document.documentElement;
+      const prevHtmlScrollBehavior = html.style.scrollBehavior;
+      const prevBodyScrollBehavior = body.style.scrollBehavior;
 
-      if (el && typeof el.focus === "function") {
-        requestAnimationFrame(() => {
-          try {
-            el.focus({ preventScroll: true });
-          } catch {
-            el.focus();
-          }
-        });
-      }
+      html.style.scrollBehavior = "auto";
+      body.style.scrollBehavior = "auto";
+
+      body.style.position = prevPosition;
+      body.style.top = prevTop;
+      body.style.left = prevLeft;
+      body.style.right = prevRight;
+      body.style.width = prevWidth;
+      body.style.overflow = prevOverflow;
+
+      window.scrollTo(0, scrollY);
+
+      requestAnimationFrame(() => {
+        html.style.scrollBehavior = prevHtmlScrollBehavior;
+        body.style.scrollBehavior = prevBodyScrollBehavior;
+      });
     };
   }, [beginClose]);
 
@@ -207,7 +225,7 @@ export function SiteLightbox({
   }, [prefersReducedMotion]);
 
   const src = String(image?.src ?? "").trim();
-  const alt = String(image?.alt ?? "");
+  const alt = String(image?.alt ?? "").trim();
 
   if (!src) {
     return null;
@@ -260,11 +278,11 @@ export function SiteLightbox({
         }}
       >
         <Button
+          type="button"
           size="icon"
           aria-label="Fermer"
           onClick={beginClose}
           className={cn(ui.closeButton)}
-          autoFocus
         >
           <X className={cn(ui.closeIcon)} aria-hidden />
         </Button>

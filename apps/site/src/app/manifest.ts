@@ -9,7 +9,6 @@ import {
   getPublishedSettingsByTenantId,
   getTenantId,
 } from "@compoz/site/lib/pages/published-page-loaders";
-import { resolveSiteBaseUrl } from "@compoz/site/lib/seo/resolveSiteBaseUrl";
 import { resolveIconHref } from "@compoz/ui/lib/seo/metadata-helpers";
 
 /* -------------------------------------------------------------------------- */
@@ -56,6 +55,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
 
   if (!settings) {
     return {
+      id: "/",
       name: "Site",
       short_name: "Site",
       description: "Site web publié avec Compoz.",
@@ -75,9 +75,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
 
   const favicon = resolveIconHref(settings.identity?.faviconUrl);
 
-  const metadataBase = resolveSiteBaseUrl(settings.seo?.baseUrl);
-
   return {
+    id: "/",
     name: siteName,
     short_name: siteName,
     description,
@@ -87,6 +86,5 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     background_color: "#ffffff",
     theme_color: "#ffffff",
     icons: favicon ? buildManifestIcons(favicon) : undefined,
-    id: metadataBase ? metadataBase.toString() : "/",
   };
 }

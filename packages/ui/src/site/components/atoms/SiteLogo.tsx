@@ -55,8 +55,8 @@ export function SiteLogo({ identity, ui }: SiteLogoProps) {
         width: logo.width,
         height: logo.height,
       }}
-      priority={false}
-      fetchPriority="auto"
+      priority
+      fetchPriority="high"
       sizes={ui.sizes}
       className={cn(ui.image)}
     />

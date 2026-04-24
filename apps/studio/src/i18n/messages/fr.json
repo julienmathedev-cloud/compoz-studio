@@ -35,7 +35,8 @@
     "creating": "Création…",
     "availableInNextVersion": "Disponible dans une prochaine version",
     "chooseColor": "Choisir une couleur",
-    "choose": "Choisir"
+    "choose": "Choisir",
+    "back": "Retour"
   },
 
   "notifications": {

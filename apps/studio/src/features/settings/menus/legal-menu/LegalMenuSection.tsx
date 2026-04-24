@@ -77,14 +77,15 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
     },
   );
 
-  const dataReady = !isLoading && !isIndexLoading;
+  const sectionIsLoading = isLoading || isIndexLoading;
+  const dataReady = !sectionIsLoading;
 
   const isEmpty = dataReady && (baseline?.items?.length ?? 0) === 0;
 
   const emptyLabel = t("studio.emptyPreview.legalMenu");
 
   const isPreviewLoading =
-    !isEmpty && (isLoading || isIndexLoading || !ready.isReady("legalMenu"));
+    !isEmpty && (sectionIsLoading || !ready.isReady("legalMenu"));
 
   const hrefSet = useMemo(() => {
     const set = new Set<string>();
@@ -140,7 +141,7 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
       headingLevel="h2"
       description={description}
       isBusy={isSaving}
-      isLoading={isLoading}
+      isLoading={sectionIsLoading}
       isDirty={isDirty}
       blockingErrorsCount={blockingErrorsCount}
     >

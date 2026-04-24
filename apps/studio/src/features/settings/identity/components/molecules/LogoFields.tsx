@@ -155,33 +155,30 @@ export function LogoFields({
 
           // Mise à jour manuelle URL (cas saisie/édition textuelle)
           // On conserve les dimensions si elles existent déjà, sinon fallback neutre.
+          if (!currentLogo?.width || !currentLogo?.height) {
+            return;
+          }
+
           logoField.onChange({
             src: nextUrl,
             alt: currentAlt,
-            width: currentLogo?.width ?? 1,
-            height: currentLogo?.height ?? 1,
+            width: currentLogo.width,
+            height: currentLogo.height,
           });
         }}
         disabled={isBusy}
         previewAlt={previewAlt}
         help={t("studio.logoFields.image.help")}
         accept={LOGO_ACCEPT}
-        onFileSelect={
-          onUploadLogo
-            ? async (file) => {
-                const uploaded = await handleUploadLogo(file);
-
-                logoField.onChange({
-                  src: uploaded.url,
-                  alt: currentAlt,
-                  width: uploaded.width,
-                  height: uploaded.height,
-                });
-
-                return uploaded;
-              }
-            : undefined
-        }
+        onFileSelect={onUploadLogo ? handleUploadLogo : undefined}
+        onUploaded={(uploaded) => {
+          logoField.onChange({
+            src: uploaded.url,
+            alt: currentAlt,
+            width: uploaded.width,
+            height: uploaded.height,
+          });
+        }}
         preferredTypes={PREFERRED_LOGO}
         preferredTypeHint={preferredLogoHint}
         maxBytes={MAX_IMAGE_UPLOAD_BYTES}

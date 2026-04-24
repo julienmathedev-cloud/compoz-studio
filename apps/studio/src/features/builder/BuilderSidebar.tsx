@@ -456,8 +456,10 @@ export function BuilderSidebar({
             size="icon"
             onClick={onBack}
             disabled={isBusy}
+            aria-label={t("common.back")}
+            title={t("common.back")}
           >
-            <ArrowLeft />
+            <ArrowLeft aria-hidden="true" />
           </Button>
         </div>
 

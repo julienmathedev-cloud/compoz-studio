@@ -107,7 +107,7 @@ export function SiteAppImage({
       alt={normalizedAlt}
       {...dimensionProps}
       priority={priority}
-      fetchPriority={priority ? undefined : fetchPriority}
+      fetchPriority={fetchPriority}
       decoding={decoding}
       loading={loading}
       sizes={normalizedSizes}

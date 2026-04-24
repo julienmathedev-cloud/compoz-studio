@@ -104,7 +104,8 @@ export function PageBlockListItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "grid min-w-0 grid-cols-[auto_max-content_minmax(0,1fr)_auto] items-center gap-3",
+        "grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3",
+        "md:grid-cols-[auto_max-content_minmax(0,1fr)_auto]",
         isDragging && "opacity-60",
       )}
       aria-busy={isBusy || undefined}
@@ -118,7 +119,9 @@ export function PageBlockListItem({
         />
       </div>
 
-      <div className="flex min-w-[12ch] items-center justify-center">
+      <div className="flex min-w-0 items-center gap-2 md:hidden">
+        <BlockCellsDescription block={block} index={index} mode="title" />
+
         {statusKind ? (
           <DiffStatusBadge
             kind={statusKind}
@@ -127,10 +130,21 @@ export function PageBlockListItem({
         ) : null}
       </div>
 
-      <BlockCellsDescription block={block} index={index} />
+      <div className="hidden min-w-[12ch] items-center justify-center md:flex">
+        {statusKind ? (
+          <DiffStatusBadge
+            kind={statusKind}
+            publishedLabel={t("common.upToDate")}
+          />
+        ) : null}
+      </div>
+
+      <div className="hidden min-w-0 md:block">
+        <BlockCellsDescription block={block} index={index} />
+      </div>
 
       <div className="min-w-max shrink-0 justify-self-end">
-        <StudioButtonGroup className="shrink-0">
+        <StudioButtonGroup className="hidden shrink-0 md:inline-flex">
           <TooltipButton
             type="button"
             size="icon"
@@ -157,6 +171,20 @@ export function PageBlockListItem({
             title={t("studio.pageBlocksListSection.bloc.delete")}
           />
         </StudioButtonGroup>
+
+        <DeleteButton
+          size="icon"
+          disabled={!canDelete}
+          isDeleting={isDeleting}
+          onConfirmDelete={async () => onDelete?.()}
+          ariaLabel={t("studio.pageBlocksListSection.bloc.delete")}
+          title={t("studio.pageBlocksListSection.bloc.delete")}
+          className="md:hidden"
+        />
+      </div>
+
+      <div className="col-span-3 min-w-0 pl-9 md:hidden">
+        <BlockCellsDescription block={block} index={index} mode="badges" />
       </div>
     </div>
   );

@@ -1518,6 +1518,7 @@
         "pageSettings": "Page settings"
       },
       "bloc": {
+        "mobileEditionHint": "Block editing is optimized for desktop. On mobile, you can review the page, but some editing actions are limited.",
         "title": "Block {title}",
         "description": "{cols, plural, one {# column} other {# columns}} · {kinds}",
         "empty": "Empty block",
@@ -1527,6 +1528,7 @@
         "delete": "Delete block",
         "back": "Back to pages",
         "row": "Row",
+        "column": "Column",
         "kinds": {
           "richText": "Text",
           "image": "Image",

@@ -11,13 +11,14 @@
   },
   "dependencies": {
     "@compoz/core": "workspace:*",
-    "@compoz/infra": "workspace:*",
     "@compoz/http": "workspace:*",
-    "@compoz/validation": "workspace:*",
+    "@compoz/infra": "workspace:*",
     "@compoz/ui": "workspace:*",
+    "@compoz/validation": "workspace:*",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "resend": "^6.12.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

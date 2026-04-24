@@ -8,9 +8,11 @@
  * Formulaire de contact public utilisé par la cellule `form`.
  *
  * @remarks
- * - UI-only.
+ * - UI-only orienté runtime site.
  * - Tous les styles sont pilotés par `ui`.
- * - Le composant ne gère pas l’envoi réel : il délègue au parent via `onSubmit`.
+ * - Le composant supporte deux modes :
+ *   1. `onSubmit` fourni par le parent
+ *   2. fallback HTTP vers `/api/contact`
  * - Utilise `Card` et les primitives `Field` ShadCN.
  * - Supporte les types `text`, `email` et `textarea`.
  */
@@ -32,6 +34,8 @@ import type { SiteFormUi } from "@compoz/ui/site/site-ui.types";
 import type { FormFieldShape } from "@compoz/validation/pages/blocks/cells/cell";
 
 export type SiteContactFormSubmitValues = Record<string, string>;
+
+type SubmitStatus = "idle" | "success" | "error";
 
 export type SiteContactFormProps = Readonly<{
   fields: readonly FormFieldShape[];
@@ -57,24 +61,72 @@ export function SiteContactForm({
     buildInitialValues(fields),
   );
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<SubmitStatus>("idle");
+
   useEffect(() => {
     setValues(buildInitialValues(fields));
+    setSubmitStatus("idle");
   }, [fields]);
 
   if (visibleFields.length < 1) {
     return null;
   }
 
+  const isFormDisabled = disabled || isSubmitting;
+
   const handleChange = (name: string, value: string) => {
     setValues((prev) => ({
       ...prev,
       [name]: value,
     }));
+
+    if (submitStatus !== "idle") {
+      setSubmitStatus("idle");
+    }
+  };
+
+  const submitWithApi = async (nextValues: SiteContactFormSubmitValues) => {
+    const response = await fetch("/api/contact", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        values: nextValues,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Contact form submission failed.");
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    await onSubmit?.(values);
+
+    if (isFormDisabled) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setSubmitStatus("idle");
+
+      if (onSubmit) {
+        await onSubmit(values);
+      } else {
+        await submitWithApi(values);
+      }
+
+      setValues(buildInitialValues(fields));
+      setSubmitStatus("success");
+    } catch (error) {
+      console.error("SiteContactForm submit error:", error);
+      setSubmitStatus("error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -103,7 +155,7 @@ export function SiteContactForm({
                         handleChange(field.name, event.target.value)
                       }
                       required={Boolean(field.required)}
-                      disabled={disabled}
+                      disabled={isFormDisabled}
                       placeholder={field.placeholder ?? ""}
                       className={cn(ui.textarea)}
                     />
@@ -120,7 +172,7 @@ export function SiteContactForm({
                         handleChange(field.name, event.target.value)
                       }
                       required={Boolean(field.required)}
-                      disabled={disabled}
+                      disabled={isFormDisabled}
                       placeholder={field.placeholder ?? ""}
                       className={cn(ui.input)}
                     />
@@ -129,15 +181,27 @@ export function SiteContactForm({
               );
             })}
           </div>
+
+          {submitStatus === "success" ? (
+            <p className="text-sm text-green-600">
+              Votre message a bien été envoyé.
+            </p>
+          ) : null}
+
+          {submitStatus === "error" ? (
+            <p className="text-sm text-destructive">
+              Une erreur est survenue lors de l’envoi du message.
+            </p>
+          ) : null}
         </CardContent>
 
         <CardFooter className={cn(ui.footer)}>
           <Button
             type="submit"
-            disabled={disabled}
+            disabled={isFormDisabled}
             className={cn(ui.submitButton)}
           >
-            {submitLabel}
+            {isSubmitting ? "Envoi..." : submitLabel}
           </Button>
         </CardFooter>
       </form>

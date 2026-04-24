@@ -639,6 +639,13 @@ export function PageBlocksListSection({
         </Link>
       </Button>
 
+      <Text
+        as="p"
+        className="rounded-lg border border-border bg-card px-3 py-2 md:hidden"
+      >
+        {t("studio.pageBlocksListSection.bloc.mobileEditionHint")}
+      </Text>
+
       <Card variant="panel" visualMode="studio">
         <CardContent className="flex flex-col gap-2">
           {orderedBlocks.length > 0 ? (

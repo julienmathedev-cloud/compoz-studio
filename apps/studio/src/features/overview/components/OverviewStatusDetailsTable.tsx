@@ -113,12 +113,16 @@ export function OverviewStatusDetailsTable() {
             <Table className="table-fixed">
               <TableHeader>
                 <TableRow className="hover:bg-accent/40">
-                  <TableHead className="w-36">{t("common.status")}</TableHead>
-                  <TableHead className="w-[120px] md:w-[260px]">
+                  <TableHead className="w-20 md:w-36">
+                    {t("common.status")}
+                  </TableHead>
+                  <TableHead className="w-[110px] md:w-[260px]">
                     {t("studio.shared.entities.pages")}
                   </TableHead>
-                  <TableHead>{t("studio.shared.entities.blocks")}</TableHead>
-                  <TableHead className="w-[40px]" />
+                  <TableHead className="w-[96px] md:w-auto">
+                    {t("studio.shared.entities.blocks")}
+                  </TableHead>
+                  <TableHead className="w-6 md:w-[40px]" />
                 </TableRow>
               </TableHeader>
 

@@ -167,11 +167,9 @@ export function BlockCellsDescription({
               </TooltipTrigger>
 
               <TooltipContent>
-                {`${t("studio.pageBlocksListSection.bloc.row", {
-                  number: row,
-                })} · ${t("studio.cellEditorTabs.tabs", {
-                  number: column,
-                })} : ${kindLabel}`}
+                {`${t("studio.pageBlocksListSection.bloc.row")} ${row} · ${t(
+                  "studio.pageBlocksListSection.bloc.column",
+                )} ${column} : ${kindLabel}`}
               </TooltipContent>
             </Tooltip>
           ))

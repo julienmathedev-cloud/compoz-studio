@@ -49,6 +49,8 @@ type DeleteButtonProps = Readonly<{
 
   /** Taille du bouton (shadcn). */
   size?: "default" | "sm" | "lg" | "icon";
+
+  className?: string;
 }>;
 
 /**
@@ -63,6 +65,7 @@ export function DeleteButton({
   title,
   confirm,
   size = "icon",
+  className,
 }: DeleteButtonProps) {
   const t = useTranslations();
   const aria = ariaLabel ?? t("common.delete");
@@ -81,6 +84,7 @@ export function DeleteButton({
       aria-label={aria}
       aria-busy={isDeleting || undefined}
       tooltip={isDisabled ? (disabledTooltip ?? ttl) : ttl}
+      className={className}
       onClick={async () => {
         if (isDisabled) return;
 

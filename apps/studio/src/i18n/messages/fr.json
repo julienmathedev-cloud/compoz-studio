@@ -1518,6 +1518,7 @@
         "pageSettings": "Réglages de la page"
       },
       "bloc": {
+        "mobileEditionHint": "L’édition des blocs est optimisée pour ordinateur. Sur mobile, vous pouvez consulter la page, mais certaines actions d’édition sont limitées.",
         "title": "Bloc {title}",
         "description": "{cols, plural, one {# colonne} other {# colonnes}} · {kinds}",
         "empty": "Bloc vide",
@@ -1527,6 +1528,7 @@
         "delete": "Supprimer le bloc",
         "back": "Retour aux pages",
         "row": "Ligne",
+        "column": "Colonne",
         "kinds": {
           "richText": "Texte",
           "image": "Image",

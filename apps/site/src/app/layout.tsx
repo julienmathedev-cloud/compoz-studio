@@ -17,7 +17,6 @@ import type { ReactNode } from "react";
 
 import "@compoz/site/app/globals.css";
 
-import { fontVariablesClassName } from "@compoz/ui/lib/fonts";
 import { cn } from "@compoz/ui/lib/utils";
 import { SITE_APP_SHELL } from "@compoz/ui/styles/site/layout";
 
@@ -27,11 +26,7 @@ type LayoutProps = Readonly<{
 
 export default function RootLayout({ children }: LayoutProps) {
   return (
-    <html
-      id="app-site"
-      lang="fr"
-      className={cn("overscroll-none h-dvh theme-site")}
-    >
+    <html id="app-site" lang="fr" className="overscroll-none h-dvh theme-site">
       <body className={cn("antialiased", SITE_APP_SHELL)}>{children}</body>
     </html>
   );

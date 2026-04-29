@@ -12,6 +12,7 @@ import { getPublishedSettingsByTenantId } from "@compoz/site/lib/pages/published
 import { resolveSiteBaseUrl } from "@compoz/site/lib/seo/resolveSiteBaseUrl";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
 import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
+import { getFontVariablesClassName } from "@compoz/ui/lib/fonts";
 import {
   ensureTitleTemplate,
   resolveAssetUrl,
@@ -156,7 +157,6 @@ export async function generateMetadata({
 /* -------------------------------------------------------------------------- */
 /* Layout                                                                     */
 /* -------------------------------------------------------------------------- */
-
 export default async function TenantSiteLayout({
   children,
   params,
@@ -170,7 +170,12 @@ export default async function TenantSiteLayout({
     <SiteRuntimeProvider ui={ui} theme={settings?.theme}>
       <ScrollTopOnRouteChange />
 
-      <div className={cn(SITE_APP_COLUMN)}>
+      <div
+        className={cn(
+          SITE_APP_COLUMN,
+          getFontVariablesClassName(settings?.theme?.fontFamily),
+        )}
+      >
         {settings ? (
           <>
             <SiteHeader

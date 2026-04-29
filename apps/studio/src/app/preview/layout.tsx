@@ -10,7 +10,7 @@ import {
   getDraftSettingsByTenantId,
   getTenantId,
 } from "@compoz/studio/lib/pages/draft-page-loaders";
-import { fontVariablesClassName } from "@compoz/ui/lib/fonts";
+import { allFontVariablesClassName } from "@compoz/ui/lib/fonts";
 import { cn } from "@compoz/ui/lib/utils";
 import { SITE_APP_SHELL } from "@compoz/ui/styles/site/layout";
 import { NextIntlClientProvider } from "next-intl";
@@ -31,7 +31,7 @@ export default async function PreviewLayout({ children }: PreviewLayoutProps) {
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       <div
-        className={cn(SITE_APP_SHELL, fontVariablesClassName)}
+        className={cn(SITE_APP_SHELL, allFontVariablesClassName)}
         data-scroll-root
       >
         <PreviewProviders tenantId={tenantId} initialTheme={initialTheme}>

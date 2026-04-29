@@ -21,7 +21,7 @@ import {
   getTenantId,
 } from "@compoz/studio/lib/pages/draft-page-loaders";
 import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
-import { fontVariablesClassName } from "@compoz/ui/lib/fonts";
+import { allFontVariablesClassName } from "@compoz/ui/lib/fonts";
 import {
   ensureTitleTemplate,
   resolveAssetUrl,
@@ -118,7 +118,7 @@ export default async function DraftLayout({ children }: LayoutProps) {
 
   return (
     <div
-      className={cn(SITE_APP_SHELL, fontVariablesClassName)}
+      className={cn(SITE_APP_SHELL, allFontVariablesClassName)}
       data-scroll-root
     >
       <SiteRuntimeProvider ui={ui} theme={settings.theme}>

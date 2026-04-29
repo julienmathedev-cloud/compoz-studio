@@ -52,6 +52,11 @@ export async function generateMetadata({
 
   if (!page) return {};
 
+  const settings = await getPublishedSettingsByTenantId(tenantId);
+
+  const description =
+    (settings?.seo?.defaultDescription ?? "").trim() || undefined;
+
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
     .map(toBlockShapeFromDTO)
     .filter((b): b is BlockShape => Boolean(b));
@@ -63,6 +68,7 @@ export async function generateMetadata({
 
   return {
     title,
+    description,
     alternates: { canonical: `/${encodeURIComponent(slug)}` },
   };
 }

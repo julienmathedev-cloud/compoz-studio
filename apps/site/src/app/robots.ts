@@ -29,6 +29,7 @@ import {
 
 function parseRobotsTokens(input: string | null | undefined): Set<string> {
   const raw = typeof input === "string" ? input : "";
+
   const tokens = raw
     .toLowerCase()
     .split(",")
@@ -49,12 +50,32 @@ function hostFromBaseUrl(baseUrl: string): string | undefined {
   }
 }
 
+function resolveRequestBaseUrl(
+  headersList: Awaited<ReturnType<typeof headers>>,
+) {
+  const hostRaw =
+    headersList.get("x-forwarded-host") ?? headersList.get("host") ?? "";
+
+  const protoRaw =
+    headersList.get("x-forwarded-proto") ??
+    (hostRaw.includes("localhost") || hostRaw.startsWith("127.0.0.1")
+      ? "http"
+      : "https");
+
+  const host = hostRaw.trim();
+
+  if (!host) return "";
+
+  return stripTrailingSlashes(`${protoRaw}://${host}`);
+}
+
 /* -------------------------------------------------------------------------- */
 /* Route                                                                      */
 /* -------------------------------------------------------------------------- */
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const h = await headers();
+
   const hostRaw = h.get("x-forwarded-host") ?? h.get("host") ?? "";
 
   const resolved = resolveTenantFromHost({
@@ -74,14 +95,22 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   const robotsTokens = parseRobotsTokens(seo?.robots ?? null);
   const disallowAll = robotsTokens.has("noindex");
 
-  const baseUrl = stripTrailingSlashes(seo?.baseUrl ?? "");
+  const seoBaseUrl = stripTrailingSlashes(seo?.baseUrl ?? "");
+  const envBaseUrl = stripTrailingSlashes(
+    process.env["NEXT_PUBLIC_SITE_URL"] ?? "",
+  );
+  const requestBaseUrl = resolveRequestBaseUrl(h);
+
+  const baseUrl = seoBaseUrl || envBaseUrl || requestBaseUrl;
   const hostOut = baseUrl ? hostFromBaseUrl(baseUrl) : undefined;
 
   const sitemapPath = usePathTenantFallback
     ? `/t/${encodeURIComponent(tenantId)}/sitemap.xml`
     : "/sitemap.xml";
 
-  const sitemapAbs = baseUrl ? canonicalFromBase(baseUrl, sitemapPath) : null;
+  const sitemapAbs = baseUrl
+    ? canonicalFromBase(baseUrl, sitemapPath)
+    : undefined;
 
   return {
     rules: [
@@ -91,6 +120,6 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
       },
     ],
     host: hostOut,
-    sitemap: sitemapAbs ?? sitemapPath,
+    sitemap: sitemapAbs,
   };
 }

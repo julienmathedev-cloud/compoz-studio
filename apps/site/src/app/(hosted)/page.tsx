@@ -37,6 +37,11 @@ export async function generateMetadata(): Promise<Metadata> {
 
   if (!page) return {};
 
+  const settings = await getPublishedSettingsByTenantId(tenantId);
+
+  const description =
+    (settings?.seo?.defaultDescription ?? "").trim() || undefined;
+
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
     .map(toBlockShapeFromDTO)
     .filter((b): b is BlockShape => Boolean(b));
@@ -48,6 +53,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title,
+    description,
     alternates: { canonical: SITE_PATH.home },
   };
 }

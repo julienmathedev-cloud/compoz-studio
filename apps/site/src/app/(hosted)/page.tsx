@@ -19,10 +19,11 @@ import {
   getPublishedIndexByTenantId,
   getTenantId,
 } from "@compoz/site/lib/pages/published-page-loaders";
-import { SitePageRuntimeRenderer } from "@compoz/site/lib/pages/SitePageRuntimeRenderer";
 import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
 import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
+import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
+import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 /* -------------------------------------------------------------------------- */
@@ -56,6 +57,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function SiteRootPage() {
   const tenantId = await getTenantId();
+  const ui = resolveSiteUi(tenantId);
 
   const index = await getPublishedIndexByTenantId(tenantId);
   if (!index) return notFound();
@@ -73,7 +75,7 @@ export default async function SiteRootPage() {
     hrefForSlug: (slug) => (slug === HOME_SLUG ? SITE_PATH.home : `/${slug}`),
   });
 
-  return <SitePageRuntimeRenderer blocks={blocks} pager={pager} />;
+  return <SitePageRenderer ui={ui} blocks={blocks} pager={pager} />;
 }
 
 SiteRootPage.displayName = "SiteRootPage";

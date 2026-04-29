@@ -21,11 +21,12 @@ import {
   getPublishedPageBySlugByTenantId,
   getTenantId,
 } from "@compoz/site/lib/pages/published-page-loaders";
-import { SitePageRuntimeRenderer } from "@compoz/site/lib/pages/SitePageRuntimeRenderer";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
 import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
 import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
+import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
+import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 export const dynamic = "force-dynamic";
@@ -75,6 +76,7 @@ export default async function SitePage({ params }: PageParams) {
   if (slug === HOME_SLUG) return redirect(SITE_PATH.home);
 
   const tenantId = await getTenantId();
+  const ui = resolveSiteUi(tenantId);
 
   const index = await getPublishedIndexByTenantId(tenantId);
   if (!index) return notFound();
@@ -92,7 +94,7 @@ export default async function SitePage({ params }: PageParams) {
     hrefForSlug: (s) => (s === HOME_SLUG ? SITE_PATH.home : `/${s}`),
   });
 
-  return <SitePageRuntimeRenderer blocks={blocks} pager={pager} />;
+  return <SitePageRenderer ui={ui} blocks={blocks} pager={pager} />;
 }
 
 SitePage.displayName = "SitePage";

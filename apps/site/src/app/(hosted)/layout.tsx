@@ -23,6 +23,7 @@ import {
 } from "@compoz/site/lib/pages/published-page-loaders";
 import { resolveSiteBaseUrl } from "@compoz/site/lib/seo/resolveSiteBaseUrl";
 import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
+import { resolvePublicFontConfig } from "@compoz/ui/lib/public-fonts";
 import {
   ensureTitleTemplate,
   resolveAssetUrl,
@@ -37,6 +38,7 @@ import { SiteHeader } from "@compoz/ui/site/components/layouts/SiteHeader";
 import { SiteRuntimeProvider } from "@compoz/ui/site/providers/SiteRuntimeProvider";
 import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 import { SITE_APP_COLUMN, SITE_MAIN } from "@compoz/ui/styles/site/layout";
+import type { CSSProperties } from "react";
 
 type LayoutProps = Readonly<{
   children: ReactNode;
@@ -165,38 +167,51 @@ export default async function HostedSiteLayout({ children }: LayoutProps) {
   const tenantId = await getTenantId();
   const settings = await getPublishedSettingsByTenantId(tenantId);
   const ui = resolveSiteUi(tenantId);
+  const publicFont = resolvePublicFontConfig(settings?.theme?.fontFamily);
+
+  const fontStyle = {
+    [publicFont.variableName]: publicFont.fontFamily,
+  } as CSSProperties;
 
   return (
-    <SiteRuntimeProvider ui={ui} theme={settings?.theme}>
-      <ScrollTopOnRouteChange />
+    <>
+      <link rel="stylesheet" href={publicFont.href} />
 
-      <div className={cn(SITE_APP_COLUMN)}>
-        {settings ? (
-          <>
-            <SiteHeader
-              header={settings.header}
-              identity={settings.identity}
-              primaryMenu={toPrimaryMenuSettingsShapeFromDTO(
-                settings.primaryMenu,
-              )}
-              social={toSocialSettingsShapeFromDTO(settings.social)}
-              ui={ui.header}
-            />
+      <div style={fontStyle}>
+        <SiteRuntimeProvider ui={ui} theme={settings?.theme}>
+          <ScrollTopOnRouteChange />
 
-            <main id="main-content" className={cn(SITE_MAIN)}>
-              {children}
-            </main>
+          <div className={cn(SITE_APP_COLUMN)}>
+            {settings ? (
+              <>
+                <SiteHeader
+                  header={settings.header}
+                  identity={settings.identity}
+                  primaryMenu={toPrimaryMenuSettingsShapeFromDTO(
+                    settings.primaryMenu,
+                  )}
+                  social={toSocialSettingsShapeFromDTO(settings.social)}
+                  ui={ui.header}
+                />
 
-            <SiteFooter
-              footer={settings.footer}
-              legalMenu={toLegalMenuSettingsShapeFromDTO(settings.legalMenu)}
-              ui={ui.footer}
-            />
-          </>
-        ) : (
-          <SiteNotFoundClient />
-        )}
+                <main id="main-content" className={cn(SITE_MAIN)}>
+                  {children}
+                </main>
+
+                <SiteFooter
+                  footer={settings.footer}
+                  legalMenu={toLegalMenuSettingsShapeFromDTO(
+                    settings.legalMenu,
+                  )}
+                  ui={ui.footer}
+                />
+              </>
+            ) : (
+              <SiteNotFoundClient />
+            )}
+          </div>
+        </SiteRuntimeProvider>
       </div>
-    </SiteRuntimeProvider>
+    </>
   );
 }

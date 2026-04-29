@@ -12,7 +12,7 @@ import { getPublishedSettingsByTenantId } from "@compoz/site/lib/pages/published
 import { resolveSiteBaseUrl } from "@compoz/site/lib/seo/resolveSiteBaseUrl";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
 import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
-import { getFontVariablesClassName } from "@compoz/ui/lib/fonts";
+import { resolvePublicFontConfig } from "@compoz/ui/lib/public-fonts";
 import {
   ensureTitleTemplate,
   resolveAssetUrl,
@@ -165,43 +165,45 @@ export default async function TenantSiteLayout({
 
   const settings = await getPublishedSettingsByTenantId(tenantId);
   const ui = resolveSiteUi(tenantId);
+  const publicFont = resolvePublicFontConfig(settings?.theme?.fontFamily);
 
   return (
-    <SiteRuntimeProvider ui={ui} theme={settings?.theme}>
-      <ScrollTopOnRouteChange />
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      <link rel="stylesheet" href={publicFont.href} />
 
-      <div
-        className={cn(
-          SITE_APP_COLUMN,
-          getFontVariablesClassName(settings?.theme?.fontFamily),
-        )}
-      >
-        {settings ? (
-          <>
-            <SiteHeader
-              header={settings.header}
-              identity={settings.identity}
-              primaryMenu={toPrimaryMenuSettingsShapeFromDTO(
-                settings.primaryMenu,
-              )}
-              social={toSocialSettingsShapeFromDTO(settings.social)}
-              ui={ui.header}
-            />
+      <SiteRuntimeProvider ui={ui} theme={settings?.theme}>
+        <ScrollTopOnRouteChange />
 
-            <main id="main-content" className={cn(SITE_MAIN)}>
-              {children}
-            </main>
+        <div className={cn(SITE_APP_COLUMN)}>
+          {settings ? (
+            <>
+              <SiteHeader
+                header={settings.header}
+                identity={settings.identity}
+                primaryMenu={toPrimaryMenuSettingsShapeFromDTO(
+                  settings.primaryMenu,
+                )}
+                social={toSocialSettingsShapeFromDTO(settings.social)}
+                ui={ui.header}
+              />
 
-            <SiteFooter
-              footer={settings.footer}
-              legalMenu={toLegalMenuSettingsShapeFromDTO(settings.legalMenu)}
-              ui={ui.footer}
-            />
-          </>
-        ) : (
-          <SiteNotFoundClient />
-        )}
-      </div>
-    </SiteRuntimeProvider>
+              <main id="main-content" className={cn(SITE_MAIN)}>
+                {children}
+              </main>
+
+              <SiteFooter
+                footer={settings.footer}
+                legalMenu={toLegalMenuSettingsShapeFromDTO(settings.legalMenu)}
+                ui={ui.footer}
+              />
+            </>
+          ) : (
+            <SiteNotFoundClient />
+          )}
+        </div>
+      </SiteRuntimeProvider>
+    </>
   );
 }

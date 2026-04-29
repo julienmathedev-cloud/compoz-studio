@@ -1,0 +1,7 @@
+@font-face {
+  font-family: "Abril Fatface";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./abril-fatface-v25-latin-regular.woff2") format("woff2");
+}

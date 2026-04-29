@@ -58,13 +58,5 @@ export function resolveThemeFontFamily(
       ? (fontId as ThemeFontId)
       : DEFAULT_THEME_FONT_ID;
 
-  console.log("THEME RUNTIME FONT DEBUG", {
-    requestedFont: fontId,
-  });
-
-  console.log("THEME RUNTIME FONT RESOLVED", {
-    resolvedFont: THEME_FONT_CSS_VARS[safeId],
-  });
-
   return THEME_FONT_CSS_VARS[safeId];
 }

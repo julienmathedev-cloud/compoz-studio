@@ -5,7 +5,7 @@
 
 import type { Metadata } from "next";
 import type { Icons } from "next/dist/lib/metadata/types/metadata-types";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { SiteNotFoundClient } from "@compoz/site/components/system/SiteNotFoundClient";
 import { getPublishedSettingsByTenantId } from "@compoz/site/lib/pages/published-page-loaders";
@@ -27,7 +27,6 @@ import { SiteHeader } from "@compoz/ui/site/components/layouts/SiteHeader";
 import { SiteRuntimeProvider } from "@compoz/ui/site/providers/SiteRuntimeProvider";
 import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 import { SITE_APP_COLUMN, SITE_MAIN } from "@compoz/ui/styles/site/layout";
-import type { CSSProperties } from "react";
 
 type TenantLayoutProps = Readonly<{
   children: ReactNode;
@@ -114,7 +113,6 @@ export async function generateMetadata({
     `${brandTitle} — Site officiel.`;
 
   const metadataBase = resolveSiteBaseUrl(settings.seo?.baseUrl) ?? undefined;
-
   const favicon = resolveIconHref(settings.identity?.faviconUrl);
 
   const ogImage = resolveAssetUrl(
@@ -123,7 +121,6 @@ export async function generateMetadata({
   );
 
   const robotsContent = (settings.seo?.robots ?? "").trim() || undefined;
-
   const isProd = process.env.NODE_ENV === "production";
   const shouldForceNoindex = isProd && !metadataBase && !robotsContent;
   const robots =
@@ -158,6 +155,7 @@ export async function generateMetadata({
 /* -------------------------------------------------------------------------- */
 /* Layout                                                                     */
 /* -------------------------------------------------------------------------- */
+
 export default async function TenantSiteLayout({
   children,
   params,
@@ -174,8 +172,6 @@ export default async function TenantSiteLayout({
 
   return (
     <>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
       <link rel="stylesheet" href={publicFont.href} />
 
       <div style={fontStyle}>

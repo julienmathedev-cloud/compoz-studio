@@ -34,7 +34,7 @@ export const defaultHeadingUi: SiteHeadingUi = {
   },
 
   levelHero:
-    "max-w-3xl text-5xl font-bold tracking-tight text-balance md:text-6xl",
+    "max-w-3xl text-3xl sm:text-4xl font-bold tracking-tight text-balance md:text-6xl",
 
   /* -------------------------------------------------------------------------- */
   /* Subtitle                                                                   */

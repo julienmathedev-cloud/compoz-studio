@@ -15,5 +15,5 @@ import type { SiteHeadingUiOverride } from "@compoz/ui/site/site-ui.types";
 export const portfolioHeadingUi: SiteHeadingUiOverride = {
   separatorHero: "bg-primary",
   highlight:
-    "inline-block text-primary md:bg-gradient-to-r md:from-primary md:via-primary/50 md:to-primary md:bg-[length:200%_100%] md:bg-clip-text md:text-transparent md:animate-highlight-shift",
+    "inline-block bg-gradient-to-r from-primary via-primary/50 to-primary bg-[length:200%_100%] bg-clip-text text-transparent animate-highlight-shift",
 } as const;

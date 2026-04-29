@@ -9,7 +9,7 @@
 import type { SiteLegalMenuUi } from "@compoz/ui/site/site-ui.types";
 
 export const defaultLegalMenuUi: SiteLegalMenuUi = {
-  nav: "justify-self-center lg:col-start-3 lg:justify-self-end py-1 md:py-2",
+  nav: "justify-self-center lg:col-start-3 lg:justify-self-end",
 
   list: "m-0 flex list-none flex-wrap items-center p-0 gap-2 md:gap-3 lg:gap-4",
 

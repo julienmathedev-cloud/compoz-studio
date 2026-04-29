@@ -60,7 +60,7 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
       linkClassName,
       labelClassName,
       newTab = false,
-      prefetch = true,
+      prefetch = false,
       showNewTabHint,
       newTabHintSrLabel = " (ouvre dans un nouvel onglet)",
       activeMode = "startsWith",

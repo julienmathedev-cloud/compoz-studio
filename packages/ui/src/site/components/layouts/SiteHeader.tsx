@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * @file packages/ui/src/site/components/layouts/SiteHeader.tsx
  * @layer ui/site/components
@@ -23,7 +21,7 @@ import type { IdentitySettingsShape } from "@compoz/validation/site/settings/ide
 import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 import type { SocialSettingsShape } from "@compoz/validation/site/settings/social/social";
 
-import { useHeaderHeightVar } from "@compoz/ui/hooks/useHeaderHeightVar";
+import { SiteHeaderHeightSync } from "@compoz/ui/site/components/atoms/SiteHeaderHeightSync";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteLogo } from "@compoz/ui/site/components/atoms/SiteLogo";
 import { SiteMobileMenu } from "@compoz/ui/site/components/molecules/SiteMobileMenu";
@@ -36,6 +34,7 @@ export type SiteHeaderProps = Readonly<{
   primaryMenu: PrimaryMenuSettingsShape;
   social: SocialSettingsShape;
   ui: SiteHeaderUi;
+  logoDisabled?: boolean;
 }>;
 
 export function SiteHeader({
@@ -44,10 +43,9 @@ export function SiteHeader({
   primaryMenu,
   social,
   ui,
+  logoDisabled = false,
 }: SiteHeaderProps) {
   const { sticky, blur, swapPrimaryAndSocial, showLogo, showSiteName } = header;
-
-  const headerRef = useHeaderHeightVar();
 
   const logoSrc = identity.logo?.src?.trim() ?? "";
   const hasLogo = showLogo && logoSrc.length > 0;
@@ -60,7 +58,8 @@ export function SiteHeader({
 
   if (!hasVisibleContent) {
     return (
-      <header ref={headerRef} className={cn(ui.header.base)}>
+      <header data-site-header className={cn(ui.header.base)}>
+        <SiteHeaderHeightSync />
         <a href="#main-content" className={cn(ui.skipLink)}>
           Aller au contenu
         </a>
@@ -70,16 +69,24 @@ export function SiteHeader({
 
   return (
     <header
-      ref={headerRef}
+      data-site-header
       className={cn(ui.header.base, sticky && ui.header.sticky, blurClassName)}
     >
+      <SiteHeaderHeightSync />
       <a href="#main-content" className={cn(ui.skipLink)}>
         Aller au contenu
       </a>
 
       <div className={cn(ui.headerContainer)}>
         <div className={cn(ui.logoSlot)}>
-          {hasLogo ? <SiteLogo identity={identity} ui={ui.logo} /> : null}
+          {hasLogo ? (
+            <SiteLogo
+              identity={identity}
+              ui={ui.logo}
+              href="/"
+              disabled={logoDisabled}
+            />
+          ) : null}
           {hasSiteName ? (
             <span className={cn(ui.siteNameText)}>{identity.siteName}</span>
           ) : null}

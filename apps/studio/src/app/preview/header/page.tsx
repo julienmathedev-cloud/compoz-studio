@@ -75,6 +75,7 @@ export default function HeaderPreviewPage() {
       primaryMenu={visiblePrimaryMenu}
       social={visibleSocial}
       ui={ui.header}
+      logoDisabled={true}
     />
   );
 }

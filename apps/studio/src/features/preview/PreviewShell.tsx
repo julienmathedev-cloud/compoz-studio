@@ -70,6 +70,7 @@ export function PreviewShell({ children, ui }: PreviewShellProps) {
         primaryMenu={visiblePrimaryMenu}
         social={visibleSocial}
         ui={ui.header}
+        logoDisabled={true}
       />
 
       <main className={cn(SITE_MAIN)}>{children}</main>

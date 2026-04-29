@@ -13,6 +13,7 @@ import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import {
   getPublishedHomePageByTenantId,
   getPublishedIndexByTenantId,
+  getPublishedSettingsByTenantId,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
 import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
@@ -80,6 +81,16 @@ export default async function SiteTenantRootPage({ params }: PageParams) {
   });
 
   const ui = resolveSiteUi(tenantId);
+  const settings = await getPublishedSettingsByTenantId(tenantId);
+  const revealPreset = settings?.theme?.revealPreset ?? "fade-up";
+  const revealUi = ui.reveal[revealPreset];
 
-  return <SitePageRenderer ui={ui} blocks={blocks} pager={pager} />;
+  return (
+    <SitePageRenderer
+      ui={ui}
+      blocks={blocks}
+      pager={pager}
+      revealUi={revealUi}
+    />
+  );
 }

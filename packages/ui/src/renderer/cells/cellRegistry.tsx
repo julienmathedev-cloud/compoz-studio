@@ -12,7 +12,6 @@ import { ButtonsCellRenderer } from "@compoz/ui/renderer/cells/ButtonsCellRender
 import { CardsCellRenderer } from "@compoz/ui/renderer/cells/CardsCellRenderer";
 import { CardsExtendedCellRenderer } from "@compoz/ui/renderer/cells/CardsExtendedCellRenderer";
 import { CarouselCellRenderer } from "@compoz/ui/renderer/cells/CarouselCellRenderer";
-import { StructuredCardCellRenderer } from "@compoz/ui/renderer/cells/StructuredCardCellRenderer";
 import { FormCellRenderer } from "@compoz/ui/renderer/cells/FormCellRenderer";
 import { GalleryCellRenderer } from "@compoz/ui/renderer/cells/GalleryCellRenderer";
 import { HeadingCellRenderer } from "@compoz/ui/renderer/cells/HeadingCellRenderer";
@@ -21,16 +20,19 @@ import { RichTextCellRenderer } from "@compoz/ui/renderer/cells/RichTextCellRend
 import { SeparatorCellRenderer } from "@compoz/ui/renderer/cells/SeparatorCellRenderer";
 import { SpacerCellRenderer } from "@compoz/ui/renderer/cells/SpacerCellRenderer";
 import { StepsCellRenderer } from "@compoz/ui/renderer/cells/StepsCellRenderer";
+import { StructuredCardCellRenderer } from "@compoz/ui/renderer/cells/StructuredCardCellRenderer";
 import { TimelineCellRenderer } from "@compoz/ui/renderer/cells/TimelineCellRenderer";
 
-import type { SiteCellsUi } from "@compoz/ui/site/site-ui.types";
+import type {
+  SiteCellsUi,
+  SiteRevealPresetUi,
+} from "@compoz/ui/site/site-ui.types";
 
 import type {
   ButtonsCellShape,
   CardsCellShape,
   CardsExtendedCellShape,
   CarouselCellShape,
-  StructuredCardCellShape,
   CellShape,
   FormCellShape,
   GalleryCellShape,
@@ -40,12 +42,14 @@ import type {
   SeparatorCellShape,
   SpacerCellShape,
   StepsCellShape,
+  StructuredCardCellShape,
   TimelineCellShape,
 } from "@compoz/validation/pages/blocks/cells/cell";
 
 export type CellRenderArgs = Readonly<{
   cell: CellShape;
   ui: SiteCellsUi;
+  revealUi: SiteRevealPresetUi;
   isFullBleed: boolean;
   isLcpMedia: boolean;
 }>;
@@ -53,12 +57,20 @@ export type CellRenderArgs = Readonly<{
 export type CellRenderer = (args: CellRenderArgs) => ReactNode;
 
 export const cellRegistry: Record<string, CellRenderer> = {
-  heading: ({ cell, ui }) => (
-    <HeadingCellRenderer cell={cell as HeadingCellShape} ui={ui.heading} />
+  heading: ({ cell, ui, revealUi }) => (
+    <HeadingCellRenderer
+      cell={cell as HeadingCellShape}
+      ui={ui.heading}
+      revealUi={revealUi}
+    />
   ),
 
-  richText: ({ cell, ui }) => (
-    <RichTextCellRenderer cell={cell as RichTextCellShape} ui={ui.richText} />
+  richText: ({ cell, ui, revealUi }) => (
+    <RichTextCellRenderer
+      cell={cell as RichTextCellShape}
+      ui={ui.richText}
+      revealUi={revealUi}
+    />
   ),
 
   spacer: ({ cell, ui }) => (
@@ -76,14 +88,19 @@ export const cellRegistry: Record<string, CellRenderer> = {
     <ButtonsCellRenderer cell={cell as ButtonsCellShape} ui={ui.buttons} />
   ),
 
-  cards: ({ cell, ui }) => (
-    <CardsCellRenderer cell={cell as CardsCellShape} ui={ui.cards} />
+  cards: ({ cell, ui, revealUi }) => (
+    <CardsCellRenderer
+      cell={cell as CardsCellShape}
+      ui={ui.cards}
+      revealUi={revealUi}
+    />
   ),
 
-  cardsExtended: ({ cell, ui }) => (
+  cardsExtended: ({ cell, ui, revealUi }) => (
     <CardsExtendedCellRenderer
       cell={cell as CardsExtendedCellShape}
       ui={ui.cardsExtended}
+      revealUi={revealUi}
     />
   ),
 
@@ -95,10 +112,11 @@ export const cellRegistry: Record<string, CellRenderer> = {
     <TimelineCellRenderer cell={cell as TimelineCellShape} ui={ui.timeline} />
   ),
 
-  structuredCard: ({ cell, ui }) => (
+  structuredCard: ({ cell, ui, revealUi }) => (
     <StructuredCardCellRenderer
       cell={cell as StructuredCardCellShape}
       ui={ui.structuredCard}
+      revealUi={revealUi}
     />
   ),
 
@@ -106,19 +124,21 @@ export const cellRegistry: Record<string, CellRenderer> = {
     <FormCellRenderer cell={cell as FormCellShape} ui={ui.form} />
   ),
 
-  image: ({ cell, ui, isLcpMedia }) => (
+  image: ({ cell, ui, revealUi, isLcpMedia }) => (
     <ImageCellRenderer
       cell={cell as ImageCellShape}
       ui={ui.image}
+      revealUi={revealUi}
       priority={isLcpMedia}
     />
   ),
 
-  gallery: ({ cell, ui, isLcpMedia }) => (
+  gallery: ({ cell, ui, revealUi, isLcpMedia }) => (
     <GalleryCellRenderer
       cell={cell as GalleryCellShape}
       navUi={ui.navGallery}
       zoomUi={ui.zoomGallery}
+      revealUi={revealUi}
       priority={isLcpMedia}
     />
   ),

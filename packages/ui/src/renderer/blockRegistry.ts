@@ -13,6 +13,7 @@ import { SectionBlockRenderer } from "@compoz/ui/renderer/SectionBlockRenderer";
 import type {
   SiteBlockSectionUi,
   SiteCellsUi,
+  SiteRevealPresetUi,
 } from "@compoz/ui/site/site-ui.types";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
@@ -22,6 +23,7 @@ export type BlockRenderer = ComponentType<{
   variant?: "site" | "preview";
   blockUi: SiteBlockSectionUi;
   cellsUi: SiteCellsUi;
+  revealUi: SiteRevealPresetUi;
 }>;
 
 export const blockRegistry: Record<string, BlockRenderer> = {

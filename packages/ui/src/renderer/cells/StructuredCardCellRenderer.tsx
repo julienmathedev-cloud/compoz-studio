@@ -19,11 +19,15 @@ import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
 import { SiteStructuredCard } from "@compoz/ui/site/components/molecules/SiteStructuredCard";
-import type { SiteStructuredCardUi } from "@compoz/ui/site/site-ui.types";
+import type {
+  SiteRevealPresetUi,
+  SiteStructuredCardUi,
+} from "@compoz/ui/site/site-ui.types";
 
 export type StructuredCardCellRendererProps = Readonly<{
   cell?: StructuredCardCellShape | null;
   ui: SiteStructuredCardUi;
+  revealUi: SiteRevealPresetUi;
 }>;
 
 type StructuredCardColumns = 1 | 2 | 3;
@@ -31,6 +35,7 @@ type StructuredCardColumns = 1 | 2 | 3;
 export function StructuredCardCellRenderer({
   cell,
   ui,
+  revealUi,
 }: StructuredCardCellRendererProps) {
   if (!cell?.items?.length) return null;
 
@@ -125,7 +130,12 @@ export function StructuredCardCellRenderer({
           return (
             <div key={item.id} className="h-full">
               {reveal ? (
-                <SiteReveal seedOrder={seed} staggerMs={60} amount={0.1}>
+                <SiteReveal
+                  revealUi={revealUi}
+                  seedOrder={seed}
+                  staggerMs={60}
+                  amount={0.1}
+                >
                   {card}
                 </SiteReveal>
               ) : (

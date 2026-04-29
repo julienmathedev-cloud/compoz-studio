@@ -19,6 +19,7 @@ import { SiteGalleryNavList } from "@compoz/ui/site/components/organisms/SiteGal
 import { SiteGalleryZoomList } from "@compoz/ui/site/components/organisms/SiteGalleryZoomList";
 import type {
   SiteNavGalleryUi,
+  SiteRevealPresetUi,
   SiteZoomGalleryUi,
 } from "@compoz/ui/site/site-ui.types";
 
@@ -26,6 +27,7 @@ export type GalleryCellRendererProps = Readonly<{
   cell: GalleryCellShape;
   navUi: SiteNavGalleryUi;
   zoomUi: SiteZoomGalleryUi;
+  revealUi: SiteRevealPresetUi;
   priority?: boolean;
 }>;
 
@@ -33,6 +35,7 @@ export function GalleryCellRenderer({
   cell,
   navUi,
   zoomUi,
+  revealUi,
   priority,
 }: GalleryCellRendererProps) {
   const items = Array.isArray(cell?.items) ? cell.items : [];
@@ -55,6 +58,7 @@ export function GalleryCellRenderer({
     <SiteGalleryNavList
       images={items}
       ui={resolvedNavUi}
+      revealUi={revealUi}
       columns={max}
       priority={priority}
       reveal={reveal}
@@ -63,6 +67,7 @@ export function GalleryCellRenderer({
     <SiteGalleryZoomList
       images={items}
       ui={resolvedZoomUi}
+      revealUi={revealUi}
       columns={max}
       priority={priority}
       reveal={reveal}

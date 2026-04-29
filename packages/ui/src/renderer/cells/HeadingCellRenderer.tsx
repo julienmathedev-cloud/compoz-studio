@@ -23,15 +23,23 @@ import { Separator } from "@compoz/ui/components/ui/separator";
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
-import type { SiteHeadingUi } from "@compoz/ui/site/site-ui.types";
+import type {
+  SiteHeadingUi,
+  SiteRevealPresetUi,
+} from "@compoz/ui/site/site-ui.types";
 import type { HeadingCellShape } from "@compoz/validation/pages/blocks/cells/cell";
 
 export type HeadingCellRendererProps = Readonly<{
   cell?: HeadingCellShape | null;
   ui: SiteHeadingUi;
+  revealUi: SiteRevealPresetUi;
 }>;
 
-export function HeadingCellRenderer({ cell, ui }: HeadingCellRendererProps) {
+export function HeadingCellRenderer({
+  cell,
+  ui,
+  revealUi,
+}: HeadingCellRendererProps) {
   if (!cell) return null;
 
   const title = normalizeString(cell.title, "");
@@ -86,7 +94,11 @@ export function HeadingCellRenderer({ cell, ui }: HeadingCellRendererProps) {
     </div>
   );
 
-  return reveal ? <SiteReveal>{content}</SiteReveal> : content;
+  return reveal ? (
+    <SiteReveal revealUi={revealUi}>{content}</SiteReveal>
+  ) : (
+    content
+  );
 }
 
 HeadingCellRenderer.displayName = "HeadingCellRenderer";

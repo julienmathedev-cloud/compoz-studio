@@ -17,6 +17,7 @@ import { blockRegistry } from "@compoz/ui/renderer/blockRegistry";
 import type {
   SiteBlockSectionUi,
   SiteCellsUi,
+  SiteRevealPresetUi,
 } from "@compoz/ui/site/site-ui.types";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
@@ -32,6 +33,8 @@ export type BlocksRendererProps = Readonly<{
   cellsUi: SiteCellsUi;
 
   blockUi: SiteBlockSectionUi;
+
+  revealUi: SiteRevealPresetUi;
 
   /**
    * Variante de rendu (micro-différences éventuelles plus tard).
@@ -53,6 +56,7 @@ export function BlocksRenderer({
   blocks,
   cellsUi,
   blockUi,
+  revealUi,
   variant = "site",
   className,
 }: BlocksRendererProps) {
@@ -75,6 +79,7 @@ export function BlocksRenderer({
             variant={variant}
             blockUi={blockUi}
             cellsUi={cellsUi}
+            revealUi={revealUi}
           />
         );
       })}

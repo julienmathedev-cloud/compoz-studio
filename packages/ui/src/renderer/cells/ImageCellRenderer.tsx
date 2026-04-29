@@ -20,17 +20,22 @@ import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
 import { SiteZoomableImage } from "@compoz/ui/site/components/molecules/SiteZoomableImage";
-import type { SiteImageUi } from "@compoz/ui/site/site-ui.types";
+import type {
+  SiteImageUi,
+  SiteRevealPresetUi,
+} from "@compoz/ui/site/site-ui.types";
 
 export type ImageCellRendererProps = Readonly<{
   cell?: ImageCellShape | null;
   ui: SiteImageUi;
+  revealUi: SiteRevealPresetUi;
   priority?: boolean;
 }>;
 
 export function ImageCellRenderer({
   cell,
   ui,
+  revealUi,
   priority,
 }: ImageCellRendererProps) {
   if (!cell?.image) return null;
@@ -90,7 +95,11 @@ export function ImageCellRenderer({
     visual
   );
 
-  return cell.reveal ? <SiteReveal>{content}</SiteReveal> : content;
+  return cell.reveal ? (
+    <SiteReveal revealUi={revealUi}>{content}</SiteReveal>
+  ) : (
+    content
+  );
 }
 
 ImageCellRenderer.displayName = "ImageCellRenderer";

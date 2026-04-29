@@ -29,12 +29,16 @@ import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
 import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
-import type { SiteNavGalleryUi } from "@compoz/ui/site/site-ui.types";
+import type {
+  SiteNavGalleryUi,
+  SiteRevealPresetUi,
+} from "@compoz/ui/site/site-ui.types";
 import type { ImageEditorShape } from "@compoz/validation/pages/blocks/cells/cell";
 
 export type SiteGalleryNavListProps = Readonly<{
   images: ReadonlyArray<ImageEditorShape>;
   ui: SiteNavGalleryUi;
+  revealUi: SiteRevealPresetUi;
   columns: number;
   priority?: boolean;
   reveal?: boolean;
@@ -53,6 +57,7 @@ type NormalizedImage = Readonly<{
 export function SiteGalleryNavList({
   images,
   ui,
+  revealUi,
   columns,
   priority = false,
   reveal = true,
@@ -155,7 +160,12 @@ export function SiteGalleryNavList({
         return (
           <li key={normalized.id}>
             {reveal ? (
-              <SiteReveal seedOrder={seed} staggerMs={60} amount={0.1}>
+              <SiteReveal
+                revealUi={revealUi}
+                seedOrder={seed}
+                staggerMs={60}
+                amount={0.1}
+              >
                 {item}
               </SiteReveal>
             ) : (

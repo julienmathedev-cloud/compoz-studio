@@ -22,12 +22,16 @@ import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
 import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
 import { SiteLightbox } from "@compoz/ui/site/components/molecules/SiteLightbox";
 
-import type { SiteZoomGalleryUi } from "@compoz/ui/site/site-ui.types";
+import type {
+  SiteRevealPresetUi,
+  SiteZoomGalleryUi,
+} from "@compoz/ui/site/site-ui.types";
 import type { ImageEditorShape } from "@compoz/validation/pages/blocks/cells/cell";
 
 export type SiteGalleryZoomListProps = Readonly<{
   images: ReadonlyArray<ImageEditorShape>;
   ui: SiteZoomGalleryUi;
+  revealUi: SiteRevealPresetUi;
   columns: number;
   priority?: boolean;
   reveal?: boolean;
@@ -46,6 +50,7 @@ type NormalizedImage = Readonly<{
 export function SiteGalleryZoomList({
   images,
   ui,
+  revealUi,
   columns,
   priority = false,
   reveal = true,
@@ -149,7 +154,12 @@ export function SiteGalleryZoomList({
           return (
             <li key={img.id}>
               {reveal ? (
-                <SiteReveal seedOrder={seed} staggerMs={60} amount={0.1}>
+                <SiteReveal
+                  revealUi={revealUi}
+                  seedOrder={seed}
+                  staggerMs={60}
+                  amount={0.1}
+                >
                   {item}
                 </SiteReveal>
               ) : (

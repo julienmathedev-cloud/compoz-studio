@@ -19,6 +19,7 @@ import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import {
   getPublishedIndexByTenantId,
   getPublishedPageBySlugByTenantId,
+  getPublishedSettingsByTenantId,
   getTenantId,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
@@ -77,6 +78,9 @@ export default async function SitePage({ params }: PageParams) {
 
   const tenantId = await getTenantId();
   const ui = resolveSiteUi(tenantId);
+  const settings = await getPublishedSettingsByTenantId(tenantId);
+  const revealPreset = settings?.theme?.revealPreset ?? "fade-up";
+  const revealUi = ui.reveal[revealPreset];
 
   const index = await getPublishedIndexByTenantId(tenantId);
   if (!index) return notFound();
@@ -94,7 +98,14 @@ export default async function SitePage({ params }: PageParams) {
     hrefForSlug: (s) => (s === HOME_SLUG ? SITE_PATH.home : `/${s}`),
   });
 
-  return <SitePageRenderer ui={ui} blocks={blocks} pager={pager} />;
+  return (
+    <SitePageRenderer
+      ui={ui}
+      blocks={blocks}
+      pager={pager}
+      revealUi={revealUi}
+    />
+  );
 }
 
 SitePage.displayName = "SitePage";

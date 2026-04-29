@@ -20,6 +20,7 @@ import { cellRegistry } from "@compoz/ui/renderer/cells/cellRegistry";
 import type {
   SiteBlockSectionUi,
   SiteCellsUi,
+  SiteRevealPresetUi,
 } from "@compoz/ui/site/site-ui.types";
 
 import type {
@@ -36,6 +37,7 @@ export type SectionRendererProps = Readonly<{
   className?: string;
   blockUi: SiteBlockSectionUi;
   cellsUi: SiteCellsUi;
+  revealUi: SiteRevealPresetUi;
 }>;
 
 type CellPosition = Readonly<{
@@ -51,6 +53,7 @@ export function SectionBlockRenderer({
   className,
   blockUi,
   cellsUi,
+  revealUi,
 }: SectionRendererProps) {
   const containerMode = block.containerMode ?? "contained";
 
@@ -120,6 +123,7 @@ export function SectionBlockRenderer({
                               cell,
                               containerMode === "fullBleed",
                               cellsUi,
+                              revealUi,
                               isLcpMedia,
                             )}
                           </div>
@@ -230,6 +234,7 @@ function renderCellFromRegistry(
   cell: CellShape,
   isFull: boolean,
   cellsUi: SiteCellsUi,
+  revealUi: SiteRevealPresetUi,
   isLcpMedia: boolean,
 ): ReactNode {
   const renderer = cellRegistry[cell.kind];
@@ -239,6 +244,7 @@ function renderCellFromRegistry(
   return renderer({
     cell,
     ui: cellsUi,
+    revealUi,
     isFullBleed: isFull,
     isLcpMedia,
   });

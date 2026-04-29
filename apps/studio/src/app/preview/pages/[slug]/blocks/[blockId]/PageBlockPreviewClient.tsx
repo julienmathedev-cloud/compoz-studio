@@ -20,6 +20,7 @@ import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePre
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 import { BlocksRenderer } from "@compoz/ui/renderer/BlocksRenderer";
+import { useTheme } from "@compoz/ui/settings/theme/ThemeProvider";
 import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
 
 type PageBlockPreviewClientProps = Readonly<{
@@ -36,6 +37,9 @@ export function PageBlockPreviewClient({
   const block = usePreviewOverride<BlockShape>(scope);
   const visible = block.override ?? block.baseline;
   const ui = useSiteUi();
+  const theme = useTheme();
+  const revealPreset = theme?.revealPreset ?? "fade-up";
+  const revealUi = ui.reveal[revealPreset];
 
   if (!visible) return null;
 
@@ -45,6 +49,7 @@ export function PageBlockPreviewClient({
         blocks={[visible]}
         cellsUi={ui.cells}
         blockUi={ui.blockSection}
+        revealUi={revealUi}
       />
     </div>
   );

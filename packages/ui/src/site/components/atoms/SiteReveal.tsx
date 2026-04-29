@@ -10,8 +10,7 @@ import type { ElementType, ReactNode } from "react";
 import { useMemo, useRef } from "react";
 
 import { cn } from "@compoz/ui/lib/utils";
-import { useTheme } from "@compoz/ui/settings/theme/ThemeProvider";
-import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
+import type { SiteRevealPresetUi } from "@compoz/ui/site/site-ui.types";
 
 export type SiteRevealProps = Readonly<{
   as?:
@@ -30,6 +29,7 @@ export type SiteRevealProps = Readonly<{
     | "span";
   className?: string;
   children: ReactNode;
+  revealUi: SiteRevealPresetUi;
   delayMs?: number;
   seedOrder?: number;
   staggerMs?: number;
@@ -59,6 +59,7 @@ export function SiteReveal({
   as = "div",
   className,
   children,
+  revealUi,
   delayMs,
   seedOrder = 1,
   staggerMs = 80,
@@ -66,12 +67,6 @@ export function SiteReveal({
   viewportMargin = "0px",
 }: SiteRevealProps) {
   const prefersReduced = useReducedMotion();
-
-  const ui = useSiteUi();
-  const theme = useTheme();
-
-  const preset = theme?.revealPreset ?? "fade-up";
-  const revealUi = ui.reveal[preset];
 
   const Comp = (MOTION_COMPONENTS[as] ?? motion.div) as ElementType;
   const ref = useRef<HTMLElement | null>(null);

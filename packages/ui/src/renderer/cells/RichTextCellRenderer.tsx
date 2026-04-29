@@ -16,7 +16,10 @@ import type { RichTextCellShape } from "@compoz/validation/pages/blocks/cells/ce
 
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
-import type { SiteRichTextUi } from "@compoz/ui/site/site-ui.types";
+import type {
+  SiteRevealPresetUi,
+  SiteRichTextUi,
+} from "@compoz/ui/site/site-ui.types";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -28,13 +31,20 @@ export type RichTextCellRendererProps = Readonly<{
 
   /** UI fine (skin). */
   ui: SiteRichTextUi;
+
+  /** Préférence pour l’enrobage (preview). */
+  revealUi: SiteRevealPresetUi;
 }>;
 
 /* -------------------------------------------------------------------------- */
 /* Component                                                                  */
 /* -------------------------------------------------------------------------- */
 
-export function RichTextCellRenderer({ cell, ui }: RichTextCellRendererProps) {
+export function RichTextCellRenderer({
+  cell,
+  ui,
+  revealUi,
+}: RichTextCellRendererProps) {
   if (!cell) return null;
 
   const html = typeof cell.content === "string" ? cell.content : "";
@@ -53,7 +63,11 @@ export function RichTextCellRenderer({ cell, ui }: RichTextCellRendererProps) {
     />
   );
 
-  return reveal ? <SiteReveal>{content}</SiteReveal> : content;
+  return reveal ? (
+    <SiteReveal revealUi={revealUi}>{content}</SiteReveal>
+  ) : (
+    content
+  );
 }
 
 RichTextCellRenderer.displayName = "RichTextCellRenderer";

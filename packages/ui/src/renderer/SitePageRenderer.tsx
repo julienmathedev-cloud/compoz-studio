@@ -6,8 +6,8 @@
  * Shell site public : surface + H1 layout + blocks + pager.
  *
  * @remarks
- * - Le UI est résolu au niveau du shell (layout site / preview shell) et injecté via le provider site.
- * - Ici, on consomme le UI via `ui` (props) pour éviter le prop-drilling en cascade.
+ * - Le UI est résolu au niveau du shell (layout site / preview shell).
+ * - Ici, il est reçu via props pour garder ce renderer SSR-compatible.
  */
 
 import type { ReactNode } from "react";
@@ -16,7 +16,10 @@ import { cn } from "@compoz/ui/lib/utils";
 import { BlocksRenderer } from "@compoz/ui/renderer/BlocksRenderer";
 import type { SiteDetailPagerLink } from "@compoz/ui/site/components/molecules/SiteDetailPager";
 import { SiteDetailPager } from "@compoz/ui/site/components/molecules/SiteDetailPager";
-import type { SiteGlobalUi } from "@compoz/ui/site/site-ui.types";
+import type {
+  SiteGlobalUi,
+  SiteRevealPresetUi,
+} from "@compoz/ui/site/site-ui.types";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 export type SitePageRendererProps = Readonly<{
@@ -30,6 +33,7 @@ export type SitePageRendererProps = Readonly<{
   }>;
 
   ui: SiteGlobalUi;
+  revealUi: SiteRevealPresetUi;
 }>;
 
 export function SitePageRenderer({
@@ -37,6 +41,7 @@ export function SitePageRenderer({
   children,
   pager,
   ui,
+  revealUi,
 }: SitePageRendererProps) {
   const isBlocksMode = children === undefined;
 
@@ -47,6 +52,7 @@ export function SitePageRenderer({
       blocks={b}
       cellsUi={ui.cells}
       blockUi={ui.blockSection}
+      revealUi={revealUi}
       variant="site"
     />
   ) : (

@@ -20,16 +20,21 @@ import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
 import { SiteExtendedCard } from "@compoz/ui/site/components/molecules/SiteExtendedCard";
-import type { SiteCardsExtendedUi } from "@compoz/ui/site/site-ui.types";
+import type {
+  SiteCardsExtendedUi,
+  SiteRevealPresetUi,
+} from "@compoz/ui/site/site-ui.types";
 
 export type CardsExtendedCellRendererProps = Readonly<{
   cell?: CardsExtendedCellShape | null;
   ui: SiteCardsExtendedUi;
+  revealUi: SiteRevealPresetUi;
 }>;
 
 export function CardsExtendedCellRenderer({
   cell,
   ui,
+  revealUi,
 }: CardsExtendedCellRendererProps) {
   if (!cell?.items?.length) return null;
 
@@ -85,6 +90,7 @@ export function CardsExtendedCellRenderer({
             <div key={item.id}>
               {reveal ? (
                 <SiteReveal
+                  revealUi={revealUi}
                   seedOrder={seed}
                   staggerMs={60}
                   amount={0.1}

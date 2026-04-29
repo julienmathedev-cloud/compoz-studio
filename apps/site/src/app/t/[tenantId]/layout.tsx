@@ -24,7 +24,7 @@ import { toPrimaryMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/p
 import { toSocialSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/social-shape";
 import { SiteFooter } from "@compoz/ui/site/components/layouts/SiteFooter";
 import { SiteHeader } from "@compoz/ui/site/components/layouts/SiteHeader";
-import { SiteRuntimeProvider } from "@compoz/ui/site/providers/SiteRuntimeProvider";
+import { SiteThemeBoundary } from "@compoz/ui/site/providers/SiteThemeBoundary";
 import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 import { SITE_APP_COLUMN, SITE_MAIN } from "@compoz/ui/styles/site/layout";
 
@@ -175,7 +175,7 @@ export default async function TenantSiteLayout({
       <link rel="stylesheet" href={publicFont.href} />
 
       <div style={fontStyle}>
-        <SiteRuntimeProvider ui={ui} theme={settings?.theme}>
+        <SiteThemeBoundary theme={settings?.theme}>
           <ScrollTopOnRouteChange />
 
           <div className={cn(SITE_APP_COLUMN)}>
@@ -204,10 +204,10 @@ export default async function TenantSiteLayout({
                 />
               </>
             ) : (
-              <SiteNotFoundClient />
+              <SiteNotFoundClient ui={ui.systemPage} />
             )}
           </div>
-        </SiteRuntimeProvider>
+        </SiteThemeBoundary>
       </div>
     </>
   );

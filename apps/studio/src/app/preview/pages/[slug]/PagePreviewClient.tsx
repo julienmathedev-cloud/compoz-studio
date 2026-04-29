@@ -27,6 +27,7 @@ import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePre
 import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { toSlug } from "@compoz/ui/lib/routing/slug";
 import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
+import { useTheme } from "@compoz/ui/settings/theme/ThemeProvider";
 import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
 import type { PageRenderShape } from "@compoz/validation/pages/page";
 
@@ -71,6 +72,9 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
 
   const blocks = visiblePage?.blocks ?? [];
   const ui = useSiteUi();
+  const theme = useTheme();
+  const revealPreset = theme?.revealPreset ?? "fade-up";
+  const revealUi = ui.reveal[revealPreset];
 
   const currentFromIndex = useMemo<PageSummaryDTO | null>(() => {
     if (!visibleIndex) {
@@ -155,7 +159,12 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
 
   return (
     <PreviewShell ui={ui}>
-      <SitePageRenderer ui={ui} blocks={blocks} pager={pager} />
+      <SitePageRenderer
+        ui={ui}
+        blocks={blocks}
+        pager={pager}
+        revealUi={revealUi}
+      />
     </PreviewShell>
   );
 }

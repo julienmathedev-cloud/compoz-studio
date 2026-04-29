@@ -30,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps) {
     <html
       id="app-site"
       lang="fr"
-      className={cn("overscroll-none h-dvh theme-site", fontVariablesClassName)}
+      className={cn("overscroll-none h-dvh theme-site")}
     >
       <body className={cn("antialiased", SITE_APP_SHELL)}>{children}</body>
     </html>

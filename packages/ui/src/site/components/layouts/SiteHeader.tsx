@@ -26,6 +26,7 @@ import type { SocialSettingsShape } from "@compoz/validation/site/settings/socia
 import { useHeaderHeightVar } from "@compoz/ui/hooks/useHeaderHeightVar";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteLogo } from "@compoz/ui/site/components/atoms/SiteLogo";
+import { SiteMobileMenu } from "@compoz/ui/site/components/molecules/SiteMobileMenu";
 import { SiteHeaderNav } from "@compoz/ui/site/components/organisms/SiteHeaderNav";
 import type { SiteHeaderUi } from "@compoz/ui/site/site-ui.types";
 
@@ -96,7 +97,15 @@ export function SiteHeader({
           />
         </div>
 
-        <div className="md:hidden" />
+        <div className="md:hidden">
+          <SiteMobileMenu
+            primaryMenu={primaryMenu}
+            social={social}
+            ui={ui.mobileMenu}
+            ariaLabel="Menu principal"
+            emptyLabel="Menu vide"
+          />
+        </div>
       </div>
     </header>
   );

@@ -8,9 +8,8 @@
  * Éditeur RHF-aware d’une FormCell (formulaire de contact).
  *
  * @remarks
- * - Connecté directement à RHF via `useController` et `useFieldArray`.
- * - Stocke la destination sous forme canonique `mailto:...`
- *   mais affiche uniquement la partie email dans le champ.
+ * - Connecté directement à RHF via `useController` et `useFieldArray`.)
+ * - Stocke la destination sous forme d’adresse email brute.
  * - S’aligne sur le standard builder :
  *   `showError || fieldState.isTouched`.
  */
@@ -133,9 +132,9 @@ export function FormCellEditor({
           ids={toIds}
           inputRef={toCtrl.field.ref}
           label={t("studio.cellEditorTabs.formCellEditor.toLabel")}
-          value={stripMailtoPrefix(String(toCtrl.field.value ?? ""))}
+          value={String(toCtrl.field.value ?? "")}
           onChange={(next) => {
-            toCtrl.field.onChange(buildMailtoHref(next));
+            toCtrl.field.onChange(normalizeEmailDestination(next));
           }}
           onBlur={toCtrl.field.onBlur}
           placeholder={t("studio.cellEditorTabs.formCellEditor.toPlaceholder")}
@@ -233,13 +232,12 @@ export function FormCellEditor({
 
 FormCellEditor.displayName = "FormCellEditor";
 
-function stripMailtoPrefix(value: string): string {
-  const v = String(value ?? "").trim();
-  return v.toLowerCase().startsWith("mailto:") ? v.slice("mailto:".length) : v;
-}
-
-function buildMailtoHref(raw: string): string {
+function normalizeEmailDestination(raw: string): string {
   const input = String(raw ?? "").trim();
+
   if (!input) return "";
-  return input.toLowerCase().startsWith("mailto:") ? input : `mailto:${input}`;
+
+  return input.toLowerCase().startsWith("mailto:")
+    ? input.slice("mailto:".length).trim()
+    : input;
 }

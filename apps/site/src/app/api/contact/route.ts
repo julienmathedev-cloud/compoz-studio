@@ -179,7 +179,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Contact API error:", error);
+    console.error("Contact API error:", {
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : undefined,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
 
     return NextResponse.json(
       { error: "Failed to send contact email." },

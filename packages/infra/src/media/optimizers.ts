@@ -5,15 +5,9 @@
  * Optimisation server-side des assets média via Sharp.
  *
  * Responsabilités :
- * - Optimisation images “content” (max width 1920)
- * - Optimisation OG image (1200x630 cover)
- * - Optimisation logo (SVG passthrough, sinon PNG/JPEG selon alpha)
- * - Optimisation favicon (ICO/SVG passthrough, sinon PNG 48x48)
- * - Génération d’un set de favicons PNG (plusieurs tailles)
- *
- * @remarks
- * - Server-only (Node) : utilise Buffer + sharp.
- * - Ne doit pas être importé côté client.
+ * - Compression intelligente uniquement si nécessaire
+ * - Préserve les assets déjà optimisés (PNG / WEBP / JPEG légers)
+ * - Évite la dégradation des screenshots / logos / UI
  */
 
 import "server-only";
@@ -43,6 +37,7 @@ async function getMeta(
   input: Buffer,
 ): Promise<Readonly<{ width: number; height: number }>> {
   const meta = await sharp(input).metadata();
+
   return {
     width: meta.width ?? 0,
     height: meta.height ?? 0,
@@ -53,6 +48,7 @@ async function getMetaAndAlpha(
   input: Buffer,
 ): Promise<Readonly<{ width: number; height: number; hasAlpha: boolean }>> {
   const meta = await sharp(input).metadata();
+
   return {
     width: meta.width ?? 0,
     height: meta.height ?? 0,
@@ -78,6 +74,41 @@ function makeOptimizedAsset(args: {
   };
 }
 
+function getRasterExt(inputMime: string): "jpg" | "png" | "webp" | null {
+  if (inputMime === "image/jpeg") return "jpg";
+  if (inputMime === "image/png") return "png";
+  if (inputMime === "image/webp") return "webp";
+
+  return null;
+}
+
+function passthroughRaster(args: {
+  input: Buffer;
+  inputMime: string;
+  original: Readonly<{ width: number; height: number }>;
+}): OptimizedAsset | null {
+  const ext = getRasterExt(args.inputMime);
+
+  if (!ext) return null;
+
+  return makeOptimizedAsset({
+    buffer: args.input,
+    mime: args.inputMime as OptimizedAsset["mime"],
+    ext,
+    original: args.original,
+    final: args.original,
+  });
+}
+
+function isReasonableUpload(args: {
+  input: Buffer;
+  meta: Readonly<{ width: number; height: number }>;
+  maxBytes: number;
+  maxWidth: number;
+}): boolean {
+  return args.input.length <= args.maxBytes && args.meta.width <= args.maxWidth;
+}
+
 /* -------------------------------------------------------------------------- */
 /* 1) Content images                                                          */
 /* -------------------------------------------------------------------------- */
@@ -90,46 +121,24 @@ export async function optimizeContentImage(
 
   const original = await getMeta(input);
 
-  /**
-   * Premium passthrough :
-   * - PNG / WebP déjà préparés proprement → on conserve
-   * - JPEG léger → on conserve
-   *
-   * Objectif :
-   * éviter de dégrader screenshots UI / portfolio déjà optimisés.
-   */
-  const isPng = inputMime === "image/png";
-  const isWebp = inputMime === "image/webp";
-  const isJpeg = inputMime === "image/jpeg";
+  const passthrough = passthroughRaster({
+    input,
+    inputMime,
+    original,
+  });
 
-  const isReasonableSize = input.length <= 1_500_000 && original.width <= 1920;
-
-  if ((isPng || isWebp) && isReasonableSize) {
-    return makeOptimizedAsset({
-      buffer: input,
-      mime: inputMime as OptimizedAsset["mime"],
-      ext: isPng ? "png" : "webp",
-      original,
-      final: original,
-    });
+  if (
+    passthrough &&
+    isReasonableUpload({
+      input,
+      meta: original,
+      maxBytes: 1_500_000,
+      maxWidth: 1920,
+    })
+  ) {
+    return passthrough;
   }
 
-  if (isJpeg && isReasonableSize) {
-    return makeOptimizedAsset({
-      buffer: input,
-      mime: "image/jpeg",
-      ext: "jpg",
-      original,
-      final: original,
-    });
-  }
-
-  /**
-   * Fallback optimisation :
-   * - JPEG lourds
-   * - PNG/WebP trop volumineux
-   * - dimensions excessives
-   */
   const buffer = await sharp(input, { failOn: "none" })
     .rotate()
     .resize({ width: 1920, withoutEnlargement: true })
@@ -162,7 +171,7 @@ export async function optimizeOgImage(
   const buffer = await sharp(input, { failOn: "none" })
     .rotate()
     .resize(1200, 630, { fit: "cover", position: "center" })
-    .jpeg({ quality: 85, mozjpeg: true })
+    .jpeg({ quality: 92, mozjpeg: true })
     .toBuffer();
 
   const final = await getMeta(buffer);
@@ -184,7 +193,6 @@ export async function optimizeLogo(
   input: Buffer,
   inputMime: string,
 ): Promise<OptimizedAsset> {
-  // SVG : on garde tel quel
   if (inputMime === "image/svg+xml") {
     return makeOptimizedAsset({
       buffer: input,
@@ -199,6 +207,29 @@ export async function optimizeLogo(
 
   const originalMeta = await getMetaAndAlpha(input);
 
+  const original = {
+    width: originalMeta.width,
+    height: originalMeta.height,
+  };
+
+  const passthrough = passthroughRaster({
+    input,
+    inputMime,
+    original,
+  });
+
+  if (
+    passthrough &&
+    isReasonableUpload({
+      input,
+      meta: original,
+      maxBytes: 500_000,
+      maxWidth: 1024,
+    })
+  ) {
+    return passthrough;
+  }
+
   let buffer: Buffer;
   let mime: string;
   let ext: "jpg" | "png";
@@ -209,6 +240,7 @@ export async function optimizeLogo(
       .resize({ width: 512, withoutEnlargement: true })
       .png({ compressionLevel: 9, palette: true })
       .toBuffer();
+
     mime = "image/png";
     ext = "png";
   } else {
@@ -217,6 +249,7 @@ export async function optimizeLogo(
       .resize({ width: 512, withoutEnlargement: true })
       .jpeg({ quality: 82, mozjpeg: true })
       .toBuffer();
+
     mime = "image/jpeg";
     ext = "jpg";
   }
@@ -227,7 +260,7 @@ export async function optimizeLogo(
     buffer,
     mime,
     ext,
-    original: { width: originalMeta.width, height: originalMeta.height },
+    original,
     final,
   });
 }
@@ -285,7 +318,7 @@ export async function optimizeFavicon(
 }
 
 /* -------------------------------------------------------------------------- */
-/* 5) Favicon Set (V0.5 production ready)                                     */
+/* 5) Favicon Set                                                             */
 /* -------------------------------------------------------------------------- */
 
 export const FAVICON_SIZES = [16, 32, 48, 180, 192, 512] as const;

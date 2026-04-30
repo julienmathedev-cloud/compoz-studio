@@ -168,6 +168,51 @@ export async function optimizeOgImage(
 
   const original = await getMeta(input);
 
+  const passthrough = passthroughRaster({
+    input,
+    inputMime,
+    original,
+  });
+
+  // Déjà propre → on garde
+  if (
+    passthrough &&
+    isReasonableUpload({
+      input,
+      meta: original,
+      maxBytes: 1_500_000,
+      maxWidth: 1200,
+    })
+  ) {
+    return passthrough;
+  }
+
+  // Resize sans ré-encodage agressif si source PNG/WebP
+  if (
+    (inputMime === "image/png" || inputMime === "image/webp") &&
+    input.length <= 1_500_000
+  ) {
+    const pipeline = sharp(input, { failOn: "none" })
+      .rotate()
+      .resize(1200, 630, { fit: "cover", position: "center" });
+
+    const buffer =
+      inputMime === "image/png"
+        ? await pipeline.png().toBuffer()
+        : await pipeline.webp({ quality: 92 }).toBuffer();
+
+    const final = await getMeta(buffer);
+
+    return makeOptimizedAsset({
+      buffer,
+      mime: inputMime as OptimizedAsset["mime"],
+      ext: inputMime === "image/png" ? "png" : "webp",
+      original,
+      final,
+    });
+  }
+
+  // Fallback lourd
   const buffer = await sharp(input, { failOn: "none" })
     .rotate()
     .resize(1200, 630, { fit: "cover", position: "center" })

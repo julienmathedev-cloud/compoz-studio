@@ -8,7 +8,6 @@
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type { Cell, FormField } from "@compoz/core/domain/pages/entities/cell";
-import { isMailtoHref } from "@compoz/core/domain/urls/mailto";
 
 type Path = ReadonlyArray<string | number>;
 
@@ -26,13 +25,13 @@ export function assertFormCell(
     });
   }
 
-  if (!isMailtoHref(cell.to)) {
+  if (!isEmailDestination(cell.to)) {
     throw new DomainError({
       code: EC.CELL_FORM_TO_INVALID,
       message: EC.CELL_FORM_TO_INVALID,
       details: {
         path: [...path, "to"],
-        meta: { value: cell.to, rule: "expects_mailto" },
+        meta: { value: cell.to, rule: "expects_valid_email" },
       },
     });
   }
@@ -144,4 +143,12 @@ function assertFormField(field: FormField, path: Path) {
       details: { path: [...path, "required"] },
     });
   }
+}
+
+function isEmailDestination(value: string): boolean {
+  const normalized = value.trim();
+
+  if (!normalized) return false;
+
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized);
 }

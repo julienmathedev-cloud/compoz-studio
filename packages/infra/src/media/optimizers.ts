@@ -300,10 +300,28 @@ export async function optimizeFavicon(
 
   const original = await getMeta(input);
 
+  const passthrough = passthroughRaster({
+    input,
+    inputMime,
+    original,
+  });
+
+  if (
+    passthrough &&
+    isReasonableUpload({
+      input,
+      meta: original,
+      maxBytes: 500_000,
+      maxWidth: 512,
+    })
+  ) {
+    return passthrough;
+  }
+
   const buffer = await sharp(input, { failOn: "none" })
     .rotate()
     .resize(48, 48, { fit: "cover" })
-    .png({ compressionLevel: 9, palette: true })
+    .png({ compressionLevel: 9 })
     .toBuffer();
 
   const final = await getMeta(buffer);

@@ -273,7 +273,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return {
       id,
       kind: "form",
-      to: "mailto:",
+      to: "",
       submitLabel: "Envoyer",
       successMessage: null,
       errorMessage: null,

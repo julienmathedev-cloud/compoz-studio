@@ -355,7 +355,7 @@ export function BuilderCellDrawer({
                       value: "carousel",
                       label: t("studio.builder.drawer.kind.options.carousel"),
                     },
-                  ]}
+                  ].sort((a, b) => a.label.localeCompare(b.label))}
                   disabled={isSubmitting}
                   help={t("studio.builder.drawer.kind.help")}
                 />

@@ -24,7 +24,7 @@ export const defaultImageUi: SiteImageUi = {
   image: "",
 
   button:
-    "block w-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    "block h-full w-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
 
   lightbox: defaultLightboxUi,
 

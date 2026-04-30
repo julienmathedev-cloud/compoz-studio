@@ -134,7 +134,7 @@ export function FormCellEditor({
           label={t("studio.cellEditorTabs.formCellEditor.toLabel")}
           value={String(toCtrl.field.value ?? "")}
           onChange={(next) => {
-            toCtrl.field.onChange(normalizeEmailDestination(next));
+            toCtrl.field.onChange(next);
           }}
           onBlur={toCtrl.field.onBlur}
           placeholder={t("studio.cellEditorTabs.formCellEditor.toPlaceholder")}
@@ -231,13 +231,3 @@ export function FormCellEditor({
 }
 
 FormCellEditor.displayName = "FormCellEditor";
-
-function normalizeEmailDestination(raw: string): string {
-  const input = String(raw ?? "").trim();
-
-  if (!input) return "";
-
-  return input.toLowerCase().startsWith("mailto:")
-    ? input.slice("mailto:".length).trim()
-    : input;
-}

@@ -56,8 +56,13 @@ function normalizeFormValues(
 }
 
 function buildEmailSubject(values: Record<string, string>): string {
+  const subject = values.subject || values.sujet;
   const email = values.email;
-  const name = values.name;
+  const name = values.name || values.nom;
+
+  if (isNonEmptyString(subject)) {
+    return `Nouveau message — ${subject}`;
+  }
 
   if (isNonEmptyString(name) && isNonEmptyString(email)) {
     return `Nouveau message de ${name} (${email})`;
@@ -71,33 +76,83 @@ function buildEmailSubject(values: Record<string, string>): string {
 }
 
 function buildEmailHtml(values: Record<string, string>): string {
-  const rows = Object.entries(values)
-    .filter(([, value]) => value.length > 0)
-    .map(([key, value]) => {
-      return `
-        <tr>
-          <td style="padding:8px 12px;font-weight:600;vertical-align:top;border:1px solid #e5e7eb;">
-            ${escapeHtml(key)}
-          </td>
-          <td style="padding:8px 12px;vertical-align:top;border:1px solid #e5e7eb;white-space:pre-wrap;">
-            ${escapeHtml(value)}
-          </td>
-        </tr>
-      `;
+  const name = values.name || values.nom;
+  const email = values.email;
+  const subject = values.subject || values.sujet;
+  const message = values.message;
+
+  const secondaryRows = Object.entries(values)
+    .filter(([key, value]) => {
+      if (!value.trim()) return false;
+      return !["name", "nom", "email", "subject", "sujet", "message"].includes(
+        key,
+      );
     })
+    .map(
+      ([key, value]) => `
+        <p style="margin:0 0 12px;">
+          <strong>${escapeHtml(key)}</strong><br />
+          ${escapeHtml(value)}
+        </p>
+      `,
+    )
     .join("");
 
   return `
-    <div style="font-family:Arial,Helvetica,sans-serif;color:#111827;line-height:1.5;">
-      <h1 style="font-size:18px;margin-bottom:16px;">
-        Nouveau message depuis le formulaire de contact
-      </h1>
+    <div style="font-family:Arial,Helvetica,sans-serif;color:#111827;line-height:1.6;background:#f9fafb;padding:24px;">
+      <div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;">
+        <p style="margin:0 0 8px;color:#6b7280;font-size:14px;">
+          Nouveau message depuis le formulaire de contact
+        </p>
 
-      <table style="border-collapse:collapse;width:100%;max-width:720px;">
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
+        <h1 style="font-size:22px;line-height:1.3;margin:0 0 24px;color:#111827;">
+          ${escapeHtml(subject || "Demande de contact")}
+        </h1>
+
+        ${
+          name || email
+            ? `
+              <div style="margin-bottom:24px;padding:16px;background:#f9fafb;border-radius:10px;">
+                ${
+                  name
+                    ? `<p style="margin:0 0 8px;"><strong>Nom :</strong> ${escapeHtml(name)}</p>`
+                    : ""
+                }
+                ${
+                  email
+                    ? `<p style="margin:0;"><strong>Email :</strong> <a href="mailto:${escapeHtml(email)}" style="color:#2563eb;">${escapeHtml(email)}</a></p>`
+                    : ""
+                }
+              </div>
+            `
+            : ""
+        }
+
+        ${
+          message
+            ? `
+              <div style="margin-bottom:24px;">
+                <h2 style="font-size:16px;margin:0 0 8px;color:#111827;">Message</h2>
+                <p style="margin:0;white-space:pre-wrap;">${escapeHtml(message)}</p>
+              </div>
+            `
+            : ""
+        }
+
+        ${
+          secondaryRows
+            ? `
+              <div style="border-top:1px solid #e5e7eb;padding-top:16px;color:#374151;">
+                ${secondaryRows}
+              </div>
+            `
+            : ""
+        }
+
+        <p style="margin:24px 0 0;color:#6b7280;font-size:13px;">
+          Vous pouvez répondre directement à cet email pour contacter l’expéditeur.
+        </p>
+      </div>
     </div>
   `;
 }

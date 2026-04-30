@@ -173,8 +173,8 @@ export async function POST(req: Request) {
         contentType: "image/png",
         originalSize,
         optimizedSize: favicons[32].buffer.length,
-        wasResized: true,
-        wasCompressed: true,
+        wasResized: false,
+        wasCompressed: false,
       };
 
       return res;

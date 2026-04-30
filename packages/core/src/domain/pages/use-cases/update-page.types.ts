@@ -48,5 +48,5 @@ export interface UpdatePageDeps {
 
 export type ChangedKey = keyof Pick<
   Page,
-  "name" | "slug" | "parentId" | "sitemap" | "paginationEnabled"
+  "name" | "slug" | "parentId" | "sitemap" | "paginationEnabled" | "seoTitle"
 >;

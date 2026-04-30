@@ -99,15 +99,15 @@ export class KvDemoSandboxCloner implements DemoSandboxCloner {
     const targetPages = new KvPagesRepository({ tenantId: targetTenantId });
 
     const [settings, index] = await Promise.all([
-      sourceSite.readSettings(CONTENT_STATE.DRAFT),
-      sourceSite.readIndex(CONTENT_STATE.DRAFT),
+      sourceSite.readSettings(CONTENT_STATE.PUBLISHED),
+      sourceSite.readIndex(CONTENT_STATE.PUBLISHED),
     ]);
 
     const pageIds = getPageIdsFromIndex(index.pages);
 
     const rawPages =
       pageIds.length > 0
-        ? await sourcePages.readManyById(CONTENT_STATE.DRAFT, pageIds)
+        ? await sourcePages.readManyById(CONTENT_STATE.PUBLISHED, pageIds)
         : [];
 
     const pages = assertAllPagesResolved(pageIds, rawPages);

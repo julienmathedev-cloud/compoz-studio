@@ -38,7 +38,7 @@ export const defaultTimelineUi: SiteTimelineUi = {
     "absolute bottom-0 left-3 top-0 z-0 flex flex-col items-center md:hidden",
 
   mobileStartDot:
-    "h-6 w-6 rounded-full bg-primary motion-safe:transition-colors motion-safe:duration-200 motion-safe:ease-out",
+    "h-6 w-6 -mt-2 rounded-full bg-primary motion-safe:transition-colors motion-safe:duration-200 motion-safe:ease-out",
 
   mobileLine:
     "origin-top -mb-2 -mt-2 flex-1 w-1.5 bg-primary motion-safe:transition-colors motion-safe:duration-200 motion-safe:ease-out",

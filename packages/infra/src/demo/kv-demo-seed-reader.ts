@@ -47,7 +47,7 @@ export class KvDemoSeedReader implements DemoSandboxSeedReader {
     }
 
     const site = new KvSiteRepository({ tenantId });
-    const index = await site.readIndex(CONTENT_STATE.DRAFT);
+    const index = await site.readIndex(CONTENT_STATE.PUBLISHED);
 
     if (!hasUsableSeedPages(index.pages)) {
       throw new Error(

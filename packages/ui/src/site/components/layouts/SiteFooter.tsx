@@ -54,7 +54,7 @@ export function SiteFooter({ footer, legalMenu, ui }: SiteFooterProps) {
           <div className={cn(ui.poweredBy)}>
             Powered by{" "}
             <Link
-              href=""
+              href="https://demo.julienmathe.fr/"
               target="_blank"
               rel="noopener noreferrer"
               className={cn(ui.poweredByLink)}

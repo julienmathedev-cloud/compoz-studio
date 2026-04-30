@@ -1357,6 +1357,11 @@
     },
 
     "overviewSection": {
+      "demoSandbox": {
+        "title": "Welcome to the Compoz Studio demo",
+        "description": "You have access to a personal copy of the demo website, allowing you to freely explore the interface, edit content, and test management features without affecting the real public site.",
+        "note": "This environment has been designed to give you a practical, risk-free introduction to Compoz Studio under conditions close to real-world use."
+      },
       "globalStatus": {
         "title": "Global status",
         "description": "Summary of the site state (draft / published) and pending changes.",

@@ -1357,6 +1357,11 @@
     },
 
     "overviewSection": {
+      "demoSandbox": {
+        "title": "Bienvenue dans la démonstration de Compoz Studio",
+        "description": "Vous disposez d’une copie personnelle du site de démonstration, vous permettant d’explorer librement l’interface, de modifier les contenus et de tester les fonctionnalités de gestion sans impact sur le site public réel.",
+        "note": "Cet environnement a été conçu pour vous offrir une découverte concrète et sans risque de Compoz Studio, dans des conditions proches d’une utilisation réelle."
+      },
       "globalStatus": {
         "title": "État global",
         "description": "Synthèse de l’état du site (brouillon / publié) et des changements en attente.",

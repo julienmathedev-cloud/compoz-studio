@@ -31,6 +31,18 @@ const SITE_UI_BY_TENANT: Readonly<Record<string, SiteGlobalUiOverride>> = {
   portfolio: portfolioGlobalUi,
 };
 
+function resolveSkinTenantId(tenantId?: string): string {
+  const normalizedTenantId = String(tenantId ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (normalizedTenantId.startsWith("demo-")) {
+    return "demo";
+  }
+
+  return normalizedTenantId;
+}
+
 /**
  * Résout l’UI site complète pour un tenant donné.
  *
@@ -39,13 +51,9 @@ const SITE_UI_BY_TENANT: Readonly<Record<string, SiteGlobalUiOverride>> = {
  * du skin dédié au tenant.
  */
 export function resolveSiteUi(tenantId?: string): SiteGlobalUi {
-  const normalizedTenantId = String(tenantId ?? "")
-    .trim()
-    .toLowerCase();
+  const skinTenantId = resolveSkinTenantId(tenantId);
 
-  const override = normalizedTenantId
-    ? SITE_UI_BY_TENANT[normalizedTenantId]
-    : undefined;
+  const override = skinTenantId ? SITE_UI_BY_TENANT[skinTenantId] : undefined;
 
   return mergeSiteUi(defaultGlobalUi, override);
 }

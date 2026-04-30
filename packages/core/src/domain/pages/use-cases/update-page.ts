@@ -29,6 +29,7 @@ import {
   applyNamePatch,
   applyPaginationEnabledPatch,
   applyParentIdPatch,
+  applySeoTitlePatch,
   applySitemapPatch,
   applySlugPatch,
 } from "@compoz/core/domain/pages/use-cases/helpers/apply-page-patch";
@@ -67,6 +68,7 @@ export function updatePage({
     const changed: ChangedKey[] = [];
 
     applyNamePatch({ existing, next, changed, input });
+    applySeoTitlePatch({ existing, next, changed, input });
 
     const slugChange = await applySlugPatch({
       existing,

@@ -198,3 +198,24 @@ export function applyNamePatch({
     changed.push("name");
   }
 }
+
+export function applySeoTitlePatch({
+  existing,
+  next,
+  changed,
+  input,
+}: {
+  existing: Page;
+  next: Page;
+  changed: ChangedKey[];
+  input: UpdatePageInput;
+}): void {
+  if (!("seoTitle" in input)) return;
+
+  const value = String(input.seoTitle ?? "").trim() || null;
+
+  if (value !== existing.seoTitle) {
+    next.seoTitle = value;
+    changed.push("seoTitle");
+  }
+}

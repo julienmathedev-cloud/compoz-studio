@@ -232,6 +232,9 @@ export function SiteLightbox({
   }
 
   const computedCaption = caption ?? alt;
+  const portalTarget =
+    document.querySelector<HTMLElement>("[data-site-theme-boundary]") ??
+    document.body;
 
   return createPortal(
     <div
@@ -303,7 +306,7 @@ export function SiteLightbox({
         ) : null}
       </div>
     </div>,
-    document.body,
+    portalTarget,
   );
 }
 

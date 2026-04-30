@@ -327,7 +327,7 @@ export function OverviewPublishCard({
             {isDemo ? (
               <Button variant="outline" visualMode="studio" asChild>
                 <Link href="/draft" target="_blank" rel="noopener noreferrer">
-                  {t("studio.shared.visualize.draft")}
+                  {t("studio.overviewSection.publish.view")}
                 </Link>
               </Button>
             ) : (

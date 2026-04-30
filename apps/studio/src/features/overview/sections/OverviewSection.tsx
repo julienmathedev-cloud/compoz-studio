@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
+import { OverviewDemoSandboxCard } from "@compoz/studio/features/overview/components/OverviewDemoSandboxCard";
 import { OverviewPreviewCard } from "@compoz/studio/features/overview/components/OverviewPreviewCard";
 import { OverviewPublishCard } from "@compoz/studio/features/overview/components/OverviewPublishCard";
 import { OverviewSettingsCard } from "@compoz/studio/features/overview/components/OverviewSettingsCard";
@@ -41,6 +42,8 @@ export function OverviewSection({ isDemo = false }: OverviewSectionProps) {
       isLoading={isLoading}
       isBusy={isFetching}
     >
+      {isDemo ? <OverviewDemoSandboxCard /> : null}
+
       <OverviewPublishCard
         data={data}
         isError={isError}

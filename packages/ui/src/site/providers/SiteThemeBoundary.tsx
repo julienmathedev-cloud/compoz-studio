@@ -33,7 +33,7 @@ export function SiteThemeBoundary({ theme, children }: SiteThemeBoundaryProps) {
       : undefined;
 
   return (
-    <div className={className} style={style}>
+    <div data-site-theme-boundary className={className} style={style}>
       {children}
     </div>
   );

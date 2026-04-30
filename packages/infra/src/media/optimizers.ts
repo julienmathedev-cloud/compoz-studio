@@ -23,7 +23,7 @@ import sharp from "sharp";
 export type OptimizedAsset = Readonly<{
   buffer: Buffer;
   mime: string;
-  ext: "jpg" | "png" | "svg" | "ico";
+  ext: "jpg" | "png" | "webp" | "svg" | "ico";
   originalWidth: number;
   originalHeight: number;
   finalWidth: number;
@@ -90,10 +90,50 @@ export async function optimizeContentImage(
 
   const original = await getMeta(input);
 
+  /**
+   * Premium passthrough :
+   * - PNG / WebP déjà préparés proprement → on conserve
+   * - JPEG léger → on conserve
+   *
+   * Objectif :
+   * éviter de dégrader screenshots UI / portfolio déjà optimisés.
+   */
+  const isPng = inputMime === "image/png";
+  const isWebp = inputMime === "image/webp";
+  const isJpeg = inputMime === "image/jpeg";
+
+  const isReasonableSize = input.length <= 1_500_000 && original.width <= 1920;
+
+  if ((isPng || isWebp) && isReasonableSize) {
+    return makeOptimizedAsset({
+      buffer: input,
+      mime: inputMime as OptimizedAsset["mime"],
+      ext: isPng ? "png" : "webp",
+      original,
+      final: original,
+    });
+  }
+
+  if (isJpeg && isReasonableSize) {
+    return makeOptimizedAsset({
+      buffer: input,
+      mime: "image/jpeg",
+      ext: "jpg",
+      original,
+      final: original,
+    });
+  }
+
+  /**
+   * Fallback optimisation :
+   * - JPEG lourds
+   * - PNG/WebP trop volumineux
+   * - dimensions excessives
+   */
   const buffer = await sharp(input, { failOn: "none" })
     .rotate()
     .resize({ width: 1920, withoutEnlargement: true })
-    .jpeg({ quality: 80, mozjpeg: true })
+    .jpeg({ quality: 92, mozjpeg: true })
     .toBuffer();
 
   const final = await getMeta(buffer);

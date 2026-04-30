@@ -204,10 +204,22 @@ export async function POST(req: Request) {
     }
 
     const optimizedSize = optimized.buffer.length;
-    const wasCompressed = optimizedSize < originalSize;
+
+    /**
+     * Premium UX :
+     * Si aucune transformation réelle n’a eu lieu,
+     * on neutralise totalement les flags
+     * pour éviter les toasts inutiles.
+     */
     const wasResized =
-      optimized.originalWidth !== optimized.finalWidth ||
-      optimized.originalHeight !== optimized.finalHeight;
+      optimized.originalWidth > 0 &&
+      optimized.originalHeight > 0 &&
+      (optimized.originalWidth !== optimized.finalWidth ||
+        optimized.originalHeight !== optimized.finalHeight);
+
+    const mimeChanged = optimized.mime !== originalContentType;
+
+    const wasCompressed = mimeChanged || optimizedSize < originalSize;
 
     const safeBase = sanitizeFilename(originalFilename.replace(/\.[^.]+$/, ""));
     const { y, m } = nowParts();

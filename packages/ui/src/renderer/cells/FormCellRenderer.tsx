@@ -31,10 +31,22 @@ export function FormCellRenderer({ cell, ui }: FormCellRendererProps) {
   const submitLabel = normalizeString(cell.submitLabel, "");
   if (!submitLabel) return null;
 
+  const toEmail = normalizeString(cell.to);
+  if (!toEmail) return null;
+
   const fields = normalizeFields(cell.fields);
   if (fields.length < 1) return null;
 
-  return <SiteContactForm fields={fields} submitLabel={submitLabel} ui={ui} />;
+  return (
+    <SiteContactForm
+      fields={fields}
+      submitLabel={submitLabel}
+      toEmail={toEmail}
+      successMessage={cell.successMessage}
+      errorMessage={cell.errorMessage}
+      ui={ui}
+    />
+  );
 }
 
 FormCellRenderer.displayName = "FormCellRenderer";

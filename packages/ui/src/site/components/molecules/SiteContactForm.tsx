@@ -40,6 +40,9 @@ type SubmitStatus = "idle" | "success" | "error";
 export type SiteContactFormProps = Readonly<{
   fields: readonly FormFieldShape[];
   submitLabel: string;
+  toEmail: string;
+  successMessage?: string | null;
+  errorMessage?: string | null;
   ui: SiteFormUi;
   disabled?: boolean;
   onSubmit?: (values: SiteContactFormSubmitValues) => void | Promise<void>;
@@ -48,6 +51,9 @@ export type SiteContactFormProps = Readonly<{
 export function SiteContactForm({
   fields,
   submitLabel,
+  toEmail,
+  successMessage = "Votre message a bien été envoyé.",
+  errorMessage = "Une erreur est survenue lors de l’envoi du message.",
   ui,
   disabled = false,
   onSubmit,
@@ -93,6 +99,7 @@ export function SiteContactForm({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        toEmail: toEmail.trim(),
         values: nextValues,
       }),
     });
@@ -183,15 +190,11 @@ export function SiteContactForm({
           </div>
 
           {submitStatus === "success" ? (
-            <p className="text-sm text-green-600">
-              Votre message a bien été envoyé.
-            </p>
+            <p className="text-sm text-green-600">{successMessage}</p>
           ) : null}
 
           {submitStatus === "error" ? (
-            <p className="text-sm text-destructive">
-              Une erreur est survenue lors de l’envoi du message.
-            </p>
+            <p className="text-sm text-destructive">{errorMessage}</p>
           ) : null}
         </CardContent>
 

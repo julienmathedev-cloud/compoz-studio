@@ -17,12 +17,12 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
 const resendApiKey = process.env.RESEND_API_KEY;
-const contactToEmail = process.env.CONTACT_TO_EMAIL;
 const contactFromEmail = process.env.CONTACT_FROM_EMAIL;
 
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 type ContactPayload = Readonly<{
+  toEmail?: unknown;
   values?: Record<string, unknown>;
 }>;
 
@@ -121,13 +121,6 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!isNonEmptyString(contactToEmail)) {
-      return NextResponse.json(
-        { error: "Missing CONTACT_TO_EMAIL." },
-        { status: 500 },
-      );
-    }
-
     if (!isNonEmptyString(contactFromEmail)) {
       return NextResponse.json(
         { error: "Missing CONTACT_FROM_EMAIL." },
@@ -136,6 +129,18 @@ export async function POST(request: Request) {
     }
 
     const body = (await request.json()) as ContactPayload;
+
+    const toEmail = isNonEmptyString(body?.toEmail)
+      ? body.toEmail.trim()
+      : null;
+
+    if (!isNonEmptyString(toEmail)) {
+      return NextResponse.json(
+        { error: "Missing destination email." },
+        { status: 400 },
+      );
+    }
+
     const rawValues = body?.values;
 
     if (
@@ -165,7 +170,7 @@ export async function POST(request: Request) {
 
     await resend.emails.send({
       from: contactFromEmail,
-      to: contactToEmail,
+      to: toEmail,
       subject,
       html,
       text,

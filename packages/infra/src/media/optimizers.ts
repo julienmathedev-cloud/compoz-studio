@@ -133,7 +133,7 @@ export async function optimizeContentImage(
       input,
       meta: original,
       maxBytes: 1_500_000,
-      maxWidth: 1920,
+      maxWidth: 3840,
     })
   ) {
     return passthrough;
@@ -269,7 +269,7 @@ export async function optimizeLogo(
       input,
       meta: original,
       maxBytes: 500_000,
-      maxWidth: 1024,
+      maxWidth: 2048,
     })
   ) {
     return passthrough;
@@ -357,7 +357,7 @@ export async function optimizeFavicon(
       input,
       meta: original,
       maxBytes: 500_000,
-      maxWidth: 512,
+      maxWidth: 1024,
     })
   ) {
     return passthrough;

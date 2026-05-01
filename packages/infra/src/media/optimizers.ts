@@ -181,7 +181,7 @@ export async function optimizeOgImage(
       input,
       meta: original,
       maxBytes: 1_500_000,
-      maxWidth: 1200,
+      maxWidth: 2400,
     })
   ) {
     return passthrough;

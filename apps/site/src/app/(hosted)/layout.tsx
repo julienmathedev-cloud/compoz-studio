@@ -44,6 +44,12 @@ type LayoutProps = Readonly<{
   children: ReactNode;
 }>;
 
+const GOOGLE_SITE_VERIFICATION_BY_TENANT_ID: Record<string, string> = {
+  portfolio: process.env.GOOGLE_SITE_VERIFICATION_PORTFOLIO ?? "",
+
+  demo: process.env.GOOGLE_SITE_VERIFICATION_DEMO ?? "",
+};
+
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
@@ -133,27 +139,51 @@ export async function generateMetadata(): Promise<Metadata> {
   const robots =
     robotsContent ?? (shouldForceNoindex ? "noindex, nofollow" : undefined);
 
+  const googleSiteVerification =
+    GOOGLE_SITE_VERIFICATION_BY_TENANT_ID[tenantId]?.trim() || undefined;
+
   return {
     metadataBase,
+
     applicationName: brandTitle,
+
     title: {
       default: defaultTitle,
+
       template: titleTemplate,
     },
+
     description,
+
     robots,
+
+    verification: googleSiteVerification
+      ? {
+          google: googleSiteVerification,
+        }
+      : undefined,
+
     icons: favicon ? buildFaviconIcons(favicon) : undefined,
+
     openGraph: {
       title: defaultTitle,
+
       description,
+
       type: "website",
+
       siteName: brandTitle,
+
       images: ogImage ? [{ url: ogImage }] : undefined,
     },
+
     twitter: {
       card: settings.seo?.twitter?.card ?? undefined,
+
       site: settings.seo?.twitter?.site ?? undefined,
+
       creator: settings.seo?.twitter?.creator ?? undefined,
+
       images: ogImage ? [ogImage] : undefined,
     },
   };

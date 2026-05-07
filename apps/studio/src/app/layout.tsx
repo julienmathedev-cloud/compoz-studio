@@ -67,8 +67,8 @@ export default function StudioRootLayout({ children }: StudioRootLayoutProps) {
         )}
       >
         {children}
+        <Analytics />
       </body>
-      <Analytics />
     </html>
   );
 }

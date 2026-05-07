@@ -19,6 +19,8 @@ import "@compoz/site/app/globals.css";
 
 import { cn } from "@compoz/ui/lib/utils";
 import { SITE_APP_SHELL } from "@compoz/ui/styles/site/layout";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 type LayoutProps = Readonly<{
   children: ReactNode;
@@ -28,6 +30,9 @@ export default function RootLayout({ children }: LayoutProps) {
   return (
     <html id="app-site" lang="fr" className="overscroll-none h-dvh theme-site">
       <body className={cn("antialiased", SITE_APP_SHELL)}>{children}</body>
+      <Analytics />
+
+      <SpeedInsights />
     </html>
   );
 }

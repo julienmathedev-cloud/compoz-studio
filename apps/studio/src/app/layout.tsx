@@ -11,6 +11,7 @@
  * - `metadata` minimal (wiring SEO plus tard via settings).
  */
 
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Nunito_Sans } from "next/font/google";
 import type { ReactNode } from "react";
@@ -67,6 +68,7 @@ export default function StudioRootLayout({ children }: StudioRootLayoutProps) {
       >
         {children}
       </body>
+      <Analytics />
     </html>
   );
 }

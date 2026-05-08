@@ -10,6 +10,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   AlertTriangle,
+  ArrowDownFromLine,
   ArrowRightLeft,
   BadgeAlert,
   BadgeCheck,
@@ -33,11 +34,14 @@ import {
   Clock,
   Cloud,
   Code2,
+  Cog,
   Columns3,
   Component,
   Cpu,
   CreditCard,
   Database,
+  Disc,
+  Disc3,
   Eye,
   EyeOff,
   Factory,
@@ -117,6 +121,7 @@ import {
   Wrench,
   Zap,
 } from "lucide-react";
+
 import type { ReactNode } from "react";
 
 export const CONTENT_ICON_DEFS: ReadonlyArray<{
@@ -126,6 +131,11 @@ export const CONTENT_ICON_DEFS: ReadonlyArray<{
 }> = [
   { value: "activity", label: "Activité", icon: Activity },
   { value: "alert-triangle", label: "Alerte critique", icon: AlertTriangle },
+  {
+    value: "arrow-down-from-line",
+    label: "Suspension",
+    icon: ArrowDownFromLine,
+  },
   { value: "arrow-right-left", label: "Échange", icon: ArrowRightLeft },
   { value: "badge-alert", label: "Alerte", icon: BadgeAlert },
   { value: "badge-check", label: "Validation", icon: BadgeCheck },
@@ -149,11 +159,14 @@ export const CONTENT_ICON_DEFS: ReadonlyArray<{
   { value: "clock", label: "Temps", icon: Clock },
   { value: "cloud", label: "Cloud", icon: Cloud },
   { value: "code-2", label: "Code", icon: Code2 },
+  { value: "cog", label: "Mécanique", icon: Cog },
   { value: "columns-3", label: "Colonnes", icon: Columns3 },
   { value: "component", label: "Composant", icon: Component },
   { value: "cpu", label: "Système", icon: Cpu },
   { value: "credit-card", label: "Paiement", icon: CreditCard },
   { value: "database", label: "Base de données", icon: Database },
+  { value: "disc", label: "Disque", icon: Disc },
+  { value: "disc-3", label: "Rotation", icon: Disc3 },
   { value: "eye", label: "Visibilité", icon: Eye },
   { value: "eye-off", label: "Manque de visibilité", icon: EyeOff },
   { value: "factory", label: "Production", icon: Factory },

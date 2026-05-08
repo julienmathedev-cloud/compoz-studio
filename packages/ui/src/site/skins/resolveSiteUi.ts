@@ -21,6 +21,7 @@ import { defaultGlobalUi } from "@compoz/ui/site/skins/default/global.ui";
 import { demoGlobalUi } from "@compoz/ui/site/skins/demo/global.ui";
 import { lolaGlobalUi } from "@compoz/ui/site/skins/lola/global.ui";
 import { portfolioGlobalUi } from "@compoz/ui/site/skins/portfolio/global.ui";
+import { renaudGlobalUi } from "@compoz/ui/site/skins/renaud/global.ui";
 
 /**
  * Table de correspondance tenant -> skin UI.
@@ -29,6 +30,7 @@ const SITE_UI_BY_TENANT: Readonly<Record<string, SiteGlobalUiOverride>> = {
   demo: demoGlobalUi,
   lola: lolaGlobalUi,
   portfolio: portfolioGlobalUi,
+  renaud: renaudGlobalUi,
 };
 
 function resolveSkinTenantId(tenantId?: string): string {

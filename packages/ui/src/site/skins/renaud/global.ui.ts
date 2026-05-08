@@ -14,9 +14,10 @@
 import type { SiteGlobalUiOverride } from "@compoz/ui/site/site-ui.types";
 import { renaudBlockSectionUi } from "@compoz/ui/site/skins/renaud/block-section.ui";
 import { renaudHeadingUi } from "@compoz/ui/site/skins/renaud/cells/heading-cell.ui";
+import { renaudImageUi } from "@compoz/ui/site/skins/renaud/cells/image-cell.ui";
 import { renaudRichTextUi } from "@compoz/ui/site/skins/renaud/cells/richtext-cell.ui";
-import { renaudHeaderUi } from "@compoz/ui/site/skins/renaud/header.ui";
 import { renaudFooterUi } from "@compoz/ui/site/skins/renaud/footer.ui";
+import { renaudHeaderUi } from "@compoz/ui/site/skins/renaud/header.ui";
 
 export const renaudGlobalUi: SiteGlobalUiOverride = {
   header: renaudHeaderUi,
@@ -24,6 +25,7 @@ export const renaudGlobalUi: SiteGlobalUiOverride = {
   cells: {
     heading: renaudHeadingUi,
     richText: renaudRichTextUi,
+    image: renaudImageUi,
   },
   blockSection: renaudBlockSectionUi,
 } as const;

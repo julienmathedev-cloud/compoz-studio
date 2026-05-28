@@ -20,5 +20,5 @@ export const defaultPrimaryMenuUi: SitePrimaryMenuUi = {
   label: "",
 
   dropdownPanel:
-    "z-[80] p-2 rounded-md border border-border bg-background shadow-sm",
+    "z-[80] rounded-md border border-border bg-background/75 p-2 shadow-md supports-[backdrop-filter]:bg-background/65 supports-[backdrop-filter]:backdrop-blur-xl",
 } as const;

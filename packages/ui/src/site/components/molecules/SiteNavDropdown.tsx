@@ -332,7 +332,6 @@ export function SiteNavDropdown({
             style={{ position: "fixed", left: rect.left, top: rect.bottom }}
             className={cn(
               panelClass,
-              blurClassName,
               "motion-reduce:transition-none motion-reduce:animate-none",
               open
                 ? "opacity-100 pointer-events-auto"

@@ -14,5 +14,6 @@ import type { SiteBlockSectionUiOverride } from "@compoz/ui/site/site-ui.types";
 
 export const renaudBlockSectionUi: SiteBlockSectionUiOverride = {
   backgroundOdd: "text-foreground",
-  backgroundEven: "bg-chrome text-white",
+  backgroundEven:
+    "bg-chrome text-white bg-gradient-to-l from-bg-chrome via-zinc-900/95 to-chrome",
 } as const;

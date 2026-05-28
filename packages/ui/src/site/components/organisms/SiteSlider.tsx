@@ -223,6 +223,7 @@ export function SiteSlider({
                 <SiteCarouselItem
                   item={item}
                   ui={ui}
+                  mode="slider"
                   isFullBleed={isFullBleed}
                   priority={priority && index === 0}
                   isActive={isActive}

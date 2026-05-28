@@ -15,9 +15,12 @@ export const defaultCarouselUi: SiteCarouselUi = {
   carousel: {
     root: "relative w-full",
     viewport: "relative overflow-hidden rounded-xl aspect-[16/9]",
-    track: "",
+
+    viewportFullBleed:
+      "relative overflow-hidden h-[calc(100dvh-var(--header-h,64px))]",
+    track: "relative h-full",
     slide:
-      "absolute inset-0 motion-safe:transition-opacity motion-safe:duration-300 motion-safe:ease-out",
+      "absolute h-full w-full inset-0 motion-safe:transition-opacity motion-safe:duration-300 motion-safe:ease-out",
     slideActive: "z-10 opacity-100",
     slideInactive: "pointer-events-none z-0 opacity-0",
     arrowButton:
@@ -49,6 +52,14 @@ export const defaultCarouselUi: SiteCarouselUi = {
     fillContainer: "relative w-full h-full",
     containedImage: "object-contain",
     coverImage: "object-cover",
+    caption: "pt-3 text-center text-sm text-muted-foreground",
+  },
+
+  imageItemSlider: {
+    ratioContainer: "relative w-full bg-muted max-h-[70vh] flex justify-center",
+    fillContainer: "relative w-full",
+    containedImage: "h-auto max-h-[70vh] w-auto max-w-full object-contain",
+    coverImage: "h-auto max-h-[70vh] w-full object-cover",
     caption: "pt-3 text-center text-sm text-muted-foreground",
   },
 

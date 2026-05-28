@@ -17,6 +17,7 @@ import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
 export type SiteCarouselItemProps = Readonly<{
   item: NormalizedCarouselItem;
   ui: SiteCarouselUi;
+  mode?: "carousel" | "slider";
   isFullBleed?: boolean;
   priority?: boolean;
   isActive?: boolean;
@@ -25,6 +26,7 @@ export type SiteCarouselItemProps = Readonly<{
 export function SiteCarouselItem({
   item,
   ui,
+  mode = "carousel",
   isFullBleed = false,
   priority = false,
   isActive = false,
@@ -34,24 +36,50 @@ export function SiteCarouselItem({
     : ui.contentItem.inactive;
 
   if (item.kind === "image") {
+    const imageUi = mode === "slider" ? ui.imageItemSlider : ui.imageItem;
+
+    if (mode === "slider") {
+      return (
+        <div
+          className={
+            isFullBleed ? imageUi.fillContainer : imageUi.ratioContainer
+          }
+        >
+          <SiteAppImage
+            image={{
+              src: item.src,
+              alt: item.alt,
+              width: item.width,
+              height: item.height,
+            }}
+            sizes="100vw"
+            className={
+              isFullBleed ? imageUi.coverImage : imageUi.containedImage
+            }
+            priority={priority}
+            fetchPriority={priority ? "high" : "auto"}
+          />
+        </div>
+      );
+    }
+
     return (
       <div
-        className={
-          isFullBleed ? ui.imageItem.fillContainer : ui.imageItem.ratioContainer
-        }
+        className={isFullBleed ? imageUi.fillContainer : imageUi.ratioContainer}
       >
         <SiteAppImage
           image={{
             src: item.src,
+
             alt: item.alt,
+
             width: item.width,
+
             height: item.height,
           }}
           fill
           sizes="100vw"
-          className={
-            isFullBleed ? ui.imageItem.coverImage : ui.imageItem.containedImage
-          }
+          className={isFullBleed ? imageUi.coverImage : imageUi.containedImage}
           priority={priority}
           fetchPriority={priority ? "high" : "auto"}
         />

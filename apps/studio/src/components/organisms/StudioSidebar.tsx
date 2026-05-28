@@ -184,11 +184,6 @@ export function StudioSidebar({
         href: base + STUDIO_PATH.blocks,
       },
       {
-        key: "theme",
-        label: t("studio.dashboard.tabs.theme"),
-        href: base + STUDIO_PATH.theme,
-      },
-      {
         key: "seo",
         label: t("studio.dashboard.tabs.seo"),
         href: base + STUDIO_PATH.seo,
@@ -197,11 +192,18 @@ export function StudioSidebar({
 
     // ✅ Studio-only
     if (isAdmin) {
-      baseItems.push({
-        key: "users",
-        label: t("studio.shared.entities.users"),
-        href: base + STUDIO_PATH.adminPath.users,
-      });
+      baseItems.push(
+        {
+          key: "theme",
+          label: t("studio.dashboard.tabs.theme"),
+          href: base + STUDIO_PATH.theme,
+        },
+        {
+          key: "users",
+          label: t("studio.shared.entities.users"),
+          href: base + STUDIO_PATH.adminPath.users,
+        },
+      );
     }
 
     return baseItems;

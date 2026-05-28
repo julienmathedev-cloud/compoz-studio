@@ -176,7 +176,11 @@ export function SiteCarousel({
         </>
       ) : null}
 
-      <div className={ui.carousel.viewport}>
+      <div
+        className={cn(
+          isFullBleed ? ui.carousel.viewportFullBleed : ui.carousel.viewport,
+        )}
+      >
         {isImageOnly ? (
           <div className={ui.carousel.track}>
             {items.map((item, index) => {
@@ -196,6 +200,7 @@ export function SiteCarousel({
                   <SiteCarouselItem
                     item={item}
                     ui={ui}
+                    mode="carousel"
                     isFullBleed={isFullBleed}
                     priority={priority && index === 0}
                     isActive={isActive}

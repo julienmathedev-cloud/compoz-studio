@@ -12,5 +12,12 @@
  */
 
 import type { SiteGlobalUiOverride } from "@compoz/ui/site/site-ui.types";
+import { lolaBlockSectionUi } from "@compoz/ui/site/skins/lola/block-section.ui";
+import { lolaZoomGalleryUi } from "@compoz/ui/site/skins/lola/cells/zoom-gallery-cell.ui";
 
-export const lolaGlobalUi: SiteGlobalUiOverride = {};
+export const lolaGlobalUi: SiteGlobalUiOverride = {
+  cells: {
+    zoomGallery: lolaZoomGalleryUi,
+  },
+  blockSection: lolaBlockSectionUi,
+};

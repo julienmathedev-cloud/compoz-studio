@@ -353,6 +353,7 @@ export type SiteImageUiOverride = DeepPartial<SiteImageUi>;
 export type SiteCarouselFrameUi = Readonly<{
   root: string;
   viewport: string;
+  viewportFullBleed: string;
   track: string;
   slide: string;
   slideActive: string;
@@ -384,6 +385,14 @@ export type SiteCarouselUi = Readonly<{
   slider: SiteSliderUi;
 
   imageItem: Readonly<{
+    ratioContainer: string;
+    fillContainer: string;
+    containedImage: string;
+    coverImage: string;
+    caption: string;
+  }>;
+
+  imageItemSlider: Readonly<{
     ratioContainer: string;
     fillContainer: string;
     containedImage: string;

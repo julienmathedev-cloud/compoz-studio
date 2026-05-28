@@ -14,7 +14,7 @@ import type { SiteBlockSectionUi } from "@compoz/ui/site/site-ui.types";
 
 export const defaultBlockSectionUi: SiteBlockSectionUi = {
   containerContained: "w-full mx-auto max-w-screen-xl px-3 md:px-4 lg:px-6",
-  containerFullBleed: "w-full",
+  containerFullBleed: "h-full w-full",
 
   sectionSpacingContained: "py-6 md:py-12 lg:py-18",
 

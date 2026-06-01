@@ -6,7 +6,8 @@
   "sideEffects": false,
   "scripts": {
     "lint": "eslint .",
-    "migrate:default-to-demo": "tsx src/scripts/migrate-default-to-demo.ts"
+    "migrate:default-to-demo": "tsx src/scripts/migrate-default-to-demo.ts",
+    "backup:upstash": "tsx src/scripts/backup-upstash-local.ts"
   },
   "dependencies": {
     "@compoz/core": "workspace:*",

@@ -12,8 +12,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { routing } from "@/i18n/routing";
-import { I18N_RUNTIME_KEYS } from "@/i18n/runtime-keys";
+import { routing } from "@compoz/studio/i18n/routing";
+import { I18N_RUNTIME_KEYS } from "@compoz/studio/i18n/runtime-keys";
 
 /* -------------------------------------------------------------------------- */
 /*                                   Config                                   */
@@ -28,7 +28,7 @@ const MESSAGES_PATH_BY_LOCALE: Record<(typeof LOCALES)[number], string> = {
 
 const ERROR_CODES_TS_PATH = path.resolve(
   process.cwd(),
-  "src/core/domain/errors/codes.ts"
+  "src/core/domain/errors/codes.ts",
 );
 
 const UI_ERROR_TS_PATH = path.resolve(process.cwd(), "src/lib/ui/uiError.ts");
@@ -171,7 +171,7 @@ function main() {
       hasError = true;
       console.error(
         `\n❌ [i18n] Keys missing in "${locale}":\n` +
-          missing.map((k) => `- ${k}`).join("\n")
+          missing.map((k) => `- ${k}`).join("\n"),
       );
     }
 
@@ -179,7 +179,7 @@ function main() {
       hasError = true;
       console.error(
         `\n❌ [i18n] Extra keys in "${locale}":\n` +
-          extra.map((k) => `- ${k}`).join("\n")
+          extra.map((k) => `- ${k}`).join("\n"),
       );
     }
   }
@@ -187,7 +187,7 @@ function main() {
   /* --------------------- 3) ERROR_CODES ----------------------- */
 
   const errorCodes = extractStringValues(
-    fs.readFileSync(ERROR_CODES_TS_PATH, "utf8")
+    fs.readFileSync(ERROR_CODES_TS_PATH, "utf8"),
   );
 
   for (const locale of LOCALES) {
@@ -205,7 +205,7 @@ function main() {
       hasError = true;
       console.error(
         `\n❌ [i18n] Missing error translations (${locale}):\n` +
-          missing.map((k) => `- ${k}`).join("\n")
+          missing.map((k) => `- ${k}`).join("\n"),
       );
     }
 
@@ -215,7 +215,7 @@ function main() {
         hasError = true;
         console.error(
           `\n❌ [i18n] Extra error keys (${locale}):\n` +
-            extra.map((k) => `- ${k}`).join("\n")
+            extra.map((k) => `- ${k}`).join("\n"),
         );
       }
     }
@@ -224,7 +224,7 @@ function main() {
   /* --------------------- 4) uiErrors -------------------------- */
 
   const uiErrorTokens = extractStringValues(
-    fs.readFileSync(UI_ERROR_TS_PATH, "utf8")
+    fs.readFileSync(UI_ERROR_TS_PATH, "utf8"),
   );
 
   for (const locale of LOCALES) {
@@ -232,7 +232,7 @@ function main() {
     if (!isObject(obj)) {
       hasError = true;
       console.error(
-        `\n❌ [i18n] Missing "${UI_ERRORS_NAMESPACE}" in ${locale}`
+        `\n❌ [i18n] Missing "${UI_ERRORS_NAMESPACE}" in ${locale}`,
       );
       continue;
     }
@@ -244,7 +244,7 @@ function main() {
       hasError = true;
       console.error(
         `\n❌ [i18n] Missing uiError translations (${locale}):\n` +
-          missing.map((k) => `- ${k}`).join("\n")
+          missing.map((k) => `- ${k}`).join("\n"),
       );
     }
 
@@ -254,7 +254,7 @@ function main() {
         hasError = true;
         console.error(
           `\n❌ [i18n] Extra uiError keys (${locale}):\n` +
-            extra.map((k) => `- ${k}`).join("\n")
+            extra.map((k) => `- ${k}`).join("\n"),
         );
       }
     }
@@ -273,7 +273,7 @@ function main() {
       hasError = true;
       console.error(
         `\n❌ [i18n] Missing runtime keys (${locale}):\n` +
-          missing.map((k) => `- ${k}`).join("\n")
+          missing.map((k) => `- ${k}`).join("\n"),
       );
     }
   }
@@ -286,7 +286,7 @@ function main() {
   }
 
   console.log(
-    "✅ i18n guard OK (parity + ERROR_CODES + uiErrors + runtime keys)."
+    "✅ i18n guard OK (parity + ERROR_CODES + uiErrors + runtime keys).",
   );
 }
 

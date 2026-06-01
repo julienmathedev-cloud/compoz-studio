@@ -14,7 +14,8 @@
     "start": "pnpm -r --parallel --filter @compoz/studio --filter @compoz/site start",
     "start:studio": "pnpm --filter @compoz/studio start",
     "start:site": "pnpm --filter @compoz/site start",
-    "lint": "pnpm -r lint"
+    "lint": "pnpm -r lint",
+    "backup:upstash": "pnpm --filter @compoz/infra backup:upstash"
   },
   "engines": {
     "node": ">=22"

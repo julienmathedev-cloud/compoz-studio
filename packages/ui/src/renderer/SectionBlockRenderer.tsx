@@ -85,7 +85,7 @@ export function SectionBlockRenderer({
 
   return (
     <section
-      className={cn(backgroundClass)}
+      className={cn(backgroundClass, block.cssClassName)}
       data-block="section"
       data-variant={variant}
       data-container={containerMode}

@@ -91,6 +91,7 @@ export function createSectionBlock({
       type: "section",
       name: resolveBlockName(input.name, currentBlocks.length + 1),
       containerMode: input.containerMode,
+      cssClassName: resolveCssClassName(input.cssClassName),
       lcpPriority: input.lcpPriority,
       rows: buildSectionRows(input.rows, idGenerator),
     };
@@ -140,6 +141,11 @@ function ensureId(value: string | undefined, idGenerator: IdGenerator): string {
 function resolveBlockName(value: string | undefined, position: number): string {
   const trimmed = String(value ?? "").trim();
   return trimmed || `Bloc ${position}`;
+}
+
+function resolveCssClassName(value: string | undefined): string | undefined {
+  const trimmed = String(value ?? "").trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 }
 
 function resolveRowReverseOn(

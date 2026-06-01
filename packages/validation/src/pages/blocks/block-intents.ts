@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import {
+  BlockCssClassNameSchema,
   BlockIdSchema,
   BlockNameSchema,
   BlockRowColumnsCountSchema,
@@ -66,6 +67,7 @@ export const CreateSectionBlockIntentSchema = z
   .object({
     name: BlockNameSchema.optional(),
     containerMode: SectionBlockContainerModeSchema,
+    cssClassName: BlockCssClassNameSchema,
     lcpPriority: z.boolean(),
     rows: z.array(CreateBlockRowIntentSchema),
     insertAt: z.number().int().min(0).optional(),
@@ -87,6 +89,7 @@ export const UpdateSectionBlockIntentSchema = z
       .object({
         name: BlockNameSchema.optional(),
         containerMode: SectionBlockContainerModeSchema.optional(),
+        cssClassName: BlockCssClassNameSchema,
         lcpPriority: z.boolean().optional(),
         rows: z.array(BlockRowSchema).optional(),
       })

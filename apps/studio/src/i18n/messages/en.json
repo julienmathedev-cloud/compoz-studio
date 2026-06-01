@@ -815,6 +815,11 @@
           "lcpPriority": {
             "label": "LCP priority",
             "help": "Enables priority loading for critical elements."
+          },
+          "cssClassName": {
+            "label": "CSS class",
+            "help": "Additional CSS class applied to the section.",
+            "placeholder": "e.g. hero-home"
           }
         },
         "rows": {

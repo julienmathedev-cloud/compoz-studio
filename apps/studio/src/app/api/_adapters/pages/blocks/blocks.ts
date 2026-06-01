@@ -78,6 +78,7 @@ export function adaptCreateSectionBlockIntent(
   const out: CreateSectionBlockPatchInput = {
     name: trimOrKeep(dto.name ?? ""),
     containerMode: dto.containerMode,
+    cssClassName: trimOrKeep(dto.cssClassName ?? ""),
     lcpPriority: Boolean(dto.lcpPriority),
     rows,
   };
@@ -110,6 +111,10 @@ export function adaptUpdateSectionBlockIntent(
 
   if ("containerMode" in dto.patch) {
     patch.containerMode = dto.patch.containerMode;
+  }
+
+  if ("cssClassName" in dto.patch) {
+    patch.cssClassName = trimOrKeep(dto.patch.cssClassName ?? "");
   }
 
   if ("lcpPriority" in dto.patch) {

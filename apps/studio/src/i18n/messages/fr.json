@@ -815,6 +815,11 @@
           "lcpPriority": {
             "label": "Priorité LCP",
             "help": "Active la priorité de chargement pour les éléments critiques."
+          },
+          "cssClassName": {
+            "label": "Classe CSS",
+            "help": "Classe CSS additionnelle appliquée à la section.",
+            "placeholder": "Ex. : hero-home"
           }
         },
         "rows": {

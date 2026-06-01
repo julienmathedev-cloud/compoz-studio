@@ -8,6 +8,7 @@
 import { z } from "zod";
 
 import {
+  BlockCssClassNameSchema,
   BlockNameSchema,
   BlockRowSchema,
   SectionBlockContainerModeSchema,
@@ -21,6 +22,7 @@ export const SectionBlockFormSchema = z
   .object({
     name: BlockNameSchema,
     containerMode: SectionBlockContainerModeSchema,
+    cssClassName: BlockCssClassNameSchema,
     lcpPriority: z.boolean(),
     rows: z.array(BlockRowSchema),
   })

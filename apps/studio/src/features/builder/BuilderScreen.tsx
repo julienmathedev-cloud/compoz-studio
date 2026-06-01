@@ -138,6 +138,7 @@ type BuilderScreenProps = Readonly<{
   pageSlug: string;
   blockId: string;
   initialValues: SectionBlockFormValues;
+  isAdmin: boolean;
 }>;
 
 type UploadedRasterImage = Readonly<{
@@ -151,6 +152,7 @@ export function BuilderScreen({
   pageSlug,
   blockId,
   initialValues,
+  isAdmin,
 }: BuilderScreenProps) {
   const t = useTranslations();
   const locale = useLocale();
@@ -567,7 +569,14 @@ export function BuilderScreen({
   const handleReset = useCallback(() => {
     lg.debug("form.reset", { blockId });
 
-    reset(baseline, {
+    const fallbackBaseline =
+      normalizeSectionBlockFormValuesForValidation(baseline);
+    const nextBaselineForValidation =
+      baselineRef.current ?? fallbackBaseline;
+    const nextBaselineForm =
+      normalizeSectionBlockFormValues(nextBaselineForValidation);
+
+    reset(nextBaselineForm, {
       keepDirty: false,
       keepTouched: false,
       keepErrors: false,
@@ -577,11 +586,16 @@ export function BuilderScreen({
     setSelectedCellId(undefined);
     setHoveredCellId(undefined);
 
-    if (baselinePreview) {
-      const sig = JSON.stringify(baselinePreview);
+    const nextBaselinePreview = toSectionBlockShapeFromFormValues({
+      blockId,
+      values: nextBaselineForValidation,
+    });
+
+    if (nextBaselinePreview) {
+      const sig = JSON.stringify(nextBaselinePreview);
       lastDraftPreviewSigRef.current = sig;
-      setDraft(baselinePreview);
-      setBaseline(previewScope, baselinePreview);
+      setDraft(nextBaselinePreview);
+      setBaseline(previewScope, nextBaselinePreview);
     }
 
     /**
@@ -591,7 +605,6 @@ export function BuilderScreen({
     frame.onReset();
   }, [
     baseline,
-    baselinePreview,
     blockId,
     dirtyGuard,
     frame,
@@ -645,6 +658,7 @@ export function BuilderScreen({
           clearErrors={
             clearErrors as UseFormClearErrors<SectionBlockFormValues>
           }
+          isAdmin={isAdmin}
           isSaving={isUpdatingThisBlock}
           isDirty={isDirty}
           selectedCellId={effectiveSelectedCellId}

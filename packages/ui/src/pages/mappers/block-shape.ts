@@ -46,6 +46,11 @@ function normalizeContainerMode(input: unknown): ContainerMode {
   return input === "fullBleed" ? "fullBleed" : "contained";
 }
 
+function normalizeCssClassName(input: unknown): string | undefined {
+  const trimmed = typeof input === "string" ? input.trim() : "";
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 function normalizeReverseOn(input: unknown): BlockRowReverseOnShape {
   const value =
     input && typeof input === "object" && !Array.isArray(input)
@@ -110,6 +115,7 @@ export function normalizeSectionBlockFormValuesShallow(
     ...values,
     name: normalizeName(values.name),
     containerMode: normalizeContainerMode(values.containerMode),
+    cssClassName: normalizeCssClassName(values.cssClassName),
     lcpPriority: Boolean(values.lcpPriority),
     rows: normalizeRows(values.rows),
   };
@@ -136,6 +142,7 @@ export function toSectionBlockShapeFromFormValues(args: {
     type: "section",
     name: normalized.name,
     containerMode: normalized.containerMode,
+    cssClassName: normalized.cssClassName,
     lcpPriority: normalized.lcpPriority,
     rows: normalized.rows as SectionBlockShape["rows"],
   };
@@ -155,6 +162,7 @@ export function toSectionBlockShapeFromDTO(
     type: "section",
     name: normalizeName(block.name),
     containerMode: normalizeContainerMode(block.containerMode),
+    cssClassName: normalizeCssClassName(block.cssClassName),
     lcpPriority:
       typeof block.lcpPriority === "boolean" ? block.lcpPriority : false,
     rows: Array.isArray(block.rows)

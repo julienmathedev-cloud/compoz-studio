@@ -24,6 +24,10 @@ export function applySectionBlockPatch(
     ...block,
     name: typeof patch.name === "string" ? patch.name.trim() : block.name,
     containerMode: patch.containerMode ?? block.containerMode,
+    cssClassName:
+      typeof patch.cssClassName === "string"
+        ? patch.cssClassName.trim() || undefined
+        : block.cssClassName,
     lcpPriority:
       typeof patch.lcpPriority === "boolean"
         ? patch.lcpPriority

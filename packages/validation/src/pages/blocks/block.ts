@@ -37,6 +37,11 @@ export const BlockNameSchema = z
   .trim()
   .min(1, ERROR_CODES.BLOCK_NAME_REQUIRED);
 
+export const BlockCssClassNameSchema = z
+  .string()
+  .trim()
+  .optional();
+
 export const BlockRowColumnsCountSchema = z.union(
   [z.literal(1), z.literal(2), z.literal(3)] as const,
   { message: ERROR_CODES.BLOCK_SECTION_COLUMNS_INVALID },
@@ -95,6 +100,7 @@ export const SectionBlockSchema = z
     type: z.literal("section"),
     name: BlockNameSchema,
     containerMode: SectionBlockContainerModeSchema,
+    cssClassName: BlockCssClassNameSchema,
     lcpPriority: z.boolean(),
     rows: z.array(BlockRowSchema),
   })

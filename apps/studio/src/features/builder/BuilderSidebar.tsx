@@ -65,6 +65,7 @@ type BuilderSidebarProps = Readonly<{
   control: Control<SectionBlockFormValues>;
   setValue: UseFormSetValue<SectionBlockFormValues>;
   clearErrors: UseFormClearErrors<SectionBlockFormValues>;
+  isAdmin: boolean;
   title?: string;
   idPrefix?: string;
   isSaving?: boolean;
@@ -151,6 +152,7 @@ export function BuilderSidebar({
   control,
   setValue,
   clearErrors,
+  isAdmin,
   title,
   idPrefix = "builder-sidebar",
   isSaving,
@@ -231,6 +233,7 @@ export function BuilderSidebar({
   const isBusy = Boolean(isSaving || isSubmitting);
 
   const nameIds = createFieldIds(idPrefix, "name");
+  const cssClassNameIds = createFieldIds(idPrefix, "css-class-name");
   const lcpPriorityIds = createFieldIds(idPrefix, "lcp-priority");
 
   const nameTouched = Boolean(touchedFields.name);
@@ -546,6 +549,29 @@ export function BuilderSidebar({
                 />
               )}
             />
+
+            {isAdmin ? (
+              <Controller
+                name="cssClassName"
+                control={control}
+                render={({ field }) => (
+                  <InputField
+                    ids={cssClassNameIds}
+                    label={t("studio.builder.sidebar.section.cssClassName.label")}
+                    help={t("studio.builder.sidebar.section.cssClassName.help")}
+                    value={field.value ?? ""}
+                    onChange={(value) => field.onChange(value)}
+                    onBlur={field.onBlur}
+                    placeholder={t(
+                      "studio.builder.sidebar.section.cssClassName.placeholder",
+                    )}
+                    maxLength={120}
+                    showCount
+                    disabled={isBusy}
+                  />
+                )}
+              />
+            ) : null}
           </div>
 
           <Separator />

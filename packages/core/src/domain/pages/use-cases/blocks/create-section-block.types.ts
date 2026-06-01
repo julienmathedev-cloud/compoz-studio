@@ -65,6 +65,7 @@ export type CreateSectionBlockInput = {
   pageId: string;
   name?: string;
   containerMode: "contained" | "fullBleed";
+  cssClassName?: string;
   lcpPriority: boolean;
   rows: ReadonlyArray<CreateSectionBlockRowInput>;
   insertAt?: number;

@@ -17,7 +17,10 @@ import { notFound } from "next/navigation";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { getPagesRepository } from "@compoz/infra/pages";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import {
+  isAdminRole,
+  requireSessionWithTenant,
+} from "@compoz/studio/auth/require-session";
 import { BuilderScreen } from "@compoz/studio/features/builder/BuilderScreen";
 import { toSectionBlockFormValuesFromDTO } from "@compoz/studio/features/pages/mappers/blocks-form";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
@@ -33,8 +36,9 @@ type BuilderPageProps = Readonly<{
 }>;
 
 export default async function BuilderPage({ params }: BuilderPageProps) {
-  const { tenantId } = await requireSessionWithTenant();
+  const { tenantId, role } = await requireSessionWithTenant();
   if (!tenantId) notFound();
+  const isAdmin = isAdminRole(role);
 
   const { pageId, blockId } = await unwrapParams(params);
   if (!pageId || !blockId) notFound();
@@ -58,6 +62,7 @@ export default async function BuilderPage({ params }: BuilderPageProps) {
       pageSlug={page.slug}
       blockId={blockId}
       initialValues={initialValues}
+      isAdmin={isAdmin}
     />
   );
 }

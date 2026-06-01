@@ -35,6 +35,7 @@ export interface UpdateSectionBlockDeps {
 export type SectionBlockPatch = {
   name?: string;
   containerMode?: SectionBlockContainerMode;
+  cssClassName?: string;
   lcpPriority?: boolean;
   rows?: ReadonlyArray<BlockRow>;
 };

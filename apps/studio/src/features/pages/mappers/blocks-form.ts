@@ -68,6 +68,12 @@ function normalizeContainerMode(
   return containerMode === "fullBleed" ? "fullBleed" : "contained";
 }
 
+function normalizeCssClassName(
+  cssClassName: SectionBlockFormValues["cssClassName"] | undefined,
+): SectionBlockFormValues["cssClassName"] {
+  return String(cssClassName ?? "").trim();
+}
+
 function normalizeColumnId(id: string | undefined): string {
   const normalized = String(id ?? "").trim();
   return normalized.length > 0 ? normalized : createUiId();
@@ -232,6 +238,7 @@ export function toSectionBlockFormValuesFromDTO(
   return {
     name: normalizeName(block.name),
     containerMode: normalizeContainerMode(block.containerMode),
+    cssClassName: normalizeCssClassName(block.cssClassName),
     lcpPriority:
       typeof block.lcpPriority === "boolean" ? block.lcpPriority : false,
     rows: normalizeRows(rows),
@@ -248,6 +255,7 @@ export function normalizeSectionBlockFormValues(
   return {
     name: normalizeName(values.name),
     containerMode: normalizeContainerMode(values.containerMode),
+    cssClassName: normalizeCssClassName(values.cssClassName),
     lcpPriority: Boolean(values.lcpPriority),
     rows: normalizeRows(values.rows),
   };
@@ -259,6 +267,7 @@ export function normalizeSectionBlockFormValuesForValidation(
   return {
     name: normalizeName(values.name),
     containerMode: normalizeContainerMode(values.containerMode),
+    cssClassName: normalizeCssClassName(values.cssClassName),
     lcpPriority: Boolean(values.lcpPriority),
     rows: normalizeRowsForValidation(values.rows),
   };
@@ -282,6 +291,7 @@ export function toCreateSectionBlockIntentDTOFromFormValues(args: {
   return {
     ...(normalized.name ? { name: normalized.name } : {}),
     containerMode: normalized.containerMode,
+    cssClassName: normalized.cssClassName,
     lcpPriority: normalized.lcpPriority,
     rows: normalized.rows,
     insertAt,
@@ -299,6 +309,10 @@ function toSectionBlockPatch(
 
   if ("containerMode" in patch && patch.containerMode !== undefined) {
     output.containerMode = normalizeContainerMode(patch.containerMode);
+  }
+
+  if ("cssClassName" in patch) {
+    output.cssClassName = normalizeCssClassName(patch.cssClassName);
   }
 
   if ("lcpPriority" in patch && patch.lcpPriority !== undefined) {
@@ -372,6 +386,7 @@ export function createEmptyRow(args?: {
  */
 export function createEmptySectionBlock(args?: {
   name?: string;
+  cssClassName?: string;
   lcpPriority?: boolean;
   containerMode?: SectionBlockFormValues["containerMode"];
   rows?: ReadonlyArray<SectionRowFormValues>;
@@ -379,6 +394,7 @@ export function createEmptySectionBlock(args?: {
   return {
     name: normalizeName(args?.name),
     containerMode: normalizeContainerMode(args?.containerMode),
+    cssClassName: normalizeCssClassName(args?.cssClassName),
     lcpPriority: args?.lcpPriority ?? false,
     rows: normalizeRows(args?.rows),
   };

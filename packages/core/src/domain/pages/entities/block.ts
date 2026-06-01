@@ -135,6 +135,11 @@ export interface SectionBlock {
   containerMode: SectionBlockContainerMode;
 
   /**
+   * Classe CSS additionnelle optionnelle appliquée au wrapper de section.
+   */
+  cssClassName?: string;
+
+  /**
    * Indique si cette section doit être considérée prioritaire
    * pour l’optimisation du Largest Contentful Paint (LCP).
    *

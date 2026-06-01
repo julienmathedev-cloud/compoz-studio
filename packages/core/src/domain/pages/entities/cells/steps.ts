@@ -16,6 +16,7 @@ export type StepItem = {
 export type StepsCell = {
   id: string;
   kind: "steps";
+  cssClassName?: string;
   variant: StepsVariant;
   items: ReadonlyArray<StepItem>;
 };

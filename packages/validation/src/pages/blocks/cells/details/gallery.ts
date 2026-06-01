@@ -8,7 +8,10 @@
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
-import { CellIdSchema } from "@compoz/validation/pages/blocks/cells/details/common";
+import {
+  CellCssClassNameSchema,
+  CellIdSchema,
+} from "@compoz/validation/pages/blocks/cells/details/common";
 import { ImageEditorSchema } from "@compoz/validation/pages/blocks/cells/details/image-editor";
 
 export const GalleryMaxColumnsSchema = z.union(
@@ -27,6 +30,7 @@ export const GalleryCellSchema = z
   .object({
     id: CellIdSchema,
     kind: z.literal("gallery"),
+    cssClassName: CellCssClassNameSchema,
     linksEnabled: z.boolean(),
     maxColumns: GalleryMaxColumnsSchema,
     reveal: z.boolean({

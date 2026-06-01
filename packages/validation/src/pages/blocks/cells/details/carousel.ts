@@ -10,7 +10,10 @@ import { z } from "zod";
 
 import { CardItemSchema } from "@compoz/validation/pages/blocks/cells/details/cards";
 import { CardsExtendedItemSchema } from "@compoz/validation/pages/blocks/cells/details/cards-extended";
-import { CellIdSchema } from "@compoz/validation/pages/blocks/cells/details/common";
+import {
+  CellCssClassNameSchema,
+  CellIdSchema,
+} from "@compoz/validation/pages/blocks/cells/details/common";
 import { ImageEditorSchema } from "@compoz/validation/pages/blocks/cells/details/image-editor";
 import { StructuredCardItemSchema } from "@compoz/validation/pages/blocks/cells/details/structured-card";
 
@@ -45,6 +48,7 @@ export const CarouselCellSchema = z
     id: CellIdSchema,
 
     kind: z.literal("carousel"),
+    cssClassName: CellCssClassNameSchema,
 
     variant: CarouselVariantSchema,
 

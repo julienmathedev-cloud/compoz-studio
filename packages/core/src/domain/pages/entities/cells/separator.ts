@@ -11,6 +11,7 @@ export type SeparatorSize = "sm" | "md" | "lg";
 export type SeparatorCell = {
   id: string;
   kind: "separator";
+  cssClassName?: string;
   align: SeparatorAlign;
   size: SeparatorSize;
 };

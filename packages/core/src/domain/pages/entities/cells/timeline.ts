@@ -18,5 +18,6 @@ export type TimelineItem = {
 export type TimelineCell = {
   id: string;
   kind: "timeline";
+  cssClassName?: string;
   items: ReadonlyArray<TimelineItem>;
 };

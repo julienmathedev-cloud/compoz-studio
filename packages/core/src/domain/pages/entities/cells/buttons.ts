@@ -19,6 +19,7 @@ export type ButtonItem = {
 export type ButtonsCell = {
   id: string;
   kind: "buttons";
+  cssClassName?: string;
   align: ButtonsAlign;
   gap: ButtonsGap;
   items: ReadonlyArray<ButtonItem>;

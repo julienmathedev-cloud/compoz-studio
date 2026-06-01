@@ -2,7 +2,7 @@
  * @file apps/studio/src/app/api/_adapters/pages/blocks/cells/buttons.ts
  */
 
-import { trimOrKeep } from "@compoz/studio/lib/strings";
+import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type {
   ButtonItem,
@@ -26,6 +26,7 @@ export function adaptButtonsCell(dto: ButtonsCellIntentDTO): ButtonsCell {
   return {
     id: trimOrKeep(dto.id),
     kind: "buttons",
+    cssClassName: trimClearableOrUndef(dto.cssClassName),
     align: dto.align,
     gap: dto.gap,
     items: dto.items.map(adaptButtonItem),

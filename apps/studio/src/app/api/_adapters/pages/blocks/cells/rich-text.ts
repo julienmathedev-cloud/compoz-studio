@@ -3,7 +3,7 @@
  */
 
 import { sanitizeRichTextHtml } from "@compoz/infra/lib/sanitize-rich-text";
-import { trimOrKeep } from "@compoz/studio/lib/strings";
+import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type { RichTextCell } from "@compoz/core/domain/pages/entities/cell";
 import type { RichTextCellIntentDTO } from "@compoz/validation/pages/blocks/cells/cell-intents";
@@ -15,6 +15,7 @@ export function adaptRichTextCell(dto: RichTextCellIntentDTO): RichTextCell {
   return {
     id: trimOrKeep(dto.id),
     kind: "richText",
+    cssClassName: trimClearableOrUndef(dto.cssClassName),
     content: safe,
     reveal: dto.reveal,
   };

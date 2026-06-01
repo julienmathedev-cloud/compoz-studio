@@ -10,6 +10,7 @@ import { z } from "zod";
 
 import { ImageSchema } from "@compoz/validation/common/image";
 import {
+  CellCssClassNameSchema,
   CellIdSchema,
   ImageEditorIdSchema,
 } from "@compoz/validation/pages/blocks/cells/details/common";
@@ -46,6 +47,7 @@ export const ImageCellSchema = z
   .object({
     id: CellIdSchema,
     kind: z.literal("image"),
+    cssClassName: CellCssClassNameSchema,
     image: ImageEditorSchema,
     variant: ImageVariantSchema,
     size: ImageSizeSchema,

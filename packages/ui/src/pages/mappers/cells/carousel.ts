@@ -65,6 +65,7 @@ export function toCarouselCellShapeFromDTO(
   return {
     id: cell.id,
     kind: "carousel",
+    cssClassName: cell.cssClassName,
     variant: cell.variant,
     showDots: cell.showDots,
     showArrows: cell.showArrows,

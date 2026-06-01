@@ -126,6 +126,7 @@ export function SectionBlockRenderer({
                             data-cell-kind={cell.kind}
                             className={cn(
                               blockUi.cell,
+                              cell.cssClassName,
                               "relative",
                               getSpacerWrapperVisibilityClass(cell),
                             )}

@@ -22,6 +22,7 @@ export type CardsExtendedItem = {
 export type CardsExtendedCell = {
   id: string;
   kind: "cardsExtended";
+  cssClassName?: string;
   columns: CardsExtendedColumns;
   align: CardsExtendedAlign;
   reveal: boolean;

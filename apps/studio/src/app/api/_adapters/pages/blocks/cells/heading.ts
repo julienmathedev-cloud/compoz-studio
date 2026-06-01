@@ -2,7 +2,7 @@
  * @file apps/studio/src/app/api/_adapters/pages/blocks/cells/heading.ts
  */
 
-import { trimOrKeep } from "@compoz/studio/lib/strings";
+import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type { HeadingCell } from "@compoz/core/domain/pages/entities/cell";
 import type { HeadingCellIntentDTO } from "@compoz/validation/pages/blocks/cells/cell-intents";
@@ -11,6 +11,7 @@ export function adaptHeadingCell(dto: HeadingCellIntentDTO): HeadingCell {
   return {
     id: trimOrKeep(dto.id),
     kind: "heading",
+    cssClassName: trimClearableOrUndef(dto.cssClassName),
     level: dto.level,
     title: trimOrKeep(dto.title),
     subtitle:

@@ -709,6 +709,7 @@ export function BuilderScreen({
         clearErrors={clearErrors}
         trigger={trigger}
         open={Boolean(selectedCellLocation)}
+        isAdmin={isAdmin}
         selectedCellLocation={selectedCellLocation}
         onUploadImage={onUploadImage}
         onOpenChange={handleDrawerOpenChange}

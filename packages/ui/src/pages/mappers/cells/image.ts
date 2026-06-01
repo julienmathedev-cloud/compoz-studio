@@ -15,6 +15,7 @@ export function toImageCellShapeFromDTO(
   return {
     id: cell.id,
     kind: "image",
+    cssClassName: cell.cssClassName,
     image: {
       id: cell.image.id,
       src: cell.image.src,

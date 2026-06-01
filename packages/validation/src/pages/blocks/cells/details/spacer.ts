@@ -8,7 +8,10 @@
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
-import { CellIdSchema } from "@compoz/validation/pages/blocks/cells/details/common";
+import {
+  CellCssClassNameSchema,
+  CellIdSchema,
+} from "@compoz/validation/pages/blocks/cells/details/common";
 
 export const SpacerSizeSchema = z.enum(["sm", "md", "lg", "xl"], {
   message: ERROR_CODES.CELL_SPACER_SIZE_INVALID,
@@ -32,6 +35,7 @@ export const SpacerCellSchema = z
   .object({
     id: CellIdSchema,
     kind: z.literal("spacer"),
+    cssClassName: CellCssClassNameSchema,
     size: SpacerSizeSchema,
     visibility: SpacerVisibilitySchema,
   })

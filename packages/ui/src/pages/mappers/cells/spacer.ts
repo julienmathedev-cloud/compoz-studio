@@ -15,6 +15,7 @@ export function toSpacerCellShapeFromDTO(
   return {
     id: cell.id,
     kind: "spacer",
+    cssClassName: cell.cssClassName,
     size: cell.size,
     visibility: cell.visibility,
   };

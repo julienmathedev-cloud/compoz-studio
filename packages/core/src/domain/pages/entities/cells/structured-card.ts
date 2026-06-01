@@ -69,6 +69,7 @@ export type StructuredCardItem = {
 export type StructuredCardCell = {
   id: string;
   kind: "structuredCard";
+  cssClassName?: string;
   columns: StructuredCardColumns;
   reveal: boolean;
   items: ReadonlyArray<StructuredCardItem>;

@@ -19,6 +19,7 @@ export type CardItem = {
 export type CardsCell = {
   id: string;
   kind: "cards";
+  cssClassName?: string;
   columns: CardsColumns;
   align: CardsAlign;
   reveal: boolean;

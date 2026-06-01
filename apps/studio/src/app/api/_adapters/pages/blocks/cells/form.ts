@@ -5,7 +5,7 @@
  * Adapteurs API Studio pour les cellules de type `FormCell`.
  */
 
-import { trimOrKeep } from "@compoz/studio/lib/strings";
+import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type {
   FormCell,
@@ -31,6 +31,7 @@ export function adaptFormCell(dto: FormCellIntentDTO): FormCell {
   return {
     id: trimOrKeep(dto.id),
     kind: "form",
+    cssClassName: trimClearableOrUndef(dto.cssClassName),
     to: trimOrKeep(dto.to),
     submitLabel: trimOrKeep(dto.submitLabel),
     successMessage: dto.successMessage ? trimOrKeep(dto.successMessage) : null,

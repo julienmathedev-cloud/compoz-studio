@@ -15,6 +15,7 @@ export function toGalleryCellShapeFromDTO(
   return {
     id: cell.id,
     kind: "gallery",
+    cssClassName: cell.cssClassName,
     linksEnabled: cell.linksEnabled,
     maxColumns: cell.maxColumns,
     reveal: cell.reveal,

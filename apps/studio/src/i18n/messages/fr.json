@@ -865,6 +865,11 @@
             "form": "Formulaire",
             "timeline": "Frise chronologique"
           }
+        },
+        "cssClassName": {
+          "label": "Classe CSS",
+          "help": "Classe CSS additionnelle appliquée à cette cellule.",
+          "placeholder": "Ex. : cell-custom"
         }
       }
     },

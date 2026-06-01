@@ -15,6 +15,7 @@ export function toSeparatorCellShapeFromDTO(
   return {
     id: cell.id,
     kind: "separator",
+    cssClassName: cell.cssClassName,
     align: cell.align,
     size: cell.size,
   };

@@ -5,7 +5,7 @@
  * Adapteurs API Studio pour les cellules de type `CardsCell`.
  */
 
-import { trimOrKeep } from "@compoz/studio/lib/strings";
+import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type {
   CardItem,
@@ -29,6 +29,7 @@ export function adaptCardsCell(dto: CardsCellIntentDTO): CardsCell {
   return {
     id: trimOrKeep(dto.id),
     kind: "cards",
+    cssClassName: trimClearableOrUndef(dto.cssClassName),
     columns: dto.columns,
     align: dto.align,
     reveal: dto.reveal,

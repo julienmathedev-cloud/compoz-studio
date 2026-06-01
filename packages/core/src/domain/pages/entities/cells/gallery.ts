@@ -12,6 +12,7 @@ export type GalleryMaxColumns = 1 | 2 | 3 | 4 | 5 | 6;
 export type GalleryCell = {
   id: string;
   kind: "gallery";
+  cssClassName?: string;
   linksEnabled: boolean;
   maxColumns: GalleryMaxColumns;
   reveal: boolean;

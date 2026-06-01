@@ -15,6 +15,7 @@ export function toHeadingCellShapeFromDTO(
   return {
     id: cell.id,
     kind: "heading",
+    cssClassName: cell.cssClassName,
     level: cell.level,
     title: cell.title,
     subtitle: cell.subtitle,

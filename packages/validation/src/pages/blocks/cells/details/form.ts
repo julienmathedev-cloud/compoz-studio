@@ -9,6 +9,7 @@ import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
 import {
+  CellCssClassNameSchema,
   CellIdSchema,
   CellItemIdSchema,
 } from "@compoz/validation/pages/blocks/cells/details/common";
@@ -45,6 +46,7 @@ export const FormCellSchema = z
     id: CellIdSchema,
 
     kind: z.literal("form"),
+    cssClassName: CellCssClassNameSchema,
 
     to: z.string().trim().min(1, ERROR_CODES.CELL_FORM_TO_REQUIRED),
 

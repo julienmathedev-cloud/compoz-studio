@@ -8,7 +8,10 @@
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
-import { CellIdSchema } from "@compoz/validation/pages/blocks/cells/details/common";
+import {
+  CellCssClassNameSchema,
+  CellIdSchema,
+} from "@compoz/validation/pages/blocks/cells/details/common";
 
 export const SeparatorAlignSchema = z.enum(
   ["left", "center", "right", "full"],
@@ -25,6 +28,7 @@ export const SeparatorCellSchema = z
   .object({
     id: CellIdSchema,
     kind: z.literal("separator"),
+    cssClassName: CellCssClassNameSchema,
     align: SeparatorAlignSchema,
     size: SeparatorSizeSchema,
   })

@@ -5,7 +5,7 @@
  * Adapteurs API Studio pour les cellules de type `CarouselCell`.
  */
 
-import { trimOrKeep } from "@compoz/studio/lib/strings";
+import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type { CarouselCell } from "@compoz/core/domain/pages/entities/cell";
 import { adaptCardsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/cards";
@@ -53,6 +53,7 @@ export function adaptCarouselCell(dto: CarouselCellIntentDTO): CarouselCell {
   return {
     id: trimOrKeep(dto.id),
     kind: "carousel",
+    cssClassName: trimClearableOrUndef(dto.cssClassName),
     variant: dto.variant,
     showDots: dto.showDots,
     showArrows: dto.showArrows,

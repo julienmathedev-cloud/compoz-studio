@@ -15,6 +15,7 @@ export function toStructuredCardCellShapeFromDTO(
   return {
     id: cell.id,
     kind: "structuredCard",
+    cssClassName: cell.cssClassName,
     columns: cell.columns,
     reveal: cell.reveal,
     items: cell.items.map((item) => ({

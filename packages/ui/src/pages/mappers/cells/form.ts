@@ -15,6 +15,7 @@ export function toFormCellShapeFromDTO(
   return {
     id: cell.id,
     kind: "form",
+    cssClassName: cell.cssClassName,
     to: cell.to,
     submitLabel: cell.submitLabel,
     successMessage: cell.successMessage,

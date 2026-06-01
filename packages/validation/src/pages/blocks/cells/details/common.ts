@@ -22,3 +22,5 @@ export const ImageEditorIdSchema = z
   .string()
   .trim()
   .min(1, ERROR_CODES.CELL_IMAGE_ID_REQUIRED);
+
+export const CellCssClassNameSchema = z.string().trim().optional();

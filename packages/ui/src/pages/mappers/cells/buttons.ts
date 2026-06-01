@@ -15,6 +15,7 @@ export function toButtonsCellShapeFromDTO(
   return {
     id: cell.id,
     kind: "buttons",
+    cssClassName: cell.cssClassName,
     align: cell.align,
     gap: cell.gap,
     items: cell.items.map((item) => ({

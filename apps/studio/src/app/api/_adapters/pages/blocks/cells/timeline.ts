@@ -5,7 +5,7 @@
  * Adapteurs API Studio pour les cellules de type `TimelineCell`.
  */
 
-import { trimOrKeep } from "@compoz/studio/lib/strings";
+import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type {
   TimelineCell,
@@ -36,6 +36,7 @@ export function adaptTimelineCell(dto: TimelineCellIntentDTO): TimelineCell {
   return {
     id: trimOrKeep(dto.id),
     kind: "timeline",
+    cssClassName: trimClearableOrUndef(dto.cssClassName),
     items: dto.items.map(adaptTimelineItem),
   };
 }

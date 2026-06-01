@@ -15,6 +15,7 @@ export function toStepsCellShapeFromDTO(
   return {
     id: cell.id,
     kind: "steps",
+    cssClassName: cell.cssClassName,
     variant: cell.variant,
     items: cell.items.map((item) => ({
       id: item.id,

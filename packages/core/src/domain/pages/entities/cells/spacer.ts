@@ -16,6 +16,7 @@ export type SpacerVisibility = {
 export type SpacerCell = {
   id: string;
   kind: "spacer";
+  cssClassName?: string;
   size: SpacerSize;
   visibility: SpacerVisibility;
 };

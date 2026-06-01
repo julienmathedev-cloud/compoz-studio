@@ -8,7 +8,10 @@
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
-import { CellIdSchema } from "@compoz/validation/pages/blocks/cells/details/common";
+import {
+  CellCssClassNameSchema,
+  CellIdSchema,
+} from "@compoz/validation/pages/blocks/cells/details/common";
 
 export const HeadingLevelSchema = z.enum(["h1", "h2", "h3", "h4", "h5", "h6"], {
   message: ERROR_CODES.CELL_HEADING_LEVEL_INVALID,
@@ -43,6 +46,7 @@ export const HeadingCellSchema = z
   .object({
     id: CellIdSchema,
     kind: z.literal("heading"),
+    cssClassName: CellCssClassNameSchema,
 
     level: HeadingLevelSchema,
 

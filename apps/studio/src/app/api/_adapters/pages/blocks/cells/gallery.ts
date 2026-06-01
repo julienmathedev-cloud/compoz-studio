@@ -2,7 +2,7 @@
  * @file apps/studio/src/app/api/_adapters/pages/blocks/cells/gallery.ts
  */
 
-import { trimOrKeep } from "@compoz/studio/lib/strings";
+import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type { GalleryCell } from "@compoz/core/domain/pages/entities/cell";
 import { adaptImage } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/image";
@@ -12,6 +12,7 @@ export function adaptGalleryCell(dto: GalleryCellIntentDTO): GalleryCell {
   return {
     id: trimOrKeep(dto.id),
     kind: "gallery",
+    cssClassName: trimClearableOrUndef(dto.cssClassName),
     linksEnabled: dto.linksEnabled,
     maxColumns: dto.maxColumns,
     reveal: dto.reveal,

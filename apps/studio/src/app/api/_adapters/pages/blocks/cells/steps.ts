@@ -5,7 +5,7 @@
  * Adapteurs API Studio pour les cellules de type `StepsCell`.
  */
 
-import { trimOrKeep } from "@compoz/studio/lib/strings";
+import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type {
   StepItem,
@@ -28,6 +28,7 @@ export function adaptStepsCell(dto: StepsCellIntentDTO): StepsCell {
   return {
     id: trimOrKeep(dto.id),
     kind: "steps",
+    cssClassName: trimClearableOrUndef(dto.cssClassName),
     variant: dto.variant,
     items: dto.items.map(adaptStepItem),
   };

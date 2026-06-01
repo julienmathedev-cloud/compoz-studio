@@ -15,6 +15,7 @@ export function toCardsExtendedCellShapeFromDTO(
   return {
     id: cell.id,
     kind: "cardsExtended",
+    cssClassName: cell.cssClassName,
     columns: cell.columns,
     align: cell.align,
     reveal: cell.reveal,

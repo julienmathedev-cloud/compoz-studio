@@ -865,6 +865,11 @@
             "form": "Form",
             "timeline": "Timeline"
           }
+        },
+        "cssClassName": {
+          "label": "CSS class",
+          "help": "Additional CSS class applied to this cell.",
+          "placeholder": "e.g. cell-custom"
         }
       }
     },

@@ -15,6 +15,7 @@ export function toCardsCellShapeFromDTO(
   return {
     id: cell.id,
     kind: "cards",
+    cssClassName: cell.cssClassName,
     columns: cell.columns,
     align: cell.align,
     reveal: cell.reveal,

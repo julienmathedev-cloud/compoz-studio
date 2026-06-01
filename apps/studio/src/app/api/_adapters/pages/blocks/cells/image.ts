@@ -2,7 +2,7 @@
  * @file apps/studio/src/app/api/_adapters/pages/blocks/cells/image.ts
  */
 
-import { trimOrKeep } from "@compoz/studio/lib/strings";
+import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type {
   ImageCell,
@@ -30,6 +30,7 @@ export function adaptImageCell(dto: ImageCellIntentDTO): ImageCell {
   return {
     id: trimOrKeep(dto.id),
     kind: "image",
+    cssClassName: trimClearableOrUndef(dto.cssClassName),
     variant: dto.variant,
     size: dto.size,
     reveal: dto.reveal,

@@ -10,6 +10,7 @@ import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
 import {
+  CellCssClassNameSchema,
   CellIdSchema,
   CellItemIdSchema,
 } from "@compoz/validation/pages/blocks/cells/details/common";
@@ -45,6 +46,7 @@ export const CardsCellSchema = z
   .object({
     id: CellIdSchema,
     kind: z.literal("cards"),
+    cssClassName: CellCssClassNameSchema,
     columns: CardsColumnsSchema,
     align: CardsAlignSchema,
     reveal: z.boolean({

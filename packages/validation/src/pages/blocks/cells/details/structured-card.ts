@@ -10,6 +10,7 @@ import { z } from "zod";
 
 import { ButtonItemSchema } from "@compoz/validation/pages/blocks/cells/details/buttons";
 import {
+  CellCssClassNameSchema,
   CellIdSchema,
   CellItemIdSchema,
 } from "@compoz/validation/pages/blocks/cells/details/common";
@@ -91,6 +92,7 @@ export const StructuredCardCellSchema = z
     id: CellIdSchema,
 
     kind: z.literal("structuredCard"),
+    cssClassName: CellCssClassNameSchema,
 
     columns: StructuredCardColumnsSchema,
 

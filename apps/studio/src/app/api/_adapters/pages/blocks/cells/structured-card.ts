@@ -5,7 +5,7 @@
  * Adapteurs API Studio pour les cellules de type `StructuredCardCell`.
  */
 
-import { trimOrKeep } from "@compoz/studio/lib/strings";
+import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type {
   StructuredCardCell,
@@ -66,6 +66,7 @@ export function adaptStructuredCardCell(
   return {
     id: trimOrKeep(dto.id),
     kind: "structuredCard",
+    cssClassName: trimClearableOrUndef(dto.cssClassName),
     columns: dto.columns,
     reveal: dto.reveal,
     items: dto.items.map(adaptStructuredCardItem),

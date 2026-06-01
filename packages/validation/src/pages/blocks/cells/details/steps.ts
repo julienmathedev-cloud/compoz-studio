@@ -9,6 +9,7 @@ import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
 import {
+  CellCssClassNameSchema,
   CellIdSchema,
   CellItemIdSchema,
 } from "@compoz/validation/pages/blocks/cells/details/common";
@@ -32,6 +33,7 @@ export const StepsCellSchema = z
   .object({
     id: CellIdSchema,
     kind: z.literal("steps"),
+    cssClassName: CellCssClassNameSchema,
     variant: StepsVariantSchema,
     items: z
       .array(StepItemSchema, {

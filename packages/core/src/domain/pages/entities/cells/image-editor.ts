@@ -19,6 +19,7 @@ export type ImageSize = "sm" | "md" | "lg" | "full";
 export type ImageCell = {
   id: string;
   kind: "image";
+  cssClassName?: string;
   image: ImageEditor;
   variant: ImageRatio;
   size: ImageSize;

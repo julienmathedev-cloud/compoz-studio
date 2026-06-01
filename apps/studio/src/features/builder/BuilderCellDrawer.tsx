@@ -27,6 +27,7 @@ import type {
 import { useFormState, useWatch } from "react-hook-form";
 
 import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
+import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { ButtonsCellEditor } from "@compoz/studio/features/builder/editor/cells/buttons/ButtonsCellEditor";
 import { CardsExtendedCellEditor } from "@compoz/studio/features/builder/editor/cells/cards-extended/CardsExtendedCellEditor";
@@ -78,6 +79,7 @@ type BuilderCellDrawerProps = Readonly<{
   clearErrors: UseFormClearErrors<SectionBlockFormValues>;
   trigger: UseFormTrigger<SectionBlockFormValues>;
   open: boolean;
+  isAdmin: boolean;
   selectedCellLocation: SelectedCellLocation | null;
   onUploadImage?: (file: File) => Promise<UploadedRasterImage>;
   onOpenChange: (open: boolean) => void;
@@ -97,6 +99,7 @@ export function BuilderCellDrawer({
   clearErrors,
   trigger,
   open,
+  isAdmin,
   selectedCellLocation,
   onUploadImage,
   onOpenChange,
@@ -135,6 +138,7 @@ export function BuilderCellDrawer({
   );
 
   const kindIds = createFieldIds("builder-cell-drawer", "kind");
+  const cssClassNameIds = createFieldIds("builder-cell-drawer", "css-class-name");
 
   const setSelectedCell = (nextCell: CellFormValues) => {
     if (!selectedCellLocation || !watchedAll) return;
@@ -360,6 +364,22 @@ export function BuilderCellDrawer({
                   help={t("studio.builder.drawer.kind.help")}
                 />
               </div>
+
+              {isAdmin ? (
+                <InputField
+                  ids={cssClassNameIds}
+                  label={t("studio.builder.drawer.cssClassName.label")}
+                  help={t("studio.builder.drawer.cssClassName.help")}
+                  value={selectedCell.cssClassName ?? ""}
+                  onChange={(value) => {
+                    setSelectedCell({ ...selectedCell, cssClassName: value });
+                  }}
+                  placeholder={t("studio.builder.drawer.cssClassName.placeholder")}
+                  maxLength={120}
+                  showCount
+                  disabled={isSubmitting}
+                />
+              ) : null}
 
               <Separator />
 

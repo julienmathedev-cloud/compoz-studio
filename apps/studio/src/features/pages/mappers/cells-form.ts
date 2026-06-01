@@ -39,6 +39,12 @@ function normalizeSpacerVisibility(
   };
 }
 
+function normalizeCssClassName(
+  cssClassName: CellFormValues["cssClassName"] | undefined,
+): CellFormValues["cssClassName"] {
+  return String(cssClassName ?? "").trim();
+}
+
 export function createEmptyImageEditor(): ImageEditorFormValues {
   return {
     id: createUiId(),
@@ -167,6 +173,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return {
       id,
       kind: "heading",
+      cssClassName: "",
       level: "h2",
       title: "",
       subtitle: null,
@@ -183,6 +190,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return {
       id,
       kind: "richText",
+      cssClassName: "",
       content: "",
       reveal: false,
     };
@@ -192,6 +200,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return {
       id,
       kind: "spacer",
+      cssClassName: "",
       size: "md",
       visibility: {
         mobile: true,
@@ -205,6 +214,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return {
       id,
       kind: "separator",
+      cssClassName: "",
       align: "center",
       size: "md",
     };
@@ -214,6 +224,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return {
       id,
       kind: "buttons",
+      cssClassName: "",
       align: "left",
       gap: "md",
       items: [createEmptyButtonItem()],
@@ -224,6 +235,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return {
       id,
       kind: "cards",
+      cssClassName: "",
       columns: 3,
       align: "left",
       reveal: true,
@@ -235,6 +247,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return {
       id,
       kind: "cardsExtended",
+      cssClassName: "",
       columns: 2,
       align: "left",
       reveal: true,
@@ -246,6 +259,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return {
       id,
       kind: "steps",
+      cssClassName: "",
       variant: "vertical",
       items: [createEmptyStepItem()],
     };
@@ -255,6 +269,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return {
       id,
       kind: "timeline",
+      cssClassName: "",
       items: [createEmptyTimelineItem()],
     };
   }
@@ -263,6 +278,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return {
       id,
       kind: "structuredCard",
+      cssClassName: "",
       columns: 1,
       reveal: true,
       items: [createEmptyStructuredCardItem()],
@@ -273,6 +289,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return {
       id,
       kind: "form",
+      cssClassName: "",
       to: "",
       submitLabel: "Envoyer",
       successMessage: null,
@@ -285,6 +302,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return {
       id,
       kind: "image",
+      cssClassName: "",
       image: createEmptyImageEditor(),
       variant: "default",
       size: "full",
@@ -296,6 +314,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     return {
       id,
       kind: "carousel",
+      cssClassName: "",
       variant: "carousel",
       showDots: true,
       showArrows: false,
@@ -307,6 +326,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
   return {
     id,
     kind: "gallery",
+    cssClassName: "",
     linksEnabled: false,
     maxColumns: 3,
     reveal: true,
@@ -482,9 +502,12 @@ function normalizeCarouselItemForValidation(
 export function toCellFormValuesForValidation(
   cell: CellFormValues,
 ): CellFormValues {
+  const normalizedCssClassName = normalizeCssClassName(cell.cssClassName);
+
   if (cell.kind === "structuredCard") {
     return {
       ...cell,
+      cssClassName: normalizedCssClassName,
       items: cell.items.map(toStructuredCardItemForValidation),
     };
   }
@@ -492,6 +515,7 @@ export function toCellFormValuesForValidation(
   if (cell.kind === "carousel") {
     return {
       ...cell,
+      cssClassName: normalizedCssClassName,
       items: cell.items.map((item) =>
         normalizeCarouselItemForValidation(
           cell.itemKind,
@@ -504,17 +528,24 @@ export function toCellFormValuesForValidation(
   if (cell.kind === "spacer") {
     return {
       ...cell,
+      cssClassName: normalizedCssClassName,
       visibility: normalizeSpacerVisibility(cell.visibility),
     };
   }
 
-  return cell;
+  return {
+    ...cell,
+    cssClassName: normalizedCssClassName,
+  };
 }
 
 export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
+  const normalizedCssClassName = normalizeCssClassName(cell.cssClassName);
+
   if (cell.kind === "structuredCard") {
     return {
       ...cell,
+      cssClassName: normalizedCssClassName,
       items: cell.items.map(normalizeStructuredCardItem),
     };
   }
@@ -522,6 +553,7 @@ export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
   if (cell.kind === "carousel") {
     return {
       ...cell,
+      cssClassName: normalizedCssClassName,
       items: cell.items.map((item) =>
         normalizeCarouselItem(cell.itemKind, item as CarouselItemFormValues),
       ),
@@ -531,9 +563,13 @@ export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
   if (cell.kind === "spacer") {
     return {
       ...cell,
+      cssClassName: normalizedCssClassName,
       visibility: normalizeSpacerVisibility(cell.visibility),
     };
   }
 
-  return cell;
+  return {
+    ...cell,
+    cssClassName: normalizedCssClassName,
+  };
 }

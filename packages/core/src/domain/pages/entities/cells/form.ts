@@ -19,6 +19,7 @@ export type FormField = {
 export type FormCell = {
   id: string;
   kind: "form";
+  cssClassName?: string;
 
   /**
    * Destination du formulaire au format `mailto:`

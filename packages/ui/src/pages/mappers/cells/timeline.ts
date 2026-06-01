@@ -16,6 +16,10 @@ export function toTimelineCellShapeFromDTO(
   return {
     id: normalizeString(cell.id, ""),
     kind: "timeline",
+    cssClassName:
+      cell.cssClassName !== undefined
+        ? normalizeString(cell.cssClassName, "")
+        : undefined,
     items: cell.items.map((item) => ({
       id: normalizeString(item.id, ""),
       period: normalizeString(item.period, ""),

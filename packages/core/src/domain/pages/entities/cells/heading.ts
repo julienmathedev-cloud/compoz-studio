@@ -12,6 +12,7 @@ export type HeadingVariant = "default" | "hero";
 export type HeadingCell = {
   id: string;
   kind: "heading";
+  cssClassName?: string;
   level: HeadingLevel;
   title: string;
   subtitle: string | null;

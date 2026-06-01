@@ -8,6 +8,7 @@
 export type RichTextCell = {
   id: string;
   kind: "richText";
+  cssClassName?: string;
   content: string;
   reveal: boolean;
 };

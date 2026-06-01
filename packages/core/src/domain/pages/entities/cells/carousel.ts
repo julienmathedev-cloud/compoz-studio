@@ -57,6 +57,7 @@ export type CarouselItem =
 export type CarouselCell = {
   id: string;
   kind: "carousel";
+  cssClassName?: string;
   variant: CarouselVariant;
   showDots: boolean;
   showArrows: boolean;

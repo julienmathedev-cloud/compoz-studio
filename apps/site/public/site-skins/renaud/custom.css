@@ -1,4 +1,60 @@
 .block-light {
-  --background: #f3f4f6;
+  --background: #f1f1f1;
   --foreground: #1f2937;
+}
+
+.contact-form {
+  --background: #1b2a4a;
+  --foreground: #ffffff;
+}
+
+.hero-block [data-row] {
+  align-items: center;
+}
+
+.cards-services [data-slot="card-content"] {
+  --muted-foreground: #575757;
+}
+
+.hero-buttons [data-slot="button"] {
+  min-height: 3rem;
+  padding-inline: 1.75rem;
+  padding-block: 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 0.9rem;
+}
+
+.hero-buttons [data-slot="button"][data-variant="outline"] {
+  border-width: 1.75px;
+  border-color: var(--primary);
+}
+
+.strong-list strong {
+  color: var(--primary);
+  font-size: 1.4em;
+}
+
+.zone-card {
+  padding: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  border-radius: 1.5rem;
+  background-color: color-mix(in srgb, var(--primary) 10%, transparent);
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.zone-card strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.zone-card p {
+  margin: 0;
+  color: color-mix(in srgb, var(--foreground) 72%, transparent);
+  font-weight: 700;
+  line-height: 1.65;
 }

@@ -37,7 +37,7 @@ export const defaultMobileMenuUi: SiteMobileMenuUi = {
   scrollArea:
     "flex-1 overflow-y-auto px-4 pb-[max(env(safe-area-inset-bottom),1rem)]",
 
-  list: "flex flex-col gap-1 pt-4",
+  list: "flex flex-col gap-1 pt-4 text-foreground",
   item: "w-full",
 
   interactive: "inline-flex w-full items-center justify-center cursor-pointer",

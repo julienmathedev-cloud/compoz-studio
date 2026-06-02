@@ -113,7 +113,7 @@ export function toInternalDraft(raw: string): string {
 
   // ✅ Préserve les ancres locales
   if (looksLikeHashAnchor(v)) {
-    return v.startsWith("/#") ? v.slice(1) : v;
+    return v;
   }
 
   if (looksLikeAbsoluteHttp(v)) {

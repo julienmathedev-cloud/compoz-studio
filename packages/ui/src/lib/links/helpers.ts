@@ -274,13 +274,17 @@ export function resolveInternalHref(currentPath: string, href: string): string {
 
   if (!raw.startsWith("/")) return raw;
 
+  const url = new URL(raw, "http://dummy");
+  const suffix = `${url.search}${url.hash}`;
   const base = resolveSiteMountBase(currentPath);
-  if (base === "/") return normalizePath(raw);
+  if (base === "/") return `${normalizePath(raw)}${suffix}`;
 
   const target = normalizePath(raw);
 
-  if (target === "/") return base;
-  if (target === base || target.startsWith(base + "/")) return target;
+  if (target === "/") return `${base}${suffix}`;
+  if (target === base || target.startsWith(base + "/")) {
+    return `${target}${suffix}`;
+  }
 
-  return base + target;
+  return `${base}${target}${suffix}`;
 }

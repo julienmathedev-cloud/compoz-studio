@@ -19,6 +19,8 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
+import { scrollToElement } from "@compoz/ui/lib/scrollToElement";
+
 type ScrollRoot = Window | HTMLElement;
 
 /**
@@ -120,6 +122,53 @@ function scrollRootToTopImmediate(): void {
   });
 }
 
+function getHashTarget(): HTMLElement | null {
+  const hash = window.location.hash;
+  if (!hash) return null;
+
+  try {
+    return document.getElementById(decodeURIComponent(hash.slice(1)));
+  } catch {
+    return null;
+  }
+}
+
+function scrollToHashTargetWhenReady(): (() => void) | null {
+  if (!window.location.hash) return null;
+
+  const scrollToTarget = (): boolean => {
+    const target = getHashTarget();
+    if (!target) return false;
+
+    scrollToElement(target);
+    return true;
+  };
+
+  if (scrollToTarget()) return null;
+
+  const observer = new MutationObserver(() => {
+    if (!scrollToTarget()) return;
+
+    observer.disconnect();
+    window.clearTimeout(timeoutId);
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+
+  const timeoutId = window.setTimeout(() => {
+    observer.disconnect();
+    scrollRootToTopImmediate();
+  }, 3000);
+
+  return () => {
+    observer.disconnect();
+    window.clearTimeout(timeoutId);
+  };
+}
+
 export function ScrollTopOnRouteChange() {
   const pathname = usePathname() || "/";
   const searchParams = useSearchParams();
@@ -166,9 +215,16 @@ export function ScrollTopOnRouteChange() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    let cleanupHashTarget: (() => void) | null = null;
+
     const timeoutId = window.setTimeout(() => {
       const raf1 = window.requestAnimationFrame(() => {
         const raf2 = window.requestAnimationFrame(() => {
+          cleanupHashTarget = scrollToHashTargetWhenReady();
+          if (window.location.hash) {
+            return;
+          }
+
           scrollRootToTopImmediate();
         });
 
@@ -180,6 +236,7 @@ export function ScrollTopOnRouteChange() {
 
     return () => {
       window.clearTimeout(timeoutId);
+      cleanupHashTarget?.();
     };
   }, [routeKey]);
 

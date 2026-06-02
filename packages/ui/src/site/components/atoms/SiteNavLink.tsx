@@ -18,7 +18,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { forwardRef, type AnchorHTMLAttributes } from "react";
+import {
+  createContext,
+  forwardRef,
+  type AnchorHTMLAttributes,
+  type ReactNode,
+  useContext,
+} from "react";
 
 import { getAriaLabel } from "@compoz/ui/lib/a11y/helpers";
 import {
@@ -31,6 +37,26 @@ import {
 } from "@compoz/ui/lib/links/helpers";
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
+
+const SiteNavActiveSectionContext = createContext<string | null | undefined>(
+  undefined,
+);
+
+export type SiteNavActiveSectionProviderProps = Readonly<{
+  activeSectionId: string | null;
+  children: ReactNode;
+}>;
+
+export function SiteNavActiveSectionProvider({
+  activeSectionId,
+  children,
+}: SiteNavActiveSectionProviderProps) {
+  return (
+    <SiteNavActiveSectionContext.Provider value={activeSectionId}>
+      {children}
+    </SiteNavActiveSectionContext.Provider>
+  );
+}
 
 export type SiteNavLinkProps = Readonly<
   Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & {
@@ -73,6 +99,7 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
     ref,
   ) {
     const pathname = usePathname() || "/";
+    const activeSectionId = useContext(SiteNavActiveSectionContext);
 
     const normalizedHref = normalizeString(href);
     const textNode = children ?? label ?? normalizedHref;
@@ -80,6 +107,11 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
     const disableAllLinks = shouldDisableLinksInPreview(pathname);
     const { special, external, rawExternal, unsafe } =
       resolveLinkFlags(normalizedHref);
+    const isHashAnchor = normalizedHref.startsWith("#");
+    const hasHashFragment = normalizedHref.includes("#");
+    const hashFragment = getHashFragment(normalizedHref);
+    const isActiveHashAnchor =
+      hashFragment !== null && activeSectionId === hashFragment;
 
     const computedAria = getAriaLabel(
       ariaLabel,
@@ -117,7 +149,7 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
       return <span className={cn(className)}>{disabledContent}</span>;
     }
 
-    if (disableAllLinks) {
+    if (disableAllLinks && !isHashAnchor) {
       return (
         <div className={cn(className, "cursor-pointer")}>{disabledContent}</div>
       );
@@ -139,18 +171,22 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
       );
     }
 
-    if (rawExternal) {
+    if (rawExternal || isHashAnchor) {
       return (
         <div className={cn(className)}>
           <a
             ref={ref}
             href={normalizedHref}
             aria-label={computedAria}
+            aria-current={
+              isHashAnchor && isActiveHashAnchor ? "page" : undefined
+            }
             className={cn(linkClassName)}
-            target={target}
-            rel={rel}
-            data-external="true"
+            target={!isHashAnchor ? target : undefined}
+            rel={!isHashAnchor ? rel : undefined}
+            data-external={!isHashAnchor ? "true" : undefined}
             {...rest}
+            onClick={onClick}
           >
             <span className={cn(labelClassName)}>{content}</span>
           </a>
@@ -166,7 +202,13 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
     const isHomeOfMount = targetPath === base;
     const mode = isHomeOfMount ? "exact" : activeMode;
 
-    const isCurrent = isActiveLink(pathname, targetPath, mode);
+    const isPathCurrent = isActiveLink(pathname, targetPath, mode);
+    const isCurrent =
+      activeSectionId === undefined
+        ? isPathCurrent
+        : hashFragment !== null
+          ? isPathCurrent && activeSectionId === hashFragment
+          : isPathCurrent && activeSectionId === null;
     const isExactCurrent = isActiveLink(pathname, targetPath, "exact");
 
     return (
@@ -178,10 +220,10 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
           aria-current={isCurrent ? "page" : undefined}
           className={cn(linkClassName)}
           prefetch={prefetch}
-          scroll={false}
+          scroll={hasHashFragment}
           {...(rest as Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href">)}
           onClick={(event) => {
-            if (isExactCurrent) {
+            if (isExactCurrent && !hasHashFragment) {
               event.preventDefault();
               return;
             }
@@ -197,3 +239,17 @@ export const SiteNavLink = forwardRef<HTMLAnchorElement, SiteNavLinkProps>(
 );
 
 SiteNavLink.displayName = "SiteNavLink";
+
+function getHashFragment(href: string): string | null {
+  const hashIndex = href.indexOf("#");
+  if (hashIndex < 0) return null;
+
+  const fragment = href.slice(hashIndex + 1);
+  if (!fragment) return null;
+
+  try {
+    return decodeURIComponent(fragment);
+  } catch {
+    return null;
+  }
+}

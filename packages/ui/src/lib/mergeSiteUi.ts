@@ -34,16 +34,8 @@ function mergeClassStrings(base: string, override: string): string {
   const baseValue = String(base ?? "").trim();
   const overrideValue = String(override ?? "").trim();
 
-  console.log(
-    "mergeClassStrings, base:",
-    baseValue,
-    "override:",
-    overrideValue,
-  );
-
   if (!baseValue) return overrideValue;
   if (!overrideValue) return baseValue;
-  console.log("twMerge", twMerge(baseValue, overrideValue));
   return twMerge(baseValue, overrideValue);
 }
 

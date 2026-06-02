@@ -17,7 +17,7 @@
  */
 
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 import type { SocialSettingsShape } from "@compoz/validation/site/settings/social/social";
@@ -28,7 +28,14 @@ import type dynamicIconImports from "lucide-react/dynamicIconImports";
 import { renderSocialKindIcon } from "@compoz/ui/lib/social/social-kind-icons";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteIconLink } from "@compoz/ui/site/components/atoms/SiteIconLink";
-import { SiteNavLink } from "@compoz/ui/site/components/atoms/SiteNavLink";
+import {
+  SiteNavActiveSectionProvider,
+  SiteNavLink,
+} from "@compoz/ui/site/components/atoms/SiteNavLink";
+import {
+  collectSectionIds,
+  useActiveSection,
+} from "@compoz/ui/hooks/useActiveSection";
 import type { SiteMobileMenuUi } from "@compoz/ui/site/site-ui.types";
 
 export type SiteMobileMenuProps = Readonly<{
@@ -70,6 +77,11 @@ export function SiteMobileMenu({
 
   const items = primaryMenu.items ?? [];
   const socials = social.items ?? [];
+  const sectionIds = useMemo(
+    () => collectSectionIds(items, pathname),
+    [items, pathname],
+  );
+  const activeSectionId = useActiveSection(sectionIds);
 
   const hasMenu = items.length > 0;
   const hasSocial = socials.length > 0;
@@ -172,151 +184,155 @@ export function SiteMobileMenu({
         onClick={() => setOpen(false)}
       />
 
-      <div
-        id={MENU_ID}
-        role="dialog"
-        aria-modal="true"
-        aria-label={ariaLabel}
-        ref={panelRef}
-        className={cn(ui.panelBase, open ? ui.panelOpen : ui.panelClosed)}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className={cn(ui.topBar)}>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            aria-label="Fermer le menu"
-            className={cn(ui.closeButton, ui.focusRing)}
-          >
-            <DynamicIcon
-              name={ICON_CLOSE}
-              size={24}
-              aria-hidden
-              focusable="false"
-            />
-          </button>
-        </div>
+      <SiteNavActiveSectionProvider activeSectionId={activeSectionId}>
+        <div
+          id={MENU_ID}
+          role="dialog"
+          aria-modal="true"
+          aria-label={ariaLabel}
+          ref={panelRef}
+          className={cn(ui.panelBase, open ? ui.panelOpen : ui.panelClosed)}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className={cn(ui.topBar)}>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Fermer le menu"
+              className={cn(ui.closeButton, ui.focusRing)}
+            >
+              <DynamicIcon
+                name={ICON_CLOSE}
+                size={24}
+                aria-hidden
+                focusable="false"
+              />
+            </button>
+          </div>
 
-        <nav className={cn(ui.scrollArea)}>
-          {hasMenu ? (
-            <ul className={cn(ui.list)}>
-              {items.map((item) => {
-                const id = item.id?.trim() ?? "";
-                const children = Array.isArray(item.children)
-                  ? item.children
-                  : [];
-                const href = item.href?.trim() ?? "";
-                const label = item.label?.trim() ?? "";
+          <nav className={cn(ui.scrollArea)}>
+            {hasMenu ? (
+              <ul className={cn(ui.list)}>
+                {items.map((item) => {
+                  const id = item.id?.trim() ?? "";
+                  const children = Array.isArray(item.children)
+                    ? item.children
+                    : [];
+                  const href = item.href?.trim() ?? "";
+                  const label = item.label?.trim() ?? "";
 
-                if (!id) {
-                  return null;
-                }
+                  if (!id) {
+                    return null;
+                  }
 
-                if (children.length > 0) {
-                  const hasActiveChild = children.some((child) =>
-                    isActivePath(pathname, child.href?.trim()),
-                  );
+                  if (children.length > 0) {
+                    const hasActiveChild = children.some((child) =>
+                      isActivePath(pathname, child.href?.trim()),
+                    );
 
-                  return (
-                    <li key={id} className={cn(ui.item)}>
-                      <details
-                        className={cn(ui.details)}
-                        {...(hasActiveChild ? { open: true } : {})}
-                      >
-                        <summary
-                          className={cn(
-                            ui.summary,
-                            ui.focusRing,
-                            ui.interactive,
-                          )}
-                          aria-label={label || "Menu"}
+                    return (
+                      <li key={id} className={cn(ui.item)}>
+                        <details
+                          className={cn(ui.details)}
+                          {...(hasActiveChild ? { open: true } : {})}
                         >
-                          <span className="truncate">{label || "Menu"}</span>
+                          <summary
+                            className={cn(
+                              ui.summary,
+                              ui.focusRing,
+                              ui.interactive,
+                            )}
+                            aria-label={label || "Menu"}
+                          >
+                            <span className="truncate">{label || "Menu"}</span>
 
-                          <DynamicIcon
-                            name={ICON_CHEVRON}
-                            size={18}
-                            aria-hidden
-                            focusable="false"
-                            className={cn(ui.chevron)}
-                          />
-                        </summary>
+                            <DynamicIcon
+                              name={ICON_CHEVRON}
+                              size={18}
+                              aria-hidden
+                              focusable="false"
+                              className={cn(ui.chevron)}
+                            />
+                          </summary>
 
-                        <ul className={cn(ui.dropdownList)}>
-                          {children
-                            .filter(
-                              (child) =>
-                                Boolean(child.id?.trim()) &&
-                                Boolean(child.href?.trim()),
-                            )
-                            .map((child) => {
-                              const childId = child.id.trim();
-                              const childHref = child.href!.trim();
-                              const childLabel =
-                                child.label?.trim() ?? childHref;
+                          <ul className={cn(ui.dropdownList)}>
+                            {children
+                              .filter(
+                                (child) =>
+                                  Boolean(child.id?.trim()) &&
+                                  Boolean(child.href?.trim()),
+                              )
+                              .map((child) => {
+                                const childId = child.id.trim();
+                                const childHref = child.href!.trim();
+                                const childLabel =
+                                  child.label?.trim() ?? childHref;
 
-                              return (
-                                <li key={childId} className={cn(ui.childItem)}>
-                                  <SiteNavLink
-                                    href={childHref}
-                                    label={childLabel}
-                                    ariaLabel={childLabel}
-                                    newTab={Boolean(child.newTab)}
-                                    className={cn(ui.childInteractive)}
-                                    linkClassName={cn(ui.link)}
-                                  />
-                                </li>
-                              );
-                            })}
-                        </ul>
-                      </details>
-                    </li>
-                  );
-                }
+                                return (
+                                  <li key={childId} className={cn(ui.childItem)}>
+                                    <SiteNavLink
+                                      href={childHref}
+                                      label={childLabel}
+                                      ariaLabel={childLabel}
+                                      newTab={Boolean(child.newTab)}
+                                      className={cn(ui.childInteractive)}
+                                      linkClassName={cn(ui.link)}
+                                      onClick={() => setOpen(false)}
+                                    />
+                                  </li>
+                                );
+                              })}
+                          </ul>
+                        </details>
+                      </li>
+                    );
+                  }
 
-                if (href) {
-                  return (
-                    <li key={id} className={cn(ui.item)}>
-                      <SiteNavLink
-                        href={href}
-                        label={label || href}
-                        ariaLabel={label}
-                        newTab={Boolean(item.newTab)}
-                        className={cn(ui.interactive)}
-                        linkClassName={cn(ui.link)}
-                      />
-                    </li>
-                  );
-                }
+                  if (href) {
+                    return (
+                      <li key={id} className={cn(ui.item)}>
+                        <SiteNavLink
+                          href={href}
+                          label={label || href}
+                          ariaLabel={label}
+                          newTab={Boolean(item.newTab)}
+                          className={cn(ui.interactive)}
+                          linkClassName={cn(ui.link)}
+                          onClick={() => setOpen(false)}
+                        />
+                      </li>
+                    );
+                  }
 
-                return null;
-              })}
-            </ul>
-          ) : null}
+                  return null;
+                })}
+              </ul>
+            ) : null}
 
-          {hasSocial ? (
-            <div className={cn(ui.socialsRow)}>
-              {socials
-                .filter(
-                  (item) =>
-                    Boolean(item.id?.trim()) && Boolean(item.href?.trim()),
-                )
-                .map((item) => (
-                  <SiteIconLink
-                    key={item.id}
-                    href={item.href}
-                    ariaLabel={item.kind}
-                    className={cn(ui.socialLink, ui.focusRing)}
-                    linkClassName={cn(ui.socialLink)}
-                    icon={renderSocialKindIcon(item.kind, {
-                      className: cn(ui.socialIcon),
-                    })}
-                  />
-                ))}
-            </div>
-          ) : null}
-        </nav>
-      </div>
+            {hasSocial ? (
+              <div className={cn(ui.socialsRow)}>
+                {socials
+                  .filter(
+                    (item) =>
+                      Boolean(item.id?.trim()) && Boolean(item.href?.trim()),
+                  )
+                  .map((item) => (
+                    <SiteIconLink
+                      key={item.id}
+                      href={item.href}
+                      ariaLabel={item.kind}
+                      className={cn(ui.socialLink, ui.focusRing)}
+                      linkClassName={cn(ui.socialLink)}
+                      icon={renderSocialKindIcon(item.kind, {
+                        className: cn(ui.socialIcon),
+                      })}
+                    />
+                  ))}
+              </div>
+            ) : null}
+          </nav>
+        </div>
+      </SiteNavActiveSectionProvider>
     </div>
   );
 }

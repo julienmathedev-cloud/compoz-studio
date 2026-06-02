@@ -52,7 +52,9 @@ function isMissingInternalHref(href: string, hrefSet?: ReadonlySet<string>) {
   if (!hrefSet) return false;
   if (!href || href === "/") return false;
   if (!href.startsWith("/")) return false;
-  return !hrefSet.has(href);
+
+  const pathname = new URL(href, "http://dummy").pathname;
+  return !hrefSet.has(pathname);
 }
 
 /**

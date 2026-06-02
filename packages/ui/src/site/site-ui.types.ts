@@ -25,11 +25,6 @@ export type DeepPartial<T> = {
 export type SiteGlobalUi = Readonly<{
   header: SiteHeaderUi;
   footer: SiteFooterUi;
-
-  body: Readonly<{
-    surface: string;
-  }>;
-
   blockSection: SiteBlockSectionUi;
   cells: SiteCellsUi;
   pager: SiteDetailPagerUi;
@@ -70,6 +65,7 @@ export type SiteCellsUiOverride = DeepPartial<SiteCellsUi>;
 /* -------------------------------------------------------------------------- */
 
 export type SiteBlockSectionUi = Readonly<{
+  surface: string;
   containerContained: string;
   containerFullBleed: string;
   sectionSpacingContained: string;
@@ -82,8 +78,6 @@ export type SiteBlockSectionUi = Readonly<{
   }>;
   column: string;
   cell: string;
-  backgroundOdd: string;
-  backgroundEven: string;
 }>;
 
 export type SiteBlockSectionUiOverride = DeepPartial<SiteBlockSectionUi>;

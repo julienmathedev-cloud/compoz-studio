@@ -62,9 +62,6 @@ export function SectionBlockRenderer({
       ? blockUi.containerFullBleed
       : blockUi.containerContained;
 
-  const backgroundClass =
-    index % 2 === 0 ? blockUi.backgroundEven : blockUi.backgroundOdd;
-
   const spacingClass =
     containerMode === "fullBleed" ? undefined : blockUi.sectionSpacingContained;
 
@@ -85,7 +82,7 @@ export function SectionBlockRenderer({
 
   return (
     <section
-      className={cn(backgroundClass, block.cssClassName)}
+      className={cn(blockUi.surface, block.cssClassName)}
       data-block="section"
       data-variant={variant}
       data-container={containerMode}

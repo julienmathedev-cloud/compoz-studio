@@ -15,10 +15,7 @@ import { renaudPrimaryMenuUi } from "@compoz/ui/site/skins/renaud/primary-menu.u
 import { renaudSocialMenuUi } from "@compoz/ui/site/skins/renaud/social-menu.ui";
 
 export const renaudHeaderUi: SiteHeaderUiOverride = {
-  header: {
-    blur: "supports-[backdrop-filter]:bg-chrome/100 supports-[backdrop-filter]:backdrop-blur-sm text-white",
-  },
-  siteNameText: "text-current",
+  header: {},
   menu: renaudPrimaryMenuUi,
   social: renaudSocialMenuUi,
 };

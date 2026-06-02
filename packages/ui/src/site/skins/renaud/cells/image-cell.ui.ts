@@ -9,5 +9,5 @@
 import type { SiteImageUiOverride } from "@compoz/ui/site/site-ui.types";
 
 export const renaudImageUi: SiteImageUiOverride = {
-  container: "rounded-xl",
+  container: "rounded-sm",
 } as const;

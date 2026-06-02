@@ -7,10 +7,13 @@
  */
 
 export const PROSE_BASE = [
+  "text-foreground",
   "prose",
   "prose-sm",
   "max-w-none",
   "dark:prose-invert",
+  "prose-strong:text-foreground",
+  "prose-a:text-foreground",
 
   // spacing
   "prose-p:my-1",

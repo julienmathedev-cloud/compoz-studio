@@ -7,6 +7,6 @@
  */
 
 export const SITE_APP_SHELL =
-  "h-dvh min-h-0 min-w-0 overflow-y-auto theme-site";
+  "h-dvh min-h-0 min-w-0 overflow-y-auto theme-site bg-background";
 export const SITE_APP_COLUMN = "flex min-h-dvh flex-col";
 export const SITE_MAIN = "flex-1 flex flex-col";

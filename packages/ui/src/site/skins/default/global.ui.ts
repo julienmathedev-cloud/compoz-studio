@@ -39,11 +39,6 @@ export const defaultGlobalUi: SiteGlobalUi = {
   header: defaultHeaderUi,
   footer: defaultFooterUi,
 
-  body: {
-    // Neutre : pas de fond par défaut (laisse le layout décider).
-    surface: "bg-background",
-  },
-
   cells: {
     richText: defaultRichTextUi,
     image: defaultImageUi,

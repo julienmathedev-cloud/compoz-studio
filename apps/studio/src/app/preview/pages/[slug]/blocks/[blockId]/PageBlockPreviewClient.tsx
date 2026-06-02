@@ -19,6 +19,7 @@ import { useMemo } from "react";
 import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePreviewOverride";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
+import { cn } from "@compoz/ui/lib/utils";
 import { BlocksRenderer } from "@compoz/ui/renderer/BlocksRenderer";
 import { useTheme } from "@compoz/ui/settings/theme/ThemeProvider";
 import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
@@ -44,7 +45,7 @@ export function PageBlockPreviewClient({
   if (!visible) return null;
 
   return (
-    <div className="h-dvh min-h-0 min-w-0 overflow-y-auto">
+    <div className={cn("h-dvh min-h-0 min-w-0 overflow-y-auto")}>
       <BlocksRenderer
         blocks={[visible]}
         cellsUi={ui.cells}

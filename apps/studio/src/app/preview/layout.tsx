@@ -12,6 +12,7 @@ import {
 } from "@compoz/studio/lib/pages/draft-page-loaders";
 import { allFontVariablesClassName } from "@compoz/ui/lib/fonts";
 import { cn } from "@compoz/ui/lib/utils";
+import { resolveSiteSkinCssHref } from "@compoz/ui/site/skins/resolveSiteUi";
 import { SITE_APP_SHELL } from "@compoz/ui/styles/site/layout";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -27,17 +28,19 @@ export default async function PreviewLayout({ children }: PreviewLayoutProps) {
   const tenantId = await getTenantId();
   const settings = await getDraftSettingsByTenantId(tenantId);
   const initialTheme = settings?.theme ?? null;
+  const skinCssHref = resolveSiteSkinCssHref(tenantId);
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <div
-        className={cn(SITE_APP_SHELL, allFontVariablesClassName)}
-        data-scroll-root
-      >
-        <PreviewProviders tenantId={tenantId} initialTheme={initialTheme}>
+      {skinCssHref ? <link rel="stylesheet" href={skinCssHref} /> : null}
+      <PreviewProviders tenantId={tenantId} initialTheme={initialTheme}>
+        <div
+          className={cn(SITE_APP_SHELL, allFontVariablesClassName)}
+          data-scroll-root
+        >
           {children}
-        </PreviewProviders>
-      </div>
+        </div>
+      </PreviewProviders>
     </NextIntlClientProvider>
   );
 }

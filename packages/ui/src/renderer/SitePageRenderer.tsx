@@ -60,7 +60,7 @@ export function SitePageRenderer({
   );
 
   return (
-    <div className={cn(ui.body.surface, "flex flex-1 flex-col")}>
+    <div className={cn("flex flex-1 flex-col")}>
       {content}
 
       {pager?.enabled ? (

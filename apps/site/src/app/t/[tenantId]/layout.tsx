@@ -25,7 +25,10 @@ import { toSocialSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/social
 import { SiteFooter } from "@compoz/ui/site/components/layouts/SiteFooter";
 import { SiteHeader } from "@compoz/ui/site/components/layouts/SiteHeader";
 import { SiteThemeBoundary } from "@compoz/ui/site/providers/SiteThemeBoundary";
-import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
+import {
+  resolveSiteSkinCssHref,
+  resolveSiteUi,
+} from "@compoz/ui/site/skins/resolveSiteUi";
 import { SITE_APP_COLUMN, SITE_MAIN } from "@compoz/ui/styles/site/layout";
 
 type TenantLayoutProps = Readonly<{
@@ -165,6 +168,7 @@ export default async function TenantSiteLayout({
   const settings = await getPublishedSettingsByTenantId(tenantId);
   const ui = resolveSiteUi(tenantId);
   const publicFont = resolvePublicFontConfig(settings?.theme?.fontFamily);
+  const skinCssHref = resolveSiteSkinCssHref(tenantId);
 
   const fontStyle = {
     [publicFont.variableName]: publicFont.fontFamily,
@@ -173,6 +177,7 @@ export default async function TenantSiteLayout({
   return (
     <>
       <link rel="stylesheet" href={publicFont.href} />
+      {skinCssHref ? <link rel="stylesheet" href={skinCssHref} /> : null}
 
       <div style={fontStyle}>
         <SiteThemeBoundary theme={settings?.theme}>

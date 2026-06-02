@@ -59,3 +59,23 @@ export function resolveSiteUi(tenantId?: string): SiteGlobalUi {
 
   return mergeSiteUi(defaultGlobalUi, override);
 }
+
+/**
+ * Table de correspondance tenant -> asset css de skin.
+ */
+export const SITE_SKIN_CSS_BY_TENANT: Readonly<Record<string, string>> = {
+  portfolio: "/site-skins/portfolio/custom.css",
+  renaud: "/site-skins/renaud/custom.css",
+} as const;
+
+/**
+ * Résout l’URL de l’asset css de skin pour un tenant donné.
+ *
+ * @param tenantId - Identifiant canonique du tenant courant.
+ * @returns URL de l’asset css de skin.
+ */
+export function resolveSiteSkinCssHref(tenantId?: string): string | undefined {
+  const skinTenantId = resolveSkinTenantId(tenantId);
+
+  return SITE_SKIN_CSS_BY_TENANT[skinTenantId];
+}

@@ -25,12 +25,12 @@ export const defaultHeadingUi: SiteHeadingUi = {
   /* -------------------------------------------------------------------------- */
 
   level: {
-    h1: "text-4xl font-bold tracking-tight",
-    h2: "text-3xl font-bold tracking-tight",
-    h3: "text-2xl font-semibold",
-    h4: "text-xl font-semibold",
-    h5: "text-lg font-semibold",
-    h6: "text-base font-semibold",
+    h1: "text-foreground text-4xl font-bold tracking-tight",
+    h2: "text-foreground text-3xl font-bold tracking-tight",
+    h3: "text-foreground text-2xl font-semibold",
+    h4: "text-foreground text-xl font-semibold",
+    h5: "text-foreground text-lg font-semibold",
+    h6: "text-foreground text-base font-semibold",
   },
 
   levelHero:

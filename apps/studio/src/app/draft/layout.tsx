@@ -34,7 +34,10 @@ import { toSocialSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/social
 import { SiteFooter } from "@compoz/ui/site/components/layouts/SiteFooter";
 import { SiteHeader } from "@compoz/ui/site/components/layouts/SiteHeader";
 import { SiteRuntimeProvider } from "@compoz/ui/site/providers/SiteRuntimeProvider";
-import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
+import {
+  resolveSiteSkinCssHref,
+  resolveSiteUi,
+} from "@compoz/ui/site/skins/resolveSiteUi";
 import {
   SITE_APP_COLUMN,
   SITE_APP_SHELL,
@@ -115,36 +118,40 @@ export default async function DraftLayout({ children }: LayoutProps) {
   if (!settings) notFound();
 
   const ui = resolveSiteUi(tenantId);
+  const skinCssHref = resolveSiteSkinCssHref(tenantId);
 
   return (
-    <div
-      className={cn(SITE_APP_SHELL, allFontVariablesClassName)}
-      data-scroll-root
-    >
+    <>
+      {skinCssHref ? <link rel="stylesheet" href={skinCssHref} /> : null}
       <SiteRuntimeProvider ui={ui} theme={settings.theme}>
-        <ScrollTopOnRouteChange />
-        <div className={cn(SITE_APP_COLUMN)}>
-          <SiteHeader
-            header={settings.header}
-            identity={settings.identity}
-            primaryMenu={toPrimaryMenuSettingsShapeFromDTO(
-              settings.primaryMenu,
-            )}
-            social={toSocialSettingsShapeFromDTO(settings.social)}
-            ui={ui.header}
-          />
+        <div
+          className={cn(SITE_APP_SHELL, allFontVariablesClassName)}
+          data-scroll-root
+        >
+          <ScrollTopOnRouteChange />
+          <div className={cn(SITE_APP_COLUMN)}>
+            <SiteHeader
+              header={settings.header}
+              identity={settings.identity}
+              primaryMenu={toPrimaryMenuSettingsShapeFromDTO(
+                settings.primaryMenu,
+              )}
+              social={toSocialSettingsShapeFromDTO(settings.social)}
+              ui={ui.header}
+            />
 
-          <main id="main-content" className={cn(SITE_MAIN)}>
-            {children}
-          </main>
+            <main id="main-content" className={cn(SITE_MAIN)}>
+              {children}
+            </main>
 
-          <SiteFooter
-            footer={settings.footer}
-            legalMenu={toLegalMenuSettingsShapeFromDTO(settings.legalMenu)}
-            ui={ui.footer}
-          />
+            <SiteFooter
+              footer={settings.footer}
+              legalMenu={toLegalMenuSettingsShapeFromDTO(settings.legalMenu)}
+              ui={ui.footer}
+            />
+          </div>
         </div>
       </SiteRuntimeProvider>
-    </div>
+    </>
   );
 }

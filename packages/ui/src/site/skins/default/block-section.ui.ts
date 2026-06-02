@@ -13,6 +13,7 @@
 import type { SiteBlockSectionUi } from "@compoz/ui/site/site-ui.types";
 
 export const defaultBlockSectionUi: SiteBlockSectionUi = {
+  surface: "bg-background",
   containerContained: "w-full mx-auto max-w-screen-xl px-3 md:px-4 lg:px-6",
   containerFullBleed: "h-full w-full",
 
@@ -35,6 +36,4 @@ export const defaultBlockSectionUi: SiteBlockSectionUi = {
   column: "flex min-w-0 flex-col gap-3 md:gap-4",
 
   cell: "min-w-0",
-  backgroundOdd: "",
-  backgroundEven: "",
 } as const;

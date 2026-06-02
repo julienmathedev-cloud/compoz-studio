@@ -12,7 +12,8 @@
   align-items: center;
 }
 
-.cards-services [data-slot="card-content"] {
+.cards-services [data-slot="card-content"],
+.contact-form {
   --muted-foreground: #575757;
 }
 

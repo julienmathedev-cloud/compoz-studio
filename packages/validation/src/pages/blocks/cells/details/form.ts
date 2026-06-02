@@ -18,6 +18,13 @@ export const FormFieldTypeSchema = z.enum(["text", "email", "textarea"], {
   message: ERROR_CODES.CELL_FORM_FIELD_TYPE_INVALID,
 });
 
+export const FormButtonVariantSchema = z.enum(
+  ["default", "secondary", "outline", "ghost"],
+  {
+    message: ERROR_CODES.CELL_FORM_VARIANT_BUTTON_INVALID,
+  },
+);
+
 export const FormFieldSchema = z
   .object({
     id: CellItemIdSchema,
@@ -54,6 +61,8 @@ export const FormCellSchema = z
       .string()
       .trim()
       .min(1, ERROR_CODES.CELL_FORM_SUBMIT_LABEL_REQUIRED),
+
+    variantButton: FormButtonVariantSchema.default("default"),
 
     successMessage: z
       .string({

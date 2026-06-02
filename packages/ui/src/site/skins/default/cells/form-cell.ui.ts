@@ -24,5 +24,5 @@ export const defaultFormUi: SiteFormUi = {
   textarea: "min-h-[140px] resize-y",
   help: "text-xs text-muted-foreground",
   footer: "flex justify-end",
-  submitButton: "w-fit",
+  submitButton: "w-fit cursor-pointer",
 } as const;

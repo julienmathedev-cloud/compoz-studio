@@ -81,6 +81,7 @@ export type {
 
 export type {
   FormCell,
+  FormButtonVariant,
   FormField,
   FormFieldType,
 } from "@compoz/core/domain/pages/entities/cells/form";

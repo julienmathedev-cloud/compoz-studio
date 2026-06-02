@@ -20,6 +20,7 @@ import type {
 } from "@compoz/validation/pages/blocks/cells/details/carousel";
 import { CarouselCellSchema } from "@compoz/validation/pages/blocks/cells/details/carousel";
 import type {
+  FormButtonVariantSchema,
   FormFieldSchema,
   FormFieldTypeSchema,
 } from "@compoz/validation/pages/blocks/cells/details/form";
@@ -113,6 +114,7 @@ export type StructuredCardColumnsShape = z.infer<
 >;
 export type StructuredCardCellShape = z.infer<typeof StructuredCardCellSchema>;
 export type FormFieldTypeShape = z.infer<typeof FormFieldTypeSchema>;
+export type FormButtonVariantShape = z.infer<typeof FormButtonVariantSchema>;
 export type FormFieldShape = z.infer<typeof FormFieldSchema>;
 export type FormCellShape = z.infer<typeof FormCellSchema>;
 export type TimelineKeywordShape = z.infer<typeof TimelineKeywordSchema>;
@@ -145,6 +147,7 @@ export {
 } from "@compoz/validation/pages/blocks/cells/details/carousel";
 export {
   FormCellSchema,
+  FormButtonVariantSchema,
   FormFieldSchema,
   FormFieldTypeSchema,
 } from "@compoz/validation/pages/blocks/cells/details/form";

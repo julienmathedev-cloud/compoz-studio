@@ -41,6 +41,7 @@ export function FormCellRenderer({ cell, ui }: FormCellRendererProps) {
     <SiteContactForm
       fields={fields}
       submitLabel={submitLabel}
+      variantButton={cell.variantButton ?? "default"}
       toEmail={toEmail}
       successMessage={cell.successMessage}
       errorMessage={cell.errorMessage}

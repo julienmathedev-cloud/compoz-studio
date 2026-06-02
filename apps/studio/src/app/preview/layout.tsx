@@ -36,18 +36,17 @@ export default async function PreviewLayout({ children }: PreviewLayoutProps) {
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       {skinCssHref ? <link rel="stylesheet" href={skinCssHref} /> : null}
-      <PreviewProviders tenantId={tenantId} initialTheme={initialTheme}>
-        <div
-          className={cn(
-            SITE_APP_SHELL,
-            SITE_APP_SURFACE,
-            allFontVariablesClassName,
-          )}
-          data-scroll-root
-        >
-          {children}
-        </div>
-      </PreviewProviders>
+
+      <div className={cn(allFontVariablesClassName)}>
+        <PreviewProviders tenantId={tenantId} initialTheme={initialTheme}>
+          <div
+            className={cn(SITE_APP_SHELL, SITE_APP_SURFACE)}
+            data-scroll-root
+          >
+            {children}
+          </div>
+        </PreviewProviders>
+      </div>
     </NextIntlClientProvider>
   );
 }

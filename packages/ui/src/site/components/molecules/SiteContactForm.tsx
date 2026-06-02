@@ -31,7 +31,10 @@ import { Input } from "@compoz/ui/components/ui/input";
 import { Textarea } from "@compoz/ui/components/ui/textarea";
 import { cn } from "@compoz/ui/lib/utils";
 import type { SiteFormUi } from "@compoz/ui/site/site-ui.types";
-import type { FormFieldShape } from "@compoz/validation/pages/blocks/cells/cell";
+import type {
+  FormCellShape,
+  FormFieldShape,
+} from "@compoz/validation/pages/blocks/cells/cell";
 
 export type SiteContactFormSubmitValues = Record<string, string>;
 
@@ -40,6 +43,7 @@ type SubmitStatus = "idle" | "success" | "error";
 export type SiteContactFormProps = Readonly<{
   fields: readonly FormFieldShape[];
   submitLabel: string;
+  variantButton: FormCellShape["variantButton"];
   toEmail: string;
   successMessage?: string | null;
   errorMessage?: string | null;
@@ -51,6 +55,7 @@ export type SiteContactFormProps = Readonly<{
 export function SiteContactForm({
   fields,
   submitLabel,
+  variantButton,
   toEmail,
   successMessage = "Votre message a bien été envoyé.",
   errorMessage = "Une erreur est survenue lors de l’envoi du message.",
@@ -201,6 +206,7 @@ export function SiteContactForm({
         <CardFooter className={cn(ui.footer)}>
           <Button
             type="submit"
+            variant={variantButton}
             disabled={isFormDisabled}
             className={cn(ui.submitButton)}
           >

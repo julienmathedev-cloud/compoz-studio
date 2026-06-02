@@ -7,6 +7,10 @@
   --background: #1b2a4a;
   --foreground: #ffffff;
 }
+.contact-form [data-slot="button"] {
+  font-weight: 700;
+  border-color: var(--primary);
+}
 
 .hero-block [data-row] {
   align-items: center;

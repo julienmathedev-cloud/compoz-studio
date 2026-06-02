@@ -310,6 +310,7 @@
     "CELL_FORM_TO_INVALID": "L’adresse de destination du formulaire est invalide.",
 
     "CELL_FORM_SUBMIT_LABEL_REQUIRED": "Le libellé du bouton d’envoi du formulaire est requis.",
+    "CELL_FORM_VARIANT_BUTTON_INVALID": "La variante du bouton d’envoi du formulaire est invalide.",
 
     "CELL_FORM_SUCCESS_MESSAGE_INVALID": "Le message de succès du formulaire est invalide.",
     "CELL_FORM_ERROR_MESSAGE_INVALID": "Le message d’erreur du formulaire est invalide.",
@@ -858,8 +859,8 @@
             "spacer": "Espacement",
             "separator": "Séparateur",
             "buttons": "Boutons",
-            "cards": "Cartes",
-            "cardsExtended": "Cartes étendues",
+            "cards": "Carte",
+            "cardsExtended": "Carte étendues",
             "steps": "Étapes",
             "structuredCard": "Carte structurée",
             "form": "Formulaire",
@@ -1758,6 +1759,15 @@
         "submitLabelLabel": "Texte du bouton",
         "submitLabelPlaceholder": "Envoyer",
         "submitLabelHelp": "Texte affiché sur le bouton d’envoi du formulaire.",
+
+        "variantButtonLabel": "Variante du bouton",
+        "variantButtonHelp": "Choisissez le style du bouton d’envoi du formulaire.",
+        "variants": {
+          "default": "Default",
+          "secondary": "Secondaire",
+          "outline": "Contour",
+          "ghost": "Ghost"
+        },
 
         "successMessageLabel": "Message de succès",
         "successMessagePlaceholder": "Merci pour votre message. Je vous répondrai rapidement.",

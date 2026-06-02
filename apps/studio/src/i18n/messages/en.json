@@ -310,6 +310,7 @@
     "CELL_FORM_TO_INVALID": "The form destination address is invalid.",
 
     "CELL_FORM_SUBMIT_LABEL_REQUIRED": "The form submit button label is required.",
+    "CELL_FORM_VARIANT_BUTTON_INVALID": "The form submit button variant is invalid.",
 
     "CELL_FORM_SUCCESS_MESSAGE_INVALID": "The form success message is invalid.",
     "CELL_FORM_ERROR_MESSAGE_INVALID": "The form error message is invalid.",
@@ -858,8 +859,8 @@
             "spacer": "Spacer",
             "separator": "Separator",
             "buttons": "Buttons",
-            "cards": "Cards",
-            "cardsExtended": "Extended cards",
+            "cards": "Card",
+            "cardsExtended": "Extended card",
             "steps": "Steps",
             "structuredCard": "Structured card",
             "form": "Form",
@@ -1758,6 +1759,15 @@
         "submitLabelLabel": "Button text",
         "submitLabelPlaceholder": "Send",
         "submitLabelHelp": "Text displayed on the form submit button.",
+
+        "variantButtonLabel": "Button variant",
+        "variantButtonHelp": "Choose the style of the form submit button.",
+        "variants": {
+          "default": "Default",
+          "secondary": "Secondary",
+          "outline": "Outline",
+          "ghost": "Ghost"
+        },
 
         "successMessageLabel": "Success message",
         "successMessagePlaceholder": "Thank you for your message. I will get back to you shortly.",

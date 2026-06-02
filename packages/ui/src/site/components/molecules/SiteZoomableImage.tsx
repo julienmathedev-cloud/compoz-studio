@@ -57,6 +57,8 @@ export type SiteZoomableImageProps = Readonly<{
   lightboxUi: SiteLightboxUi;
   /** Libellé d’accessibilité optionnel pour le déclencheur. */
   ariaLabel?: string;
+  /** permet de rendre l'image zommable */
+  zoomable?: boolean;
 }>;
 
 export function SiteZoomableImage({
@@ -69,6 +71,7 @@ export function SiteZoomableImage({
   fetchPriority = "auto",
   lightboxUi,
   ariaLabel,
+  zoomable = false,
 }: SiteZoomableImageProps) {
   const [open, setOpen] = useState(false);
 
@@ -107,6 +110,26 @@ export function SiteZoomableImage({
 
   if (!src) {
     return null;
+  }
+
+  if (!zoomable) {
+    return (
+      <SiteAppImage
+        image={{
+          src,
+
+          alt,
+
+          width: image.width,
+
+          height: image.height,
+        }}
+        sizes={sizes}
+        className={cn(imageClassName)}
+        priority={priority}
+        fetchPriority={fetchPriority}
+      />
+    );
   }
 
   return (

@@ -12,6 +12,7 @@ import type { Cell, FormField } from "@compoz/core/domain/pages/entities/cell";
 type Path = ReadonlyArray<string | number>;
 
 const FORM_FIELD_TYPES = ["text", "email", "textarea"] as const;
+const BUTTON_VARIANTS = ["default", "secondary", "outline", "ghost"] as const;
 
 export function assertFormCell(
   cell: Extract<Cell, { kind: "form" }>,
@@ -41,6 +42,20 @@ export function assertFormCell(
       code: EC.CELL_FORM_SUBMIT_LABEL_REQUIRED,
       message: EC.CELL_FORM_SUBMIT_LABEL_REQUIRED,
       details: { path: [...path, "submitLabel"] },
+    });
+  }
+
+  if (!BUTTON_VARIANTS.includes(cell.variantButton)) {
+    throw new DomainError({
+      code: EC.CELL_FORM_VARIANT_BUTTON_INVALID,
+
+      message: EC.CELL_FORM_VARIANT_BUTTON_INVALID,
+
+      details: {
+        path: [...path, "variantButton"],
+
+        meta: { variantButton: cell.variantButton },
+      },
     });
   }
 

@@ -80,7 +80,7 @@ export function ThemeProvider({ theme, children }: ThemeProviderProps) {
 
   return (
     <ThemeContext.Provider value={contextValue}>
-      <div className={className} style={style}>
+      <div data-site-theme-boundary="true" className={className} style={style}>
         {children}
       </div>
     </ThemeContext.Provider>

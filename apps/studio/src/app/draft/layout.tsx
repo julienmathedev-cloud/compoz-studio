@@ -124,35 +124,34 @@ export default async function DraftLayout({ children }: LayoutProps) {
   return (
     <>
       {skinCssHref ? <link rel="stylesheet" href={skinCssHref} /> : null}
-      <SiteRuntimeProvider ui={ui} theme={settings.theme}>
-        <div
-          className={cn(SITE_APP_SHELL, allFontVariablesClassName)}
-          data-scroll-root
-        >
-          <ScrollTopOnRouteChange />
-          <div className={cn(SITE_APP_COLUMN, SITE_APP_SURFACE)}>
-            <SiteHeader
-              header={settings.header}
-              identity={settings.identity}
-              primaryMenu={toPrimaryMenuSettingsShapeFromDTO(
-                settings.primaryMenu,
-              )}
-              social={toSocialSettingsShapeFromDTO(settings.social)}
-              ui={ui.header}
-            />
+      <div className={cn(allFontVariablesClassName)}>
+        <SiteRuntimeProvider ui={ui} theme={settings.theme}>
+          <div className={cn(SITE_APP_SHELL)} data-scroll-root>
+            <ScrollTopOnRouteChange />
+            <div className={cn(SITE_APP_COLUMN, SITE_APP_SURFACE)}>
+              <SiteHeader
+                header={settings.header}
+                identity={settings.identity}
+                primaryMenu={toPrimaryMenuSettingsShapeFromDTO(
+                  settings.primaryMenu,
+                )}
+                social={toSocialSettingsShapeFromDTO(settings.social)}
+                ui={ui.header}
+              />
 
-            <main id="main-content" className={cn(SITE_MAIN)}>
-              {children}
-            </main>
+              <main id="main-content" className={cn(SITE_MAIN)}>
+                {children}
+              </main>
 
-            <SiteFooter
-              footer={settings.footer}
-              legalMenu={toLegalMenuSettingsShapeFromDTO(settings.legalMenu)}
-              ui={ui.footer}
-            />
+              <SiteFooter
+                footer={settings.footer}
+                legalMenu={toLegalMenuSettingsShapeFromDTO(settings.legalMenu)}
+                ui={ui.footer}
+              />
+            </div>
           </div>
-        </div>
-      </SiteRuntimeProvider>
+        </SiteRuntimeProvider>
+      </div>
     </>
   );
 }

@@ -292,6 +292,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       cssClassName: "",
       to: "",
       submitLabel: "Envoyer",
+      variantButton: "default",
       successMessage: null,
       errorMessage: null,
       fields: [createEmptyFormField()],
@@ -512,6 +513,14 @@ export function toCellFormValuesForValidation(
     };
   }
 
+  if (cell.kind === "form") {
+    return {
+      ...cell,
+      cssClassName: normalizedCssClassName,
+      variantButton: cell.variantButton ?? "default",
+    };
+  }
+
   if (cell.kind === "carousel") {
     return {
       ...cell,
@@ -547,6 +556,14 @@ export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
       ...cell,
       cssClassName: normalizedCssClassName,
       items: cell.items.map(normalizeStructuredCardItem),
+    };
+  }
+
+  if (cell.kind === "form") {
+    return {
+      ...cell,
+      cssClassName: normalizedCssClassName,
+      variantButton: cell.variantButton ?? "default",
     };
   }
 

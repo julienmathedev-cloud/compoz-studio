@@ -22,6 +22,7 @@ import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 import { AddEmptyCardButton } from "@compoz/studio/components/molecules/controls/AddEmptyCardButton";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
+import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
 import { FormFieldItemEditor } from "@compoz/studio/features/builder/editor/cells/form/FormFieldItemEditor";
 import { createEmptyFormField } from "@compoz/studio/features/pages/mappers/cells-form";
@@ -41,6 +42,15 @@ type SelectedCellLocation = Readonly<{
 
 type FormFieldBasePath = `rows.${number}.columns.${number}.cells.${number}`;
 type FormFieldsPath = `${FormFieldBasePath}.fields`;
+
+const FORM_BUTTON_VARIANTS = [
+  "default",
+  "secondary",
+  "outline",
+  "ghost",
+] as const;
+
+type FormButtonVariant = (typeof FORM_BUTTON_VARIANTS)[number];
 
 type FormFieldArrayItem = {
   id: string;
@@ -79,6 +89,12 @@ export function FormCellEditor({
     control,
   });
 
+  const variantButtonCtrl = useController({
+    name: `${basePath}.variantButton` as `${FormFieldBasePath}.variantButton`,
+    control,
+    defaultValue: "default",
+  });
+
   const successMessageCtrl = useController({
     name: `${basePath}.successMessage` as `${FormFieldBasePath}.successMessage`,
     control,
@@ -101,6 +117,7 @@ export function FormCellEditor({
 
   const toIds = createFieldIds(idPrefix, "to");
   const submitLabelIds = createFieldIds(idPrefix, "submitLabel");
+  const variantButtonIds = createFieldIds(idPrefix, "variantButton");
   const successMessageIds = createFieldIds(idPrefix, "successMessage");
   const errorMessageIds = createFieldIds(idPrefix, "errorMessage");
 
@@ -124,6 +141,13 @@ export function FormCellEditor({
     shouldShowSubmitLabelError && submitLabelCtrl.fieldState.error?.message
       ? String(submitLabelCtrl.fieldState.error.message)
       : undefined;
+
+  const rawVariantButton = variantButtonCtrl.field.value;
+  const variantButton: FormButtonVariant =
+    rawVariantButton &&
+    FORM_BUTTON_VARIANTS.includes(rawVariantButton as FormButtonVariant)
+      ? (rawVariantButton as FormButtonVariant)
+      : "default";
 
   return (
     <div className={cn(STACK_MD)}>
@@ -176,19 +200,36 @@ export function FormCellEditor({
           help={t("studio.cellEditorTabs.formCellEditor.successMessageHelp")}
         />
 
-        <TextareaField
-          ids={errorMessageIds}
-          label={t("studio.cellEditorTabs.formCellEditor.errorMessageLabel")}
-          value={String(errorMessageCtrl.field.value ?? "")}
-          onChange={errorMessageCtrl.field.onChange}
-          onBlur={errorMessageCtrl.field.onBlur}
-          placeholder={t(
-            "studio.cellEditorTabs.formCellEditor.errorMessagePlaceholder",
-          )}
+        <SelectField
+          ids={variantButtonIds}
+          label={t("studio.cellEditorTabs.formCellEditor.variantButtonLabel")}
+          value={variantButton}
+          onChange={(next) => {
+            variantButtonCtrl.field.onChange(next as FormButtonVariant);
+          }}
+          items={FORM_BUTTON_VARIANTS.map((variant) => ({
+            value: variant,
+            label: t(`studio.cellEditorTabs.formCellEditor.variants.${variant}`),
+          }))}
           disabled={disabled}
-          rows={3}
-          help={t("studio.cellEditorTabs.formCellEditor.errorMessageHelp")}
+          help={t("studio.cellEditorTabs.formCellEditor.variantButtonHelp")}
         />
+
+        <div className="sm:col-span-2">
+          <TextareaField
+            ids={errorMessageIds}
+            label={t("studio.cellEditorTabs.formCellEditor.errorMessageLabel")}
+            value={String(errorMessageCtrl.field.value ?? "")}
+            onChange={errorMessageCtrl.field.onChange}
+            onBlur={errorMessageCtrl.field.onBlur}
+            placeholder={t(
+              "studio.cellEditorTabs.formCellEditor.errorMessagePlaceholder",
+            )}
+            disabled={disabled}
+            rows={3}
+            help={t("studio.cellEditorTabs.formCellEditor.errorMessageHelp")}
+          />
+        </div>
       </FormGrid>
 
       <div className={cn(STACK_SM)}>

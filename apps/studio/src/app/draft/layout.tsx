@@ -41,6 +41,7 @@ import {
 import {
   SITE_APP_COLUMN,
   SITE_APP_SHELL,
+  SITE_APP_SURFACE,
   SITE_MAIN,
 } from "@compoz/ui/styles/site/layout";
 
@@ -129,7 +130,7 @@ export default async function DraftLayout({ children }: LayoutProps) {
           data-scroll-root
         >
           <ScrollTopOnRouteChange />
-          <div className={cn(SITE_APP_COLUMN)}>
+          <div className={cn(SITE_APP_COLUMN, SITE_APP_SURFACE)}>
             <SiteHeader
               header={settings.header}
               identity={settings.identity}

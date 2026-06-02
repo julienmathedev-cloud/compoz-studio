@@ -9,7 +9,7 @@
 import type { SitePrimaryMenuUi } from "@compoz/ui/site/site-ui.types";
 
 export const defaultPrimaryMenuUi: SitePrimaryMenuUi = {
-  list: "m-0 p-0 list-none flex flex-wrap items-center gap-2 md:gap-3 lg:gap-4",
+  list: "m-0 p-0 list-none flex flex-wrap items-center gap-2 md:gap-3 lg:gap-4 text-foreground",
 
   item: "shrink-0",
 

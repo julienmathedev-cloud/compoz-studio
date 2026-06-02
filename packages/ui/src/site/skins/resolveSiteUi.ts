@@ -56,7 +56,7 @@ export function resolveSiteUi(tenantId?: string): SiteGlobalUi {
   const skinTenantId = resolveSkinTenantId(tenantId);
 
   const override = skinTenantId ? SITE_UI_BY_TENANT[skinTenantId] : undefined;
-
+  console.log("override skin", override);
   return mergeSiteUi(defaultGlobalUi, override);
 }
 

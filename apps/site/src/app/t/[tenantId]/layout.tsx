@@ -29,7 +29,11 @@ import {
   resolveSiteSkinCssHref,
   resolveSiteUi,
 } from "@compoz/ui/site/skins/resolveSiteUi";
-import { SITE_APP_COLUMN, SITE_MAIN } from "@compoz/ui/styles/site/layout";
+import {
+  SITE_APP_COLUMN,
+  SITE_APP_SURFACE,
+  SITE_MAIN,
+} from "@compoz/ui/styles/site/layout";
 
 type TenantLayoutProps = Readonly<{
   children: ReactNode;
@@ -183,7 +187,7 @@ export default async function TenantSiteLayout({
         <SiteThemeBoundary theme={settings?.theme}>
           <ScrollTopOnRouteChange />
 
-          <div className={cn(SITE_APP_COLUMN)}>
+          <div className={cn(SITE_APP_COLUMN, SITE_APP_SURFACE)}>
             {settings ? (
               <>
                 <SiteHeader

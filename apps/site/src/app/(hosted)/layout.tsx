@@ -40,7 +40,11 @@ import {
   resolveSiteSkinCssHref,
   resolveSiteUi,
 } from "@compoz/ui/site/skins/resolveSiteUi";
-import { SITE_APP_COLUMN, SITE_MAIN } from "@compoz/ui/styles/site/layout";
+import {
+  SITE_APP_COLUMN,
+  SITE_APP_SURFACE,
+  SITE_MAIN,
+} from "@compoz/ui/styles/site/layout";
 import type { CSSProperties } from "react";
 
 type LayoutProps = Readonly<{
@@ -216,7 +220,7 @@ export default async function HostedSiteLayout({ children }: LayoutProps) {
         <SiteThemeBoundary theme={settings?.theme}>
           <ScrollTopOnRouteChange />
 
-          <div className={cn(SITE_APP_COLUMN)}>
+          <div className={cn(SITE_APP_COLUMN, SITE_APP_SURFACE)}>
             {settings ? (
               <>
                 <SiteHeader

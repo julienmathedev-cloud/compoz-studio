@@ -221,6 +221,7 @@ export type SiteCardsUi = Readonly<{
   card: string;
   header: string;
   headerTop: string;
+  iconContainer: string;
   icon: string;
   title: string;
   content: string;

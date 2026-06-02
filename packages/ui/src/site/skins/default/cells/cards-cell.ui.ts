@@ -30,6 +30,8 @@ export const defaultCardsUi: SiteCardsUi = {
 
   headerTop: "flex items-center! gap-5",
 
+  iconContainer: "",
+
   icon: "h-7 w-7 shrink-0 text-primary",
 
   title: "",

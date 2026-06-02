@@ -13,7 +13,10 @@ import {
 import { allFontVariablesClassName } from "@compoz/ui/lib/fonts";
 import { cn } from "@compoz/ui/lib/utils";
 import { resolveSiteSkinCssHref } from "@compoz/ui/site/skins/resolveSiteUi";
-import { SITE_APP_SHELL } from "@compoz/ui/styles/site/layout";
+import {
+  SITE_APP_SHELL,
+  SITE_APP_SURFACE,
+} from "@compoz/ui/styles/site/layout";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
@@ -35,7 +38,11 @@ export default async function PreviewLayout({ children }: PreviewLayoutProps) {
       {skinCssHref ? <link rel="stylesheet" href={skinCssHref} /> : null}
       <PreviewProviders tenantId={tenantId} initialTheme={initialTheme}>
         <div
-          className={cn(SITE_APP_SHELL, allFontVariablesClassName)}
+          className={cn(
+            SITE_APP_SHELL,
+            SITE_APP_SURFACE,
+            allFontVariablesClassName,
+          )}
           data-scroll-root
         >
           {children}

@@ -46,7 +46,11 @@ export function SiteCard({
     <Card className={cn(ui.card, className)}>
       <CardHeader className={cn(ui.header, ui.align[align])}>
         <div className={cn(ui.headerTop, ui.align[align])}>
-          {icon ? <div aria-hidden="true">{icon}</div> : null}
+          {icon ? (
+            <div aria-hidden="true" className={ui.iconContainer}>
+              {icon}
+            </div>
+          ) : null}
 
           <CardTitle className={ui.title}>{title}</CardTitle>
         </div>

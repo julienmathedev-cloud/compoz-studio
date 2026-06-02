@@ -9,5 +9,7 @@
 import type { SiteImageUiOverride } from "@compoz/ui/site/site-ui.types";
 
 export const renaudImageUi: SiteImageUiOverride = {
-  container: "rounded-sm",
+  container:
+    "rounded-2xl border border-primary/40 p-1 shadow-2xl shadow-primary/30 bg-primary/10",
+  button: "rounded-xl overflow-hidden",
 } as const;

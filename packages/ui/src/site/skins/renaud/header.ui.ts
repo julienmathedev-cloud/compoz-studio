@@ -15,7 +15,9 @@ import { renaudPrimaryMenuUi } from "@compoz/ui/site/skins/renaud/primary-menu.u
 import { renaudSocialMenuUi } from "@compoz/ui/site/skins/renaud/social-menu.ui";
 
 export const renaudHeaderUi: SiteHeaderUiOverride = {
-  header: {},
+  header: {
+    base: "border-none",
+  },
   menu: renaudPrimaryMenuUi,
   social: renaudSocialMenuUi,
 };

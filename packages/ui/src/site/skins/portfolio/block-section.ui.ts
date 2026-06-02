@@ -13,8 +13,8 @@
 import type { SiteBlockSectionUiOverride } from "@compoz/ui/site/site-ui.types";
 
 export const portfolioBlockSectionUi: SiteBlockSectionUiOverride = {
-  backgroundOdd:
-    "bg-gradient-to-br from-primary/20 via-background to-transparent",
-  backgroundEven:
-    "bg-gradient-to-tr from-primary/20 via-background to-transparent",
+  // backgroundOdd:
+  //   "bg-gradient-to-br from-primary/20 via-background to-transparent",
+  // backgroundEven:
+  //   "bg-gradient-to-tr from-primary/20 via-background to-transparent",
 } as const;

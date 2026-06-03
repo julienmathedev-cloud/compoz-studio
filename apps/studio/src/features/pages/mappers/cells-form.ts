@@ -181,7 +181,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       variant: "default",
       separator: false,
       idAnchor: null,
-      reveal: true,
+      reveal: false,
       highlights: [],
     };
   }
@@ -238,7 +238,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       cssClassName: "",
       columns: 3,
       align: "left",
-      reveal: true,
+      reveal: false,
       items: [createEmptyCardItem()],
     };
   }
@@ -250,7 +250,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       cssClassName: "",
       columns: 2,
       align: "left",
-      reveal: true,
+      reveal: false,
       items: [createEmptyCardsExtendedItem()],
     };
   }
@@ -280,7 +280,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       kind: "structuredCard",
       cssClassName: "",
       columns: 1,
-      reveal: true,
+      reveal: false,
       items: [createEmptyStructuredCardItem()],
     };
   }
@@ -307,7 +307,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       image: createEmptyImageEditor(),
       variant: "default",
       size: "full",
-      reveal: true,
+      reveal: false,
     };
   }
 
@@ -330,7 +330,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     cssClassName: "",
     linksEnabled: false,
     maxColumns: 3,
-    reveal: true,
+    reveal: false,
     items: [createEmptyImageEditor()],
   };
 }

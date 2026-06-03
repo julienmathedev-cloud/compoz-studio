@@ -69,17 +69,6 @@ export function SectionBlockRenderer({
     ? findFirstMediaCellPosition(block)
     : null;
 
-  const isSeoOnlyTitleBlock =
-    block.name?.toLowerCase() === "titre" &&
-    block.rows.length === 1 &&
-    block.rows[0]?.columns.length === 1 &&
-    block.rows[0]?.columns[0]?.cells.length === 1 &&
-    block.rows[0]?.columns[0]?.cells[0]?.kind === "heading";
-
-  if (isSeoOnlyTitleBlock) {
-    return null;
-  }
-
   return (
     <section
       className={cn(blockUi.surface, block.cssClassName)}

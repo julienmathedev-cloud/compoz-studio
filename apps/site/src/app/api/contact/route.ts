@@ -8,9 +8,11 @@
  * @remarks
  * - Route server-only.
  * - Valide défensivement le payload reçu.
- * - Envoie un email vers l’adresse configurée dans `CONTACT_TO_EMAIL`.
+ * - Envoie un email vers l’adresse configurée dans la cellule formulaire.
  * - Utilise `CONTACT_FROM_EMAIL` comme expéditeur.
- * - Prévu pour être branché ensuite sur `SiteContactForm`.
+ * - Supporte les champs dynamiques configurés depuis le builder.
+ * - Utilise `subject` / `sujet` comme convention optionnelle pour le sujet du mail.
+ * - Utilise `email` comme convention optionnelle pour permettre une réponse directe.
  */
 
 import { NextResponse } from "next/server";
@@ -21,9 +23,12 @@ const contactFromEmail = process.env.CONTACT_FROM_EMAIL;
 
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
+const SUBJECT_FIELD_KEYS = new Set(["subject", "sujet"]);
+
 type ContactPayload = Readonly<{
   toEmail?: unknown;
   values?: Record<string, unknown>;
+  fields?: unknown;
 }>;
 
 function isNonEmptyString(value: unknown): value is string {
@@ -55,6 +60,39 @@ function normalizeFormValues(
   return output;
 }
 
+function normalizeFieldLabels(input: unknown): Record<string, string> {
+  const output: Record<string, string> = {};
+
+  if (!Array.isArray(input)) {
+    return output;
+  }
+
+  for (const field of input) {
+    if (!field || typeof field !== "object") {
+      continue;
+    }
+
+    const candidate = field as Record<string, unknown>;
+    const name = candidate.name;
+    const label = candidate.label;
+
+    if (!isNonEmptyString(name) || !isNonEmptyString(label)) {
+      continue;
+    }
+
+    output[name.trim()] = label.trim();
+  }
+
+  return output;
+}
+
+function getFieldLabel(
+  fieldLabels: Record<string, string>,
+  key: string,
+): string {
+  return fieldLabels[key] || key;
+}
+
 function buildEmailSubject(values: Record<string, string>): string {
   const subject = values.subject || values.sujet;
   const email = values.email;
@@ -75,28 +113,51 @@ function buildEmailSubject(values: Record<string, string>): string {
   return "Nouveau message depuis le formulaire de contact";
 }
 
-function buildEmailHtml(values: Record<string, string>): string {
-  const name = values.name || values.nom;
-  const email = values.email;
-  const subject = values.subject || values.sujet;
-  const message = values.message;
-
-  const secondaryRows = Object.entries(values)
+function buildEmailRowsHtml(
+  values: Record<string, string>,
+  fieldLabels: Record<string, string>,
+): string {
+  return Object.entries(values)
     .filter(([key, value]) => {
       if (!value.trim()) return false;
-      return !["name", "nom", "email", "subject", "sujet", "message"].includes(
-        key,
-      );
+      return !SUBJECT_FIELD_KEYS.has(key);
     })
-    .map(
-      ([key, value]) => `
-        <p style="margin:0 0 12px;">
-          <strong>${escapeHtml(key)}</strong><br />
-          ${escapeHtml(value)}
+    .map(([key, value]) => {
+      const label = getFieldLabel(fieldLabels, key);
+      const escapedValue = escapeHtml(value);
+
+      if (key === "email") {
+        return `
+          <p style="margin:0 0 16px;">
+            <strong>${escapeHtml(label)}</strong><br />
+            <a href="mailto:${escapeHtml(value)}" style="color:#2563eb;">
+              ${escapedValue}
+            </a>
+          </p>
+        `;
+      }
+
+      return `
+        <p style="margin:0 0 16px;">
+          <strong>${escapeHtml(label)}</strong><br />
+          <span style="white-space:pre-wrap;">${escapedValue}</span>
         </p>
-      `,
-    )
+      `;
+    })
     .join("");
+}
+
+function buildEmailHtml(
+  values: Record<string, string>,
+  fieldLabels: Record<string, string>,
+): string {
+  const email = values.email;
+  const subject = values.subject || values.sujet;
+  const rows = buildEmailRowsHtml(values, fieldLabels);
+
+  const footerText = isNonEmptyString(email)
+    ? "Vous pouvez répondre directement à cet email pour contacter l’expéditeur."
+    : "L’expéditeur n’a pas renseigné d’adresse email. Utilisez les coordonnées indiquées dans le message pour le recontacter.";
 
   return `
     <div style="font-family:Arial,Helvetica,sans-serif;color:#111827;line-height:1.6;background:#f9fafb;padding:24px;">
@@ -110,61 +171,50 @@ function buildEmailHtml(values: Record<string, string>): string {
         </h1>
 
         ${
-          name || email
-            ? `
-              <div style="margin-bottom:24px;padding:16px;background:#f9fafb;border-radius:10px;">
-                ${
-                  name
-                    ? `<p style="margin:0 0 8px;"><strong>Nom :</strong> ${escapeHtml(name)}</p>`
-                    : ""
-                }
-                ${
-                  email
-                    ? `<p style="margin:0;"><strong>Email :</strong> <a href="mailto:${escapeHtml(email)}" style="color:#2563eb;">${escapeHtml(email)}</a></p>`
-                    : ""
-                }
-              </div>
-            `
-            : ""
-        }
-
-        ${
-          message
-            ? `
-              <div style="margin-bottom:24px;">
-                <h2 style="font-size:16px;margin:0 0 8px;color:#111827;">Message</h2>
-                <p style="margin:0;white-space:pre-wrap;">${escapeHtml(message)}</p>
-              </div>
-            `
-            : ""
-        }
-
-        ${
-          secondaryRows
+          rows
             ? `
               <div style="border-top:1px solid #e5e7eb;padding-top:16px;color:#374151;">
-                ${secondaryRows}
+                ${rows}
               </div>
             `
             : ""
         }
 
         <p style="margin:24px 0 0;color:#6b7280;font-size:13px;">
-          Vous pouvez répondre directement à cet email pour contacter l’expéditeur.
+          ${escapeHtml(footerText)}
         </p>
       </div>
     </div>
   `;
 }
 
-function buildEmailText(values: Record<string, string>): string {
+function buildEmailText(
+  values: Record<string, string>,
+  fieldLabels: Record<string, string>,
+): string {
   const lines = Object.entries(values)
-    .filter(([, value]) => value.length > 0)
-    .map(([key, value]) => `${key}:\n${value}`);
+    .filter(([key, value]) => {
+      if (!value.trim()) return false;
+      return !SUBJECT_FIELD_KEYS.has(key);
+    })
+    .map(([key, value]) => {
+      const label = getFieldLabel(fieldLabels, key);
 
-  return ["Nouveau message depuis le formulaire de contact", "", ...lines].join(
-    "\n",
-  );
+      return `${label}:\n${value}`;
+    });
+
+  const email = values.email;
+  const footerText = isNonEmptyString(email)
+    ? "Vous pouvez répondre directement à cet email pour contacter l’expéditeur."
+    : "L’expéditeur n’a pas renseigné d’adresse email. Utilisez les coordonnées indiquées dans le message pour le recontacter.";
+
+  return [
+    "Nouveau message depuis le formulaire de contact",
+    "",
+    ...lines,
+    "",
+    footerText,
+  ].join("\n");
 }
 
 export async function POST(request: Request) {
@@ -207,6 +257,7 @@ export async function POST(request: Request) {
     }
 
     const values = normalizeFormValues(rawValues);
+    const fieldLabels = normalizeFieldLabels(body.fields);
 
     const hasAtLeastOneValue = Object.values(values).some(
       (value) => value.length > 0,
@@ -220,8 +271,8 @@ export async function POST(request: Request) {
     }
 
     const subject = buildEmailSubject(values);
-    const html = buildEmailHtml(values);
-    const text = buildEmailText(values);
+    const html = buildEmailHtml(values, fieldLabels);
+    const text = buildEmailText(values, fieldLabels);
 
     await resend.emails.send({
       from: contactFromEmail,

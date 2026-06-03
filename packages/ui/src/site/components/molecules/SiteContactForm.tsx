@@ -15,6 +15,8 @@
  *   2. fallback HTTP vers `/api/contact`
  * - Utilise `Card` et les primitives `Field` ShadCN.
  * - Supporte les types `text`, `email` et `textarea`.
+ * - Envoie aussi les métadonnées minimales des champs (`name`, `label`)
+ *   afin que l’API puisse afficher les champs dynamiques avec un libellé lisible.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -106,11 +108,19 @@ export function SiteContactForm({
       body: JSON.stringify({
         toEmail: toEmail.trim(),
         values: nextValues,
+        fields: visibleFields.map((field) => ({
+          name: field.name,
+          label: field.label,
+        })),
       }),
     });
 
     if (!response.ok) {
-      throw new Error("Contact form submission failed.");
+      const errorPayload = (await response.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+
+      throw new Error(errorPayload?.error || "Contact form submission failed.");
     }
   };
 
@@ -155,7 +165,18 @@ export function SiteContactForm({
               return (
                 <Field key={field.id} className={cn(ui.field)}>
                   <FieldLabel htmlFor={field.id} className={cn(ui.label)}>
-                    {field.label}
+                    <span>{field.label}</span>
+                    {field.required ? (
+                      <>
+                        <span
+                          className="-ml-1 text-destructive"
+                          aria-hidden="true"
+                        >
+                          *
+                        </span>
+                        <span className="sr-only"> champ obligatoire</span>
+                      </>
+                    ) : null}
                   </FieldLabel>
 
                   {isTextarea ? (
@@ -167,6 +188,7 @@ export function SiteContactForm({
                         handleChange(field.name, event.target.value)
                       }
                       required={Boolean(field.required)}
+                      aria-required={Boolean(field.required)}
                       disabled={isFormDisabled}
                       placeholder={field.placeholder ?? ""}
                       className={cn(ui.textarea)}
@@ -184,6 +206,7 @@ export function SiteContactForm({
                         handleChange(field.name, event.target.value)
                       }
                       required={Boolean(field.required)}
+                      aria-required={Boolean(field.required)}
                       disabled={isFormDisabled}
                       placeholder={field.placeholder ?? ""}
                       className={cn(ui.input)}

@@ -92,69 +92,53 @@ export type RichTextContentEditorProps = Readonly<{
 }>;
 
 type BlockKind = "list" | "blockquote";
+type UnorderedListVariant = "check" | "arrow";
+type ListOption =
+  | "none"
+  | "bulletList"
+  | "orderedList"
+  | "checkList"
+  | "arrowList";
 
-/**
- * Gère explicitement Tab / Shift+Tab pour empêcher la perte de focus.
- *
- * Règles :
- * - Dans une liste :
- *   - Tab = indent si possible
- *   - Shift+Tab = outdent si possible
- * - Hors liste :
- *   - Tab insère un caractère "\t"
- * - Dans tous les cas gérés ici :
- *   - on empêche le comportement natif du navigateur
- */
-const TabKeymap = Extension.create({
-  name: "tabKeymap",
+const UNORDERED_LIST_VARIANTS = ["check", "arrow"] as const;
 
-  addProseMirrorPlugins() {
-    return [
-      new Plugin({
-        key: new PluginKey("rich-text-tab-keymap"),
-        props: {
-          handleKeyDown: (_view, event) => {
-            if (event.key !== "Tab") return false;
-            if (!this.editor.isEditable) return false;
+function isUnorderedListVariant(value: unknown): value is UnorderedListVariant {
+  return (
+    typeof value === "string" &&
+    UNORDERED_LIST_VARIANTS.includes(value as UnorderedListVariant)
+  );
+}
 
-            event.preventDefault();
+function listVariantForOption(option: ListOption): UnorderedListVariant | null {
+  if (option === "checkList") return "check";
+  if (option === "arrowList") return "arrow";
+  return null;
+}
 
-            if (this.editor.isActive("listItem")) {
-              if (event.shiftKey) {
-                const handled = this.editor
-                  .chain()
-                  .focus()
-                  .liftListItem("listItem")
-                  .run();
+function getActiveBulletListVariant(
+  editor: Editor,
+): UnorderedListVariant | null {
+  const value = editor.getAttributes("bulletList").listVariant;
 
-                return handled || true;
-              }
+  return isUnorderedListVariant(value) ? value : null;
+}
 
-              const handled = this.editor
-                .chain()
-                .focus()
-                .sinkListItem("listItem")
-                .run();
+function applyCurrentBulletListVariantAfterIndent(
+  editor: Editor,
+  variant: UnorderedListVariant | null,
+) {
+  if (!variant) return;
 
-              return handled || true;
-            }
+  if (!editor.isActive("bulletList")) return;
 
-            if (event.shiftKey) {
-              return true;
-            }
-
-            this.editor
-              .chain()
-              .focus()
-              .insertContent("\u00A0\u00A0\u00A0\u00A0")
-              .run();
-            return true;
-          },
-        },
-      }),
-    ];
-  },
-});
+  editor
+    .chain()
+    .focus()
+    .updateAttributes("bulletList", {
+      listVariant: variant,
+    })
+    .run();
+}
 
 const EnhancedLink = Link.extend({
   addProseMirrorPlugins() {
@@ -191,6 +175,33 @@ const EnhancedLink = Link.extend({
   },
 });
 
+const BulletListVariantAttribute = Extension.create({
+  name: "bulletListVariantAttribute",
+
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["bulletList"],
+        attributes: {
+          listVariant: {
+            default: null,
+            parseHTML: (element: HTMLElement) => {
+              const value = element.getAttribute("data-list-variant");
+              return isUnorderedListVariant(value) ? value : null;
+            },
+            renderHTML: (attributes: Record<string, unknown>) => {
+              const value = attributes.listVariant;
+              return isUnorderedListVariant(value)
+                ? { "data-list-variant": value }
+                : {};
+            },
+          },
+        },
+      },
+    ];
+  },
+});
+
 function buildExtensions() {
   return [
     StarterKit.configure({
@@ -199,6 +210,7 @@ function buildExtensions() {
       horizontalRule: {},
       link: false,
     }),
+    BulletListVariantAttribute,
     Superscript,
     Subscript,
     EnhancedLink.configure({
@@ -209,7 +221,6 @@ function buildExtensions() {
     TextAlign.configure({
       types: ["paragraph", "listItem"],
     }),
-    TabKeymap,
   ];
 }
 
@@ -253,6 +264,8 @@ export function RichTextContentEditor({
       list: t("studio.cellEditorTabs.richText.list"),
       bulletList: t("studio.cellEditorTabs.richText.bulletList"),
       orderedList: t("studio.cellEditorTabs.richText.orderedList"),
+      checkList: t("studio.cellEditorTabs.richText.checkList"),
+      arrowList: t("studio.cellEditorTabs.richText.arrowList"),
       quote: t("studio.cellEditorTabs.richText.quote"),
       bold: t("studio.cellEditorTabs.richText.bold"),
       italic: t("studio.cellEditorTabs.richText.italic"),
@@ -355,7 +368,14 @@ export function RichTextContentEditor({
     (editor.isActive("subscript") && "subscript") ||
     "none";
 
+  const activeListVariant = editor.getAttributes("bulletList").listVariant;
   const listValue =
+    (editor.isActive("bulletList") &&
+      activeListVariant === "check" &&
+      "checkList") ||
+    (editor.isActive("bulletList") &&
+      activeListVariant === "arrow" &&
+      "arrowList") ||
     (editor.isActive("bulletList") && "bulletList") ||
     (editor.isActive("orderedList") && "orderedList") ||
     "none";
@@ -370,20 +390,64 @@ export function RichTextContentEditor({
   const canUndo = editor.can().chain().undo().run();
   const canRedo = editor.can().chain().redo().run();
 
-  const applyList = (next: "none" | "bulletList" | "orderedList") => {
+  const applyList = (next: ListOption) => {
     if (disabled) return;
 
-    if (next === "none") {
+    const activeVariant = getActiveBulletListVariant(editor);
+    const isActiveBulletList = editor.isActive("bulletList");
+    const isActiveOrderedList = editor.isActive("orderedList");
+
+    const shouldRemoveCurrentList =
+      (next === "bulletList" && isActiveBulletList && activeVariant === null) ||
+      (next === "checkList" &&
+        isActiveBulletList &&
+        activeVariant === "check") ||
+      (next === "arrowList" &&
+        isActiveBulletList &&
+        activeVariant === "arrow") ||
+      (next === "orderedList" && isActiveOrderedList) ||
+      next === "none";
+
+    if (shouldRemoveCurrentList) {
       const chain = editor.chain().focus();
-      if (editor.isActive("bulletList")) chain.toggleBulletList().run();
-      if (editor.isActive("orderedList")) chain.toggleOrderedList().run();
+
+      if (isActiveBulletList) {
+        chain.toggleBulletList().run();
+        return;
+      }
+
+      if (isActiveOrderedList) {
+        chain.toggleOrderedList().run();
+        return;
+      }
+
       return;
     }
 
     const chain = clearBlockConflicts(editor, "list");
 
-    if (next === "bulletList") chain.toggleBulletList().run();
-    if (next === "orderedList") chain.toggleOrderedList().run();
+    if (next === "orderedList") {
+      chain.toggleOrderedList().run();
+      return;
+    }
+
+    const nextVariant = listVariantForOption(next);
+
+    if (isActiveBulletList) {
+      chain
+        .updateAttributes("bulletList", {
+          listVariant: nextVariant,
+        })
+        .run();
+      return;
+    }
+
+    chain
+      .toggleBulletList()
+      .updateAttributes("bulletList", {
+        listVariant: nextVariant,
+      })
+      .run();
   };
 
   const applyQuote = () => {
@@ -443,12 +507,16 @@ export function RichTextContentEditor({
     if (!editor) return;
 
     if (editor.isActive("listItem")) {
+      const currentVariant = getActiveBulletListVariant(editor);
+
       if (event.shiftKey) {
         editor.chain().focus().liftListItem("listItem").run();
+        applyCurrentBulletListVariantAfterIndent(editor, currentVariant);
         return;
       }
 
       editor.chain().focus().sinkListItem("listItem").run();
+      applyCurrentBulletListVariantAfterIndent(editor, currentVariant);
       return;
     }
 
@@ -542,7 +610,7 @@ export function RichTextContentEditor({
                 value={(listValue || "none") as string}
                 onValueChange={(next) => {
                   if (disabled) return;
-                  applyList(next as "none" | "bulletList" | "orderedList");
+                  applyList(next as ListOption);
                 }}
               >
                 <DropdownMenuRadioItem
@@ -573,6 +641,28 @@ export function RichTextContentEditor({
                 >
                   <ListOrdered />
                   <span className="text-xs">{labels.orderedList}</span>
+                </DropdownMenuRadioItem>
+
+                <DropdownMenuRadioItem
+                  visualMode="studio"
+                  value="checkList"
+                  aria-label={labels.checkList}
+                  title={labels.checkList}
+                  disabled={disabled}
+                >
+                  <Check />
+                  <span className="text-xs">{labels.checkList}</span>
+                </DropdownMenuRadioItem>
+
+                <DropdownMenuRadioItem
+                  visualMode="studio"
+                  value="arrowList"
+                  aria-label={labels.arrowList}
+                  title={labels.arrowList}
+                  disabled={disabled}
+                >
+                  <span className="text-base leading-none">→</span>
+                  <span className="text-xs">{labels.arrowList}</span>
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuGroup>

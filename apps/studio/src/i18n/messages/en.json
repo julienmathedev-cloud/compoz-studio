@@ -1971,6 +1971,8 @@
         "list": "List",
         "bulletList": "Bullet list",
         "orderedList": "Numbered list",
+        "checkList": "Check list",
+        "arrowList": "Arrow list",
         "quote": "Quote",
         "bold": "Bold",
         "italic": "Italic",

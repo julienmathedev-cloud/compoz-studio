@@ -24,7 +24,11 @@ import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchFi
 import { MenuBadges } from "@compoz/studio/features/settings/menus/_shared/MenuBadges";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { resolveLinkFlags } from "@compoz/ui/lib/links/helpers";
-import { toExternalDraft, toInternalDraft } from "@compoz/ui/lib/normalize";
+import {
+  normalizeTelAndMailtoHrefDraft,
+  toExternalDraft,
+  toInternalDraft,
+} from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
 import { ROW_CENTER, STACK_MD } from "@compoz/ui/styles/studio/layout";
 
@@ -61,6 +65,9 @@ type LinkFieldsItemProps = Readonly<{
   /** Options de pages internes disponibles (picker). */
   internalPageOptions?: ReadonlyArray<InternalPageOptionDTO>;
 
+  /** Autorise la saisie directe de href spéciaux (`tel:` / `mailto:`). */
+  allowTelAndMailto?: boolean;
+
   /** Déclenche une validation immédiate côté parent (optionnel). */
   onValidateNow?: (markTouched?: boolean) => void;
 }>;
@@ -76,6 +83,7 @@ export function LinkFieldsItem({
   invalid,
   error,
   internalPageOptions,
+  allowTelAndMailto = false,
   onValidateNow,
 }: LinkFieldsItemProps) {
   const t = useTranslations();
@@ -97,9 +105,14 @@ export function LinkFieldsItem({
   const isExternal = flags.rawExternal;
 
   // Valeur affichée (draft) cohérente avec le mode.
-  const hrefDraft = isExternal
-    ? toExternalDraft(hrefRaw)
-    : toInternalDraft(hrefRaw);
+  const specialHrefDraft = allowTelAndMailto
+    ? normalizeTelAndMailtoHrefDraft(hrefRaw)
+    : null;
+  const hrefDraft = specialHrefDraft
+    ? toExternalDraft(specialHrefDraft)
+    : isExternal
+      ? toExternalDraft(hrefRaw)
+      : toInternalDraft(hrefRaw);
 
   const isBusy = Boolean(disabled);
 
@@ -127,9 +140,19 @@ export function LinkFieldsItem({
           value={hrefDraft}
           onChange={(value) => {
             // On garde le mode courant (interne/externe), on ne le “devine” pas au milieu d’une saisie.
-            const normalized = isExternal
-              ? toExternalDraft(value)
-              : toInternalDraft(value);
+            const specialDraft = allowTelAndMailto
+              ? normalizeTelAndMailtoHrefDraft(value)
+              : null;
+            const normalized =
+              specialDraft !== null
+                ? toExternalDraft(specialDraft)
+                : isExternal
+                  ? toExternalDraft(value)
+                  : toInternalDraft(value);
+
+            if (specialDraft !== null && canShowNewTab) {
+              onNewTabChange(false);
+            }
 
             onHrefChange(normalized);
           }}

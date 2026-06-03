@@ -21,11 +21,31 @@ export const PROSE_BASE = [
   "prose-li:[&>p]:my-1",
   "prose-li:[&>p]:leading-relaxed",
 
-  // lists
+  // default lists
   "prose-ul:list-disc",
   "prose-ol:list-decimal",
   "prose-ul:pl-6",
   "prose-ol:pl-6",
+
+  // Liste customisée
+  "[&_ul[data-list-variant=check]]:!list-none",
+  "[&_ul[data-list-variant=arrow]]:!list-none",
+  "[&_ul[data-list-variant=check]]:pl-0",
+  "[&_ul[data-list-variant=arrow]]:pl-0",
+
+  "[&_ul[data-list-variant=check]>li]:relative",
+  "[&_ul[data-list-variant=arrow]>li]:relative",
+  "[&_ul[data-list-variant=check]>li]:pl-6",
+  "[&_ul[data-list-variant=arrow]>li]:pl-6",
+
+  "[&_ul[data-list-variant=check]>li]:before:absolute",
+  "[&_ul[data-list-variant=arrow]>li]:before:absolute",
+  "[&_ul[data-list-variant=check]>li]:before:left-0",
+  "[&_ul[data-list-variant=arrow]>li]:before:left-0",
+  "[&_ul[data-list-variant=check]>li]:before:top-0",
+  "[&_ul[data-list-variant=arrow]>li]:before:top-0",
+  "[&_ul[data-list-variant=check]>li]:before:content-['✓']",
+  "[&_ul[data-list-variant=arrow]>li]:before:content-['→']",
 
   // quote
   "prose-blockquote:border-l-4",

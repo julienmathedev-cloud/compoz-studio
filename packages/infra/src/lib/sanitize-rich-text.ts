@@ -13,6 +13,16 @@ import "server-only";
 
 import sanitizeHtml, { type Attributes, type IOptions } from "sanitize-html";
 
+function sanitizeListVariant(attribs: Attributes): Attributes {
+  const value = (attribs["data-list-variant"] ?? "").trim();
+
+  if (value === "check" || value === "arrow") {
+    return { "data-list-variant": value };
+  }
+
+  return {};
+}
+
 export const RICH_TEXT_SANITIZE_OPTIONS = {
   allowedTags: [
     "p",
@@ -38,6 +48,7 @@ export const RICH_TEXT_SANITIZE_OPTIONS = {
 
   allowedAttributes: {
     a: ["href", "target", "rel"],
+    ul: ["data-list-variant"],
     p: ["style"],
     h2: ["style"],
     h3: ["style"],
@@ -57,6 +68,10 @@ export const RICH_TEXT_SANITIZE_OPTIONS = {
   },
 
   transformTags: {
+    ul: (_tagName: string, attribs: Attributes) => ({
+      tagName: "ul",
+      attribs: sanitizeListVariant(attribs),
+    }),
     a: (_tagName: string, attribs: Attributes) => {
       const href = (attribs.href ?? "").trim();
       if (!href) return { tagName: "span", attribs: {} };

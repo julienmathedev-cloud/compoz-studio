@@ -36,6 +36,11 @@ function looksLikeHashAnchor(s: string): boolean {
   return v.startsWith("#") || v.startsWith("/#");
 }
 
+/** Vrai si la chaîne est un protocole spécial supporté tel quel. */
+function looksLikeSpecialHref(s: string): boolean {
+  return /^(mailto|tel):/i.test((s ?? "").trim());
+}
+
 /**
  * Normalise les alias internes de "home".
  *
@@ -74,6 +79,7 @@ function normalizeHomeAlias(path: string): string {
  * Comportement :
  * - Vide ou préfixe HTTP incomplet → "https://"
  * - Chemin relatif ("/page") → "https://" (incite à saisir un domaine)
+ * - Protocole spécial supporté (`mailto:` / `tel:`) → conservé tel quel
  * - Schéma non-http(s) → suppression du schéma puis rebase en "https://"
  * - Nettoie les doublons de protocole
  */
@@ -82,6 +88,7 @@ export function toExternalDraft(raw: string): string {
 
   if (!v || isHttpPrefixOnly(v)) return HTTPS;
   if (v.startsWith("/")) return HTTPS;
+  if (looksLikeSpecialHref(v)) return v;
 
   // Si l'utilisateur a mis un schéma non-http(s), on le retire.
   if (!looksLikeAbsoluteHttp(v) && hasScheme(v)) {
@@ -136,6 +143,15 @@ export function toInternalDraft(raw: string): string {
 
   const out = v.startsWith("/") ? v || "/" : `/${v.replace(/^\/+/, "")}`;
   return normalizeHomeAlias(out || "/");
+}
+
+export function normalizeTelAndMailtoHrefDraft(value: string): string | null {
+  const raw = (value ?? "").trim();
+  const normalized = raw
+    .replace(/^\/(?=(mailto|tel):)/i, "")
+    .replace(/^https?:\/\/(?=(mailto|tel):)/i, "");
+
+  return /^(mailto|tel):/i.test(normalized) ? normalized : null;
 }
 
 /* -------------------------------------------------------------------------- */

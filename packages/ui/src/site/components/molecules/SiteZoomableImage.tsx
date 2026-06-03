@@ -117,11 +117,8 @@ export function SiteZoomableImage({
       <SiteAppImage
         image={{
           src,
-
           alt,
-
           width: image.width,
-
           height: image.height,
         }}
         sizes={sizes}

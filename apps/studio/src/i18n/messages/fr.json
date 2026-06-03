@@ -1971,6 +1971,8 @@
         "list": "Liste",
         "bulletList": "Liste à puces",
         "orderedList": "Liste numérotée",
+        "checkList": "Liste à coches",
+        "arrowList": "Liste fléchée",
         "quote": "Citation",
         "bold": "Gras",
         "italic": "Italique",

@@ -177,6 +177,7 @@ export function ButtonItemEditor({
               href={hrefValue}
               onHrefChange={hrefCtrl.field.onChange}
               disabled={disabled}
+              allowTelAndMailto={true}
             />
 
             <SelectField

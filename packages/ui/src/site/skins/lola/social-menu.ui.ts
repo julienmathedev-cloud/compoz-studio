@@ -13,4 +13,7 @@
 import type { SiteSocialMenuUiOverride } from "@compoz/ui/site/site-ui.types";
 
 export const lolaSocialMenuUi: SiteSocialMenuUiOverride = {
-  } as const;
+  interactive:
+    "motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-out motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.98]",
+  link: "text-current/80 hover:text-current",
+} as const;

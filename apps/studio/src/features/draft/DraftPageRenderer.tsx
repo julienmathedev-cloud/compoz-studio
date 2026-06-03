@@ -10,6 +10,7 @@
 
 import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
 import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
+import type { SiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRuntimeFeatures";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 import type { SitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { useTheme } from "@compoz/ui/settings/theme/ThemeProvider";
@@ -17,9 +18,14 @@ import { useTheme } from "@compoz/ui/settings/theme/ThemeProvider";
 type DraftPageRendererProps = Readonly<{
   blocks: ReadonlyArray<BlockShape>;
   pager?: SitePager | null;
+  runtimeFeatures?: SiteRuntimeFeatures;
 }>;
 
-export function DraftPageRenderer({ blocks, pager }: DraftPageRendererProps) {
+export function DraftPageRenderer({
+  blocks,
+  pager,
+  runtimeFeatures,
+}: DraftPageRendererProps) {
   const ui = useSiteUi();
   const theme = useTheme();
   const revealPreset = theme?.revealPreset ?? "fade-up";
@@ -31,6 +37,7 @@ export function DraftPageRenderer({ blocks, pager }: DraftPageRendererProps) {
       blocks={blocks}
       pager={pager ?? undefined}
       revealUi={revealUi}
+      runtimeFeatures={runtimeFeatures}
     />
   );
 }

@@ -29,6 +29,7 @@ import { toSlug } from "@compoz/ui/lib/routing/slug";
 import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
 import { useTheme } from "@compoz/ui/settings/theme/ThemeProvider";
 import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
+import type { SiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRuntimeFeatures";
 import type { PageRenderShape } from "@compoz/validation/pages/page";
 
 /* -------------------------------------------------------------------------- */
@@ -59,9 +60,15 @@ function hrefForDraftSlug(slug: string): string {
 /* Component                                                                  */
 /* -------------------------------------------------------------------------- */
 
-type PagePreviewClientProps = Readonly<{ slug: string }>;
+type PagePreviewClientProps = Readonly<{
+  slug: string;
+  runtimeFeatures: SiteRuntimeFeatures;
+}>;
 
-export function PagePreviewClient({ slug }: PagePreviewClientProps) {
+export function PagePreviewClient({
+  slug,
+  runtimeFeatures,
+}: PagePreviewClientProps) {
   const pageScope = useMemo(() => `page:${slug}`, [slug]);
 
   const siteIndex = usePreviewOverride<SiteIndexDTO>("siteIndex");
@@ -164,6 +171,7 @@ export function PagePreviewClient({ slug }: PagePreviewClientProps) {
         blocks={blocks}
         pager={pager}
         revealUi={revealUi}
+        runtimeFeatures={runtimeFeatures}
       />
     </PreviewShell>
   );

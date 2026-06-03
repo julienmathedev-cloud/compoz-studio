@@ -20,6 +20,7 @@ import type {
   SiteGlobalUi,
   SiteRevealPresetUi,
 } from "@compoz/ui/site/site-ui.types";
+import type { SiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRuntimeFeatures";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 export type SitePageRendererProps = Readonly<{
@@ -34,6 +35,7 @@ export type SitePageRendererProps = Readonly<{
 
   ui: SiteGlobalUi;
   revealUi: SiteRevealPresetUi;
+  runtimeFeatures?: SiteRuntimeFeatures;
 }>;
 
 export function SitePageRenderer({
@@ -42,6 +44,7 @@ export function SitePageRenderer({
   pager,
   ui,
   revealUi,
+  runtimeFeatures,
 }: SitePageRendererProps) {
   const isBlocksMode = children === undefined;
 
@@ -53,6 +56,7 @@ export function SitePageRenderer({
       cellsUi={ui.cells}
       blockUi={ui.blockSection}
       revealUi={revealUi}
+      runtimeFeatures={runtimeFeatures}
       variant="site"
     />
   ) : (

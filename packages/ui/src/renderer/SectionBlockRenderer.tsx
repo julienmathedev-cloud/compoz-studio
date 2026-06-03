@@ -22,6 +22,7 @@ import type {
   SiteCellsUi,
   SiteRevealPresetUi,
 } from "@compoz/ui/site/site-ui.types";
+import type { SiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRuntimeFeatures";
 
 import type {
   BlockRowShape,
@@ -38,6 +39,7 @@ export type SectionRendererProps = Readonly<{
   blockUi: SiteBlockSectionUi;
   cellsUi: SiteCellsUi;
   revealUi: SiteRevealPresetUi;
+  runtimeFeatures?: SiteRuntimeFeatures;
 }>;
 
 type CellPosition = Readonly<{
@@ -54,6 +56,7 @@ export function SectionBlockRenderer({
   blockUi,
   cellsUi,
   revealUi,
+  runtimeFeatures,
 }: SectionRendererProps) {
   const containerMode = block.containerMode ?? "contained";
 
@@ -71,7 +74,13 @@ export function SectionBlockRenderer({
 
   return (
     <section
-      className={cn(blockUi.surface, block.cssClassName)}
+      className={cn(
+        blockUi.surface,
+        block.cssClassName,
+        shouldAutoHideSingleH1Block(block, runtimeFeatures)
+          ? "seo-only"
+          : undefined,
+      )}
       data-block="section"
       data-variant={variant}
       data-container={containerMode}
@@ -246,6 +255,32 @@ function renderCellFromRegistry(
     isFullBleed: isFull,
     isLcpMedia,
   });
+}
+
+function shouldAutoHideSingleH1Block(
+  block: SectionBlockShape,
+  runtimeFeatures?: SiteRuntimeFeatures,
+): boolean {
+  if (!runtimeFeatures?.autoHideSingleH1Block) {
+    return false;
+  }
+
+  const row = block.rows[0];
+  if (!row || block.rows.length !== 1 || row.columns.length !== 1) {
+    return false;
+  }
+
+  const column = row.columns[0];
+  if (!column || column.cells.length !== 1) {
+    return false;
+  }
+
+  const cell = column.cells[0];
+  if (!cell || cell.kind !== "heading" || cell.level !== "h1") {
+    return false;
+  }
+
+  return String(cell.title ?? "").trim().length > 0;
 }
 
 function getSpacerWrapperVisibilityClass(cell: CellShape): string | undefined {

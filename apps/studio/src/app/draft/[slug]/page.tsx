@@ -21,6 +21,7 @@ import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { toSlug } from "@compoz/ui/lib/routing/slug";
 import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
 import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
+import { resolveSiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRuntimeFeatures";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 type PageParams = Readonly<{
@@ -77,6 +78,7 @@ export default async function DraftPage({ params }: PageParams) {
   if (!s || s === HOME_SLUG) redirect("/draft");
 
   const tenantId = await getTenantId();
+  const runtimeFeatures = resolveSiteRuntimeFeatures(tenantId);
 
   const index = await getDraftIndexByTenantId(tenantId);
   if (!index) notFound();
@@ -94,7 +96,13 @@ export default async function DraftPage({ params }: PageParams) {
     hrefForSlug: hrefForDraftSlug,
   });
 
-  return <DraftPageRenderer blocks={blocks} pager={pager} />;
+  return (
+    <DraftPageRenderer
+      blocks={blocks}
+      pager={pager}
+      runtimeFeatures={runtimeFeatures}
+    />
+  );
 }
 
 DraftPage.displayName = "DraftPage";

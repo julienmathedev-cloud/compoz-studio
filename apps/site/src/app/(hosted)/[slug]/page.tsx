@@ -27,6 +27,7 @@ import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
 import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
 import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
+import { resolveSiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRuntimeFeatures";
 import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
@@ -84,6 +85,7 @@ export default async function SitePage({ params }: PageParams) {
 
   const tenantId = await getTenantId();
   const ui = resolveSiteUi(tenantId);
+  const runtimeFeatures = resolveSiteRuntimeFeatures(tenantId);
   const settings = await getPublishedSettingsByTenantId(tenantId);
   const revealPreset = settings?.theme?.revealPreset ?? "fade-up";
   const revealUi = ui.reveal[revealPreset];
@@ -110,6 +112,7 @@ export default async function SitePage({ params }: PageParams) {
       blocks={blocks}
       pager={pager}
       revealUi={revealUi}
+      runtimeFeatures={runtimeFeatures}
     />
   );
 }

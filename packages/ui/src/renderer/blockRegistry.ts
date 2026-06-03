@@ -15,6 +15,7 @@ import type {
   SiteCellsUi,
   SiteRevealPresetUi,
 } from "@compoz/ui/site/site-ui.types";
+import type { SiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRuntimeFeatures";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 export type BlockRenderer = ComponentType<{
@@ -24,6 +25,7 @@ export type BlockRenderer = ComponentType<{
   blockUi: SiteBlockSectionUi;
   cellsUi: SiteCellsUi;
   revealUi: SiteRevealPresetUi;
+  runtimeFeatures?: SiteRuntimeFeatures;
 }>;
 
 export const blockRegistry: Record<string, BlockRenderer> = {

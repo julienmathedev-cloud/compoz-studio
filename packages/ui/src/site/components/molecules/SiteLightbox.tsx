@@ -231,7 +231,7 @@ export function SiteLightbox({
     return null;
   }
 
-  const computedCaption = caption ?? alt;
+  const computedCaption = String(caption ?? "").trim();
   const portalTarget =
     document.querySelector<HTMLElement>("[data-site-theme-boundary]") ??
     document.body;

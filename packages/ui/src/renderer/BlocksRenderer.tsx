@@ -19,6 +19,7 @@ import type {
   SiteCellsUi,
   SiteRevealPresetUi,
 } from "@compoz/ui/site/site-ui.types";
+import type { SiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRuntimeFeatures";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 /* -------------------------------------------------------------------------- */
@@ -35,6 +36,8 @@ export type BlocksRendererProps = Readonly<{
   blockUi: SiteBlockSectionUi;
 
   revealUi: SiteRevealPresetUi;
+
+  runtimeFeatures?: SiteRuntimeFeatures;
 
   /**
    * Variante de rendu (micro-différences éventuelles plus tard).
@@ -57,6 +60,7 @@ export function BlocksRenderer({
   cellsUi,
   blockUi,
   revealUi,
+  runtimeFeatures,
   variant = "site",
   className,
 }: BlocksRendererProps) {
@@ -80,6 +84,7 @@ export function BlocksRenderer({
             blockUi={blockUi}
             cellsUi={cellsUi}
             revealUi={revealUi}
+            runtimeFeatures={runtimeFeatures}
           />
         );
       })}

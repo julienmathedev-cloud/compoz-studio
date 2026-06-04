@@ -1,15 +1,14 @@
 .block-odd {
   background-image: linear-gradient(
-    to bottom right,
+    to top right,
     color-mix(in srgb, var(--primary) 20%, transparent),
     var(--background),
     transparent
   );
 }
-
 .block-even {
   background-image: linear-gradient(
-    to top right,
+    to bottom right,
     color-mix(in srgb, var(--primary) 20%, transparent),
     var(--background),
     transparent

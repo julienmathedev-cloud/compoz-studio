@@ -9,5 +9,5 @@
 import type { SiteLegalMenuUiOverride } from "@compoz/ui/site/site-ui.types";
 
 export const renaudLegalMenuUi: SiteLegalMenuUiOverride = {
-  link: "text-current/85 hover:text-current",
+  link: "text-black/85 hover:text-black",
 } as const;

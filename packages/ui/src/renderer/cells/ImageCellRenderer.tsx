@@ -77,11 +77,9 @@ export function ImageCellRenderer({
   const visual = (
     <div className={cn(ui.root)}>
       <div className={cn(ui.size[size])}>
-        {mode === "default" ? (
-          imageNode
-        ) : (
-          <div className={cn(frameClass, ui.container)}>{imageNode}</div>
-        )}
+        <div className={cn(mode !== "default" && frameClass, ui.container)}>
+          {imageNode}
+        </div>
       </div>
     </div>
   );

@@ -62,7 +62,7 @@ export const FormCellSchema = z
       .trim()
       .min(1, ERROR_CODES.CELL_FORM_SUBMIT_LABEL_REQUIRED),
 
-    variantButton: FormButtonVariantSchema.default("default"),
+    variantButton: FormButtonVariantSchema,
 
     successMessage: z
       .string({

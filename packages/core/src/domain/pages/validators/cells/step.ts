@@ -11,7 +11,7 @@ import type { Cell, StepItem } from "@compoz/core/domain/pages/entities/cell";
 
 type Path = ReadonlyArray<string | number>;
 
-const STEPS_VARIANTS = ["vertical"] as const;
+const STEPS_VARIANTS = ["vertical", "horizontal"] as const;
 
 export function assertStepsCell(
   cell: Extract<Cell, { kind: "steps" }>,

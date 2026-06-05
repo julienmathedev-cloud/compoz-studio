@@ -1820,8 +1820,10 @@
 
         "variantLabel": "Layout",
         "variants": {
-          "vertical": "Vertical"
-        }
+          "vertical": "Vertical",
+          "horizontal": "Horizontal"
+        },
+        "variantResponsiveHelp": "Horizontal layout is only applied when there is enough available screen space."
       },
 
       "cardsCellEditor": {

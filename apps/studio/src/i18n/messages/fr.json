@@ -1820,8 +1820,10 @@
 
         "variantLabel": "Disposition",
         "variants": {
-          "vertical": "Verticale"
-        }
+          "vertical": "Verticale",
+          "horizontal": "Horizontale"
+        },
+        "variantResponsiveHelp": "Le mode horizontal s’applique uniquement si l’espace disponible à l’écran est suffisant."
       },
 
       "cardsCellEditor": {

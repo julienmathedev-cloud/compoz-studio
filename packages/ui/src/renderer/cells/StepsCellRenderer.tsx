@@ -7,9 +7,12 @@
  *
  * @remarks
  * - UI-only : consomme une shape déjà validée.
- * - Rend une liste verticale de `SiteStepCard`.
+ * - Rend une liste de `SiteStepCard` selon le variant de layout.
  * - Ignore les items sans titre.
  * - La numérotation est calculée automatiquement à partir de l’ordre.
+ * - Le responsive est piloté par la skin, pas par le renderer.
+ * - Expose une densité UI via `data-density` pour permettre à la skin
+ *   d’adapter le breakpoint horizontal selon le nombre d’items.
  */
 
 import type { StepsCellShape } from "@compoz/validation/pages/blocks/cells/cell";
@@ -25,6 +28,8 @@ export type StepsCellRendererProps = Readonly<{
   ui: SiteStepsUi;
 }>;
 
+type StepsDensity = "default" | "dense";
+
 export function StepsCellRenderer({ cell, ui }: StepsCellRendererProps) {
   if (!cell?.items?.length) return null;
 
@@ -35,29 +40,47 @@ export function StepsCellRenderer({ cell, ui }: StepsCellRendererProps) {
 
   if (items.length < 1) return null;
 
+  const variant = cell.variant === "horizontal" ? "horizontal" : "vertical";
+  const variantUi = ui.variants[variant];
+
+  const density: StepsDensity = items.length > 4 ? "dense" : "default";
   const align = "center";
 
   return (
-    <div className={ui.root} data-cell="steps">
-      <div className={cn(ui.list)}>
+    <div
+      className={cn(ui.root, variantUi.root)}
+      data-cell="steps"
+      data-variant={variant}
+      data-density={density}
+    >
+      <div className={cn(variantUi.list)} data-density={density}>
         {items.map((item, index) => {
           const title = normalizeString(item.title, "");
           const description = normalizeString(item.description, "");
           const isLast = index === items.length - 1;
 
           return (
-            <div key={item.id} className="contents">
-              <SiteStepCard
-                step={index + 1}
-                title={title}
-                description={description}
-                align={align}
-                ui={ui.card}
-              />
+            <div key={item.id} className={cn(variantUi.item)}>
+              <div className={cn(variantUi.cardRoot)} data-density={density}>
+                <SiteStepCard
+                  step={index + 1}
+                  title={title}
+                  description={description}
+                  align={align}
+                  ui={ui.card}
+                />
+              </div>
 
               {!isLast ? (
-                <div className={ui.connector} aria-hidden="true">
-                  <ArrowDown className={ui.connectorIcon} />
+                <div
+                  className={cn(variantUi.connector)}
+                  data-density={density}
+                  aria-hidden="true"
+                >
+                  <ArrowDown
+                    className={cn(variantUi.connectorIcon)}
+                    data-density={density}
+                  />
                 </div>
               ) : null}
             </div>

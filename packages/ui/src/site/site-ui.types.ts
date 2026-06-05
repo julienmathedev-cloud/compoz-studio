@@ -187,15 +187,10 @@ export type SiteButtonsUiOverride = DeepPartial<SiteButtonsUi>;
 
 export type SiteStepCardUi = Readonly<{
   root: string;
-
   header: string;
-
   content: string;
-
   badge: string;
-
   title: string;
-
   description: string;
 
   align: Readonly<{
@@ -211,12 +206,24 @@ export type SiteStepCardUi = Readonly<{
   headerSpacerSlot?: string;
 }>;
 
-export type SiteStepsUi = Readonly<{
+export type SiteStepsVariantUi = Readonly<{
   root: string;
   list: string;
+  item: string;
   connector: string;
   connectorIcon: string;
+  cardRoot: string;
+}>;
+
+export type SiteStepsVariantUiOverride = DeepPartial<SiteStepsVariantUi>;
+
+export type SiteStepsUi = Readonly<{
+  root: string;
   card: SiteStepCardUi;
+  variants: Readonly<{
+    vertical: SiteStepsVariantUi;
+    horizontal: SiteStepsVariantUi;
+  }>;
 }>;
 
 export type SiteStepsUiOverride = DeepPartial<SiteStepsUi>;

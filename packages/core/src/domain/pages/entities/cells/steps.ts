@@ -5,7 +5,7 @@
  * Entité métier StepsCell.
  */
 
-export type StepsVariant = "vertical";
+export type StepsVariant = "vertical" | "horizontal";
 
 export type StepItem = {
   id: string;

@@ -14,7 +14,7 @@ import {
   CellItemIdSchema,
 } from "@compoz/validation/pages/blocks/cells/details/common";
 
-export const StepsVariantSchema = z.enum(["vertical"], {
+export const StepsVariantSchema = z.enum(["vertical", "horizontal"], {
   message: ERROR_CODES.CELL_STEPS_VARIANT_INVALID,
 });
 

@@ -40,7 +40,7 @@ type SelectedCellLocation = Readonly<{
   cellId: string;
 }>;
 
-const STEPS_VARIANTS = ["vertical"] as const;
+const STEPS_VARIANTS = ["vertical", "horizontal"] as const;
 
 type StepsVariant = (typeof STEPS_VARIANTS)[number];
 type StepsFieldBasePath = `rows.${number}.columns.${number}.cells.${number}`;
@@ -112,27 +112,33 @@ export function StepsCellEditor({
       <div
         className={cn("grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3")}
       >
-        <div className={cn(STACK_SM)}>
+        <div className={cn(STACK_SM, "md:col-span-2 xl:col-span-3")}>
           <Text as="p" className="font-medium">
             {t("studio.cellEditorTabs.stepsCellEditor.variantLabel")}
           </Text>
 
-          <div className="flex items-center gap-0.5">
-            {STEPS_VARIANTS.map((item) => (
-              <Button
-                key={item}
-                type="button"
-                size="sm"
-                variant={variant === item ? "default" : "ghost"}
-                visualMode="studio"
-                onClick={() => {
-                  variantCtrl.field.onChange(item);
-                }}
-                disabled={disabled}
-              >
-                {t(`studio.cellEditorTabs.stepsCellEditor.variants.${item}`)}
-              </Button>
-            ))}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-0.5">
+              {STEPS_VARIANTS.map((item) => (
+                <Button
+                  key={item}
+                  type="button"
+                  size="sm"
+                  variant={variant === item ? "default" : "ghost"}
+                  visualMode="studio"
+                  onClick={() => {
+                    variantCtrl.field.onChange(item);
+                  }}
+                  disabled={disabled}
+                >
+                  {t(`studio.cellEditorTabs.stepsCellEditor.variants.${item}`)}
+                </Button>
+              ))}
+            </div>
+
+            <Text as="p" variant="muted" className="w-full text-sm">
+              {t("studio.cellEditorTabs.stepsCellEditor.variantResponsiveHelp")}
+            </Text>
           </div>
         </div>
       </div>

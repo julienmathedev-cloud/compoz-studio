@@ -9,11 +9,14 @@ export type ButtonItemVariant = "default" | "secondary" | "outline" | "ghost";
 export type ButtonsAlign = "left" | "center" | "right";
 export type ButtonsGap = "sm" | "md" | "lg";
 
-export type ButtonItem = {
-  id: string;
+export type ButtonPresentation = {
   label: string;
-  href: string;
   variant: ButtonItemVariant;
+};
+
+export type ButtonItem = ButtonPresentation & {
+  id: string;
+  href: string;
 };
 
 export type ButtonsCell = {

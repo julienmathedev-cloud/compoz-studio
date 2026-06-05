@@ -37,24 +37,26 @@ export function assertFormCell(
     });
   }
 
-  if (typeof cell.submitLabel !== "string" || !cell.submitLabel.trim()) {
+  if (
+    !cell.submitButton ||
+    typeof cell.submitButton !== "object" ||
+    typeof cell.submitButton.label !== "string" ||
+    !cell.submitButton.label.trim()
+  ) {
     throw new DomainError({
       code: EC.CELL_FORM_SUBMIT_LABEL_REQUIRED,
       message: EC.CELL_FORM_SUBMIT_LABEL_REQUIRED,
-      details: { path: [...path, "submitLabel"] },
+      details: { path: [...path, "submitButton", "label"] },
     });
   }
 
-  if (!BUTTON_VARIANTS.includes(cell.variantButton)) {
+  if (!BUTTON_VARIANTS.includes(cell.submitButton.variant)) {
     throw new DomainError({
       code: EC.CELL_FORM_VARIANT_BUTTON_INVALID,
-
       message: EC.CELL_FORM_VARIANT_BUTTON_INVALID,
-
       details: {
-        path: [...path, "variantButton"],
-
-        meta: { variantButton: cell.variantButton },
+        path: [...path, "submitButton", "variant"],
+        meta: { variant: cell.submitButton.variant },
       },
     });
   }

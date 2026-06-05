@@ -119,13 +119,45 @@ function normalizeFormCellLegacy(value: unknown): unknown {
     return value;
   }
 
+  const submitButton =
+    cell.submitButton && typeof cell.submitButton === "object"
+      ? (cell.submitButton as Record<string, unknown>)
+      : undefined;
+
+  const submitButtonVariant =
+    typeof submitButton?.variant === "string"
+      ? submitButton.variant.trim()
+      : "";
+  const legacyVariantButton =
+    typeof cell.variantButton === "string" ? cell.variantButton.trim() : "";
+
+  const label =
+    typeof submitButton?.label === "string" && submitButton.label.trim()
+      ? submitButton.label.trim()
+      : typeof cell.submitLabel === "string" && cell.submitLabel.trim()
+        ? cell.submitLabel.trim()
+        : "";
+
+  const variantValue =
+    submitButtonVariant && FORM_BUTTON_VARIANTS.has(submitButtonVariant)
+      ? submitButtonVariant
+      : legacyVariantButton && FORM_BUTTON_VARIANTS.has(legacyVariantButton)
+        ? legacyVariantButton
+        : "default";
+
+  const {
+    submitLabel: _submitLabel,
+    variantButton: _variantButton,
+    submitButton: _legacySubmitButton,
+    ...rest
+  } = cell;
+
   return {
-    ...cell,
-    variantButton:
-      typeof cell.variantButton === "string" &&
-      FORM_BUTTON_VARIANTS.has(cell.variantButton)
-        ? cell.variantButton
-        : "default",
+    ...rest,
+    submitButton: {
+      label,
+      variant: variantValue,
+    },
   };
 }
 

@@ -5,11 +5,15 @@
  * Entité métier FormCell (formulaire de contact).
  */
 
-import type { ButtonItemVariant } from "@compoz/core/domain/pages/entities/cells/buttons";
+import type {
+  ButtonItemVariant,
+  ButtonPresentation,
+} from "@compoz/core/domain/pages/entities/cells/buttons";
 
 export type FormFieldType = "text" | "email" | "textarea";
 
 export type FormButtonVariant = ButtonItemVariant;
+export type FormSubmitButton = ButtonPresentation;
 
 export type FormField = {
   id: string;
@@ -31,14 +35,9 @@ export type FormCell = {
   to: string;
 
   /**
-   * Texte du bouton de soumission
+   * Bouton de soumission
    */
-  submitLabel: string;
-
-  /**
-   * Variante visuelle du bouton de soumission
-   */
-  variantButton: FormButtonVariant;
+  submitButton: FormSubmitButton;
 
   /**
    * Message affiché après envoi réussi

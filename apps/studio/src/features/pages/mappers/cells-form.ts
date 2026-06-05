@@ -15,6 +15,7 @@ import type {
   CarouselItemFormValues,
   CellFormValues,
   FormFieldFormValues,
+  FormSubmitButtonFormValues,
   ImageEditorFormValues,
   SpacerCellFormValues,
   StepItemFormValues,
@@ -45,6 +46,15 @@ function normalizeCssClassName(
   return String(cssClassName ?? "").trim();
 }
 
+function normalizeFormSubmitButton(
+  submitButton: FormSubmitButtonFormValues | undefined,
+): FormSubmitButtonFormValues {
+  return {
+    label: submitButton?.label?.trim() ?? "",
+    variant: submitButton?.variant ?? "default",
+  };
+}
+
 export function createEmptyImageEditor(): ImageEditorFormValues {
   return {
     id: createUiId(),
@@ -62,6 +72,13 @@ export function createEmptyButtonItem(): ButtonItemFormValues {
     id: createUiId(),
     label: "",
     href: "",
+    variant: "default",
+  };
+}
+
+export function createEmptyFormSubmitButton(): FormSubmitButtonFormValues {
+  return {
+    label: "Envoyer",
     variant: "default",
   };
 }
@@ -291,8 +308,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       kind: "form",
       cssClassName: "",
       to: "",
-      submitLabel: "Envoyer",
-      variantButton: "default",
+      submitButton: createEmptyFormSubmitButton(),
       successMessage: null,
       errorMessage: null,
       fields: [createEmptyFormField()],
@@ -518,7 +534,7 @@ export function toCellFormValuesForValidation(
     return {
       ...cell,
       cssClassName: normalizedCssClassName,
-      variantButton: cell.variantButton ?? "default",
+      submitButton: normalizeFormSubmitButton(cell.submitButton),
     };
   }
 
@@ -572,7 +588,7 @@ export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
     return {
       ...cell,
       cssClassName: normalizedCssClassName,
-      variantButton: cell.variantButton ?? "default",
+      submitButton: normalizeFormSubmitButton(cell.submitButton),
     };
   }
 

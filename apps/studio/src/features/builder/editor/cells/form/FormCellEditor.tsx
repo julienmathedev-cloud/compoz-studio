@@ -41,6 +41,7 @@ type SelectedCellLocation = Readonly<{
 }>;
 
 type FormFieldBasePath = `rows.${number}.columns.${number}.cells.${number}`;
+type FormSubmitButtonBasePath = `${FormFieldBasePath}.submitButton`;
 type FormFieldsPath = `${FormFieldBasePath}.fields`;
 
 const FORM_BUTTON_VARIANTS = [
@@ -84,13 +85,14 @@ export function FormCellEditor({
     control,
   });
 
-  const submitLabelCtrl = useController({
-    name: `${basePath}.submitLabel` as `${FormFieldBasePath}.submitLabel`,
+  const submitButtonLabelCtrl = useController({
+    name: `${basePath}.submitButton.label` as `${FormSubmitButtonBasePath}.label`,
     control,
+    defaultValue: "",
   });
 
-  const variantButtonCtrl = useController({
-    name: `${basePath}.variantButton` as `${FormFieldBasePath}.variantButton`,
+  const submitButtonVariantCtrl = useController({
+    name: `${basePath}.submitButton.variant` as `${FormSubmitButtonBasePath}.variant`,
     control,
     defaultValue: "default",
   });
@@ -116,14 +118,17 @@ export function FormCellEditor({
   });
 
   const toIds = createFieldIds(idPrefix, "to");
-  const submitLabelIds = createFieldIds(idPrefix, "submitLabel");
-  const variantButtonIds = createFieldIds(idPrefix, "variantButton");
+  const submitLabelIds = createFieldIds(idPrefix, "submitButtonLabel");
+  const submitButtonVariantIds = createFieldIds(
+    idPrefix,
+    "submitButtonVariant",
+  );
   const successMessageIds = createFieldIds(idPrefix, "successMessage");
   const errorMessageIds = createFieldIds(idPrefix, "errorMessage");
 
   const shouldShowToError = showError || toCtrl.fieldState.isTouched;
   const shouldShowSubmitLabelError =
-    showError || submitLabelCtrl.fieldState.isTouched;
+    showError || submitButtonLabelCtrl.fieldState.isTouched;
 
   const toInvalid =
     shouldShowToError && Boolean(toCtrl.fieldState.error?.message);
@@ -135,18 +140,19 @@ export function FormCellEditor({
 
   const submitLabelInvalid =
     shouldShowSubmitLabelError &&
-    Boolean(submitLabelCtrl.fieldState.error?.message);
+    Boolean(submitButtonLabelCtrl.fieldState.error?.message);
 
   const submitLabelError =
-    shouldShowSubmitLabelError && submitLabelCtrl.fieldState.error?.message
-      ? String(submitLabelCtrl.fieldState.error.message)
+    shouldShowSubmitLabelError &&
+    submitButtonLabelCtrl.fieldState.error?.message
+      ? String(submitButtonLabelCtrl.fieldState.error.message)
       : undefined;
 
-  const rawVariantButton = variantButtonCtrl.field.value;
-  const variantButton: FormButtonVariant =
-    rawVariantButton &&
-    FORM_BUTTON_VARIANTS.includes(rawVariantButton as FormButtonVariant)
-      ? (rawVariantButton as FormButtonVariant)
+  const rawSubmitButtonVariant = submitButtonVariantCtrl.field.value;
+  const submitButtonVariant: FormButtonVariant =
+    rawSubmitButtonVariant &&
+    FORM_BUTTON_VARIANTS.includes(rawSubmitButtonVariant as FormButtonVariant)
+      ? (rawSubmitButtonVariant as FormButtonVariant)
       : "default";
 
   return (
@@ -170,11 +176,11 @@ export function FormCellEditor({
 
         <InputField
           ids={submitLabelIds}
-          inputRef={submitLabelCtrl.field.ref}
+          inputRef={submitButtonLabelCtrl.field.ref}
           label={t("studio.cellEditorTabs.formCellEditor.submitLabelLabel")}
-          value={String(submitLabelCtrl.field.value ?? "")}
-          onChange={submitLabelCtrl.field.onChange}
-          onBlur={submitLabelCtrl.field.onBlur}
+          value={String(submitButtonLabelCtrl.field.value ?? "")}
+          onChange={submitButtonLabelCtrl.field.onChange}
+          onBlur={submitButtonLabelCtrl.field.onBlur}
           placeholder={t(
             "studio.cellEditorTabs.formCellEditor.submitLabelPlaceholder",
           )}
@@ -201,15 +207,17 @@ export function FormCellEditor({
         />
 
         <SelectField
-          ids={variantButtonIds}
+          ids={submitButtonVariantIds}
           label={t("studio.cellEditorTabs.formCellEditor.variantButtonLabel")}
-          value={variantButton}
+          value={submitButtonVariant}
           onChange={(next) => {
-            variantButtonCtrl.field.onChange(next as FormButtonVariant);
+            submitButtonVariantCtrl.field.onChange(next as FormButtonVariant);
           }}
           items={FORM_BUTTON_VARIANTS.map((variant) => ({
             value: variant,
-            label: t(`studio.cellEditorTabs.formCellEditor.variants.${variant}`),
+            label: t(
+              `studio.cellEditorTabs.formCellEditor.variants.${variant}`,
+            ),
           }))}
           disabled={disabled}
           help={t("studio.cellEditorTabs.formCellEditor.variantButtonHelp")}

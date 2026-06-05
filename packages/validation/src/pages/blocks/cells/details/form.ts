@@ -25,6 +25,16 @@ export const FormButtonVariantSchema = z.enum(
   },
 );
 
+export const FormSubmitButtonSchema = z
+  .object({
+    label: z
+      .string()
+      .trim()
+      .min(1, ERROR_CODES.CELL_FORM_SUBMIT_LABEL_REQUIRED),
+    variant: FormButtonVariantSchema,
+  })
+  .strict();
+
 export const FormFieldSchema = z
   .object({
     id: CellItemIdSchema,
@@ -57,12 +67,7 @@ export const FormCellSchema = z
 
     to: z.string().trim().min(1, ERROR_CODES.CELL_FORM_TO_REQUIRED),
 
-    submitLabel: z
-      .string()
-      .trim()
-      .min(1, ERROR_CODES.CELL_FORM_SUBMIT_LABEL_REQUIRED),
-
-    variantButton: FormButtonVariantSchema,
+    submitButton: FormSubmitButtonSchema,
 
     successMessage: z
       .string({

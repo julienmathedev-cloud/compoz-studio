@@ -28,7 +28,9 @@ export type FormCellRendererProps = Readonly<{
 export function FormCellRenderer({ cell, ui }: FormCellRendererProps) {
   if (!cell) return null;
 
-  const submitLabel = normalizeString(cell.submitLabel, "");
+  const submitButton = cell.submitButton;
+  const submitLabel = normalizeString(submitButton.label, "");
+
   if (!submitLabel) return null;
 
   const toEmail = normalizeString(cell.to);
@@ -40,8 +42,10 @@ export function FormCellRenderer({ cell, ui }: FormCellRendererProps) {
   return (
     <SiteContactForm
       fields={fields}
-      submitLabel={submitLabel}
-      variantButton={cell.variantButton ?? "default"}
+      submitButton={{
+        label: submitLabel,
+        variant: submitButton.variant,
+      }}
       toEmail={toEmail}
       successMessage={cell.successMessage}
       errorMessage={cell.errorMessage}

@@ -33,8 +33,10 @@ export function adaptFormCell(dto: FormCellIntentDTO): FormCell {
     kind: "form",
     cssClassName: trimClearableOrUndef(dto.cssClassName),
     to: trimOrKeep(dto.to),
-    submitLabel: trimOrKeep(dto.submitLabel),
-    variantButton: dto.variantButton ?? "default",
+    submitButton: {
+      label: trimOrKeep(dto.submitButton.label),
+      variant: dto.submitButton.variant ?? "default",
+    },
     successMessage: dto.successMessage ? trimOrKeep(dto.successMessage) : null,
     errorMessage: dto.errorMessage ? trimOrKeep(dto.errorMessage) : null,
     fields: dto.fields.map(adaptFormField),

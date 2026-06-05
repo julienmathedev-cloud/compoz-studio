@@ -7,7 +7,10 @@
 
 import { z } from "zod";
 
-import type { ButtonItemSchema } from "@compoz/validation/pages/blocks/cells/details/buttons";
+import type {
+  ButtonItemSchema,
+  ButtonPresentationSchema,
+} from "@compoz/validation/pages/blocks/cells/details/buttons";
 import { ButtonsCellSchema } from "@compoz/validation/pages/blocks/cells/details/buttons";
 import type { CardItemSchema } from "@compoz/validation/pages/blocks/cells/details/cards";
 import { CardsCellSchema } from "@compoz/validation/pages/blocks/cells/details/cards";
@@ -23,6 +26,7 @@ import type {
   FormButtonVariantSchema,
   FormFieldSchema,
   FormFieldTypeSchema,
+  FormSubmitButtonSchema,
 } from "@compoz/validation/pages/blocks/cells/details/form";
 import { FormCellSchema } from "@compoz/validation/pages/blocks/cells/details/form";
 import { GalleryCellSchema } from "@compoz/validation/pages/blocks/cells/details/gallery";
@@ -94,6 +98,7 @@ export type RichTextCellShape = z.infer<typeof RichTextCellSchema>;
 export type SpacerCellShape = z.infer<typeof SpacerCellSchema>;
 export type SeparatorCellShape = z.infer<typeof SeparatorCellSchema>;
 export type ButtonItemShape = z.infer<typeof ButtonItemSchema>;
+export type ButtonPresentationShape = z.infer<typeof ButtonPresentationSchema>;
 export type ButtonsCellShape = z.infer<typeof ButtonsCellSchema>;
 export type CardItemShape = z.infer<typeof CardItemSchema>;
 export type CardsCellShape = z.infer<typeof CardsCellSchema>;
@@ -115,6 +120,7 @@ export type StructuredCardColumnsShape = z.infer<
 export type StructuredCardCellShape = z.infer<typeof StructuredCardCellSchema>;
 export type FormFieldTypeShape = z.infer<typeof FormFieldTypeSchema>;
 export type FormButtonVariantShape = z.infer<typeof FormButtonVariantSchema>;
+export type FormSubmitButtonShape = z.infer<typeof FormSubmitButtonSchema>;
 export type FormFieldShape = z.infer<typeof FormFieldSchema>;
 export type FormCellShape = z.infer<typeof FormCellSchema>;
 export type TimelineKeywordShape = z.infer<typeof TimelineKeywordSchema>;
@@ -126,6 +132,8 @@ export type ImageEditorShape = z.infer<typeof ImageEditorSchema>;
 
 export {
   ButtonItemSchema,
+  ButtonItemVariantSchema,
+  ButtonPresentationSchema,
   ButtonsCellSchema,
 } from "@compoz/validation/pages/blocks/cells/details/buttons";
 export {
@@ -146,10 +154,11 @@ export {
   CarouselVariantSchema,
 } from "@compoz/validation/pages/blocks/cells/details/carousel";
 export {
-  FormCellSchema,
   FormButtonVariantSchema,
+  FormCellSchema,
   FormFieldSchema,
   FormFieldTypeSchema,
+  FormSubmitButtonSchema,
 } from "@compoz/validation/pages/blocks/cells/details/form";
 export {
   GalleryCellSchema,

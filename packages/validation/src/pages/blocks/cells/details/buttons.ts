@@ -21,6 +21,16 @@ export const ButtonItemVariantSchema = z.enum(
   },
 );
 
+export const ButtonPresentationSchema = z
+  .object({
+    label: z
+      .string()
+      .trim()
+      .min(1, ERROR_CODES.CELL_BUTTON_ITEM_LABEL_REQUIRED),
+    variant: ButtonItemVariantSchema,
+  })
+  .strict();
+
 export const ButtonsAlignSchema = z.enum(["left", "center", "right"], {
   message: ERROR_CODES.CELL_BUTTONS_ALIGN_INVALID,
 });
@@ -29,17 +39,10 @@ export const ButtonsGapSchema = z.enum(["sm", "md", "lg"], {
   message: ERROR_CODES.CELL_BUTTONS_GAP_INVALID,
 });
 
-export const ButtonItemSchema = z
-  .object({
-    id: CellItemIdSchema,
-    label: z
-      .string()
-      .trim()
-      .min(1, ERROR_CODES.CELL_BUTTON_ITEM_LABEL_REQUIRED),
-    href: z.string().trim(),
-    variant: ButtonItemVariantSchema,
-  })
-  .strict();
+export const ButtonItemSchema = ButtonPresentationSchema.extend({
+  id: CellItemIdSchema,
+  href: z.string().trim(),
+}).strict();
 
 export const ButtonsCellSchema = z
   .object({

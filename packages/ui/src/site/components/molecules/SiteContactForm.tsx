@@ -44,8 +44,7 @@ type SubmitStatus = "idle" | "success" | "error";
 
 export type SiteContactFormProps = Readonly<{
   fields: readonly FormFieldShape[];
-  submitLabel: string;
-  variantButton: FormCellShape["variantButton"];
+  submitButton: FormCellShape["submitButton"];
   toEmail: string;
   successMessage?: string | null;
   errorMessage?: string | null;
@@ -56,8 +55,7 @@ export type SiteContactFormProps = Readonly<{
 
 export function SiteContactForm({
   fields,
-  submitLabel,
-  variantButton,
+  submitButton,
   toEmail,
   successMessage = "Votre message a bien été envoyé.",
   errorMessage = "Une erreur est survenue lors de l’envoi du message.",
@@ -229,11 +227,11 @@ export function SiteContactForm({
         <CardFooter className={cn(ui.footer)}>
           <Button
             type="submit"
-            variant={variantButton}
+            variant={submitButton.variant}
             disabled={isFormDisabled}
             className={cn(ui.submitButton)}
           >
-            {isSubmitting ? "Envoi..." : submitLabel}
+            {isSubmitting ? "Envoi..." : submitButton.label}
           </Button>
         </CardFooter>
       </form>

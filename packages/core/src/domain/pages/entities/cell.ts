@@ -53,6 +53,7 @@ export type Cell =
   | TimelineCell;
 
 export type {
+  ButtonPresentation,
   ButtonItem,
   ButtonItemVariant,
   ButtonsCell,
@@ -84,6 +85,7 @@ export type {
   FormButtonVariant,
   FormField,
   FormFieldType,
+  FormSubmitButton,
 } from "@compoz/core/domain/pages/entities/cells/form";
 
 export type {

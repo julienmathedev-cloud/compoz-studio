@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import {
   ButtonItemSchema,
+  ButtonPresentationSchema,
   ButtonsCellSchema,
   CardItemSchema,
   CardsCellSchema,
@@ -20,6 +21,7 @@ import {
   CarouselVariantSchema,
   FormCellSchema,
   FormFieldSchema,
+  FormSubmitButtonSchema,
   GalleryCellSchema,
   HeadingCellSchema,
   ImageCellSchema,
@@ -73,6 +75,11 @@ export type SeparatorCellFormValues = z.infer<
 
 export const ButtonItemFormValuesSchema = ButtonItemSchema;
 export type ButtonItemFormValues = z.infer<typeof ButtonItemFormValuesSchema>;
+
+export const ButtonPresentationFormValuesSchema = ButtonPresentationSchema;
+export type ButtonPresentationFormValues = z.infer<
+  typeof ButtonPresentationFormValuesSchema
+>;
 
 export const ButtonsCellFormValuesSchema = ButtonsCellSchema;
 export type ButtonsCellFormValues = z.infer<typeof ButtonsCellFormValuesSchema>;
@@ -137,6 +144,11 @@ export type StructuredCardCellFormValues = z.infer<
 
 export const FormFieldFormValuesSchema = FormFieldSchema;
 export type FormFieldFormValues = z.infer<typeof FormFieldFormValuesSchema>;
+
+export const FormSubmitButtonFormValuesSchema = FormSubmitButtonSchema;
+export type FormSubmitButtonFormValues = z.infer<
+  typeof FormSubmitButtonFormValuesSchema
+>;
 
 export const FormCellFormValuesSchema = FormCellSchema;
 export type FormCellFormValues = z.infer<typeof FormCellFormValuesSchema>;

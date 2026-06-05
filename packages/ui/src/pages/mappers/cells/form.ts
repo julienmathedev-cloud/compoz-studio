@@ -17,8 +17,10 @@ export function toFormCellShapeFromDTO(
     kind: "form",
     cssClassName: cell.cssClassName,
     to: cell.to,
-    submitLabel: cell.submitLabel,
-    variantButton: cell.variantButton ?? "default",
+    submitButton: {
+      label: cell.submitButton.label,
+      variant: cell.submitButton.variant,
+    },
     successMessage: cell.successMessage,
     errorMessage: cell.errorMessage,
     fields: cell.fields.map((field) => ({

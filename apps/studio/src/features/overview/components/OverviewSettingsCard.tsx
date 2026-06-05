@@ -25,17 +25,19 @@ import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 type OverviewSettingsCardProps = Readonly<{
   data?: SiteStatusDTO;
   isError?: boolean;
+  isAdmin?: boolean;
 }>;
 
 export function OverviewSettingsCard({
   data,
   isError,
+  isAdmin = false,
 }: OverviewSettingsCardProps) {
   const t = useTranslations();
 
   const changed = data?.changedSettings;
 
-  const items = [
+  const baseItems = [
     { key: "identity", label: t("studio.shared.entities.identity") },
     { key: "primaryMenu", label: t("studio.shared.entities.primaryMenu") },
     { key: "legalMenu", label: t("studio.shared.entities.legalMenu") },
@@ -43,8 +45,14 @@ export function OverviewSettingsCard({
     { key: "header", label: t("studio.shared.entities.header") },
     { key: "footer", label: t("studio.shared.entities.footer") },
     { key: "seo", label: t("studio.shared.entities.seo") },
-    { key: "theme", label: t("studio.shared.entities.theme") },
   ] as const;
+
+  const visibleItems = isAdmin
+    ? ([
+        ...baseItems,
+        { key: "theme", label: t("studio.shared.entities.theme") },
+      ] as const)
+    : baseItems;
 
   return (
     <Card
@@ -55,6 +63,7 @@ export function OverviewSettingsCard({
     >
       <CardHeader>
         <Heading as="h3">{t("studio.overviewSection.settings.title")}</Heading>
+
         <Text as="p" variant="muted">
           {t("studio.overviewSection.settings.description")}
         </Text>
@@ -62,7 +71,7 @@ export function OverviewSettingsCard({
 
       <CardContent className={cn(STACK_MD)}>
         <div className="grid gap-x-10 gap-y-3 sm:grid-cols-2">
-          {items.map((item) => {
+          {visibleItems.map((item) => {
             const isChanged = Boolean(changed?.[item.key]);
 
             const statusKind = isError

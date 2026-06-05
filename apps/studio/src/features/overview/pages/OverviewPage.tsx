@@ -25,12 +25,13 @@ import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
  */
 type OverviewPageProps = Readonly<{
   isDemo?: boolean;
+  isAdmin?: boolean;
 }>;
 
 /**
  * Page Overview (admin).
  */
-export function OverviewPage({ isDemo = false }: OverviewPageProps) {
+export function OverviewPage({ isDemo = false, isAdmin = false }: OverviewPageProps) {
   const t = useTranslations();
 
   return (
@@ -39,7 +40,7 @@ export function OverviewPage({ isDemo = false }: OverviewPageProps) {
         {t("studio.shared.entities.overview")}
       </Heading>
 
-      <OverviewSection isDemo={isDemo} />
+      <OverviewSection isDemo={isDemo} isAdmin={isAdmin} />
     </div>
   );
 }

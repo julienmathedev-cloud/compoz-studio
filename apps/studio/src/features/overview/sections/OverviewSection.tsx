@@ -23,9 +23,10 @@ import { useSiteStatus } from "@compoz/studio/features/site/status/useSiteStatus
 
 type OverviewSectionProps = Readonly<{
   isDemo?: boolean;
+  isAdmin?: boolean;
 }>;
 
-export function OverviewSection({ isDemo = false }: OverviewSectionProps) {
+export function OverviewSection({ isDemo = false, isAdmin = false }: OverviewSectionProps) {
   const t = useTranslations();
 
   const { data, isError, isLoading, isFetching } = useSiteStatus();
@@ -57,7 +58,7 @@ export function OverviewSection({ isDemo = false }: OverviewSectionProps) {
         </div>
 
         <div className="md:col-span-2 lg:col-span-2">
-          <OverviewSettingsCard data={data} isError={isError} />
+          <OverviewSettingsCard data={data} isError={isError} isAdmin={isAdmin} />
         </div>
       </div>
 

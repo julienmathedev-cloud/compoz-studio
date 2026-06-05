@@ -51,7 +51,7 @@ export const defaultMobileMenuUi: SiteMobileMenuUi = {
     "shrink-0 motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out group-open:rotate-90",
 
   dropdownList:
-    "mt-1 flex max-h-0 flex-col gap-1 overflow-hidden opacity-0 motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-out group-open:max-h-96 group-open:opacity-100",
+    "mt-1 flex max-h-0 flex-col gap-1 overflow-hidden opacity-0 motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-out group-open:max-h-[80vh] group-open:opacity-100",
 
   childItem: "w-full",
   childInteractive:

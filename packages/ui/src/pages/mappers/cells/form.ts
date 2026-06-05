@@ -20,6 +20,9 @@ export function toFormCellShapeFromDTO(
     submitButton: {
       label: cell.submitButton.label,
       variant: cell.submitButton.variant,
+      icon: cell.submitButton.icon,
+      iconPosition:
+        cell.submitButton.iconPosition === "after" ? "after" : "before",
     },
     successMessage: cell.successMessage,
     errorMessage: cell.errorMessage,

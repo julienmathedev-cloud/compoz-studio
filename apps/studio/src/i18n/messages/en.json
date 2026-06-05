@@ -1922,6 +1922,14 @@
         "hrefHelp": "Button destination.",
         "variantLabel": "Variant",
         "variantHelp": "Visual style of the button.",
+        "iconLabel": "Icon",
+        "iconHelp": "Optional icon displayed on the button.",
+        "iconPositionLabel": "Icon position",
+        "iconPositionHelp": "Choose whether the icon appears before or after the label.",
+        "iconPositions": {
+          "before": "Before",
+          "after": "After"
+        },
         "alignLabel": "Alignment",
         "aligns": {
           "left": "Left",

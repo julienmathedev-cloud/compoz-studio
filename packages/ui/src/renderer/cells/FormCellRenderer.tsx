@@ -25,6 +25,14 @@ export type FormCellRendererProps = Readonly<{
   ui: SiteFormUi;
 }>;
 
+type PublicButtonIconPosition = "before" | "after";
+
+function normalizePublicButtonIconPosition(
+  iconPosition: string | null | undefined,
+): PublicButtonIconPosition {
+  return iconPosition === "after" ? "after" : "before";
+}
+
 export function FormCellRenderer({ cell, ui }: FormCellRendererProps) {
   if (!cell) return null;
 
@@ -45,6 +53,10 @@ export function FormCellRenderer({ cell, ui }: FormCellRendererProps) {
       submitButton={{
         label: submitLabel,
         variant: submitButton.variant,
+        icon: submitButton.icon,
+        iconPosition: normalizePublicButtonIconPosition(
+          submitButton.iconPosition,
+        ),
       }}
       toEmail={toEmail}
       successMessage={cell.successMessage}

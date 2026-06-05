@@ -34,6 +34,9 @@ export function toStructuredCardCellShapeFromDTO(
             label: item.button.label,
             href: item.button.href,
             variant: item.button.variant,
+            icon: item.button.icon,
+            iconPosition:
+              item.button.iconPosition === "after" ? "after" : "before",
           }
         : null,
     })),

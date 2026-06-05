@@ -20,14 +20,16 @@ import {
 } from "@compoz/ui/components/ui/card";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
-import { SiteButton } from "@compoz/ui/site/components/atoms/SiteButton";
+import {
+  SiteButton,
+  type SiteButtonProps,
+} from "@compoz/ui/site/components/atoms/SiteButton";
 import type { SiteStructuredCardUi } from "@compoz/ui/site/site-ui.types";
 
-type SiteStructuredCardButton = Readonly<{
-  label: string;
-  href: string;
-  variant?: "default" | "secondary" | "outline" | "ghost";
-}>;
+type SiteStructuredCardButton = Pick<
+  SiteButtonProps,
+  "label" | "href" | "variant" | "icon" | "iconPosition"
+>;
 
 export type SiteStructuredCardProps = Readonly<{
   title: string;
@@ -114,7 +116,10 @@ export function SiteStructuredCard({
               label={normalizedButton.label}
               href={normalizedButton.href}
               variant={normalizedButton.variant}
+              icon={normalizedButton.icon}
+              iconPosition={normalizedButton.iconPosition}
               className={cn(ui.button)}
+              ui={ui.buttonUi}
             />
           </div>
         ) : null}

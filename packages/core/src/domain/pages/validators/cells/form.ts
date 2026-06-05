@@ -8,11 +8,11 @@
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type { Cell, FormField } from "@compoz/core/domain/pages/entities/cell";
+import { assertButtonPresentation } from "@compoz/core/domain/pages/validators/cells/button";
 
 type Path = ReadonlyArray<string | number>;
 
 const FORM_FIELD_TYPES = ["text", "email", "textarea"] as const;
-const BUTTON_VARIANTS = ["default", "secondary", "outline", "ghost"] as const;
 
 export function assertFormCell(
   cell: Extract<Cell, { kind: "form" }>,
@@ -50,16 +50,7 @@ export function assertFormCell(
     });
   }
 
-  if (!BUTTON_VARIANTS.includes(cell.submitButton.variant)) {
-    throw new DomainError({
-      code: EC.CELL_FORM_VARIANT_BUTTON_INVALID,
-      message: EC.CELL_FORM_VARIANT_BUTTON_INVALID,
-      details: {
-        path: [...path, "submitButton", "variant"],
-        meta: { variant: cell.submitButton.variant },
-      },
-    });
-  }
+  assertButtonPresentation(cell.submitButton, [...path, "submitButton"]);
 
   if (cell.successMessage !== null && typeof cell.successMessage !== "string") {
     throw new DomainError({

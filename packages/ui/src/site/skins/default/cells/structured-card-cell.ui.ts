@@ -7,6 +7,7 @@
  */
 
 import type { SiteStructuredCardUi } from "@compoz/ui/site/site-ui.types";
+import { defaultSiteButtonUi } from "@compoz/ui/site/skins/default/atoms/site-button.ui";
 
 export const defaultStructuredCardUi: SiteStructuredCardUi = {
   root: "",
@@ -46,4 +47,6 @@ export const defaultStructuredCardUi: SiteStructuredCardUi = {
   buttonWrapper: "pt-2 flex justify-center mt-auto",
 
   button: "",
+
+  buttonUi: defaultSiteButtonUi,
 } as const;

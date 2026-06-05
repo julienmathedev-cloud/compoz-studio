@@ -18,8 +18,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 
+import type { ContentIconKind } from "@compoz/core/constants/icons/content-icons";
 import { Button } from "@compoz/ui/components/ui/button";
+import { renderContentIcon } from "@compoz/ui/lib/icons/content-icons";
 import {
   resolveInternalHref,
   resolveLinkFlags,
@@ -27,21 +30,29 @@ import {
 } from "@compoz/ui/lib/links/helpers";
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
+import type { SiteButtonUi } from "@compoz/ui/site/site-ui.types";
 
 type SiteButtonVariant = "default" | "secondary" | "outline" | "ghost";
+type SiteButtonIconPosition = "before" | "after";
 
 export type SiteButtonProps = Readonly<{
   label: string;
   href: string;
   variant?: SiteButtonVariant;
+  icon?: ContentIconKind | null;
+  iconPosition?: SiteButtonIconPosition;
   className?: string;
+  ui: SiteButtonUi;
 }>;
 
 export function SiteButton({
   label,
   href,
   variant = "default",
+  icon = null,
+  iconPosition = "before",
   className,
+  ui,
 }: SiteButtonProps) {
   const pathname = usePathname() || "/";
 
@@ -51,6 +62,13 @@ export function SiteButton({
   if (!normalizedLabel) {
     return null;
   }
+
+  const content = renderButtonContent({
+    label: normalizedLabel,
+    icon,
+    iconPosition,
+    ui,
+  });
 
   /**
    * Bouton visuellement non cliquable uniquement pour les cas réellement invalides :
@@ -68,7 +86,7 @@ export function SiteButton({
       aria-disabled="true"
       data-disabled="true"
     >
-      {normalizedLabel}
+      {content}
     </Button>
   );
 
@@ -77,6 +95,7 @@ export function SiteButton({
   if (!disableAllLinks && !normalizedHref) {
     return disabledButton;
   }
+
   const { special, external, rawExternal, unsafe } =
     resolveLinkFlags(normalizedHref);
 
@@ -108,7 +127,7 @@ export function SiteButton({
             event.stopPropagation();
           }}
         >
-          {normalizedLabel}
+          {content}
         </a>
       </Button>
     );
@@ -123,7 +142,7 @@ export function SiteButton({
           rel={!isHashAnchor ? rel : undefined}
           data-external={!special && !isHashAnchor ? true : undefined}
         >
-          {normalizedLabel}
+          {content}
         </a>
       </Button>
     );
@@ -134,10 +153,42 @@ export function SiteButton({
   return (
     <Button asChild variant={variant} className={cn(className)}>
       <Link href={internalHref} scroll={false}>
-        {normalizedLabel}
+        {content}
       </Link>
     </Button>
   );
 }
 
 SiteButton.displayName = "SiteButton";
+
+/* -------------------------------------------------------------------------- */
+/* Internals                                                                  */
+/* -------------------------------------------------------------------------- */
+
+function renderButtonContent({
+  label,
+  icon,
+  iconPosition,
+  ui,
+}: Readonly<{
+  label: string;
+  icon: ContentIconKind | null;
+  iconPosition: SiteButtonIconPosition;
+  ui: SiteButtonUi;
+}>): ReactNode {
+  if (!icon) {
+    return label;
+  }
+
+  const iconNode = renderContentIcon(icon, {
+    className: cn(ui.icon),
+  });
+
+  return (
+    <span className={cn(ui.content)}>
+      {iconPosition === "before" ? iconNode : null}
+      <span className={cn(ui.label)}>{label}</span>
+      {iconPosition === "after" ? iconNode : null}
+    </span>
+  );
+}

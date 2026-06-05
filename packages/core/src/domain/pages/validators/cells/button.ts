@@ -7,11 +7,17 @@
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
-import type { ButtonItem, Cell } from "@compoz/core/domain/pages/entities/cell";
+import type {
+  ButtonItem,
+  ButtonPresentation,
+  Cell,
+} from "@compoz/core/domain/pages/entities/cell";
+import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";
 
 type Path = ReadonlyArray<string | number>;
 
 const BUTTON_VARIANTS = ["default", "secondary", "outline", "ghost"] as const;
+const BUTTON_ICON_POSITIONS = ["before", "after"] as const;
 const BUTTON_ALIGNS = ["left", "center", "right"] as const;
 const BUTTON_GAPS = ["sm", "md", "lg"] as const;
 
@@ -89,11 +95,40 @@ export function assertButtonItem(item: ButtonItem, path: Path) {
     });
   }
 
-  if (!BUTTON_VARIANTS.includes(item.variant)) {
+  assertButtonPresentation(item, path);
+}
+
+export function assertButtonPresentation(
+  button: ButtonPresentation,
+  path: Path,
+) {
+  if (!BUTTON_VARIANTS.includes(button.variant)) {
     throw new DomainError({
       code: EC.CELL_BUTTON_ITEM_VARIANT_INVALID,
       message: EC.CELL_BUTTON_ITEM_VARIANT_INVALID,
-      details: { path: [...path, "variant"], meta: { variant: item.variant } },
+      details: { path: [...path, "variant"], meta: { variant: button.variant } },
+    });
+  }
+
+  if (
+    button.icon !== null &&
+    !CONTENT_ICON_KINDS.includes(button.icon)
+  ) {
+    throw new DomainError({
+      code: EC.CELL_BUTTON_ICON_INVALID,
+      message: EC.CELL_BUTTON_ICON_INVALID,
+      details: { path: [...path, "icon"], meta: { icon: button.icon } },
+    });
+  }
+
+  if (!BUTTON_ICON_POSITIONS.includes(button.iconPosition)) {
+    throw new DomainError({
+      code: EC.CELL_BUTTON_ICON_POSITION_INVALID,
+      message: EC.CELL_BUTTON_ICON_POSITION_INVALID,
+      details: {
+        path: [...path, "iconPosition"],
+        meta: { iconPosition: button.iconPosition },
+      },
     });
   }
 }

@@ -5,13 +5,18 @@
  * Entité métier ButtonsCell.
  */
 
+import type { ContentIconKind } from "@compoz/core/constants/icons/content-icons";
+
 export type ButtonItemVariant = "default" | "secondary" | "outline" | "ghost";
+export type ButtonIconPosition = "before" | "after";
 export type ButtonsAlign = "left" | "center" | "right";
 export type ButtonsGap = "sm" | "md" | "lg";
 
 export type ButtonPresentation = {
   label: string;
   variant: ButtonItemVariant;
+  icon: ContentIconKind | null;
+  iconPosition: ButtonIconPosition;
 };
 
 export type ButtonItem = ButtonPresentation & {

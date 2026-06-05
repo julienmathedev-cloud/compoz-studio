@@ -1922,6 +1922,14 @@
         "hrefHelp": "Destination du bouton.",
         "variantLabel": "Variante",
         "variantHelp": "Style visuel du bouton.",
+        "iconLabel": "Icône",
+        "iconHelp": "Icône optionnelle affichée sur le bouton.",
+        "iconPositionLabel": "Position de l’icône",
+        "iconPositionHelp": "Choisissez si l’icône apparaît avant ou après le libellé.",
+        "iconPositions": {
+          "before": "Avant",
+          "after": "Après"
+        },
         "alignLabel": "Alignement",
         "aligns": {
           "left": "Gauche",

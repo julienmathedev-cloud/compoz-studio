@@ -27,6 +27,7 @@ export type ButtonsCellRendererProps = Readonly<{
 }>;
 
 type PublicButtonVariant = "default" | "secondary" | "outline" | "ghost";
+type PublicButtonIconPosition = "before" | "after";
 
 function normalizePublicButtonVariant(
   variant: string | null | undefined,
@@ -45,6 +46,12 @@ function normalizePublicButtonVariant(
     default:
       return "default";
   }
+}
+
+function normalizePublicButtonIconPosition(
+  iconPosition: string | null | undefined,
+): PublicButtonIconPosition {
+  return iconPosition === "after" ? "after" : "before";
 }
 
 export function ButtonsCellRenderer({ cell, ui }: ButtonsCellRendererProps) {
@@ -67,6 +74,9 @@ export function ButtonsCellRenderer({ cell, ui }: ButtonsCellRendererProps) {
           const label = normalizeString(item.label, "");
           const href = normalizeString(item.href, "");
           const variant = normalizePublicButtonVariant(item.variant);
+          const iconPosition = normalizePublicButtonIconPosition(
+            item.iconPosition,
+          );
 
           return (
             <SiteButton
@@ -74,7 +84,10 @@ export function ButtonsCellRenderer({ cell, ui }: ButtonsCellRendererProps) {
               label={label}
               href={href}
               variant={variant}
+              icon={item.icon}
+              iconPosition={iconPosition}
               className={ui.button}
+              ui={ui.buttonUi}
             />
           );
         })}

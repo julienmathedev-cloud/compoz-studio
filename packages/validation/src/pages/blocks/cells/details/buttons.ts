@@ -5,6 +5,7 @@
  * Schémas Zod de ButtonsCell.
  */
 
+import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
@@ -21,6 +22,10 @@ export const ButtonItemVariantSchema = z.enum(
   },
 );
 
+export const ButtonIconPositionSchema = z.enum(["before", "after"], {
+  message: ERROR_CODES.CELL_BUTTON_ICON_POSITION_INVALID,
+});
+
 export const ButtonPresentationSchema = z
   .object({
     label: z
@@ -28,6 +33,12 @@ export const ButtonPresentationSchema = z
       .trim()
       .min(1, ERROR_CODES.CELL_BUTTON_ITEM_LABEL_REQUIRED),
     variant: ButtonItemVariantSchema,
+    icon: z
+      .enum(CONTENT_ICON_KINDS, {
+        message: ERROR_CODES.CELL_BUTTON_ICON_INVALID,
+      })
+      .nullable(),
+    iconPosition: ButtonIconPositionSchema,
   })
   .strict();
 

@@ -8,6 +8,7 @@
 import { z } from "zod";
 
 import type {
+  ButtonIconPositionSchema,
   ButtonItemSchema,
   ButtonPresentationSchema,
 } from "@compoz/validation/pages/blocks/cells/details/buttons";
@@ -98,6 +99,7 @@ export type RichTextCellShape = z.infer<typeof RichTextCellSchema>;
 export type SpacerCellShape = z.infer<typeof SpacerCellSchema>;
 export type SeparatorCellShape = z.infer<typeof SeparatorCellSchema>;
 export type ButtonItemShape = z.infer<typeof ButtonItemSchema>;
+export type ButtonIconPositionShape = z.infer<typeof ButtonIconPositionSchema>;
 export type ButtonPresentationShape = z.infer<typeof ButtonPresentationSchema>;
 export type ButtonsCellShape = z.infer<typeof ButtonsCellSchema>;
 export type CardItemShape = z.infer<typeof CardItemSchema>;
@@ -131,15 +133,18 @@ export type GalleryCellShape = z.infer<typeof GalleryCellSchema>;
 export type ImageEditorShape = z.infer<typeof ImageEditorSchema>;
 
 export {
+  ButtonIconPositionSchema,
   ButtonItemSchema,
   ButtonItemVariantSchema,
   ButtonPresentationSchema,
   ButtonsCellSchema,
 } from "@compoz/validation/pages/blocks/cells/details/buttons";
+
 export {
   CardItemSchema,
   CardsCellSchema,
 } from "@compoz/validation/pages/blocks/cells/details/cards";
+
 export {
   CardsExtendedAlignSchema,
   CardsExtendedBulletSchema,
@@ -147,12 +152,14 @@ export {
   CardsExtendedColumnsSchema,
   CardsExtendedItemSchema,
 } from "@compoz/validation/pages/blocks/cells/details/cards-extended";
+
 export {
   CarouselCellSchema,
   CarouselItemKindSchema,
   CarouselItemSchema,
   CarouselVariantSchema,
 } from "@compoz/validation/pages/blocks/cells/details/carousel";
+
 export {
   FormButtonVariantSchema,
   FormCellSchema,
@@ -160,30 +167,37 @@ export {
   FormFieldTypeSchema,
   FormSubmitButtonSchema,
 } from "@compoz/validation/pages/blocks/cells/details/form";
+
 export {
   GalleryCellSchema,
   GalleryMaxColumnsSchema,
 } from "@compoz/validation/pages/blocks/cells/details/gallery";
+
 export { HeadingCellSchema } from "@compoz/validation/pages/blocks/cells/details/heading";
+
 export {
   ImageCellSchema,
   ImageEditorSchema,
   ImageVariantSchema,
 } from "@compoz/validation/pages/blocks/cells/details/image-editor";
+
 export { RichTextCellSchema } from "@compoz/validation/pages/blocks/cells/details/rich-text";
 export { SeparatorCellSchema } from "@compoz/validation/pages/blocks/cells/details/separator";
 export { SpacerCellSchema } from "@compoz/validation/pages/blocks/cells/details/spacer";
+
 export {
   StepItemSchema,
   StepsCellSchema,
   StepsVariantSchema,
 } from "@compoz/validation/pages/blocks/cells/details/steps";
+
 export {
   StructuredCardCellSchema,
   StructuredCardColumnsSchema,
   StructuredCardItemSchema,
   StructuredCardSectionSchema,
 } from "@compoz/validation/pages/blocks/cells/details/structured-card";
+
 export {
   TimelineCellSchema,
   TimelineItemSchema,

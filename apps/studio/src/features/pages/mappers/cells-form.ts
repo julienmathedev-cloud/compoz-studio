@@ -7,9 +7,11 @@
  */
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";
+import { isContentIconKind } from "@compoz/ui/lib/icons/content-icons";
 import { toCellShapeFromDTO } from "@compoz/ui/pages/mappers/cell-shape";
 import type {
   ButtonItemFormValues,
+  ButtonPresentationFormValues,
   CardItemFormValues,
   CardsExtendedItemFormValues,
   CarouselItemFormValues,
@@ -46,12 +48,32 @@ function normalizeCssClassName(
   return String(cssClassName ?? "").trim();
 }
 
-function normalizeFormSubmitButton(
-  submitButton: FormSubmitButtonFormValues | undefined,
-): FormSubmitButtonFormValues {
+const BUTTON_VARIANTS = ["default", "secondary", "outline", "ghost"] as const;
+const BUTTON_ICON_POSITIONS = ["before", "after"] as const;
+
+type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
+type ButtonIconPosition = (typeof BUTTON_ICON_POSITIONS)[number];
+
+function normalizeButtonPresentation(
+  button: ButtonPresentationFormValues | undefined,
+  fallbackLabel: string,
+): ButtonPresentationFormValues {
+  const iconValue =
+    button?.icon && isContentIconKind(button.icon) ? button.icon : null;
+
+  const iconPosition: ButtonIconPosition =
+    button?.iconPosition === "after" ? "after" : "before";
+
+  const variant: ButtonVariant =
+    button?.variant && BUTTON_VARIANTS.includes(button.variant)
+      ? button.variant
+      : "default";
+
   return {
-    label: submitButton?.label?.trim() ?? "",
-    variant: submitButton?.variant ?? "default",
+    label: button?.label?.trim() ?? fallbackLabel,
+    variant,
+    icon: iconValue,
+    iconPosition,
   };
 }
 
@@ -73,6 +95,8 @@ export function createEmptyButtonItem(): ButtonItemFormValues {
     label: "",
     href: "",
     variant: "default",
+    icon: null,
+    iconPosition: "before",
   };
 }
 
@@ -80,6 +104,8 @@ export function createEmptyFormSubmitButton(): FormSubmitButtonFormValues {
   return {
     label: "Envoyer",
     variant: "default",
+    icon: null,
+    iconPosition: "before",
   };
 }
 
@@ -382,9 +408,8 @@ export function normalizeStructuredCardButton(
 
   return {
     ...button,
-    label: button.label?.trim() ?? "",
+    ...normalizeButtonPresentation(button, ""),
     href: button.href?.trim() ?? "",
-    variant: button.variant ?? "default",
   };
 }
 
@@ -428,7 +453,7 @@ export function toStructuredCardButtonForValidation(
 
   const label = button.label?.trim() ?? "";
   const href = button.href?.trim() ?? "";
-  const variant = button.variant ?? "default";
+  const presentation = normalizeButtonPresentation(button, "");
 
   if (!label) {
     return null;
@@ -436,9 +461,9 @@ export function toStructuredCardButtonForValidation(
 
   return {
     ...button,
+    ...presentation,
     label,
     href,
-    variant,
   };
 }
 
@@ -534,7 +559,19 @@ export function toCellFormValuesForValidation(
     return {
       ...cell,
       cssClassName: normalizedCssClassName,
-      submitButton: normalizeFormSubmitButton(cell.submitButton),
+      submitButton: normalizeButtonPresentation(cell.submitButton, "Envoyer"),
+    };
+  }
+
+  if (cell.kind === "buttons") {
+    return {
+      ...cell,
+      cssClassName: normalizedCssClassName,
+      items: cell.items.map((item) => ({
+        ...item,
+        ...normalizeButtonPresentation(item, ""),
+        href: item.href?.trim() ?? "",
+      })),
     };
   }
 
@@ -588,7 +625,19 @@ export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
     return {
       ...cell,
       cssClassName: normalizedCssClassName,
-      submitButton: normalizeFormSubmitButton(cell.submitButton),
+      submitButton: normalizeButtonPresentation(cell.submitButton, "Envoyer"),
+    };
+  }
+
+  if (cell.kind === "buttons") {
+    return {
+      ...cell,
+      cssClassName: normalizedCssClassName,
+      items: cell.items.map((item) => ({
+        ...item,
+        ...normalizeButtonPresentation(item, ""),
+        href: item.href?.trim() ?? "",
+      })),
     };
   }
 

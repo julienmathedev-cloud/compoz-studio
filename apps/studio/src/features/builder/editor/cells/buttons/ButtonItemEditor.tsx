@@ -25,6 +25,7 @@ import type { Control } from "react-hook-form";
 import { useController } from "react-hook-form";
 
 import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
+import { ButtonIconFields } from "@compoz/studio/components/molecules/fields/ButtonIconFields";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { LinkFieldsItem } from "@compoz/studio/components/molecules/fields/LinkFieldsItem";
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
@@ -39,6 +40,7 @@ import type { ButtonItemFormValues } from "@compoz/validation/pages/blocks/cells
 const BUTTON_VARIANTS = ["default", "secondary", "outline", "ghost"] as const;
 
 type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
+type ButtonIconPosition = "before" | "after";
 type ButtonsFieldBasePath = `rows.${number}.columns.${number}.cells.${number}`;
 type ButtonItemBasePath = `${ButtonsFieldBasePath}.items.${number}`;
 
@@ -89,6 +91,18 @@ export function ButtonItemEditor({
     defaultValue: watchedItem?.variant ?? "default",
   });
 
+  const iconCtrl = useController({
+    name: `${itemBasePath}.icon` as `${ButtonItemBasePath}.icon`,
+    control,
+    defaultValue: watchedItem?.icon ?? null,
+  });
+
+  const iconPositionCtrl = useController({
+    name: `${itemBasePath}.iconPosition` as `${ButtonItemBasePath}.iconPosition`,
+    control,
+    defaultValue: watchedItem?.iconPosition ?? "before",
+  });
+
   const {
     attributes,
     listeners,
@@ -123,6 +137,14 @@ export function ButtonItemEditor({
     rawVariant && BUTTON_VARIANTS.includes(rawVariant as ButtonVariant)
       ? (rawVariant as ButtonVariant)
       : "default";
+
+  const iconValue = iconCtrl.field.value ?? watchedItem?.icon ?? null;
+
+  const rawIconPosition =
+    iconPositionCtrl.field.value ?? watchedItem?.iconPosition;
+
+  const iconPositionValue: ButtonIconPosition =
+    rawIconPosition === "after" ? "after" : "before";
 
   const style = {
     transform: transform ? CSS.Transform.toString(transform) : undefined,
@@ -178,6 +200,15 @@ export function ButtonItemEditor({
               onHrefChange={hrefCtrl.field.onChange}
               disabled={disabled}
               allowTelAndMailto={true}
+            />
+
+            <ButtonIconFields
+              idPrefix={`${idPrefix}-icon`}
+              icon={iconValue}
+              iconPosition={iconPositionValue}
+              onIconChange={iconCtrl.field.onChange}
+              onIconPositionChange={iconPositionCtrl.field.onChange}
+              disabled={disabled}
             />
 
             <SelectField

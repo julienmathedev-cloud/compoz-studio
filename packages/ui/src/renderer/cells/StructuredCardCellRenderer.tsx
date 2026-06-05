@@ -31,6 +31,13 @@ export type StructuredCardCellRendererProps = Readonly<{
 }>;
 
 type StructuredCardColumns = 1 | 2 | 3;
+type PublicButtonIconPosition = "before" | "after";
+
+function normalizePublicButtonIconPosition(
+  iconPosition: string | null | undefined,
+): PublicButtonIconPosition {
+  return iconPosition === "after" ? "after" : "before";
+}
 
 export function StructuredCardCellRenderer({
   cell,
@@ -105,12 +112,20 @@ export function StructuredCardCellRenderer({
                 }
               : undefined;
 
+          const buttonLabel = item.button
+            ? normalizeString(item.button.label, "")
+            : "";
+
           const button =
-            item.button && normalizeString(item.button.label, "")
+            item.button && buttonLabel
               ? {
-                  label: normalizeString(item.button.label, ""),
+                  label: buttonLabel,
                   href: normalizeString(item.button.href, ""),
                   variant: item.button.variant,
+                  icon: item.button.icon,
+                  iconPosition: normalizePublicButtonIconPosition(
+                    item.button.iconPosition,
+                  ),
                 }
               : undefined;
 

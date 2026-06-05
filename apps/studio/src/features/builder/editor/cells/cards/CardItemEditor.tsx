@@ -89,7 +89,7 @@ export function CardItemEditor({
   const iconCtrl = useController({
     name: `${itemBasePath}.icon` as `${CardItemBasePath}.icon`,
     control,
-    defaultValue: watchedItem?.icon,
+    defaultValue: watchedItem?.icon ?? null,
   });
 
   const {
@@ -132,18 +132,20 @@ export function CardItemEditor({
   const descriptionValue = String(
     descriptionCtrl.field.value ?? watchedItem?.description ?? "",
   );
-  const iconValue = iconCtrl.field.value ?? watchedItem?.icon ?? null;
 
-  const style = {
-    transform: transform ? CSS.Transform.toString(transform) : undefined,
-    transition,
-  };
+  const iconValue: string | null =
+    iconCtrl.field.value ?? watchedItem?.icon ?? null;
 
   const selectedIconPreview: ReactNode = iconValue
     ? renderContentIcon(iconValue, { className: "h-4 w-4" })
     : null;
 
   const selectedIconLabel = iconValue ? getContentIconLabel(iconValue) : null;
+
+  const style = {
+    transform: transform ? CSS.Transform.toString(transform) : undefined,
+    transition,
+  };
 
   return (
     <Card
@@ -221,8 +223,7 @@ export function CardItemEditor({
                 onClick={() => setIsIconPickerOpen((prev) => !prev)}
                 className={cn(
                   "flex w-full items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-left",
-                  "transition-colors",
-                  "hover:bg-accent/50",
+                  "transition-colors hover:bg-accent/50",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-0",
                   disabled && "cursor-not-allowed opacity-60",
                 )}
@@ -235,12 +236,15 @@ export function CardItemEditor({
                   {selectedIconPreview ? (
                     <>
                       {selectedIconPreview}
-                      <span className="truncate">{selectedIconLabel}</span>
+
+                      <Text as="span" className="truncate">
+                        {selectedIconLabel}
+                      </Text>
                     </>
                   ) : (
-                    <span className="truncate">
+                    <Text as="span" className="truncate">
                       {t("studio.cellEditorTabs.cardsCellEditor.iconHelp")}
-                    </span>
+                    </Text>
                   )}
                 </div>
 

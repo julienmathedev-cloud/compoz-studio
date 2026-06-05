@@ -1,5 +1,8 @@
 /**
  * @file apps/studio/src/app/api/_adapters/pages/blocks/cells/buttons.ts
+ * @layer ui/studio/pages/blocks/adapters/cells
+ * @description
+ * Adapteurs métier pour ButtonsCell.
  */
 
 import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
@@ -19,6 +22,8 @@ function adaptButtonItem(dto: ButtonItemIntentDTO): ButtonItem {
     label: trimOrKeep(dto.label),
     href: trimOrKeep(dto.href),
     variant: dto.variant,
+    icon: dto.icon ?? null,
+    iconPosition: dto.iconPosition === "after" ? "after" : "before",
   };
 }
 

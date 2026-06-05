@@ -36,6 +36,9 @@ export function adaptFormCell(dto: FormCellIntentDTO): FormCell {
     submitButton: {
       label: trimOrKeep(dto.submitButton.label),
       variant: dto.submitButton.variant ?? "default",
+      icon: dto.submitButton.icon ?? null,
+      iconPosition:
+        dto.submitButton.iconPosition === "after" ? "after" : "before",
     },
     successMessage: dto.successMessage ? trimOrKeep(dto.successMessage) : null,
     errorMessage: dto.errorMessage ? trimOrKeep(dto.errorMessage) : null,

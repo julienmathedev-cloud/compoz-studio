@@ -8,6 +8,7 @@
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
+import { ButtonPresentationSchema } from "@compoz/validation/pages/blocks/cells/details/buttons";
 import {
   CellCssClassNameSchema,
   CellIdSchema,
@@ -25,15 +26,10 @@ export const FormButtonVariantSchema = z.enum(
   },
 );
 
-export const FormSubmitButtonSchema = z
-  .object({
-    label: z
-      .string()
-      .trim()
-      .min(1, ERROR_CODES.CELL_FORM_SUBMIT_LABEL_REQUIRED),
-    variant: FormButtonVariantSchema,
-  })
-  .strict();
+export const FormSubmitButtonSchema = ButtonPresentationSchema.extend({
+  label: z.string().trim().min(1, ERROR_CODES.CELL_FORM_SUBMIT_LABEL_REQUIRED),
+  variant: FormButtonVariantSchema,
+}).strict();
 
 export const FormFieldSchema = z
   .object({

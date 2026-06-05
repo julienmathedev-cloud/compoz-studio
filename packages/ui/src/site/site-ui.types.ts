@@ -83,6 +83,18 @@ export type SiteBlockSectionUi = Readonly<{
 export type SiteBlockSectionUiOverride = DeepPartial<SiteBlockSectionUi>;
 
 /* -------------------------------------------------------------------------- */
+/* Shared atoms                                                               */
+/* -------------------------------------------------------------------------- */
+
+export type SiteButtonUi = Readonly<{
+  content: string;
+  label: string;
+  icon: string;
+}>;
+
+export type SiteButtonUiOverride = DeepPartial<SiteButtonUi>;
+
+/* -------------------------------------------------------------------------- */
 /* Cells                                                                      */
 /* -------------------------------------------------------------------------- */
 
@@ -99,6 +111,7 @@ export type SiteFormUi = Readonly<{
   help: string;
   footer: string;
   submitButton: string;
+  submitButtonUi: SiteButtonUi;
 }>;
 
 export type SiteFormUiOverride = DeepPartial<SiteFormUi>;
@@ -167,6 +180,7 @@ export type SiteButtonsUi = Readonly<{
     lg: string;
   }>;
   button: string;
+  buttonUi: SiteButtonUi;
 }>;
 
 export type SiteButtonsUiOverride = DeepPartial<SiteButtonsUi>;
@@ -299,6 +313,7 @@ export type SiteStructuredCardUi = Readonly<{
   sectionText: string;
   buttonWrapper: string;
   button: string;
+  buttonUi: SiteButtonUi;
 }>;
 
 export type SiteStructuredCardUiOverride = DeepPartial<SiteStructuredCardUi>;

@@ -55,6 +55,9 @@ function adaptStructuredCardItem(
             label: trimOrKeep(dto.button.label),
             href: trimOrKeep(dto.button.href),
             variant: dto.button.variant,
+            icon: dto.button.icon ?? null,
+            iconPosition:
+              dto.button.iconPosition === "after" ? "after" : "before",
           }
         : null,
   };

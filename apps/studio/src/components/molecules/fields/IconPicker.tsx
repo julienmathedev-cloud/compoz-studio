@@ -23,7 +23,7 @@ import { STACK_SM } from "@compoz/ui/styles/studio/layout";
 
 export type IconPickerProps = Readonly<{
   value: string | null;
-  onChange: (value: string) => void;
+  onChange: (value: string | null) => void;
   disabled?: boolean;
   className?: string;
 }>;
@@ -72,7 +72,9 @@ export function IconPicker({
                 label={item.label}
                 isSelected={isSelected}
                 disabled={disabled}
-                onSelect={onChange}
+                onSelect={(next) => {
+                  onChange(isSelected ? null : next);
+                }}
               />
             );
           })}
@@ -117,13 +119,16 @@ const MemoizedIconOptionButton = memo(function IconOptionButton({
       visualMode="studio"
       disabled={disabled}
       onClick={() => onSelect(value)}
-      className="h-auto min-h-20 flex-col gap-2 px-2 py-3"
+      className="h-auto min-h-20 min-w-0 flex-col gap-2 px-2 py-3"
       title={label}
     >
       {renderContentIcon(value, {
-        className: "h-5 w-5",
+        className: "h-5 w-5 shrink-0",
       })}
-      <span className="line-clamp-2 text-center text-xs">{label}</span>
+
+      <span className="line-clamp-2 min-w-0 wrap-break-words text-center text-xs leading-tight">
+        {label}
+      </span>
     </Button>
   );
 });

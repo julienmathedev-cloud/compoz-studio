@@ -23,6 +23,8 @@ export function toButtonsCellShapeFromDTO(
       label: item.label,
       href: item.href,
       variant: item.variant,
+      icon: item.icon,
+      iconPosition: item.iconPosition === "after" ? "after" : "before",
     })),
   };
 }

@@ -33,6 +33,7 @@ import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButt
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 import { AddEmptyCardButton } from "@compoz/studio/components/molecules/controls/AddEmptyCardButton";
+import { ButtonIconFields } from "@compoz/studio/components/molecules/fields/ButtonIconFields";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { LinkFieldsItem } from "@compoz/studio/components/molecules/fields/LinkFieldsItem";
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
@@ -51,6 +52,7 @@ import type { StructuredCardItemFormValues } from "@compoz/validation/pages/bloc
 const BUTTON_VARIANTS = ["default", "secondary", "outline", "ghost"] as const;
 
 type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
+type ButtonIconPosition = "before" | "after";
 
 type UploadedRasterImage = Readonly<{
   url: string;
@@ -155,6 +157,18 @@ export function StructuredCardItemEditor({
     name: `${itemBasePath}.button.variant` as `${StructuredCardItemBasePath}.button.variant`,
     control,
     defaultValue: watchedItem?.button?.variant ?? "default",
+  });
+
+  const buttonIconCtrl = useController({
+    name: `${itemBasePath}.button.icon` as `${StructuredCardItemBasePath}.button.icon`,
+    control,
+    defaultValue: watchedItem?.button?.icon ?? null,
+  });
+
+  const buttonIconPositionCtrl = useController({
+    name: `${itemBasePath}.button.iconPosition` as `${StructuredCardItemBasePath}.button.iconPosition`,
+    control,
+    defaultValue: watchedItem?.button?.iconPosition ?? "before",
   });
 
   const {
@@ -269,6 +283,14 @@ export function StructuredCardItemEditor({
   const buttonHrefValue = String(
     buttonHrefCtrl.field.value ?? watchedItem?.button?.href ?? "",
   );
+  const buttonIconValue =
+    buttonIconCtrl.field.value ?? watchedItem?.button?.icon ?? null;
+
+  const rawButtonIconPosition =
+    buttonIconPositionCtrl.field.value ?? watchedItem?.button?.iconPosition;
+
+  const buttonIconPositionValue: ButtonIconPosition =
+    rawButtonIconPosition === "after" ? "after" : "before";
 
   const style = {
     transform: transform ? CSS.Transform.toString(transform) : undefined,
@@ -423,54 +445,74 @@ export function StructuredCardItemEditor({
             <Separator />
 
             <FormGrid>
-              <Text className="text-sm font-semibold">
+              <Text as="p" className="text-sm font-semibold">
                 {t(
                   "studio.cellEditorTabs.structuredCardCellEditor.buttonLabel",
                 )}
               </Text>
-              <InputField
-                ids={buttonLabelIds}
-                inputRef={buttonLabelCtrl.field.ref}
-                label={t("studio.cellEditorTabs.buttonsCellEditor.labelLabel")}
-                value={buttonLabelValue}
-                onChange={(next) => {
-                  buttonLabelCtrl.field.onChange(next);
-                }}
-                onBlur={buttonLabelCtrl.field.onBlur}
-                disabled={disabled}
-                placeholder={t(
-                  "studio.cellEditorTabs.buttonsCellEditor.labelPlaceholder",
-                )}
-                help={t("studio.cellEditorTabs.buttonsCellEditor.labelHelp")}
-                invalid={buttonLabelInvalid}
-                error={buttonLabelError}
-              />
-              <LinkFieldsItem
-                idPrefix={buttonLinkIdPrefix}
-                href={buttonHrefValue}
-                onHrefChange={(next) => {
-                  buttonHrefCtrl.field.onChange(next);
-                }}
-                disabled={disabled}
-              />
 
-              <SelectField
-                ids={buttonVariantIds}
-                label={t(
-                  "studio.cellEditorTabs.buttonsCellEditor.variantLabel",
-                )}
-                value={currentButtonVariant}
-                onChange={(next) => {
-                  buttonVariantCtrl.field.onChange(next as ButtonVariant);
-                }}
-                items={BUTTON_VARIANTS.map((variant) => ({
-                  value: variant,
-                  label: t(
-                    `studio.cellEditorTabs.buttonsCellEditor.variants.${variant}`,
-                  ),
-                }))}
+              <div aria-hidden="true" />
+
+              <div className={cn(STACK_MD)}>
+                <InputField
+                  ids={buttonLabelIds}
+                  inputRef={buttonLabelCtrl.field.ref}
+                  label={t(
+                    "studio.cellEditorTabs.buttonsCellEditor.labelLabel",
+                  )}
+                  value={buttonLabelValue}
+                  onChange={(next) => {
+                    buttonLabelCtrl.field.onChange(next);
+                  }}
+                  onBlur={buttonLabelCtrl.field.onBlur}
+                  disabled={disabled}
+                  placeholder={t(
+                    "studio.cellEditorTabs.buttonsCellEditor.labelPlaceholder",
+                  )}
+                  help={t("studio.cellEditorTabs.buttonsCellEditor.labelHelp")}
+                  invalid={buttonLabelInvalid}
+                  error={buttonLabelError}
+                />
+
+                <LinkFieldsItem
+                  idPrefix={buttonLinkIdPrefix}
+                  href={buttonHrefValue}
+                  onHrefChange={(next) => {
+                    buttonHrefCtrl.field.onChange(next);
+                  }}
+                  disabled={disabled}
+                />
+
+                <SelectField
+                  ids={buttonVariantIds}
+                  label={t(
+                    "studio.cellEditorTabs.buttonsCellEditor.variantLabel",
+                  )}
+                  value={currentButtonVariant}
+                  onChange={(next) => {
+                    buttonVariantCtrl.field.onChange(next as ButtonVariant);
+                  }}
+                  items={BUTTON_VARIANTS.map((variant) => ({
+                    value: variant,
+
+                    label: t(
+                      `studio.cellEditorTabs.buttonsCellEditor.variants.${variant}`,
+                    ),
+                  }))}
+                  disabled={disabled}
+                  help={t(
+                    "studio.cellEditorTabs.buttonsCellEditor.variantHelp",
+                  )}
+                />
+              </div>
+
+              <ButtonIconFields
+                idPrefix={`${idPrefix}-button-icon`}
+                icon={buttonIconValue}
+                iconPosition={buttonIconPositionValue}
+                onIconChange={buttonIconCtrl.field.onChange}
+                onIconPositionChange={buttonIconPositionCtrl.field.onChange}
                 disabled={disabled}
-                help={t("studio.cellEditorTabs.buttonsCellEditor.variantHelp")}
               />
             </FormGrid>
 

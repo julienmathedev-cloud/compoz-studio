@@ -13,6 +13,7 @@
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
+import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";
 import type { Page, PageMeta } from "@compoz/core/domain/pages/entities/page";
@@ -58,15 +59,38 @@ type KvPagesRepositoryOptions = Readonly<{
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const FORM_BUTTON_VARIANTS = new Set([
-  "default",
-  "secondary",
-  "outline",
-  "ghost",
-]);
+const BUTTON_VARIANTS = new Set(["default", "secondary", "outline", "ghost"]);
+const BUTTON_ICON_POSITIONS = new Set(["before", "after"]);
+
+type ContentIconKind = (typeof CONTENT_ICON_KINDS)[number];
 
 function normalizeSlug(slug: unknown): string {
   return String(slug ?? "").trim();
+}
+
+function isContentIconKind(value: unknown): value is ContentIconKind {
+  return (
+    typeof value === "string" &&
+    CONTENT_ICON_KINDS.includes(value.trim() as ContentIconKind)
+  );
+}
+
+function normalizeButtonIcon(value: unknown): ContentIconKind | null {
+  return isContentIconKind(value) ? (value.trim() as ContentIconKind) : null;
+}
+
+function normalizeButtonIconPosition(value: unknown): "before" | "after" {
+  const position = typeof value === "string" ? value.trim() : "";
+
+  return BUTTON_ICON_POSITIONS.has(position) && position === "after"
+    ? "after"
+    : "before";
+}
+
+function normalizeButtonVariant(value: unknown): string {
+  const variant = typeof value === "string" ? value.trim() : "";
+
+  return BUTTON_VARIANTS.has(variant) ? variant : "default";
 }
 
 function normalizeRowReverseOn(value: unknown): {
@@ -108,6 +132,77 @@ function normalizeImageCellLegacy(value: unknown): unknown {
   };
 }
 
+function normalizeButtonPresentationLegacy(
+  value: unknown,
+  fallbackLabel: string,
+): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value;
+  }
+
+  const button = value as Record<string, unknown>;
+
+  const label =
+    typeof button.label === "string" && button.label.trim()
+      ? button.label.trim()
+      : fallbackLabel;
+
+  return {
+    ...button,
+    label,
+    variant: normalizeButtonVariant(button.variant),
+    icon: normalizeButtonIcon(button.icon),
+    iconPosition: normalizeButtonIconPosition(button.iconPosition),
+  };
+}
+
+function normalizeOptionalButtonItemLegacy(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const button = value as Record<string, unknown>;
+  const label = typeof button.label === "string" ? button.label.trim() : "";
+
+  if (!label) {
+    return null;
+  }
+
+  return normalizeButtonPresentationLegacy(button, "");
+}
+
+function normalizeButtonsCellLegacy(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value;
+  }
+
+  const cell = value as Record<string, unknown>;
+
+  if (cell.kind !== "buttons" || !Array.isArray(cell.items)) {
+    return value;
+  }
+
+  return {
+    ...cell,
+    items: cell.items.map((item) =>
+      normalizeButtonPresentationLegacy(item, ""),
+    ),
+  };
+}
+
+function normalizeStructuredCardItemLegacy(item: unknown): unknown {
+  if (!item || typeof item !== "object" || Array.isArray(item)) {
+    return item;
+  }
+
+  const structuredCardItem = item as Record<string, unknown>;
+
+  return {
+    ...structuredCardItem,
+    button: normalizeOptionalButtonItemLegacy(structuredCardItem.button),
+  };
+}
+
 function normalizeFormCellLegacy(value: unknown): unknown {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return value;
@@ -124,26 +219,19 @@ function normalizeFormCellLegacy(value: unknown): unknown {
       ? (cell.submitButton as Record<string, unknown>)
       : undefined;
 
-  const submitButtonVariant =
-    typeof submitButton?.variant === "string"
-      ? submitButton.variant.trim()
-      : "";
+  const legacySubmitLabel =
+    typeof cell.submitLabel === "string" ? cell.submitLabel.trim() : "";
+
   const legacyVariantButton =
     typeof cell.variantButton === "string" ? cell.variantButton.trim() : "";
 
-  const label =
-    typeof submitButton?.label === "string" && submitButton.label.trim()
-      ? submitButton.label.trim()
-      : typeof cell.submitLabel === "string" && cell.submitLabel.trim()
-        ? cell.submitLabel.trim()
-        : "";
-
-  const variantValue =
-    submitButtonVariant && FORM_BUTTON_VARIANTS.has(submitButtonVariant)
-      ? submitButtonVariant
-      : legacyVariantButton && FORM_BUTTON_VARIANTS.has(legacyVariantButton)
-        ? legacyVariantButton
-        : "default";
+  const normalizedSubmitButton = normalizeButtonPresentationLegacy(
+    submitButton ?? {
+      label: legacySubmitLabel || "Envoyer",
+      variant: normalizeButtonVariant(legacyVariantButton),
+    },
+    legacySubmitLabel || "Envoyer",
+  );
 
   const {
     submitLabel: _submitLabel,
@@ -154,15 +242,56 @@ function normalizeFormCellLegacy(value: unknown): unknown {
 
   return {
     ...rest,
-    submitButton: {
-      label,
-      variant: variantValue,
-    },
+    submitButton: normalizedSubmitButton,
+  };
+}
+
+function normalizeStructuredCardCellLegacy(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value;
+  }
+
+  const cell = value as Record<string, unknown>;
+
+  if (cell.kind !== "structuredCard" || !Array.isArray(cell.items)) {
+    return value;
+  }
+
+  return {
+    ...cell,
+    items: cell.items.map(normalizeStructuredCardItemLegacy),
+  };
+}
+
+function normalizeCarouselCellLegacy(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value;
+  }
+
+  const cell = value as Record<string, unknown>;
+
+  if (cell.kind !== "carousel" || !Array.isArray(cell.items)) {
+    return value;
+  }
+
+  if (cell.itemKind !== "structuredCard") {
+    return value;
+  }
+
+  return {
+    ...cell,
+    items: cell.items.map(normalizeStructuredCardItemLegacy),
   };
 }
 
 function normalizeCellLegacy(value: unknown): unknown {
-  return normalizeFormCellLegacy(normalizeImageCellLegacy(value));
+  return normalizeCarouselCellLegacy(
+    normalizeStructuredCardCellLegacy(
+      normalizeButtonsCellLegacy(
+        normalizeFormCellLegacy(normalizeImageCellLegacy(value)),
+      ),
+    ),
+  );
 }
 
 function normalizeColumnLegacy(value: unknown): unknown {

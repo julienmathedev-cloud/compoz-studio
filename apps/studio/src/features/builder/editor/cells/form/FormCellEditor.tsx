@@ -21,6 +21,7 @@ import { useController, useFieldArray } from "react-hook-form";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 import { AddEmptyCardButton } from "@compoz/studio/components/molecules/controls/AddEmptyCardButton";
+import { ButtonIconFields } from "@compoz/studio/components/molecules/fields/ButtonIconFields";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
@@ -52,6 +53,7 @@ const FORM_BUTTON_VARIANTS = [
 ] as const;
 
 type FormButtonVariant = (typeof FORM_BUTTON_VARIANTS)[number];
+type ButtonIconPosition = "before" | "after";
 
 type FormFieldArrayItem = {
   id: string;
@@ -95,6 +97,18 @@ export function FormCellEditor({
     name: `${basePath}.submitButton.variant` as `${FormSubmitButtonBasePath}.variant`,
     control,
     defaultValue: "default",
+  });
+
+  const submitButtonIconCtrl = useController({
+    name: `${basePath}.submitButton.icon` as `${FormSubmitButtonBasePath}.icon`,
+    control,
+    defaultValue: null,
+  });
+
+  const submitButtonIconPositionCtrl = useController({
+    name: `${basePath}.submitButton.iconPosition` as `${FormSubmitButtonBasePath}.iconPosition`,
+    control,
+    defaultValue: "before",
   });
 
   const successMessageCtrl = useController({
@@ -155,6 +169,13 @@ export function FormCellEditor({
       ? (rawSubmitButtonVariant as FormButtonVariant)
       : "default";
 
+  const submitButtonIcon = submitButtonIconCtrl.field.value ?? null;
+
+  const rawSubmitButtonIconPosition = submitButtonIconPositionCtrl.field.value;
+
+  const submitButtonIconPosition: ButtonIconPosition =
+    rawSubmitButtonIconPosition === "after" ? "after" : "before";
+
   return (
     <div className={cn(STACK_MD)}>
       <FormGrid>
@@ -192,18 +213,13 @@ export function FormCellEditor({
       </FormGrid>
 
       <FormGrid>
-        <TextareaField
-          ids={successMessageIds}
-          label={t("studio.cellEditorTabs.formCellEditor.successMessageLabel")}
-          value={String(successMessageCtrl.field.value ?? "")}
-          onChange={successMessageCtrl.field.onChange}
-          onBlur={successMessageCtrl.field.onBlur}
-          placeholder={t(
-            "studio.cellEditorTabs.formCellEditor.successMessagePlaceholder",
-          )}
+        <ButtonIconFields
+          idPrefix={`${idPrefix}-submit-button-icon`}
+          icon={submitButtonIcon}
+          iconPosition={submitButtonIconPosition}
+          onIconChange={submitButtonIconCtrl.field.onChange}
+          onIconPositionChange={submitButtonIconPositionCtrl.field.onChange}
           disabled={disabled}
-          rows={3}
-          help={t("studio.cellEditorTabs.formCellEditor.successMessageHelp")}
         />
 
         <SelectField
@@ -222,22 +238,36 @@ export function FormCellEditor({
           disabled={disabled}
           help={t("studio.cellEditorTabs.formCellEditor.variantButtonHelp")}
         />
+      </FormGrid>
 
-        <div className="sm:col-span-2">
-          <TextareaField
-            ids={errorMessageIds}
-            label={t("studio.cellEditorTabs.formCellEditor.errorMessageLabel")}
-            value={String(errorMessageCtrl.field.value ?? "")}
-            onChange={errorMessageCtrl.field.onChange}
-            onBlur={errorMessageCtrl.field.onBlur}
-            placeholder={t(
-              "studio.cellEditorTabs.formCellEditor.errorMessagePlaceholder",
-            )}
-            disabled={disabled}
-            rows={3}
-            help={t("studio.cellEditorTabs.formCellEditor.errorMessageHelp")}
-          />
-        </div>
+      <FormGrid>
+        <TextareaField
+          ids={successMessageIds}
+          label={t("studio.cellEditorTabs.formCellEditor.successMessageLabel")}
+          value={String(successMessageCtrl.field.value ?? "")}
+          onChange={successMessageCtrl.field.onChange}
+          onBlur={successMessageCtrl.field.onBlur}
+          placeholder={t(
+            "studio.cellEditorTabs.formCellEditor.successMessagePlaceholder",
+          )}
+          disabled={disabled}
+          rows={3}
+          help={t("studio.cellEditorTabs.formCellEditor.successMessageHelp")}
+        />
+
+        <TextareaField
+          ids={errorMessageIds}
+          label={t("studio.cellEditorTabs.formCellEditor.errorMessageLabel")}
+          value={String(errorMessageCtrl.field.value ?? "")}
+          onChange={errorMessageCtrl.field.onChange}
+          onBlur={errorMessageCtrl.field.onBlur}
+          placeholder={t(
+            "studio.cellEditorTabs.formCellEditor.errorMessagePlaceholder",
+          )}
+          disabled={disabled}
+          rows={3}
+          help={t("studio.cellEditorTabs.formCellEditor.errorMessageHelp")}
+        />
       </FormGrid>
 
       <div className={cn(STACK_SM)}>
@@ -245,9 +275,9 @@ export function FormCellEditor({
           {t("studio.cellEditorTabs.formCellEditor.fieldsLabel")}
         </Text>
 
-        <p className="text-muted-foreground text-xs">
+        <Text as="p" variant="muted" className="text-xs">
           {t("studio.cellEditorTabs.formCellEditor.fieldsHelp")}
-        </p>
+        </Text>
       </div>
 
       <div className={cn(STACK_MD)}>

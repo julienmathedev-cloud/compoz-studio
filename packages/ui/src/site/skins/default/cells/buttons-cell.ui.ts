@@ -7,6 +7,7 @@
  */
 
 import type { SiteButtonsUi } from "@compoz/ui/site/site-ui.types";
+import { defaultSiteButtonUi } from "@compoz/ui/site/skins/default/atoms/site-button.ui";
 
 export const defaultButtonsUi: SiteButtonsUi = {
   root: "w-full",
@@ -22,4 +23,5 @@ export const defaultButtonsUi: SiteButtonsUi = {
     lg: "gap-2 sm:gap-12",
   },
   button: "",
+  buttonUi: defaultSiteButtonUi,
 } as const;

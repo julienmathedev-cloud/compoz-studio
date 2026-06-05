@@ -19,7 +19,7 @@
  *   afin que l’API puisse afficher les champs dynamiques avec un libellé lisible.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { Button } from "@compoz/ui/components/ui/button";
 import {
@@ -31,6 +31,7 @@ import {
 import { Field, FieldLabel } from "@compoz/ui/components/ui/field";
 import { Input } from "@compoz/ui/components/ui/input";
 import { Textarea } from "@compoz/ui/components/ui/textarea";
+import { renderContentIcon } from "@compoz/ui/lib/icons/content-icons";
 import { cn } from "@compoz/ui/lib/utils";
 import type { SiteFormUi } from "@compoz/ui/site/site-ui.types";
 import type {
@@ -41,6 +42,7 @@ import type {
 export type SiteContactFormSubmitValues = Record<string, string>;
 
 type SubmitStatus = "idle" | "success" | "error";
+type SubmitButtonIconPosition = "before" | "after";
 
 export type SiteContactFormProps = Readonly<{
   fields: readonly FormFieldShape[];
@@ -85,6 +87,17 @@ export function SiteContactForm({
   }
 
   const isFormDisabled = disabled || isSubmitting;
+  const submitLabel = isSubmitting ? "Envoi..." : submitButton.label;
+
+  const submitButtonIconPosition: SubmitButtonIconPosition =
+    submitButton.iconPosition === "after" ? "after" : "before";
+
+  const submitContent = renderSubmitButtonContent({
+    label: submitLabel,
+    icon: submitButton.icon,
+    iconPosition: submitButtonIconPosition,
+    ui,
+  });
 
   const handleChange = (name: string, value: string) => {
     setValues((prev) => ({
@@ -231,7 +244,7 @@ export function SiteContactForm({
             disabled={isFormDisabled}
             className={cn(ui.submitButton)}
           >
-            {isSubmitting ? "Envoi..." : submitButton.label}
+            {submitContent}
           </Button>
         </CardFooter>
       </form>
@@ -240,6 +253,10 @@ export function SiteContactForm({
 }
 
 SiteContactForm.displayName = "SiteContactForm";
+
+/* -------------------------------------------------------------------------- */
+/* Internals                                                                  */
+/* -------------------------------------------------------------------------- */
 
 function buildInitialValues(
   fields: readonly FormFieldShape[],
@@ -255,4 +272,32 @@ function buildInitialValues(
   }
 
   return output;
+}
+
+function renderSubmitButtonContent({
+  label,
+  icon,
+  iconPosition,
+  ui,
+}: Readonly<{
+  label: string;
+  icon: FormCellShape["submitButton"]["icon"];
+  iconPosition: SubmitButtonIconPosition;
+  ui: SiteFormUi;
+}>): ReactNode {
+  if (!icon) {
+    return label;
+  }
+
+  const iconNode = renderContentIcon(icon, {
+    className: cn(ui.submitButtonUi.icon),
+  });
+
+  return (
+    <span className={cn(ui.submitButtonUi.content)}>
+      {iconPosition === "before" ? iconNode : null}
+      <span className={cn(ui.submitButtonUi.label)}>{label}</span>
+      {iconPosition === "after" ? iconNode : null}
+    </span>
+  );
 }

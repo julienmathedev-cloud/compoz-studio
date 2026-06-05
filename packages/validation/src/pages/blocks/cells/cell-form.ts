@@ -8,6 +8,7 @@
 import { z } from "zod";
 
 import {
+  ButtonIconPositionSchema,
   ButtonItemSchema,
   ButtonPresentationSchema,
   ButtonsCellSchema,
@@ -79,6 +80,11 @@ export type ButtonItemFormValues = z.infer<typeof ButtonItemFormValuesSchema>;
 export const ButtonPresentationFormValuesSchema = ButtonPresentationSchema;
 export type ButtonPresentationFormValues = z.infer<
   typeof ButtonPresentationFormValuesSchema
+>;
+
+export const ButtonIconPositionFormValuesSchema = ButtonIconPositionSchema;
+export type ButtonIconPositionFormValues = z.infer<
+  typeof ButtonIconPositionFormValuesSchema
 >;
 
 export const ButtonsCellFormValuesSchema = ButtonsCellSchema;

@@ -55,6 +55,7 @@ export type Cell =
 export type {
   ButtonPresentation,
   ButtonItem,
+  ButtonIconPosition,
   ButtonItemVariant,
   ButtonsCell,
 } from "@compoz/core/domain/pages/entities/cells/buttons";

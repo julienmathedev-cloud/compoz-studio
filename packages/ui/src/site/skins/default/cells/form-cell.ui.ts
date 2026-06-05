@@ -11,6 +11,7 @@
  */
 
 import type { SiteFormUi } from "@compoz/ui/site/site-ui.types";
+import { defaultSiteButtonUi } from "@compoz/ui/site/skins/default/atoms/site-button.ui";
 
 export const defaultFormUi: SiteFormUi = {
   card: "w-full max-w-2xl mx-auto border border-border shadow-xs",
@@ -25,4 +26,5 @@ export const defaultFormUi: SiteFormUi = {
   help: "text-xs text-muted-foreground",
   footer: "flex justify-end",
   submitButton: "w-fit cursor-pointer",
+  submitButtonUi: defaultSiteButtonUi,
 } as const;

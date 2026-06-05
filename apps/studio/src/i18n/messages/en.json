@@ -391,6 +391,7 @@
     "CELL_IMAGE_WIDTH_REQUIRED": "The image width is required.",
     "IMAGE_REVEAL_INVALID": "The image configuration is invalid.",
     "IMAGE_SIZE_INVALID": "The image size is invalid.",
+    "IMAGE_ZOOM_ENABLED_INVALID": "The image zoom setting is invalid.",
     "CELL_IMAGE_HEIGHT_REQUIRED": "The image height is required.",
     "CELL_IMAGE_ALT_INVALID": "The image alt text is invalid.",
     "CELL_IMAGE_CAPTION_INVALID": "The image caption is invalid.",
@@ -1998,6 +1999,8 @@
         },
         "revealLabel": "Reveal animation",
         "revealHelp": "Enables the image reveal effect.",
+        "zoomLabel": "Enable zoom",
+        "zoomHelp": "Allows opening the image in a larger view on click.",
         "sizeLabel": "Size",
         "sizes": {
           "sm": "Small",

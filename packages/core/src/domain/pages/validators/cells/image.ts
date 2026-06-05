@@ -57,4 +57,15 @@ export function assertSingleImageCell(
       },
     });
   }
+
+  if (typeof cell.zoomEnabled !== "boolean") {
+    throw new DomainError({
+      code: EC.IMAGE_ZOOM_ENABLED_INVALID,
+      message: EC.IMAGE_ZOOM_ENABLED_INVALID,
+      details: {
+        path: [...path, "zoomEnabled"],
+        meta: { zoomEnabled: cell.zoomEnabled },
+      },
+    });
+  }
 }

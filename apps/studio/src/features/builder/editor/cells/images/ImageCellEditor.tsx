@@ -113,7 +113,13 @@ export function ImageCellEditor({
     control,
   });
 
+  const zoomEnabledCtrl = useController({
+    name: `${basePath}.zoomEnabled` as `${ImageFieldBasePath}.zoomEnabled`,
+    control,
+  });
+
   const revealIds = createFieldIds(idPrefix, "reveal");
+  const zoomEnabledIds = createFieldIds(idPrefix, "zoom-enabled");
 
   const variant: Variant =
     variantCtrl.field.value &&
@@ -157,11 +163,24 @@ export function ImageCellEditor({
         checked={
           typeof revealCtrl.field.value === "boolean"
             ? revealCtrl.field.value
-            : true
+            : false
         }
         onCheckedChange={revealCtrl.field.onChange}
         disabled={disabled}
         help={t("studio.cellEditorTabs.imageCellEditor.revealHelp")}
+      />
+
+      <SwitchField
+        ids={zoomEnabledIds}
+        label={t("studio.cellEditorTabs.imageCellEditor.zoomLabel")}
+        checked={
+          typeof zoomEnabledCtrl.field.value === "boolean"
+            ? zoomEnabledCtrl.field.value
+            : false
+        }
+        onCheckedChange={zoomEnabledCtrl.field.onChange}
+        disabled={disabled}
+        help={t("studio.cellEditorTabs.imageCellEditor.zoomHelp")}
       />
 
       <div className={cn(STACK_SM)}>

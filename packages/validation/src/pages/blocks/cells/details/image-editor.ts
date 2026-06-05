@@ -54,5 +54,8 @@ export const ImageCellSchema = z
     reveal: z.boolean({
       message: ERROR_CODES.IMAGE_REVEAL_INVALID,
     }),
+    zoomEnabled: z.boolean({
+      message: ERROR_CODES.IMAGE_ZOOM_ENABLED_INVALID,
+    }),
   })
   .strict();

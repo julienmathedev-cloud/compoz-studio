@@ -24,4 +24,5 @@ export type ImageCell = {
   variant: ImageRatio;
   size: ImageSize;
   reveal: boolean;
+  zoomEnabled: boolean;
 };

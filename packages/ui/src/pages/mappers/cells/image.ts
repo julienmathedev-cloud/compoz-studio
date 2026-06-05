@@ -28,5 +28,6 @@ export function toImageCellShapeFromDTO(
     variant: cell.variant,
     size: cell.size,
     reveal: cell.reveal,
+    zoomEnabled: cell.zoomEnabled ?? false,
   };
 }

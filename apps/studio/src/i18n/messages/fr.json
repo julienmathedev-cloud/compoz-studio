@@ -391,6 +391,7 @@
     "CELL_IMAGE_WIDTH_REQUIRED": "La largeur de l’image est requise.",
     "IMAGE_REVEAL_INVALID": "La configuration de l’image est invalide.",
     "IMAGE_SIZE_INVALID": "La taille de l’image est invalide.",
+    "IMAGE_ZOOM_ENABLED_INVALID": "Le paramètre de zoom de l’image est invalide.",
     "CELL_IMAGE_HEIGHT_REQUIRED": "La hauteur de l’image est requise.",
     "CELL_IMAGE_ALT_INVALID": "Le texte alternatif de l’image est invalide.",
     "CELL_IMAGE_CAPTION_INVALID": "La légende de l’image est invalide.",
@@ -1998,6 +1999,8 @@
         },
         "revealLabel": "Effet d’apparition",
         "revealHelp": "Active l’effet d’apparition de l’image.",
+        "zoomLabel": "Activer le zoom",
+        "zoomHelp": "Permet d’ouvrir l’image en grand au clic.",
         "sizeLabel": "Taille",
         "sizes": {
           "sm": "Petite",

@@ -34,6 +34,7 @@ export function adaptImageCell(dto: ImageCellIntentDTO): ImageCell {
     variant: dto.variant,
     size: dto.size,
     reveal: dto.reveal,
+    zoomEnabled: dto.zoomEnabled,
     image: adaptImage(dto.image),
   };
 }

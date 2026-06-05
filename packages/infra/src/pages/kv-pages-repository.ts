@@ -20,8 +20,6 @@ import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repo
 
 import { kvCmd } from "@compoz/infra/kv/kv-telemetry";
 
-// ⛳️ NOTE: idéalement ces schémas vivent dans @compoz/core (boundary validation),
-// pour que @compoz/infra ne dépende pas d’un import "app".
 import { PageSchema, type PageShape } from "@compoz/validation/pages/page";
 
 import { getUpstashRedis, parseRedisJson } from "@compoz/infra/kv/kv-redis";
@@ -60,6 +58,13 @@ type KvPagesRepositoryOptions = Readonly<{
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
+const FORM_BUTTON_VARIANTS = new Set([
+  "default",
+  "secondary",
+  "outline",
+  "ghost",
+]);
+
 function normalizeSlug(slug: unknown): string {
   return String(slug ?? "").trim();
 }
@@ -82,6 +87,66 @@ function normalizeRowReverseOn(value: unknown): {
     mobile: Boolean(safe?.mobile),
     tablet: Boolean(safe?.tablet),
     desktop: Boolean(safe?.desktop),
+  };
+}
+
+function normalizeImageCellLegacy(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value;
+  }
+
+  const cell = value as Record<string, unknown>;
+
+  if (cell.kind !== "image") {
+    return value;
+  }
+
+  return {
+    ...cell,
+    zoomEnabled:
+      typeof cell.zoomEnabled === "boolean" ? cell.zoomEnabled : false,
+  };
+}
+
+function normalizeFormCellLegacy(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value;
+  }
+
+  const cell = value as Record<string, unknown>;
+
+  if (cell.kind !== "form") {
+    return value;
+  }
+
+  return {
+    ...cell,
+    variantButton:
+      typeof cell.variantButton === "string" &&
+      FORM_BUTTON_VARIANTS.has(cell.variantButton)
+        ? cell.variantButton
+        : "default",
+  };
+}
+
+function normalizeCellLegacy(value: unknown): unknown {
+  return normalizeFormCellLegacy(normalizeImageCellLegacy(value));
+}
+
+function normalizeColumnLegacy(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value;
+  }
+
+  const column = value as Record<string, unknown>;
+
+  if (!Array.isArray(column.cells)) {
+    return value;
+  }
+
+  return {
+    ...column,
+    cells: column.cells.map(normalizeCellLegacy),
   };
 }
 
@@ -123,11 +188,15 @@ function normalizePageLegacyBlocks(input: unknown): unknown {
 
           const safeRow = row as {
             reverseOn?: unknown;
+            columns?: unknown;
           };
 
           return {
             ...safeRow,
             reverseOn: normalizeRowReverseOn(safeRow.reverseOn),
+            columns: Array.isArray(safeRow.columns)
+              ? safeRow.columns.map(normalizeColumnLegacy)
+              : safeRow.columns,
           };
         }),
       };

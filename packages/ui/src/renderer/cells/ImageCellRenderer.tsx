@@ -62,6 +62,7 @@ export function ImageCellRenderer({
         height: cell.image.height,
       }}
       caption={caption || undefined}
+      zoomable={cell.zoomEnabled}
       sizes={resolvedSizes}
       priority={priority}
       fetchPriority={priority ? "high" : "auto"}

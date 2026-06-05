@@ -308,6 +308,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       variant: "default",
       size: "full",
       reveal: false,
+      zoomEnabled: false,
     };
   }
 
@@ -542,6 +543,14 @@ export function toCellFormValuesForValidation(
     };
   }
 
+  if (cell.kind === "image") {
+    return {
+      ...cell,
+      cssClassName: normalizedCssClassName,
+      zoomEnabled: cell.zoomEnabled ?? false,
+    };
+  }
+
   return {
     ...cell,
     cssClassName: normalizedCssClassName,
@@ -582,6 +591,14 @@ export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
       ...cell,
       cssClassName: normalizedCssClassName,
       visibility: normalizeSpacerVisibility(cell.visibility),
+    };
+  }
+
+  if (cell.kind === "image") {
+    return {
+      ...cell,
+      cssClassName: normalizedCssClassName,
+      zoomEnabled: cell.zoomEnabled ?? false,
     };
   }
 

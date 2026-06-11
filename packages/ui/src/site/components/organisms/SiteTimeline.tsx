@@ -11,14 +11,14 @@
  * - UI-only.
  * - Tous les styles sont pilotés par `ui`.
  * - Réutilise `SiteTimelineItem` pour le rendu d’un item individuel.
- * - Gère localement l’ouverture / fermeture de la timeline.
+ * - Peut gérer localement l’ouverture / fermeture lorsque la timeline est repliable.
  * - Mesure la hauteur réelle des items pour appliquer un léger compactage desktop.
  * - Le scroll d’ouverture tient compte de la hauteur du header sticky via `--header-h`.
  */
 
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@compoz/ui/components/ui/button";
 import { scrollToElement } from "@compoz/ui/lib/scrollToElement";
@@ -29,14 +29,219 @@ import type { TimelineItemShape } from "@compoz/validation/pages/blocks/cells/ce
 
 export type SiteTimelineProps = Readonly<{
   items: readonly TimelineItemShape[];
+  collapsible: boolean;
   ui: SiteTimelineUi;
 }>;
 
 const OVERLAP_RATIO = 0.68;
 const MAX_OVERLAP_PX = 600;
 const COLLAPSE_DURATION_MS = 500;
+const STATIC_TOP_PADDING_CLASS = "pt-8";
 
-export function SiteTimeline({ items, ui }: SiteTimelineProps) {
+function useTimelineItemOffsets(
+  items: readonly TimelineItemShape[],
+  enabled: boolean,
+) {
+  const [itemHeights, setItemHeights] = useState<number[]>([]);
+  const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  const registerItemRef = useCallback(
+    (index: number, node: HTMLDivElement | null) => {
+      itemRefs.current[index] = node;
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    const nodes = itemRefs.current.slice(0, items.length);
+
+    const readHeights = () => {
+      const nextHeights = nodes.map((node) =>
+        node ? Math.round(node.getBoundingClientRect().height) : 0,
+      );
+
+      setItemHeights((prev) => {
+        if (
+          prev.length === nextHeights.length &&
+          prev.every((value, index) => value === nextHeights[index])
+        ) {
+          return prev;
+        }
+
+        return nextHeights;
+      });
+    };
+
+    readHeights();
+
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      readHeights();
+    });
+
+    nodes.forEach((node) => {
+      if (node) {
+        observer.observe(node);
+      }
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [enabled, items]);
+
+  const itemOffsets = useMemo(() => {
+    return items.map((_, index) => {
+      if (index === 0) {
+        return 0;
+      }
+
+      const previousHeight = itemHeights[index - 1];
+
+      if (!previousHeight || previousHeight <= 0) {
+        return 0;
+      }
+
+      const overlap = Math.min(
+        MAX_OVERLAP_PX,
+        Math.round(previousHeight * OVERLAP_RATIO),
+      );
+
+      return -overlap;
+    });
+  }, [itemHeights, items]);
+
+  return {
+    itemOffsets,
+    registerItemRef,
+  };
+}
+
+type TimelineContentProps = Readonly<{
+  items: readonly TimelineItemShape[];
+  ui: SiteTimelineUi;
+  measureEnabled: boolean;
+  animated: boolean;
+  outerClassName?: string;
+}>;
+
+function TimelineContent({
+  items,
+  ui,
+  measureEnabled,
+  animated,
+  outerClassName,
+}: TimelineContentProps) {
+  const { itemOffsets, registerItemRef } = useTimelineItemOffsets(
+    items,
+    measureEnabled,
+  );
+
+  return (
+    <div className={cn("relative", outerClassName)}>
+      <div className={cn(ui.desktopRailWrap)}>
+        <div className={cn(ui.desktopStartDot)} />
+
+        {animated ? (
+          <motion.div
+            className={cn(ui.desktopLine)}
+            initial={{ scaleY: 0 }}
+            animate={{ scaleY: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          />
+        ) : (
+          <div className={cn(ui.desktopLine)} />
+        )}
+
+        {animated ? (
+          <motion.div
+            className={cn(ui.desktopEndDot)}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.8, duration: 0.1, ease: "easeOut" }}
+          />
+        ) : (
+          <div className={cn(ui.desktopEndDot)} />
+        )}
+      </div>
+
+      <div className={cn(ui.contentWrap)}>
+        <div className={cn(ui.mobileRailWrap)}>
+          <div className={cn(ui.mobileStartDot)} />
+
+          {animated ? (
+            <motion.div
+              className={cn(ui.mobileLine)}
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: 1 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            />
+          ) : (
+            <div className={cn(ui.mobileLine)} />
+          )}
+
+          <div className={cn(ui.mobileEndDot)} />
+        </div>
+
+        <div className={cn(ui.itemsWrap)}>
+          {items.map((item, index) => {
+            const itemNode = (
+              <SiteTimelineItem
+                item={item}
+                index={index}
+                ui={ui.item}
+                desktopOffset={itemOffsets[index] ?? 0}
+              />
+            );
+
+            if (!animated) {
+              return (
+                <div
+                  key={item.id}
+                  ref={(node) => {
+                    registerItemRef(index, node);
+                  }}
+                >
+                  {itemNode}
+                </div>
+              );
+            }
+
+            return (
+              <motion.div
+                key={item.id}
+                ref={(node) => {
+                  registerItemRef(index, node);
+                }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  delay: index * 0.15,
+                  duration: 0.4,
+                  ease: "easeOut",
+                }}
+              >
+                {itemNode}
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CollapsibleTimeline({
+  items,
+  ui,
+}: Pick<SiteTimelineProps, "items" | "ui">) {
   const [isOpen, setIsOpen] = useState(false);
 
   /**
@@ -54,13 +259,7 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
    */
   const [canAnimate, setCanAnimate] = useState(false);
 
-  const [itemHeights, setItemHeights] = useState<number[]>([]);
   const anchorRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
-
-  if (!items.length) {
-    return null;
-  }
 
   /**
    * Scrolle vers l’ancre d’ouverture de la timeline
@@ -117,72 +316,6 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!shouldRender) {
-      return;
-    }
-
-    const nodes = itemRefs.current.slice(0, items.length);
-
-    const readHeights = () => {
-      const nextHeights = nodes.map((node) =>
-        node ? Math.round(node.getBoundingClientRect().height) : 0,
-      );
-
-      setItemHeights((prev) => {
-        if (
-          prev.length === nextHeights.length &&
-          prev.every((value, index) => value === nextHeights[index])
-        ) {
-          return prev;
-        }
-
-        return nextHeights;
-      });
-    };
-
-    readHeights();
-
-    if (typeof ResizeObserver === "undefined") {
-      return;
-    }
-
-    const observer = new ResizeObserver(() => {
-      readHeights();
-    });
-
-    nodes.forEach((node) => {
-      if (node) {
-        observer.observe(node);
-      }
-    });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [shouldRender, items]);
-
-  const itemOffsets = useMemo(() => {
-    return items.map((_, index) => {
-      if (index === 0) {
-        return 0;
-      }
-
-      const previousHeight = itemHeights[index - 1];
-
-      if (!previousHeight || previousHeight <= 0) {
-        return 0;
-      }
-
-      const overlap = Math.min(
-        MAX_OVERLAP_PX,
-        Math.round(previousHeight * OVERLAP_RATIO),
-      );
-
-      return -overlap;
-    });
-  }, [itemHeights, items]);
-
   return (
     <div className={cn(ui.root)}>
       <div className={cn(ui.triggerWrap)}>
@@ -190,6 +323,7 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
           size="icon"
           onClick={handleClickButton}
           aria-label={isOpen ? "Masquer la timeline" : "Afficher la timeline"}
+          aria-expanded={isOpen}
           className={cn(ui.triggerButton)}
         >
           <ChevronDown
@@ -221,68 +355,45 @@ export function SiteTimeline({ items, ui }: SiteTimelineProps) {
         className={cn(ui.collapse)}
       >
         {shouldRender ? (
-          <div className="relative">
-            <div className={cn(ui.desktopRailWrap)}>
-              <div className={cn(ui.desktopStartDot)} />
-
-              <motion.div
-                className={cn(ui.desktopLine)}
-                initial={{ scaleY: 0 }}
-                animate={{ scaleY: 1 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-              />
-
-              <motion.div
-                className={cn(ui.desktopEndDot)}
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.8, duration: 0.1, ease: "easeOut" }}
-              />
-            </div>
-
-            <div className={cn(ui.contentWrap)}>
-              <div className={cn(ui.mobileRailWrap)}>
-                <div className={cn(ui.mobileStartDot)} />
-
-                <motion.div
-                  className={cn(ui.mobileLine)}
-                  initial={{ scaleY: 0 }}
-                  animate={{ scaleY: 1 }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                />
-
-                <div className={cn(ui.mobileEndDot)} />
-              </div>
-
-              <div className={cn(ui.itemsWrap)}>
-                {items.map((item, index) => (
-                  <motion.div
-                    key={item.id}
-                    ref={(node) => {
-                      itemRefs.current[index] = node;
-                    }}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      delay: index * 0.15,
-                      duration: 0.4,
-                      ease: "easeOut",
-                    }}
-                  >
-                    <SiteTimelineItem
-                      item={item}
-                      index={index}
-                      ui={ui.item}
-                      desktopOffset={itemOffsets[index] ?? 0}
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <TimelineContent
+            items={items}
+            ui={ui}
+            measureEnabled={shouldRender}
+            animated
+          />
         ) : null}
       </motion.div>
     </div>
+  );
+}
+
+function StaticTimeline({
+  items,
+  ui,
+}: Pick<SiteTimelineProps, "items" | "ui">) {
+  return (
+    <div className={cn(ui.root)}>
+      <div className={cn(STATIC_TOP_PADDING_CLASS)}>
+        <TimelineContent
+          items={items}
+          ui={ui}
+          measureEnabled={false}
+          animated={false}
+        />
+      </div>
+    </div>
+  );
+}
+
+export function SiteTimeline({ items, collapsible, ui }: SiteTimelineProps) {
+  if (!items.length) {
+    return null;
+  }
+
+  return collapsible ? (
+    <CollapsibleTimeline items={items} ui={ui} />
+  ) : (
+    <StaticTimeline items={items} ui={ui} />
   );
 }
 

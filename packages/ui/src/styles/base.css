@@ -11,7 +11,6 @@
 @import "@radix-ui/colors/orange-dark.css";
 @import "@radix-ui/colors/mauve.css";
 @import "@radix-ui/colors/mauve-dark.css";
-
 /* ✅ Tailwind v4 custom variants */
 @custom-variant dark (&:is(.dark *));
 
@@ -168,44 +167,6 @@
     transform-origin: center;
   }
 
-  @keyframes highlight-shift {
-    0% {
-      background-position: 200% 50%;
-    }
-    100% {
-      background-position: -100% 50%;
-    }
-  }
-
-  .animate-highlight-shift {
-    animation: highlight-shift 6s cubic-bezier(0.6, 0, 0.3, 1) infinite;
-    background-size: 150% 100%;
-    will-change: background-position;
-  }
-
-  /* -------------------------------------------------------------------------
-   * Icon pulse (motion-safe)
-   * ----------------------------------------------------------------------- */
-  @keyframes pulse-icon {
-    0%,
-    100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.15);
-    }
-  }
-
-  .icon-hover-pulse {
-    transition: transform 0.3s ease;
-    will-change: transform;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .hover-pulse-trigger:hover .icon-hover-pulse {
-      animation: pulse-icon 0.6s ease;
-    }
-  }
   /* Respect du réglage "réduire les animations" */
   @media (prefers-reduced-motion: reduce) {
     .lb-zoom-in,

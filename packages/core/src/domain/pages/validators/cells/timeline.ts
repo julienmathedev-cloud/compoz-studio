@@ -34,6 +34,14 @@ export function assertTimelineCell(
     });
   }
 
+  if (typeof cell.collapsible !== "boolean") {
+    throw new DomainError({
+      code: EC.CELL_TIMELINE_COLLAPSIBLE_INVALID,
+      message: EC.CELL_TIMELINE_COLLAPSIBLE_INVALID,
+      details: { path: [...path, "collapsible"] },
+    });
+  }
+
   for (let i = 0; i < cell.items.length; i++) {
     assertTimelineItem(cell.items[i], [...path, "items", i]);
   }

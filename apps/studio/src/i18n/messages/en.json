@@ -354,6 +354,7 @@
 
     "CELL_TIMELINE_ITEMS_INVALID": "The timeline items list is invalid.",
     "CELL_TIMELINE_ITEMS_MIN_1": "At least one item is required in the timeline.",
+    "CELL_TIMELINE_COLLAPSIBLE_INVALID": "The timeline collapsible flag is invalid.",
 
     "CELL_TIMELINE_ITEM_INVALID": "A timeline item is invalid.",
     "CELL_TIMELINE_ITEM_ID_REQUIRED": "A timeline item ID is required.",
@@ -1654,6 +1655,9 @@
         "badgeLabel": "Badge / label",
         "badgePlaceholder": "PM",
         "badgeHelp": "Short label or acronym displayed visually in the timeline.",
+
+        "collapsibleLabel": "Allow collapse",
+        "collapsibleHelp": "When enabled, visitors can collapse and expand the timeline.",
 
         "keywordsLabel": "Keywords",
         "keywordsPlaceholder": "Project management\nCoordination\nOrganization",

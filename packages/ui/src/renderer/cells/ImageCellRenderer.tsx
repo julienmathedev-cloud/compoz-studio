@@ -12,6 +12,8 @@
  * - Reveal : activé par défaut (V0.5).
  * - Si une caption est présente, l’image est rendue dans un `figure`
  *   avec `figcaption`.
+ * - Expose des attributs `data-*` stables pour permettre un ciblage CSS
+ *   précis côté skins ou overrides tenant.
  */
 
 import type { ImageCellShape } from "@compoz/validation/pages/blocks/cells/cell";
@@ -52,6 +54,7 @@ export function ImageCellRenderer({
   const mode = ui.variantMode[variant];
   const frameClass = ui.variantFrame[variant];
   const resolvedSizes = ui.variantSizes[variant];
+  const reveal = cell.reveal === true;
 
   const imageNode = (
     <SiteZoomableImage
@@ -76,9 +79,20 @@ export function ImageCellRenderer({
   );
 
   const visual = (
-    <div className={cn(ui.root)}>
-      <div className={cn(ui.size[size])}>
-        <div className={cn(mode !== "default" && frameClass, ui.container)}>
+    <div
+      className={cn(ui.root)}
+      data-image-root
+      data-image-variant={variant}
+      data-image-size={size}
+      data-image-mode={mode}
+      data-image-zoomable={cell.zoomEnabled ? "true" : "false"}
+    >
+      <div className={cn(ui.size[size])} data-image-size-wrapper>
+        <div
+          className={cn(mode !== "default" && frameClass, ui.container)}
+          data-image-container
+          data-image-framed={mode !== "default" ? "true" : "false"}
+        >
           {imageNode}
         </div>
       </div>
@@ -86,18 +100,32 @@ export function ImageCellRenderer({
   );
 
   const content = caption ? (
-    <figure className={cn(ui.figure)}>
+    <figure className={cn(ui.figure)} data-image-figure>
       {visual}
-      <figcaption className={cn(ui.caption)}>{caption}</figcaption>
+      <figcaption className={cn(ui.caption)} data-image-caption>
+        {caption}
+      </figcaption>
     </figure>
   ) : (
     visual
   );
 
-  return cell.reveal ? (
-    <SiteReveal revealUi={revealUi}>{content}</SiteReveal>
-  ) : (
-    content
+  return (
+    <div
+      data-cell="image"
+      data-image-cell
+      data-image-variant={variant}
+      data-image-size={size}
+      data-image-mode={mode}
+      data-image-has-caption={caption ? "true" : "false"}
+      data-reveal={reveal ? "true" : "false"}
+    >
+      {reveal ? (
+        <SiteReveal revealUi={revealUi}>{content}</SiteReveal>
+      ) : (
+        content
+      )}
+    </div>
   );
 }
 

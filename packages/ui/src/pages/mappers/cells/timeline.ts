@@ -20,6 +20,7 @@ export function toTimelineCellShapeFromDTO(
       cell.cssClassName !== undefined
         ? normalizeString(cell.cssClassName, "")
         : undefined,
+    collapsible: cell.collapsible ?? true,
     items: cell.items.map((item) => ({
       id: normalizeString(item.id, ""),
       period: normalizeString(item.period, ""),

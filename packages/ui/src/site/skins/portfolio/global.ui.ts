@@ -20,6 +20,7 @@ import { portfolioCarouselUi } from "@compoz/ui/site/skins/portfolio/cells/carou
 import { portfolioFormUi } from "@compoz/ui/site/skins/portfolio/cells/form-cell.ui";
 import { portfolioHeadingUi } from "@compoz/ui/site/skins/portfolio/cells/heading-cell.ui";
 import { portfolioImageUi } from "@compoz/ui/site/skins/portfolio/cells/image-cell.ui";
+import { portfolioRichTextUi } from "@compoz/ui/site/skins/portfolio/cells/richtext-cell.ui";
 import { portfolioStepsUi } from "@compoz/ui/site/skins/portfolio/cells/steps-cell.ui";
 import { portfolioStructuredCardUi } from "@compoz/ui/site/skins/portfolio/cells/structured-card-cell.ui";
 import { portfolioTimelineUi } from "@compoz/ui/site/skins/portfolio/cells/timeline-cell.ui";
@@ -38,6 +39,7 @@ export const portfolioGlobalUi: SiteGlobalUiOverride = {
     steps: portfolioStepsUi,
     structuredCard: portfolioStructuredCardUi,
     timeline: portfolioTimelineUi,
+    richText: portfolioRichTextUi,
   },
   blockSection: portfolioBlockSectionUi,
 } as const;

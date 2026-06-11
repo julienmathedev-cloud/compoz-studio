@@ -11,6 +11,8 @@
  * - Ignore les items sans titre.
  * - Les colonnes et l’alignement sont pilotés par la cell.
  * - `reveal` active/désactive l’enrobage `SiteReveal` item par item.
+ * - Expose des attributs `data-*` stables pour permettre un ciblage CSS
+ *   précis côté skins ou overrides tenant.
  */
 
 import type { CardsCellShape } from "@compoz/validation/pages/blocks/cells/cell";
@@ -54,9 +56,12 @@ export function CardsCellRenderer({
     <div
       className={ui.root}
       data-cell="cards"
+      data-card-cell
+      data-card-columns={columns}
+      data-card-align={align}
       data-reveal={reveal ? "true" : "false"}
     >
-      <div className={cn(ui.grid, ui.columns[columns])}>
+      <div className={cn(ui.grid, ui.columns[columns])} data-card-grid>
         {items.map((item, index) => {
           const title = normalizeString(item.title, "");
           const description = normalizeString(item.description, "");
@@ -77,7 +82,12 @@ export function CardsCellRenderer({
           );
 
           return (
-            <div key={item.id}>
+            <div
+              key={item.id}
+              data-card-item
+              data-card-index={index}
+              data-card-column={seed}
+            >
               {reveal ? (
                 <SiteReveal
                   revealUi={revealUi}
@@ -86,10 +96,12 @@ export function CardsCellRenderer({
                   amount={0.1}
                   className={cn(ui.content)}
                 >
-                  {card}
+                  <div data-card-content>{card}</div>
                 </SiteReveal>
               ) : (
-                card
+                <div className={cn(ui.content)} data-card-content>
+                  {card}
+                </div>
               )}
             </div>
           );

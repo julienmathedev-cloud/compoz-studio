@@ -11,6 +11,8 @@
  * - La cellule porte le layout (`columns`), les items portent le contenu.
  * - Utilise `SiteStructuredCard` pour le rendu visuel.
  * - `reveal` active/désactive l’enrobage `SiteReveal` item par item.
+ * - Expose des attributs `data-*` stables pour permettre un ciblage CSS
+ *   précis côté skins ou overrides tenant.
  */
 
 import type { StructuredCardCellShape } from "@compoz/validation/pages/blocks/cells/cell";
@@ -79,9 +81,17 @@ export function StructuredCardCellRenderer({
     <div
       className={ui.root}
       data-cell="structuredCard"
+      data-card-cell
+      data-structured-card-cell
+      data-card-columns={effectiveColumns}
+      data-structured-card-columns={effectiveColumns}
       data-reveal={reveal ? "true" : "false"}
     >
-      <div className={cn(ui.grid, ui.columns[effectiveColumns])}>
+      <div
+        className={cn(ui.grid, ui.columns[effectiveColumns])}
+        data-card-grid
+        data-structured-card-grid
+      >
         {items.map((item, index) => {
           const title = normalizeString(item.title, "");
           const meta = normalizeString(item.meta ?? "", "") || undefined;
@@ -143,18 +153,40 @@ export function StructuredCardCellRenderer({
           );
 
           return (
-            <div key={item.id} className="h-full">
+            <div
+              key={item.id}
+              className="h-full"
+              data-card-item
+              data-structured-card-item
+              data-card-index={index}
+              data-structured-card-index={index}
+              data-card-column={seed}
+              data-structured-card-column={seed}
+            >
               {reveal ? (
                 <SiteReveal
                   revealUi={revealUi}
                   seedOrder={seed}
                   staggerMs={60}
                   amount={0.1}
+                  className="h-full"
                 >
-                  {card}
+                  <div
+                    className="h-full"
+                    data-card-content
+                    data-structured-card-content
+                  >
+                    {card}
+                  </div>
                 </SiteReveal>
               ) : (
-                card
+                <div
+                  className="h-full"
+                  data-card-content
+                  data-structured-card-content
+                >
+                  {card}
+                </div>
               )}
             </div>
           );

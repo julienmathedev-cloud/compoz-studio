@@ -12,9 +12,10 @@
  *   et les mots-clés éventuels.
  * - N’impose pas de balise heading pour éviter une hiérarchie HTML
  *   incohérente selon l’emplacement de la cellule dans la page.
+ * - Expose des attributs `data-*` stables pour permettre un ciblage CSS
+ *   précis côté skins ou overrides tenant.
  */
 
-import { Badge } from "@compoz/ui/components/ui/badge";
 import { cn } from "@compoz/ui/lib/utils";
 import type { SiteTimelineItemUi } from "@compoz/ui/site/site-ui.types";
 
@@ -44,23 +45,41 @@ export function SiteTimelineItemDescription({
 
   return (
     <div className={cn(ui.cardInner, textAlignClassName)}>
-      <p className={cn(ui.period)}>{period}</p>
+      <p className={cn(ui.period)} data-timeline-period>
+        {period}
+      </p>
 
-      <div className={cn(ui.textBlock)}>
-        <p className={cn(ui.title)}>{title}</p>
+      <div className={cn(ui.textBlock)} data-timeline-text-block>
+        <p className={cn(ui.title)} data-timeline-title>
+          {title}
+        </p>
 
-        {subtitle ? <p className={cn(ui.subtitle)}>{subtitle}</p> : null}
+        {subtitle ? (
+          <p className={cn(ui.subtitle)} data-timeline-subtitle>
+            {subtitle}
+          </p>
+        ) : null}
 
         {description ? (
-          <p className={cn(ui.description)}>{description}</p>
+          <p className={cn(ui.description)} data-timeline-description>
+            {description}
+          </p>
         ) : null}
 
         {keywords?.length ? (
-          <div className={cn(ui.keywordsWrap, keywordsWrapClassName)}>
-            {keywords.map((keyword) => (
-              <Badge key={keyword} className={cn(ui.keyword)}>
+          <div
+            className={cn(ui.keywordsWrap, keywordsWrapClassName)}
+            data-timeline-keywords
+          >
+            {keywords.map((keyword, index) => (
+              <span
+                key={keyword}
+                className={cn(ui.keyword)}
+                data-timeline-keyword
+                data-timeline-keyword-index={index}
+              >
                 {keyword}
-              </Badge>
+              </span>
             ))}
           </div>
         ) : null}

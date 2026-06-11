@@ -132,6 +132,24 @@ function normalizeImageCellLegacy(value: unknown): unknown {
   };
 }
 
+function normalizeTimelineCellLegacy(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value;
+  }
+
+  const cell = value as Record<string, unknown>;
+
+  if (cell.kind !== "timeline") {
+    return value;
+  }
+
+  return {
+    ...cell,
+    collapsible:
+      typeof cell.collapsible === "boolean" ? cell.collapsible : true,
+  };
+}
+
 function normalizeButtonPresentationLegacy(
   value: unknown,
   fallbackLabel: string,
@@ -288,7 +306,9 @@ function normalizeCellLegacy(value: unknown): unknown {
   return normalizeCarouselCellLegacy(
     normalizeStructuredCardCellLegacy(
       normalizeButtonsCellLegacy(
-        normalizeFormCellLegacy(normalizeImageCellLegacy(value)),
+        normalizeFormCellLegacy(
+          normalizeTimelineCellLegacy(normalizeImageCellLegacy(value)),
+        ),
       ),
     ),
   );

@@ -20,10 +20,12 @@
 
 import { useTranslations } from "next-intl";
 import type { Control } from "react-hook-form";
-import { useFieldArray, useWatch } from "react-hook-form";
+import { useController, useFieldArray, useWatch } from "react-hook-form";
 
+import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
 import { TimelineListEditor } from "@compoz/studio/features/builder/editor/cells/timeline/TimelineListEditor";
 import { createEmptyTimelineItem } from "@compoz/studio/features/pages/mappers/cells-form";
+import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
@@ -65,6 +67,12 @@ export function TimelineCellEditor({
 
   const itemsPath = `${basePath}.items` as TimelineItemsPath;
 
+  const collapsibleCtrl = useController({
+    name: `${basePath}.collapsible` as `${TimelineFieldBasePath}.collapsible`,
+    control,
+    defaultValue: true,
+  });
+
   /**
    * `useFieldArray` est la source de vérité RHF pour la liste des étapes.
    *
@@ -87,9 +95,20 @@ export function TimelineCellEditor({
   }) ?? []) as TimelineItemFormValues[];
 
   const timelineFields = fields as TimelineItemField[];
+  const collapsibleIds = createFieldIds(idPrefix, "collapsible");
 
   return (
     <div className={cn(STACK_MD)}>
+      <SwitchField
+        ids={collapsibleIds}
+        label={t("studio.cellEditorTabs.timelineCellEditor.collapsibleLabel")}
+        help={t("studio.cellEditorTabs.timelineCellEditor.collapsibleHelp")}
+        checked={Boolean(collapsibleCtrl.field.value)}
+        disabled={disabled}
+        onCheckedChange={(checked) => {
+          collapsibleCtrl.field.onChange(checked);
+        }}
+      />
       <div>
         <p className="text-sm font-medium">
           {t("studio.cellEditorTabs.timelineCellEditor.itemsLabel")}

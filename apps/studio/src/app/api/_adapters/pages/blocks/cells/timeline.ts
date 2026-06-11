@@ -37,6 +37,7 @@ export function adaptTimelineCell(dto: TimelineCellIntentDTO): TimelineCell {
     id: trimOrKeep(dto.id),
     kind: "timeline",
     cssClassName: trimClearableOrUndef(dto.cssClassName),
+    collapsible: dto.collapsible ?? true,
     items: dto.items.map(adaptTimelineItem),
   };
 }

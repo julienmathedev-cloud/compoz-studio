@@ -165,6 +165,7 @@ export type TimelineItemFormValues = z.infer<
 >;
 
 export const TimelineCellFormValuesSchema = TimelineCellSchema;
+
 export type TimelineCellFormValues = z.infer<
   typeof TimelineCellFormValuesSchema
 >;

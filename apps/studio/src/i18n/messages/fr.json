@@ -354,6 +354,7 @@
 
     "CELL_TIMELINE_ITEMS_INVALID": "La liste des éléments de la timeline est invalide.",
     "CELL_TIMELINE_ITEMS_MIN_1": "Au moins un élément est requis dans la timeline.",
+    "CELL_TIMELINE_COLLAPSIBLE_INVALID": "Le drapeau de repli de la timeline est invalide.",
 
     "CELL_TIMELINE_ITEM_INVALID": "Un élément de la timeline est invalide.",
     "CELL_TIMELINE_ITEM_ID_REQUIRED": "Un identifiant d’élément de timeline est requis.",
@@ -1654,6 +1655,9 @@
         "badgeLabel": "Badge / sigle",
         "badgePlaceholder": "CDP",
         "badgeHelp": "Petit sigle ou libellé court affiché visuellement dans la timeline.",
+
+        "collapsibleLabel": "Autoriser le repli",
+        "collapsibleHelp": "Lorsque cette option est activée, les visiteurs peuvent replier et déplier la timeline.",
 
         "keywordsLabel": "Mots-clés",
         "keywordsPlaceholder": "Gestion de projet\nCoordination\nOrganisation",

@@ -313,6 +313,7 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       id,
       kind: "timeline",
       cssClassName: "",
+      collapsible: true,
       items: [createEmptyTimelineItem()],
     };
   }

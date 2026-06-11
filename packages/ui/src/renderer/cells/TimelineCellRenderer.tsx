@@ -24,7 +24,9 @@ export function TimelineCellRenderer({ cell, ui }: TimelineCellRendererProps) {
   );
   if (!items.length) return null;
 
-  return <SiteTimeline items={items} ui={ui} />;
+  return (
+    <SiteTimeline items={items} collapsible={cell.collapsible} ui={ui} />
+  );
 }
 
 TimelineCellRenderer.displayName = "TimelineCellRenderer";

@@ -59,6 +59,9 @@ export const TimelineCellSchema = z
     id: CellIdSchema,
     kind: z.literal("timeline"),
     cssClassName: CellCssClassNameSchema,
+    collapsible: z.boolean({
+      message: ERROR_CODES.CELL_TIMELINE_COLLAPSIBLE_INVALID,
+    }),
     items: z
       .array(TimelineItemSchema, {
         message: ERROR_CODES.CELL_TIMELINE_ITEMS_INVALID,

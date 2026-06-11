@@ -52,14 +52,14 @@ export function SiteFooter({ footer, legalMenu, ui }: SiteFooterProps) {
       <div className={cn(ui.footerContainer)}>
         {hasPoweredBy ? (
           <div className={cn(ui.poweredBy)}>
-            Powered by{" "}
+            Conçus par{" "}
             <Link
-              href="https://demo.julienmathe.fr/"
+              href="https://julienmathe.fr/"
               target="_blank"
               rel="noopener noreferrer"
               className={cn(ui.poweredByLink)}
             >
-              Compoz Studio
+              Julien Mathé
             </Link>
           </div>
         ) : null}

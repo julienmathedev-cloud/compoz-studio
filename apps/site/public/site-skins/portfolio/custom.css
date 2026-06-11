@@ -1,17 +1,296 @@
-.block-odd {
-  background-image: linear-gradient(
-    to top right,
-    color-mix(in srgb, var(--primary) 20%, transparent),
-    var(--background),
-    transparent
-  );
+.centered-block [data-row] {
+  align-items: center;
 }
 
-.block-even {
-  background-image: linear-gradient(
-    to bottom right,
-    color-mix(in srgb, var(--primary) 20%, transparent),
-    var(--background),
-    transparent
-  );
+.portfolio-eyebrow :where(p, strong) {
+  color: var(--primary) !important;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.portfolio-hero-schema [data-image-size-wrapper] {
+  border: 1px solid rgba(227, 221, 207, 0.7);
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 1rem;
+  box-shadow: 0 24px 60px rgba(28, 43, 30, 0.06);
+}
+
+.portfolio-hero-schema [data-image-container] {
+  overflow: hidden;
+  border-radius: 1.4rem;
+}
+
+.portfolio-hero-schema img {
+  display: block;
+  border-radius: 1.4rem;
+}
+
+.portfolio-proof-band [data-card-grid] {
+  gap: 0 !important;
+  overflow: hidden;
+  align-items: stretch;
+  border: 1px solid rgba(227, 221, 207, 0.85);
+  border-radius: 1.5rem;
+  background: var(--background);
+  box-shadow: 0 18px 48px rgba(28, 43, 30, 0.045);
+}
+
+.portfolio-proof-band [data-card-item] {
+  position: relative;
+  padding: 1.75rem;
+  transition: background-color 200ms ease;
+}
+
+.portfolio-proof-band [data-card-item]:hover {
+  background: rgba(31, 91, 69, 0.035);
+}
+
+.portfolio-proof-band [data-card-content] > * {
+  height: 100%;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+@media (min-width: 1024px) {
+  .portfolio-proof-band [data-card-item]:not(:last-child) {
+    border-right: 1px solid rgba(227, 221, 207, 0.85);
+  }
+}
+
+@media (max-width: 1023px) {
+  .portfolio-proof-band [data-card-item]:not(:last-child) {
+    border-bottom: 1px solid rgba(227, 221, 207, 0.85);
+  }
+}
+
+.portfolio-frictions [data-card-grid] {
+  gap: 1.25rem;
+}
+
+.portfolio-frictions [data-card-content] > *::after {
+  content: "";
+  display: block;
+  width: 4.5rem;
+  height: 3px;
+  margin-top: 0.5rem;
+  background: var(--primary);
+  border-radius: 999px;
+}
+
+.portfolio-about-quote blockquote {
+  font-size: clamp(1.35rem, 4vw, 1.8rem);
+  line-height: 1.7;
+  font-weight: 700;
+}
+
+.portfolio-dark-section {
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(255, 255, 255, 0.08),
+      transparent 32%
+    ),
+    var(--primary);
+}
+
+.portfolio-eyebrow-dark :where(p, strong) {
+  color: rgba(255, 255, 255, 0.65) !important;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.portfolio-dark-section h2 {
+  color: var(--primary-foreground);
+}
+
+.portfolio-dark-section p {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.portfolio-dark-section [data-card-content] > * {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+  box-shadow: none !important;
+}
+
+.portfolio-dark-section [data-card-content] > *:hover {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+}
+
+.portfolio-dark-section [data-slot="card-title"] {
+  color: var(--primary-foreground);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.portfolio-dark-section [data-card-content] p {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.portfolio-compoz-heading strong {
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  line-height: 0;
+  letter-spacing: -0.055em;
+}
+
+.portfolio-compoz-heading p {
+  margin-top: 0.5rem;
+  font-size: clamp(1rem, 1.2vw, 1.15rem);
+  color: var(--muted-foreground);
+}
+
+.portfolio-compoz-stack strong {
+  line-height: 1;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.portfolio-compoz-details strong {
+  line-height: 1;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.portfolio-compoz-details p:not(:has(strong)) {
+  line-height: 1.5;
+}
+
+.portfolio-client-gallery figure {
+  border: 1px solid rgba(227, 221, 207, 0.7);
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 24px 60px rgba(28, 43, 30, 0.06);
+}
+
+.portfolio-client-gallery img {
+  inset: 1rem;
+  height: calc(100% - 2rem);
+  width: calc(100% - 2rem);
+  border-radius: 1.4rem;
+}
+
+.portfolio-client-copy {
+  max-width: 36rem;
+}
+
+.portfolio-client-validation {
+  max-width: 36rem;
+  margin-top: 1.75rem;
+  border-left: 4px solid var(--primary);
+  background: rgba(31, 91, 69, 0.07);
+  padding: 1.25rem 1.5rem;
+}
+
+.portfolio-client-validation strong {
+  margin-bottom: 0.75rem;
+  color: var(--primary);
+  font-size: 1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.portfolio-client-validation p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+@keyframes highlight-shift {
+  0% {
+    background-position: 200% 50%;
+  }
+  100% {
+    background-position: -100% 50%;
+  }
+}
+
+.animate-highlight-shift {
+  animation: highlight-shift 6s cubic-bezier(0.6, 0, 0.3, 1) infinite;
+  background-size: 150% 100%;
+  will-change: background-position;
+}
+
+.portfolio-final-cta [data-row] {
+  align-items: center;
+  border: 1px solid rgba(227, 221, 207, 0.85);
+  border-radius: 1.75rem;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(31, 91, 69, 0.06),
+      transparent 34%
+    ),
+    var(--background);
+  box-shadow: 0 18px 48px rgba(28, 43, 30, 0.045);
+  padding: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .portfolio-final-cta [data-row] {
+    padding: 2.5rem 3rem;
+  }
+}
+
+.portfolio-timeline [data-timeline-keyword] {
+  font-family: "Kalam", "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+}
+
+@media (min-width: 768px) {
+  .portfolio-timeline [data-timeline-keyword] {
+    position: relative;
+    letter-spacing: 0.01em;
+    opacity: 0.88;
+  }
+
+  .portfolio-timeline [data-timeline-keyword]::before {
+    content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='40' viewBox='0 0 90 40' fill='none'%3E%3Cpath d='M 82 32 C 60 32 35 28 10 14' stroke='rgba(107%2C111%2C123%2C0.6)' stroke-width='1.5' stroke-linecap='round'/%3E%3Cg transform='rotate(40%2C 10%2C 14)'%3E%3Cpath d='M 16 7 L 10 14 L 18 20' stroke='rgba(107%2C111%2C123%2C0.6)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E");
+    position: absolute;
+    left: -5.8rem;
+    top: -1rem;
+  }
+
+  .portfolio-timeline [data-timeline-keyword]::after {
+    display: none;
+  }
+}
+
+.pages-legales h2 {
+  font-size: clamp(2rem, 1.6vw, 3rem);
+  line-height: 1.3;
+}
+
+/* -------------------------------------------------------------------------
+   * Icon pulse (motion-safe)
+   * ----------------------------------------------------------------------- */
+@keyframes pulse-icon {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+.icon-hover-pulse {
+  transition: transform 0.3s ease;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hover-pulse-trigger:hover .icon-hover-pulse {
+    animation: pulse-icon 0.6s ease;
+  }
 }

@@ -10,7 +10,7 @@ import type { SitePrimaryMenuUiOverride } from "@compoz/ui/site/site-ui.types";
 
 export const portfolioPrimaryMenuUi: SitePrimaryMenuUiOverride = {
   interactive:
-    "justify-center whitespace-nowrap rounded-md shrink-0 disabled:pointer-events-none disabled:opacity-50 group font-normal motion-safe:transition-all motion-safe:duration-300 motion-safe:ease-out motion-safe:hover:translate-y-[-1px] motion-safe:hover:scale-[1.01] motion-safe:active:scale-[0.98] motion-safe:hover:bg-accent motion-safe:hover:shadow-md motion-safe:hover:shadow-accent motion-safe:hover:opacity-100",
+    "justify-center whitespace-nowrap rounded-md shrink-0 disabled:pointer-events-none disabled:opacity-50 group font-normal motion-safe:transition-all motion-safe:duration-300 motion-safe:ease-out motion-safe:hover:translate-y-[-1px] motion-safe:hover:scale-[1.01] motion-safe:active:scale-[0.98] motion-safe:hover:opacity-100",
 
   link: "px-4 py-2 hover:text-primary group aria-[current=page]:no-underline data-[section-active=true]:no-underline",
 

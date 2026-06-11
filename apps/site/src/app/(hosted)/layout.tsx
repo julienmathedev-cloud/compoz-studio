@@ -15,6 +15,7 @@
 import type { Metadata } from "next";
 import type { Icons } from "next/dist/lib/metadata/types/metadata-types";
 import type { ReactNode } from "react";
+import { preload } from "react-dom";
 
 import { SiteNotFoundClient } from "@compoz/site/components/system/SiteNotFoundClient";
 import {
@@ -217,19 +218,20 @@ export default async function HostedSiteLayout({ children }: LayoutProps) {
     [publicFont.variableName]: publicFont.fontFamily,
   } as CSSProperties;
 
+  if (fontPreloadHref) {
+    preload(fontPreloadHref, {
+      as: "font",
+      type: "font/woff2",
+      crossOrigin: "anonymous",
+    });
+  }
+
   return (
     <>
-      {fontPreloadHref ? (
-        <link
-          rel="preload"
-          href={fontPreloadHref}
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
+      <link rel="stylesheet" href={publicFont.href} precedence="font" />
+      {skinCssHref ? (
+        <link rel="stylesheet" href={skinCssHref} precedence="skin" />
       ) : null}
-      <link rel="stylesheet" href={publicFont.href} />
-      {skinCssHref ? <link rel="stylesheet" href={skinCssHref} /> : null}
 
       <div style={fontStyle}>
         <SiteThemeBoundary theme={settings?.theme}>

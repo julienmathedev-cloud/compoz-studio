@@ -23,7 +23,10 @@ import { useEffect, useMemo, useRef } from "react";
 import type { FieldErrors, UseFormSetValue } from "react-hook-form";
 import { Controller, useForm, useFormState, useWatch } from "react-hook-form";
 
-import { PAGE_NAME } from "@compoz/core/constants/limits/pages";
+import {
+  PAGE_NAME,
+  PAGE_SEO_DESCRIPTION,
+} from "@compoz/core/constants/limits/pages";
 import { SLUG_FINAL_RE } from "@compoz/core/domain/slug/constants";
 import { normalizeSlug } from "@compoz/core/domain/slug/utils";
 import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
@@ -95,8 +98,6 @@ type PageFormProps = Readonly<{
 }>;
 
 const NO_PARENT_VALUE = "__none__";
-const SEO_DESCRIPTION_MAX_LENGTH = 180;
-
 const CHANGEFREQ_VALUES = [
   "always",
   "hourly",
@@ -609,7 +610,7 @@ export function PageForm({
                       "studio.pageForm.seoDescription.placeholder",
                     )}
                     help={t("studio.pageForm.seoDescription.help")}
-                    maxLength={SEO_DESCRIPTION_MAX_LENGTH}
+                    maxLength={PAGE_SEO_DESCRIPTION.MAX}
                     showCount
                     autoCapitalize="sentences"
                     spellCheck

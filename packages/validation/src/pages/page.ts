@@ -9,7 +9,10 @@
 
 import { z } from "zod";
 
-import { PAGE_NAME } from "@compoz/core/constants/limits/pages";
+import {
+  PAGE_NAME,
+  PAGE_SEO_DESCRIPTION,
+} from "@compoz/core/constants/limits/pages";
 import { SLUG } from "@compoz/core/constants/limits/slug";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { SLUG_FINAL_RE } from "@compoz/core/domain/slug/constants";
@@ -61,9 +64,8 @@ export const PageSeoTitleSchema = z
 export const PageSeoDescriptionSchema = z
   .string()
   .trim()
-  .max(180, ERROR_CODES.SEO_DESCRIPTION_TOO_LONG)
-  .nullable()
-  .transform((value) => value || null);
+  .max(PAGE_SEO_DESCRIPTION.MAX, ERROR_CODES.SEO_DESCRIPTION_TOO_LONG)
+  .nullable();
 
 /**
  * Id technique d'une Page.

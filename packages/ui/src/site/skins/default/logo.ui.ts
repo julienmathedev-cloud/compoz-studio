@@ -16,5 +16,5 @@ export const defaultLogoUi: SiteLogoUi = {
   image: "h-10 w-auto md:h-12 lg:h-14 select-none",
 
   // Largeur rendue approximative pour aider next/image.
-  sizes: "(max-width: 768px) 160px, 220px",
+  sizes: "(max-width: 768px) 120px, 160px",
 } as const;

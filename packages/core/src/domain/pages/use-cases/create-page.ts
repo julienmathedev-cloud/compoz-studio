@@ -76,6 +76,8 @@ export function createPage({
     });
 
     const seoTitle = input.seoTitle !== null ? input.seoTitle.trim() : null;
+    const seoDescription =
+      input.seoDescription !== null ? input.seoDescription.trim() || null : null;
 
     const sitemap =
       input.sitemap !== null ? applySitemapDefaults(input.sitemap) : null;
@@ -90,6 +92,7 @@ export function createPage({
       slug,
       name,
       seoTitle,
+      seoDescription,
       sitemap,
       paginationEnabled,
       nowIso,
@@ -142,6 +145,7 @@ type BuildPageEntityProps = {
   slug: string;
   name: string;
   seoTitle: string | null;
+  seoDescription: string | null;
   sitemap: Page["sitemap"];
   paginationEnabled: boolean;
   nowIso: NonNullable<CreatePageDeps["nowIso"]>;
@@ -153,6 +157,7 @@ function buildPageEntity({
   slug,
   name,
   seoTitle,
+  seoDescription,
   sitemap,
   paginationEnabled,
   nowIso,
@@ -165,6 +170,7 @@ function buildPageEntity({
     slug,
     name,
     seoTitle,
+    seoDescription,
     blocks: [],
     meta: { createdAt: at, updatedAt: at },
     sitemap,

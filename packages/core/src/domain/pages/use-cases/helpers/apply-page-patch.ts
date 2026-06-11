@@ -219,3 +219,24 @@ export function applySeoTitlePatch({
     changed.push("seoTitle");
   }
 }
+
+export function applySeoDescriptionPatch({
+  existing,
+  next,
+  changed,
+  input,
+}: {
+  existing: Page;
+  next: Page;
+  changed: ChangedKey[];
+  input: UpdatePageInput;
+}): void {
+  if (!("seoDescription" in input)) return;
+
+  const value = String(input.seoDescription ?? "").trim() || null;
+
+  if (value !== existing.seoDescription) {
+    next.seoDescription = value;
+    changed.push("seoDescription");
+  }
+}

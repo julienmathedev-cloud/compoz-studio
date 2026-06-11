@@ -185,6 +185,19 @@ export function assertSeoTitle(
   }
 }
 
+export function assertSeoDescription(
+  seoDescription: string | null,
+  path: (string | number)[] = ["seoDescription"],
+): void {
+  if (seoDescription !== null && typeof seoDescription !== "string") {
+    throw new DomainError({
+      code: EC.INVALID_ARGUMENT,
+      message: EC.INVALID_ARGUMENT,
+      details: { path },
+    });
+  }
+}
+
 export function assertSitemap(
   sitemap: Page["sitemap"],
   path: (string | number)[] = ["sitemap"],
@@ -234,6 +247,7 @@ export function assertPage(p: Page): void {
   assertNameRequired(p.name, ["page", "name"]);
   assertPageSlug(p.slug, ["page", "slug"]);
   assertSeoTitle(p.seoTitle, ["page", "seoTitle"]);
+  assertSeoDescription(p.seoDescription, ["page", "seoDescription"]);
 
   const normalizedParentId = assertParentId(p.parentId, ["page", "parentId"]);
 

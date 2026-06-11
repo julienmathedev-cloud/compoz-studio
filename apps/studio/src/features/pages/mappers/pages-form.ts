@@ -58,6 +58,10 @@ export function normalizePageFormValues(
     name: String(values.name ?? "").trim(),
     seoTitle:
       values.seoTitle !== null ? String(values.seoTitle ?? "").trim() : null,
+    seoDescription:
+      values.seoDescription !== null
+        ? String(values.seoDescription ?? "").trim() || null
+        : null,
     parentId: values.parentId ?? null,
     slug: String(values.slug ?? "").trim(),
     sitemap: values.sitemap
@@ -100,6 +104,7 @@ export function toCreatePageIntentDTOFromFormValues(
   return {
     name: normalizedValues.name,
     seoTitle: normalizedValues.seoTitle,
+    seoDescription: normalizedValues.seoDescription,
     parentId: normalizedValues.parentId,
     paginationEnabled: normalizedValues.paginationEnabled,
     sitemap: toPageSitemapIntentDTOFromFormValues(normalizedValues.sitemap),
@@ -120,6 +125,13 @@ export function toUpdatePageIntentDTOFromFormValues(
     output.seoTitle =
       patch.seoTitle !== null && patch.seoTitle !== undefined
         ? String(patch.seoTitle).trim()
+        : null;
+  }
+
+  if ("seoDescription" in patch) {
+    output.seoDescription =
+      patch.seoDescription !== null && patch.seoDescription !== undefined
+        ? String(patch.seoDescription).trim() || null
         : null;
   }
 

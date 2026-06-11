@@ -13,6 +13,7 @@ import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import {
   PageIdSchema,
   PageNameSchema,
+  PageSeoDescriptionSchema,
   PageSeoTitleSchema,
   SitemapChangeFreqSchema,
   SlugSchema,
@@ -50,6 +51,9 @@ export const CreatePageIntentSchema = z
     /** Titre SEO explicite ou null. */
     seoTitle: PageSeoTitleSchema,
 
+    /** Description SEO explicite ou null. */
+    seoDescription: PageSeoDescriptionSchema,
+
     parentId: PageIdSchema.nullable(),
 
     /**
@@ -85,6 +89,12 @@ export const UpdatePageIntentSchema = z
      * null => vider explicitement
      */
     seoTitle: PageSeoTitleSchema.optional(),
+
+    /**
+     * Absence => inchangé
+     * null => vider explicitement
+     */
+    seoDescription: PageSeoDescriptionSchema.optional(),
 
     /**
      * Absence => inchangé

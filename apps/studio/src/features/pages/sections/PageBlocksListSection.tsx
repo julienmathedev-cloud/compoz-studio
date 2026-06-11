@@ -177,6 +177,7 @@ export function PageBlocksListSection({
       const warningKeysNow = computePageWarnings({
         name: values.name ?? "",
         seoTitle: values.seoTitle ?? null,
+        seoDescription: values.seoDescription ?? null,
         parentId: values.parentId ?? null,
         slug: values.slug ?? "",
         sitemap: values.sitemap ?? null,
@@ -375,6 +376,7 @@ export function PageBlocksListSection({
     return {
       name: page.name,
       seoTitle: page.seoTitle,
+      seoDescription: page.seoDescription,
       blocks: pageBlocks,
       paginationEnabled: Boolean(page.paginationEnabled),
     } as const;

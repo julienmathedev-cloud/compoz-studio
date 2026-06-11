@@ -62,6 +62,7 @@ function normalizeSitemap(
  * Contrat :
  * - `name` toujours trimé et obligatoire.
  * - `seoTitle` trimé si fourni, sinon `null`.
+ * - `seoDescription` trimée si fournie et non vide, sinon `null`.
  * - `slug` optionnel : normalisé s’il est fourni, sinon logique fallback côté domaine.
  * - `sitemap` toujours propagé (`null` ou objet normalisé).
  */
@@ -73,6 +74,7 @@ export function adaptCreatePagePayload(
   log.debug("studio.adapter.pages.create.start", {
     hasSlug: typeof dto.slug === "string",
     hasSeoTitle: dto.seoTitle !== null,
+    hasSeoDescription: dto.seoDescription !== null,
     hasSitemap: true,
     hasParentId: true,
   });
@@ -80,6 +82,10 @@ export function adaptCreatePagePayload(
   const out: CreatePageInput = {
     name: trimOrKeep(dto.name),
     seoTitle: dto.seoTitle !== null ? trimOrKeep(dto.seoTitle) : null,
+    seoDescription:
+      dto.seoDescription !== null
+        ? trimOrKeep(dto.seoDescription) || null
+        : null,
     parentId: dto.parentId,
     sitemap: normalizeSitemap(dto.sitemap) ?? null,
     paginationEnabled: dto.parentId === null ? false : dto.paginationEnabled,
@@ -117,6 +123,7 @@ export function adaptUpdatePagePayload(
   log.debug("studio.adapter.pages.update.start", {
     hasName: "name" in dto,
     hasSeoTitle: "seoTitle" in dto,
+    hasSeoDescription: "seoDescription" in dto,
     hasSlug: "slug" in dto,
     hasSitemap: "sitemap" in dto,
     hasParentId: "parentId" in dto,
@@ -132,6 +139,13 @@ export function adaptUpdatePagePayload(
     out.seoTitle =
       dto.seoTitle !== null && typeof dto.seoTitle === "string"
         ? trimOrKeep(dto.seoTitle)
+        : null;
+  }
+
+  if ("seoDescription" in dto) {
+    out.seoDescription =
+      dto.seoDescription !== null && typeof dto.seoDescription === "string"
+        ? trimOrKeep(dto.seoDescription) || null
         : null;
   }
 

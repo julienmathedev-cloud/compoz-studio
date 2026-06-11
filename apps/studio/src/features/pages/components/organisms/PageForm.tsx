@@ -95,6 +95,7 @@ type PageFormProps = Readonly<{
 }>;
 
 const NO_PARENT_VALUE = "__none__";
+const SEO_DESCRIPTION_MAX_LENGTH = 180;
 
 const CHANGEFREQ_VALUES = [
   "always",
@@ -156,6 +157,7 @@ export function PageForm({
   const nameIds = createFieldIds(formIdPrefix, "name");
   const slugIds = createFieldIds(formIdPrefix, "slug");
   const seoTitleIds = createFieldIds(formIdPrefix, "seoTitle");
+  const seoDescriptionIds = createFieldIds(formIdPrefix, "seoDescription");
   const sitemapIncludeIds = createFieldIds(formIdPrefix, "sitemapInclude");
   const sitemapPriorityIds = createFieldIds(formIdPrefix, "sitemapPriority");
   const sitemapChangefreqIds = createFieldIds(
@@ -194,10 +196,11 @@ export function PageForm({
 
   const values: PageFormValues = watchedValues ?? {
     name: "",
-    seoTitle: "",
+    seoTitle: null,
+    seoDescription: null,
     slug: "",
     parentId: null,
-    sitemap: undefined,
+    sitemap: null,
     paginationEnabled: false,
   };
 
@@ -284,9 +287,24 @@ export function PageForm({
       ? String(errors.seoTitle.message)
       : undefined;
 
+  const invalidSeoDescription =
+    (showError || Boolean(touchedFields.seoDescription)) &&
+    Boolean(errors.seoDescription?.message ?? errors.seoDescription);
+
+  const seoDescriptionErrorMessage =
+    (showError || Boolean(touchedFields.seoDescription)) &&
+    errors.seoDescription?.message
+      ? String(errors.seoDescription.message)
+      : undefined;
+
   const blockingErrorsCount = useMemo(() => {
-    return [invalidName, invalidSlug, invalidSeoTitle].filter(Boolean).length;
-  }, [invalidName, invalidSlug, invalidSeoTitle]);
+    return [
+      invalidName,
+      invalidSlug,
+      invalidSeoTitle,
+      invalidSeoDescription,
+    ].filter(Boolean).length;
+  }, [invalidName, invalidSlug, invalidSeoDescription, invalidSeoTitle]);
 
   useEffect(() => {
     onBlockingErrorsCountChange?.(blockingErrorsCount);
@@ -316,6 +334,7 @@ export function PageForm({
       "name",
       "slug",
       "seoTitle",
+      "seoDescription",
     ];
     const first = fieldPriority.find((key) => Boolean(formErrors[key]));
     if (!first) return;
@@ -324,6 +343,7 @@ export function PageForm({
       name: nameIds.fieldId,
       slug: slugIds.fieldId,
       seoTitle: seoTitleIds.fieldId,
+      seoDescription: seoDescriptionIds.fieldId,
     };
 
     const targetId = fieldIdByName[first];
@@ -569,6 +589,33 @@ export function PageForm({
                     disabled={isBusy}
                     invalid={invalidSeoTitle}
                     error={seoTitleErrorMessage}
+                  />
+                )}
+              />
+
+              <Controller
+                name="seoDescription"
+                control={control}
+                render={({ field }) => (
+                  <InputField
+                    ids={seoDescriptionIds}
+                    name={field.name}
+                    inputRef={field.ref}
+                    label={t("studio.pageForm.seoDescription.label")}
+                    value={field.value ?? ""}
+                    onChange={(value) => field.onChange(value)}
+                    onBlur={field.onBlur}
+                    placeholder={t(
+                      "studio.pageForm.seoDescription.placeholder",
+                    )}
+                    help={t("studio.pageForm.seoDescription.help")}
+                    maxLength={SEO_DESCRIPTION_MAX_LENGTH}
+                    showCount
+                    autoCapitalize="sentences"
+                    spellCheck
+                    disabled={isBusy}
+                    invalid={invalidSeoDescription}
+                    error={seoDescriptionErrorMessage}
                   />
                 )}
               />

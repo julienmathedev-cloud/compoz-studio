@@ -29,6 +29,7 @@ import {
   applyNamePatch,
   applyPaginationEnabledPatch,
   applyParentIdPatch,
+  applySeoDescriptionPatch,
   applySeoTitlePatch,
   applySitemapPatch,
   applySlugPatch,
@@ -69,6 +70,7 @@ export function updatePage({
 
     applyNamePatch({ existing, next, changed, input });
     applySeoTitlePatch({ existing, next, changed, input });
+    applySeoDescriptionPatch({ existing, next, changed, input });
 
     const slugChange = await applySlugPatch({
       existing,

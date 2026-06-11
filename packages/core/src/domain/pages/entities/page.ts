@@ -58,6 +58,9 @@ export interface Page {
   /** Titre SEO. */
   seoTitle: string | null;
 
+  /** Description SEO. */
+  seoDescription: string | null;
+
   /** Blocs de contenu associés à la page (contenu structuré). */
   blocks: ReadonlyArray<Block>;
 

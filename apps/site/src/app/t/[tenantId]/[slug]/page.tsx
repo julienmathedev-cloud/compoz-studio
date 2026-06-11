@@ -54,6 +54,7 @@ export async function generateMetadata({
   const settings = await getPublishedSettingsByTenantId(tenantId);
 
   const description =
+    (page.seoDescription ?? "").trim() ||
     (settings?.seo?.defaultDescription ?? "").trim() || undefined;
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])

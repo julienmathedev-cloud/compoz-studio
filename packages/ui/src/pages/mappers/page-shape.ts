@@ -51,6 +51,7 @@ export function toPageShapeFromDTO(
     return {
       name: "",
       seoTitle: null,
+      seoDescription: null,
       parentId: null,
       slug: fallbackSlug,
       sitemap: { ...DEFAULT_SITEMAP },
@@ -63,6 +64,7 @@ export function toPageShapeFromDTO(
   return {
     name: page.name,
     seoTitle: page.seoTitle,
+    seoDescription: page.seoDescription,
     parentId: page.parentId,
     slug,
     sitemap: page.sitemap

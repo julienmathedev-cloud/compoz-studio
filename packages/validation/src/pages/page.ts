@@ -53,6 +53,19 @@ export const PageSeoTitleSchema = z
   .nullable();
 
 /**
+ * Description SEO :
+ * - trim automatique
+ * - null autorisé pour représenter l’absence de valeur
+ * - borne max adaptée aux résultats de recherche
+ */
+export const PageSeoDescriptionSchema = z
+  .string()
+  .trim()
+  .max(180, ERROR_CODES.SEO_DESCRIPTION_TOO_LONG)
+  .nullable()
+  .transform((value) => value || null);
+
+/**
  * Id technique d'une Page.
  *
  * Contrat :
@@ -130,6 +143,9 @@ export const PageSchema = z
     /** Titre SEO. */
     seoTitle: PageSeoTitleSchema,
 
+    /** Description SEO. */
+    seoDescription: PageSeoDescriptionSchema,
+
     /** Blocs de contenu de la page. */
     blocks: z.array(BlockSchema),
 
@@ -156,6 +172,7 @@ export const PageRenderSchema = z
   .object({
     name: PageNameSchema,
     seoTitle: PageSeoTitleSchema,
+    seoDescription: PageSeoDescriptionSchema,
     blocks: z.array(BlockSchema),
     paginationEnabled: z.boolean(),
   })

@@ -336,16 +336,22 @@ function normalizePageLegacyBlocks(input: unknown): unknown {
     return input;
   }
 
-  const page = input as {
-    blocks?: unknown;
-  };
+  const page = input as Record<string, unknown>;
+  const seoDescription =
+    typeof page.seoDescription === "string"
+      ? page.seoDescription.trim() || null
+      : null;
 
   if (!Array.isArray(page.blocks)) {
-    return input;
+    return {
+      ...page,
+      seoDescription,
+    };
   }
 
   return {
     ...page,
+    seoDescription,
     blocks: page.blocks.map((block) => {
       if (!block || typeof block !== "object" || Array.isArray(block)) {
         return block;
@@ -399,6 +405,7 @@ function toDomainPage(p: PageShape): Page {
     slug: p.slug,
     name: p.name,
     seoTitle: p.seoTitle,
+    seoDescription: p.seoDescription,
     blocks,
     meta,
     sitemap: p.sitemap,

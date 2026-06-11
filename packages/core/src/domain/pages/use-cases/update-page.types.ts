@@ -18,12 +18,13 @@ import type { SiteRepository } from "@compoz/core/domain/site/ports/site-reposit
  *
  * @remarks
  * - Les champs restent optionnels car il s’agit d’un patch partiel.
- * - `seoTitle` et `sitemap` peuvent être explicitement remis à `null`.
+ * - `seoTitle`, `seoDescription` et `sitemap` peuvent être explicitement remis à `null`.
  */
 export type UpdatePageInput = {
   pageId: string;
   name?: string;
   seoTitle?: string | null;
+  seoDescription?: string | null;
   slug?: string;
   parentId?: string | null;
   sitemap?: Partial<PageSitemap> | null;
@@ -48,5 +49,11 @@ export interface UpdatePageDeps {
 
 export type ChangedKey = keyof Pick<
   Page,
-  "name" | "slug" | "parentId" | "sitemap" | "paginationEnabled" | "seoTitle"
+  | "name"
+  | "slug"
+  | "parentId"
+  | "sitemap"
+  | "paginationEnabled"
+  | "seoTitle"
+  | "seoDescription"
 >;

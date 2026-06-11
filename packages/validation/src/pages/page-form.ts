@@ -12,6 +12,7 @@ import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import {
   PageIdSchema,
   PageNameSchema,
+  PageSeoDescriptionSchema,
   PageSeoTitleSchema,
   SitemapChangeFreqSchema,
   SlugSchema,
@@ -75,6 +76,7 @@ export const PageFormSchema = z
   .object({
     name: PageNameSchema,
     seoTitle: PageSeoTitleSchema,
+    seoDescription: PageSeoDescriptionSchema,
     parentId: PageIdSchema.nullable(),
     slug: PageSlugFormSchema,
     sitemap: PageSitemapFormSchema.nullable(),

@@ -1146,6 +1146,11 @@
         "placeholder": "Titre affiché dans les résultats de recherche",
         "help": "Optionnel. Laissez vide pour utiliser un fallback automatique basé sur le contenu de la page."
       },
+      "seoDescription": {
+        "label": "Description SEO",
+        "placeholder": "Ex. Je conçois des outils web sur mesure pour structurer vos process métier.",
+        "help": "Résumé court utilisé par les moteurs de recherche lorsqu’il est pertinent."
+      },
       "parent": {
         "label": "Page parente",
         "help": "Sélectionnez une page pour la définir comme parente.",

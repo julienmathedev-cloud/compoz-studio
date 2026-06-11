@@ -32,6 +32,7 @@ export interface CreatePageDeps {
  * - `name` (obligatoire) : doit être non vide (validé dans le use-case).
  * - `slug` (optionnel) : si absent, dérivé du titre.
  * - `seoTitle` : valeur explicite ou `null`.
+ * - `seoDescription` : valeur explicite ou `null`.
  * - `sitemap` : patch partiel ou `null` ; s’il est fourni, il est complété dans le use-case.
  *
  * @remarks
@@ -41,6 +42,7 @@ export type CreatePageInput = {
   name: string;
   slug?: string;
   seoTitle: string | null;
+  seoDescription: string | null;
   parentId: string | null;
   sitemap: Partial<PageSitemap> | null;
   existingSlugs?: ReadonlySet<string>;

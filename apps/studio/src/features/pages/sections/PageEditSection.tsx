@@ -146,6 +146,7 @@ export function PageEditSection({
       const warningKeysNow = computePageWarnings({
         name: values.name ?? "",
         seoTitle: values.seoTitle ?? null,
+        seoDescription: values.seoDescription ?? null,
         parentId: values.parentId ?? null,
         slug: values.slug ?? "",
         sitemap: values.sitemap ?? null,

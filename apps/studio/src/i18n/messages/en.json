@@ -1146,6 +1146,11 @@
         "placeholder": "Title displayed in search results",
         "help": "Optional. Leave empty to use an automatic fallback based on the page content."
       },
+      "seoDescription": {
+        "label": "SEO description",
+        "placeholder": "E.g. I design custom web tools to structure business workflows.",
+        "help": "Short summary used by search engines when relevant."
+      },
       "parent": {
         "label": "Parent page",
         "help": "Select a page to set it as parent.",

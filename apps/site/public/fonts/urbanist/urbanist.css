@@ -1,6 +1,22 @@
 @font-face {
   font-family: "Urbanist";
   font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./urbanist-latin-wght-normal.woff2") format("woff2-variations");
+}
+
+@font-face {
+  font-family: "Urbanist";
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./urbanist-latin-wght-italic.woff2") format("woff2-variations");
+}
+
+/* @font-face {
+  font-family: "Urbanist";
+  font-style: normal;
   font-weight: 400;
   font-display: swap;
   src: url("./urbanist-v18-latin-regular.woff2") format("woff2");
@@ -60,4 +76,4 @@
   font-weight: 700;
   font-display: swap;
   src: url("./urbanist-v18-latin-700italic.woff2") format("woff2");
-}
+} */

@@ -1,6 +1,22 @@
 @font-face {
   font-family: "DM Sans";
   font-style: normal;
+  font-weight: 100 1000;
+  font-display: swap;
+  src: url("./dm-sans-latin-wght-normal.woff2") format("woff2-variations");
+}
+
+@font-face {
+  font-family: "DM Sans";
+  font-style: italic;
+  font-weight: 100 1000;
+  font-display: swap;
+  src: url("./dm-sans-latin-wght-italic.woff2") format("woff2-variations");
+}
+
+/* @font-face {
+  font-family: "DM Sans";
+  font-style: normal;
   font-weight: 400;
   font-display: swap;
   src: url("./dm-sans-v17-latin-regular.woff2") format("woff2");
@@ -60,4 +76,4 @@
   font-weight: 700;
   font-display: swap;
   src: url("./dm-sans-v17-latin-700italic.woff2") format("woff2");
-}
+} */

@@ -1,6 +1,14 @@
 @font-face {
   font-family: "Manrope";
   font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("./manrope-latin-wght-normal.woff2") format("woff2-variations");
+}
+
+/* @font-face {
+  font-family: "Manrope";
+  font-style: normal;
   font-weight: 400;
   font-display: swap;
   src: url("./manrope-v20-latin-regular.woff2") format("woff2");
@@ -28,4 +36,4 @@
   font-weight: 700;
   font-display: swap;
   src: url("./manrope-v20-latin-700.woff2") format("woff2");
-}
+} */

@@ -1,6 +1,13 @@
 @font-face {
   font-family: "Caveat";
   font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("./caveat-latin-wght-normal.woff2") format("woff2-variations");
+}
+/* @font-face {
+  font-family: "Caveat";
+  font-style: normal;
   font-weight: 400;
   font-display: swap;
   src: url("./caveat-v23-latin-regular.woff2") format("woff2");
@@ -28,4 +35,4 @@
   font-weight: 700;
   font-display: swap;
   src: url("./caveat-v23-latin-700.woff2") format("woff2");
-}
+} */

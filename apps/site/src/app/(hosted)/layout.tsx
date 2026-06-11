@@ -23,7 +23,10 @@ import {
 } from "@compoz/site/lib/pages/published-page-loaders";
 import { resolveSiteBaseUrl } from "@compoz/site/lib/seo/resolveSiteBaseUrl";
 import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
-import { resolvePublicFontConfig } from "@compoz/ui/lib/public-fonts";
+import {
+  resolveFontPreloadHref,
+  resolvePublicFontConfig,
+} from "@compoz/ui/lib/public-fonts";
 import {
   ensureTitleTemplate,
   resolveAssetUrl,
@@ -205,6 +208,9 @@ export default async function HostedSiteLayout({ children }: LayoutProps) {
   const settings = await getPublishedSettingsByTenantId(tenantId);
   const ui = resolveSiteUi(tenantId);
   const publicFont = resolvePublicFontConfig(settings?.theme?.fontFamily);
+  const fontPreloadHref = resolveFontPreloadHref(
+    settings?.theme?.fontFamily,
+  );
   const skinCssHref = resolveSiteSkinCssHref(tenantId);
 
   const fontStyle = {
@@ -213,6 +219,15 @@ export default async function HostedSiteLayout({ children }: LayoutProps) {
 
   return (
     <>
+      {fontPreloadHref ? (
+        <link
+          rel="preload"
+          href={fontPreloadHref}
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      ) : null}
       <link rel="stylesheet" href={publicFont.href} />
       {skinCssHref ? <link rel="stylesheet" href={skinCssHref} /> : null}
 

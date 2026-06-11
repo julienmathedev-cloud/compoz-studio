@@ -20,7 +20,7 @@ export const demoCarouselUi: SiteCarouselUiOverride = {
     slide:
       "motion-safe:transition-[opacity] motion-safe:duration-200 motion-safe:ease-out",
     slideActive: "translate-y-0",
-    slideInactive: "opacity-40 translate-y-2 shadow-none",
+    slideInactive: "opacity-93 translate-y-2 shadow-none",
     arrowButton: "scale-120 md:scale-120 lg:scale-140",
   },
   card: demoCardsUi,

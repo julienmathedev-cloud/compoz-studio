@@ -23,7 +23,7 @@ export const portfolioCarouselUi: SiteCarouselUiOverride = {
     slide:
       "motion-safe:transition-[opacity] motion-safe:duration-300 motion-safe:ease-out",
     slideActive: "translate-y-0",
-    slideInactive: "opacity-40 translate-y-2 shadow-none",
+    slideInactive: "opacity-93 translate-y-2 shadow-none",
     arrowButton:
       portfolioButtonClass +
       " md:scale-120 motion-safe:md:hover:scale-124 motion-safe:md:active:scale-116 lg:scale-140 motion-safe:lg:hover:scale-148 motion-safe:lg:active:scale-138",

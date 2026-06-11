@@ -26,6 +26,7 @@ import { Controller, useForm, useFormState, useWatch } from "react-hook-form";
 import {
   PAGE_NAME,
   PAGE_SEO_DESCRIPTION,
+  PAGE_SEO_TITLE,
 } from "@compoz/core/constants/limits/pages";
 import { SLUG_FINAL_RE } from "@compoz/core/domain/slug/constants";
 import { normalizeSlug } from "@compoz/core/domain/slug/utils";
@@ -36,6 +37,7 @@ import { ActionsBar } from "@compoz/studio/components/molecules/controls/Actions
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
+import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
 import {
   usePageUiWarnings,
   type PageWarningKey,
@@ -583,7 +585,7 @@ export function PageForm({
                     onBlur={field.onBlur}
                     placeholder={t("studio.pageForm.seoTitle.placeholder")}
                     help={t("studio.pageForm.seoTitle.help")}
-                    maxLength={PAGE_NAME.MAX}
+                    maxLength={PAGE_SEO_TITLE.MAX}
                     showCount
                     autoCapitalize="sentences"
                     spellCheck={false}
@@ -598,10 +600,9 @@ export function PageForm({
                 name="seoDescription"
                 control={control}
                 render={({ field }) => (
-                  <InputField
+                  <TextareaField
                     ids={seoDescriptionIds}
                     name={field.name}
-                    inputRef={field.ref}
                     label={t("studio.pageForm.seoDescription.label")}
                     value={field.value ?? ""}
                     onChange={(value) => field.onChange(value)}
@@ -617,6 +618,7 @@ export function PageForm({
                     disabled={isBusy}
                     invalid={invalidSeoDescription}
                     error={seoDescriptionErrorMessage}
+                    rows={3}
                   />
                 )}
               />

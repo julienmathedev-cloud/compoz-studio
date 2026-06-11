@@ -12,6 +12,7 @@ import { z } from "zod";
 import {
   PAGE_NAME,
   PAGE_SEO_DESCRIPTION,
+  PAGE_SEO_TITLE,
 } from "@compoz/core/constants/limits/pages";
 import { SLUG } from "@compoz/core/constants/limits/slug";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
@@ -52,7 +53,7 @@ export const PageNameSchema = z
 export const PageSeoTitleSchema = z
   .string()
   .trim()
-  .max(PAGE_NAME.MAX, ERROR_CODES.PAGE_TITLE_TOO_LONG)
+  .max(PAGE_SEO_TITLE.MAX, ERROR_CODES.PAGE_TITLE_TOO_LONG)
   .nullable();
 
 /**

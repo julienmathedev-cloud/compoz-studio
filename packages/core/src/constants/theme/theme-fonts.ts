@@ -121,6 +121,13 @@ export const THEME_FONTS = [
     description: "Traditionnel · éditorial",
     fontFamily: '"Libre Baskerville", ui-serif, Georgia, serif',
   },
+  {
+    id: "spectral",
+    label: "Spectral",
+    category: "serif",
+    description: "Éditorial · raffiné",
+    fontFamily: '"Spectral", ui-serif, Georgia, serif',
+  },
 
   {
     id: "bebas-neue",

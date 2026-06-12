@@ -30,7 +30,6 @@ import type { CSSProperties, PropsWithChildren } from "react";
 import { createContext, useContext, useMemo } from "react";
 
 import { themeSettingsToCssVars } from "@compoz/ui/settings/theme/theme-css-vars";
-import { resolveThemeFontFamily } from "@compoz/ui/settings/theme/theme-font-runtime";
 import type { ThemeSettingsShape } from "@compoz/validation/site/settings/theme/theme";
 
 type ThemeProviderProps = PropsWithChildren<{
@@ -57,7 +56,7 @@ export function ThemeProvider({ theme, children }: ThemeProviderProps) {
 
     return {
       ...(vars as CSSProperties),
-      fontFamily: resolveThemeFontFamily(resolvedTheme.fontFamily),
+      fontFamily: "var(--tenant-font-body)",
     };
   }, [resolvedTheme]);
 

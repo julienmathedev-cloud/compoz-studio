@@ -159,6 +159,12 @@ export const ThemeSettingsObjectSchema = z
       message: ERROR_CODES.THEME_FONT_UNSUPPORTED,
     }),
 
+    headingFont: z
+      .enum(THEME_FONT_IDS, {
+        message: ERROR_CODES.THEME_FONT_UNSUPPORTED,
+      })
+      .nullable(),
+
     revealPreset: z.enum(REVEAL_PRESETS, {
       message: ERROR_CODES.THEME_REVEAL_PRESET_INVALID,
     }),

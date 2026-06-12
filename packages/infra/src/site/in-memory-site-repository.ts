@@ -58,6 +58,24 @@ function defaultSettings(): SiteSettings {
   };
 }
 
+function mergeThemeSettings(
+  theme: Partial<SiteSettings["theme"]> | null | undefined,
+): SiteSettings["theme"] {
+  return {
+    ...DEFAULT_THEME_SETTINGS,
+    ...theme,
+    headingFont: theme?.headingFont ?? null,
+    lightTokens: {
+      ...DEFAULT_THEME_SETTINGS.lightTokens,
+      ...theme?.lightTokens,
+    },
+    darkTokens: {
+      ...DEFAULT_THEME_SETTINGS.darkTokens,
+      ...theme?.darkTokens,
+    },
+  };
+}
+
 /**
  * Repository SiteRepository basé sur la mémoire.
  * Contrat : lit/écrit des copies pour isoler l’état interne, compatible tests unitaires et e2e.
@@ -137,7 +155,12 @@ export class InMemorySiteRepository implements SiteRepository {
    * Contrat : fallback sur defaultSettings(), retourne une copie.
    */
   async readSettings(state: ContentState): Promise<SiteSettings> {
-    return structuredClone(this.pickSettings(state) ?? defaultSettings());
+    const settings = this.pickSettings(state) ?? defaultSettings();
+
+    return structuredClone({
+      ...settings,
+      theme: mergeThemeSettings(settings.theme),
+    });
   }
 
   /**

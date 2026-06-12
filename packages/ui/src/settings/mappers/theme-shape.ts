@@ -11,6 +11,7 @@
  * - Pas d’intents API ni de normalisation orientée formulaire.
  */
 
+import { getThemeFontById } from "@compoz/core/constants/theme/theme-fonts";
 import {
   DEFAULT_DARK_THEME_TOKENS,
   DEFAULT_LIGHT_THEME_TOKENS,
@@ -22,13 +23,19 @@ import type { ThemeSettingsShape } from "@compoz/validation/site/settings/theme/
 export function toThemeSettingsShapeFromDTO(
   dto: ThemeSettingsDTO | null | undefined,
 ): ThemeSettingsShape {
+  const fontFamily =
+    getThemeFontById(dto?.fontFamily)?.id ?? DEFAULT_THEME_FONT_ID;
+  const headingFont = getThemeFontById(dto?.headingFont)?.id ?? null;
+
   return {
     enableDarkMode:
       typeof dto?.enableDarkMode === "boolean" ? dto.enableDarkMode : false,
 
     mode: dto?.mode ?? "light",
 
-    fontFamily: dto?.fontFamily ?? DEFAULT_THEME_FONT_ID,
+    fontFamily,
+
+    headingFont,
 
     revealPreset: dto?.revealPreset ?? "fade-up",
 

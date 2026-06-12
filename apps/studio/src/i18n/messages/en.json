@@ -584,6 +584,12 @@
         "help": "Font used by default across the entire site."
       },
 
+      "headingFont": {
+        "label": "Heading font",
+        "sameAsBody": "Same font as body text",
+        "help": "Font used for site headings."
+      },
+
       "mode": {
         "label": "Default mode",
         "help": "Selects the mode applied when the site loads.",

@@ -126,6 +126,7 @@ export function ThemeForm({
 
   const enableDarkModeIds = createFieldIds(idPrefix, "enableDarkMode");
   const fontFamilyIds = createFieldIds(idPrefix, "fontFamily");
+  const headingFontIds = createFieldIds(idPrefix, "headingFont");
 
   const enableDarkMode = useWatch({
     control,
@@ -172,6 +173,7 @@ export function ThemeForm({
     let count = 0;
 
     if (errors.fontFamily) count++;
+    if (errors.headingFont) count++;
 
     for (const key of THEME_TOKEN_KEYS) {
       if (errors.lightTokens?.[key]) count++;
@@ -205,7 +207,7 @@ export function ThemeForm({
                     ids={fontFamilyIds}
                     name={field.name}
                     label={t("studio.themeForm.fontFamily.label")}
-                    value={field.value ?? ""}
+                    value={field.value}
                     onChange={(value) => field.onChange(value)}
                     placeholder={t("studio.themeForm.fontFamily.placeholder")}
                     help={t("studio.themeForm.fontFamily.help")}
@@ -214,6 +216,31 @@ export function ThemeForm({
                     error={
                       errors.fontFamily?.message
                         ? String(errors.fontFamily.message)
+                        : undefined
+                    }
+                  />
+                )}
+              />
+
+              <Controller
+                name="headingFont"
+                control={control}
+                render={({ field }) => (
+                  <ThemeFontSelectField
+                    ids={headingFontIds}
+                    name={field.name}
+                    label={t("studio.themeForm.headingFont.label")}
+                    value={field.value}
+                    onChange={(value) => field.onChange(value)}
+                    fallbackLabel={t(
+                      "studio.themeForm.headingFont.sameAsBody",
+                    )}
+                    help={t("studio.themeForm.headingFont.help")}
+                    disabled={disabledControls}
+                    invalid={Boolean(errors.headingFont?.message)}
+                    error={
+                      errors.headingFont?.message
+                        ? String(errors.headingFont.message)
                         : undefined
                     }
                   />

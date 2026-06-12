@@ -11,6 +11,6 @@ import type { SiteZoomGalleryUiOverride } from "@compoz/ui/site/site-ui.types";
 export const lolaZoomGalleryUi: SiteZoomGalleryUiOverride = {
   figure: "relative w-full overflow-hidden rounded-lg bg-muted/30",
   image: "object-contain",
-  overlayPanel: "bg-gradient-to-t from-black/95 to-black/50",
-  overlayContent: "text-white text-sm font-semibold",
+  overlayPanel: "bg-gradient-to-t from-white to-white/70",
+  overlayContent: "text-muted-foreground text-sm font-semibold",
 };

@@ -24,10 +24,7 @@ import {
 } from "@compoz/site/lib/pages/published-page-loaders";
 import { resolveSiteBaseUrl } from "@compoz/site/lib/seo/resolveSiteBaseUrl";
 import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
-import {
-  resolveFontPreloadHref,
-  resolvePublicFontConfig,
-} from "@compoz/ui/lib/public-fonts";
+import { resolvePublicThemeFonts } from "@compoz/ui/lib/public-fonts";
 import {
   ensureTitleTemplate,
   resolveAssetUrl,
@@ -208,18 +205,18 @@ export default async function HostedSiteLayout({ children }: LayoutProps) {
   const tenantId = await getTenantId();
   const settings = await getPublishedSettingsByTenantId(tenantId);
   const ui = resolveSiteUi(tenantId);
-  const publicFont = resolvePublicFontConfig(settings?.theme?.fontFamily);
-  const fontPreloadHref = resolveFontPreloadHref(
+  const publicFonts = resolvePublicThemeFonts(
     settings?.theme?.fontFamily,
+    settings?.theme?.headingFont,
   );
   const skinCssHref = resolveSiteSkinCssHref(tenantId);
 
-  const fontStyle = {
-    [publicFont.variableName]: publicFont.fontFamily,
-  } as CSSProperties;
+  const fontStyle = Object.fromEntries(
+    publicFonts.map((font) => [font.variableName, font.fontFamily]),
+  ) as CSSProperties;
 
-  if (fontPreloadHref) {
-    preload(fontPreloadHref, {
+  for (const font of publicFonts) {
+    preload(font.preloadHref, {
       as: "font",
       type: "font/woff2",
       crossOrigin: "anonymous",
@@ -228,7 +225,14 @@ export default async function HostedSiteLayout({ children }: LayoutProps) {
 
   return (
     <>
-      <link rel="stylesheet" href={publicFont.href} precedence="font" />
+      {publicFonts.map((font) => (
+        <link
+          key={font.key}
+          rel="stylesheet"
+          href={font.href}
+          precedence="font"
+        />
+      ))}
       {skinCssHref ? (
         <link rel="stylesheet" href={skinCssHref} precedence="skin" />
       ) : null}

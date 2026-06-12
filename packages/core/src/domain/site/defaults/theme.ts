@@ -113,6 +113,7 @@ export const DEFAULT_THEME_SETTINGS: ThemeSettings = {
   enableDarkMode: true,
   mode: "light",
   fontFamily: DEFAULT_THEME_FONT_ID,
+  headingFont: null,
   revealPreset: "fade-up",
   lightTokens: DEFAULT_LIGHT_THEME_TOKENS,
   darkTokens: DEFAULT_DARK_THEME_TOKENS,

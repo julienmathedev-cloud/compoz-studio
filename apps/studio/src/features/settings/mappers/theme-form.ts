@@ -69,6 +69,14 @@ function normalizeThemeFontFamily(value: string | null | undefined) {
   return getThemeFontById(normalized)?.id ?? DEFAULT_THEME_FONT_ID;
 }
 
+function normalizeHeadingFont(value: string | null | undefined) {
+  const normalized = trimKeepEmpty(value);
+
+  if (!normalized) return null;
+
+  return getThemeFontById(normalized)?.id ?? null;
+}
+
 /* ----------------------- Domaine (DTO) -> UI (form values) ---------------- */
 
 export function toThemeFormValuesFromDTO(
@@ -78,6 +86,7 @@ export function toThemeFormValuesFromDTO(
     enableDarkMode: asBool(dto.enableDarkMode),
     mode: dto.mode,
     fontFamily: normalizeThemeFontFamily(dto.fontFamily),
+    headingFont: normalizeHeadingFont(dto.headingFont),
     revealPreset: dto.revealPreset,
     lightTokens: normalizeThemeTokens(dto.lightTokens),
     darkTokens: normalizeThemeTokens(dto.darkTokens),
@@ -93,6 +102,7 @@ export function toThemeSettingsShapeFromFormValues(
     enableDarkMode: asBool(values.enableDarkMode),
     mode: values.mode,
     fontFamily: normalizeThemeFontFamily(values.fontFamily),
+    headingFont: normalizeHeadingFont(values.headingFont),
     revealPreset: values.revealPreset,
     lightTokens: normalizeThemeTokens(values.lightTokens),
     darkTokens: normalizeThemeTokens(values.darkTokens),
@@ -124,6 +134,7 @@ export function normalizeThemeFormValues(
     enableDarkMode: asBool(values.enableDarkMode),
     mode: values.mode,
     fontFamily: normalizeThemeFontFamily(values.fontFamily),
+    headingFont: normalizeHeadingFont(values.headingFont),
     revealPreset: values.revealPreset,
     lightTokens: normalizeThemeTokens(values.lightTokens),
     darkTokens: normalizeThemeTokens(values.darkTokens),
@@ -147,6 +158,10 @@ export function toUpdateThemeIntentDTOFromFormValues(
 
   if ("fontFamily" in p) {
     out.fontFamily = normalizeThemeFontFamily(p.fontFamily);
+  }
+
+  if ("headingFont" in p) {
+    out.headingFont = normalizeHeadingFont(p.headingFont);
   }
 
   if ("revealPreset" in p && p.revealPreset) {

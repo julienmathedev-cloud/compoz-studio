@@ -75,7 +75,11 @@ export function HeadingCellRenderer({
       <HeadingTag
         id={idAnchor || undefined}
         level={level}
-        className={cn(ui.level[level], variant === "hero" && ui.levelHero)}
+        className={cn(
+          "[font-family:var(--tenant-font-heading)]",
+          ui.level[level],
+          variant === "hero" && ui.levelHero,
+        )}
       >
         {titleContent}
       </HeadingTag>

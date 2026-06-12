@@ -105,6 +105,14 @@ export interface ThemeSettings {
   fontFamily: ThemeFontId;
 
   /**
+   * Police utilisée par les titres du site public.
+   *
+   * @remarks
+   * `null` signifie que les titres utilisent `fontFamily`.
+   */
+  headingFont: ThemeFontId | null;
+
+  /**
    * Preset de reveal utilisé par les cellules publiques.
    */
   revealPreset: RevealPreset;

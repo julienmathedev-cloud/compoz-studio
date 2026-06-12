@@ -70,6 +70,24 @@ function defaultSettings(): SiteSettings {
   };
 }
 
+function mergeThemeSettings(
+  theme: Partial<SiteSettings["theme"]> | null | undefined,
+): SiteSettings["theme"] {
+  return {
+    ...DEFAULT_THEME_SETTINGS,
+    ...theme,
+    headingFont: theme?.headingFont ?? null,
+    lightTokens: {
+      ...DEFAULT_THEME_SETTINGS.lightTokens,
+      ...theme?.lightTokens,
+    },
+    darkTokens: {
+      ...DEFAULT_THEME_SETTINGS.darkTokens,
+      ...theme?.darkTokens,
+    },
+  };
+}
+
 function kvCtx(base: string, state: ContentState): string {
   return `site.${base}.${state}`;
 }
@@ -127,7 +145,7 @@ export class KvSiteRepository implements SiteRepository {
       identity: json.identity ?? d.identity,
       social: json.social ?? d.social,
       seo: json.seo ?? d.seo,
-      theme: json.theme ?? d.theme,
+      theme: mergeThemeSettings(json.theme),
     };
   }
 

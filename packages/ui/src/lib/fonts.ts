@@ -33,6 +33,7 @@ import {
   Source_Serif_4,
   Space_Grotesk,
   Urbanist,
+  Spectral,
 } from "next/font/google";
 
 const inter = Inter({
@@ -161,6 +162,13 @@ const fjallaOne = Fjalla_One({
   display: "swap",
 });
 
+const spectral = Spectral({
+  subsets: ["latin"],
+  weight: "500",
+  variable: "--font-spectral",
+  display: "swap",
+});
+
 export type FontKey =
   | "inter"
   | "manrope"
@@ -181,7 +189,8 @@ export type FontKey =
   | "oswald"
   | "pacifico"
   | "caveat"
-  | "fjalla-one";
+  | "fjalla-one"
+  | "spectral";
 
 const fontVariablesByKey: Readonly<Record<FontKey, string>> = {
   inter: inter.variable,
@@ -204,6 +213,7 @@ const fontVariablesByKey: Readonly<Record<FontKey, string>> = {
   pacifico: pacifico.variable,
   caveat: caveat.variable,
   "fjalla-one": fjallaOne.variable,
+  spectral: spectral.variable,
 };
 
 function isFontKey(value: string): value is FontKey {
@@ -244,4 +254,5 @@ export const allFontVariablesClassName = [
   pacifico.variable,
   caveat.variable,
   fjallaOne.variable,
+  spectral.variable,
 ].join(" ");

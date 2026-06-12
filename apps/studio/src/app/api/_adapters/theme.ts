@@ -48,6 +48,8 @@ export function adaptUpdateThemeIntent(
     hasEnableDarkMode: typeof dto.enableDarkMode === "boolean",
     hasMode: typeof dto.mode === "string",
     hasFontFamily: typeof dto.fontFamily === "string",
+    hasHeadingFont:
+      typeof dto.headingFont === "string" || dto.headingFont === null,
     hasRevealPreset: typeof dto.revealPreset === "string",
     hasLightTokens: dto.lightTokens !== undefined,
     hasDarkTokens: dto.darkTokens !== undefined,
@@ -65,6 +67,10 @@ export function adaptUpdateThemeIntent(
 
   if (typeof dto.fontFamily === "string") {
     patch.fontFamily = dto.fontFamily;
+  }
+
+  if (typeof dto.headingFont === "string" || dto.headingFont === null) {
+    patch.headingFont = dto.headingFont;
   }
 
   if (typeof dto.revealPreset === "string") {

@@ -34,6 +34,7 @@ const THEME_FONT_CSS_VARS: Readonly<Record<ThemeFontId, string>> = {
   merriweather: "var(--font-merriweather)",
   "source-serif-4": "var(--font-source-serif-4)",
   "libre-baskerville": "var(--font-libre-baskerville)",
+  spectral: "var(--font-spectral)",
 
   "bebas-neue": "var(--font-bebas-neue)",
   "abril-fatface": "var(--font-abril-fatface)",

@@ -584,6 +584,12 @@
         "help": "Police utilisée par défaut sur l’ensemble du site."
       },
 
+      "headingFont": {
+        "label": "Police des titres",
+        "sameAsBody": "Même police que le texte",
+        "help": "Police utilisée pour les titres du site."
+      },
+
       "mode": {
         "label": "Mode par défaut",
         "help": "Choisit le mode appliqué au chargement du site.",

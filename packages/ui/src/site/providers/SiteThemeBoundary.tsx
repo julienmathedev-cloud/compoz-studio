@@ -9,7 +9,6 @@
 import type { CSSProperties, ReactNode } from "react";
 
 import { themeSettingsToCssVars } from "@compoz/ui/settings/theme/theme-css-vars";
-import { resolveThemeFontFamily } from "@compoz/ui/settings/theme/theme-font-runtime";
 import type { ThemeSettingsShape } from "@compoz/validation/site/settings/theme/theme";
 
 export type SiteThemeBoundaryProps = Readonly<{
@@ -23,7 +22,7 @@ export function SiteThemeBoundary({ theme, children }: SiteThemeBoundaryProps) {
   const style = resolvedTheme
     ? ({
         ...(themeSettingsToCssVars(resolvedTheme) as CSSProperties),
-        fontFamily: resolveThemeFontFamily(resolvedTheme.fontFamily),
+        fontFamily: "var(--tenant-font-body)",
       } satisfies CSSProperties)
     : undefined;
 

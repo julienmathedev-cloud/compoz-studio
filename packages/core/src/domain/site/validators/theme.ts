@@ -26,6 +26,7 @@ import type { ThemeSettings } from "@compoz/core/domain/site/entities/theme";
  */
 function assertSupportedThemeFont(
   fontFamily: ThemeSettings["fontFamily"],
+  path: readonly string[] = ["theme", "fontFamily"],
 ): void {
   const exists = THEME_FONTS.some((font) => font.id === fontFamily);
 
@@ -34,7 +35,7 @@ function assertSupportedThemeFont(
       code: EC.THEME_FONT_UNSUPPORTED,
       message: EC.THEME_FONT_UNSUPPORTED,
       details: {
-        path: ["theme", "fontFamily"],
+        path,
         value: fontFamily,
       },
     });
@@ -70,5 +71,8 @@ function assertThemeModeConsistency(theme: ThemeSettings): void {
  */
 export function assertThemeSettings(theme: ThemeSettings): void {
   assertSupportedThemeFont(theme.fontFamily);
+  if (theme.headingFont !== null) {
+    assertSupportedThemeFont(theme.headingFont, ["theme", "headingFont"]);
+  }
   assertThemeModeConsistency(theme);
 }

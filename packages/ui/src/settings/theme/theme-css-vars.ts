@@ -16,6 +16,7 @@
 
 import type { CSSProperties } from "react";
 
+import { resolveThemeFontFamily } from "@compoz/ui/settings/theme/theme-font-runtime";
 import type {
   PublicThemeTokensShape,
   ThemeSettingsShape,
@@ -99,7 +100,16 @@ export function themeSettingsToCssVars(
   theme: ThemeSettingsShape,
 ): ThemeCssVars {
   const tokens = resolveThemeTokens(theme);
-  return themeTokensToCssVars(tokens);
+  const bodyFont = resolveThemeFontFamily(theme.fontFamily);
+  const headingFont = resolveThemeFontFamily(
+    theme.headingFont ?? theme.fontFamily,
+  );
+
+  return {
+    ...themeTokensToCssVars(tokens),
+    "--tenant-font-body": bodyFont,
+    "--tenant-font-heading": headingFont,
+  };
 }
 
 /**

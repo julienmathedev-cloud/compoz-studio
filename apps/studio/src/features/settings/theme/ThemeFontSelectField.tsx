@@ -10,7 +10,8 @@
  * @remarks
  * - S’appuie sur `SelectField`.
  * - Consomme les options UI construites depuis la source de vérité `theme-fonts`.
- * - Retourne la valeur canonique côté thème : `ThemeFontId`.
+ * - Retourne la valeur canonique côté thème : `ThemeFontId | null`.
+ * - `null` représente l’option “même police que le texte”.
  */
 
 import type { ThemeFontId } from "@compoz/core/constants/theme/theme-fonts";
@@ -22,8 +23,9 @@ type ThemeFontSelectFieldProps = Readonly<{
   ids: FieldIds;
   name?: string;
   label: string;
-  value: string;
-  onChange: (value: ThemeFontId) => void;
+  value: ThemeFontId | null;
+  onChange: (value: ThemeFontId | null) => void;
+  fallbackLabel?: string;
   placeholder?: string;
   help?: string;
   error?: string;
@@ -32,6 +34,7 @@ type ThemeFontSelectFieldProps = Readonly<{
 }>;
 
 const FONT_ITEMS = buildThemeFontSelectItems();
+const SAME_AS_BODY_VALUE = "__same-as-body__";
 
 export function ThemeFontSelectField({
   ids,
@@ -39,20 +42,36 @@ export function ThemeFontSelectField({
   label,
   value,
   onChange,
+  fallbackLabel,
   placeholder,
   help,
   error,
   invalid,
   disabled,
 }: ThemeFontSelectFieldProps) {
+  const items = fallbackLabel
+    ? [
+        {
+          value: SAME_AS_BODY_VALUE,
+          label: fallbackLabel,
+          textLabel: fallbackLabel,
+        },
+        ...FONT_ITEMS,
+      ]
+    : FONT_ITEMS;
+
   return (
     <SelectField
       ids={ids}
       name={name}
       label={label}
-      value={value}
-      onChange={(nextValue) => onChange(nextValue as ThemeFontId)}
-      items={FONT_ITEMS}
+      value={value ?? SAME_AS_BODY_VALUE}
+      onChange={(nextValue) =>
+        onChange(
+          nextValue === SAME_AS_BODY_VALUE ? null : (nextValue as ThemeFontId),
+        )
+      }
+      items={items}
       placeholder={placeholder}
       help={help}
       error={error}

@@ -30,6 +30,7 @@ export type PublicFontKey =
   | "merriweather"
   | "source-serif-4"
   | "libre-baskerville"
+  | "spectral"
   | "bebas-neue"
   | "abril-fatface"
   | "oswald"
@@ -172,6 +173,14 @@ const PUBLIC_FONTS: Readonly<Record<PublicFontKey, PublicFontConfig>> = {
     fontFamily: '"Libre Baskerville", ui-serif, Georgia, serif',
   },
 
+  spectral: {
+    key: "spectral",
+    href: "/fonts/spectral/spectral.css",
+    preloadHref: "/fonts/spectral/spectral-latin-500-normal.woff2",
+    variableName: "--font-spectral",
+    fontFamily: '"Spectral", ui-serif, Georgia, serif',
+  },
+
   "bebas-neue": {
     key: "bebas-neue",
     href: "/fonts/bebas-neue/bebas-neue.css",
@@ -252,4 +261,20 @@ export function resolvePublicFontConfig(
   }
 
   return PUBLIC_FONTS.inter;
+}
+
+/**
+ * Résout les fonts nécessaires au rendu d’un thème, dans l’ordre body puis
+ * heading, sans charger deux fois la même font.
+ */
+export function resolvePublicThemeFonts(
+  bodyFont: string | null | undefined,
+  headingFont: string | null | undefined,
+): readonly PublicFontConfig[] {
+  const bodyConfig = resolvePublicFontConfig(bodyFont);
+  const headingConfig = resolvePublicFontConfig(headingFont ?? bodyFont);
+
+  return bodyConfig.key === headingConfig.key
+    ? [bodyConfig]
+    : [bodyConfig, headingConfig];
 }

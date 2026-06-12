@@ -14,6 +14,7 @@
 import type { SiteGlobalUiOverride } from "@compoz/ui/site/site-ui.types";
 import { lolaBlockSectionUi } from "@compoz/ui/site/skins/lola/block-section.ui";
 import { lolaCarouselUi } from "@compoz/ui/site/skins/lola/cells/carousel-cell.ui";
+import { lolaHeadingUi } from "@compoz/ui/site/skins/lola/cells/heading-cell.ui";
 import { lolaZoomGalleryUi } from "@compoz/ui/site/skins/lola/cells/zoom-gallery-cell.ui";
 import { lolaHeaderUi } from "@compoz/ui/site/skins/lola/header.ui";
 
@@ -21,6 +22,7 @@ export const lolaGlobalUi: SiteGlobalUiOverride = {
   header: lolaHeaderUi,
   cells: {
     carousel: lolaCarouselUi,
+    heading: lolaHeadingUi,
     zoomGallery: lolaZoomGalleryUi,
   },
   blockSection: lolaBlockSectionUi,

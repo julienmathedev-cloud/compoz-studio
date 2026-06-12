@@ -13,7 +13,8 @@
 import type { SiteBlockSectionUiOverride } from "@compoz/ui/site/site-ui.types";
 
 export const lolaBlockSectionUi: SiteBlockSectionUiOverride = {
-  sectionSpacingContained: "py-6 md:py-8 lg:py-12",
+  sectionSpacingContained: "py-4 md:py-6 lg:py-8",
+  rows: "space-y-1 lg:space-y-2",
   gridCols: {
     1: "grid-cols-1",
     2: "grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 lg:gap-24",

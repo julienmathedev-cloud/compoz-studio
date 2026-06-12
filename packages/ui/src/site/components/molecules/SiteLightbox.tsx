@@ -91,6 +91,7 @@ export function SiteLightbox({
   caption,
   ariaLabel = "Agrandissement de l’image",
 }: SiteLightboxProps) {
+  console.log("ui", ui);
   const [prefersReducedMotion] = useState(() => readPrefersReducedMotion());
   const [entered, setEntered] = useState(() => prefersReducedMotion);
   const [closing, setClosing] = useState(false);

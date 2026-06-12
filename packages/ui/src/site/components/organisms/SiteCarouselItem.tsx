@@ -13,6 +13,7 @@ import { SiteExtendedCard } from "@compoz/ui/site/components/molecules/SiteExten
 import { SiteStructuredCard } from "@compoz/ui/site/components/molecules/SiteStructuredCard";
 import type { NormalizedCarouselItem } from "@compoz/ui/site/components/organisms/carousel-item.types";
 import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
+import type { CSSProperties } from "react";
 
 export type SiteCarouselItemProps = Readonly<{
   item: NormalizedCarouselItem;
@@ -39,6 +40,20 @@ export function SiteCarouselItem({
     const imageUi = mode === "slider" ? ui.imageItemSlider : ui.imageItem;
 
     if (mode === "slider") {
+      const hasImageDimensions =
+        typeof item.width === "number" &&
+        item.width > 0 &&
+        typeof item.height === "number" &&
+        item.height > 0;
+
+      const imageRatio = hasImageDimensions ? item.width / item.height : 16 / 9;
+
+      const containedImageStyle: CSSProperties = {
+        width: `min(100%, calc(70vh * ${imageRatio}))`,
+        height: "auto",
+        maxHeight: "70vh",
+      };
+
       return (
         <div
           className={
@@ -56,6 +71,7 @@ export function SiteCarouselItem({
             className={
               isFullBleed ? imageUi.coverImage : imageUi.containedImage
             }
+            style={isFullBleed ? undefined : containedImageStyle}
             priority={priority}
             fetchPriority={priority ? "high" : "auto"}
           />

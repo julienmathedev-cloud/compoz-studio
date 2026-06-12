@@ -34,10 +34,11 @@ export const defaultCarouselUi: SiteCarouselUi = {
 
   slider: {
     root: "relative",
-    track: "cursor-grab active:cursor-grabbing",
-    slide: "mt-4 mb-4 flex justify-center outline-none",
-    slideActive: "opacity-100 p-2",
-    slideInactive: "opacity-93 p-2",
+    track: "cursor-grab active:cursor-grabbing overflow-visible",
+    slide:
+      "mt-4 mb-4 flex items-center justify-center overflow-visible outline-none",
+    slideActive: "z-10 opacity-100 p-2",
+    slideInactive: "z-0 opacity-93 p-2",
     arrowButton:
       "absolute top-9/20 z-20 hidden h-8 w-8 rounded-full sm:inline-flex cursor-pointer",
     arrowIcon: "h-8 w-8",
@@ -56,10 +57,11 @@ export const defaultCarouselUi: SiteCarouselUi = {
   },
 
   imageItemSlider: {
-    ratioContainer: "relative w-full bg-muted max-h-[70vh] flex justify-center",
+    ratioContainer:
+      "relative flex w-full items-center justify-center overflow-visible",
     fillContainer: "relative w-full",
-    containedImage: "h-auto max-h-[70vh] w-auto max-w-full object-contain",
-    coverImage: "h-auto max-h-[70vh] w-full object-cover",
+    containedImage: "block h-auto self-center object-contain",
+    coverImage: "block h-full w-full object-cover",
     caption: "pt-3 text-center text-sm text-muted-foreground",
   },
 

@@ -8,4 +8,6 @@
 
 import type { SiteLightboxUiOverride } from "@compoz/ui/site/site-ui.types";
 
-export const lolaLightboxUi: SiteLightboxUiOverride = {};
+export const lolaLightboxUi: SiteLightboxUiOverride = {
+  closeButton: "bg-primary/40",
+};

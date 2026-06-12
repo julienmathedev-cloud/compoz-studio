@@ -21,6 +21,7 @@
 import Image, { type StaticImageData } from "next/image";
 
 import { normalizeString } from "@compoz/ui/lib/normalize";
+import type { CSSProperties } from "react";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -47,6 +48,7 @@ export type SiteAppImageProps = Readonly<{
   ariaLabelledBy?: string;
   placeholder?: "empty" | "blur";
   blurDataURL?: string;
+  style?: CSSProperties;
 }>;
 
 function isStaticImageData(src: SiteImageSource): src is StaticImageData {
@@ -65,6 +67,7 @@ export function SiteAppImage({
   ariaLabelledBy,
   placeholder = "empty",
   blurDataURL,
+  style,
 }: SiteAppImageProps) {
   const normalizedAlt = normalizeString(image.alt, "");
   const normalizedSizes = normalizeString(
@@ -117,6 +120,7 @@ export function SiteAppImage({
       aria-labelledby={labelledBy}
       placeholder={placeholder}
       blurDataURL={placeholder === "blur" ? blurDataURL : undefined}
+      style={style}
     />
   );
 }

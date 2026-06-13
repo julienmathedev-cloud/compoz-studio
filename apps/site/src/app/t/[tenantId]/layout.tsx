@@ -45,6 +45,11 @@ type TenantLayoutProps = Readonly<{
   >;
 }>;
 
+type StructuredDataGraph = Readonly<{
+  "@context": "https://schema.org";
+  "@graph": ReadonlyArray<Record<string, unknown>>;
+}>;
+
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
@@ -93,6 +98,65 @@ function buildFaviconIcons(favicon: string): Icons {
   return {
     icon: [{ url: favicon }],
     shortcut: [{ url: favicon }],
+  };
+}
+
+function removeTrailingSlash(value: string): string {
+  return value.replace(/\/+$/, "");
+}
+
+function escapeJsonLd(value: StructuredDataGraph): string {
+  return JSON.stringify(value).replace(/</g, "\\u003c");
+}
+
+function buildStructuredData(
+  settings: Awaited<ReturnType<typeof getPublishedSettingsByTenantId>>,
+): StructuredDataGraph | null {
+  if (!settings?.seo?.structuredDataEnabled) return null;
+
+  const metadataBase = resolveSiteBaseUrl(settings.seo.baseUrl);
+  if (!metadataBase) return null;
+
+  const siteUrl = removeTrailingSlash(metadataBase.toString());
+
+  const siteName = (settings.identity?.siteName ?? "").trim() || "Site";
+  const description =
+    (settings.seo.defaultDescription ?? "").trim() ||
+    `${siteName} — Site officiel.`;
+
+  const logoUrl = resolveAssetUrl(settings.identity?.logo?.src, metadataBase);
+
+  const organizationId = `${siteUrl}/#organization`;
+  const websiteId = `${siteUrl}/#website`;
+
+  const organization: Record<string, unknown> = {
+    "@type": "Organization",
+    "@id": organizationId,
+    name: siteName,
+    url: siteUrl,
+  };
+
+  if (logoUrl) {
+    organization.logo = {
+      "@type": "ImageObject",
+      url: logoUrl.toString(),
+    };
+  }
+
+  const website: Record<string, unknown> = {
+    "@type": "WebSite",
+    "@id": websiteId,
+    url: siteUrl,
+    name: siteName,
+    description,
+    publisher: {
+      "@id": organizationId,
+    },
+  };
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [organization, website],
   };
 }
 
@@ -177,6 +241,7 @@ export default async function TenantSiteLayout({
     settings?.theme?.headingFont,
   );
   const skinCssHref = resolveSiteSkinCssHref(tenantId);
+  const structuredData = buildStructuredData(settings);
 
   const fontStyle = Object.fromEntries(
     publicFonts.map((font) => [font.variableName, font.fontFamily]),
@@ -192,6 +257,15 @@ export default async function TenantSiteLayout({
 
   return (
     <>
+      {structuredData ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: escapeJsonLd(structuredData),
+          }}
+        />
+      ) : null}
+
       {publicFonts.map((font) => (
         <link
           key={font.key}

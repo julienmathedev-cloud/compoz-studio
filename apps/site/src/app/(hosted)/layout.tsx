@@ -14,7 +14,7 @@
 
 import type { Metadata } from "next";
 import type { Icons } from "next/dist/lib/metadata/types/metadata-types";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { preload } from "react-dom";
 
 import { SiteNotFoundClient } from "@compoz/site/components/system/SiteNotFoundClient";
@@ -46,10 +46,14 @@ import {
   SITE_APP_SURFACE,
   SITE_MAIN,
 } from "@compoz/ui/styles/site/layout";
-import type { CSSProperties } from "react";
 
 type LayoutProps = Readonly<{
   children: ReactNode;
+}>;
+
+type StructuredDataGraph = Readonly<{
+  "@context": "https://schema.org";
+  "@graph": ReadonlyArray<Record<string, unknown>>;
 }>;
 
 const GOOGLE_SITE_VERIFICATION_BY_TENANT_ID: Record<string, string> = {
@@ -106,6 +110,65 @@ function buildFaviconIcons(favicon: string): Icons {
   return {
     icon: [{ url: favicon }],
     shortcut: [{ url: favicon }],
+  };
+}
+
+function removeTrailingSlash(value: string): string {
+  return value.replace(/\/+$/, "");
+}
+
+function escapeJsonLd(value: StructuredDataGraph): string {
+  return JSON.stringify(value).replace(/</g, "\\u003c");
+}
+
+function buildStructuredData(
+  settings: Awaited<ReturnType<typeof getPublishedSettingsByTenantId>>,
+): StructuredDataGraph | null {
+  if (!settings?.seo?.structuredDataEnabled) return null;
+
+  const metadataBase = resolveSiteBaseUrl(settings.seo.baseUrl);
+  if (!metadataBase) return null;
+
+  const siteUrl = removeTrailingSlash(metadataBase.toString());
+
+  const siteName = (settings.identity?.siteName ?? "").trim() || "Site";
+  const description =
+    (settings.seo.defaultDescription ?? "").trim() ||
+    `${siteName} — Site officiel.`;
+
+  const logoUrl = resolveAssetUrl(settings.identity?.logo?.src, metadataBase);
+
+  const organizationId = `${siteUrl}/#organization`;
+  const websiteId = `${siteUrl}/#website`;
+
+  const organization: Record<string, unknown> = {
+    "@type": "Organization",
+    "@id": organizationId,
+    name: siteName,
+    url: siteUrl,
+  };
+
+  if (logoUrl) {
+    organization.logo = {
+      "@type": "ImageObject",
+      url: logoUrl.toString(),
+    };
+  }
+
+  const website: Record<string, unknown> = {
+    "@type": "WebSite",
+    "@id": websiteId,
+    url: siteUrl,
+    name: siteName,
+    description,
+    publisher: {
+      "@id": organizationId,
+    },
+  };
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [organization, website],
   };
 }
 
@@ -210,6 +273,7 @@ export default async function HostedSiteLayout({ children }: LayoutProps) {
     settings?.theme?.headingFont,
   );
   const skinCssHref = resolveSiteSkinCssHref(tenantId);
+  const structuredData = buildStructuredData(settings);
 
   const fontStyle = Object.fromEntries(
     publicFonts.map((font) => [font.variableName, font.fontFamily]),
@@ -225,6 +289,15 @@ export default async function HostedSiteLayout({ children }: LayoutProps) {
 
   return (
     <>
+      {structuredData ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: escapeJsonLd(structuredData),
+          }}
+        />
+      ) : null}
+
       {publicFonts.map((font) => (
         <link
           key={font.key}

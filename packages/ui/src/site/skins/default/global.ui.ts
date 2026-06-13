@@ -14,6 +14,7 @@
 import type { SiteGlobalUi } from "@compoz/ui/site/site-ui.types";
 import { defaultBlockSectionUi } from "@compoz/ui/site/skins/default/block-section.ui";
 import { defaultButtonsUi } from "@compoz/ui/site/skins/default/cells/buttons-cell.ui";
+import { defaultCardCollectionUi } from "@compoz/ui/site/skins/default/cells/card-collection-cell.ui";
 import { defaultCardsUi } from "@compoz/ui/site/skins/default/cells/cards-cell.ui";
 import { defaultCardsExtendedUi } from "@compoz/ui/site/skins/default/cells/cards-extended-cell.ui";
 import { defaultCarouselUi } from "@compoz/ui/site/skins/default/cells/carousel-cell.ui";
@@ -45,6 +46,7 @@ export const defaultGlobalUi: SiteGlobalUi = {
     carousel: defaultCarouselUi,
     navGallery: defaultNavGalleryUi,
     zoomGallery: defaultZoomGalleryUi,
+    cardCollection: defaultCardCollectionUi,
     cards: defaultCardsUi,
     cardsExtended: defaultCardsExtendedUi,
     steps: defaultStepsUi,

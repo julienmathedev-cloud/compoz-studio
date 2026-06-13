@@ -93,6 +93,7 @@ export const cellRegistry: Record<string, CellRenderer> = {
   cardCollection: ({ cell, ui, revealUi }) => (
     <CardCollectionCellRenderer
       cell={cell as CardCollectionCellShape}
+      ui={ui.cardCollection}
       cardsUi={ui.cards}
       cardsExtendedUi={ui.cardsExtended}
       structuredCardUi={ui.structuredCard}

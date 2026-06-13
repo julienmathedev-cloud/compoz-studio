@@ -46,6 +46,7 @@ export type SiteCellsUi = Readonly<{
   spacer: SiteSpacerUi;
   separator: SiteSeparatorUi;
   buttons: SiteButtonsUi;
+  cardCollection: SiteCardCollectionUi;
   cards: SiteCardsUi;
   cardsExtended: SiteCardsExtendedUi;
   steps: SiteStepsUi;
@@ -184,6 +185,16 @@ export type SiteButtonsUi = Readonly<{
 }>;
 
 export type SiteButtonsUiOverride = DeepPartial<SiteButtonsUi>;
+
+export type SiteCardCollectionUi = Readonly<{
+  root: string;
+  grid: string;
+  columns: Readonly<Record<1 | 2 | 3 | 4, string>>;
+  align: Readonly<Record<"left" | "center", string>>;
+  item: string;
+}>;
+
+export type SiteCardCollectionUiOverride = DeepPartial<SiteCardCollectionUi>;
 
 export type SiteStepCardUi = Readonly<{
   root: string;

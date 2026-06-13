@@ -54,34 +54,51 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl =
     stripTrailingSlashes(seoBaseUrl) || stripTrailingSlashes(envBaseUrl) || "";
 
-  const lastModified =
+  const indexLastModified =
     updatedAt && !Number.isNaN(Date.parse(updatedAt))
       ? new Date(updatedAt)
       : new Date();
 
-  return pages.map((ref) => {
-    const slugRaw = String(ref.slug ?? "").trim();
-    const slug = slugRaw ? slugRaw : HOME_SLUG;
+  const entries = await Promise.all(
+    pages.map(async (ref) => {
+      const slugRaw = String(ref.slug ?? "").trim();
+      const slug = slugRaw ? slugRaw : HOME_SLUG;
 
-    const slugPath = slug === HOME_SLUG ? "" : `/${encodeURIComponent(slug)}`;
+      const page = await siteRepo.readPage(slug, CONTENT_STATE.PUBLISHED);
+      if (!page) return null;
 
-    const finalPath = usePathTenantFallback
-      ? slug === HOME_SLUG
-        ? `/t/${encodeURIComponent(tenantId)}`
-        : `/t/${encodeURIComponent(tenantId)}${slugPath}`
-      : slug === HOME_SLUG
-        ? "/"
-        : slugPath;
+      if (page.sitemap?.include === false) {
+        return null;
+      }
 
-    const url = baseUrl
-      ? (canonicalFromBase(baseUrl, finalPath) ?? finalPath)
-      : finalPath;
+      const slugPath = slug === HOME_SLUG ? "" : `/${encodeURIComponent(slug)}`;
 
-    return {
-      url,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: slug === HOME_SLUG ? 1 : 0.7,
-    };
-  });
+      const finalPath = usePathTenantFallback
+        ? slug === HOME_SLUG
+          ? `/t/${encodeURIComponent(tenantId)}`
+          : `/t/${encodeURIComponent(tenantId)}${slugPath}`
+        : slug === HOME_SLUG
+          ? "/"
+          : slugPath;
+
+      const url = baseUrl
+        ? (canonicalFromBase(baseUrl, finalPath) ?? finalPath)
+        : finalPath;
+
+      const pageUpdatedAt = page.meta?.updatedAt;
+      const lastModified =
+        pageUpdatedAt && !Number.isNaN(Date.parse(pageUpdatedAt))
+          ? new Date(pageUpdatedAt)
+          : indexLastModified;
+
+      return {
+        url,
+        lastModified,
+        changeFrequency: page.sitemap?.changefreq ?? "weekly",
+        priority: page.sitemap?.priority ?? (slug === HOME_SLUG ? 1 : 0.7),
+      } satisfies MetadataRoute.Sitemap[number];
+    }),
+  );
+
+  return entries.filter(Boolean) as MetadataRoute.Sitemap;
 }

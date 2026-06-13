@@ -164,6 +164,35 @@ export const I18N_RUNTIME_KEYS = {
       "studio.cellEditorTabs.kinds.image",
       "studio.cellEditorTabs.kinds.gallery",
       "studio.cellEditorTabs.kinds.carousel",
+      "studio.cellEditorTabs.kinds.heading",
+      "studio.cellEditorTabs.kinds.spacer",
+      "studio.cellEditorTabs.kinds.separator",
+      "studio.cellEditorTabs.kinds.buttons",
+      "studio.cellEditorTabs.kinds.cards",
+      "studio.cellEditorTabs.kinds.cardCollection",
+      "studio.cellEditorTabs.kinds.cardsExtended",
+      "studio.cellEditorTabs.kinds.steps",
+      "studio.cellEditorTabs.kinds.structuredCard",
+      "studio.cellEditorTabs.kinds.form",
+      "studio.cellEditorTabs.kinds.timeline",
+    ] as const,
+  },
+
+  cardCollectionCellEditor: {
+    cardKinds: [
+      "studio.cellEditorTabs.cardCollectionCellEditor.cardKinds.card",
+      "studio.cellEditorTabs.cardCollectionCellEditor.cardKinds.cardsExtended",
+      "studio.cellEditorTabs.cardCollectionCellEditor.cardKinds.structuredCard",
+    ] as const,
+    columns: [
+      "studio.cellEditorTabs.cardCollectionCellEditor.columns.1",
+      "studio.cellEditorTabs.cardCollectionCellEditor.columns.2",
+      "studio.cellEditorTabs.cardCollectionCellEditor.columns.3",
+      "studio.cellEditorTabs.cardCollectionCellEditor.columns.4",
+    ] as const,
+    aligns: [
+      "studio.cellEditorTabs.cardCollectionCellEditor.aligns.left",
+      "studio.cellEditorTabs.cardCollectionCellEditor.aligns.center",
     ] as const,
   },
 

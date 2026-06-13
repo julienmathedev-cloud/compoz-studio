@@ -11,6 +11,11 @@ import type { Image } from "@compoz/core/domain/assets/entities/image";
 import type { Block } from "@compoz/core/domain/pages/entities/block";
 import type {
   ButtonItem,
+  CardCollectionAlign,
+  CardCollectionCardKind,
+  CardCollectionCell,
+  CardCollectionColumns,
+  CardCollectionItem,
   CardItem,
   CardsExtendedItem,
   CarouselCell,
@@ -76,6 +81,11 @@ export type CellDTO = Readonly<Cell>;
 export type ImageEditorDTO = Readonly<ImageEditor>;
 export type ButtonItemDTO = Readonly<ButtonItem>;
 export type CardItemDTO = Readonly<CardItem>;
+export type CardCollectionItemDTO = Readonly<CardCollectionItem>;
+export type CardCollectionCardKindDTO = CardCollectionCardKind;
+export type CardCollectionColumnsDTO = CardCollectionColumns;
+export type CardCollectionAlignDTO = CardCollectionAlign;
+export type CardCollectionCellDTO = Readonly<CardCollectionCell>;
 export type CardsExtendedItemDTO = Readonly<CardsExtendedItem>;
 export type StructuredCardItemDTO = Readonly<StructuredCardItem>;
 export type TimelineItemDTO = Readonly<TimelineItem>;

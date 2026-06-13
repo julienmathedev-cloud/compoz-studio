@@ -288,7 +288,12 @@
     "CELL_CARD_ITEM_DESCRIPTION_REQUIRED": "A card description is required.",
     "CELL_CARD_ITEM_ICON_INVALID": "The card icon is invalid.",
     "CELL_CARDS_REVEAL_INVALID": "The card configuration is invalid.",
-
+    "CELL_CARD_COLLECTION_KIND_INVALID": "The card collection type is invalid.",
+    "CELL_CARD_COLLECTION_COLUMNS_INVALID": "The number of card collection columns is invalid.",
+    "CELL_CARD_COLLECTION_ALIGN_INVALID": "The card collection alignment is invalid.",
+    "CELL_CARD_COLLECTION_REVEAL_INVALID": "The card collection reveal configuration is invalid.",
+    "CELL_CARD_COLLECTION_ITEMS_INVALID": "The card collection items list is invalid.",
+    "CELL_CARD_COLLECTION_ITEMS_MIN_1": "At least one card is required in the collection.",
     "CELL_STRUCTURED_CARD_COLUMNS_INVALID": "The number of structured card columns is invalid.",
     "CELL_STRUCTURED_CARD_ITEMS_INVALID": "The structured cards list is invalid.",
     "CELL_STRUCTURED_CARD_ITEMS_MIN_1": "At least one structured card is required.",
@@ -867,10 +872,11 @@
             "spacer": "Spacer",
             "separator": "Separator",
             "buttons": "Buttons",
-            "cards": "Card",
-            "cardsExtended": "Extended card",
+            "cards": "Cards",
+            "cardCollection": "Card collection",
+            "cardsExtended": "Extended cards",
             "steps": "Steps",
-            "structuredCard": "Structured card",
+            "structuredCard": "Structured cards",
             "form": "Form",
             "timeline": "Timeline"
           }
@@ -1569,6 +1575,7 @@
           "separator": "Separator",
           "buttons": "Buttons",
           "cards": "Cards",
+          "cardCollection": "Card collection",
           "cardsExtended": "Extended cards",
           "steps": "Steps",
           "structuredCard": "Structured card",
@@ -1636,6 +1643,7 @@
         "separator": "Separator",
         "buttons": "Buttons",
         "cards": "Cards",
+        "cardCollection": "Card collection",
         "cardsExtended": "Extended cards",
         "steps": "Steps",
         "structuredCard": "Structured card",
@@ -1694,6 +1702,31 @@
           "cardsExtended": "Extended card",
           "structuredCard": "Structured card"
         }
+      },
+
+      "cardCollectionCellEditor": {
+        "itemsLabel": "Cards",
+        "itemsHelp": "Add, reorder, and edit a collection containing one card type.",
+        "cardKindLabel": "Card type",
+        "cardKinds": {
+          "card": "Card",
+          "cardsExtended": "Extended card",
+          "structuredCard": "Structured card"
+        },
+        "columnsLabel": "Columns",
+        "columns": {
+          "1": "1 column",
+          "2": "2 columns",
+          "3": "3 columns",
+          "4": "4 columns"
+        },
+        "alignLabel": "Alignment",
+        "aligns": {
+          "left": "Left",
+          "center": "Center"
+        },
+        "revealLabel": "Reveal animation",
+        "revealHelp": "Enables the reveal animation for the card collection."
       },
 
       "cardsExtendedCellEditor": {

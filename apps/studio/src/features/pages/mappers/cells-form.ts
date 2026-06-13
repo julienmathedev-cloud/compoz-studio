@@ -12,6 +12,8 @@ import { toCellShapeFromDTO } from "@compoz/ui/pages/mappers/cell-shape";
 import type {
   ButtonItemFormValues,
   ButtonPresentationFormValues,
+  CardCollectionCardKindFormValues,
+  CardCollectionItemFormValues,
   CardItemFormValues,
   CardsExtendedItemFormValues,
   CarouselItemFormValues,
@@ -198,6 +200,20 @@ export function createEmptyCarouselItem(
   return createEmptyCarouselStructuredCardItem();
 }
 
+export function createEmptyCardCollectionItem(
+  cardKind: CardCollectionCardKindFormValues,
+): CardCollectionItemFormValues {
+  if (cardKind === "card") {
+    return createEmptyCardItem();
+  }
+
+  if (cardKind === "cardsExtended") {
+    return createEmptyCardsExtendedItem();
+  }
+
+  return createEmptyStructuredCardItem();
+}
+
 export function createEmptyFormField(): FormFieldFormValues {
   return {
     id: createUiId(),
@@ -279,6 +295,19 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       id,
       kind: "cards",
       cssClassName: "",
+      columns: 3,
+      align: "left",
+      reveal: false,
+      items: [createEmptyCardItem()],
+    };
+  }
+
+  if (kind === "cardCollection") {
+    return {
+      id,
+      kind: "cardCollection",
+      cssClassName: "",
+      cardKind: "card",
       columns: 3,
       align: "left",
       reveal: false,
@@ -543,6 +572,30 @@ function normalizeCarouselItemForValidation(
   return item;
 }
 
+function normalizeCardCollectionItem(
+  cardKind: "card" | "cardsExtended" | "structuredCard",
+  item: CardCollectionItemFormValues,
+): CardCollectionItemFormValues {
+  if (cardKind === "structuredCard") {
+    return normalizeStructuredCardItem(item as StructuredCardItemFormValues);
+  }
+
+  return item;
+}
+
+function normalizeCardCollectionItemForValidation(
+  cardKind: "card" | "cardsExtended" | "structuredCard",
+  item: CardCollectionItemFormValues,
+): CardCollectionItemFormValues {
+  if (cardKind === "structuredCard") {
+    return toStructuredCardItemForValidation(
+      item as StructuredCardItemFormValues,
+    );
+  }
+
+  return item;
+}
+
 export function toCellFormValuesForValidation(
   cell: CellFormValues,
 ): CellFormValues {
@@ -584,6 +637,19 @@ export function toCellFormValuesForValidation(
         normalizeCarouselItemForValidation(
           cell.itemKind,
           item as CarouselItemFormValues,
+        ),
+      ),
+    };
+  }
+
+  if (cell.kind === "cardCollection") {
+    return {
+      ...cell,
+      cssClassName: normalizedCssClassName,
+      items: cell.items.map((item) =>
+        normalizeCardCollectionItemForValidation(
+          cell.cardKind,
+          item as CardCollectionItemFormValues,
         ),
       ),
     };
@@ -648,6 +714,19 @@ export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
       cssClassName: normalizedCssClassName,
       items: cell.items.map((item) =>
         normalizeCarouselItem(cell.itemKind, item as CarouselItemFormValues),
+      ),
+    };
+  }
+
+  if (cell.kind === "cardCollection") {
+    return {
+      ...cell,
+      cssClassName: normalizedCssClassName,
+      items: cell.items.map((item) =>
+        normalizeCardCollectionItem(
+          cell.cardKind,
+          item as CardCollectionItemFormValues,
+        ),
       ),
     };
   }

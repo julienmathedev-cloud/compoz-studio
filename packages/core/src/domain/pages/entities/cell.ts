@@ -6,6 +6,7 @@
  */
 
 import type { ButtonsCell } from "@compoz/core/domain/pages/entities/cells/buttons";
+import type { CardCollectionCell } from "@compoz/core/domain/pages/entities/cells/card-collection";
 import type { CardsCell } from "@compoz/core/domain/pages/entities/cells/cards";
 import type { CardsExtendedCell } from "@compoz/core/domain/pages/entities/cells/cards-extended";
 import type { CarouselCell } from "@compoz/core/domain/pages/entities/cells/carousel";
@@ -29,6 +30,7 @@ export type CellKind =
   | "image"
   | "gallery"
   | "carousel"
+  | "cardCollection"
   | "cards"
   | "cardsExtended"
   | "steps"
@@ -45,6 +47,7 @@ export type Cell =
   | ImageCell
   | GalleryCell
   | CarouselCell
+  | CardCollectionCell
   | CardsCell
   | CardsExtendedCell
   | StepsCell
@@ -53,12 +56,20 @@ export type Cell =
   | TimelineCell;
 
 export type {
-  ButtonPresentation,
-  ButtonItem,
   ButtonIconPosition,
+  ButtonItem,
   ButtonItemVariant,
+  ButtonPresentation,
   ButtonsCell,
 } from "@compoz/core/domain/pages/entities/cells/buttons";
+
+export type {
+  CardCollectionAlign,
+  CardCollectionCardKind,
+  CardCollectionCell,
+  CardCollectionColumns,
+  CardCollectionItem,
+} from "@compoz/core/domain/pages/entities/cells/card-collection";
 
 export type {
   CardItem,
@@ -82,8 +93,8 @@ export type {
 } from "@compoz/core/domain/pages/entities/cells/carousel";
 
 export type {
-  FormCell,
   FormButtonVariant,
+  FormCell,
   FormField,
   FormFieldType,
   FormSubmitButton,

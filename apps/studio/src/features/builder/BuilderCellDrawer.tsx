@@ -30,6 +30,7 @@ import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButt
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { ButtonsCellEditor } from "@compoz/studio/features/builder/editor/cells/buttons/ButtonsCellEditor";
+import { CardCollectionCellEditor } from "@compoz/studio/features/builder/editor/cells/CardCollectionCellEditor";
 import { CardsExtendedCellEditor } from "@compoz/studio/features/builder/editor/cells/cards-extended/CardsExtendedCellEditor";
 import { CardsCellEditor } from "@compoz/studio/features/builder/editor/cells/cards/CardsCellEditor";
 import { CarouselCellEditor } from "@compoz/studio/features/builder/editor/cells/CarouselCellEditor";
@@ -324,6 +325,12 @@ export function BuilderCellDrawer({
                       label: t("studio.builder.drawer.kind.options.cards"),
                     },
                     {
+                      value: "cardCollection",
+                      label: t(
+                        "studio.builder.drawer.kind.options.cardCollection",
+                      ),
+                    },
+                    {
                       value: "cardsExtended",
                       label: t(
                         "studio.builder.drawer.kind.options.cardsExtended",
@@ -441,6 +448,17 @@ export function BuilderCellDrawer({
                   selectedCellLocation={selectedCellLocation}
                   disabled={isSubmitting}
                   showError={forceShowErrors}
+                />
+              ) : null}
+
+              {selectedCell.kind === "cardCollection" ? (
+                <CardCollectionCellEditor
+                  control={control}
+                  idPrefix={`builder-cell-${selectedCell.id}`}
+                  selectedCellLocation={selectedCellLocation}
+                  disabled={isSubmitting}
+                  showError={forceShowErrors}
+                  onUploadImage={onUploadImage}
                 />
               ) : null}
 

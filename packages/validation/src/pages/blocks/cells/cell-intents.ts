@@ -10,6 +10,9 @@ import type { z } from "zod";
 import {
   ButtonItemSchema,
   ButtonsCellSchema,
+  CardCollectionCellSchema,
+  CardCollectionItemSchema,
+  CardCollectionCardKindSchema,
   CardItemSchema,
   CardsCellSchema,
   CardsExtendedCellSchema,
@@ -89,6 +92,21 @@ export type CarouselItemIntentDTO = z.infer<typeof CarouselItemIntentSchema>;
 
 export const CarouselCellIntentSchema = CarouselCellSchema;
 export type CarouselCellIntentDTO = z.infer<typeof CarouselCellIntentSchema>;
+
+export const CardCollectionCardKindIntentSchema = CardCollectionCardKindSchema;
+export type CardCollectionCardKindIntentDTO = z.infer<
+  typeof CardCollectionCardKindIntentSchema
+>;
+
+export const CardCollectionItemIntentSchema = CardCollectionItemSchema;
+export type CardCollectionItemIntentDTO = z.infer<
+  typeof CardCollectionItemIntentSchema
+>;
+
+export const CardCollectionCellIntentSchema = CardCollectionCellSchema;
+export type CardCollectionCellIntentDTO = z.infer<
+  typeof CardCollectionCellIntentSchema
+>;
 
 export const StepItemIntentSchema = StepItemSchema;
 export type StepItemIntentDTO = z.infer<typeof StepItemIntentSchema>;

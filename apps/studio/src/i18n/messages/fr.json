@@ -288,6 +288,12 @@
     "CELL_CARD_ITEM_DESCRIPTION_REQUIRED": "Une description de carte est requise.",
     "CELL_CARD_ITEM_ICON_INVALID": "L’icône de la carte est invalide.",
     "CELL_CARDS_REVEAL_INVALID": "La configuration de la carte est invalide.",
+    "CELL_CARD_COLLECTION_KIND_INVALID": "Le type de carte de la collection est invalide.",
+    "CELL_CARD_COLLECTION_COLUMNS_INVALID": "Le nombre de colonnes de la collection de cartes est invalide.",
+    "CELL_CARD_COLLECTION_ALIGN_INVALID": "L’alignement de la collection de cartes est invalide.",
+    "CELL_CARD_COLLECTION_REVEAL_INVALID": "La configuration d’apparition de la collection de cartes est invalide.",
+    "CELL_CARD_COLLECTION_ITEMS_INVALID": "La liste des cartes de la collection est invalide.",
+    "CELL_CARD_COLLECTION_ITEMS_MIN_1": "Au moins une carte est requise dans la collection.",
 
     "CELL_STRUCTURED_CARD_COLUMNS_INVALID": "Le nombre de colonnes de la carte structurée est invalide.",
     "CELL_STRUCTURED_CARD_ITEMS_INVALID": "La liste des cartes structurées est invalide.",
@@ -867,10 +873,11 @@
             "spacer": "Espacement",
             "separator": "Séparateur",
             "buttons": "Boutons",
-            "cards": "Carte",
-            "cardsExtended": "Carte étendues",
+            "cards": "Cartes",
+            "cardCollection": "Collection de cartes",
+            "cardsExtended": "Cartes étendues",
             "steps": "Étapes",
-            "structuredCard": "Carte structurée",
+            "structuredCard": "Cartes structurées",
             "form": "Formulaire",
             "timeline": "Frise chronologique"
           }
@@ -1569,6 +1576,7 @@
           "separator": "Séparateur",
           "buttons": "Boutons",
           "cards": "Cartes",
+          "cardCollection": "Collection de cartes",
           "cardsExtended": "Cartes étendues",
           "steps": "Étapes",
           "structuredCard": "Carte structurée",
@@ -1636,6 +1644,7 @@
         "separator": "Séparateur",
         "buttons": "Boutons",
         "cards": "Cartes",
+        "cardCollection": "Collection de cartes",
         "cardsExtended": "Cartes étendues",
         "steps": "Étapes",
         "structuredCard": "Carte structurée",
@@ -1694,6 +1703,31 @@
           "cardsExtended": "Carte étendue",
           "structuredCard": "Carte structurée"
         }
+      },
+
+      "cardCollectionCellEditor": {
+        "itemsLabel": "Cartes",
+        "itemsHelp": "Ajoutez, réorganisez et modifiez une collection contenant un seul type de carte.",
+        "cardKindLabel": "Type de carte",
+        "cardKinds": {
+          "card": "Carte",
+          "cardsExtended": "Carte étendue",
+          "structuredCard": "Carte structurée"
+        },
+        "columnsLabel": "Colonnes",
+        "columns": {
+          "1": "1 colonne",
+          "2": "2 colonnes",
+          "3": "3 colonnes",
+          "4": "4 colonnes"
+        },
+        "alignLabel": "Alignement",
+        "aligns": {
+          "left": "Gauche",
+          "center": "Centre"
+        },
+        "revealLabel": "Afficher avec un effet d’apparition",
+        "revealHelp": "Active l’animation d’apparition de la collection de cartes."
       },
 
       "cardsExtendedCellEditor": {

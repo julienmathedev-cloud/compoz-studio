@@ -1,5 +1,5 @@
 /**
- * @file apps/studio/src/lib/pages/block/cell-kind-meta.ts
+ * @file apps/studio/src/lib/pages/blocks/cell-kind-meta.ts
  * @layer studio/lib/pages/block
  *
  * @description
@@ -46,6 +46,7 @@ export function getCellKind(value: unknown): CellKind | null {
     kind === "separator" ||
     kind === "buttons" ||
     kind === "cards" ||
+    kind === "cardCollection" ||
     kind === "cardsExtended" ||
     kind === "steps" ||
     kind === "timeline" ||
@@ -68,6 +69,7 @@ export function getCellKindIcon(kind: CellKind): LucideIcon {
   if (kind === "separator") return Minus;
   if (kind === "buttons") return MousePointerClick;
   if (kind === "cards") return LayoutGrid;
+  if (kind === "cardCollection") return LayoutGrid;
   if (kind === "cardsExtended") return LayoutList;
   if (kind === "steps") return ListOrdered;
   if (kind === "timeline") return History;

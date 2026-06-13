@@ -10,6 +10,7 @@ import type { CellDTO } from "@compoz/core/domain/pages/dto";
 import type { CellFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 
 import { toButtonsCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/buttons";
+import { toCardCollectionCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/card-collection";
 import { toCardsCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/cards";
 import { toCardsExtendedCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/cards-extended";
 import { toCarouselCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/carousel";
@@ -29,6 +30,9 @@ export function toCellShapeFromDTO(cell: CellDTO): CellFormValues {
   if (cell.kind === "richText") return toRichTextCellShapeFromDTO(cell);
   if (cell.kind === "separator") return toSeparatorCellShapeFromDTO(cell);
   if (cell.kind === "buttons") return toButtonsCellShapeFromDTO(cell);
+  if (cell.kind === "cardCollection") {
+    return toCardCollectionCellShapeFromDTO(cell);
+  }
   if (cell.kind === "cards") return toCardsCellShapeFromDTO(cell);
   if (cell.kind === "cardsExtended") {
     return toCardsExtendedCellShapeFromDTO(cell);

@@ -9,6 +9,7 @@
 import type { ReactNode } from "react";
 
 import { ButtonsCellRenderer } from "@compoz/ui/renderer/cells/ButtonsCellRenderer";
+import { CardCollectionCellRenderer } from "@compoz/ui/renderer/cells/CardCollectionCellRenderer";
 import { CardsCellRenderer } from "@compoz/ui/renderer/cells/CardsCellRenderer";
 import { CardsExtendedCellRenderer } from "@compoz/ui/renderer/cells/CardsExtendedCellRenderer";
 import { CarouselCellRenderer } from "@compoz/ui/renderer/cells/CarouselCellRenderer";
@@ -30,6 +31,7 @@ import type {
 
 import type {
   ButtonsCellShape,
+  CardCollectionCellShape,
   CardsCellShape,
   CardsExtendedCellShape,
   CarouselCellShape,
@@ -86,6 +88,16 @@ export const cellRegistry: Record<string, CellRenderer> = {
 
   buttons: ({ cell, ui }) => (
     <ButtonsCellRenderer cell={cell as ButtonsCellShape} ui={ui.buttons} />
+  ),
+
+  cardCollection: ({ cell, ui, revealUi }) => (
+    <CardCollectionCellRenderer
+      cell={cell as CardCollectionCellShape}
+      cardsUi={ui.cards}
+      cardsExtendedUi={ui.cardsExtended}
+      structuredCardUi={ui.structuredCard}
+      revealUi={revealUi}
+    />
   ),
 
   cards: ({ cell, ui, revealUi }) => (

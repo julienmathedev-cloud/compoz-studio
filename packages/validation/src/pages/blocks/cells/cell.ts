@@ -13,6 +13,11 @@ import type {
   ButtonPresentationSchema,
 } from "@compoz/validation/pages/blocks/cells/details/buttons";
 import { ButtonsCellSchema } from "@compoz/validation/pages/blocks/cells/details/buttons";
+import type {
+  CardCollectionCardKindSchema,
+  CardCollectionItemSchema,
+} from "@compoz/validation/pages/blocks/cells/details/card-collection";
+import { CardCollectionCellSchema } from "@compoz/validation/pages/blocks/cells/details/card-collection";
 import type { CardItemSchema } from "@compoz/validation/pages/blocks/cells/details/cards";
 import { CardsCellSchema } from "@compoz/validation/pages/blocks/cells/details/cards";
 import type { CardsExtendedItemSchema } from "@compoz/validation/pages/blocks/cells/details/cards-extended";
@@ -60,6 +65,7 @@ export const CellSchema = z.discriminatedUnion("kind", [
   ImageCellSchema,
   GalleryCellSchema,
   CarouselCellSchema,
+  CardCollectionCellSchema,
   CardsCellSchema,
   CardsExtendedCellSchema,
   StepsCellSchema,
@@ -82,6 +88,10 @@ export type CardsExtendedCellInput = z.input<typeof CardsExtendedCellSchema>;
 export type CardsExtendedCellOutput = z.output<typeof CardsExtendedCellSchema>;
 export type CarouselCellInput = z.input<typeof CarouselCellSchema>;
 export type CarouselCellOutput = z.output<typeof CarouselCellSchema>;
+export type CardCollectionCellInput = z.input<typeof CardCollectionCellSchema>;
+export type CardCollectionCellOutput = z.output<
+  typeof CardCollectionCellSchema
+>;
 export type StepsCellInput = z.input<typeof StepsCellSchema>;
 export type StepsCellOutput = z.output<typeof StepsCellSchema>;
 export type StructuredCardCellInput = z.input<typeof StructuredCardCellSchema>;
@@ -110,6 +120,11 @@ export type CarouselVariantShape = z.infer<typeof CarouselVariantSchema>;
 export type CarouselItemKindShape = z.infer<typeof CarouselItemKindSchema>;
 export type CarouselItemShape = z.infer<typeof CarouselItemSchema>;
 export type CarouselCellShape = z.infer<typeof CarouselCellSchema>;
+export type CardCollectionCardKindShape = z.infer<
+  typeof CardCollectionCardKindSchema
+>;
+export type CardCollectionItemShape = z.infer<typeof CardCollectionItemSchema>;
+export type CardCollectionCellShape = z.infer<typeof CardCollectionCellSchema>;
 export type StepItemShape = z.infer<typeof StepItemSchema>;
 export type StepsCellShape = z.infer<typeof StepsCellSchema>;
 export type StructuredCardSectionShape = z.infer<
@@ -139,6 +154,12 @@ export {
   ButtonPresentationSchema,
   ButtonsCellSchema,
 } from "@compoz/validation/pages/blocks/cells/details/buttons";
+
+export {
+  CardCollectionCardKindSchema,
+  CardCollectionCellSchema,
+  CardCollectionItemSchema,
+} from "@compoz/validation/pages/blocks/cells/details/card-collection";
 
 export {
   CardItemSchema,

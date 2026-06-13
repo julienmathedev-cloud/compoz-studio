@@ -12,6 +12,9 @@ import {
   ButtonItemSchema,
   ButtonPresentationSchema,
   ButtonsCellSchema,
+  CardCollectionCardKindSchema,
+  CardCollectionCellSchema,
+  CardCollectionItemSchema,
   CardItemSchema,
   CardsCellSchema,
   CardsExtendedCellSchema,
@@ -48,6 +51,7 @@ export const CellFormSchema = z.discriminatedUnion("kind", [
   ImageCellSchema,
   GalleryCellSchema,
   CarouselCellSchema,
+  CardCollectionCellSchema,
   CardsCellSchema,
   CardsExtendedCellSchema,
   StepsCellSchema,
@@ -124,6 +128,22 @@ export type CarouselItemFormValues = z.infer<
 export const CarouselCellFormValuesSchema = CarouselCellSchema;
 export type CarouselCellFormValues = z.infer<
   typeof CarouselCellFormValuesSchema
+>;
+
+export const CardCollectionCardKindFormValuesSchema =
+  CardCollectionCardKindSchema;
+export type CardCollectionCardKindFormValues = z.infer<
+  typeof CardCollectionCardKindFormValuesSchema
+>;
+
+export const CardCollectionItemFormValuesSchema = CardCollectionItemSchema;
+export type CardCollectionItemFormValues = z.infer<
+  typeof CardCollectionItemFormValuesSchema
+>;
+
+export const CardCollectionCellFormValuesSchema = CardCollectionCellSchema;
+export type CardCollectionCellFormValues = z.infer<
+  typeof CardCollectionCellFormValuesSchema
 >;
 
 export const StepItemFormValuesSchema = StepItemSchema;

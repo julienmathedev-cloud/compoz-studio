@@ -6,6 +6,7 @@ import type { Cell } from "@compoz/core/domain/pages/entities/cell";
 import type { CellIntentDTO } from "@compoz/validation/pages/blocks/cells/cell-intents";
 
 import { adaptButtonsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/buttons";
+import { adaptCardCollectionCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/card-collection";
 import { adaptCardsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/cards";
 import { adaptCardsExtendedCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/cards-extended";
 import { adaptCarouselCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/carousel";
@@ -50,6 +51,9 @@ export function adaptCells(
 
       case "carousel":
         return adaptCarouselCell(cell);
+
+      case "cardCollection":
+        return adaptCardCollectionCell(cell);
 
       case "cards":
         return adaptCardsCell(cell);

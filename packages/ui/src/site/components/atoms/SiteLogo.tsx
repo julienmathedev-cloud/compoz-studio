@@ -33,13 +33,17 @@ export function SiteLogo({
     return null;
   }
 
-  const ariaLabel = normalizeString(identity.siteName) || "Accueil";
+  const siteName = normalizeString(identity.siteName);
+  const ariaLabel = siteName || "Accueil";
+  const logoAlt =
+    normalizeString(logo.alt) ||
+    (siteName ? `Logo ${siteName}` : "Logo du site");
 
   const logoImage = (
     <SiteAppImage
       image={{
         src: logo.src,
-        alt: "",
+        alt: logoAlt,
         width: logo.width,
         height: logo.height,
       }}

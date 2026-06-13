@@ -18,6 +18,7 @@ import { headers } from "next/headers";
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { getSiteRepository } from "@compoz/infra/site";
+import { getPublishedPageBySlugByTenantId } from "@compoz/site/lib/pages/published-page-loaders";
 import { resolveTenantFromHost } from "@compoz/site/lib/tenant/resolve-site-tenant";
 import {
   canonicalFromBase,
@@ -64,7 +65,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const slugRaw = String(ref.slug ?? "").trim();
       const slug = slugRaw ? slugRaw : HOME_SLUG;
 
-      const page = await siteRepo.readPage(slug, CONTENT_STATE.PUBLISHED);
+      const page = await getPublishedPageBySlugByTenantId(tenantId, slug);
       if (!page) return null;
 
       if (page.sitemap?.include === false) {

@@ -65,10 +65,12 @@ export type {
 
 export type {
   CardCollectionAlign,
+  CardCollectionCardColumns,
   CardCollectionCardKind,
   CardCollectionCell,
   CardCollectionColumns,
   CardCollectionItem,
+  CardCollectionStackedColumns,
 } from "@compoz/core/domain/pages/entities/cells/card-collection";
 
 export type {

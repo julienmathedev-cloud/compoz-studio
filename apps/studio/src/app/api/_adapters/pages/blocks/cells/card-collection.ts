@@ -4,7 +4,11 @@
  * @description Adapteur API Studio pour CardCollectionCell.
  */
 
-import type { CardCollectionCell } from "@compoz/core/domain/pages/entities/cell";
+import type {
+  CardCollectionCardColumns,
+  CardCollectionCell,
+  CardCollectionStackedColumns,
+} from "@compoz/core/domain/pages/entities/cell";
 import { adaptCardsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/cards";
 import { adaptCardsExtendedCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/cards-extended";
 import { adaptStructuredCardCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/structured-card";
@@ -24,7 +28,7 @@ export function adaptCardCollectionCell(
       ? adaptCardsCell({
           id: dto.id,
           kind: "cards",
-          columns: dto.columns as 2 | 3 | 4,
+          columns: dto.columns as CardCollectionCardColumns,
           align: dto.align,
           reveal: dto.reveal,
           items: dto.items as CardItemIntentDTO[],
@@ -33,7 +37,7 @@ export function adaptCardCollectionCell(
         ? adaptCardsExtendedCell({
             id: dto.id,
             kind: "cardsExtended",
-            columns: dto.columns as 1 | 2 | 3,
+            columns: dto.columns as CardCollectionStackedColumns,
             align: dto.align,
             reveal: dto.reveal,
             items: dto.items as CardsExtendedItemIntentDTO[],
@@ -41,7 +45,7 @@ export function adaptCardCollectionCell(
         : adaptStructuredCardCell({
             id: dto.id,
             kind: "structuredCard",
-            columns: dto.columns as 1 | 2 | 3,
+            columns: dto.columns as CardCollectionStackedColumns,
             reveal: dto.reveal,
             items: dto.items as StructuredCardItemIntentDTO[],
           }).items;

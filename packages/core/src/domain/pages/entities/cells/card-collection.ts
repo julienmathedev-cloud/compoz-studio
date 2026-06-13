@@ -18,7 +18,13 @@ export type CardCollectionItem =
   | CardsExtendedItem
   | StructuredCardItem;
 
-export type CardCollectionColumns = 1 | 2 | 3 | 4;
+export type CardCollectionCardColumns = 2 | 3 | 4;
+
+export type CardCollectionStackedColumns = 1 | 2 | 3;
+
+export type CardCollectionColumns =
+  | CardCollectionCardColumns
+  | CardCollectionStackedColumns;
 
 export type CardCollectionAlign = "left" | "center";
 

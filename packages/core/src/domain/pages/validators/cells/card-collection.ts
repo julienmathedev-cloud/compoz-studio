@@ -20,6 +20,12 @@ import { assertStructuredCardItem } from "@compoz/core/domain/pages/validators/c
 
 type Path = ReadonlyArray<string | number>;
 
+function castCardCollectionItem<T extends CardCollectionItem>(
+  item: CardCollectionItem,
+): T {
+  return item as T;
+}
+
 function assertCardCollectionKind(
   value: unknown,
   path: Path,
@@ -43,16 +49,22 @@ function assertCardCollectionItemByKind(
   path: Path,
 ): void {
   if (cardKind === "card") {
-    assertCardItem(item as CardItem, path);
+    assertCardItem(castCardCollectionItem<CardItem>(item), path);
     return;
   }
 
   if (cardKind === "cardsExtended") {
-    assertCardsExtendedItem(item as CardsExtendedItem, path);
+    assertCardsExtendedItem(
+      castCardCollectionItem<CardsExtendedItem>(item),
+      path,
+    );
     return;
   }
 
-  assertStructuredCardItem(item as StructuredCardItem, path);
+  assertStructuredCardItem(
+    castCardCollectionItem<StructuredCardItem>(item),
+    path,
+  );
 }
 
 export function assertCardCollectionCell(

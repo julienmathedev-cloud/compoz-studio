@@ -5,6 +5,10 @@
  */
 
 import type {
+  CardCollectionCardColumns,
+  CardCollectionStackedColumns,
+} from "@compoz/core/domain/pages/entities/cell";
+import type {
   CardCollectionCellShape,
   CardItemShape,
   CardsExtendedItemShape,
@@ -46,7 +50,7 @@ export function CardCollectionCellRenderer({
           id: cell.id,
           kind: "cards",
           cssClassName: cell.cssClassName,
-          columns: cell.columns as 2 | 3 | 4,
+          columns: cell.columns as CardCollectionCardColumns,
           align: cell.align,
           reveal: cell.reveal,
           items: cell.items as CardItemShape[],
@@ -64,7 +68,7 @@ export function CardCollectionCellRenderer({
           id: cell.id,
           kind: "cardsExtended",
           cssClassName: cell.cssClassName,
-          columns: cell.columns as 1 | 2 | 3,
+          columns: cell.columns as CardCollectionStackedColumns,
           align: cell.align,
           reveal: cell.reveal,
           items: cell.items as CardsExtendedItemShape[],
@@ -82,7 +86,7 @@ export function CardCollectionCellRenderer({
           id: cell.id,
           kind: "structuredCard",
           cssClassName: cell.cssClassName,
-          columns: cell.columns as 1 | 2 | 3,
+          columns: cell.columns as CardCollectionStackedColumns,
           reveal: cell.reveal,
           items: cell.items as StructuredCardItemShape[],
         }}

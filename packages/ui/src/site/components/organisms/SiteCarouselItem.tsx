@@ -86,11 +86,8 @@ export function SiteCarouselItem({
         <SiteAppImage
           image={{
             src: item.src,
-
             alt: item.alt,
-
             width: item.width,
-
             height: item.height,
           }}
           fill

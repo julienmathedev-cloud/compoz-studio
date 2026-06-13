@@ -10,6 +10,10 @@ import type {
   CardsExtendedItemDTO,
   StructuredCardItemDTO,
 } from "@compoz/core/domain/pages/dto";
+import type {
+  CardCollectionCardColumns,
+  CardCollectionStackedColumns,
+} from "@compoz/core/domain/pages/entities/cell";
 import { toCardsCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/cards";
 import { toCardsExtendedCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/cards-extended";
 import { toStructuredCardCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/structured-card";
@@ -23,7 +27,7 @@ export function toCardCollectionCellShapeFromDTO(
       ? toCardsCellShapeFromDTO({
           id: cell.id,
           kind: "cards",
-          columns: cell.columns as 2 | 3 | 4,
+          columns: cell.columns as CardCollectionCardColumns,
           align: cell.align,
           reveal: cell.reveal,
           items: cell.items as CardItemDTO[],
@@ -32,7 +36,7 @@ export function toCardCollectionCellShapeFromDTO(
         ? toCardsExtendedCellShapeFromDTO({
             id: cell.id,
             kind: "cardsExtended",
-            columns: cell.columns as 1 | 2 | 3,
+            columns: cell.columns as CardCollectionStackedColumns,
             align: cell.align,
             reveal: cell.reveal,
             items: cell.items as CardsExtendedItemDTO[],
@@ -40,7 +44,7 @@ export function toCardCollectionCellShapeFromDTO(
         : toStructuredCardCellShapeFromDTO({
             id: cell.id,
             kind: "structuredCard",
-            columns: cell.columns as 1 | 2 | 3,
+            columns: cell.columns as CardCollectionStackedColumns,
             reveal: cell.reveal,
             items: cell.items as StructuredCardItemDTO[],
           }).items;

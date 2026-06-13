@@ -21,7 +21,10 @@ import { notFound } from "next/navigation";
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { getSiteRepository } from "@compoz/infra/site";
-import { getPublishedPageBySlugByTenantId } from "@compoz/site/lib/pages/published-page-loaders";
+import {
+  getPublishedHomePageByTenantId,
+  getPublishedPageBySlugByTenantId,
+} from "@compoz/site/lib/pages/published-page-loaders";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
 import { toSlug } from "@compoz/ui/lib/routing/slug";
 import { requireTenantId } from "@compoz/ui/lib/tenant-id";
@@ -81,7 +84,10 @@ export default async function sitemap({
       const slug = toSlug(ref.slug);
       if (!slug) return null;
 
-      const page = await getPublishedPageBySlugByTenantId(t, slug);
+      const page =
+        slug === HOME_SLUG
+          ? await getPublishedHomePageByTenantId(t)
+          : await getPublishedPageBySlugByTenantId(t, slug);
       if (!page) return null;
 
       if (page.sitemap?.include === false) {

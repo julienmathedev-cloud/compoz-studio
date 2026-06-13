@@ -25,6 +25,7 @@ import {
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
 import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
+import { ensureTitleTemplate } from "@compoz/ui/lib/seo/metadata-helpers";
 import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
 import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
 import { resolveSiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRuntimeFeatures";
@@ -36,6 +37,19 @@ export const dynamic = "force-dynamic";
 type PageParams = Readonly<{
   params: Promise<Readonly<{ slug: string }>>;
 }>;
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function applyTitleTemplate(
+  title: string | undefined,
+  template: string,
+): string | undefined {
+  if (!title) return undefined;
+
+  return template.replace("%s", title);
+}
 
 /* -------------------------------------------------------------------------- */
 /* Metadata                                                                   */
@@ -55,9 +69,15 @@ export async function generateMetadata({
 
   const settings = await getPublishedSettingsByTenantId(tenantId);
 
+  const defaultSeoTitle =
+    (settings?.seo?.defaultTitle ?? "").trim() || undefined;
+
+  const brandTitle = (settings?.identity?.siteName ?? "").trim() || undefined;
+
   const description =
     (page.seoDescription ?? "").trim() ||
-    (settings?.seo?.defaultDescription ?? "").trim() || undefined;
+    (settings?.seo?.defaultDescription ?? "").trim() ||
+    undefined;
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
     .map(toBlockShapeFromDTO)
@@ -66,12 +86,31 @@ export async function generateMetadata({
   const h1 = getPageH1(blocks);
 
   const title =
-    (page.seoTitle ?? "").trim() || h1 || (page.name ?? "").trim() || undefined;
+    (page.seoTitle ?? "").trim() ||
+    h1 ||
+    (page.name ?? "").trim() ||
+    defaultSeoTitle ||
+    brandTitle;
+
+  const titleTemplate = ensureTitleTemplate(
+    (settings?.seo?.titleTemplate ?? "").trim(),
+    brandTitle ?? defaultSeoTitle ?? "Site",
+  );
+
+  const resolvedTitle = applyTitleTemplate(title, titleTemplate);
 
   return {
     title,
     description,
     alternates: { canonical: `/${encodeURIComponent(slug)}` },
+    openGraph: {
+      title: resolvedTitle,
+      description,
+    },
+    twitter: {
+      title: resolvedTitle,
+      description,
+    },
   };
 }
 

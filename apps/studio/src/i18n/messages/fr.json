@@ -1716,10 +1716,10 @@
         },
         "columnsLabel": "Colonnes",
         "columns": {
-          "1": "1 colonne",
-          "2": "2 colonnes",
-          "3": "3 colonnes",
-          "4": "4 colonnes"
+          "1": "1",
+          "2": "2",
+          "3": "3",
+          "4": "4"
         },
         "alignLabel": "Alignement",
         "aligns": {

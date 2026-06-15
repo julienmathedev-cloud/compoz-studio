@@ -67,12 +67,15 @@ export function CardCollectionCellRenderer({
   const align = cell.align;
   const reveal = cell.reveal === true;
   const cols = Math.max(1, Math.floor(columns));
+  const isStructuredCard = cell.cardKind === "structuredCard";
 
   return (
     <div
       className={cn(ui.root, ui.align[align], cell.cssClassName)}
       data-cell="cardCollection"
+      data-card-cell
       data-card-collection
+      data-structured-card-cell={isStructuredCard ? true : undefined}
       data-card-kind={cell.cardKind}
       data-card-columns={columns}
       data-card-align={align}
@@ -80,28 +83,42 @@ export function CardCollectionCellRenderer({
     >
       <div
         className={cn(ui.grid, ui.columns[columns])}
+        data-card-grid
         data-card-collection-grid
+        data-structured-card-grid={isStructuredCard ? true : undefined}
       >
         {items.map((item, index) => {
           const seed = index % cols;
+
           const content = (
-            <SiteCardCollectionItem
-              item={item}
-              cardKind={cell.cardKind}
-              align={align}
-              cardsUi={cardsUi}
-              cardsExtendedUi={cardsExtendedUi}
-              structuredCardUi={structuredCardUi}
-            />
+            <div
+              className="h-full"
+              data-card-content
+              data-card-collection-content
+              data-structured-card-content={isStructuredCard ? true : undefined}
+            >
+              <SiteCardCollectionItem
+                item={item}
+                cardKind={cell.cardKind}
+                align={align}
+                cardsUi={cardsUi}
+                cardsExtendedUi={cardsExtendedUi}
+                structuredCardUi={structuredCardUi}
+              />
+            </div>
           );
 
           return (
             <div
               key={item.id}
               className={ui.item}
+              data-card-item
               data-card-collection-item
+              data-structured-card-item={isStructuredCard ? true : undefined}
               data-card-index={index}
               data-card-column={seed}
+              data-structured-card-index={isStructuredCard ? index : undefined}
+              data-structured-card-column={isStructuredCard ? seed : undefined}
             >
               {reveal ? (
                 <SiteReveal
@@ -109,6 +126,7 @@ export function CardCollectionCellRenderer({
                   seedOrder={seed}
                   staggerMs={60}
                   amount={0.1}
+                  className={ui.item}
                 >
                   {content}
                 </SiteReveal>

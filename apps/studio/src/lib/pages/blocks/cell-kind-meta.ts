@@ -19,6 +19,7 @@ import {
   LayoutList,
   ListOrdered,
   Mail,
+  MessageSquareQuote,
   Minus,
   MousePointerClick,
   SeparatorHorizontal,
@@ -49,6 +50,7 @@ export function getCellKind(value: unknown): CellKind | null {
     kind === "cardCollection" ||
     kind === "cardsExtended" ||
     kind === "steps" ||
+    kind === "testimonials" ||
     kind === "timeline" ||
     kind === "structuredCard" ||
     kind === "form" ||
@@ -72,6 +74,7 @@ export function getCellKindIcon(kind: CellKind): LucideIcon {
   if (kind === "cardCollection") return LayoutGrid;
   if (kind === "cardsExtended") return LayoutList;
   if (kind === "steps") return ListOrdered;
+  if (kind === "testimonials") return MessageSquareQuote;
   if (kind === "timeline") return History;
   if (kind === "structuredCard") return FileText;
   if (kind === "form") return Mail;

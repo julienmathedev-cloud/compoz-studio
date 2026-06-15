@@ -51,6 +51,12 @@ import type {
 } from "@compoz/validation/pages/blocks/cells/details/structured-card";
 import { StructuredCardCellSchema } from "@compoz/validation/pages/blocks/cells/details/structured-card";
 import type {
+  TestimonialItemSchema,
+  TestimonialRatingSchema,
+  TestimonialsDisplayModeSchema,
+} from "@compoz/validation/pages/blocks/cells/details/testimonials";
+import { TestimonialsCellSchema } from "@compoz/validation/pages/blocks/cells/details/testimonials";
+import type {
   TimelineItemSchema,
   TimelineKeywordSchema,
 } from "@compoz/validation/pages/blocks/cells/details/timeline";
@@ -69,6 +75,7 @@ export const CellSchema = z.discriminatedUnion("kind", [
   CardsCellSchema,
   CardsExtendedCellSchema,
   StepsCellSchema,
+  TestimonialsCellSchema,
   StructuredCardCellSchema,
   FormCellSchema,
   TimelineCellSchema,
@@ -94,6 +101,8 @@ export type CardCollectionCellOutput = z.output<
 >;
 export type StepsCellInput = z.input<typeof StepsCellSchema>;
 export type StepsCellOutput = z.output<typeof StepsCellSchema>;
+export type TestimonialsCellInput = z.input<typeof TestimonialsCellSchema>;
+export type TestimonialsCellOutput = z.output<typeof TestimonialsCellSchema>;
 export type StructuredCardCellInput = z.input<typeof StructuredCardCellSchema>;
 export type StructuredCardCellOutput = z.output<
   typeof StructuredCardCellSchema
@@ -127,6 +136,12 @@ export type CardCollectionItemShape = z.infer<typeof CardCollectionItemSchema>;
 export type CardCollectionCellShape = z.infer<typeof CardCollectionCellSchema>;
 export type StepItemShape = z.infer<typeof StepItemSchema>;
 export type StepsCellShape = z.infer<typeof StepsCellSchema>;
+export type TestimonialsDisplayModeShape = z.infer<
+  typeof TestimonialsDisplayModeSchema
+>;
+export type TestimonialRatingShape = z.infer<typeof TestimonialRatingSchema>;
+export type TestimonialItemShape = z.infer<typeof TestimonialItemSchema>;
+export type TestimonialsCellShape = z.infer<typeof TestimonialsCellSchema>;
 export type StructuredCardSectionShape = z.infer<
   typeof StructuredCardSectionSchema
 >;
@@ -211,6 +226,13 @@ export {
   StepsCellSchema,
   StepsVariantSchema,
 } from "@compoz/validation/pages/blocks/cells/details/steps";
+
+export {
+  TestimonialItemSchema,
+  TestimonialRatingSchema,
+  TestimonialsCellSchema,
+  TestimonialsDisplayModeSchema,
+} from "@compoz/validation/pages/blocks/cells/details/testimonials";
 
 export {
   StructuredCardCellSchema,

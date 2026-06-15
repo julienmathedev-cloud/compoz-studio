@@ -28,6 +28,8 @@ import type {
   StructuredCardColumns,
   StructuredCardItem,
   StructuredCardSection,
+  TestimonialItem,
+  TestimonialsCell,
   TimelineItem,
 } from "@compoz/core/domain/pages/entities/cell";
 import type {
@@ -89,6 +91,8 @@ export type CardCollectionCellDTO = Readonly<CardCollectionCell>;
 export type CardsExtendedItemDTO = Readonly<CardsExtendedItem>;
 export type StructuredCardItemDTO = Readonly<StructuredCardItem>;
 export type TimelineItemDTO = Readonly<TimelineItem>;
+export type TestimonialItemDTO = Readonly<TestimonialItem>;
+export type TestimonialsCellDTO = Readonly<TestimonialsCell>;
 export type StructuredCardColumnsDTO = Readonly<StructuredCardColumns>;
 export type StructuredCardCellDTO = Readonly<StructuredCardCell>;
 export type StructuredCardSectionDTO = Readonly<StructuredCardSection>;

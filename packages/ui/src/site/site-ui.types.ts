@@ -50,6 +50,7 @@ export type SiteCellsUi = Readonly<{
   cards: SiteCardsUi;
   cardsExtended: SiteCardsExtendedUi;
   steps: SiteStepsUi;
+  testimonials: SiteTestimonialsUi;
   structuredCard: SiteStructuredCardUi;
   image: SiteImageUi;
   navGallery: SiteNavGalleryUi;
@@ -238,6 +239,34 @@ export type SiteStepsUi = Readonly<{
 }>;
 
 export type SiteStepsUiOverride = DeepPartial<SiteStepsUi>;
+
+export type SiteTestimonialsUi = Readonly<{
+  root: string;
+  header: string;
+  title: string;
+  description: string;
+  staticGrid: string;
+  marqueeViewport: string;
+  marqueeTrack: string;
+  marqueeGroup: string;
+  marqueeDuplicate: string;
+  item: string;
+  staticItem: string;
+  marqueeItem: string;
+  card: string;
+  cardContent: string;
+  rating: string;
+  star: string;
+  quote: string;
+  author: string;
+  authorImageWrapper: string;
+  authorImage: string;
+  authorText: string;
+  authorName: string;
+  authorRole: string;
+}>;
+
+export type SiteTestimonialsUiOverride = DeepPartial<SiteTestimonialsUi>;
 
 export type SiteStepCardUiOverride = DeepPartial<SiteStepCardUi>;
 

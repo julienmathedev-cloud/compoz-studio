@@ -25,6 +25,7 @@ import type {
   StepItemFormValues,
   StructuredCardItemFormValues,
   StructuredCardSectionFormValues,
+  TestimonialItemFormValues,
   TimelineItemFormValues,
 } from "@compoz/validation/pages/blocks/cells/cell-form";
 
@@ -76,6 +77,19 @@ function normalizeButtonPresentation(
     variant,
     icon: iconValue,
     iconPosition,
+  };
+}
+
+function normalizeTestimonialItem(
+  item: TestimonialItemFormValues,
+): TestimonialItemFormValues {
+  return {
+    ...item,
+    quote: item.quote?.trim() ?? "",
+    authorName: item.authorName?.trim() ?? "",
+    authorRole: item.authorRole?.trim() ? item.authorRole.trim() : undefined,
+    authorImage: item.authorImage?.trim() ? item.authorImage.trim() : undefined,
+    rating: item.rating,
   };
 }
 
@@ -136,6 +150,17 @@ export function createEmptyStepItem(): StepItemFormValues {
     id: createUiId(),
     title: "",
     description: "",
+  };
+}
+
+export function createEmptyTestimonialItem(): TestimonialItemFormValues {
+  return {
+    id: createUiId(),
+    quote: "",
+    authorName: "",
+    authorRole: undefined,
+    authorImage: undefined,
+    rating: undefined,
   };
 }
 
@@ -334,6 +359,18 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       cssClassName: "",
       variant: "vertical",
       items: [createEmptyStepItem()],
+    };
+  }
+
+  if (kind === "testimonials") {
+    return {
+      id,
+      kind: "testimonials",
+      cssClassName: "",
+      title: undefined,
+      description: undefined,
+      displayMode: "static",
+      items: [createEmptyTestimonialItem()],
     };
   }
 
@@ -609,6 +646,18 @@ export function toCellFormValuesForValidation(
     };
   }
 
+  if (cell.kind === "testimonials") {
+    return {
+      ...cell,
+      cssClassName: normalizedCssClassName,
+      title: cell.title?.trim() ? cell.title.trim() : undefined,
+      description: cell.description?.trim()
+        ? cell.description.trim()
+        : undefined,
+      items: cell.items.map(normalizeTestimonialItem),
+    };
+  }
+
   if (cell.kind === "form") {
     return {
       ...cell,
@@ -685,6 +734,18 @@ export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
       ...cell,
       cssClassName: normalizedCssClassName,
       items: cell.items.map(normalizeStructuredCardItem),
+    };
+  }
+
+  if (cell.kind === "testimonials") {
+    return {
+      ...cell,
+      cssClassName: normalizedCssClassName,
+      title: cell.title?.trim() ? cell.title.trim() : undefined,
+      description: cell.description?.trim()
+        ? cell.description.trim()
+        : undefined,
+      items: cell.items.map(normalizeTestimonialItem),
     };
   }
 

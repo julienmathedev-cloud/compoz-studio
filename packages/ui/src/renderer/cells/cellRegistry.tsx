@@ -22,6 +22,7 @@ import { SeparatorCellRenderer } from "@compoz/ui/renderer/cells/SeparatorCellRe
 import { SpacerCellRenderer } from "@compoz/ui/renderer/cells/SpacerCellRenderer";
 import { StepsCellRenderer } from "@compoz/ui/renderer/cells/StepsCellRenderer";
 import { StructuredCardCellRenderer } from "@compoz/ui/renderer/cells/StructuredCardCellRenderer";
+import { TestimonialsCellRenderer } from "@compoz/ui/renderer/cells/TestimonialsCellRenderer";
 import { TimelineCellRenderer } from "@compoz/ui/renderer/cells/TimelineCellRenderer";
 
 import type {
@@ -45,6 +46,7 @@ import type {
   SpacerCellShape,
   StepsCellShape,
   StructuredCardCellShape,
+  TestimonialsCellShape,
   TimelineCellShape,
 } from "@compoz/validation/pages/blocks/cells/cell";
 
@@ -119,6 +121,13 @@ export const cellRegistry: Record<string, CellRenderer> = {
 
   steps: ({ cell, ui }) => (
     <StepsCellRenderer cell={cell as StepsCellShape} ui={ui.steps} />
+  ),
+
+  testimonials: ({ cell, ui }) => (
+    <TestimonialsCellRenderer
+      cell={cell as TestimonialsCellShape}
+      ui={ui.testimonials}
+    />
   ),
 
   timeline: ({ cell, ui }) => (

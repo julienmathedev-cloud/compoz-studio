@@ -23,6 +23,7 @@ import { toSeparatorCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/sepa
 import { toSpacerCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/spacer";
 import { toStepsCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/steps";
 import { toStructuredCardCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/structured-card";
+import { toTestimonialsCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/testimonials";
 import { toTimelineCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/timeline";
 
 export function toCellShapeFromDTO(cell: CellDTO): CellFormValues {
@@ -38,6 +39,9 @@ export function toCellShapeFromDTO(cell: CellDTO): CellFormValues {
     return toCardsExtendedCellShapeFromDTO(cell);
   }
   if (cell.kind === "steps") return toStepsCellShapeFromDTO(cell);
+  if (cell.kind === "testimonials") {
+    return toTestimonialsCellShapeFromDTO(cell);
+  }
   if (cell.kind === "timeline") return toTimelineCellShapeFromDTO(cell);
   if (cell.kind === "structuredCard") {
     return toStructuredCardCellShapeFromDTO(cell);

@@ -38,6 +38,10 @@ import {
   StructuredCardCellSchema,
   StructuredCardItemSchema,
   StructuredCardSectionSchema,
+  TestimonialItemSchema,
+  TestimonialRatingSchema,
+  TestimonialsCellSchema,
+  TestimonialsDisplayModeSchema,
   TimelineCellSchema,
   TimelineItemSchema,
 } from "@compoz/validation/pages/blocks/cells/cell";
@@ -55,6 +59,7 @@ export const CellFormSchema = z.discriminatedUnion("kind", [
   CardsCellSchema,
   CardsExtendedCellSchema,
   StepsCellSchema,
+  TestimonialsCellSchema,
   StructuredCardCellSchema,
   FormCellSchema,
   TimelineCellSchema,
@@ -151,6 +156,27 @@ export type StepItemFormValues = z.infer<typeof StepItemFormValuesSchema>;
 
 export const StepsCellFormValuesSchema = StepsCellSchema;
 export type StepsCellFormValues = z.infer<typeof StepsCellFormValuesSchema>;
+
+export const TestimonialsDisplayModeFormValuesSchema =
+  TestimonialsDisplayModeSchema;
+export type TestimonialsDisplayModeFormValues = z.infer<
+  typeof TestimonialsDisplayModeFormValuesSchema
+>;
+
+export const TestimonialRatingFormValuesSchema = TestimonialRatingSchema;
+export type TestimonialRatingFormValues = z.infer<
+  typeof TestimonialRatingFormValuesSchema
+>;
+
+export const TestimonialItemFormValuesSchema = TestimonialItemSchema;
+export type TestimonialItemFormValues = z.infer<
+  typeof TestimonialItemFormValuesSchema
+>;
+
+export const TestimonialsCellFormValuesSchema = TestimonialsCellSchema;
+export type TestimonialsCellFormValues = z.infer<
+  typeof TestimonialsCellFormValuesSchema
+>;
 
 export const StructuredCardSectionFormValuesSchema =
   StructuredCardSectionSchema;

@@ -19,6 +19,7 @@ import { adaptSeparatorCell } from "@compoz/studio/app/api/_adapters/pages/block
 import { adaptSpacerCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/spacer";
 import { adaptStepsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/steps";
 import { adaptStructuredCardCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/structured-card";
+import { adaptTestimonialsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/testimonials";
 import { adaptTimelineCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/timeline";
 
 export function adaptCells(
@@ -63,6 +64,9 @@ export function adaptCells(
 
       case "steps":
         return adaptStepsCell(cell);
+
+      case "testimonials":
+        return adaptTestimonialsCell(cell);
 
       case "timeline":
         return adaptTimelineCell(cell);

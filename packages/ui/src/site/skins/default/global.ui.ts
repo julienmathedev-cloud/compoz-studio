@@ -27,6 +27,7 @@ import { defaultSeparatorUi } from "@compoz/ui/site/skins/default/cells/separato
 import { defaultSpacerUi } from "@compoz/ui/site/skins/default/cells/spacer-cell.ui";
 import { defaultStepsUi } from "@compoz/ui/site/skins/default/cells/steps-cell.ui";
 import { defaultStructuredCardUi } from "@compoz/ui/site/skins/default/cells/structured-card-cell.ui";
+import { defaultTestimonialsUi } from "@compoz/ui/site/skins/default/cells/testimonials-cell.ui";
 import { defaultTimelineUi } from "@compoz/ui/site/skins/default/cells/timeline-cell.ui";
 import { defaultZoomGalleryUi } from "@compoz/ui/site/skins/default/cells/zoom-gallery-cell.ui";
 import { defaultFooterUi } from "@compoz/ui/site/skins/default/footer.ui";
@@ -50,6 +51,7 @@ export const defaultGlobalUi: SiteGlobalUi = {
     cards: defaultCardsUi,
     cardsExtended: defaultCardsExtendedUi,
     steps: defaultStepsUi,
+    testimonials: defaultTestimonialsUi,
     structuredCard: defaultStructuredCardUi,
     heading: defaultHeadingUi,
     spacer: defaultSpacerUi,

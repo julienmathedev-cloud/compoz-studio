@@ -36,6 +36,10 @@ import {
   StructuredCardCellSchema,
   StructuredCardItemSchema,
   StructuredCardSectionSchema,
+  TestimonialItemSchema,
+  TestimonialRatingSchema,
+  TestimonialsCellSchema,
+  TestimonialsDisplayModeSchema,
   TimelineCellSchema,
   TimelineItemSchema,
 } from "@compoz/validation/pages/blocks/cells/cell";
@@ -113,6 +117,27 @@ export type StepItemIntentDTO = z.infer<typeof StepItemIntentSchema>;
 
 export const StepsCellIntentSchema = StepsCellSchema;
 export type StepsCellIntentDTO = z.infer<typeof StepsCellIntentSchema>;
+
+export const TestimonialsDisplayModeIntentSchema =
+  TestimonialsDisplayModeSchema;
+export type TestimonialsDisplayModeIntentDTO = z.infer<
+  typeof TestimonialsDisplayModeIntentSchema
+>;
+
+export const TestimonialRatingIntentSchema = TestimonialRatingSchema;
+export type TestimonialRatingIntentDTO = z.infer<
+  typeof TestimonialRatingIntentSchema
+>;
+
+export const TestimonialItemIntentSchema = TestimonialItemSchema;
+export type TestimonialItemIntentDTO = z.infer<
+  typeof TestimonialItemIntentSchema
+>;
+
+export const TestimonialsCellIntentSchema = TestimonialsCellSchema;
+export type TestimonialsCellIntentDTO = z.infer<
+  typeof TestimonialsCellIntentSchema
+>;
 
 export const StructuredCardSectionIntentSchema = StructuredCardSectionSchema;
 export type StructuredCardSectionIntentDTO = z.infer<

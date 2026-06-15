@@ -352,6 +352,18 @@
     "CELL_STEPS_VARIANT_INVALID": "La variante des étapes est invalide.",
     "CELL_STEPS_ITEMS_INVALID": "La liste des étapes est invalide.",
     "CELL_STEPS_ITEMS_MIN_1": "Au moins une étape est requise.",
+    "CELL_TESTIMONIALS_TITLE_INVALID": "Le titre des témoignages est invalide.",
+    "CELL_TESTIMONIALS_DESCRIPTION_INVALID": "La description des témoignages est invalide.",
+    "CELL_TESTIMONIALS_DISPLAY_MODE_INVALID": "Le mode d’affichage des témoignages est invalide.",
+    "CELL_TESTIMONIALS_ITEMS_INVALID": "La liste des témoignages est invalide.",
+    "CELL_TESTIMONIALS_ITEMS_MIN_1": "Au moins un témoignage est requis.",
+    "CELL_TESTIMONIAL_ITEM_INVALID": "Un témoignage est invalide.",
+    "CELL_TESTIMONIAL_ITEM_ID_REQUIRED": "Un identifiant de témoignage est requis.",
+    "CELL_TESTIMONIAL_ITEM_QUOTE_REQUIRED": "La citation du témoignage est requise.",
+    "CELL_TESTIMONIAL_ITEM_AUTHOR_NAME_REQUIRED": "Le nom de l’auteur est requis.",
+    "CELL_TESTIMONIAL_ITEM_AUTHOR_ROLE_INVALID": "Le rôle de l’auteur est invalide.",
+    "CELL_TESTIMONIAL_ITEM_AUTHOR_IMAGE_INVALID": "L’image de l’auteur est invalide.",
+    "CELL_TESTIMONIAL_ITEM_RATING_INVALID": "La note du témoignage est invalide.",
 
     "CELL_STEP_ITEM_INVALID": "Une étape est invalide.",
     "CELL_STEP_ITEM_ID_REQUIRED": "Un identifiant d’étape est requis.",
@@ -877,6 +889,7 @@
             "cardCollection": "Collection de cartes",
             "cardsExtended": "Cartes étendues",
             "steps": "Étapes",
+            "testimonials": "Témoignages",
             "structuredCard": "Cartes structurées",
             "form": "Formulaire",
             "timeline": "Frise chronologique"
@@ -1579,6 +1592,7 @@
           "cardCollection": "Collection de cartes",
           "cardsExtended": "Cartes étendues",
           "steps": "Étapes",
+          "testimonials": "Témoignages",
           "structuredCard": "Carte structurée",
           "form": "Formulaire"
         },
@@ -1647,9 +1661,48 @@
         "cardCollection": "Collection de cartes",
         "cardsExtended": "Cartes étendues",
         "steps": "Étapes",
+        "testimonials": "Témoignages",
         "structuredCard": "Carte structurée",
         "form": "Formulaire",
         "timeline": "Timeline"
+      },
+
+      "testimonialsCellEditor": {
+        "titleLabel": "Titre",
+        "titlePlaceholder": "Ce que disent nos clients",
+        "titleHelp": "Titre optionnel affiché au-dessus des témoignages.",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Découvrez leurs retours d’expérience.",
+        "descriptionHelp": "Description optionnelle affichée sous le titre.",
+        "displayModeLabel": "Mode d’affichage",
+        "displayModeHelp": "Le bandeau défile uniquement lorsqu’il contient plusieurs témoignages.",
+        "displayModes": {
+          "static": "Statique",
+          "marquee": "Bandeau défilant"
+        },
+        "itemsLabel": "Témoignages",
+        "itemsHelp": "Ajoutez, modifiez et réorganisez les témoignages.",
+        "quoteLabel": "Citation",
+        "quotePlaceholder": "Ce service a transformé notre façon de travailler.",
+        "quoteHelp": "Texte du témoignage.",
+        "authorNameLabel": "Nom de l’auteur",
+        "authorNamePlaceholder": "Camille Martin",
+        "authorNameHelp": "Nom affiché sous la citation.",
+        "authorRoleLabel": "Rôle / entreprise",
+        "authorRolePlaceholder": "Direction, Entreprise",
+        "authorRoleHelp": "Fonction ou entreprise optionnelle.",
+        "authorImageLabel": "Image",
+        "authorImageHelp": "Portrait optionnel de l’auteur.",
+        "ratingLabel": "Note",
+        "ratingHelp": "Note optionnelle affichée sous forme d’étoiles.",
+        "ratings": {
+          "none": "Aucune note",
+          "1": "1 étoile",
+          "2": "2 étoiles",
+          "3": "3 étoiles",
+          "4": "4 étoiles",
+          "5": "5 étoiles"
+        }
       },
 
       "timelineCellEditor": {

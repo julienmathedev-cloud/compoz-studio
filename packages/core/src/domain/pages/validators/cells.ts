@@ -30,6 +30,7 @@ import { assertSeparatorCell } from "@compoz/core/domain/pages/validators/cells/
 import { assertSpacerCell } from "@compoz/core/domain/pages/validators/cells/spacer";
 import { assertStepsCell } from "@compoz/core/domain/pages/validators/cells/step";
 import { assertStructuredCardCell } from "@compoz/core/domain/pages/validators/cells/structured-card";
+import { assertTestimonialsCell } from "@compoz/core/domain/pages/validators/cells/testimonials";
 import { assertTimelineCell } from "@compoz/core/domain/pages/validators/cells/timeline";
 
 type Path = ReadonlyArray<string | number>;
@@ -88,6 +89,10 @@ export function assertCell(cell: Cell, path: Path): void {
 
     case "steps":
       assertStepsCell(cell, path);
+      return;
+
+    case "testimonials":
+      assertTestimonialsCell(cell, path);
       return;
 
     case "timeline":

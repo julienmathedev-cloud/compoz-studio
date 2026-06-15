@@ -43,6 +43,7 @@ import { SeparatorCellEditor } from "@compoz/studio/features/builder/editor/cell
 import { SpacerCellEditor } from "@compoz/studio/features/builder/editor/cells/SpacerCellEditor";
 import { StepsCellEditor } from "@compoz/studio/features/builder/editor/cells/steps/StepsCellEditor";
 import { StructuredCardCellEditor } from "@compoz/studio/features/builder/editor/cells/structured-cards/StructuredCardCellEditor";
+import { TestimonialsCellEditor } from "@compoz/studio/features/builder/editor/cells/testimonials/TestimonialsCellEditor";
 import { TimelineCellEditor } from "@compoz/studio/features/builder/editor/cells/timeline/TimelinesCellEditor";
 import { createEmptyCell } from "@compoz/studio/features/pages/mappers/cells-form";
 import {
@@ -341,6 +342,12 @@ export function BuilderCellDrawer({
                       label: t("studio.builder.drawer.kind.options.steps"),
                     },
                     {
+                      value: "testimonials",
+                      label: t(
+                        "studio.builder.drawer.kind.options.testimonials",
+                      ),
+                    },
+                    {
                       value: "timeline",
                       label: t("studio.builder.drawer.kind.options.timeline"),
                     },
@@ -479,6 +486,17 @@ export function BuilderCellDrawer({
                   selectedCellLocation={selectedCellLocation}
                   disabled={isSubmitting}
                   showError={forceShowErrors}
+                />
+              ) : null}
+
+              {selectedCell.kind === "testimonials" ? (
+                <TestimonialsCellEditor
+                  control={control}
+                  idPrefix={`builder-cell-${selectedCell.id}`}
+                  selectedCellLocation={selectedCellLocation}
+                  disabled={isSubmitting}
+                  showError={forceShowErrors}
+                  onUploadImage={onUploadImage}
                 />
               ) : null}
 

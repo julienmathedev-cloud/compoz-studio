@@ -19,6 +19,7 @@ import type { SeparatorCell } from "@compoz/core/domain/pages/entities/cells/sep
 import type { SpacerCell } from "@compoz/core/domain/pages/entities/cells/spacer";
 import type { StepsCell } from "@compoz/core/domain/pages/entities/cells/steps";
 import type { StructuredCardCell } from "@compoz/core/domain/pages/entities/cells/structured-card";
+import type { TestimonialsCell } from "@compoz/core/domain/pages/entities/cells/testimonials";
 import type { TimelineCell } from "@compoz/core/domain/pages/entities/cells/timeline";
 
 export type CellKind =
@@ -34,6 +35,7 @@ export type CellKind =
   | "cards"
   | "cardsExtended"
   | "steps"
+  | "testimonials"
   | "structuredCard"
   | "form"
   | "timeline";
@@ -51,6 +53,7 @@ export type Cell =
   | CardsCell
   | CardsExtendedCell
   | StepsCell
+  | TestimonialsCell
   | StructuredCardCell
   | FormCell
   | TimelineCell;
@@ -145,6 +148,13 @@ export type {
   StructuredCardItem,
   StructuredCardSection,
 } from "@compoz/core/domain/pages/entities/cells/structured-card";
+
+export type {
+  TestimonialItem,
+  TestimonialRating,
+  TestimonialsCell,
+  TestimonialsDisplayMode,
+} from "@compoz/core/domain/pages/entities/cells/testimonials";
 
 export type {
   TimelineCell,

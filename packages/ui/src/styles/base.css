@@ -133,6 +133,25 @@
     border: 0 !important;
   }
 
+  @keyframes testimonials-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .testimonials-marquee-track {
+    animation: testimonials-marquee 40s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .testimonials-marquee-track {
+      will-change: transform;
+    }
+  }
+
   /* Ouverture (zoom-in) */
   @keyframes lb-zoom-in {
     0% {
@@ -181,6 +200,15 @@
 
     .animate-highlight-shift {
       animation: none !important;
+    }
+
+    .testimonials-marquee-track {
+      animation: none !important;
+      transform: none !important;
+    }
+
+    .testimonials-marquee-duplicate {
+      display: none !important;
     }
 
     *,

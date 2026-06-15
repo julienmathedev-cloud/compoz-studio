@@ -351,6 +351,18 @@
     "CELL_STEPS_VARIANT_INVALID": "The steps variant is invalid.",
     "CELL_STEPS_ITEMS_INVALID": "The steps list is invalid.",
     "CELL_STEPS_ITEMS_MIN_1": "At least one step is required.",
+    "CELL_TESTIMONIALS_TITLE_INVALID": "The testimonials title is invalid.",
+    "CELL_TESTIMONIALS_DESCRIPTION_INVALID": "The testimonials description is invalid.",
+    "CELL_TESTIMONIALS_DISPLAY_MODE_INVALID": "The testimonials display mode is invalid.",
+    "CELL_TESTIMONIALS_ITEMS_INVALID": "The testimonials list is invalid.",
+    "CELL_TESTIMONIALS_ITEMS_MIN_1": "At least one testimonial is required.",
+    "CELL_TESTIMONIAL_ITEM_INVALID": "A testimonial is invalid.",
+    "CELL_TESTIMONIAL_ITEM_ID_REQUIRED": "A testimonial ID is required.",
+    "CELL_TESTIMONIAL_ITEM_QUOTE_REQUIRED": "The testimonial quote is required.",
+    "CELL_TESTIMONIAL_ITEM_AUTHOR_NAME_REQUIRED": "The author name is required.",
+    "CELL_TESTIMONIAL_ITEM_AUTHOR_ROLE_INVALID": "The author role is invalid.",
+    "CELL_TESTIMONIAL_ITEM_AUTHOR_IMAGE_INVALID": "The author image is invalid.",
+    "CELL_TESTIMONIAL_ITEM_RATING_INVALID": "The testimonial rating is invalid.",
 
     "CELL_STEP_ITEM_INVALID": "A step is invalid.",
     "CELL_STEP_ITEM_ID_REQUIRED": "A step ID is required.",
@@ -876,6 +888,7 @@
             "cardCollection": "Card collection",
             "cardsExtended": "Extended cards",
             "steps": "Steps",
+            "testimonials": "Testimonials",
             "structuredCard": "Structured cards",
             "form": "Form",
             "timeline": "Timeline"
@@ -1578,6 +1591,7 @@
           "cardCollection": "Card collection",
           "cardsExtended": "Extended cards",
           "steps": "Steps",
+          "testimonials": "Testimonials",
           "structuredCard": "Structured card",
           "form": "Form"
         },
@@ -1646,9 +1660,48 @@
         "cardCollection": "Card collection",
         "cardsExtended": "Extended cards",
         "steps": "Steps",
+        "testimonials": "Testimonials",
         "structuredCard": "Structured card",
         "form": "Form",
         "timeline": "Timeline"
+      },
+
+      "testimonialsCellEditor": {
+        "titleLabel": "Title",
+        "titlePlaceholder": "What our customers say",
+        "titleHelp": "Optional title displayed above the testimonials.",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Discover their feedback.",
+        "descriptionHelp": "Optional description displayed below the title.",
+        "displayModeLabel": "Display mode",
+        "displayModeHelp": "The banner scrolls only when it contains multiple testimonials.",
+        "displayModes": {
+          "static": "Static",
+          "marquee": "Scrolling banner"
+        },
+        "itemsLabel": "Testimonials",
+        "itemsHelp": "Add, edit, and reorder testimonials.",
+        "quoteLabel": "Quote",
+        "quotePlaceholder": "This service transformed the way we work.",
+        "quoteHelp": "Testimonial text.",
+        "authorNameLabel": "Author name",
+        "authorNamePlaceholder": "Camille Martin",
+        "authorNameHelp": "Name displayed below the quote.",
+        "authorRoleLabel": "Role / company",
+        "authorRolePlaceholder": "Director, Company",
+        "authorRoleHelp": "Optional role or company.",
+        "authorImageLabel": "Image",
+        "authorImageHelp": "Optional author portrait.",
+        "ratingLabel": "Rating",
+        "ratingHelp": "Optional rating displayed as stars.",
+        "ratings": {
+          "none": "No rating",
+          "1": "1 star",
+          "2": "2 stars",
+          "3": "3 stars",
+          "4": "4 stars",
+          "5": "5 stars"
+        }
       },
 
       "timelineCellEditor": {

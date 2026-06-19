@@ -105,6 +105,15 @@ function TestimonialCards({
   ));
 }
 
+function getStaticGridClassName(
+  itemCount: number,
+  ui: SiteTestimonialsUi,
+): string {
+  if (itemCount === 1) return ui.staticGridOne;
+  if (itemCount === 2) return ui.staticGridTwo;
+  return ui.staticGridMany;
+}
+
 export function TestimonialsCellRenderer({
   cell,
   ui,
@@ -122,6 +131,7 @@ export function TestimonialsCellRenderer({
   const title = normalizeString(cell.title, "");
   const description = normalizeString(cell.description, "");
   const isMarquee = cell.displayMode === "marquee" && items.length > 1;
+  const staticGridClassName = getStaticGridClassName(items.length, ui);
 
   return (
     <section
@@ -162,7 +172,7 @@ export function TestimonialsCellRenderer({
           </div>
         </div>
       ) : (
-        <div className={ui.staticGrid}>
+        <div className={staticGridClassName}>
           <TestimonialCards
             items={items}
             ui={ui}

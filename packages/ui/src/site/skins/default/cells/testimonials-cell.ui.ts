@@ -13,7 +13,10 @@ export const defaultTestimonialsUi: SiteTestimonialsUi = {
   header: "mx-auto flex max-w-3xl flex-col gap-2 text-center",
   title: "text-2xl font-semibold text-foreground md:text-3xl",
   description: "text-muted-foreground",
-  staticGrid: "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3",
+  staticGridOne: "mx-auto grid w-full max-w-2xl grid-cols-1 gap-6",
+  staticGridTwo:
+    "mx-auto grid w-full max-w-5xl grid-cols-1 gap-6 md:grid-cols-2",
+  staticGridMany: "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3",
   marqueeViewport: "overflow-hidden",
   marqueeTrack: "testimonials-marquee-track flex w-max",
   marqueeGroup: "flex shrink-0 gap-6 pr-6",

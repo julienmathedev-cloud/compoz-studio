@@ -245,7 +245,9 @@ export type SiteTestimonialsUi = Readonly<{
   header: string;
   title: string;
   description: string;
-  staticGrid: string;
+  staticGridOne: string;
+  staticGridTwo: string;
+  staticGridMany: string;
   marqueeViewport: string;
   marqueeTrack: string;
   marqueeGroup: string;

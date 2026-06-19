@@ -3,7 +3,7 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer site/preview : rendu d’une liste de témoignages.
+ * Site/preview renderer for a testimonials list.
  */
 
 import type {
@@ -35,8 +35,16 @@ type TestimonialCardsProps = Readonly<{
   keyPrefix: string;
 }>;
 
+function getQuoteParagraphs(quote: string): string[] {
+  return quote
+    .split(/\n\s*\n/g)
+    .map((paragraph) => normalizeString(paragraph, ""))
+    .filter(Boolean);
+}
+
 function TestimonialCard({ item, ui }: TestimonialCardProps) {
   const quote = normalizeString(item.quote, "");
+  const quoteParagraphs = getQuoteParagraphs(quote);
   const authorName = normalizeString(item.authorName, "");
   const authorRole = normalizeString(item.authorRole, "");
   const authorImage = normalizeString(item.authorImage, "");
@@ -62,7 +70,9 @@ function TestimonialCard({ item, ui }: TestimonialCardProps) {
         ) : null}
 
         <blockquote className={ui.quote}>
-          <p>{quote}</p>
+          {quoteParagraphs.map((paragraph, index) => (
+            <p key={index}>{paragraph}</p>
+          ))}
         </blockquote>
       </CardContent>
 

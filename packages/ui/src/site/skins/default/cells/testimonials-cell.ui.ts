@@ -28,7 +28,7 @@ export const defaultTestimonialsUi: SiteTestimonialsUi = {
   cardContent: "flex flex-1 flex-col gap-4",
   rating: "flex items-center gap-1 text-primary",
   star: "h-4 w-4",
-  quote: "text-base leading-relaxed text-card-foreground",
+  quote: "space-y-4 text-base leading-relaxed text-card-foreground",
   author: "flex items-center gap-3",
   authorImageWrapper:
     "relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-muted",

@@ -96,7 +96,24 @@ export function useSeoUiWarningsFromFields(
         titleTemplate: titleTemplate ?? "",
         canonicalUrl: "",
         robots: robots ?? "",
-        structuredDataEnabled: true,
+        structuredData: {
+          enabled: false,
+          entityType: "organization",
+          name: "",
+          description: "",
+          telephone: "",
+          email: "",
+          address: {
+            streetAddress: "",
+            postalCode: "",
+            addressLocality: "",
+            addressRegion: "",
+            addressCountry: "",
+          },
+          areaServed: [],
+          priceRange: "",
+          openingHours: [],
+        },
 
         // OpenGraph
         openGraph: {

@@ -17,7 +17,10 @@ import {
   AbsoluteHttpUrlSchema,
   AssetUrlSchema,
 } from "@compoz/validation/common/url-fragments";
-import { SeoSettingsObjectSchema } from "@compoz/validation/site/settings/seo/seo";
+import {
+  SeoSettingsObjectSchema,
+  StructuredDataEntityTypeSchema,
+} from "@compoz/validation/site/settings/seo/seo";
 import { z } from "zod";
 
 /* -------------------------------------------------------------------------- */
@@ -70,8 +73,37 @@ export const OpenGraphPatchSchema = z
   })
   .strict();
 
+export const StructuredDataAddressPatchSchema = z
+  .object({
+    streetAddress: ClearableStringSchema.optional(),
+    postalCode: ClearableStringSchema.optional(),
+    addressLocality: ClearableStringSchema.optional(),
+    addressRegion: ClearableStringSchema.optional(),
+    addressCountry: ClearableStringSchema.optional(),
+  })
+  .strict();
+
+export const StructuredDataPatchSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    entityType: StructuredDataEntityTypeSchema.optional(),
+    name: ClearableStringSchema.optional(),
+    description: ClearableStringSchema.optional(),
+    telephone: ClearableStringSchema.optional(),
+    email: ClearableStringSchema.optional(),
+    address: StructuredDataAddressPatchSchema.optional(),
+    areaServed: z.array(ClearableStringSchema).optional(),
+    priceRange: ClearableStringSchema.optional(),
+    openingHours: z.array(ClearableStringSchema).optional(),
+  })
+  .strict();
+
 export type OpenGraphPatchDTO = z.infer<typeof OpenGraphPatchSchema>;
 export type TwitterPatchDTO = z.infer<typeof TwitterPatchSchema>;
+export type StructuredDataAddressPatchDTO = z.infer<
+  typeof StructuredDataAddressPatchSchema
+>;
+export type StructuredDataPatchDTO = z.infer<typeof StructuredDataPatchSchema>;
 
 const UpdateSeoSettingsIntentObjectSchema = SeoSettingsObjectSchema.partial()
   .extend({
@@ -86,6 +118,9 @@ const UpdateSeoSettingsIntentObjectSchema = SeoSettingsObjectSchema.partial()
     openGraph: z.union([OpenGraphPatchSchema, z.null()]).optional(),
     twitter: z.union([TwitterPatchSchema, z.null()]).optional(),
 
+    structuredData: z
+      .union([StructuredDataPatchSchema, z.boolean()])
+      .optional(),
     structuredDataEnabled: z.boolean().optional(),
   })
   .strict();
@@ -127,7 +162,10 @@ export function validateSeoSettingsPatchValues(
     robots: null,
     openGraph: null,
     twitter: null,
-    structuredDataEnabled: false,
+    structuredData: {
+      enabled: false,
+      entityType: "organization",
+    },
   };
 
   const merged = { ...base, ...patch };

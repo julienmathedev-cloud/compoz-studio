@@ -37,6 +37,35 @@ export interface TwitterSettings {
   creator: string | null;
 }
 
+export type StructuredDataEntityType =
+  | "person"
+  | "organization"
+  | "localBusiness"
+  | "professionalService"
+  | "visualArtist"
+  | "autoRepair";
+
+export interface StructuredDataAddress {
+  streetAddress?: string;
+  postalCode?: string;
+  addressLocality?: string;
+  addressRegion?: string;
+  addressCountry?: string;
+}
+
+export interface StructuredDataSettings {
+  enabled: boolean;
+  entityType: StructuredDataEntityType;
+  name?: string;
+  description?: string;
+  telephone?: string;
+  email?: string;
+  address?: StructuredDataAddress;
+  areaServed?: string[];
+  priceRange?: string;
+  openingHours?: string[];
+}
+
 /** Réglages SEO globaux. */
 export interface SeoSettings {
   /** Domaine de base du site (null si absent). */
@@ -63,6 +92,6 @@ export interface SeoSettings {
   /** Bloc Twitter. */
   twitter: TwitterSettings | null;
 
-  /** Active les données structurées. */
-  structuredDataEnabled: boolean;
+  /** Configuration des données structurées JSON-LD. */
+  structuredData: StructuredDataSettings;
 }

@@ -18,6 +18,7 @@ import {
   AbsoluteHttpUrlSchema,
   AssetUrlSchema,
 } from "@compoz/validation/common/url-fragments";
+import { StructuredDataEntityTypeSchema } from "@compoz/validation/site/settings/seo/seo";
 
 /* -------------------------------------------------------------------------- */
 /*                              Helpers draft (UI)                            */
@@ -107,6 +108,42 @@ export const SeoTwitterFormSchema = z
   .strict();
 
 export type SeoTwitterFormValues = z.infer<typeof SeoTwitterFormSchema>;
+
+/* -------------------------------------------------------------------------- */
+/*                           Structured data (UI)                              */
+/* -------------------------------------------------------------------------- */
+
+const StructuredDataDraftStringSchema = z.string().trim();
+
+export const StructuredDataAddressFormSchema = z
+  .object({
+    streetAddress: StructuredDataDraftStringSchema,
+    postalCode: StructuredDataDraftStringSchema,
+    addressLocality: StructuredDataDraftStringSchema,
+    addressRegion: StructuredDataDraftStringSchema,
+    addressCountry: StructuredDataDraftStringSchema,
+  })
+  .strict();
+
+export const StructuredDataFormSchema = z
+  .object({
+    enabled: z.boolean(),
+    entityType: StructuredDataEntityTypeSchema,
+    name: StructuredDataDraftStringSchema,
+    description: StructuredDataDraftStringSchema,
+    telephone: StructuredDataDraftStringSchema,
+    email: StructuredDataDraftStringSchema,
+    address: StructuredDataAddressFormSchema,
+    areaServed: z.array(StructuredDataDraftStringSchema),
+    priceRange: StructuredDataDraftStringSchema,
+    openingHours: z.array(StructuredDataDraftStringSchema),
+  })
+  .strict();
+
+export type StructuredDataAddressFormValues = z.infer<
+  typeof StructuredDataAddressFormSchema
+>;
+export type StructuredDataFormValues = z.infer<typeof StructuredDataFormSchema>;
 
 /* -------------------------------------------------------------------------- */
 /*                               Inline validation                            */
@@ -210,7 +247,7 @@ const SeoFormObjectSchema = z
       .trim()
       .max(SEO.ROBOTS.MAX, ERROR_CODES.SEO_ROBOTS_TOO_LONG),
 
-    structuredDataEnabled: z.boolean(),
+    structuredData: StructuredDataFormSchema,
 
     openGraph: SeoOpenGraphFormSchema,
     twitter: SeoTwitterFormSchema,

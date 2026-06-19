@@ -27,5 +27,8 @@ export const DEFAULT_SEO_SETTINGS: SeoSettings = {
     site: null,
     creator: null,
   },
-  structuredDataEnabled: true,
+  structuredData: {
+    enabled: false,
+    entityType: "organization",
+  },
 };

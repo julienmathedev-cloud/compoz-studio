@@ -15,6 +15,10 @@ import {
   getPublishedIndexByTenantId,
   getPublishedSettingsByTenantId,
 } from "@compoz/site/lib/pages/published-page-loaders";
+import {
+  buildSiteJsonLd,
+  serializeSiteJsonLd,
+} from "@compoz/site/lib/seo/buildSiteJsonLd";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
 import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
@@ -124,7 +128,9 @@ export default async function SiteTenantRootPage({ params }: PageParams) {
     page,
     index,
     hrefForSlug: (slug) =>
-      slug === HOME_SLUG ? tenantPrefix : `${tenantPrefix}/${slug}`,
+      slug === HOME_SLUG
+        ? tenantPrefix
+        : `${tenantPrefix}/${encodeURIComponent(slug)}`,
   });
 
   const ui = resolveSiteUi(tenantId);
@@ -132,14 +138,32 @@ export default async function SiteTenantRootPage({ params }: PageParams) {
   const settings = await getPublishedSettingsByTenantId(tenantId);
   const revealPreset = settings?.theme?.revealPreset ?? "fade-up";
   const revealUi = ui.reveal[revealPreset];
+  const jsonLd = settings
+    ? buildSiteJsonLd({
+        settings,
+        page,
+        index,
+        pathname: tenantPrefix,
+      })
+    : null;
 
   return (
-    <SitePageRenderer
-      ui={ui}
-      blocks={blocks}
-      pager={pager}
-      revealUi={revealUi}
-      runtimeFeatures={runtimeFeatures}
-    />
+    <>
+      {jsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeSiteJsonLd(jsonLd) }}
+        />
+      ) : null}
+      <SitePageRenderer
+        ui={ui}
+        blocks={blocks}
+        pager={pager}
+        revealUi={revealUi}
+        runtimeFeatures={runtimeFeatures}
+      />
+    </>
   );
 }
+
+SiteTenantRootPage.displayName = "SiteTenantRootPage";

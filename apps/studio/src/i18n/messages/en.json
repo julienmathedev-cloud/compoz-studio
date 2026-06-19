@@ -1272,7 +1272,54 @@
         },
         "structuredData": {
           "label": "Structured data (JSON-LD)",
-          "help": "Enables injection of basic structured data to improve how search engines understand your site."
+          "help": "Enables structured data injection on public pages.",
+          "entityType": {
+            "label": "Main entity type",
+            "help": "Choose the Schema.org type that best describes the main activity.",
+            "options": {
+              "person": "Person",
+              "organization": "Organization",
+              "localBusiness": "Local business",
+              "professionalService": "Professional service",
+              "visualArtist": "Visual artist",
+              "autoRepair": "Auto repair"
+            }
+          },
+          "name": {
+            "label": "Name",
+            "help": "Leave empty to use the name from Identity."
+          },
+          "description": {
+            "label": "Description",
+            "help": "Leave empty to use the SEO description or tagline."
+          },
+          "telephone": {
+            "label": "Telephone",
+            "help": "Public business telephone number."
+          },
+          "email": {
+            "label": "Email",
+            "help": "Public business email address."
+          },
+          "address": {
+            "streetAddress": "Street address",
+            "postalCode": "Postal code",
+            "addressLocality": "City",
+            "addressRegion": "Region",
+            "addressCountry": "Country"
+          },
+          "areaServed": {
+            "label": "Areas served",
+            "help": "One area per line."
+          },
+          "priceRange": {
+            "label": "Price range",
+            "help": "For example: $, $$ or $50 to $150."
+          },
+          "openingHours": {
+            "label": "Opening hours",
+            "help": "One Schema.org value per line, e.g. Mo-Fr 09:00-18:00."
+          }
         }
       },
       "twitter": {

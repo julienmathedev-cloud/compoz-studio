@@ -91,6 +91,50 @@ export const TwitterSettingsSchema = z
 export type TwitterSettingsShape = z.infer<typeof TwitterSettingsSchema>;
 
 /* -------------------------------------------------------------------------- */
+/*                           Structured data                                  */
+/* -------------------------------------------------------------------------- */
+
+const OptionalStructuredDataStringSchema = z.string().trim().min(1).optional();
+
+export const StructuredDataEntityTypeSchema = z.enum([
+  "person",
+  "organization",
+  "localBusiness",
+  "professionalService",
+  "visualArtist",
+  "autoRepair",
+]);
+
+export const StructuredDataAddressSchema = z
+  .object({
+    streetAddress: OptionalStructuredDataStringSchema,
+    postalCode: OptionalStructuredDataStringSchema,
+    addressLocality: OptionalStructuredDataStringSchema,
+    addressRegion: OptionalStructuredDataStringSchema,
+    addressCountry: OptionalStructuredDataStringSchema,
+  })
+  .strict();
+
+export const StructuredDataSettingsSchema = z
+  .object({
+    enabled: z.boolean(),
+    entityType: StructuredDataEntityTypeSchema,
+    name: OptionalStructuredDataStringSchema,
+    description: OptionalStructuredDataStringSchema,
+    telephone: OptionalStructuredDataStringSchema,
+    email: OptionalStructuredDataStringSchema,
+    address: StructuredDataAddressSchema.optional(),
+    areaServed: z.array(z.string().trim().min(1)).optional(),
+    priceRange: OptionalStructuredDataStringSchema,
+    openingHours: z.array(z.string().trim().min(1)).optional(),
+  })
+  .strict();
+
+export type StructuredDataSettingsShape = z.infer<
+  typeof StructuredDataSettingsSchema
+>;
+
+/* -------------------------------------------------------------------------- */
 /*                               Inline validation                            */
 /* -------------------------------------------------------------------------- */
 
@@ -199,7 +243,7 @@ export const SeoSettingsObjectSchema = z
 
     twitter: TwitterSettingsSchema.nullable(),
 
-    structuredDataEnabled: z.boolean(),
+    structuredData: StructuredDataSettingsSchema,
   })
   .strict();
 

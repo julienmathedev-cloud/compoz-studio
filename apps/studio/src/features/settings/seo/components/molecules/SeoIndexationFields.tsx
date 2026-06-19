@@ -1,16 +1,19 @@
 /**
- * @file apps/studio/src/features/settings/seo/components/molecules/OpenGraphFields.tsx
+ * @file apps/studio/src/features/settings/seo/components/molecules/SeoIndexationFields.tsx
  * @layer ui/studio/molecules
  * @description Composant de champs d’indexation SEO pour le formulaire du studio.
- * @remarks Inclut les contrôles pour baseUrl, canonicalUrl, robots et structuredDataEnabled avec gestion RHF.
+ * @remarks Inclut les contrôles d’indexation et de données structurées avec gestion RHF.
  */
 
 import type { Control } from "react-hook-form";
-import { Controller } from "react-hook-form";
+import { Controller, useWatch } from "react-hook-form";
 
+import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 import { HelperChips } from "@compoz/studio/components/molecules/controls/HelperChips";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
+import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
+import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
 import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
@@ -71,6 +74,7 @@ function toggleCsvToken(prev: string, token: string) {
     const next = parts
       .slice(0, alreadyIndex)
       .concat(parts.slice(alreadyIndex + 1));
+
     return next.join(",");
   }
 
@@ -99,7 +103,38 @@ export function SeoIndexationFields({
   invalidRobots,
   robotsError,
 }: SeoIndexationFieldsProps) {
-  const structuredDataIds = createFieldIds(idPrefix, "structuredDataEnabled");
+  const structuredDataEnabledIds = createFieldIds(
+    idPrefix,
+    "structuredData.enabled",
+  );
+  const structuredDataTypeIds = createFieldIds(
+    idPrefix,
+    "structuredData.entityType",
+  );
+
+  const structuredDataEnabled = useWatch({
+    control,
+    name: "structuredData.enabled",
+  });
+  const entityType = useWatch({
+    control,
+    name: "structuredData.entityType",
+  });
+
+  const showLocalFields = [
+    "localBusiness",
+    "professionalService",
+    "autoRepair",
+  ].includes(entityType);
+
+  const entityTypes = [
+    "person",
+    "organization",
+    "localBusiness",
+    "professionalService",
+    "visualArtist",
+    "autoRepair",
+  ] as const;
 
   return (
     <div className={cn(STACK_MD)}>
@@ -188,11 +223,11 @@ export function SeoIndexationFields({
       />
 
       <Controller
-        name="structuredDataEnabled"
+        name="structuredData.enabled"
         control={control}
         render={({ field }) => (
           <SwitchField
-            ids={structuredDataIds}
+            ids={structuredDataEnabledIds}
             name={field.name}
             label={t("studio.seoForm.indexing.structuredData.label")}
             help={t("studio.seoForm.indexing.structuredData.help")}
@@ -202,6 +237,163 @@ export function SeoIndexationFields({
           />
         )}
       />
+
+      {structuredDataEnabled ? (
+        <div className={cn(STACK_MD)}>
+          <Controller
+            name="structuredData.entityType"
+            control={control}
+            render={({ field }) => (
+              <SelectField
+                ids={structuredDataTypeIds}
+                name={field.name}
+                label={t(
+                  "studio.seoForm.indexing.structuredData.entityType.label",
+                )}
+                help={t(
+                  "studio.seoForm.indexing.structuredData.entityType.help",
+                )}
+                value={field.value}
+                onChange={field.onChange}
+                disabled={isBusy}
+                items={entityTypes.map((value) => ({
+                  value,
+                  label: t(
+                    `studio.seoForm.indexing.structuredData.entityType.options.${value}`,
+                  ),
+                }))}
+              />
+            )}
+          />
+
+          <FormGrid>
+            {(["name", "telephone", "email"] as const).map((name) => (
+              <Controller
+                key={name}
+                name={`structuredData.${name}`}
+                control={control}
+                render={({ field }) => (
+                  <InputField
+                    ids={createFieldIds(idPrefix, `structuredData.${name}`)}
+                    name={field.name}
+                    label={t(
+                      `studio.seoForm.indexing.structuredData.${name}.label`,
+                    )}
+                    help={t(
+                      `studio.seoForm.indexing.structuredData.${name}.help`,
+                    )}
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isBusy}
+                  />
+                )}
+              />
+            ))}
+          </FormGrid>
+
+          <Controller
+            name="structuredData.description"
+            control={control}
+            render={({ field }) => (
+              <TextareaField
+                ids={createFieldIds(idPrefix, "structuredData.description")}
+                name={field.name}
+                label={t(
+                  "studio.seoForm.indexing.structuredData.description.label",
+                )}
+                help={t(
+                  "studio.seoForm.indexing.structuredData.description.help",
+                )}
+                value={field.value}
+                onChange={field.onChange}
+                rows={4}
+                disabled={isBusy}
+              />
+            )}
+          />
+
+          {showLocalFields ? (
+            <>
+              <FormGrid>
+                {(
+                  [
+                    "streetAddress",
+                    "postalCode",
+                    "addressLocality",
+                    "addressRegion",
+                    "addressCountry",
+                  ] as const
+                ).map((name) => (
+                  <Controller
+                    key={name}
+                    name={`structuredData.address.${name}`}
+                    control={control}
+                    render={({ field }) => (
+                      <InputField
+                        ids={createFieldIds(
+                          idPrefix,
+                          `structuredData.address.${name}`,
+                        )}
+                        name={field.name}
+                        label={t(
+                          `studio.seoForm.indexing.structuredData.address.${name}`,
+                        )}
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={isBusy}
+                      />
+                    )}
+                  />
+                ))}
+              </FormGrid>
+
+              <Controller
+                name="structuredData.priceRange"
+                control={control}
+                render={({ field }) => (
+                  <InputField
+                    ids={createFieldIds(idPrefix, "structuredData.priceRange")}
+                    name={field.name}
+                    label={t(
+                      "studio.seoForm.indexing.structuredData.priceRange.label",
+                    )}
+                    help={t(
+                      "studio.seoForm.indexing.structuredData.priceRange.help",
+                    )}
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isBusy}
+                  />
+                )}
+              />
+
+              {(["areaServed", "openingHours"] as const).map((name) => (
+                <Controller
+                  key={name}
+                  name={`structuredData.${name}`}
+                  control={control}
+                  render={({ field }) => (
+                    <TextareaField
+                      ids={createFieldIds(idPrefix, `structuredData.${name}`)}
+                      name={field.name}
+                      label={t(
+                        `studio.seoForm.indexing.structuredData.${name}.label`,
+                      )}
+                      help={t(
+                        `studio.seoForm.indexing.structuredData.${name}.help`,
+                      )}
+                      value={(field.value ?? []).join("\n")}
+                      onChange={(value) => field.onChange(value.split("\n"))}
+                      rows={4}
+                      disabled={isBusy}
+                    />
+                  )}
+                />
+              ))}
+            </>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

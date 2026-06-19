@@ -1273,7 +1273,54 @@
         },
         "structuredData": {
           "label": "Données structurées JSON-LD",
-          "help": "Active l’injection de données structurées basiques pour améliorer la compréhension du site par les moteurs de recherche."
+          "help": "Active l’injection de données structurées pour les pages publiques.",
+          "entityType": {
+            "label": "Type d’entité principale",
+            "help": "Choisissez le type Schema.org qui décrit le mieux l’activité principale.",
+            "options": {
+              "person": "Personne",
+              "organization": "Organisation",
+              "localBusiness": "Entreprise locale",
+              "professionalService": "Service professionnel",
+              "visualArtist": "Artiste visuel",
+              "autoRepair": "Réparation automobile"
+            }
+          },
+          "name": {
+            "label": "Nom",
+            "help": "Laissez vide pour utiliser le nom défini dans Identité."
+          },
+          "description": {
+            "label": "Description",
+            "help": "Laissez vide pour utiliser la description SEO ou le slogan."
+          },
+          "telephone": {
+            "label": "Téléphone",
+            "help": "Numéro public de l’activité."
+          },
+          "email": {
+            "label": "E-mail",
+            "help": "Adresse e-mail publique de l’activité."
+          },
+          "address": {
+            "streetAddress": "Adresse",
+            "postalCode": "Code postal",
+            "addressLocality": "Ville",
+            "addressRegion": "Région",
+            "addressCountry": "Pays"
+          },
+          "areaServed": {
+            "label": "Zones desservies",
+            "help": "Une zone par ligne."
+          },
+          "priceRange": {
+            "label": "Fourchette de prix",
+            "help": "Ex. : €, €€ ou 50 € à 150 €."
+          },
+          "openingHours": {
+            "label": "Horaires",
+            "help": "Une valeur Schema.org par ligne, ex. Mo-Fr 09:00-18:00."
+          }
         }
       },
       "twitter": {

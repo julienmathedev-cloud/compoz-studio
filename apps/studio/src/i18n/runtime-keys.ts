@@ -149,6 +149,14 @@ export const I18N_RUNTIME_KEYS = {
       "studio.seoSection.warnings.robots.noindex",
       "studio.seoSection.warnings.openGraph.image.missing",
     ] as const,
+    structuredDataEntityTypes: [
+      "studio.seoForm.indexing.structuredData.entityType.options.person",
+      "studio.seoForm.indexing.structuredData.entityType.options.organization",
+      "studio.seoForm.indexing.structuredData.entityType.options.localBusiness",
+      "studio.seoForm.indexing.structuredData.entityType.options.professionalService",
+      "studio.seoForm.indexing.structuredData.entityType.options.visualArtist",
+      "studio.seoForm.indexing.structuredData.entityType.options.autoRepair",
+    ] as const,
   },
 
   socialSection: {

@@ -22,7 +22,12 @@ export type {
   PrimaryMenuSettings,
 } from "@compoz/core/domain/site/entities/primary-menu";
 
-export type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
+export type {
+  SeoSettings,
+  StructuredDataAddress,
+  StructuredDataEntityType,
+  StructuredDataSettings,
+} from "@compoz/core/domain/site/entities/seo";
 
 export type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
 

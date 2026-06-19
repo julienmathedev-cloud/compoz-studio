@@ -20,6 +20,10 @@ import {
   getPublishedSettingsByTenantId,
   getTenantId,
 } from "@compoz/site/lib/pages/published-page-loaders";
+import {
+  buildSiteJsonLd,
+  serializeSiteJsonLd,
+} from "@compoz/site/lib/seo/buildSiteJsonLd";
 import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
 import { ensureTitleTemplate } from "@compoz/ui/lib/seo/metadata-helpers";
@@ -124,17 +128,35 @@ export default async function SiteRootPage() {
   const pager = computeSitePager({
     page,
     index,
-    hrefForSlug: (slug) => (slug === HOME_SLUG ? SITE_PATH.home : `/${slug}`),
+    hrefForSlug: (slug) =>
+      slug === HOME_SLUG ? SITE_PATH.home : `/${encodeURIComponent(slug)}`,
   });
 
+  const jsonLd = settings
+    ? buildSiteJsonLd({
+        settings,
+        page,
+        index,
+        pathname: SITE_PATH.home,
+      })
+    : null;
+
   return (
-    <SitePageRenderer
-      ui={ui}
-      blocks={blocks}
-      pager={pager}
-      revealUi={revealUi}
-      runtimeFeatures={runtimeFeatures}
-    />
+    <>
+      {jsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeSiteJsonLd(jsonLd) }}
+        />
+      ) : null}
+      <SitePageRenderer
+        ui={ui}
+        blocks={blocks}
+        pager={pager}
+        revealUi={revealUi}
+        runtimeFeatures={runtimeFeatures}
+      />
+    </>
   );
 }
 

@@ -19,6 +19,7 @@ import { DEFAULT_SEO_SETTINGS } from "@compoz/core/domain/site/defaults/seo";
 import { DEFAULT_SOCIAL_SETTINGS } from "@compoz/core/domain/site/defaults/social";
 import { DEFAULT_THEME_SETTINGS } from "@compoz/core/domain/site/defaults/theme";
 
+import type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
 import type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
@@ -61,12 +62,56 @@ function defaultSettings(): SiteSettings {
     legalMenu: { ...DEFAULT_LEGAL_MENU_SETTINGS },
     identity: { ...DEFAULT_IDENTITY_SETTINGS },
     social: { ...DEFAULT_SOCIAL_SETTINGS },
-    seo: { ...DEFAULT_SEO_SETTINGS },
+    seo: {
+      ...DEFAULT_SEO_SETTINGS,
+      structuredData: { ...DEFAULT_SEO_SETTINGS.structuredData },
+    },
     theme: {
       ...DEFAULT_THEME_SETTINGS,
       lightTokens: { ...DEFAULT_THEME_SETTINGS.lightTokens },
       darkTokens: { ...DEFAULT_THEME_SETTINGS.darkTokens },
     },
+  };
+}
+
+type PersistedSeoSettings = Omit<Partial<SeoSettings>, "structuredData"> & {
+  structuredData?: SeoSettings["structuredData"] | boolean;
+  structuredDataEnabled?: boolean;
+};
+
+function normalizeSeoSettings(
+  seo: PersistedSeoSettings | null | undefined,
+): SeoSettings {
+  const legacyEnabled =
+    typeof seo?.structuredData === "boolean"
+      ? seo.structuredData
+      : typeof seo?.structuredDataEnabled === "boolean"
+        ? seo.structuredDataEnabled
+        : undefined;
+
+  const structuredData =
+    seo?.structuredData &&
+    typeof seo.structuredData === "object" &&
+    !Array.isArray(seo.structuredData)
+      ? {
+          ...DEFAULT_SEO_SETTINGS.structuredData,
+          ...seo.structuredData,
+        }
+      : {
+          ...DEFAULT_SEO_SETTINGS.structuredData,
+          enabled: legacyEnabled ?? DEFAULT_SEO_SETTINGS.structuredData.enabled,
+        };
+
+  const {
+    structuredData: _legacyStructuredData,
+    structuredDataEnabled: _legacyStructuredDataEnabled,
+    ...current
+  } = seo ?? {};
+
+  return {
+    ...DEFAULT_SEO_SETTINGS,
+    ...current,
+    structuredData,
   };
 }
 
@@ -144,7 +189,7 @@ export class KvSiteRepository implements SiteRepository {
       legalMenu: json.legalMenu ?? d.legalMenu,
       identity: json.identity ?? d.identity,
       social: json.social ?? d.social,
-      seo: json.seo ?? d.seo,
+      seo: normalizeSeoSettings(json.seo as PersistedSeoSettings | undefined),
       theme: mergeThemeSettings(json.theme),
     };
   }

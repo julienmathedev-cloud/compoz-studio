@@ -16,7 +16,11 @@
  * - Les invariants et defaults (ex: twitter.card) sont garantis par le domaine/repo.
  */
 
-import type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
+import type {
+  SeoSettings,
+  StructuredDataAddress,
+  StructuredDataSettings,
+} from "@compoz/core/domain/site/entities/seo";
 import type { UpdateSeoSettingsInput } from "@compoz/core/domain/site/use-cases/seo/update-seo-settings.types";
 import { asAssetUrlOrNull } from "@compoz/core/domain/urls/href";
 import { log } from "@compoz/infra/lib/log";
@@ -37,6 +41,68 @@ function trimNullableString(value: string | null | undefined): string | null {
 
   const trimmed = trimOrKeep(value);
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function trimOptionalString(
+  value: string | null | undefined,
+): string | undefined {
+  if (value === null || typeof value === "undefined") return undefined;
+
+  const trimmed = trimOrKeep(value);
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function cleanStringList(
+  values: ReadonlyArray<string | null> | null | undefined,
+): string[] | undefined {
+  if (!values) return undefined;
+
+  const cleaned = values
+    .map((value) => trimOrKeep(value ?? ""))
+    .filter(Boolean);
+
+  return cleaned.length > 0 ? cleaned : undefined;
+}
+
+function adaptStructuredData(
+  value: UpdateSeoSettingsIntentDTO["structuredData"],
+  legacyEnabled?: boolean,
+): StructuredDataSettings {
+  if (typeof value === "boolean") {
+    return { enabled: value, entityType: "organization" };
+  }
+
+  if (!value) {
+    return {
+      enabled: legacyEnabled ?? false,
+      entityType: "organization",
+    };
+  }
+
+  const address: StructuredDataAddress = {
+    streetAddress: trimOptionalString(value.address?.streetAddress),
+    postalCode: trimOptionalString(value.address?.postalCode),
+    addressLocality: trimOptionalString(value.address?.addressLocality),
+    addressRegion: trimOptionalString(value.address?.addressRegion),
+    addressCountry: trimOptionalString(value.address?.addressCountry),
+  };
+
+  const cleanAddress = Object.fromEntries(
+    Object.entries(address).filter(([, addressValue]) => addressValue),
+  ) as StructuredDataAddress;
+
+  return {
+    enabled: value.enabled ?? legacyEnabled ?? false,
+    entityType: value.entityType ?? "organization",
+    name: trimOptionalString(value.name),
+    description: trimOptionalString(value.description),
+    telephone: trimOptionalString(value.telephone),
+    email: trimOptionalString(value.email),
+    address: Object.keys(cleanAddress).length > 0 ? cleanAddress : undefined,
+    areaServed: cleanStringList(value.areaServed),
+    priceRange: trimOptionalString(value.priceRange),
+    openingHours: cleanStringList(value.openingHours),
+  };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -64,6 +130,7 @@ export function adaptUpdateSeoIntent(
     hasTitleTemplate: "titleTemplate" in dto,
     hasCanonicalUrl: "canonicalUrl" in dto,
     hasRobots: "robots" in dto,
+    hasStructuredData: "structuredData" in dto,
     hasStructuredDataEnabled: "structuredDataEnabled" in dto,
     hasOpenGraph: "openGraph" in dto,
     hasTwitter: "twitter" in dto,
@@ -97,11 +164,11 @@ export function adaptUpdateSeoIntent(
     patch.robots = trimNullableString(dto.robots);
   }
 
-  if (
-    "structuredDataEnabled" in dto &&
-    typeof dto.structuredDataEnabled === "boolean"
-  ) {
-    patch.structuredDataEnabled = dto.structuredDataEnabled;
+  if ("structuredData" in dto || "structuredDataEnabled" in dto) {
+    patch.structuredData = adaptStructuredData(
+      dto.structuredData,
+      dto.structuredDataEnabled,
+    );
   }
 
   /* ------------------------------ OpenGraph ------------------------------ */

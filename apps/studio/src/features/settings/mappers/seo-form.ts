@@ -23,7 +23,30 @@ import { toSeoSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/seo-shape
 
 /* --------------------------------- helpers --------------------------------- */
 
-const DEFAULT_TWITTER_CARD = TWITTER_CARD_TYPES[1];
+const DEFAULT_TWITTER_CARD = TWITTER_CARD_TYPES[1] ?? TWITTER_CARD_TYPES[0];
+
+function normalizeStructuredDataFormValues(
+  value: SeoFormValues["structuredData"],
+): SeoFormValues["structuredData"] {
+  return {
+    enabled: asBool(value.enabled),
+    entityType: value.entityType ?? "organization",
+    name: trimKeepEmpty(value.name),
+    description: trimKeepEmpty(value.description),
+    telephone: trimKeepEmpty(value.telephone),
+    email: trimKeepEmpty(value.email),
+    address: {
+      streetAddress: trimKeepEmpty(value.address?.streetAddress),
+      postalCode: trimKeepEmpty(value.address?.postalCode),
+      addressLocality: trimKeepEmpty(value.address?.addressLocality),
+      addressRegion: trimKeepEmpty(value.address?.addressRegion),
+      addressCountry: trimKeepEmpty(value.address?.addressCountry),
+    },
+    areaServed: (value.areaServed ?? []).map(trimKeepEmpty).filter(Boolean),
+    priceRange: trimKeepEmpty(value.priceRange),
+    openingHours: (value.openingHours ?? []).map(trimKeepEmpty).filter(Boolean),
+  };
+}
 
 /* ----------------------- Domaine (DTO) -> UI (form values) ------------------ */
 
@@ -36,10 +59,32 @@ export function toSeoFormValuesFromDTO(dto: SeoSettingsDTO): SeoFormValues {
     canonicalUrl: trimKeepEmpty(dto.canonicalUrl),
     robots: trimKeepEmpty(dto.robots),
 
-    structuredDataEnabled:
-      typeof dto.structuredDataEnabled === "boolean"
-        ? dto.structuredDataEnabled
-        : true,
+    structuredData: {
+      enabled: dto.structuredData?.enabled ?? false,
+      entityType: dto.structuredData?.entityType ?? "organization",
+      name: trimKeepEmpty(dto.structuredData?.name),
+      description: trimKeepEmpty(dto.structuredData?.description),
+      telephone: trimKeepEmpty(dto.structuredData?.telephone),
+      email: trimKeepEmpty(dto.structuredData?.email),
+      address: {
+        streetAddress: trimKeepEmpty(
+          dto.structuredData?.address?.streetAddress,
+        ),
+        postalCode: trimKeepEmpty(dto.structuredData?.address?.postalCode),
+        addressLocality: trimKeepEmpty(
+          dto.structuredData?.address?.addressLocality,
+        ),
+        addressRegion: trimKeepEmpty(
+          dto.structuredData?.address?.addressRegion,
+        ),
+        addressCountry: trimKeepEmpty(
+          dto.structuredData?.address?.addressCountry,
+        ),
+      },
+      areaServed: [...(dto.structuredData?.areaServed ?? [])],
+      priceRange: trimKeepEmpty(dto.structuredData?.priceRange),
+      openingHours: [...(dto.structuredData?.openingHours ?? [])],
+    },
 
     openGraph: {
       title: trimKeepEmpty(dto.openGraph?.title),
@@ -67,7 +112,7 @@ export function normalizeSeoFormValues(values: SeoFormValues): SeoFormValues {
     canonicalUrl: trimKeepEmpty(values.canonicalUrl),
     robots: trimKeepEmpty(values.robots),
 
-    structuredDataEnabled: asBool(values.structuredDataEnabled),
+    structuredData: normalizeStructuredDataFormValues(values.structuredData),
 
     openGraph: {
       title: trimKeepEmpty(values.openGraph.title),
@@ -118,8 +163,36 @@ export function toUpdateSeoIntentDTOFromFormValues(
   if ("canonicalUrl" in p) out.canonicalUrl = trimKeepEmpty(p.canonicalUrl);
   if ("robots" in p) out.robots = trimKeepEmpty(p.robots);
 
-  if ("structuredDataEnabled" in p) {
-    out.structuredDataEnabled = asBool(p.structuredDataEnabled);
+  if ("structuredData" in p && p.structuredData) {
+    const structuredData = normalizeStructuredDataFormValues(p.structuredData);
+
+    out.structuredData = {
+      enabled: structuredData.enabled,
+      entityType: structuredData.entityType,
+      name: structuredData.name || undefined,
+      description: structuredData.description || undefined,
+      telephone: structuredData.telephone || undefined,
+      email: structuredData.email || undefined,
+      address: Object.values(structuredData.address).some(Boolean)
+        ? {
+            streetAddress: structuredData.address.streetAddress || undefined,
+            postalCode: structuredData.address.postalCode || undefined,
+            addressLocality:
+              structuredData.address.addressLocality || undefined,
+            addressRegion: structuredData.address.addressRegion || undefined,
+            addressCountry: structuredData.address.addressCountry || undefined,
+          }
+        : undefined,
+      areaServed:
+        structuredData.areaServed.length > 0
+          ? structuredData.areaServed
+          : undefined,
+      priceRange: structuredData.priceRange || undefined,
+      openingHours:
+        structuredData.openingHours.length > 0
+          ? structuredData.openingHours
+          : undefined,
+    };
   }
 
   if ("openGraph" in p) {

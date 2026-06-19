@@ -1,14 +1,13 @@
 /**
  * @file packages/core/src/domain/pages/entities/cell.ts
  * @layer core/domain/pages
+ *
  * @description
- * Entités métier représentant les cells contenues dans un block de page.
+ * Domain entities representing the cells contained in a page block.
  */
 
 import type { ButtonsCell } from "@compoz/core/domain/pages/entities/cells/buttons";
 import type { CardCollectionCell } from "@compoz/core/domain/pages/entities/cells/card-collection";
-import type { CardsCell } from "@compoz/core/domain/pages/entities/cells/cards";
-import type { CardsExtendedCell } from "@compoz/core/domain/pages/entities/cells/cards-extended";
 import type { CarouselCell } from "@compoz/core/domain/pages/entities/cells/carousel";
 import type { FormCell } from "@compoz/core/domain/pages/entities/cells/form";
 import type { GalleryCell } from "@compoz/core/domain/pages/entities/cells/gallery";
@@ -18,7 +17,6 @@ import type { RichTextCell } from "@compoz/core/domain/pages/entities/cells/rich
 import type { SeparatorCell } from "@compoz/core/domain/pages/entities/cells/separator";
 import type { SpacerCell } from "@compoz/core/domain/pages/entities/cells/spacer";
 import type { StepsCell } from "@compoz/core/domain/pages/entities/cells/steps";
-import type { StructuredCardCell } from "@compoz/core/domain/pages/entities/cells/structured-card";
 import type { TestimonialsCell } from "@compoz/core/domain/pages/entities/cells/testimonials";
 import type { TimelineCell } from "@compoz/core/domain/pages/entities/cells/timeline";
 
@@ -32,11 +30,8 @@ export type CellKind =
   | "gallery"
   | "carousel"
   | "cardCollection"
-  | "cards"
-  | "cardsExtended"
   | "steps"
   | "testimonials"
-  | "structuredCard"
   | "form"
   | "timeline";
 
@@ -50,11 +45,8 @@ export type Cell =
   | GalleryCell
   | CarouselCell
   | CardCollectionCell
-  | CardsCell
-  | CardsExtendedCell
   | StepsCell
   | TestimonialsCell
-  | StructuredCardCell
   | FormCell
   | TimelineCell;
 
@@ -76,19 +68,9 @@ export type {
   CardCollectionStackedColumns,
 } from "@compoz/core/domain/pages/entities/cells/card-collection";
 
-export type {
-  CardItem,
-  CardsAlign,
-  CardsCell,
-  CardsColumns,
-} from "@compoz/core/domain/pages/entities/cells/cards";
+export type { CardItem } from "@compoz/core/domain/pages/entities/items/card-item";
 
-export type {
-  CardsExtendedAlign,
-  CardsExtendedCell,
-  CardsExtendedColumns,
-  CardsExtendedItem,
-} from "@compoz/core/domain/pages/entities/cells/cards-extended";
+export type { ExtendedCardItem } from "@compoz/core/domain/pages/entities/items/extended-card-item";
 
 export type {
   CarouselCell,
@@ -143,11 +125,9 @@ export type {
 } from "@compoz/core/domain/pages/entities/cells/steps";
 
 export type {
-  StructuredCardCell,
-  StructuredCardColumns,
   StructuredCardItem,
   StructuredCardSection,
-} from "@compoz/core/domain/pages/entities/cells/structured-card";
+} from "@compoz/core/domain/pages/entities/items/structured-card-item";
 
 export type {
   TestimonialItem,

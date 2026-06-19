@@ -3,7 +3,9 @@
 /**
  * @file apps/studio/src/features/builder/editor/cells/CardCollectionCellEditor.tsx
  * @layer ui/studio/pages/blocks/editor/cells
- * @description Éditeur RHF d’une collection homogène de cards.
+ *
+ * @description
+ * RHF editor for a homogeneous card collection.
  */
 
 import type {
@@ -18,13 +20,13 @@ import { useController, useFieldArray, useWatch } from "react-hook-form";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
-import { CardExtendedListEditor } from "@compoz/studio/features/builder/editor/cells/cards-extended/CardExtendedListEditor";
-import { CardListEditor } from "@compoz/studio/features/builder/editor/cells/cards/CardListEditor";
-import { StructuredCardListEditor } from "@compoz/studio/features/builder/editor/cells/structured-cards/StructuredCardListEditor";
+import { CardListEditor } from "@compoz/studio/features/builder/editor/cells/card/CardListEditor";
+import { ExtendedCardListEditor } from "@compoz/studio/features/builder/editor/cells/extended-card/ExtendedCardListEditor";
+import { StructuredCardListEditor } from "@compoz/studio/features/builder/editor/cells/structured-card/StructuredCardListEditor";
 import {
   createEmptyCardCollectionItem,
   createEmptyCardItem,
-  createEmptyCardsExtendedItem,
+  createEmptyExtendedCardItem,
   createEmptyStructuredCardItem,
 } from "@compoz/studio/features/pages/mappers/cells-form";
 import { Button } from "@compoz/ui/components/ui/button";
@@ -34,7 +36,7 @@ import { ROW_SM, STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 import type {
   CardItemFormValues,
-  CardsExtendedItemFormValues,
+  ExtendedCardItemFormValues,
   StructuredCardItemFormValues,
 } from "@compoz/validation/pages/blocks/cells/cell-form";
 
@@ -61,7 +63,7 @@ type CardCollectionFieldBasePath =
 type CardCollectionItemsPath = `${CardCollectionFieldBasePath}.items`;
 
 type CardItemField = CardItemFormValues & { fieldId: string };
-type CardsExtendedItemField = CardsExtendedItemFormValues & {
+type ExtendedCardItemField = ExtendedCardItemFormValues & {
   fieldId: string;
 };
 type StructuredCardItemField = StructuredCardItemFormValues & {
@@ -145,7 +147,7 @@ export function CardCollectionCellEditor({
     name: itemsPath,
   }) ?? []) as Array<
     | CardItemFormValues
-    | CardsExtendedItemFormValues
+    | ExtendedCardItemFormValues
     | StructuredCardItemFormValues
   >;
 
@@ -309,17 +311,17 @@ export function CardCollectionCellEditor({
       ) : null}
 
       {cardKind === "cardsExtended" ? (
-        <CardExtendedListEditor
+        <ExtendedCardListEditor
           control={control}
           idPrefix={idPrefix}
           basePath={basePath}
-          fields={fields as CardsExtendedItemField[]}
-          watchedItems={watchedItems as CardsExtendedItemFormValues[]}
+          fields={fields as ExtendedCardItemField[]}
+          watchedItems={watchedItems as ExtendedCardItemFormValues[]}
           append={append}
           remove={remove}
           move={move}
           disabled={disabled}
-          createEmptyItem={createEmptyCardsExtendedItem}
+          createEmptyItem={createEmptyExtendedCardItem}
           minItems={1}
           showError={showError}
         />

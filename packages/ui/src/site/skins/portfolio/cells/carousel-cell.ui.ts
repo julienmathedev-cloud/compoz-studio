@@ -8,8 +8,8 @@
 
 import type { SiteCarouselUiOverride } from "@compoz/ui/site/site-ui.types";
 import { portfolioButtonClass } from "@compoz/ui/site/skins/portfolio/cells/buttons-cell.ui";
-import { portfolioCardsUi } from "@compoz/ui/site/skins/portfolio/cells/cards-cell.ui";
-import { portfolioCardsExtendedUi } from "@compoz/ui/site/skins/portfolio/cells/cards-extended-cell.ui";
+import { portfolioCardUi } from "@compoz/ui/site/skins/portfolio/cells/card-cell.ui";
+import { portfolioExtendedCardUi } from "@compoz/ui/site/skins/portfolio/cells/extended-card-cell.ui";
 import { portfolioStructuredCardUi } from "@compoz/ui/site/skins/portfolio/cells/structured-card-cell.ui";
 
 export const portfolioCarouselUi: SiteCarouselUiOverride = {
@@ -29,7 +29,7 @@ export const portfolioCarouselUi: SiteCarouselUiOverride = {
       " md:scale-120 motion-safe:md:hover:scale-124 motion-safe:md:active:scale-116 lg:scale-140 motion-safe:lg:hover:scale-148 motion-safe:lg:active:scale-138",
   },
 
-  card: portfolioCardsUi,
-  extendedCard: portfolioCardsExtendedUi,
+  card: portfolioCardUi,
+  extendedCard: portfolioExtendedCardUi,
   structuredCard: portfolioStructuredCardUi,
 } as const;

@@ -3,20 +3,18 @@
  * @layer studio/lib/pages/block
  *
  * @description
- * Métadonnées sur les cellules de blocs (pour l’UI Studio).
+ * Studio UI metadata for block cells.
  */
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";
 import type { LucideIcon } from "lucide-react";
 import {
-  FileText,
   GalleryHorizontal,
   Heading,
   History,
   Image as ImageIcon,
   Images,
   LayoutGrid,
-  LayoutList,
   ListOrdered,
   Mail,
   MessageSquareQuote,
@@ -46,13 +44,10 @@ export function getCellKind(value: unknown): CellKind | null {
     kind === "spacer" ||
     kind === "separator" ||
     kind === "buttons" ||
-    kind === "cards" ||
     kind === "cardCollection" ||
-    kind === "cardsExtended" ||
     kind === "steps" ||
     kind === "testimonials" ||
     kind === "timeline" ||
-    kind === "structuredCard" ||
     kind === "form" ||
     kind === "image" ||
     kind === "gallery" ||
@@ -70,13 +65,10 @@ export function getCellKindIcon(kind: CellKind): LucideIcon {
   if (kind === "spacer") return SeparatorHorizontal;
   if (kind === "separator") return Minus;
   if (kind === "buttons") return MousePointerClick;
-  if (kind === "cards") return LayoutGrid;
   if (kind === "cardCollection") return LayoutGrid;
-  if (kind === "cardsExtended") return LayoutList;
   if (kind === "steps") return ListOrdered;
   if (kind === "testimonials") return MessageSquareQuote;
   if (kind === "timeline") return History;
-  if (kind === "structuredCard") return FileText;
   if (kind === "form") return Mail;
   if (kind === "image") return ImageIcon;
   if (kind === "carousel") return GalleryHorizontal;

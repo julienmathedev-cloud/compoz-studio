@@ -7,8 +7,8 @@
  */
 
 import type { SiteCarouselUiOverride } from "@compoz/ui/site/site-ui.types";
-import { demoCardsUi } from "@compoz/ui/site/skins/demo/cells/cards-cell.ui";
-import { demoCardsExtendedUi } from "@compoz/ui/site/skins/demo/cells/cards-extended-cell.ui";
+import { demoCardUi } from "@compoz/ui/site/skins/demo/cells/card-cell.ui";
+import { demoExtendedCardUi } from "@compoz/ui/site/skins/demo/cells/extended-card-cell.ui";
 import { demoStructuredCardUi } from "@compoz/ui/site/skins/demo/cells/structured-card-cell.ui";
 
 export const demoCarouselUi: SiteCarouselUiOverride = {
@@ -23,7 +23,7 @@ export const demoCarouselUi: SiteCarouselUiOverride = {
     slideInactive: "opacity-93 translate-y-2 shadow-none",
     arrowButton: "scale-120 md:scale-120 lg:scale-140",
   },
-  card: demoCardsUi,
-  extendedCard: demoCardsExtendedUi,
+  card: demoCardUi,
+  extendedCard: demoExtendedCardUi,
   structuredCard: demoStructuredCardUi,
 } as const;

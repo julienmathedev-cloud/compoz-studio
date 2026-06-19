@@ -7,8 +7,8 @@
  */
 
 import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
-import { defaultCardsUi } from "@compoz/ui/site/skins/default/cells/cards-cell.ui";
-import { defaultCardsExtendedUi } from "@compoz/ui/site/skins/default/cells/cards-extended-cell.ui";
+import { defaultCardUi } from "@compoz/ui/site/skins/default/cells/card-cell.ui";
+import { defaultExtendedCardUi } from "@compoz/ui/site/skins/default/cells/extended-card-cell.ui";
 import { defaultStructuredCardUi } from "@compoz/ui/site/skins/default/cells/structured-card-cell.ui";
 
 export const defaultCarouselUi: SiteCarouselUi = {
@@ -69,7 +69,7 @@ export const defaultCarouselUi: SiteCarouselUi = {
     active: "mx-auto w-full max-w-4xl py-0.5",
     inactive: "mx-auto w-full max-w-4xl py-0.5",
   },
-  card: defaultCardsUi,
-  extendedCard: defaultCardsExtendedUi,
+  card: defaultCardUi,
+  extendedCard: defaultExtendedCardUi,
   structuredCard: defaultStructuredCardUi,
 } as const;

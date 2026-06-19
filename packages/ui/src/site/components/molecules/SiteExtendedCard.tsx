@@ -4,7 +4,7 @@
  *
  * @description
  * Carte étendue utilisée pour afficher des contenus riches
- * dans les cells `cardsExtended`.
+ * dans les cells `extendedCard`.
  */
 
 import type { ReactNode } from "react";
@@ -17,7 +17,7 @@ import {
   CardTitle,
 } from "@compoz/ui/components/ui/card";
 import { cn } from "@compoz/ui/lib/utils";
-import type { SiteCardsExtendedUi } from "@compoz/ui/site/site-ui.types";
+import type { SiteExtendedCardUi } from "@compoz/ui/site/site-ui.types";
 
 export type SiteExtendedCardProps = Readonly<{
   title: string;
@@ -26,7 +26,7 @@ export type SiteExtendedCardProps = Readonly<{
   bullets?: readonly string[];
   footer?: string;
   align?: "left" | "center";
-  ui: SiteCardsExtendedUi;
+  ui: SiteExtendedCardUi;
   className?: string;
 }>;
 

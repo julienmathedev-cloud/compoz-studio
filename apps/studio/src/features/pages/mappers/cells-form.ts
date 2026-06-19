@@ -3,7 +3,7 @@
  * @layer ui/studio/pages/mappers
  *
  * @description
- * Mappers de formulaires studio pour les cells.
+ * Studio form mappers and factories for page cells.
  */
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";
@@ -15,9 +15,9 @@ import type {
   CardCollectionCardKindFormValues,
   CardCollectionItemFormValues,
   CardItemFormValues,
-  CardsExtendedItemFormValues,
   CarouselItemFormValues,
   CellFormValues,
+  ExtendedCardItemFormValues,
   FormFieldFormValues,
   FormSubmitButtonFormValues,
   ImageEditorFormValues,
@@ -52,10 +52,9 @@ function normalizeCssClassName(
 }
 
 const BUTTON_VARIANTS = ["default", "secondary", "outline", "ghost"] as const;
-const BUTTON_ICON_POSITIONS = ["before", "after"] as const;
 
 type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
-type ButtonIconPosition = (typeof BUTTON_ICON_POSITIONS)[number];
+type ButtonIconPosition = "before" | "after";
 
 function normalizeButtonPresentation(
   button: ButtonPresentationFormValues | undefined,
@@ -134,7 +133,7 @@ export function createEmptyCardItem(): CardItemFormValues {
   };
 }
 
-export function createEmptyCardsExtendedItem(): CardsExtendedItemFormValues {
+export function createEmptyExtendedCardItem(): ExtendedCardItemFormValues {
   return {
     id: createUiId(),
     title: "",
@@ -195,18 +194,6 @@ export function createEmptyStructuredCardItem(): StructuredCardItemFormValues {
   };
 }
 
-export function createEmptyCarouselCardItem(): CardItemFormValues {
-  return createEmptyCardItem();
-}
-
-export function createEmptyCarouselCardsExtendedItem(): CardsExtendedItemFormValues {
-  return createEmptyCardsExtendedItem();
-}
-
-export function createEmptyCarouselStructuredCardItem(): StructuredCardItemFormValues {
-  return createEmptyStructuredCardItem();
-}
-
 export function createEmptyCarouselItem(
   itemKind: "image" | "card" | "cardsExtended" | "structuredCard",
 ): CarouselItemFormValues {
@@ -215,14 +202,14 @@ export function createEmptyCarouselItem(
   }
 
   if (itemKind === "card") {
-    return createEmptyCarouselCardItem();
+    return createEmptyCardItem();
   }
 
   if (itemKind === "cardsExtended") {
-    return createEmptyCarouselCardsExtendedItem();
+    return createEmptyExtendedCardItem();
   }
 
-  return createEmptyCarouselStructuredCardItem();
+  return createEmptyStructuredCardItem();
 }
 
 export function createEmptyCardCollectionItem(
@@ -233,7 +220,7 @@ export function createEmptyCardCollectionItem(
   }
 
   if (cardKind === "cardsExtended") {
-    return createEmptyCardsExtendedItem();
+    return createEmptyExtendedCardItem();
   }
 
   return createEmptyStructuredCardItem();
@@ -315,18 +302,6 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
     };
   }
 
-  if (kind === "cards") {
-    return {
-      id,
-      kind: "cards",
-      cssClassName: "",
-      columns: 3,
-      align: "left",
-      reveal: false,
-      items: [createEmptyCardItem()],
-    };
-  }
-
   if (kind === "cardCollection") {
     return {
       id,
@@ -337,18 +312,6 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       align: "left",
       reveal: false,
       items: [createEmptyCardItem()],
-    };
-  }
-
-  if (kind === "cardsExtended") {
-    return {
-      id,
-      kind: "cardsExtended",
-      cssClassName: "",
-      columns: 2,
-      align: "left",
-      reveal: false,
-      items: [createEmptyCardsExtendedItem()],
     };
   }
 
@@ -381,17 +344,6 @@ export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
       cssClassName: "",
       collapsible: true,
       items: [createEmptyTimelineItem()],
-    };
-  }
-
-  if (kind === "structuredCard") {
-    return {
-      id,
-      kind: "structuredCard",
-      cssClassName: "",
-      columns: 1,
-      reveal: false,
-      items: [createEmptyStructuredCardItem()],
     };
   }
 
@@ -463,7 +415,7 @@ export function ensureCellsLength(
 }
 
 /* -------------------------------------------------------------------------- */
-/* StructuredCard - normalisation UI-safe                                     */
+/* Structured card item - UI-safe normalization                               */
 /* -------------------------------------------------------------------------- */
 
 export function normalizeStructuredCardButton(
@@ -510,7 +462,7 @@ export function normalizeStructuredCardItem(
 }
 
 /* -------------------------------------------------------------------------- */
-/* StructuredCard - normalisation for validation                              */
+/* Structured card item - validation normalization                            */
 /* -------------------------------------------------------------------------- */
 
 export function toStructuredCardButtonForValidation(
@@ -638,14 +590,6 @@ export function toCellFormValuesForValidation(
 ): CellFormValues {
   const normalizedCssClassName = normalizeCssClassName(cell.cssClassName);
 
-  if (cell.kind === "structuredCard") {
-    return {
-      ...cell,
-      cssClassName: normalizedCssClassName,
-      items: cell.items.map(toStructuredCardItemForValidation),
-    };
-  }
-
   if (cell.kind === "testimonials") {
     return {
       ...cell,
@@ -728,14 +672,6 @@ export function toCellFormValuesForValidation(
 
 export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
   const normalizedCssClassName = normalizeCssClassName(cell.cssClassName);
-
-  if (cell.kind === "structuredCard") {
-    return {
-      ...cell,
-      cssClassName: normalizedCssClassName,
-      items: cell.items.map(normalizeStructuredCardItem),
-    };
-  }
 
   if (cell.kind === "testimonials") {
     return {

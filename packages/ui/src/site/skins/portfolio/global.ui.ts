@@ -14,9 +14,9 @@
 import type { SiteGlobalUiOverride } from "@compoz/ui/site/site-ui.types";
 import { portfolioBlockSectionUi } from "@compoz/ui/site/skins/portfolio/block-section.ui";
 import { portfolioButtonsUi } from "@compoz/ui/site/skins/portfolio/cells/buttons-cell.ui";
-import { portfolioCardsUi } from "@compoz/ui/site/skins/portfolio/cells/cards-cell.ui";
-import { portfolioCardsExtendedUi } from "@compoz/ui/site/skins/portfolio/cells/cards-extended-cell.ui";
+import { portfolioCardUi } from "@compoz/ui/site/skins/portfolio/cells/card-cell.ui";
 import { portfolioCarouselUi } from "@compoz/ui/site/skins/portfolio/cells/carousel-cell.ui";
+import { portfolioExtendedCardUi } from "@compoz/ui/site/skins/portfolio/cells/extended-card-cell.ui";
 import { portfolioFormUi } from "@compoz/ui/site/skins/portfolio/cells/form-cell.ui";
 import { portfolioHeadingUi } from "@compoz/ui/site/skins/portfolio/cells/heading-cell.ui";
 import { portfolioImageUi } from "@compoz/ui/site/skins/portfolio/cells/image-cell.ui";
@@ -30,8 +30,8 @@ export const portfolioGlobalUi: SiteGlobalUiOverride = {
   header: portfolioHeaderUi,
   cells: {
     buttons: portfolioButtonsUi,
-    cards: portfolioCardsUi,
-    cardsExtended: portfolioCardsExtendedUi,
+    card: portfolioCardUi,
+    extendedCard: portfolioExtendedCardUi,
     carousel: portfolioCarouselUi,
     form: portfolioFormUi,
     heading: portfolioHeadingUi,

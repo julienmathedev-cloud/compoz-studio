@@ -1,22 +1,26 @@
 /**
  * @file packages/ui/src/pages/mappers/cells/card-collection.ts
  * @layer ui/pages/mappers
- * @description Mapper partagé pour CardCollectionCell.
+ *
+ * @description
+ * Shared runtime mapper for CardCollectionCell.
+ *
+ * @remarks
+ * The card collection mapper owns cell-level concerns such as `cardKind`,
+ * `columns`, `align`, `reveal`, and `cssClassName`.
+ *
+ * Reusable item shapes are delegated to item mappers.
  */
 
 import type {
   CardCollectionCellDTO,
   CardItemDTO,
-  CardsExtendedItemDTO,
+  ExtendedCardItemDTO,
   StructuredCardItemDTO,
 } from "@compoz/core/domain/pages/dto";
-import type {
-  CardCollectionCardColumns,
-  CardCollectionStackedColumns,
-} from "@compoz/core/domain/pages/entities/cell";
-import { toCardsCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/cards";
-import { toCardsExtendedCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/cards-extended";
-import { toStructuredCardCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/structured-card";
+import { toCardItemsShapeFromDTO } from "@compoz/ui/pages/mappers/items/card-item";
+import { toExtendedCardItemsShapeFromDTO } from "@compoz/ui/pages/mappers/items/extended-card-item";
+import { toStructuredCardItemsShapeFromDTO } from "@compoz/ui/pages/mappers/items/structured-card-item";
 import type { CardCollectionCellFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 
 export function toCardCollectionCellShapeFromDTO(
@@ -24,30 +28,12 @@ export function toCardCollectionCellShapeFromDTO(
 ): CardCollectionCellFormValues {
   const items =
     cell.cardKind === "card"
-      ? toCardsCellShapeFromDTO({
-          id: cell.id,
-          kind: "cards",
-          columns: cell.columns as CardCollectionCardColumns,
-          align: cell.align,
-          reveal: cell.reveal,
-          items: cell.items as CardItemDTO[],
-        }).items
+      ? toCardItemsShapeFromDTO(cell.items as CardItemDTO[])
       : cell.cardKind === "cardsExtended"
-        ? toCardsExtendedCellShapeFromDTO({
-            id: cell.id,
-            kind: "cardsExtended",
-            columns: cell.columns as CardCollectionStackedColumns,
-            align: cell.align,
-            reveal: cell.reveal,
-            items: cell.items as CardsExtendedItemDTO[],
-          }).items
-        : toStructuredCardCellShapeFromDTO({
-            id: cell.id,
-            kind: "structuredCard",
-            columns: cell.columns as CardCollectionStackedColumns,
-            reveal: cell.reveal,
-            items: cell.items as StructuredCardItemDTO[],
-          }).items;
+        ? toExtendedCardItemsShapeFromDTO(cell.items as ExtendedCardItemDTO[])
+        : toStructuredCardItemsShapeFromDTO(
+            cell.items as StructuredCardItemDTO[],
+          );
 
   return {
     id: cell.id,

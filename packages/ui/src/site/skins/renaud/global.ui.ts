@@ -13,7 +13,7 @@
 
 import type { SiteGlobalUiOverride } from "@compoz/ui/site/site-ui.types";
 import { renaudBlockSectionUi } from "@compoz/ui/site/skins/renaud/block-section.ui";
-import { renaudCardsUi } from "@compoz/ui/site/skins/renaud/cells/cards-cell.ui";
+import { renaudCardUi } from "@compoz/ui/site/skins/renaud/cells/card-cell.ui";
 import { renaudFormUi } from "@compoz/ui/site/skins/renaud/cells/form-cell.ui";
 import { renaudHeadingUi } from "@compoz/ui/site/skins/renaud/cells/heading-cell.ui";
 import { renaudImageUi } from "@compoz/ui/site/skins/renaud/cells/image-cell.ui";
@@ -25,7 +25,7 @@ export const renaudGlobalUi: SiteGlobalUiOverride = {
   header: renaudHeaderUi,
   footer: renaudFooterUi,
   cells: {
-    cards: renaudCardsUi,
+    card: renaudCardUi,
     form: renaudFormUi,
     heading: renaudHeadingUi,
     richText: renaudRichTextUi,

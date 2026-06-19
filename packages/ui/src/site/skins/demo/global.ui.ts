@@ -12,9 +12,9 @@
  */
 
 import type { SiteGlobalUiOverride } from "@compoz/ui/site/site-ui.types";
-import { demoCardsUi } from "@compoz/ui/site/skins/demo/cells/cards-cell.ui";
-import { demoCardsExtendedUi } from "@compoz/ui/site/skins/demo/cells/cards-extended-cell.ui";
 import { demoCarouselUi } from "@compoz/ui/site/skins/demo/cells/carousel-cell.ui";
+import { demoCardUi } from "@compoz/ui/site/skins/demo/cells/card-cell.ui";
+import { demoExtendedCardUi } from "@compoz/ui/site/skins/demo/cells/extended-card-cell.ui";
 import { demoHeadingUi } from "@compoz/ui/site/skins/demo/cells/heading-cell.ui";
 import { demoNavGalleryUi } from "@compoz/ui/site/skins/demo/cells/nav-gallery-cell.ui";
 import { demoStepsUi } from "@compoz/ui/site/skins/demo/cells/steps-cell.ui";
@@ -29,8 +29,8 @@ export const demoGlobalUi: SiteGlobalUiOverride = {
   header: demoHeaderUi,
   footer: demoFooterUi,
   cells: {
-    cards: demoCardsUi,
-    cardsExtended: demoCardsExtendedUi,
+    card: demoCardUi,
+    extendedCard: demoExtendedCardUi,
     carousel: demoCarouselUi,
     heading: demoHeadingUi,
     navGallery: demoNavGalleryUi,

@@ -1,5 +1,9 @@
 /**
  * @file apps/studio/src/app/api/_adapters/pages/blocks/cells.ts
+ * @layer studio/app/api/adapters
+ *
+ * @description
+ * Studio API adapters entry point for page block cells.
  */
 
 import type { Cell } from "@compoz/core/domain/pages/entities/cell";
@@ -7,8 +11,6 @@ import type { CellIntentDTO } from "@compoz/validation/pages/blocks/cells/cell-i
 
 import { adaptButtonsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/buttons";
 import { adaptCardCollectionCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/card-collection";
-import { adaptCardsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/cards";
-import { adaptCardsExtendedCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/cards-extended";
 import { adaptCarouselCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/carousel";
 import { adaptFormCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/form";
 import { adaptGalleryCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/gallery";
@@ -18,7 +20,6 @@ import { adaptRichTextCell } from "@compoz/studio/app/api/_adapters/pages/blocks
 import { adaptSeparatorCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/separator";
 import { adaptSpacerCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/spacer";
 import { adaptStepsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/steps";
-import { adaptStructuredCardCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/structured-card";
 import { adaptTestimonialsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/testimonials";
 import { adaptTimelineCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/timeline";
 
@@ -56,12 +57,6 @@ export function adaptCells(
       case "cardCollection":
         return adaptCardCollectionCell(cell);
 
-      case "cards":
-        return adaptCardsCell(cell);
-
-      case "cardsExtended":
-        return adaptCardsExtendedCell(cell);
-
       case "steps":
         return adaptStepsCell(cell);
 
@@ -70,9 +65,6 @@ export function adaptCells(
 
       case "timeline":
         return adaptTimelineCell(cell);
-
-      case "structuredCard":
-        return adaptStructuredCardCell(cell);
 
       case "form":
         return adaptFormCell(cell);

@@ -1,0 +1,94 @@
+/**
+ * @file packages/core/src/domain/pages/validators/items/extended-card-item.ts
+ * @layer core/domain/pages/validators
+ *
+ * @description
+ * Validateur métier d’un item de carte enrichie.
+ *
+ * @remarks
+ * Cet item est utilisé par des cellules de plus haut niveau comme
+ * `cardCollection` ou `carousel`.
+ */
+
+import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";
+import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
+import { DomainError } from "@compoz/core/domain/errors/domain-error";
+import type { ExtendedCardItem } from "@compoz/core/domain/pages/entities/cell";
+
+type Path = ReadonlyArray<string | number>;
+
+export function assertExtendedCardItem(item: ExtendedCardItem, path: Path) {
+  if (!item || typeof item !== "object") {
+    throw new DomainError({
+      code: EC.CELL_CARDS_EXTENDED_ITEM_INVALID,
+      message: EC.CELL_CARDS_EXTENDED_ITEM_INVALID,
+      details: { path },
+    });
+  }
+
+  if (typeof item.id !== "string" || !item.id.trim()) {
+    throw new DomainError({
+      code: EC.CELL_CARDS_EXTENDED_ITEM_ID_REQUIRED,
+      message: EC.CELL_CARDS_EXTENDED_ITEM_ID_REQUIRED,
+      details: { path: [...path, "id"] },
+    });
+  }
+
+  if (typeof item.title !== "string" || !item.title.trim()) {
+    throw new DomainError({
+      code: EC.CELL_CARDS_EXTENDED_ITEM_TITLE_REQUIRED,
+      message: EC.CELL_CARDS_EXTENDED_ITEM_TITLE_REQUIRED,
+      details: { path: [...path, "title"] },
+    });
+  }
+
+  if (typeof item.description !== "string" || !item.description.trim()) {
+    throw new DomainError({
+      code: EC.CELL_CARDS_EXTENDED_ITEM_DESCRIPTION_REQUIRED,
+      message: EC.CELL_CARDS_EXTENDED_ITEM_DESCRIPTION_REQUIRED,
+      details: { path: [...path, "description"] },
+    });
+  }
+
+  if (
+    item.icon !== null &&
+    (typeof item.icon !== "string" || !CONTENT_ICON_KINDS.includes(item.icon))
+  ) {
+    throw new DomainError({
+      code: EC.CELL_CARDS_EXTENDED_ITEM_ICON_INVALID,
+      message: EC.CELL_CARDS_EXTENDED_ITEM_ICON_INVALID,
+      details: {
+        path: [...path, "icon"],
+        meta: { icon: item.icon },
+      },
+    });
+  }
+
+  if (item.footer !== null && typeof item.footer !== "string") {
+    throw new DomainError({
+      code: EC.CELL_CARDS_EXTENDED_ITEM_FOOTER_INVALID,
+      message: EC.CELL_CARDS_EXTENDED_ITEM_FOOTER_INVALID,
+      details: { path: [...path, "footer"] },
+    });
+  }
+
+  if (!Array.isArray(item.bullets)) {
+    throw new DomainError({
+      code: EC.CELL_CARDS_EXTENDED_ITEM_BULLETS_INVALID,
+      message: EC.CELL_CARDS_EXTENDED_ITEM_BULLETS_INVALID,
+      details: { path: [...path, "bullets"] },
+    });
+  }
+
+  for (let i = 0; i < item.bullets.length; i++) {
+    const bullet = item.bullets[i];
+
+    if (typeof bullet !== "string" || !bullet.trim()) {
+      throw new DomainError({
+        code: EC.CELL_CARDS_EXTENDED_ITEM_BULLET_INVALID,
+        message: EC.CELL_CARDS_EXTENDED_ITEM_BULLET_INVALID,
+        details: { path: [...path, "bullets", i] },
+      });
+    }
+  }
+}

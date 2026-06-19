@@ -3,13 +3,13 @@
  * @layer ui/site/molecules
  *
  * @description
- * Carte publique utilisée pour afficher un item de type `structuredCard`.
+ * Public card used to render a `structuredCard` item.
  *
  * @remarks
  * - UI-only.
- * - Utilisé par `StructuredCardCellRenderer`.
- * - Utilise `SiteAppImage` pour rester cohérent avec le runtime site.
- * - Tous les styles sont pilotés par `ui`.
+ * - Used by `StructuredCardItemsRenderer` and carousel/card collection renderers.
+ * - Uses `SiteAppImage` to stay consistent with the site runtime.
+ * - All styles are driven by `ui`.
  */
 
 import {

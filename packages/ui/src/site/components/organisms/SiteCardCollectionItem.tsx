@@ -8,7 +8,7 @@ import type {
   CardCollectionCardKindShape,
   CardCollectionItemShape,
   CardItemShape,
-  CardsExtendedItemShape,
+  ExtendedCardItemShape,
   StructuredCardItemShape,
 } from "@compoz/validation/pages/blocks/cells/cell";
 
@@ -18,8 +18,8 @@ import { SiteCard } from "@compoz/ui/site/components/molecules/SiteCard";
 import { SiteExtendedCard } from "@compoz/ui/site/components/molecules/SiteExtendedCard";
 import { SiteStructuredCard } from "@compoz/ui/site/components/molecules/SiteStructuredCard";
 import type {
-  SiteCardsExtendedUi,
-  SiteCardsUi,
+  SiteExtendedCardUi,
+  SiteCardUi,
   SiteStructuredCardUi,
 } from "@compoz/ui/site/site-ui.types";
 
@@ -27,8 +27,8 @@ export type SiteCardCollectionItemProps = Readonly<{
   item: CardCollectionItemShape;
   cardKind: CardCollectionCardKindShape;
   align: "left" | "center";
-  cardsUi: SiteCardsUi;
-  cardsExtendedUi: SiteCardsExtendedUi;
+  cardUi: SiteCardUi;
+  extendedCardUi: SiteExtendedCardUi;
   structuredCardUi: SiteStructuredCardUi;
 }>;
 
@@ -44,8 +44,8 @@ export function SiteCardCollectionItem({
   item,
   cardKind,
   align,
-  cardsUi,
-  cardsExtendedUi,
+  cardUi,
+  extendedCardUi,
   structuredCardUi,
 }: SiteCardCollectionItemProps) {
   if (cardKind === "card") {
@@ -57,17 +57,17 @@ export function SiteCardCollectionItem({
         description={normalizeString(card.description, "")}
         icon={
           card.icon
-            ? renderContentIcon(card.icon, { className: cardsUi.icon })
+            ? renderContentIcon(card.icon, { className: cardUi.icon })
             : undefined
         }
         align={align}
-        ui={cardsUi}
+        ui={cardUi}
       />
     );
   }
 
   if (cardKind === "cardsExtended") {
-    const card = item as CardsExtendedItemShape;
+    const card = item as ExtendedCardItemShape;
     const bullets = Array.isArray(card.bullets)
       ? card.bullets
           .map((bullet) => normalizeString(bullet, ""))
@@ -83,12 +83,12 @@ export function SiteCardCollectionItem({
         icon={
           card.icon
             ? renderContentIcon(card.icon, {
-                className: cardsExtendedUi.icon,
+                className: extendedCardUi.icon,
               })
             : undefined
         }
         align={align}
-        ui={cardsExtendedUi}
+        ui={extendedCardUi}
       />
     );
   }

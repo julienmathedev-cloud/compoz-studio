@@ -1,10 +1,13 @@
 /**
  * @file packages/core/src/domain/pages/dto.ts
  * @layer core/domain
+ *
  * @description
- * DTOs de lecture pour le module Pages, alignés sur les entités du domaine.
- * Ces types représentent la forme stable exposée aux adapters (API/infra)
- * et restent immuables (`Readonly<>`).
+ * Read DTOs for the Pages module, aligned with domain entities.
+ *
+ * @remarks
+ * These types represent the stable shape exposed to adapters such as API
+ * and infra layers. DTOs remain immutable through `Readonly<>`.
  */
 
 import type { Image } from "@compoz/core/domain/assets/entities/image";
@@ -17,15 +20,13 @@ import type {
   CardCollectionColumns,
   CardCollectionItem,
   CardItem,
-  CardsExtendedItem,
   CarouselCell,
   CarouselItem,
   CarouselItemKind,
   CarouselVariant,
   Cell,
+  ExtendedCardItem,
   ImageEditor,
-  StructuredCardCell,
-  StructuredCardColumns,
   StructuredCardItem,
   StructuredCardSection,
   TestimonialItem,
@@ -41,39 +42,59 @@ import type {
 } from "@compoz/core/domain/pages/entities/page";
 
 /**
- * DTO complet représentant une Page.
- * Aligné strictement sur l’entité métier `Page`.
+ * Complete DTO representing a page.
+ *
+ * @remarks
+ * Strictly aligned with the `Page` domain entity.
  */
 export type PageDTO = Readonly<Page>;
 
 /**
- * DTO résumé pour les listes/admin (slug + title uniquement).
- * Correspond au type métier `PageSummary`.
+ * Summary DTO used for admin lists.
+ *
+ * @remarks
+ * Strictly aligned with the `PageSummary` domain entity.
  */
 export type PageSummaryDTO = Readonly<PageSummary>;
 
-/** DTO de type `InternalPageOption`. */
+/**
+ * DTO representing an internal page option.
+ */
 export type InternalPageOptionDTO = Readonly<InternalPageOption>;
 
 /**
- * DTO du sous-objet `sitemap` (optionnel dans une Page).
- * Structure exposée telle quelle, immuable.
+ * DTO representing the optional sitemap sub-object of a page.
+ *
+ * @remarks
+ * The structure is exposed as-is and remains immutable.
  */
 export type PageSitemapDTO = Readonly<PageSitemap>;
 
 /**
- * Enum (type union) représentant les valeurs possibles de `changefreq`.
- * Exposé afin que les couches UI / schémas puissent s’y référer sans
- * importer directement l’entité.
+ * Union type representing allowed sitemap `changefreq` values.
+ *
+ * @remarks
+ * Exposed so UI and schema layers can reference it without importing the
+ * domain entity directly.
  */
 export type SitemapChangeFreqDTO = SitemapChangeFreq;
 
 export type ImageDTO = Readonly<Image>;
 
-/** DTO représentant un Block (aligné sur l’entité métier `Block`). */
+/**
+ * DTO representing a block.
+ *
+ * @remarks
+ * Strictly aligned with the `Block` domain entity.
+ */
 export type BlockDTO = Readonly<Block>;
 
-/** DTO représentant une Cell (aligné sur l’entité métier `Cell`). */
+/**
+ * DTO representing a cell.
+ *
+ * @remarks
+ * Strictly aligned with the `Cell` domain entity.
+ */
 export type CellDTO = Readonly<Cell>;
 
 /* -------------------------------------------------------------------------- */
@@ -82,20 +103,25 @@ export type CellDTO = Readonly<Cell>;
 
 export type ImageEditorDTO = Readonly<ImageEditor>;
 export type ButtonItemDTO = Readonly<ButtonItem>;
+
 export type CardItemDTO = Readonly<CardItem>;
+export type ExtendedCardItemDTO = Readonly<ExtendedCardItem>;
+export type StructuredCardItemDTO = Readonly<StructuredCardItem>;
+export type StructuredCardSectionDTO = Readonly<StructuredCardSection>;
+
+export type TimelineItemDTO = Readonly<TimelineItem>;
+export type TestimonialItemDTO = Readonly<TestimonialItem>;
+export type TestimonialsCellDTO = Readonly<TestimonialsCell>;
+
+/* -------------------------------------------------------------------------- */
+/* Card collection DTO                                                        */
+/* -------------------------------------------------------------------------- */
+
 export type CardCollectionItemDTO = Readonly<CardCollectionItem>;
 export type CardCollectionCardKindDTO = CardCollectionCardKind;
 export type CardCollectionColumnsDTO = CardCollectionColumns;
 export type CardCollectionAlignDTO = CardCollectionAlign;
 export type CardCollectionCellDTO = Readonly<CardCollectionCell>;
-export type CardsExtendedItemDTO = Readonly<CardsExtendedItem>;
-export type StructuredCardItemDTO = Readonly<StructuredCardItem>;
-export type TimelineItemDTO = Readonly<TimelineItem>;
-export type TestimonialItemDTO = Readonly<TestimonialItem>;
-export type TestimonialsCellDTO = Readonly<TestimonialsCell>;
-export type StructuredCardColumnsDTO = Readonly<StructuredCardColumns>;
-export type StructuredCardCellDTO = Readonly<StructuredCardCell>;
-export type StructuredCardSectionDTO = Readonly<StructuredCardSection>;
 
 /* -------------------------------------------------------------------------- */
 /* Carousel DTO                                                               */

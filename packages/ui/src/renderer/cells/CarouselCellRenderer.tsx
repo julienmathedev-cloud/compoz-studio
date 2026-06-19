@@ -3,14 +3,20 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer site/preview : rendu d’un carousel ou slider
- * homogène basé sur `variant` + `itemKind`.
+ * Site/preview renderer for a homogeneous carousel or slider based on
+ * `variant` and `itemKind`.
+ *
+ * @remarks
+ * - UI-only: consumes an already validated cell shape.
+ * - Normalizes image/card-like items into `NormalizedCarouselItem`.
+ * - Delegates the visual rendering to `SiteCarousel` or `SiteSlider`.
+ * - Keeps persisted item kinds unchanged for compatibility.
  */
 
 import type {
   CardItemShape,
-  CardsExtendedItemShape,
   CarouselCellShape,
+  ExtendedCardItemShape,
   ImageEditorShape,
   StructuredCardItemShape,
 } from "@compoz/validation/pages/blocks/cells/cell";
@@ -88,7 +94,7 @@ function normalizeCarouselItems(
 
   if (cell.itemKind === "cardsExtended") {
     return cell.items
-      .map((item) => normalizeCardsExtendedItem(item as CardsExtendedItemShape))
+      .map((item) => normalizeExtendedCardItem(item as ExtendedCardItemShape))
       .filter((item): item is NormalizedCarouselItem => Boolean(item));
   }
 
@@ -130,8 +136,8 @@ function normalizeCardItem(item: CardItemShape): NormalizedCarouselItem | null {
   };
 }
 
-function normalizeCardsExtendedItem(
-  item: CardsExtendedItemShape,
+function normalizeExtendedCardItem(
+  item: ExtendedCardItemShape,
 ): NormalizedCarouselItem | null {
   const title = normalizeString(item.title, "");
   if (!title) return null;
@@ -141,11 +147,9 @@ function normalizeCardsExtendedItem(
     id: item.id,
     title,
     description: normalizeString(item.description, ""),
-    bullets: Array.isArray(item.bullets)
-      ? item.bullets
-          .map((bullet) => normalizeString(bullet, ""))
-          .filter(Boolean)
-      : [],
+    bullets: item.bullets
+      .map((bullet) => normalizeString(bullet, ""))
+      .filter(Boolean),
     footer: normalizeString(item.footer ?? "", "") || undefined,
     icon: normalizeString(item.icon ?? "", "") || undefined,
   };
@@ -157,14 +161,12 @@ function normalizeStructuredCardItem(
   const title = normalizeString(item.title, "");
   if (!title) return null;
 
-  const sections = Array.isArray(item.sections)
-    ? item.sections
-        .map((section) => ({
-          label: normalizeString(section.label, ""),
-          content: normalizeString(section.content, ""),
-        }))
-        .filter((section) => Boolean(section.label && section.content))
-    : [];
+  const sections = item.sections
+    .map((section) => ({
+      label: normalizeString(section.label, ""),
+      content: normalizeString(section.content, ""),
+    }))
+    .filter((section) => Boolean(section.label && section.content));
 
   if (sections.length === 0) return null;
 

@@ -1,8 +1,9 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/cell-intents.ts
  * @layer schemas
+ *
  * @description
- * Définit les schémas Zod décrivant la forme frontière des intentions liées aux cells.
+ * Defines Zod schemas describing the boundary shape of cell-related intents.
  */
 
 import type { z } from "zod";
@@ -10,18 +11,16 @@ import type { z } from "zod";
 import {
   ButtonItemSchema,
   ButtonsCellSchema,
+  CardCollectionCardKindSchema,
   CardCollectionCellSchema,
   CardCollectionItemSchema,
-  CardCollectionCardKindSchema,
   CardItemSchema,
-  CardsCellSchema,
-  CardsExtendedCellSchema,
-  CardsExtendedItemSchema,
   CarouselCellSchema,
   CarouselItemKindSchema,
   CarouselItemSchema,
   CarouselVariantSchema,
   CellSchema,
+  ExtendedCardItemSchema,
   FormCellSchema,
   FormFieldSchema,
   GalleryCellSchema,
@@ -33,7 +32,6 @@ import {
   SpacerCellSchema,
   StepItemSchema,
   StepsCellSchema,
-  StructuredCardCellSchema,
   StructuredCardItemSchema,
   StructuredCardSectionSchema,
   TestimonialItemSchema,
@@ -68,17 +66,19 @@ export type ButtonsCellIntentDTO = z.infer<typeof ButtonsCellIntentSchema>;
 export const CardItemIntentSchema = CardItemSchema;
 export type CardItemIntentDTO = z.infer<typeof CardItemIntentSchema>;
 
-export const CardsCellIntentSchema = CardsCellSchema;
-export type CardsCellIntentDTO = z.infer<typeof CardsCellIntentSchema>;
-
-export const CardsExtendedItemIntentSchema = CardsExtendedItemSchema;
-export type CardsExtendedItemIntentDTO = z.infer<
-  typeof CardsExtendedItemIntentSchema
+export const ExtendedCardItemIntentSchema = ExtendedCardItemSchema;
+export type ExtendedCardItemIntentDTO = z.infer<
+  typeof ExtendedCardItemIntentSchema
 >;
 
-export const CardsExtendedCellIntentSchema = CardsExtendedCellSchema;
-export type CardsExtendedCellIntentDTO = z.infer<
-  typeof CardsExtendedCellIntentSchema
+export const StructuredCardSectionIntentSchema = StructuredCardSectionSchema;
+export type StructuredCardSectionIntentDTO = z.infer<
+  typeof StructuredCardSectionIntentSchema
+>;
+
+export const StructuredCardItemIntentSchema = StructuredCardItemSchema;
+export type StructuredCardItemIntentDTO = z.infer<
+  typeof StructuredCardItemIntentSchema
 >;
 
 export const CarouselVariantIntentSchema = CarouselVariantSchema;
@@ -137,21 +137,6 @@ export type TestimonialItemIntentDTO = z.infer<
 export const TestimonialsCellIntentSchema = TestimonialsCellSchema;
 export type TestimonialsCellIntentDTO = z.infer<
   typeof TestimonialsCellIntentSchema
->;
-
-export const StructuredCardSectionIntentSchema = StructuredCardSectionSchema;
-export type StructuredCardSectionIntentDTO = z.infer<
-  typeof StructuredCardSectionIntentSchema
->;
-
-export const StructuredCardItemIntentSchema = StructuredCardItemSchema;
-export type StructuredCardItemIntentDTO = z.infer<
-  typeof StructuredCardItemIntentSchema
->;
-
-export const StructuredCardCellIntentSchema = StructuredCardCellSchema;
-export type StructuredCardCellIntentDTO = z.infer<
-  typeof StructuredCardCellIntentSchema
 >;
 
 export const FormFieldIntentSchema = FormFieldSchema;

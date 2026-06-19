@@ -3,19 +3,25 @@
  * @layer ui/pages/mappers
  *
  * @description
- * Mapper "shared runtime" pour les cellules de type `carousel`.
+ * Shared runtime mapper for CarouselCell.
+ *
+ * @remarks
+ * The carousel mapper owns cell-level concerns such as `variant`,
+ * `showDots`, `showArrows`, `itemKind`, and `cssClassName`.
+ *
+ * Reusable item shapes are delegated to item mappers.
  */
 
 import type {
   CardItemDTO,
-  CardsExtendedItemDTO,
   CarouselCellDTO,
+  ExtendedCardItemDTO,
   ImageEditorDTO,
   StructuredCardItemDTO,
 } from "@compoz/core/domain/pages/dto";
-import { toCardsCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/cards";
-import { toCardsExtendedCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/cards-extended";
-import { toStructuredCardCellShapeFromDTO } from "@compoz/ui/pages/mappers/cells/structured-card";
+import { toCardItemsShapeFromDTO } from "@compoz/ui/pages/mappers/items/card-item";
+import { toExtendedCardItemsShapeFromDTO } from "@compoz/ui/pages/mappers/items/extended-card-item";
+import { toStructuredCardItemsShapeFromDTO } from "@compoz/ui/pages/mappers/items/structured-card-item";
 import type { CarouselCellFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 
 type WithDims = { width?: number | null; height?: number | null };
@@ -37,30 +43,12 @@ export function toCarouselCellShapeFromDTO(
           coerceDims(item),
         )
       : cell.itemKind === "card"
-        ? toCardsCellShapeFromDTO({
-            id: cell.id,
-            kind: "cards",
-            columns: 2,
-            align: "left",
-            reveal: true,
-            items: cell.items as CardItemDTO[],
-          }).items
+        ? toCardItemsShapeFromDTO(cell.items as CardItemDTO[])
         : cell.itemKind === "cardsExtended"
-          ? toCardsExtendedCellShapeFromDTO({
-              id: cell.id,
-              kind: "cardsExtended",
-              columns: 2,
-              align: "left",
-              reveal: true,
-              items: cell.items as CardsExtendedItemDTO[],
-            }).items
-          : toStructuredCardCellShapeFromDTO({
-              id: cell.id,
-              kind: "structuredCard",
-              columns: 1,
-              reveal: true,
-              items: cell.items as StructuredCardItemDTO[],
-            }).items;
+          ? toExtendedCardItemsShapeFromDTO(cell.items as ExtendedCardItemDTO[])
+          : toStructuredCardItemsShapeFromDTO(
+              cell.items as StructuredCardItemDTO[],
+            );
 
   return {
     id: cell.id,

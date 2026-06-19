@@ -9,17 +9,17 @@ import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type {
   CardItem,
-  CardsExtendedItem,
   CarouselItem,
   CarouselItemKind,
   Cell,
+  ExtendedCardItem,
   ImageEditor,
   StructuredCardItem,
 } from "@compoz/core/domain/pages/entities/cell";
-import { assertCardItem } from "@compoz/core/domain/pages/validators/cells/card";
-import { assertCardsExtendedItem } from "@compoz/core/domain/pages/validators/cells/card-extended";
 import { assertImageEditor } from "@compoz/core/domain/pages/validators/cells/shared-image";
-import { assertStructuredCardItem } from "@compoz/core/domain/pages/validators/cells/structured-card";
+import { assertCardItem } from "@compoz/core/domain/pages/validators/items/card-item";
+import { assertExtendedCardItem } from "@compoz/core/domain/pages/validators/items/extended-card-item";
+import { assertStructuredCardItem } from "@compoz/core/domain/pages/validators/items/structured-card-item";
 
 type Path = ReadonlyArray<string | number>;
 
@@ -66,7 +66,7 @@ function assertCarouselItemByKind(
       return;
 
     case "cardsExtended":
-      assertCardsExtendedItem(item as CardsExtendedItem, path);
+      assertExtendedCardItem(item as ExtendedCardItem, path);
       return;
 
     case "structuredCard":

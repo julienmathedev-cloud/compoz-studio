@@ -21,7 +21,7 @@ import {
   CardTitle,
 } from "@compoz/ui/components/ui/card";
 import { cn } from "@compoz/ui/lib/utils";
-import type { SiteCardsUi } from "@compoz/ui/site/site-ui.types";
+import type { SiteCardUi } from "@compoz/ui/site/site-ui.types";
 
 export type SiteCardAlign = "left" | "center";
 
@@ -30,7 +30,7 @@ export type SiteCardProps = Readonly<{
   description: string;
   icon?: ReactNode;
   align?: SiteCardAlign;
-  ui: SiteCardsUi;
+  ui: SiteCardUi;
   className?: string;
 }>;
 

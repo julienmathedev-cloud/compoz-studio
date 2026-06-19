@@ -14,10 +14,10 @@
 import type { SiteGlobalUi } from "@compoz/ui/site/site-ui.types";
 import { defaultBlockSectionUi } from "@compoz/ui/site/skins/default/block-section.ui";
 import { defaultButtonsUi } from "@compoz/ui/site/skins/default/cells/buttons-cell.ui";
+import { defaultCardUi } from "@compoz/ui/site/skins/default/cells/card-cell.ui";
 import { defaultCardCollectionUi } from "@compoz/ui/site/skins/default/cells/card-collection-cell.ui";
-import { defaultCardsUi } from "@compoz/ui/site/skins/default/cells/cards-cell.ui";
-import { defaultCardsExtendedUi } from "@compoz/ui/site/skins/default/cells/cards-extended-cell.ui";
 import { defaultCarouselUi } from "@compoz/ui/site/skins/default/cells/carousel-cell.ui";
+import { defaultExtendedCardUi } from "@compoz/ui/site/skins/default/cells/extended-card-cell.ui";
 import { defaultFormUi } from "@compoz/ui/site/skins/default/cells/form-cell.ui";
 import { defaultHeadingUi } from "@compoz/ui/site/skins/default/cells/heading-cell.ui";
 import { defaultImageUi } from "@compoz/ui/site/skins/default/cells/image-cell.ui";
@@ -48,8 +48,8 @@ export const defaultGlobalUi: SiteGlobalUi = {
     navGallery: defaultNavGalleryUi,
     zoomGallery: defaultZoomGalleryUi,
     cardCollection: defaultCardCollectionUi,
-    cards: defaultCardsUi,
-    cardsExtended: defaultCardsExtendedUi,
+    card: defaultCardUi,
+    extendedCard: defaultExtendedCardUi,
     steps: defaultStepsUi,
     testimonials: defaultTestimonialsUi,
     structuredCard: defaultStructuredCardUi,

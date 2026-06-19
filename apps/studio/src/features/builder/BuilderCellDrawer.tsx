@@ -5,15 +5,15 @@
  * @layer ui/studio/builder
  *
  * @description
- * Drawer d’édition d’une cell sélectionnée dans le builder Studio.
+ * Studio builder drawer used to edit the currently selected cell.
  *
  * @remarks
- * - Ne dépend plus de `useFormContext()`.
- * - Reçoit explicitement `control`, `setValue`, `clearErrors` et `trigger` depuis le parent.
- * - Rend un éditeur unique pour la cell active.
- * - Réutilise les éditeurs existants des cells.
- * - Le sélecteur de type reste disponible dans le drawer.
- * - Bloque la fermeture si la cell active contient des erreurs bloquantes.
+ * - Does not depend on `useFormContext()`.
+ * - Receives `control`, `setValue`, `clearErrors`, and `trigger` explicitly from the parent.
+ * - Renders a single editor for the active cell.
+ * - Reuses existing cell editors.
+ * - Keeps the cell type selector available inside the drawer.
+ * - Prevents closing when the active cell contains blocking validation errors.
  */
 
 import { useTranslations } from "next-intl";
@@ -31,8 +31,6 @@ import { InputField } from "@compoz/studio/components/molecules/fields/InputFiel
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { ButtonsCellEditor } from "@compoz/studio/features/builder/editor/cells/buttons/ButtonsCellEditor";
 import { CardCollectionCellEditor } from "@compoz/studio/features/builder/editor/cells/CardCollectionCellEditor";
-import { CardsExtendedCellEditor } from "@compoz/studio/features/builder/editor/cells/cards-extended/CardsExtendedCellEditor";
-import { CardsCellEditor } from "@compoz/studio/features/builder/editor/cells/cards/CardsCellEditor";
 import { CarouselCellEditor } from "@compoz/studio/features/builder/editor/cells/CarouselCellEditor";
 import { FormCellEditor } from "@compoz/studio/features/builder/editor/cells/form/FormCellEditor";
 import { GalleryCellEditor } from "@compoz/studio/features/builder/editor/cells/GalleryCellEditor";
@@ -42,7 +40,6 @@ import { RichTextCellEditor } from "@compoz/studio/features/builder/editor/cells
 import { SeparatorCellEditor } from "@compoz/studio/features/builder/editor/cells/SeparatorCellEditor";
 import { SpacerCellEditor } from "@compoz/studio/features/builder/editor/cells/SpacerCellEditor";
 import { StepsCellEditor } from "@compoz/studio/features/builder/editor/cells/steps/StepsCellEditor";
-import { StructuredCardCellEditor } from "@compoz/studio/features/builder/editor/cells/structured-cards/StructuredCardCellEditor";
 import { TestimonialsCellEditor } from "@compoz/studio/features/builder/editor/cells/testimonials/TestimonialsCellEditor";
 import { TimelineCellEditor } from "@compoz/studio/features/builder/editor/cells/timeline/TimelinesCellEditor";
 import { createEmptyCell } from "@compoz/studio/features/pages/mappers/cells-form";
@@ -140,7 +137,10 @@ export function BuilderCellDrawer({
   );
 
   const kindIds = createFieldIds("builder-cell-drawer", "kind");
-  const cssClassNameIds = createFieldIds("builder-cell-drawer", "css-class-name");
+  const cssClassNameIds = createFieldIds(
+    "builder-cell-drawer",
+    "css-class-name",
+  );
 
   const setSelectedCell = (nextCell: CellFormValues) => {
     if (!selectedCellLocation || !watchedAll) return;
@@ -322,19 +322,9 @@ export function BuilderCellDrawer({
                       label: t("studio.builder.drawer.kind.options.buttons"),
                     },
                     {
-                      value: "cards",
-                      label: t("studio.builder.drawer.kind.options.cards"),
-                    },
-                    {
                       value: "cardCollection",
                       label: t(
                         "studio.builder.drawer.kind.options.cardCollection",
-                      ),
-                    },
-                    {
-                      value: "cardsExtended",
-                      label: t(
-                        "studio.builder.drawer.kind.options.cardsExtended",
                       ),
                     },
                     {
@@ -350,12 +340,6 @@ export function BuilderCellDrawer({
                     {
                       value: "timeline",
                       label: t("studio.builder.drawer.kind.options.timeline"),
-                    },
-                    {
-                      value: "structuredCard",
-                      label: t(
-                        "studio.builder.drawer.kind.options.structuredCard",
-                      ),
                     },
                     {
                       value: "form",
@@ -388,7 +372,9 @@ export function BuilderCellDrawer({
                   onChange={(value) => {
                     setSelectedCell({ ...selectedCell, cssClassName: value });
                   }}
-                  placeholder={t("studio.builder.drawer.cssClassName.placeholder")}
+                  placeholder={t(
+                    "studio.builder.drawer.cssClassName.placeholder",
+                  )}
                   maxLength={120}
                   showCount
                   disabled={isSubmitting}
@@ -448,16 +434,6 @@ export function BuilderCellDrawer({
                 />
               ) : null}
 
-              {selectedCell.kind === "cards" ? (
-                <CardsCellEditor
-                  control={control}
-                  idPrefix={`builder-cell-${selectedCell.id}`}
-                  selectedCellLocation={selectedCellLocation}
-                  disabled={isSubmitting}
-                  showError={forceShowErrors}
-                />
-              ) : null}
-
               {selectedCell.kind === "cardCollection" ? (
                 <CardCollectionCellEditor
                   control={control}
@@ -466,16 +442,6 @@ export function BuilderCellDrawer({
                   disabled={isSubmitting}
                   showError={forceShowErrors}
                   onUploadImage={onUploadImage}
-                />
-              ) : null}
-
-              {selectedCell.kind === "cardsExtended" ? (
-                <CardsExtendedCellEditor
-                  control={control}
-                  idPrefix={`builder-cell-${selectedCell.id}`}
-                  selectedCellLocation={selectedCellLocation}
-                  disabled={isSubmitting}
-                  showError={forceShowErrors}
                 />
               ) : null}
 
@@ -507,17 +473,6 @@ export function BuilderCellDrawer({
                   selectedCellLocation={selectedCellLocation}
                   disabled={isSubmitting}
                   showError={forceShowErrors}
-                />
-              ) : null}
-
-              {selectedCell.kind === "structuredCard" ? (
-                <StructuredCardCellEditor
-                  control={control}
-                  idPrefix={`builder-cell-${selectedCell.id}`}
-                  selectedCellLocation={selectedCellLocation}
-                  disabled={isSubmitting}
-                  showError={forceShowErrors}
-                  onUploadImage={onUploadImage}
                 />
               ) : null}
 

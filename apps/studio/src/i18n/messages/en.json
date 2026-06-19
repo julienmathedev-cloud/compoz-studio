@@ -884,12 +884,9 @@
             "spacer": "Spacer",
             "separator": "Separator",
             "buttons": "Buttons",
-            "cards": "Cards",
             "cardCollection": "Card collection",
-            "cardsExtended": "Extended cards",
             "steps": "Steps",
             "testimonials": "Testimonials",
-            "structuredCard": "Structured cards",
             "form": "Form",
             "timeline": "Timeline"
           }
@@ -1634,12 +1631,9 @@
           "spacer": "Spacer",
           "separator": "Separator",
           "buttons": "Buttons",
-          "cards": "Cards",
           "cardCollection": "Card collection",
-          "cardsExtended": "Extended cards",
           "steps": "Steps",
           "testimonials": "Testimonials",
-          "structuredCard": "Structured card",
           "form": "Form"
         },
         "fallbackSummary": "Type: {type}"
@@ -1703,12 +1697,9 @@
         "spacer": "Spacer",
         "separator": "Separator",
         "buttons": "Buttons",
-        "cards": "Cards",
         "cardCollection": "Card collection",
-        "cardsExtended": "Extended cards",
         "steps": "Steps",
         "testimonials": "Testimonials",
-        "structuredCard": "Structured card",
         "form": "Form",
         "timeline": "Timeline"
       },
@@ -1799,7 +1790,7 @@
         "itemKinds": {
           "image": "Image",
           "card": "Card",
-          "cardsExtended": "Extended card",
+          "extendedCard": "Extended card",
           "structuredCard": "Structured card"
         }
       },
@@ -1810,7 +1801,7 @@
         "cardKindLabel": "Card type",
         "cardKinds": {
           "card": "Card",
-          "cardsExtended": "Extended card",
+          "extendedCard": "Extended card",
           "structuredCard": "Structured card"
         },
         "columnsLabel": "Columns",
@@ -1829,7 +1820,7 @@
         "revealHelp": "Enables the reveal animation for the card collection."
       },
 
-      "cardsExtendedCellEditor": {
+      "extendedCardCellEditor": {
         "itemsLabel": "Cards",
         "itemsHelp": "Add and organize the cards displayed in this section.",
 
@@ -1974,7 +1965,7 @@
         "variantResponsiveHelp": "Horizontal layout is only applied when there is enough available screen space."
       },
 
-      "cardsCellEditor": {
+      "cardCellEditor": {
         "itemsLabel": "Cards",
         "itemsHelp": "Add, reorder, and edit the cards in this section.",
         "alignLabel": "Alignment",

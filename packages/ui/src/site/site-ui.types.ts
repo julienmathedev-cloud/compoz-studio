@@ -47,8 +47,8 @@ export type SiteCellsUi = Readonly<{
   separator: SiteSeparatorUi;
   buttons: SiteButtonsUi;
   cardCollection: SiteCardCollectionUi;
-  cards: SiteCardsUi;
-  cardsExtended: SiteCardsExtendedUi;
+  card: SiteCardUi;
+  extendedCard: SiteExtendedCardUi;
   steps: SiteStepsUi;
   testimonials: SiteTestimonialsUi;
   structuredCard: SiteStructuredCardUi;
@@ -270,7 +270,7 @@ export type SiteTestimonialsUiOverride = DeepPartial<SiteTestimonialsUi>;
 
 export type SiteStepCardUiOverride = DeepPartial<SiteStepCardUi>;
 
-export type SiteCardsUi = Readonly<{
+export type SiteCardUi = Readonly<{
   root: string;
   grid: string;
   columns: Readonly<{
@@ -289,9 +289,9 @@ export type SiteCardsUi = Readonly<{
   description: string;
 }>;
 
-export type SiteCardsUiOverride = DeepPartial<SiteCardsUi>;
+export type SiteCardUiOverride = DeepPartial<SiteCardUi>;
 
-export type SiteCardsExtendedUi = Readonly<{
+export type SiteExtendedCardUi = Readonly<{
   root: string;
 
   grid: string;
@@ -336,7 +336,7 @@ export type SiteCardsExtendedUi = Readonly<{
   }>;
 }>;
 
-export type SiteCardsExtendedUiOverride = DeepPartial<SiteCardsExtendedUi>;
+export type SiteExtendedCardUiOverride = DeepPartial<SiteExtendedCardUi>;
 
 export type SiteStructuredCardUi = Readonly<{
   root: string;
@@ -462,9 +462,9 @@ export type SiteCarouselUi = Readonly<{
     inactive: string;
   }>;
 
-  card: SiteCardsUi;
+  card: SiteCardUi;
   structuredCard: SiteStructuredCardUi;
-  extendedCard: SiteCardsExtendedUi;
+  extendedCard: SiteExtendedCardUi;
 }>;
 
 export type SiteCarouselUiOverride = DeepPartial<SiteCarouselUi>;

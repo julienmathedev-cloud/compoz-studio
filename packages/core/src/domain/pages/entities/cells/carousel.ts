@@ -1,35 +1,39 @@
 /**
  * @file packages/core/src/domain/pages/entities/cells/carousel.ts
  * @layer core/domain/pages
+ *
  * @description
- * Entités métier liées à la cellule Carousel.
+ * Domain entities related to the Carousel cell.
  *
  * @remarks
- * - La cellule `carousel` porte le cadre d’affichage :
- *   - variante visuelle
- *   - options d’interaction
- *   - type homogène d’items
- * - Les contenus sont stockés dans `items`.
- * - Le carousel ne rend pas des cells arbitraires :
- *   seuls certains types d’items sont autorisés.
+ * A carousel is a layout cell responsible for rendering a homogeneous list
+ * of supported items as slides.
+ *
+ * The carousel does not render arbitrary cells. It only supports specific
+ * reusable item types.
  */
 
-import type { CardItem } from "@compoz/core/domain/pages/entities/cells/cards";
-import type { CardsExtendedItem } from "@compoz/core/domain/pages/entities/cells/cards-extended";
 import type { ImageEditor } from "@compoz/core/domain/pages/entities/cells/image-editor";
-import type { StructuredCardItem } from "@compoz/core/domain/pages/entities/cells/structured-card";
+import type { CardItem } from "@compoz/core/domain/pages/entities/items/card-item";
+import type { ExtendedCardItem } from "@compoz/core/domain/pages/entities/items/extended-card-item";
+import type { StructuredCardItem } from "@compoz/core/domain/pages/entities/items/structured-card-item";
 
 /**
- * Variantes visuelles supportées par la cellule carousel.
+ * Visual variants supported by the carousel cell.
  */
 export type CarouselVariant = "carousel" | "slider";
 
 /**
- * Types d’items autorisés dans le carousel.
+ * Supported item kinds inside a carousel.
  *
  * @remarks
- * Le carousel rend une liste homogène d’items :
- * tous les items d’une même cellule doivent partager le même `itemKind`.
+ * A carousel renders a homogeneous list of items: all items in the same cell
+ * must share the same `itemKind`.
+ *
+ * @todo
+ * The `"extendedCard"` and `"structuredCard"` values are temporarily kept
+ * for compatibility with existing KV data. They can be migrated to singular
+ * values in a dedicated data migration.
  */
 export type CarouselItemKind =
   | "image"
@@ -38,21 +42,21 @@ export type CarouselItemKind =
   | "structuredCard";
 
 /**
- * Union des items autorisés dans un carousel.
+ * Union of all items supported by a carousel.
  */
 export type CarouselItem =
   | ImageEditor
   | CardItem
-  | CardsExtendedItem
+  | ExtendedCardItem
   | StructuredCardItem;
 
 /**
- * Cellule de type `carousel`.
+ * Carousel cell.
  *
  * @remarks
- * - `variant` pilote le comportement visuel global.
- * - `itemKind` indique le type homogène de contenu rendu.
- * - `items` contient les données à afficher dans les slides.
+ * - `variant` controls the visual behavior.
+ * - `itemKind` identifies the homogeneous content type rendered by the slides.
+ * - `items` contains the slide content.
  */
 export type CarouselCell = {
   id: string;

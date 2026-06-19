@@ -1,22 +1,31 @@
 /**
  * @file packages/ui/src/renderer/cells/CardCollectionCellRenderer.tsx
  * @layer ui/renderer/cells
- * @description Rendu statique d’une collection homogène de cards.
+ *
+ * @description
+ * Static renderer for a homogeneous card collection.
+ *
+ * @remarks
+ * - UI-only: consumes an already validated cell shape.
+ * - The cell owns the outer wrapper, alignment, custom class, and selected card kind.
+ * - Item renderers own item filtering, grid rendering, and reveal behavior.
  */
 
 import type {
   CardCollectionCellShape,
-  CardCollectionItemShape,
+  CardItemShape,
+  ExtendedCardItemShape,
+  StructuredCardItemShape,
 } from "@compoz/validation/pages/blocks/cells/cell";
 
-import { normalizeString } from "@compoz/ui/lib/normalize";
 import { cn } from "@compoz/ui/lib/utils";
-import { SiteReveal } from "@compoz/ui/site/components/atoms/SiteReveal";
-import { SiteCardCollectionItem } from "@compoz/ui/site/components/organisms/SiteCardCollectionItem";
+import { CardItemsRenderer } from "@compoz/ui/renderer/items/CardItemsRenderer";
+import { ExtendedCardItemsRenderer } from "@compoz/ui/renderer/items/ExtendedCardItemsRenderer";
+import { StructuredCardItemsRenderer } from "@compoz/ui/renderer/items/StructuredCardItemsRenderer";
 import type {
   SiteCardCollectionUi,
-  SiteCardsExtendedUi,
-  SiteCardsUi,
+  SiteExtendedCardUi,
+  SiteCardUi,
   SiteRevealPresetUi,
   SiteStructuredCardUi,
 } from "@compoz/ui/site/site-ui.types";
@@ -24,8 +33,8 @@ import type {
 export type CardCollectionCellRendererProps = Readonly<{
   cell?: CardCollectionCellShape | null;
   ui: SiteCardCollectionUi;
-  cardsUi: SiteCardsUi;
-  cardsExtendedUi: SiteCardsExtendedUi;
+  cardUi: SiteCardUi;
+  extendedCardUi: SiteExtendedCardUi;
   structuredCardUi: SiteStructuredCardUi;
   revealUi: SiteRevealPresetUi;
 }>;
@@ -33,41 +42,27 @@ export type CardCollectionCellRendererProps = Readonly<{
 export function CardCollectionCellRenderer({
   cell,
   ui,
-  cardsUi,
-  cardsExtendedUi,
+  cardUi,
+  extendedCardUi,
   structuredCardUi,
   revealUi,
 }: CardCollectionCellRendererProps) {
   if (!cell?.items?.length) return null;
 
-  const items = (cell.items as ReadonlyArray<CardCollectionItemShape>).filter(
-    (item) => {
-      const title = normalizeString(item.title, "");
-
-      if (cell.cardKind !== "structuredCard") {
-        return Boolean(title);
-      }
-
-      const sections =
-        "sections" in item && Array.isArray(item.sections)
-          ? item.sections.filter((section) => {
-              const label = normalizeString(section.label, "");
-              const content = normalizeString(section.content, "");
-              return Boolean(label && content);
-            })
-          : [];
-
-      return Boolean(title && sections.length > 0);
-    },
-  );
-
-  if (items.length < 1) return null;
-
-  const columns = cell.columns;
   const align = cell.align;
   const reveal = cell.reveal === true;
-  const cols = Math.max(1, Math.floor(columns));
   const isStructuredCard = cell.cardKind === "structuredCard";
+
+  const content = renderCardCollectionItems({
+    cell,
+    cardUi,
+    extendedCardUi,
+    structuredCardUi,
+    revealUi,
+    reveal,
+  });
+
+  if (!content) return null;
 
   return (
     <div
@@ -77,68 +72,77 @@ export function CardCollectionCellRenderer({
       data-card-collection
       data-structured-card-cell={isStructuredCard ? true : undefined}
       data-card-kind={cell.cardKind}
-      data-card-columns={columns}
+      data-card-columns={cell.columns}
       data-card-align={align}
       data-reveal={reveal ? "true" : "false"}
     >
-      <div
-        className={cn(ui.grid, ui.columns[columns])}
-        data-card-grid
-        data-card-collection-grid
-        data-structured-card-grid={isStructuredCard ? true : undefined}
-      >
-        {items.map((item, index) => {
-          const seed = index % cols;
-
-          const content = (
-            <div
-              className="h-full"
-              data-card-content
-              data-card-collection-content
-              data-structured-card-content={isStructuredCard ? true : undefined}
-            >
-              <SiteCardCollectionItem
-                item={item}
-                cardKind={cell.cardKind}
-                align={align}
-                cardsUi={cardsUi}
-                cardsExtendedUi={cardsExtendedUi}
-                structuredCardUi={structuredCardUi}
-              />
-            </div>
-          );
-
-          return (
-            <div
-              key={item.id}
-              className={ui.item}
-              data-card-item
-              data-card-collection-item
-              data-structured-card-item={isStructuredCard ? true : undefined}
-              data-card-index={index}
-              data-card-column={seed}
-              data-structured-card-index={isStructuredCard ? index : undefined}
-              data-structured-card-column={isStructuredCard ? seed : undefined}
-            >
-              {reveal ? (
-                <SiteReveal
-                  revealUi={revealUi}
-                  seedOrder={seed}
-                  staggerMs={60}
-                  amount={0.1}
-                  className={ui.item}
-                >
-                  {content}
-                </SiteReveal>
-              ) : (
-                content
-              )}
-            </div>
-          );
-        })}
-      </div>
+      {content}
     </div>
   );
 }
 
 CardCollectionCellRenderer.displayName = "CardCollectionCellRenderer";
+
+type RenderCardCollectionItemsParams = Readonly<{
+  cell: CardCollectionCellShape;
+  cardUi: SiteCardUi;
+  extendedCardUi: SiteExtendedCardUi;
+  structuredCardUi: SiteStructuredCardUi;
+  revealUi: SiteRevealPresetUi;
+  reveal: boolean;
+}>;
+
+function renderCardCollectionItems({
+  cell,
+  cardUi,
+  extendedCardUi,
+  structuredCardUi,
+  revealUi,
+  reveal,
+}: RenderCardCollectionItemsParams) {
+  if (cell.cardKind === "card") {
+    return (
+      <CardItemsRenderer
+        items={cell.items as ReadonlyArray<CardItemShape>}
+        columns={toCardColumns(cell.columns)}
+        align={cell.align}
+        reveal={reveal}
+        ui={cardUi}
+        revealUi={revealUi}
+      />
+    );
+  }
+
+  if (cell.cardKind === "cardsExtended") {
+    return (
+      <ExtendedCardItemsRenderer
+        items={cell.items as ReadonlyArray<ExtendedCardItemShape>}
+        columns={toStackedColumns(cell.columns)}
+        align={cell.align}
+        reveal={reveal}
+        ui={extendedCardUi}
+        revealUi={revealUi}
+      />
+    );
+  }
+
+  return (
+    <StructuredCardItemsRenderer
+      items={cell.items as ReadonlyArray<StructuredCardItemShape>}
+      columns={toStackedColumns(cell.columns)}
+      reveal={reveal}
+      ui={structuredCardUi}
+      revealUi={revealUi}
+    />
+  );
+}
+
+function toCardColumns(columns: CardCollectionCellShape["columns"]): 2 | 3 | 4 {
+  return columns === 2 || columns === 3 || columns === 4 ? columns : 3;
+}
+
+function toStackedColumns(
+  columns: CardCollectionCellShape["columns"],
+): 1 | 2 | 3 {
+  return columns === 1 || columns === 2 || columns === 3 ? columns : 1;
+}

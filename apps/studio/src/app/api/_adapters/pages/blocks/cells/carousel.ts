@@ -1,21 +1,27 @@
 /**
  * @file apps/studio/src/app/api/_adapters/pages/blocks/cells/carousel.ts
  * @layer studio/app/api/adapters
+ *
  * @description
- * Adapteurs API Studio pour les cellules de type `CarouselCell`.
+ * Studio API adapter for CarouselCell.
+ *
+ * @remarks
+ * The carousel adapter owns cell-level concerns such as `variant`,
+ * `showDots`, `showArrows`, `itemKind`, and `cssClassName`.
+ *
+ * Reusable item shapes are delegated to item adapters.
  */
 
-import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
-
 import type { CarouselCell } from "@compoz/core/domain/pages/entities/cell";
-import { adaptCardsCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/cards";
-import { adaptCardsExtendedCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/cards-extended";
 import { adaptImage } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/image";
-import { adaptStructuredCardCell } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/structured-card";
+import { adaptCardItem } from "@compoz/studio/app/api/_adapters/pages/blocks/items/card-item";
+import { adaptExtendedCardItem } from "@compoz/studio/app/api/_adapters/pages/blocks/items/extended-card-item";
+import { adaptStructuredCardItem } from "@compoz/studio/app/api/_adapters/pages/blocks/items/structured-card-item";
+import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";
 import type {
   CardItemIntentDTO,
-  CardsExtendedItemIntentDTO,
   CarouselCellIntentDTO,
+  ExtendedCardItemIntentDTO,
   ImageEditorIntentDTO,
   StructuredCardItemIntentDTO,
 } from "@compoz/validation/pages/blocks/cells/cell-intents";
@@ -23,32 +29,16 @@ import type {
 export function adaptCarouselCell(dto: CarouselCellIntentDTO): CarouselCell {
   const items =
     dto.itemKind === "image"
-      ? (dto.items as ImageEditorIntentDTO[]).map((item) => adaptImage(item))
+      ? (dto.items as ImageEditorIntentDTO[]).map(adaptImage)
       : dto.itemKind === "card"
-        ? adaptCardsCell({
-            id: dto.id,
-            kind: "cards",
-            columns: 2,
-            align: "left",
-            reveal: true,
-            items: dto.items as CardItemIntentDTO[],
-          }).items
+        ? (dto.items as CardItemIntentDTO[]).map(adaptCardItem)
         : dto.itemKind === "cardsExtended"
-          ? adaptCardsExtendedCell({
-              id: dto.id,
-              kind: "cardsExtended",
-              columns: 2,
-              align: "left",
-              reveal: true,
-              items: dto.items as CardsExtendedItemIntentDTO[],
-            }).items
-          : adaptStructuredCardCell({
-              id: dto.id,
-              kind: "structuredCard",
-              columns: 1,
-              reveal: true,
-              items: dto.items as StructuredCardItemIntentDTO[],
-            }).items;
+          ? (dto.items as ExtendedCardItemIntentDTO[]).map(
+              adaptExtendedCardItem,
+            )
+          : (dto.items as StructuredCardItemIntentDTO[]).map(
+              adaptStructuredCardItem,
+            );
 
   return {
     id: trimOrKeep(dto.id),

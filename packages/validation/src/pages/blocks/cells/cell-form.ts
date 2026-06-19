@@ -1,8 +1,9 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/cell-form.ts
  * @layer schemas
+ *
  * @description
- * Schémas Zod décrivant la forme des formulaires UI (RHF) pour l’édition des cells.
+ * Zod schemas describing the UI form shape used to edit cells with RHF.
  */
 
 import { z } from "zod";
@@ -16,13 +17,11 @@ import {
   CardCollectionCellSchema,
   CardCollectionItemSchema,
   CardItemSchema,
-  CardsCellSchema,
-  CardsExtendedCellSchema,
-  CardsExtendedItemSchema,
   CarouselCellSchema,
   CarouselItemKindSchema,
   CarouselItemSchema,
   CarouselVariantSchema,
+  ExtendedCardItemSchema,
   FormCellSchema,
   FormFieldSchema,
   FormSubmitButtonSchema,
@@ -35,7 +34,6 @@ import {
   SpacerCellSchema,
   StepItemSchema,
   StepsCellSchema,
-  StructuredCardCellSchema,
   StructuredCardItemSchema,
   StructuredCardSectionSchema,
   TestimonialItemSchema,
@@ -56,11 +54,8 @@ export const CellFormSchema = z.discriminatedUnion("kind", [
   GalleryCellSchema,
   CarouselCellSchema,
   CardCollectionCellSchema,
-  CardsCellSchema,
-  CardsExtendedCellSchema,
   StepsCellSchema,
   TestimonialsCellSchema,
-  StructuredCardCellSchema,
   FormCellSchema,
   TimelineCellSchema,
 ]);
@@ -102,17 +97,20 @@ export type ButtonsCellFormValues = z.infer<typeof ButtonsCellFormValuesSchema>;
 export const CardItemFormValuesSchema = CardItemSchema;
 export type CardItemFormValues = z.infer<typeof CardItemFormValuesSchema>;
 
-export const CardsCellFormValuesSchema = CardsCellSchema;
-export type CardsCellFormValues = z.infer<typeof CardsCellFormValuesSchema>;
-
-export const CardsExtendedItemFormValuesSchema = CardsExtendedItemSchema;
-export type CardsExtendedItemFormValues = z.infer<
-  typeof CardsExtendedItemFormValuesSchema
+export const ExtendedCardItemFormValuesSchema = ExtendedCardItemSchema;
+export type ExtendedCardItemFormValues = z.infer<
+  typeof ExtendedCardItemFormValuesSchema
 >;
 
-export const CardsExtendedCellFormValuesSchema = CardsExtendedCellSchema;
-export type CardsExtendedCellFormValues = z.infer<
-  typeof CardsExtendedCellFormValuesSchema
+export const StructuredCardSectionFormValuesSchema =
+  StructuredCardSectionSchema;
+export type StructuredCardSectionFormValues = z.infer<
+  typeof StructuredCardSectionFormValuesSchema
+>;
+
+export const StructuredCardItemFormValuesSchema = StructuredCardItemSchema;
+export type StructuredCardItemFormValues = z.infer<
+  typeof StructuredCardItemFormValuesSchema
 >;
 
 export const CarouselVariantFormValuesSchema = CarouselVariantSchema;
@@ -178,22 +176,6 @@ export type TestimonialsCellFormValues = z.infer<
   typeof TestimonialsCellFormValuesSchema
 >;
 
-export const StructuredCardSectionFormValuesSchema =
-  StructuredCardSectionSchema;
-export type StructuredCardSectionFormValues = z.infer<
-  typeof StructuredCardSectionFormValuesSchema
->;
-
-export const StructuredCardItemFormValuesSchema = StructuredCardItemSchema;
-export type StructuredCardItemFormValues = z.infer<
-  typeof StructuredCardItemFormValuesSchema
->;
-
-export const StructuredCardCellFormValuesSchema = StructuredCardCellSchema;
-export type StructuredCardCellFormValues = z.infer<
-  typeof StructuredCardCellFormValuesSchema
->;
-
 export const FormFieldFormValuesSchema = FormFieldSchema;
 export type FormFieldFormValues = z.infer<typeof FormFieldFormValuesSchema>;
 
@@ -211,7 +193,6 @@ export type TimelineItemFormValues = z.infer<
 >;
 
 export const TimelineCellFormValuesSchema = TimelineCellSchema;
-
 export type TimelineCellFormValues = z.infer<
   typeof TimelineCellFormValuesSchema
 >;

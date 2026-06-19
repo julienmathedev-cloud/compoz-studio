@@ -3,15 +3,13 @@
  * @layer ui/renderer
  *
  * @description
- * Registry des renderers de cellules.
+ * Cell renderer registry.
  */
 
 import type { ReactNode } from "react";
 
 import { ButtonsCellRenderer } from "@compoz/ui/renderer/cells/ButtonsCellRenderer";
 import { CardCollectionCellRenderer } from "@compoz/ui/renderer/cells/CardCollectionCellRenderer";
-import { CardsCellRenderer } from "@compoz/ui/renderer/cells/CardsCellRenderer";
-import { CardsExtendedCellRenderer } from "@compoz/ui/renderer/cells/CardsExtendedCellRenderer";
 import { CarouselCellRenderer } from "@compoz/ui/renderer/cells/CarouselCellRenderer";
 import { FormCellRenderer } from "@compoz/ui/renderer/cells/FormCellRenderer";
 import { GalleryCellRenderer } from "@compoz/ui/renderer/cells/GalleryCellRenderer";
@@ -21,7 +19,6 @@ import { RichTextCellRenderer } from "@compoz/ui/renderer/cells/RichTextCellRend
 import { SeparatorCellRenderer } from "@compoz/ui/renderer/cells/SeparatorCellRenderer";
 import { SpacerCellRenderer } from "@compoz/ui/renderer/cells/SpacerCellRenderer";
 import { StepsCellRenderer } from "@compoz/ui/renderer/cells/StepsCellRenderer";
-import { StructuredCardCellRenderer } from "@compoz/ui/renderer/cells/StructuredCardCellRenderer";
 import { TestimonialsCellRenderer } from "@compoz/ui/renderer/cells/TestimonialsCellRenderer";
 import { TimelineCellRenderer } from "@compoz/ui/renderer/cells/TimelineCellRenderer";
 
@@ -33,8 +30,6 @@ import type {
 import type {
   ButtonsCellShape,
   CardCollectionCellShape,
-  CardsCellShape,
-  CardsExtendedCellShape,
   CarouselCellShape,
   CellShape,
   FormCellShape,
@@ -45,7 +40,6 @@ import type {
   SeparatorCellShape,
   SpacerCellShape,
   StepsCellShape,
-  StructuredCardCellShape,
   TestimonialsCellShape,
   TimelineCellShape,
 } from "@compoz/validation/pages/blocks/cells/cell";
@@ -96,25 +90,9 @@ export const cellRegistry: Record<string, CellRenderer> = {
     <CardCollectionCellRenderer
       cell={cell as CardCollectionCellShape}
       ui={ui.cardCollection}
-      cardsUi={ui.cards}
-      cardsExtendedUi={ui.cardsExtended}
+      cardUi={ui.card}
+      extendedCardUi={ui.extendedCard}
       structuredCardUi={ui.structuredCard}
-      revealUi={revealUi}
-    />
-  ),
-
-  cards: ({ cell, ui, revealUi }) => (
-    <CardsCellRenderer
-      cell={cell as CardsCellShape}
-      ui={ui.cards}
-      revealUi={revealUi}
-    />
-  ),
-
-  cardsExtended: ({ cell, ui, revealUi }) => (
-    <CardsExtendedCellRenderer
-      cell={cell as CardsExtendedCellShape}
-      ui={ui.cardsExtended}
       revealUi={revealUi}
     />
   ),
@@ -132,14 +110,6 @@ export const cellRegistry: Record<string, CellRenderer> = {
 
   timeline: ({ cell, ui }) => (
     <TimelineCellRenderer cell={cell as TimelineCellShape} ui={ui.timeline} />
-  ),
-
-  structuredCard: ({ cell, ui, revealUi }) => (
-    <StructuredCardCellRenderer
-      cell={cell as StructuredCardCellShape}
-      ui={ui.structuredCard}
-      revealUi={revealUi}
-    />
   ),
 
   form: ({ cell, ui }) => (

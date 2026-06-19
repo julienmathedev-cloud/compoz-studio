@@ -176,9 +176,9 @@ export const I18N_RUNTIME_KEYS = {
       "studio.cellEditorTabs.kinds.spacer",
       "studio.cellEditorTabs.kinds.separator",
       "studio.cellEditorTabs.kinds.buttons",
-      "studio.cellEditorTabs.kinds.cards",
+      "studio.cellEditorTabs.kinds.card",
       "studio.cellEditorTabs.kinds.cardCollection",
-      "studio.cellEditorTabs.kinds.cardsExtended",
+      "studio.cellEditorTabs.kinds.extendedCard",
       "studio.cellEditorTabs.kinds.steps",
       "studio.cellEditorTabs.kinds.testimonials",
       "studio.cellEditorTabs.kinds.structuredCard",
@@ -205,7 +205,7 @@ export const I18N_RUNTIME_KEYS = {
   cardCollectionCellEditor: {
     cardKinds: [
       "studio.cellEditorTabs.cardCollectionCellEditor.cardKinds.card",
-      "studio.cellEditorTabs.cardCollectionCellEditor.cardKinds.cardsExtended",
+      "studio.cellEditorTabs.cardCollectionCellEditor.cardKinds.extendedCard",
       "studio.cellEditorTabs.cardCollectionCellEditor.cardKinds.structuredCard",
     ] as const,
     columns: [

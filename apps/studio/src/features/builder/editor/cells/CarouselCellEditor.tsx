@@ -5,21 +5,21 @@
  * @layer ui/studio/pages/blocks/editor/cells
  *
  * @description
- * Éditeur RHF-aware d’une CarouselCell avec options de cadre
- * et rendu dynamique d’une liste homogène d’items.
+ * RHF-aware editor for a CarouselCell with frame options and a dynamic
+ * homogeneous item list.
  *
  * @remarks
- * - Connecté directement à RHF via `useController`, `useFieldArray` et `useWatch`.
- * - Le carousel porte uniquement :
+ * - Connected directly to RHF through `useController`, `useFieldArray`, and `useWatch`.
+ * - The carousel only owns:
  *   - `variant`
  *   - `showDots`
  *   - `showArrows`
  *   - `itemKind`
  *   - `items`
- * - Les contenus sont édités via les ListEditors dédiés.
- * - Le reorder des items s’appuie sur `move()` pour conserver l’état RHF.
- * - `replace()` reste utilisé pour les remplacements volontaires de collection
- *   (ex: changement de `itemKind`).
+ * - Item content is edited through dedicated ListEditors.
+ * - Item reordering relies on `move()` to preserve RHF state.
+ * - `replace()` is only used for intentional collection replacements
+ *   such as changing `itemKind`.
  */
 
 import { useTranslations } from "next-intl";
@@ -29,13 +29,13 @@ import { useController, useFieldArray, useWatch } from "react-hook-form";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
-import { CardExtendedListEditor } from "@compoz/studio/features/builder/editor/cells/cards-extended/CardExtendedListEditor";
-import { CardListEditor } from "@compoz/studio/features/builder/editor/cells/cards/CardListEditor";
+import { CardListEditor } from "@compoz/studio/features/builder/editor/cells/card/CardListEditor";
+import { ExtendedCardListEditor } from "@compoz/studio/features/builder/editor/cells/extended-card/ExtendedCardListEditor";
 import { ImageListEditor } from "@compoz/studio/features/builder/editor/cells/images/ImageListEditor";
-import { StructuredCardListEditor } from "@compoz/studio/features/builder/editor/cells/structured-cards/StructuredCardListEditor";
+import { StructuredCardListEditor } from "@compoz/studio/features/builder/editor/cells/structured-card/StructuredCardListEditor";
 import {
   createEmptyCardItem,
-  createEmptyCardsExtendedItem,
+  createEmptyExtendedCardItem,
   createEmptyImageEditor,
   createEmptyStructuredCardItem,
 } from "@compoz/studio/features/pages/mappers/cells-form";
@@ -46,7 +46,7 @@ import { ROW_SM, STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 import type {
   CardItemFormValues,
-  CardsExtendedItemFormValues,
+  ExtendedCardItemFormValues,
   ImageEditorFormValues,
   StructuredCardItemFormValues,
 } from "@compoz/validation/pages/blocks/cells/cell-form";
@@ -82,7 +82,7 @@ type CarouselItemsPath = `${CarouselFieldBasePath}.items`;
 
 type ImageItemField = ImageEditorFormValues & { fieldId: string };
 type CardItemField = CardItemFormValues & { fieldId: string };
-type CardsExtendedItemField = CardsExtendedItemFormValues & {
+type ExtendedCardItemField = ExtendedCardItemFormValues & {
   fieldId: string;
 };
 type StructuredCardItemField = StructuredCardItemFormValues & {
@@ -101,7 +101,7 @@ export type CarouselCellEditorProps = Readonly<{
 function getEmptyItemByKind(kind: CarouselItemKind) {
   if (kind === "image") return createEmptyImageEditor();
   if (kind === "card") return createEmptyCardItem();
-  if (kind === "cardsExtended") return createEmptyCardsExtendedItem();
+  if (kind === "cardsExtended") return createEmptyExtendedCardItem();
   return createEmptyStructuredCardItem();
 }
 
@@ -156,7 +156,7 @@ export function CarouselCellEditor({
   }) ?? []) as Array<
     | ImageEditorFormValues
     | CardItemFormValues
-    | CardsExtendedItemFormValues
+    | ExtendedCardItemFormValues
     | StructuredCardItemFormValues
   >;
 
@@ -299,17 +299,17 @@ export function CarouselCellEditor({
       ) : null}
 
       {itemKind === "cardsExtended" ? (
-        <CardExtendedListEditor
+        <ExtendedCardListEditor
           control={control}
           idPrefix={idPrefix}
           basePath={basePath}
-          fields={fields as CardsExtendedItemField[]}
-          watchedItems={watchedItems as CardsExtendedItemFormValues[]}
+          fields={fields as ExtendedCardItemField[]}
+          watchedItems={watchedItems as ExtendedCardItemFormValues[]}
           append={append}
           remove={remove}
           move={move}
           disabled={disabled}
-          createEmptyItem={createEmptyCardsExtendedItem}
+          createEmptyItem={createEmptyExtendedCardItem}
           minItems={1}
           showError={showError}
         />

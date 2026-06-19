@@ -9,9 +9,7 @@ import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type { Cell } from "@compoz/core/domain/pages/entities/cell";
 import { assertButtonsCell } from "@compoz/core/domain/pages/validators/cells/button";
-import { assertCardsCell } from "@compoz/core/domain/pages/validators/cells/card";
 import { assertCardCollectionCell } from "@compoz/core/domain/pages/validators/cells/card-collection";
-import { assertCardsExtendedCell } from "@compoz/core/domain/pages/validators/cells/card-extended";
 import { assertCarouselCell } from "@compoz/core/domain/pages/validators/cells/carousel";
 import { assertFormCell } from "@compoz/core/domain/pages/validators/cells/form";
 import {
@@ -29,7 +27,6 @@ import { assertRichText } from "@compoz/core/domain/pages/validators/cells/rich-
 import { assertSeparatorCell } from "@compoz/core/domain/pages/validators/cells/separator";
 import { assertSpacerCell } from "@compoz/core/domain/pages/validators/cells/spacer";
 import { assertStepsCell } from "@compoz/core/domain/pages/validators/cells/step";
-import { assertStructuredCardCell } from "@compoz/core/domain/pages/validators/cells/structured-card";
 import { assertTestimonialsCell } from "@compoz/core/domain/pages/validators/cells/testimonials";
 import { assertTimelineCell } from "@compoz/core/domain/pages/validators/cells/timeline";
 
@@ -75,38 +72,6 @@ export function assertCell(cell: Cell, path: Path): void {
       assertButtonsCell(cell, path);
       return;
 
-    case "cards":
-      assertCardsCell(cell, path);
-      return;
-
-    case "cardCollection":
-      assertCardCollectionCell(cell, path);
-      return;
-
-    case "cardsExtended":
-      assertCardsExtendedCell(cell, path);
-      return;
-
-    case "steps":
-      assertStepsCell(cell, path);
-      return;
-
-    case "testimonials":
-      assertTestimonialsCell(cell, path);
-      return;
-
-    case "timeline":
-      assertTimelineCell(cell, path);
-      return;
-
-    case "structuredCard":
-      assertStructuredCardCell(cell, path);
-      return;
-
-    case "form":
-      assertFormCell(cell, path);
-      return;
-
     case "image":
       assertSingleImageCell(cell, path);
       return;
@@ -118,6 +83,26 @@ export function assertCell(cell: Cell, path: Path): void {
 
     case "carousel":
       assertCarouselCell(cell, path);
+      return;
+
+    case "cardCollection":
+      assertCardCollectionCell(cell, path);
+      return;
+
+    case "steps":
+      assertStepsCell(cell, path);
+      return;
+
+    case "testimonials":
+      assertTestimonialsCell(cell, path);
+      return;
+
+    case "form":
+      assertFormCell(cell, path);
+      return;
+
+    case "timeline":
+      assertTimelineCell(cell, path);
       return;
 
     default:

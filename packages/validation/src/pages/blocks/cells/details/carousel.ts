@@ -1,21 +1,29 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/details/carousel.ts
  * @layer schemas
+ *
  * @description
- * Schéma Zod de CarouselCell.
+ * Zod schema for CarouselCell.
+ *
+ * @remarks
+ * A carousel is a layout cell responsible for rendering a homogeneous list
+ * of supported items as slides.
+ *
+ * The item schemas are defined separately because they can be reused by
+ * other higher-level cells such as `cardCollection`.
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
-import { CardItemSchema } from "@compoz/validation/pages/blocks/cells/details/cards";
-import { CardsExtendedItemSchema } from "@compoz/validation/pages/blocks/cells/details/cards-extended";
 import {
   CellCssClassNameSchema,
   CellIdSchema,
 } from "@compoz/validation/pages/blocks/cells/details/common";
 import { ImageEditorSchema } from "@compoz/validation/pages/blocks/cells/details/image-editor";
-import { StructuredCardItemSchema } from "@compoz/validation/pages/blocks/cells/details/structured-card";
+import { CardItemSchema } from "@compoz/validation/pages/blocks/items/card-item";
+import { ExtendedCardItemSchema } from "@compoz/validation/pages/blocks/items/extended-card-item";
+import { StructuredCardItemSchema } from "@compoz/validation/pages/blocks/items/structured-card-item";
 
 export const CarouselVariantSchema = z.enum(["carousel", "slider"], {
   message: ERROR_CODES.CELL_CAROUSEL_VARIANT_INVALID,
@@ -29,17 +37,17 @@ export const CarouselItemKindSchema = z.enum(
 );
 
 /**
- * Schéma générique d’un item de carousel.
+ * Generic schema for a carousel item.
  *
  * @remarks
- * - Représente l’union de tous les items autorisés dans une carousel cell.
- * - Ne suffit pas à lui seul à valider la cohérence avec `itemKind`.
- * - Cette cohérence reste validée dans `CarouselCellSchema.superRefine`.
+ * - Represents the union of all items allowed in a carousel cell.
+ * - Does not guarantee consistency with `itemKind` by itself.
+ * - This consistency is validated in `CarouselCellSchema.superRefine`.
  */
 export const CarouselItemSchema = z.union([
   ImageEditorSchema,
   CardItemSchema,
-  CardsExtendedItemSchema,
+  ExtendedCardItemSchema,
   StructuredCardItemSchema,
 ]);
 
@@ -73,7 +81,7 @@ export const CarouselCellSchema = z
     const schemaMap = {
       image: ImageEditorSchema,
       card: CardItemSchema,
-      cardsExtended: CardsExtendedItemSchema,
+      cardsExtended: ExtendedCardItemSchema,
       structuredCard: StructuredCardItemSchema,
     } as const;
 

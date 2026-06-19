@@ -32,6 +32,7 @@ import { useSettingsSectionForm } from "@compoz/studio/features/settings/_shared
 import { useStableWarningKeys } from "@compoz/studio/features/settings/_shared/useStableWarningKeys";
 import { SeoIndexationFields } from "@compoz/studio/features/settings/seo/components/molecules/SeoIndexationFields";
 import { SeoOpenGraphFields } from "@compoz/studio/features/settings/seo/components/molecules/SeoOpenGraphFields";
+import { SeoStructuredDataFields } from "@compoz/studio/features/settings/seo/components/molecules/SeoStructuredDataFields";
 import { SeoTwitterFields } from "@compoz/studio/features/settings/seo/components/molecules/SeoTwitterFields";
 import type { SeoWarningKey } from "@compoz/studio/features/settings/seo/validate";
 import { useSeoUiWarnings } from "@compoz/studio/features/settings/seo/validate";
@@ -407,7 +408,6 @@ export function SeoForm({
               control={control}
               isBusy={isBusy}
               t={t}
-              idPrefix={idPrefix}
               baseUrlIds={baseUrlIds}
               invalidBaseUrl={invalidBaseUrl}
               baseUrlError={baseUrlError}
@@ -420,6 +420,7 @@ export function SeoForm({
             />
 
             {/* ===== Twitter ===== */}
+
             <SeoTwitterFields
               control={control}
               isBusy={isBusy}
@@ -428,6 +429,15 @@ export function SeoForm({
               idPrefix={idPrefix}
             />
           </FormGrid>
+
+          <Separator />
+
+          <SeoStructuredDataFields
+            control={control}
+            isBusy={isBusy}
+            t={t}
+            idPrefix={idPrefix}
+          />
 
           <Separator />
 

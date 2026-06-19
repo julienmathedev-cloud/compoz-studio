@@ -18,6 +18,7 @@ import type {
   ExtendedCardItemDTO,
   StructuredCardItemDTO,
 } from "@compoz/core/domain/pages/dto";
+import { normalizeCardCollectionCardKind } from "@compoz/core/domain/pages/entities/cell";
 import { toCardItemsShapeFromDTO } from "@compoz/ui/pages/mappers/items/card-item";
 import { toExtendedCardItemsShapeFromDTO } from "@compoz/ui/pages/mappers/items/extended-card-item";
 import { toStructuredCardItemsShapeFromDTO } from "@compoz/ui/pages/mappers/items/structured-card-item";
@@ -26,10 +27,12 @@ import type { CardCollectionCellFormValues } from "@compoz/validation/pages/bloc
 export function toCardCollectionCellShapeFromDTO(
   cell: CardCollectionCellDTO,
 ): CardCollectionCellFormValues {
+  const cardKind = normalizeCardCollectionCardKind(cell.cardKind);
+
   const items =
-    cell.cardKind === "card"
+    cardKind === "card"
       ? toCardItemsShapeFromDTO(cell.items as CardItemDTO[])
-      : cell.cardKind === "cardsExtended"
+      : cardKind === "extendedCard"
         ? toExtendedCardItemsShapeFromDTO(cell.items as ExtendedCardItemDTO[])
         : toStructuredCardItemsShapeFromDTO(
             cell.items as StructuredCardItemDTO[],
@@ -39,7 +42,7 @@ export function toCardCollectionCellShapeFromDTO(
     id: cell.id,
     kind: "cardCollection",
     cssClassName: cell.cssClassName,
-    cardKind: cell.cardKind,
+    cardKind,
     columns: cell.columns,
     align: cell.align,
     reveal: cell.reveal,

@@ -117,7 +117,7 @@ export function SiteCarouselItem({
     );
   }
 
-  if (item.kind === "cardsExtended") {
+  if (item.kind === "extendedCard") {
     return (
       <div className={contentStateClassName}>
         <SiteExtendedCard

@@ -18,14 +18,15 @@ import type {
   StructuredCardItemShape,
 } from "@compoz/validation/pages/blocks/cells/cell";
 
+import { normalizeCardCollectionCardKind } from "@compoz/core/domain/pages/entities/cell";
 import { cn } from "@compoz/ui/lib/utils";
 import { CardItemsRenderer } from "@compoz/ui/renderer/items/CardItemsRenderer";
 import { ExtendedCardItemsRenderer } from "@compoz/ui/renderer/items/ExtendedCardItemsRenderer";
 import { StructuredCardItemsRenderer } from "@compoz/ui/renderer/items/StructuredCardItemsRenderer";
 import type {
   SiteCardCollectionUi,
-  SiteExtendedCardUi,
   SiteCardUi,
+  SiteExtendedCardUi,
   SiteRevealPresetUi,
   SiteStructuredCardUi,
 } from "@compoz/ui/site/site-ui.types";
@@ -51,7 +52,8 @@ export function CardCollectionCellRenderer({
 
   const align = cell.align;
   const reveal = cell.reveal === true;
-  const isStructuredCard = cell.cardKind === "structuredCard";
+  const cardKind = normalizeCardCollectionCardKind(cell.cardKind);
+  const isStructuredCard = cardKind === "structuredCard";
 
   const content = renderCardCollectionItems({
     cell,
@@ -68,10 +70,8 @@ export function CardCollectionCellRenderer({
     <div
       className={cn(ui.root, ui.align[align], cell.cssClassName)}
       data-cell="cardCollection"
-      data-card-cell
       data-card-collection
-      data-structured-card-cell={isStructuredCard ? true : undefined}
-      data-card-kind={cell.cardKind}
+      data-card-kind={cardKind}
       data-card-columns={cell.columns}
       data-card-align={align}
       data-reveal={reveal ? "true" : "false"}
@@ -100,7 +100,9 @@ function renderCardCollectionItems({
   revealUi,
   reveal,
 }: RenderCardCollectionItemsParams) {
-  if (cell.cardKind === "card") {
+  const cardKind = normalizeCardCollectionCardKind(cell.cardKind);
+
+  if (cardKind === "card") {
     return (
       <CardItemsRenderer
         items={cell.items as ReadonlyArray<CardItemShape>}
@@ -113,7 +115,7 @@ function renderCardCollectionItems({
     );
   }
 
-  if (cell.cardKind === "cardsExtended") {
+  if (cardKind === "extendedCard") {
     return (
       <ExtendedCardItemsRenderer
         items={cell.items as ReadonlyArray<ExtendedCardItemShape>}

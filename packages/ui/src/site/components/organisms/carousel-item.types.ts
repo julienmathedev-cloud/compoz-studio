@@ -24,8 +24,8 @@ export type NormalizedCardItem = Readonly<{
   icon?: string;
 }>;
 
-export type NormalizedextendedCardItem = Readonly<{
-  kind: "cardsExtended";
+export type NormalizedExtendedCardItem = Readonly<{
+  kind: "extendedCard";
   id: string;
   title: string;
   description: string;
@@ -62,5 +62,5 @@ export type NormalizedStructuredCardItem = Readonly<{
 export type NormalizedCarouselItem =
   | NormalizedImageItem
   | NormalizedCardItem
-  | NormalizedextendedCardItem
+  | NormalizedExtendedCardItem
   | NormalizedStructuredCardItem;

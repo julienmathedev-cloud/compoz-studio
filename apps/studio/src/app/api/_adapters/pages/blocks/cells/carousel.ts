@@ -12,7 +12,10 @@
  * Reusable item shapes are delegated to item adapters.
  */
 
-import type { CarouselCell } from "@compoz/core/domain/pages/entities/cell";
+import {
+  normalizeCarouselItemKind,
+  type CarouselCell,
+} from "@compoz/core/domain/pages/entities/cell";
 import { adaptImage } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/image";
 import { adaptCardItem } from "@compoz/studio/app/api/_adapters/pages/blocks/items/card-item";
 import { adaptExtendedCardItem } from "@compoz/studio/app/api/_adapters/pages/blocks/items/extended-card-item";
@@ -27,12 +30,14 @@ import type {
 } from "@compoz/validation/pages/blocks/cells/cell-intents";
 
 export function adaptCarouselCell(dto: CarouselCellIntentDTO): CarouselCell {
+  const itemKind = normalizeCarouselItemKind(dto.itemKind);
+
   const items =
-    dto.itemKind === "image"
+    itemKind === "image"
       ? (dto.items as ImageEditorIntentDTO[]).map(adaptImage)
-      : dto.itemKind === "card"
+      : itemKind === "card"
         ? (dto.items as CardItemIntentDTO[]).map(adaptCardItem)
-        : dto.itemKind === "cardsExtended"
+        : itemKind === "extendedCard"
           ? (dto.items as ExtendedCardItemIntentDTO[]).map(
               adaptExtendedCardItem,
             )
@@ -47,7 +52,7 @@ export function adaptCarouselCell(dto: CarouselCellIntentDTO): CarouselCell {
     variant: dto.variant,
     showDots: dto.showDots,
     showArrows: dto.showArrows,
-    itemKind: dto.itemKind,
+    itemKind,
     items,
   };
 }

@@ -1,14 +1,23 @@
 /**
  * @file scripts/audit-legacy-card-cells.mjs
  *
- * Audit read-only des anciennes cells cards / cardsExtended / structuredCard
- * dans toute la base KV / Upstash Redis.
+ * Read-only audit for remaining legacy "cardsExtended" values
+ * in KV / Upstash Redis page data.
+ *
+ * This script does not modify data.
  *
  * Usage:
- * node scripts/audit-legacy-card-cells.mjs
+ * pnpm dlx dotenv-cli -e apps/studio/.env.local -- node scripts/audit-legacy-card-cells.mjs
  */
 
-const LEGACY_KINDS = new Set(["cards", "cardsExtended", "structuredCard"]);
+const LEGACY_VALUE = "cardsExtended";
+
+const TARGET_FIELDS = new Set(["itemKind", "cardKind"]);
+
+const DEFAULT_SCAN_PATTERNS = [
+  "compoz:*:draft:pages:*",
+  "compoz:*:published:pages:*",
+];
 
 const REST_URL =
   process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
@@ -19,11 +28,11 @@ const REST_TOKEN =
 if (!REST_URL || !REST_TOKEN) {
   console.error(
     [
-      "❌ Variables d'environnement manquantes.",
+      "❌ Missing environment variables.",
       "",
-      "Attendues :",
+      "Expected:",
       "- KV_REST_API_URL + KV_REST_API_TOKEN",
-      "ou",
+      "or",
       "- UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN",
     ].join("\n"),
   );
@@ -66,73 +75,94 @@ function safeJsonParse(value) {
   }
 }
 
-function findLegacyCells(value, path = "$", matches = []) {
-  if (!value || typeof value !== "object") return matches;
+function parseCompozKey(key) {
+  const [, tenantId, scope, resource, pageKey] = key.split(":");
 
-  if (
-    !Array.isArray(value) &&
-    typeof value.kind === "string" &&
-    LEGACY_KINDS.has(value.kind)
-  ) {
-    matches.push({
-      path,
-      kind: value.kind,
-      id: typeof value.id === "string" ? value.id : null,
-      itemCount: Array.isArray(value.items) ? value.items.length : null,
-    });
-  }
+  return {
+    tenantId: tenantId ?? "unknown",
+    scope: scope ?? "unknown",
+    resource: resource ?? "unknown",
+    pageKey: pageKey ?? "unknown",
+  };
+}
+
+function shouldIgnoreKey(key) {
+  const { tenantId } = parseCompozKey(key);
+
+  return tenantId.startsWith("demo-");
+}
+
+function findLegacyCardsExtendedValues(value, path = "$", matches = []) {
+  if (!value || typeof value !== "object") return matches;
 
   if (Array.isArray(value)) {
     value.forEach((item, index) => {
-      findLegacyCells(item, `${path}[${index}]`, matches);
+      findLegacyCardsExtendedValues(item, `${path}[${index}]`, matches);
     });
 
     return matches;
   }
 
   for (const [key, child] of Object.entries(value)) {
-    findLegacyCells(child, `${path}.${key}`, matches);
+    const childPath = `${path}.${key}`;
+
+    if (child === LEGACY_VALUE) {
+      matches.push({
+        path: childPath,
+        field: key,
+        isTargetField: TARGET_FIELDS.has(key),
+        parentKind: typeof value.kind === "string" ? value.kind : null,
+        parentId: typeof value.id === "string" ? value.id : null,
+        itemCount: Array.isArray(value.items) ? value.items.length : null,
+      });
+
+      continue;
+    }
+
+    findLegacyCardsExtendedValues(child, childPath, matches);
   }
 
   return matches;
 }
 
-async function scanKeys() {
+async function scanKeysForPattern(pattern) {
   const keys = [];
-
   let cursor = "0";
 
   do {
     const result = await redis([
       "SCAN",
-
       cursor,
-
       "MATCH",
-
-      "compoz:*:draft:pages:*",
-
+      pattern,
       "COUNT",
-
       "500",
     ]);
 
     cursor = String(result[0]);
 
-    keys.push(
-      ...result[1].filter((key) => {
-        const tenantId = key.split(":")[1];
-
-        return tenantId && !tenantId.startsWith("demo-");
-      }),
-    );
+    keys.push(...result[1].filter((key) => !shouldIgnoreKey(key)));
   } while (cursor !== "0");
 
   return keys;
 }
 
+async function scanKeys() {
+  const uniqueKeys = new Set();
+
+  for (const pattern of DEFAULT_SCAN_PATTERNS) {
+    const keys = await scanKeysForPattern(pattern);
+
+    for (const key of keys) {
+      uniqueKeys.add(key);
+    }
+  }
+
+  return Array.from(uniqueKeys).sort();
+}
+
 async function main() {
-  console.log("🔎 Scan KV en cours...");
+  console.log("🔎 Scanning KV for legacy cardsExtended values...");
 
   const keys = await scanKeys();
   const report = [];
@@ -143,40 +173,59 @@ async function main() {
 
     if (!parsed) continue;
 
-    const matches = findLegacyCells(parsed);
+    const matches = findLegacyCardsExtendedValues(parsed);
 
     if (matches.length > 0) {
       report.push({
         key,
+        ...parseCompozKey(key),
         matches,
       });
     }
   }
 
+  const totalMatches = report.reduce(
+    (total, entry) => total + entry.matches.length,
+    0,
+  );
+
   console.log("");
-  console.log(`📦 Clés scannées : ${keys.length}`);
-  console.log(`🧩 Clés contenant d'anciennes cells : ${report.length}`);
+  console.log(`📦 Keys scanned: ${keys.length}`);
+  console.log(`🧩 Keys containing legacy values: ${report.length}`);
+  console.log(
+    `🔁 Total legacy "${LEGACY_VALUE}" values found: ${totalMatches}`,
+  );
 
   if (report.length === 0) {
     console.log("");
-    console.log(
-      "✅ Aucun reste de cards / cardsExtended / structuredCard trouvé.",
-    );
+    console.log(`✅ No remaining "${LEGACY_VALUE}" value found.`);
     return;
   }
 
   console.log("");
-  console.log("⚠️ Anciennes cells trouvées :");
+  console.log(`⚠️ Legacy "${LEGACY_VALUE}" values found:`);
   console.log("");
 
   for (const entry of report) {
     console.log(`KEY: ${entry.key}`);
+    console.log(
+      `  tenant=${entry.tenantId} | scope=${entry.scope} | page=${entry.pageKey}`,
+    );
 
     for (const match of entry.matches) {
+      const fieldStatus = match.isTargetField
+        ? "target field"
+        : "unexpected field";
+
       console.log(
-        `  - ${match.kind} | id=${match.id ?? "unknown"} | items=${
-          match.itemCount ?? "unknown"
-        } | path=${match.path}`,
+        [
+          `  - ${match.field}="${LEGACY_VALUE}"`,
+          `(${fieldStatus})`,
+          `parentKind=${match.parentKind ?? "unknown"}`,
+          `parentId=${match.parentId ?? "unknown"}`,
+          `items=${match.itemCount ?? "unknown"}`,
+          `path=${match.path}`,
+        ].join(" | "),
       );
     }
 
@@ -188,7 +237,7 @@ async function main() {
 
 main().catch((error) => {
   console.error("");
-  console.error("❌ Audit échoué");
+  console.error("❌ Audit failed");
   console.error(error);
   process.exit(1);
 });

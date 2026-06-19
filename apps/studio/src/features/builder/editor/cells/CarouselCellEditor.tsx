@@ -22,6 +22,11 @@
  *   such as changing `itemKind`.
  */
 
+import {
+  normalizeCarouselItemKind,
+  type CarouselCurrentItemKind,
+  type CarouselItemKind as DomainCarouselItemKind,
+} from "@compoz/core/domain/pages/entities/cell";
 import { useTranslations } from "next-intl";
 import type { Control } from "react-hook-form";
 import { useController, useFieldArray, useWatch } from "react-hook-form";
@@ -70,12 +75,12 @@ const CAROUSEL_VARIANTS = ["carousel", "slider"] as const;
 const CAROUSEL_ITEM_KINDS = [
   "image",
   "card",
-  "cardsExtended",
+  "extendedCard",
   "structuredCard",
 ] as const;
 
 type CarouselVariant = (typeof CAROUSEL_VARIANTS)[number];
-type CarouselItemKind = (typeof CAROUSEL_ITEM_KINDS)[number];
+type CarouselItemKind = CarouselCurrentItemKind;
 
 type CarouselFieldBasePath = `rows.${number}.columns.${number}.cells.${number}`;
 type CarouselItemsPath = `${CarouselFieldBasePath}.items`;
@@ -101,8 +106,23 @@ export type CarouselCellEditorProps = Readonly<{
 function getEmptyItemByKind(kind: CarouselItemKind) {
   if (kind === "image") return createEmptyImageEditor();
   if (kind === "card") return createEmptyCardItem();
-  if (kind === "cardsExtended") return createEmptyExtendedCardItem();
+  if (kind === "extendedCard") return createEmptyExtendedCardItem();
   return createEmptyStructuredCardItem();
+}
+
+function normalizeEditorItemKind(
+  value: DomainCarouselItemKind | undefined,
+): CarouselItemKind {
+  if (!value) return "image";
+
+  if (
+    value === "cardsExtended" ||
+    CAROUSEL_ITEM_KINDS.includes(value as CarouselItemKind)
+  ) {
+    return normalizeCarouselItemKind(value);
+  }
+
+  return "image";
 }
 
 export function CarouselCellEditor({
@@ -166,11 +186,10 @@ export function CarouselCellEditor({
       ? (variantCtrl.field.value as CarouselVariant)
       : "carousel";
 
-  const itemKind: CarouselItemKind =
-    itemKindCtrl.field.value &&
-    CAROUSEL_ITEM_KINDS.includes(itemKindCtrl.field.value as CarouselItemKind)
-      ? (itemKindCtrl.field.value as CarouselItemKind)
-      : "image";
+  const rawItemKind = itemKindCtrl.field.value as
+    | DomainCarouselItemKind
+    | undefined;
+  const itemKind = normalizeEditorItemKind(rawItemKind);
 
   const showDotsIds = createFieldIds(idPrefix, "showDots");
   const showArrowsIds = createFieldIds(idPrefix, "showArrows");
@@ -298,7 +317,7 @@ export function CarouselCellEditor({
         />
       ) : null}
 
-      {itemKind === "cardsExtended" ? (
+      {itemKind === "extendedCard" ? (
         <ExtendedCardListEditor
           control={control}
           idPrefix={idPrefix}

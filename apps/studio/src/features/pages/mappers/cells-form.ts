@@ -7,6 +7,12 @@
  */
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";
+import {
+  normalizeCardCollectionCardKind,
+  normalizeCarouselItemKind,
+  type CardCollectionCardKind,
+  type CarouselItemKind,
+} from "@compoz/core/domain/pages/entities/cell";
 import { isContentIconKind } from "@compoz/ui/lib/icons/content-icons";
 import { toCellShapeFromDTO } from "@compoz/ui/pages/mappers/cell-shape";
 import type {
@@ -195,17 +201,19 @@ export function createEmptyStructuredCardItem(): StructuredCardItemFormValues {
 }
 
 export function createEmptyCarouselItem(
-  itemKind: "image" | "card" | "cardsExtended" | "structuredCard",
+  itemKind: CarouselItemKind,
 ): CarouselItemFormValues {
-  if (itemKind === "image") {
+  const normalizedItemKind = normalizeCarouselItemKind(itemKind);
+
+  if (normalizedItemKind === "image") {
     return createEmptyImageEditor();
   }
 
-  if (itemKind === "card") {
+  if (normalizedItemKind === "card") {
     return createEmptyCardItem();
   }
 
-  if (itemKind === "cardsExtended") {
+  if (normalizedItemKind === "extendedCard") {
     return createEmptyExtendedCardItem();
   }
 
@@ -213,13 +221,15 @@ export function createEmptyCarouselItem(
 }
 
 export function createEmptyCardCollectionItem(
-  cardKind: CardCollectionCardKindFormValues,
+  cardKind: CardCollectionCardKindFormValues | CardCollectionCardKind,
 ): CardCollectionItemFormValues {
-  if (cardKind === "card") {
+  const normalizedCardKind = normalizeCardCollectionCardKind(cardKind);
+
+  if (normalizedCardKind === "card") {
     return createEmptyCardItem();
   }
 
-  if (cardKind === "cardsExtended") {
+  if (normalizedCardKind === "extendedCard") {
     return createEmptyExtendedCardItem();
   }
 
@@ -538,10 +548,10 @@ export function toStructuredCardItemForValidation(
 /* -------------------------------------------------------------------------- */
 
 function normalizeCarouselItem(
-  itemKind: "image" | "card" | "cardsExtended" | "structuredCard",
+  itemKind: CarouselItemKind,
   item: CarouselItemFormValues,
 ): CarouselItemFormValues {
-  if (itemKind === "structuredCard") {
+  if (normalizeCarouselItemKind(itemKind) === "structuredCard") {
     return normalizeStructuredCardItem(item as StructuredCardItemFormValues);
   }
 
@@ -549,10 +559,10 @@ function normalizeCarouselItem(
 }
 
 function normalizeCarouselItemForValidation(
-  itemKind: "image" | "card" | "cardsExtended" | "structuredCard",
+  itemKind: CarouselItemKind,
   item: CarouselItemFormValues,
 ): CarouselItemFormValues {
-  if (itemKind === "structuredCard") {
+  if (normalizeCarouselItemKind(itemKind) === "structuredCard") {
     return toStructuredCardItemForValidation(
       item as StructuredCardItemFormValues,
     );
@@ -562,10 +572,10 @@ function normalizeCarouselItemForValidation(
 }
 
 function normalizeCardCollectionItem(
-  cardKind: "card" | "cardsExtended" | "structuredCard",
+  cardKind: CardCollectionCardKind,
   item: CardCollectionItemFormValues,
 ): CardCollectionItemFormValues {
-  if (cardKind === "structuredCard") {
+  if (normalizeCardCollectionCardKind(cardKind) === "structuredCard") {
     return normalizeStructuredCardItem(item as StructuredCardItemFormValues);
   }
 
@@ -573,10 +583,10 @@ function normalizeCardCollectionItem(
 }
 
 function normalizeCardCollectionItemForValidation(
-  cardKind: "card" | "cardsExtended" | "structuredCard",
+  cardKind: CardCollectionCardKind,
   item: CardCollectionItemFormValues,
 ): CardCollectionItemFormValues {
-  if (cardKind === "structuredCard") {
+  if (normalizeCardCollectionCardKind(cardKind) === "structuredCard") {
     return toStructuredCardItemForValidation(
       item as StructuredCardItemFormValues,
     );
@@ -623,12 +633,15 @@ export function toCellFormValuesForValidation(
   }
 
   if (cell.kind === "carousel") {
+    const itemKind = normalizeCarouselItemKind(cell.itemKind);
+
     return {
       ...cell,
       cssClassName: normalizedCssClassName,
+      itemKind,
       items: cell.items.map((item) =>
         normalizeCarouselItemForValidation(
-          cell.itemKind,
+          itemKind,
           item as CarouselItemFormValues,
         ),
       ),
@@ -636,12 +649,15 @@ export function toCellFormValuesForValidation(
   }
 
   if (cell.kind === "cardCollection") {
+    const cardKind = normalizeCardCollectionCardKind(cell.cardKind);
+
     return {
       ...cell,
       cssClassName: normalizedCssClassName,
+      cardKind,
       items: cell.items.map((item) =>
         normalizeCardCollectionItemForValidation(
-          cell.cardKind,
+          cardKind,
           item as CardCollectionItemFormValues,
         ),
       ),
@@ -706,22 +722,28 @@ export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
   }
 
   if (cell.kind === "carousel") {
+    const itemKind = normalizeCarouselItemKind(cell.itemKind);
+
     return {
       ...cell,
       cssClassName: normalizedCssClassName,
+      itemKind,
       items: cell.items.map((item) =>
-        normalizeCarouselItem(cell.itemKind, item as CarouselItemFormValues),
+        normalizeCarouselItem(itemKind, item as CarouselItemFormValues),
       ),
     };
   }
 
   if (cell.kind === "cardCollection") {
+    const cardKind = normalizeCardCollectionCardKind(cell.cardKind);
+
     return {
       ...cell,
       cssClassName: normalizedCssClassName,
+      cardKind,
       items: cell.items.map((item) =>
         normalizeCardCollectionItem(
-          cell.cardKind,
+          cardKind,
           item as CardCollectionItemFormValues,
         ),
       ),

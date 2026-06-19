@@ -12,6 +12,7 @@ import type {
   StructuredCardItemShape,
 } from "@compoz/validation/pages/blocks/cells/cell";
 
+import { normalizeCardCollectionCardKind } from "@compoz/core/domain/pages/entities/cell";
 import { renderContentIcon } from "@compoz/ui/lib/icons/content-icons";
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { SiteCard } from "@compoz/ui/site/components/molecules/SiteCard";
@@ -48,7 +49,9 @@ export function SiteCardCollectionItem({
   extendedCardUi,
   structuredCardUi,
 }: SiteCardCollectionItemProps) {
-  if (cardKind === "card") {
+  const normalizedCardKind = normalizeCardCollectionCardKind(cardKind);
+
+  if (normalizedCardKind === "card") {
     const card = item as CardItemShape;
 
     return (
@@ -66,7 +69,7 @@ export function SiteCardCollectionItem({
     );
   }
 
-  if (cardKind === "cardsExtended") {
+  if (normalizedCardKind === "extendedCard") {
     const card = item as ExtendedCardItemShape;
     const bullets = Array.isArray(card.bullets)
       ? card.bullets

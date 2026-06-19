@@ -7,6 +7,7 @@
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
+import { normalizeCarouselItemKind } from "@compoz/core/domain/pages/entities/cell";
 import type {
   CardItem,
   CarouselItem,
@@ -41,6 +42,7 @@ function assertCarouselItemKind(
     value !== "image" &&
     value !== "card" &&
     value !== "cardsExtended" &&
+    value !== "extendedCard" &&
     value !== "structuredCard"
   ) {
     throw new DomainError({
@@ -56,7 +58,7 @@ function assertCarouselItemByKind(
   itemKind: CarouselItemKind,
   path: Path,
 ): void {
-  switch (itemKind) {
+  switch (normalizeCarouselItemKind(itemKind)) {
     case "image":
       assertImageEditor(item as ImageEditor, path);
       return;
@@ -65,7 +67,7 @@ function assertCarouselItemByKind(
       assertCardItem(item as CardItem, path);
       return;
 
-    case "cardsExtended":
+    case "extendedCard":
       assertExtendedCardItem(item as ExtendedCardItem, path);
       return;
 
@@ -104,6 +106,7 @@ export function assertCarouselCell(
   }
 
   assertCarouselItemKind(cell.itemKind, [...path, "itemKind"]);
+  const itemKind = normalizeCarouselItemKind(cell.itemKind);
 
   if (!Array.isArray(cell.items)) {
     throw new DomainError({
@@ -122,6 +125,6 @@ export function assertCarouselCell(
   }
 
   cell.items.forEach((item, index) => {
-    assertCarouselItemByKind(item, cell.itemKind, [...path, "items", index]);
+    assertCarouselItemByKind(item, itemKind, [...path, "items", index]);
   });
 }

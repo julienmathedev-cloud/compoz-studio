@@ -12,7 +12,9 @@ import type {
   CardCollectionAlign,
   CardCollectionCardKind,
   CardCollectionColumns,
+  CardCollectionCurrentCardKind,
 } from "@compoz/core/domain/pages/entities/cell";
+import { normalizeCardCollectionCardKind } from "@compoz/core/domain/pages/entities/cell";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { Control } from "react-hook-form";
@@ -55,7 +57,7 @@ type SelectedCellLocation = Readonly<{
   cellId: string;
 }>;
 
-const CARD_KINDS = ["card", "cardsExtended", "structuredCard"] as const;
+const CARD_KINDS = ["card", "extendedCard", "structuredCard"] as const;
 const CARD_COLLECTION_ALIGNS = ["left", "center"] as const;
 
 type CardCollectionFieldBasePath =
@@ -79,22 +81,37 @@ export type CardCollectionCellEditorProps = Readonly<{
   onUploadImage?: (file: File) => Promise<UploadedRasterImage>;
 }>;
 
-function getEmptyItemByKind(kind: CardCollectionCardKind) {
+function getEmptyItemByKind(kind: CardCollectionCurrentCardKind) {
   return createEmptyCardCollectionItem(kind);
 }
 
 function getColumnsByKind(
-  kind: CardCollectionCardKind,
+  kind: CardCollectionCurrentCardKind,
 ): ReadonlyArray<CardCollectionColumns> {
   return kind === "card" ? [2, 3, 4] : [1, 2, 3];
 }
 
 function getDefaultColumnsByKind(
-  kind: CardCollectionCardKind,
+  kind: CardCollectionCurrentCardKind,
 ): CardCollectionColumns {
   if (kind === "card") return 3;
-  if (kind === "cardsExtended") return 2;
+  if (kind === "extendedCard") return 2;
   return 1;
+}
+
+function normalizeEditorCardKind(
+  value: CardCollectionCardKind | undefined,
+): CardCollectionCurrentCardKind {
+  if (!value) return "card";
+
+  if (
+    value === "cardsExtended" ||
+    CARD_KINDS.includes(value as CardCollectionCurrentCardKind)
+  ) {
+    return normalizeCardCollectionCardKind(value);
+  }
+
+  return "card";
 }
 
 export function CardCollectionCellEditor({
@@ -151,11 +168,10 @@ export function CardCollectionCellEditor({
     | StructuredCardItemFormValues
   >;
 
-  const cardKind: CardCollectionCardKind =
-    cardKindCtrl.field.value &&
-    CARD_KINDS.includes(cardKindCtrl.field.value as CardCollectionCardKind)
-      ? (cardKindCtrl.field.value as CardCollectionCardKind)
-      : "card";
+  const rawCardKind = cardKindCtrl.field.value as
+    | CardCollectionCardKind
+    | undefined;
+  const cardKind = normalizeEditorCardKind(rawCardKind);
 
   const availableColumns = getColumnsByKind(cardKind);
 
@@ -310,7 +326,7 @@ export function CardCollectionCellEditor({
         />
       ) : null}
 
-      {cardKind === "cardsExtended" ? (
+      {cardKind === "extendedCard" ? (
         <ExtendedCardListEditor
           control={control}
           idPrefix={idPrefix}

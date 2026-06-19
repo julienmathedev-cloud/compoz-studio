@@ -14,6 +14,7 @@
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
+import { normalizeCarouselItemKind } from "@compoz/core/domain/pages/entities/cell";
 import { z } from "zod";
 
 import {
@@ -30,7 +31,9 @@ export const CarouselVariantSchema = z.enum(["carousel", "slider"], {
 });
 
 export const CarouselItemKindSchema = z.enum(
-  ["image", "card", "cardsExtended", "structuredCard"],
+  // "cardsExtended" is a legacy persisted value kept only for backward
+  // compatibility. Studio writes "extendedCard".
+  ["image", "card", "cardsExtended", "extendedCard", "structuredCard"],
   {
     message: ERROR_CODES.CELL_CAROUSEL_ITEM_KIND_INVALID,
   },
@@ -78,14 +81,16 @@ export const CarouselCellSchema = z
   })
   .strict()
   .superRefine((cell, ctx) => {
+    const itemKind = normalizeCarouselItemKind(cell.itemKind);
+
     const schemaMap = {
       image: ImageEditorSchema,
       card: CardItemSchema,
-      cardsExtended: ExtendedCardItemSchema,
+      extendedCard: ExtendedCardItemSchema,
       structuredCard: StructuredCardItemSchema,
     } as const;
 
-    const schema = schemaMap[cell.itemKind];
+    const schema = schemaMap[itemKind];
 
     for (let i = 0; i < cell.items.length; i++) {
       const result = schema.safeParse(cell.items[i]);

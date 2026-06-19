@@ -12,7 +12,10 @@
  * Reusable item shapes are delegated to item adapters.
  */
 
-import type { CardCollectionCell } from "@compoz/core/domain/pages/entities/cell";
+import {
+  normalizeCardCollectionCardKind,
+  type CardCollectionCell,
+} from "@compoz/core/domain/pages/entities/cell";
 import { adaptCardItem } from "@compoz/studio/app/api/_adapters/pages/blocks/items/card-item";
 import { adaptExtendedCardItem } from "@compoz/studio/app/api/_adapters/pages/blocks/items/extended-card-item";
 import { adaptStructuredCardItem } from "@compoz/studio/app/api/_adapters/pages/blocks/items/structured-card-item";
@@ -27,10 +30,12 @@ import type {
 export function adaptCardCollectionCell(
   dto: CardCollectionCellIntentDTO,
 ): CardCollectionCell {
+  const cardKind = normalizeCardCollectionCardKind(dto.cardKind);
+
   const items =
-    dto.cardKind === "card"
+    cardKind === "card"
       ? (dto.items as CardItemIntentDTO[]).map(adaptCardItem)
-      : dto.cardKind === "cardsExtended"
+      : cardKind === "extendedCard"
         ? (dto.items as ExtendedCardItemIntentDTO[]).map(adaptExtendedCardItem)
         : (dto.items as StructuredCardItemIntentDTO[]).map(
             adaptStructuredCardItem,
@@ -40,7 +45,7 @@ export function adaptCardCollectionCell(
     id: trimOrKeep(dto.id),
     kind: "cardCollection",
     cssClassName: trimClearableOrUndef(dto.cssClassName),
-    cardKind: dto.cardKind,
+    cardKind,
     columns: dto.columns,
     align: dto.align,
     reveal: dto.reveal,

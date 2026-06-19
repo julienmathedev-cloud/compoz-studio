@@ -10,7 +10,8 @@
  * - UI-only: consumes an already validated cell shape.
  * - Normalizes image/card-like items into `NormalizedCarouselItem`.
  * - Delegates the visual rendering to `SiteCarousel` or `SiteSlider`.
- * - Keeps persisted item kinds unchanged for compatibility.
+ * - Accepts legacy persisted item kinds and normalizes them for rendering.
+ * - Does not mutate persisted data.
  */
 
 import type {
@@ -21,6 +22,7 @@ import type {
   StructuredCardItemShape,
 } from "@compoz/validation/pages/blocks/cells/cell";
 
+import { normalizeCarouselItemKind } from "@compoz/core/domain/pages/entities/cell";
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { SiteCarousel } from "@compoz/ui/site/components/organisms/SiteCarousel";
 import { SiteSlider } from "@compoz/ui/site/components/organisms/SiteSlider";
@@ -80,19 +82,21 @@ CarouselCellRenderer.displayName = "CarouselCellRenderer";
 function normalizeCarouselItems(
   cell: CarouselCellShape,
 ): NormalizedCarouselItem[] {
-  if (cell.itemKind === "image") {
+  const itemKind = normalizeCarouselItemKind(cell.itemKind);
+
+  if (itemKind === "image") {
     return cell.items
       .map((item) => normalizeImageItem(item as ImageEditorShape))
       .filter((item): item is NormalizedCarouselItem => Boolean(item));
   }
 
-  if (cell.itemKind === "card") {
+  if (itemKind === "card") {
     return cell.items
       .map((item) => normalizeCardItem(item as CardItemShape))
       .filter((item): item is NormalizedCarouselItem => Boolean(item));
   }
 
-  if (cell.itemKind === "cardsExtended") {
+  if (itemKind === "extendedCard") {
     return cell.items
       .map((item) => normalizeExtendedCardItem(item as ExtendedCardItemShape))
       .filter((item): item is NormalizedCarouselItem => Boolean(item));
@@ -143,7 +147,7 @@ function normalizeExtendedCardItem(
   if (!title) return null;
 
   return {
-    kind: "cardsExtended",
+    kind: "extendedCard",
     id: item.id,
     title,
     description: normalizeString(item.description, ""),

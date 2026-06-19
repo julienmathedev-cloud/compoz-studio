@@ -6,6 +6,7 @@
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
+import { normalizeCardCollectionCardKind } from "@compoz/core/domain/pages/entities/cell";
 import type {
   CardCollectionCardKind,
   CardCollectionItem,
@@ -16,9 +17,7 @@ import type {
 } from "@compoz/core/domain/pages/entities/cell";
 
 import { assertCardItem } from "@compoz/core/domain/pages/validators/items/card-item";
-
 import { assertExtendedCardItem } from "@compoz/core/domain/pages/validators/items/extended-card-item";
-
 import { assertStructuredCardItem } from "@compoz/core/domain/pages/validators/items/structured-card-item";
 
 type Path = ReadonlyArray<string | number>;
@@ -36,6 +35,7 @@ function assertCardCollectionKind(
   if (
     value !== "card" &&
     value !== "cardsExtended" &&
+    value !== "extendedCard" &&
     value !== "structuredCard"
   ) {
     throw new DomainError({
@@ -51,12 +51,14 @@ function assertCardCollectionItemByKind(
   cardKind: CardCollectionCardKind,
   path: Path,
 ): void {
-  if (cardKind === "card") {
+  const normalizedCardKind = normalizeCardCollectionCardKind(cardKind);
+
+  if (normalizedCardKind === "card") {
     assertCardItem(castCardCollectionItem<CardItem>(item), path);
     return;
   }
 
-  if (cardKind === "cardsExtended") {
+  if (normalizedCardKind === "extendedCard") {
     assertExtendedCardItem(
       castCardCollectionItem<ExtendedCardItem>(item),
       path,
@@ -75,9 +77,10 @@ export function assertCardCollectionCell(
   path: Path,
 ): void {
   assertCardCollectionKind(cell.cardKind, [...path, "cardKind"]);
+  const cardKind = normalizeCardCollectionCardKind(cell.cardKind);
 
   const validColumns =
-    cell.cardKind === "card"
+    cardKind === "card"
       ? cell.columns === 2 || cell.columns === 3 || cell.columns === 4
       : cell.columns === 1 || cell.columns === 2 || cell.columns === 3;
 
@@ -87,7 +90,7 @@ export function assertCardCollectionCell(
       message: EC.CELL_CARD_COLLECTION_COLUMNS_INVALID,
       details: {
         path: [...path, "columns"],
-        meta: { cardKind: cell.cardKind, columns: cell.columns },
+        meta: { cardKind, columns: cell.columns },
       },
     });
   }
@@ -125,10 +128,6 @@ export function assertCardCollectionCell(
   }
 
   cell.items.forEach((item, index) => {
-    assertCardCollectionItemByKind(item, cell.cardKind, [
-      ...path,
-      "items",
-      index,
-    ]);
+    assertCardCollectionItemByKind(item, cardKind, [...path, "items", index]);
   });
 }

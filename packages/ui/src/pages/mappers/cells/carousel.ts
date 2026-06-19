@@ -19,6 +19,7 @@ import type {
   ImageEditorDTO,
   StructuredCardItemDTO,
 } from "@compoz/core/domain/pages/dto";
+import { normalizeCarouselItemKind } from "@compoz/core/domain/pages/entities/cell";
 import { toCardItemsShapeFromDTO } from "@compoz/ui/pages/mappers/items/card-item";
 import { toExtendedCardItemsShapeFromDTO } from "@compoz/ui/pages/mappers/items/extended-card-item";
 import { toStructuredCardItemsShapeFromDTO } from "@compoz/ui/pages/mappers/items/structured-card-item";
@@ -37,14 +38,16 @@ function coerceDims<T extends WithDims>(img: T): T {
 export function toCarouselCellShapeFromDTO(
   cell: CarouselCellDTO,
 ): CarouselCellFormValues {
+  const itemKind = normalizeCarouselItemKind(cell.itemKind);
+
   const items =
-    cell.itemKind === "image"
+    itemKind === "image"
       ? (cell.items as ReadonlyArray<ImageEditorDTO>).map((item) =>
           coerceDims(item),
         )
-      : cell.itemKind === "card"
+      : itemKind === "card"
         ? toCardItemsShapeFromDTO(cell.items as CardItemDTO[])
-        : cell.itemKind === "cardsExtended"
+        : itemKind === "extendedCard"
           ? toExtendedCardItemsShapeFromDTO(cell.items as ExtendedCardItemDTO[])
           : toStructuredCardItemsShapeFromDTO(
               cell.items as StructuredCardItemDTO[],
@@ -57,7 +60,7 @@ export function toCarouselCellShapeFromDTO(
     variant: cell.variant,
     showDots: cell.showDots,
     showArrows: cell.showArrows,
-    itemKind: cell.itemKind,
+    itemKind,
     items,
   };
 }

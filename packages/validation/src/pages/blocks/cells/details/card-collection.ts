@@ -14,6 +14,7 @@
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
+import { normalizeCardCollectionCardKind } from "@compoz/core/domain/pages/entities/cell";
 import { z } from "zod";
 
 import {
@@ -25,7 +26,9 @@ import { ExtendedCardItemSchema } from "@compoz/validation/pages/blocks/items/ex
 import { StructuredCardItemSchema } from "@compoz/validation/pages/blocks/items/structured-card-item";
 
 export const CardCollectionCardKindSchema = z.enum(
-  ["card", "cardsExtended", "structuredCard"],
+  // "cardsExtended" is a legacy persisted value kept only for backward
+  // compatibility. Studio writes "extendedCard".
+  ["card", "cardsExtended", "extendedCard", "structuredCard"],
   {
     message: ERROR_CODES.CELL_CARD_COLLECTION_KIND_INVALID,
   },
@@ -89,8 +92,10 @@ export const CardCollectionCellSchema = z
   })
   .strict()
   .superRefine((cell, ctx) => {
+    const cardKind = normalizeCardCollectionCardKind(cell.cardKind);
+
     const columnsSchema =
-      cell.cardKind === "card"
+      cardKind === "card"
         ? CardCollectionCardColumnsSchema
         : CardCollectionStackedColumnsSchema;
 
@@ -106,11 +111,11 @@ export const CardCollectionCellSchema = z
 
     const schemaMap = {
       card: CardItemSchema,
-      cardsExtended: ExtendedCardItemSchema,
+      extendedCard: ExtendedCardItemSchema,
       structuredCard: StructuredCardItemSchema,
     } as const;
 
-    const schema = schemaMap[cell.cardKind];
+    const schema = schemaMap[cardKind];
 
     for (let i = 0; i < cell.items.length; i++) {
       const result = schema.safeParse(cell.items[i]);

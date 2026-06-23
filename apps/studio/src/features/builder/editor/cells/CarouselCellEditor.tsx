@@ -22,11 +22,7 @@
  *   such as changing `itemKind`.
  */
 
-import {
-  normalizeCarouselItemKind,
-  type CarouselCurrentItemKind,
-  type CarouselItemKind as DomainCarouselItemKind,
-} from "@compoz/core/domain/pages/entities/cell";
+import type { CarouselItemKind } from "@compoz/core/domain/pages/entities/cell";
 import { useTranslations } from "next-intl";
 import type { Control } from "react-hook-form";
 import { useController, useFieldArray, useWatch } from "react-hook-form";
@@ -80,8 +76,6 @@ const CAROUSEL_ITEM_KINDS = [
 ] as const;
 
 type CarouselVariant = (typeof CAROUSEL_VARIANTS)[number];
-type CarouselItemKind = CarouselCurrentItemKind;
-
 type CarouselFieldBasePath = `rows.${number}.columns.${number}.cells.${number}`;
 type CarouselItemsPath = `${CarouselFieldBasePath}.items`;
 
@@ -111,15 +105,12 @@ function getEmptyItemByKind(kind: CarouselItemKind) {
 }
 
 function normalizeEditorItemKind(
-  value: DomainCarouselItemKind | undefined,
+  value: CarouselItemKind | undefined,
 ): CarouselItemKind {
   if (!value) return "image";
 
-  if (
-    value === "cardsExtended" ||
-    CAROUSEL_ITEM_KINDS.includes(value as CarouselItemKind)
-  ) {
-    return normalizeCarouselItemKind(value);
+  if (CAROUSEL_ITEM_KINDS.includes(value as CarouselItemKind)) {
+    return value;
   }
 
   return "image";
@@ -186,9 +177,7 @@ export function CarouselCellEditor({
       ? (variantCtrl.field.value as CarouselVariant)
       : "carousel";
 
-  const rawItemKind = itemKindCtrl.field.value as
-    | DomainCarouselItemKind
-    | undefined;
+  const rawItemKind = itemKindCtrl.field.value as CarouselItemKind | undefined;
   const itemKind = normalizeEditorItemKind(rawItemKind);
 
   const showDotsIds = createFieldIds(idPrefix, "showDots");

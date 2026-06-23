@@ -10,8 +10,6 @@
  * - UI-only: consumes an already validated cell shape.
  * - Normalizes image/card-like items into `NormalizedCarouselItem`.
  * - Delegates the visual rendering to `SiteCarousel` or `SiteSlider`.
- * - Accepts legacy persisted item kinds and normalizes them for rendering.
- * - Does not mutate persisted data.
  */
 
 import type {
@@ -22,7 +20,6 @@ import type {
   StructuredCardItemShape,
 } from "@compoz/validation/pages/blocks/cells/cell";
 
-import { normalizeCarouselItemKind } from "@compoz/core/domain/pages/entities/cell";
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import { SiteCarousel } from "@compoz/ui/site/components/organisms/SiteCarousel";
 import { SiteSlider } from "@compoz/ui/site/components/organisms/SiteSlider";
@@ -82,7 +79,7 @@ CarouselCellRenderer.displayName = "CarouselCellRenderer";
 function normalizeCarouselItems(
   cell: CarouselCellShape,
 ): NormalizedCarouselItem[] {
-  const itemKind = normalizeCarouselItemKind(cell.itemKind);
+  const itemKind = cell.itemKind;
 
   if (itemKind === "image") {
     return cell.items

@@ -7,7 +7,6 @@
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
-import { normalizeCarouselItemKind } from "@compoz/core/domain/pages/entities/cell";
 import type {
   CardItem,
   CarouselItem,
@@ -41,7 +40,6 @@ function assertCarouselItemKind(
   if (
     value !== "image" &&
     value !== "card" &&
-    value !== "cardsExtended" &&
     value !== "extendedCard" &&
     value !== "structuredCard"
   ) {
@@ -58,7 +56,7 @@ function assertCarouselItemByKind(
   itemKind: CarouselItemKind,
   path: Path,
 ): void {
-  switch (normalizeCarouselItemKind(itemKind)) {
+  switch (itemKind) {
     case "image":
       assertImageEditor(item as ImageEditor, path);
       return;
@@ -106,7 +104,7 @@ export function assertCarouselCell(
   }
 
   assertCarouselItemKind(cell.itemKind, [...path, "itemKind"]);
-  const itemKind = normalizeCarouselItemKind(cell.itemKind);
+  const itemKind = cell.itemKind;
 
   if (!Array.isArray(cell.items)) {
     throw new DomainError({

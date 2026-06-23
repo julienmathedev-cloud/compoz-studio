@@ -1,18 +1,34 @@
 /**
  * @file scripts/audit-legacy-card-cells.mjs
  *
- * Read-only audit for remaining legacy "cardsExtended" values
+ * Read-only audit for remaining legacy card cell values
  * in KV / Upstash Redis page data.
  *
  * This script does not modify data.
+ *
+ * It checks for:
+ * - cards
+ * - cardsExtended
+ * - structuredCard
+ * - extendedCard
+ *
+ * Expected new value:
+ * - cardCollection
  *
  * Usage:
  * pnpm dlx dotenv-cli -e apps/studio/.env.local -- node scripts/audit-legacy-card-cells.mjs
  */
 
-const LEGACY_VALUE = "cardsExtended";
+const LEGACY_VALUES = new Set([
+  "cards",
+  "cardsExtended",
+  "structuredCard",
+  "extendedCard",
+]);
 
-const TARGET_FIELDS = new Set(["itemKind", "cardKind"]);
+const NEW_VALUE = "cardCollection";
+
+const TARGET_FIELDS = new Set(["kind", "cellKind"]);
 
 const DEFAULT_SCAN_PATTERNS = [
   "compoz:*:draft:pages:*",
@@ -76,10 +92,10 @@ function safeJsonParse(value) {
 }
 
 function parseCompozKey(key) {
-  const [, tenantId, scope, resource, pageKey] = key.split(":");
+  const [, websiteId, scope, resource, pageKey] = key.split(":");
 
   return {
-    tenantId: tenantId ?? "unknown",
+    websiteId: websiteId ?? "unknown",
     scope: scope ?? "unknown",
     resource: resource ?? "unknown",
     pageKey: pageKey ?? "unknown",
@@ -87,17 +103,17 @@ function parseCompozKey(key) {
 }
 
 function shouldIgnoreKey(key) {
-  const { tenantId } = parseCompozKey(key);
+  const { websiteId } = parseCompozKey(key);
 
-  return tenantId.startsWith("demo-");
+  return websiteId.startsWith("demo-");
 }
 
-function findLegacyCardsExtendedValues(value, path = "$", matches = []) {
+function findCardValues(value, path = "$", matches = []) {
   if (!value || typeof value !== "object") return matches;
 
   if (Array.isArray(value)) {
     value.forEach((item, index) => {
-      findLegacyCardsExtendedValues(item, `${path}[${index}]`, matches);
+      findCardValues(item, `${path}[${index}]`, matches);
     });
 
     return matches;
@@ -106,20 +122,28 @@ function findLegacyCardsExtendedValues(value, path = "$", matches = []) {
   for (const [key, child] of Object.entries(value)) {
     const childPath = `${path}.${key}`;
 
-    if (child === LEGACY_VALUE) {
-      matches.push({
-        path: childPath,
-        field: key,
-        isTargetField: TARGET_FIELDS.has(key),
-        parentKind: typeof value.kind === "string" ? value.kind : null,
-        parentId: typeof value.id === "string" ? value.id : null,
-        itemCount: Array.isArray(value.items) ? value.items.length : null,
-      });
+    if (typeof child === "string") {
+      const isTargetField = TARGET_FIELDS.has(key);
+      const isLegacy = isTargetField && LEGACY_VALUES.has(child);
+      const isNewValue = isTargetField && child === NEW_VALUE;
+
+      if (isLegacy || isNewValue) {
+        matches.push({
+          path: childPath,
+          field: key,
+          value: child,
+          isLegacy,
+          isTargetField,
+          parentKind: typeof value.kind === "string" ? value.kind : null,
+          parentId: typeof value.id === "string" ? value.id : null,
+          itemCount: Array.isArray(value.items) ? value.items.length : null,
+        });
+      }
 
       continue;
     }
 
-    findLegacyCardsExtendedValues(child, childPath, matches);
+    findCardValues(child, childPath, matches);
   }
 
   return matches;
@@ -162,10 +186,11 @@ async function scanKeys() {
 }
 
 async function main() {
-  console.log("🔎 Scanning KV for legacy cardsExtended values...");
+  console.log("🔎 Scanning KV for legacy card values...");
 
   const keys = await scanKeys();
-  const report = [];
+  const legacyReport = [];
+  let totalNewValues = 0;
 
   for (const key of keys) {
     const raw = await redis(["GET", key]);
@@ -173,43 +198,46 @@ async function main() {
 
     if (!parsed) continue;
 
-    const matches = findLegacyCardsExtendedValues(parsed);
+    const matches = findCardValues(parsed);
+    const legacyMatches = matches.filter((match) => match.isLegacy);
+    const newMatches = matches.filter((match) => match.value === NEW_VALUE);
 
-    if (matches.length > 0) {
-      report.push({
+    totalNewValues += newMatches.length;
+
+    if (legacyMatches.length > 0) {
+      legacyReport.push({
         key,
         ...parseCompozKey(key),
-        matches,
+        matches: legacyMatches,
       });
     }
   }
 
-  const totalMatches = report.reduce(
+  const totalLegacyMatches = legacyReport.reduce(
     (total, entry) => total + entry.matches.length,
     0,
   );
 
   console.log("");
   console.log(`📦 Keys scanned: ${keys.length}`);
-  console.log(`🧩 Keys containing legacy values: ${report.length}`);
-  console.log(
-    `🔁 Total legacy "${LEGACY_VALUE}" values found: ${totalMatches}`,
-  );
+  console.log(`🧩 Keys containing legacy values: ${legacyReport.length}`);
+  console.log(`🔁 Total legacy values found: ${totalLegacyMatches}`);
+  console.log(`✅ Total "${NEW_VALUE}" values found: ${totalNewValues}`);
 
-  if (report.length === 0) {
+  if (legacyReport.length === 0) {
     console.log("");
-    console.log(`✅ No remaining "${LEGACY_VALUE}" value found.`);
+    console.log("✅ No remaining legacy card value found.");
     return;
   }
 
   console.log("");
-  console.log(`⚠️ Legacy "${LEGACY_VALUE}" values found:`);
+  console.log("⚠️ Legacy card values found:");
   console.log("");
 
-  for (const entry of report) {
+  for (const entry of legacyReport) {
     console.log(`KEY: ${entry.key}`);
     console.log(
-      `  tenant=${entry.tenantId} | scope=${entry.scope} | page=${entry.pageKey}`,
+      `  website=${entry.websiteId} | scope=${entry.scope} | page=${entry.pageKey}`,
     );
 
     for (const match of entry.matches) {
@@ -219,7 +247,7 @@ async function main() {
 
       console.log(
         [
-          `  - ${match.field}="${LEGACY_VALUE}"`,
+          `  - ${match.field}="${match.value}"`,
           `(${fieldStatus})`,
           `parentKind=${match.parentKind ?? "unknown"}`,
           `parentId=${match.parentId ?? "unknown"}`,

@@ -12,9 +12,7 @@ import type {
   CardCollectionAlign,
   CardCollectionCardKind,
   CardCollectionColumns,
-  CardCollectionCurrentCardKind,
 } from "@compoz/core/domain/pages/entities/cell";
-import { normalizeCardCollectionCardKind } from "@compoz/core/domain/pages/entities/cell";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { Control } from "react-hook-form";
@@ -81,18 +79,18 @@ export type CardCollectionCellEditorProps = Readonly<{
   onUploadImage?: (file: File) => Promise<UploadedRasterImage>;
 }>;
 
-function getEmptyItemByKind(kind: CardCollectionCurrentCardKind) {
+function getEmptyItemByKind(kind: CardCollectionCardKind) {
   return createEmptyCardCollectionItem(kind);
 }
 
 function getColumnsByKind(
-  kind: CardCollectionCurrentCardKind,
+  kind: CardCollectionCardKind,
 ): ReadonlyArray<CardCollectionColumns> {
   return kind === "card" ? [2, 3, 4] : [1, 2, 3];
 }
 
 function getDefaultColumnsByKind(
-  kind: CardCollectionCurrentCardKind,
+  kind: CardCollectionCardKind,
 ): CardCollectionColumns {
   if (kind === "card") return 3;
   if (kind === "extendedCard") return 2;
@@ -101,14 +99,11 @@ function getDefaultColumnsByKind(
 
 function normalizeEditorCardKind(
   value: CardCollectionCardKind | undefined,
-): CardCollectionCurrentCardKind {
+): CardCollectionCardKind {
   if (!value) return "card";
 
-  if (
-    value === "cardsExtended" ||
-    CARD_KINDS.includes(value as CardCollectionCurrentCardKind)
-  ) {
-    return normalizeCardCollectionCardKind(value);
+  if (CARD_KINDS.includes(value as CardCollectionCardKind)) {
+    return value;
   }
 
   return "card";

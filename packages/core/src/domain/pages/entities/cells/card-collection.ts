@@ -20,28 +20,11 @@ import type { StructuredCardItem } from "@compoz/core/domain/pages/entities/item
 
 /**
  * Supported card item kinds inside a card collection.
- *
- * @remarks
- * - `"cardsExtended"` is a legacy persisted value kept only for backward
- *   compatibility with existing KV/database content.
- * - `"extendedCard"` is the current value written by the Studio.
  */
-export type CardCollectionCurrentCardKind =
+export type CardCollectionCardKind =
   | "card"
   | "extendedCard"
   | "structuredCard";
-
-export type CardCollectionLegacyCardKind = "cardsExtended";
-
-export type CardCollectionCardKind =
-  | CardCollectionCurrentCardKind
-  | CardCollectionLegacyCardKind;
-
-export function normalizeCardCollectionCardKind(
-  kind: CardCollectionCardKind,
-): CardCollectionCurrentCardKind {
-  return kind === "cardsExtended" ? "extendedCard" : kind;
-}
 
 export type CardCollectionItem =
   | CardItem

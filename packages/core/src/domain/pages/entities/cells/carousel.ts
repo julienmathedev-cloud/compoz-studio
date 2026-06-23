@@ -29,26 +29,12 @@ export type CarouselVariant = "carousel" | "slider";
  * @remarks
  * A carousel renders a homogeneous list of items: all items in the same cell
  * must share the same `itemKind`.
- *
- * - `"cardsExtended"` is a legacy persisted value kept only for backward
- *   compatibility with existing KV/database content.
- * - `"extendedCard"` is the current value written by the Studio.
  */
-export type CarouselCurrentItemKind =
+export type CarouselItemKind =
   | "image"
   | "card"
   | "extendedCard"
   | "structuredCard";
-
-export type CarouselLegacyItemKind = "cardsExtended";
-
-export type CarouselItemKind = CarouselCurrentItemKind | CarouselLegacyItemKind;
-
-export function normalizeCarouselItemKind(
-  kind: CarouselItemKind,
-): CarouselCurrentItemKind {
-  return kind === "cardsExtended" ? "extendedCard" : kind;
-}
 
 /**
  * Union of all items supported by a carousel.

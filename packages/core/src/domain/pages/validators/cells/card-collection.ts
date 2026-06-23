@@ -6,7 +6,6 @@
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
-import { normalizeCardCollectionCardKind } from "@compoz/core/domain/pages/entities/cell";
 import type {
   CardCollectionCardKind,
   CardCollectionItem,
@@ -34,7 +33,6 @@ function assertCardCollectionKind(
 ): asserts value is CardCollectionCardKind {
   if (
     value !== "card" &&
-    value !== "cardsExtended" &&
     value !== "extendedCard" &&
     value !== "structuredCard"
   ) {
@@ -51,14 +49,12 @@ function assertCardCollectionItemByKind(
   cardKind: CardCollectionCardKind,
   path: Path,
 ): void {
-  const normalizedCardKind = normalizeCardCollectionCardKind(cardKind);
-
-  if (normalizedCardKind === "card") {
+  if (cardKind === "card") {
     assertCardItem(castCardCollectionItem<CardItem>(item), path);
     return;
   }
 
-  if (normalizedCardKind === "extendedCard") {
+  if (cardKind === "extendedCard") {
     assertExtendedCardItem(
       castCardCollectionItem<ExtendedCardItem>(item),
       path,
@@ -77,7 +73,7 @@ export function assertCardCollectionCell(
   path: Path,
 ): void {
   assertCardCollectionKind(cell.cardKind, [...path, "cardKind"]);
-  const cardKind = normalizeCardCollectionCardKind(cell.cardKind);
+  const cardKind = cell.cardKind;
 
   const validColumns =
     cardKind === "card"

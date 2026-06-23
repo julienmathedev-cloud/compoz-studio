@@ -12,10 +12,7 @@
  * Reusable item shapes are delegated to item adapters.
  */
 
-import {
-  normalizeCardCollectionCardKind,
-  type CardCollectionCell,
-} from "@compoz/core/domain/pages/entities/cell";
+import type { CardCollectionCell } from "@compoz/core/domain/pages/entities/cell";
 import { adaptCardItem } from "@compoz/studio/app/api/_adapters/pages/blocks/items/card-item";
 import { adaptExtendedCardItem } from "@compoz/studio/app/api/_adapters/pages/blocks/items/extended-card-item";
 import { adaptStructuredCardItem } from "@compoz/studio/app/api/_adapters/pages/blocks/items/structured-card-item";
@@ -30,7 +27,7 @@ import type {
 export function adaptCardCollectionCell(
   dto: CardCollectionCellIntentDTO,
 ): CardCollectionCell {
-  const cardKind = normalizeCardCollectionCardKind(dto.cardKind);
+  const cardKind = dto.cardKind;
 
   const items =
     cardKind === "card"

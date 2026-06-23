@@ -18,7 +18,6 @@ import type {
   StructuredCardItemShape,
 } from "@compoz/validation/pages/blocks/cells/cell";
 
-import { normalizeCardCollectionCardKind } from "@compoz/core/domain/pages/entities/cell";
 import { cn } from "@compoz/ui/lib/utils";
 import { CardItemsRenderer } from "@compoz/ui/renderer/items/CardItemsRenderer";
 import { ExtendedCardItemsRenderer } from "@compoz/ui/renderer/items/ExtendedCardItemsRenderer";
@@ -52,8 +51,7 @@ export function CardCollectionCellRenderer({
 
   const align = cell.align;
   const reveal = cell.reveal === true;
-  const cardKind = normalizeCardCollectionCardKind(cell.cardKind);
-  const isStructuredCard = cardKind === "structuredCard";
+  const cardKind = cell.cardKind;
 
   const content = renderCardCollectionItems({
     cell,
@@ -100,7 +98,7 @@ function renderCardCollectionItems({
   revealUi,
   reveal,
 }: RenderCardCollectionItemsParams) {
-  const cardKind = normalizeCardCollectionCardKind(cell.cardKind);
+  const cardKind = cell.cardKind;
 
   if (cardKind === "card") {
     return (

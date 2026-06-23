@@ -12,10 +12,7 @@
  * Reusable item shapes are delegated to item adapters.
  */
 
-import {
-  normalizeCarouselItemKind,
-  type CarouselCell,
-} from "@compoz/core/domain/pages/entities/cell";
+import type { CarouselCell } from "@compoz/core/domain/pages/entities/cell";
 import { adaptImage } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/image";
 import { adaptCardItem } from "@compoz/studio/app/api/_adapters/pages/blocks/items/card-item";
 import { adaptExtendedCardItem } from "@compoz/studio/app/api/_adapters/pages/blocks/items/extended-card-item";
@@ -30,7 +27,7 @@ import type {
 } from "@compoz/validation/pages/blocks/cells/cell-intents";
 
 export function adaptCarouselCell(dto: CarouselCellIntentDTO): CarouselCell {
-  const itemKind = normalizeCarouselItemKind(dto.itemKind);
+  const itemKind = dto.itemKind;
 
   const items =
     itemKind === "image"

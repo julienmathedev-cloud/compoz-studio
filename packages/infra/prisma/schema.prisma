@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ContentState {
+  draft
+  published
+}
+
+enum WebsiteType {
+  site
+  sandbox
+}
+
+enum UserStatus {
+  active
+  disabled
+}
+
+enum UserRole {
+  admin
+  editor
+}
+
+enum WebsiteRole {
+  owner
+  admin
+  editor
+}
+
+enum MediaStorageProvider {
+  vercel_blob
+  local
+}
+
+enum MediaAssetKind {
+  image
+  svg
+  favicon
+}
+
+model Website {
+  id              String      @id
+  slug            String      @unique
+  name            String
+  type            WebsiteType @default(site)
+  sourceWebsiteId String?
+  expiresAt       DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  domains       WebsiteDomain[]
+  accesses      WebsiteAccess[]
+  pages         Page[]
+  siteSettings  SiteSettings[]
+  mediaAssets   MediaAsset[]
+  demoSandbox   DemoSandbox?
+
+  @@index([type])
+  @@index([expiresAt])
+  @@index([sourceWebsiteId])
+}
+
+model WebsiteDomain {
+  id        String   @id @default(cuid())
+  websiteId String
+  host      String   @unique
+  rawHost   String?
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId])
+}
+
+model WebsiteAccess {
+  id        String      @id @default(cuid())
+  userId    String
+  websiteId String
+  role      WebsiteRole
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, websiteId])
+  @@index([websiteId])
+  @@index([userId, role])
+}
+
+model Page {
+  id                String       @id @default(cuid())
+  websiteId         String
+  state             ContentState
+  pageId            String
+  parentPageId      String?
+  slug              String
+  name              String
+  seoTitle          String?
+  seoDescription    String?
+  blocks            Json
+  sitemap           Json?
+  paginationEnabled Boolean      @default(false)
+  position          Int          @default(0)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, state, pageId])
+  @@unique([websiteId, state, slug])
+  @@index([websiteId, state])
+  @@index([websiteId, state, parentPageId])
+  @@index([websiteId, state, position])
+}
+
+model SiteSettings {
+  id          String       @id @default(cuid())
+  websiteId   String
+  state       ContentState
+  header      Json
+  footer      Json
+  primaryMenu Json
+  legalMenu   Json
+  social      Json
+  identity    Json
+  seo         Json
+  theme       Json
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, state])
+}
+
+model User {
+  id               String     @id
+  email            String     @unique
+  name             String
+  status           UserStatus
+  role             UserRole
+  defaultWebsiteId String?
+  passwordHash     String
+  demo             Json?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  lastLoginAt      DateTime?
+
+  accesses      WebsiteAccess[]
+  demoSandboxes DemoSandbox[]
+
+  @@index([status])
+  @@index([role])
+  @@index([defaultWebsiteId])
+}
+
+model DemoSandbox {
+  demoInstanceId String   @id
+  userId         String
+  websiteId      String   @unique
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([userId])
+}
+
+model MediaAsset {
+  id            String               @id @default(cuid())
+  websiteId     String
+  provider      MediaStorageProvider
+  kind          MediaAssetKind
+  key           String
+  url           String
+  filename      String?
+  contentType   String?
+  size          Int?
+  width         Int?
+  height        Int?
+  originalSize  Int?
+  optimizedSize Int?
+  wasResized    Boolean?
+  wasCompressed Boolean?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime @updatedAt
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, key])
+  @@index([websiteId, createdAt])
+  @@index([websiteId, kind])
+}

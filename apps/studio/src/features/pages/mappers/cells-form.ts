@@ -7,11 +7,9 @@
  */
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";
-import {
-  normalizeCardCollectionCardKind,
-  normalizeCarouselItemKind,
-  type CardCollectionCardKind,
-  type CarouselItemKind,
+import type {
+  CardCollectionCardKind,
+  CarouselItemKind,
 } from "@compoz/core/domain/pages/entities/cell";
 import { isContentIconKind } from "@compoz/ui/lib/icons/content-icons";
 import { toCellShapeFromDTO } from "@compoz/ui/pages/mappers/cell-shape";
@@ -203,17 +201,15 @@ export function createEmptyStructuredCardItem(): StructuredCardItemFormValues {
 export function createEmptyCarouselItem(
   itemKind: CarouselItemKind,
 ): CarouselItemFormValues {
-  const normalizedItemKind = normalizeCarouselItemKind(itemKind);
-
-  if (normalizedItemKind === "image") {
+  if (itemKind === "image") {
     return createEmptyImageEditor();
   }
 
-  if (normalizedItemKind === "card") {
+  if (itemKind === "card") {
     return createEmptyCardItem();
   }
 
-  if (normalizedItemKind === "extendedCard") {
+  if (itemKind === "extendedCard") {
     return createEmptyExtendedCardItem();
   }
 
@@ -223,13 +219,11 @@ export function createEmptyCarouselItem(
 export function createEmptyCardCollectionItem(
   cardKind: CardCollectionCardKindFormValues | CardCollectionCardKind,
 ): CardCollectionItemFormValues {
-  const normalizedCardKind = normalizeCardCollectionCardKind(cardKind);
-
-  if (normalizedCardKind === "card") {
+  if (cardKind === "card") {
     return createEmptyCardItem();
   }
 
-  if (normalizedCardKind === "extendedCard") {
+  if (cardKind === "extendedCard") {
     return createEmptyExtendedCardItem();
   }
 
@@ -551,7 +545,7 @@ function normalizeCarouselItem(
   itemKind: CarouselItemKind,
   item: CarouselItemFormValues,
 ): CarouselItemFormValues {
-  if (normalizeCarouselItemKind(itemKind) === "structuredCard") {
+  if (itemKind === "structuredCard") {
     return normalizeStructuredCardItem(item as StructuredCardItemFormValues);
   }
 
@@ -562,7 +556,7 @@ function normalizeCarouselItemForValidation(
   itemKind: CarouselItemKind,
   item: CarouselItemFormValues,
 ): CarouselItemFormValues {
-  if (normalizeCarouselItemKind(itemKind) === "structuredCard") {
+  if (itemKind === "structuredCard") {
     return toStructuredCardItemForValidation(
       item as StructuredCardItemFormValues,
     );
@@ -575,7 +569,7 @@ function normalizeCardCollectionItem(
   cardKind: CardCollectionCardKind,
   item: CardCollectionItemFormValues,
 ): CardCollectionItemFormValues {
-  if (normalizeCardCollectionCardKind(cardKind) === "structuredCard") {
+  if (cardKind === "structuredCard") {
     return normalizeStructuredCardItem(item as StructuredCardItemFormValues);
   }
 
@@ -586,7 +580,7 @@ function normalizeCardCollectionItemForValidation(
   cardKind: CardCollectionCardKind,
   item: CardCollectionItemFormValues,
 ): CardCollectionItemFormValues {
-  if (normalizeCardCollectionCardKind(cardKind) === "structuredCard") {
+  if (cardKind === "structuredCard") {
     return toStructuredCardItemForValidation(
       item as StructuredCardItemFormValues,
     );
@@ -633,7 +627,7 @@ export function toCellFormValuesForValidation(
   }
 
   if (cell.kind === "carousel") {
-    const itemKind = normalizeCarouselItemKind(cell.itemKind);
+    const itemKind = cell.itemKind;
 
     return {
       ...cell,
@@ -649,7 +643,7 @@ export function toCellFormValuesForValidation(
   }
 
   if (cell.kind === "cardCollection") {
-    const cardKind = normalizeCardCollectionCardKind(cell.cardKind);
+    const cardKind = cell.cardKind;
 
     return {
       ...cell,
@@ -722,7 +716,7 @@ export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
   }
 
   if (cell.kind === "carousel") {
-    const itemKind = normalizeCarouselItemKind(cell.itemKind);
+    const itemKind = cell.itemKind;
 
     return {
       ...cell,
@@ -735,7 +729,7 @@ export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
   }
 
   if (cell.kind === "cardCollection") {
-    const cardKind = normalizeCardCollectionCardKind(cell.cardKind);
+    const cardKind = cell.cardKind;
 
     return {
       ...cell,

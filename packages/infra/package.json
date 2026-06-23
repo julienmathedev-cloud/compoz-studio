@@ -7,10 +7,15 @@
   "scripts": {
     "lint": "eslint .",
     "migrate:default-to-demo": "tsx src/scripts/migrate-default-to-demo.ts",
-    "backup:upstash": "tsx src/scripts/backup-upstash-local.ts"
+    "backup:upstash": "tsx src/scripts/backup-upstash-local.ts",
+    "db:validate": "prisma validate --schema prisma/schema.prisma",
+    "db:generate": "prisma generate --schema prisma/schema.prisma",
+    "db:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@compoz/core": "workspace:*",
+    "@prisma/client": "^7.8.0",
     "@upstash/redis": "^1.36.3",
     "@vercel/blob": "^2.3.1",
     "bcryptjs": "^3.0.3",
@@ -25,9 +30,14 @@
     "./kv/kv-telemetry": {
       "types": "./src/kv/kv-telemetry.ts",
       "default": "./src/kv/kv-telemetry.ts"
+    },
+    "./prisma/prisma-client": {
+      "types": "./src/prisma/prisma-client.ts",
+      "default": "./src/prisma/prisma-client.ts"
     }
   },
   "devDependencies": {
-    "@types/bcryptjs": "^3.0.0"
+    "@types/bcryptjs": "^3.0.0",
+    "prisma": "^7.8.0"
   }
 }

@@ -64,12 +64,9 @@ export type {
   CardCollectionCardKind,
   CardCollectionCell,
   CardCollectionColumns,
-  CardCollectionCurrentCardKind,
   CardCollectionItem,
-  CardCollectionLegacyCardKind,
   CardCollectionStackedColumns,
 } from "@compoz/core/domain/pages/entities/cells/card-collection";
-export { normalizeCardCollectionCardKind } from "@compoz/core/domain/pages/entities/cells/card-collection";
 
 export type { CardItem } from "@compoz/core/domain/pages/entities/items/card-item";
 
@@ -77,13 +74,10 @@ export type { ExtendedCardItem } from "@compoz/core/domain/pages/entities/items/
 
 export type {
   CarouselCell,
-  CarouselCurrentItemKind,
   CarouselItem,
   CarouselItemKind,
-  CarouselLegacyItemKind,
   CarouselVariant,
 } from "@compoz/core/domain/pages/entities/cells/carousel";
-export { normalizeCarouselItemKind } from "@compoz/core/domain/pages/entities/cells/carousel";
 
 export type {
   FormButtonVariant,

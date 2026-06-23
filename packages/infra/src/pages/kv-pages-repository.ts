@@ -264,23 +264,6 @@ function normalizeFormCellLegacy(value: unknown): unknown {
   };
 }
 
-function normalizeStructuredCardCellLegacy(value: unknown): unknown {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return value;
-  }
-
-  const cell = value as Record<string, unknown>;
-
-  if (cell.kind !== "structuredCard" || !Array.isArray(cell.items)) {
-    return value;
-  }
-
-  return {
-    ...cell,
-    items: cell.items.map(normalizeStructuredCardItemLegacy),
-  };
-}
-
 function normalizeCarouselCellLegacy(value: unknown): unknown {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return value;
@@ -304,11 +287,9 @@ function normalizeCarouselCellLegacy(value: unknown): unknown {
 
 function normalizeCellLegacy(value: unknown): unknown {
   return normalizeCarouselCellLegacy(
-    normalizeStructuredCardCellLegacy(
-      normalizeButtonsCellLegacy(
-        normalizeFormCellLegacy(
-          normalizeTimelineCellLegacy(normalizeImageCellLegacy(value)),
-        ),
+    normalizeButtonsCellLegacy(
+      normalizeFormCellLegacy(
+        normalizeTimelineCellLegacy(normalizeImageCellLegacy(value)),
       ),
     ),
   );

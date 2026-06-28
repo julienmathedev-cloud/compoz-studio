@@ -1,7 +1,7 @@
 /**
  * @file packages/validation/src/index.ts
  * @description
- * Configuration du package Validation.
+ * Public exports for the validation package.
  * @layer validation
  */
 

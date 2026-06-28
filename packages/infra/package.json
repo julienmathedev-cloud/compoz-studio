@@ -15,10 +15,13 @@
   },
   "dependencies": {
     "@compoz/core": "workspace:*",
+    "@compoz/validation": "workspace:*",
+    "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@upstash/redis": "^1.36.3",
     "@vercel/blob": "^2.3.1",
     "bcryptjs": "^3.0.3",
+    "pg": "^8.22.0",
     "sharp": "^0.34.5",
     "uuid": "^13.0.0"
   },
@@ -31,13 +34,65 @@
       "types": "./src/kv/kv-telemetry.ts",
       "default": "./src/kv/kv-telemetry.ts"
     },
+    "./kv/kv-redis": {
+      "types": "./src/kv/kv-redis.ts",
+      "import": "./src/kv/kv-redis.ts",
+      "default": "./src/kv/kv-redis.ts"
+    },
+    "./lib/normalize-tenant-id": {
+      "types": "./src/lib/normalize-tenant-id.ts",
+      "import": "./src/lib/normalize-tenant-id.ts",
+      "default": "./src/lib/normalize-tenant-id.ts"
+    },
+    "./pages/kv-pages-repository": {
+      "types": "./src/pages/kv-pages-repository.ts",
+      "import": "./src/pages/kv-pages-repository.ts",
+      "default": "./src/pages/kv-pages-repository.ts"
+    },
+    "./pages/prisma-pages-repository": {
+      "types": "./src/pages/prisma-pages-repository.ts",
+      "import": "./src/pages/prisma-pages-repository.ts",
+      "default": "./src/pages/prisma-pages-repository.ts"
+    },
+    "./pages/mappers/page.mapper": {
+      "types": "./src/pages/mappers/page.mapper.ts",
+      "import": "./src/pages/mappers/page.mapper.ts",
+      "default": "./src/pages/mappers/page.mapper.ts"
+    },
+    "./pages/mappers/page-legacy-normalizer": {
+      "types": "./src/pages/mappers/page-legacy-normalizer.ts",
+      "import": "./src/pages/mappers/page-legacy-normalizer.ts",
+      "default": "./src/pages/mappers/page-legacy-normalizer.ts"
+    },
     "./prisma/prisma-client": {
       "types": "./src/prisma/prisma-client.ts",
+      "import": "./src/prisma/prisma-client.ts",
       "default": "./src/prisma/prisma-client.ts"
+    },
+    "./site/kv-site-repository": {
+      "types": "./src/site/kv-site-repository.ts",
+      "import": "./src/site/kv-site-repository.ts",
+      "default": "./src/site/kv-site-repository.ts"
+    },
+    "./site/prisma-site-repository": {
+      "types": "./src/site/prisma-site-repository.ts",
+      "import": "./src/site/prisma-site-repository.ts",
+      "default": "./src/site/prisma-site-repository.ts"
+    },
+    "./site/mappers/site-index.mapper": {
+      "types": "./src/site/mappers/site-index.mapper.ts",
+      "import": "./src/site/mappers/site-index.mapper.ts",
+      "default": "./src/site/mappers/site-index.mapper.ts"
+    },
+    "./site/mappers/site-settings.mapper": {
+      "types": "./src/site/mappers/site-settings.mapper.ts",
+      "import": "./src/site/mappers/site-settings.mapper.ts",
+      "default": "./src/site/mappers/site-settings.mapper.ts"
     }
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
+    "@types/pg": "^8.20.0",
     "prisma": "^7.8.0"
   }
 }

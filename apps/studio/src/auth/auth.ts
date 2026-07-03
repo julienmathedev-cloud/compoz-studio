@@ -6,7 +6,7 @@
  * Configuration Auth.js (NextAuth) pour le Studio.
  *
  * Responsabilités :
- * - Provider Credentials (email/password) via `KvUsersRepository` (Studio users SoT).
+ * - Provider Credentials (email/password) via `UsersRepository` (Studio users SoT).
  * - Session JWT (pas d’adapter DB).
  * - Injection RBAC + tenantIds + defaultTenantId dans le token + la session.
  * - Propagation éventuelle des métadonnées de sandbox démo dans le token + la session.
@@ -22,7 +22,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 
-import { KvUsersRepository } from "@compoz/infra/users/kv-users-repository";
+import { getUsersRepository } from "@compoz/infra/users";
 
 const CredentialsSchema = z.object({
   email: z.string().trim().email(),
@@ -48,11 +48,15 @@ export const authOptions: NextAuthOptions = {
         const { email, password } = parsed.data;
 
         // ✅ SoT unique : repo Studio users.
-        const repo = new KvUsersRepository();
+        const repo = getUsersRepository();
 
         const user = await repo.readByEmail(email);
         if (!user) {
           throw new Error("EMAIL_NOT_FOUND");
+        }
+
+        if (user.status !== "active") {
+          throw new Error("USER_DISABLED");
         }
 
         const ok = await repo.verifyPassword(user.id, password);

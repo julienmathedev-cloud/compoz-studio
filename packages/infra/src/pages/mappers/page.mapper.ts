@@ -27,6 +27,8 @@ export type PrismaPageRow = {
   blocks: unknown;
   sitemap: unknown;
   paginationEnabled: boolean;
+  metaCreatedAt: Date;
+  metaUpdatedAt: Date;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -40,6 +42,8 @@ type PrismaPageBaseWriteData = {
   blocks: Prisma.InputJsonValue;
   sitemap: Prisma.InputJsonValue | typeof Prisma.JsonNull;
   paginationEnabled: boolean;
+  metaCreatedAt: Date;
+  metaUpdatedAt: Date;
 };
 
 export type PrismaPageCreateData = PrismaPageBaseWriteData & {
@@ -93,8 +97,8 @@ export function toDomainPage(row: PrismaPageRow): Page {
     seoDescription: row.seoDescription,
     blocks: row.blocks,
     meta: {
-      createdAt: row.createdAt.toISOString(),
-      updatedAt: row.updatedAt.toISOString(),
+      createdAt: row.metaCreatedAt.toISOString(),
+      updatedAt: row.metaUpdatedAt.toISOString(),
     },
     sitemap: row.sitemap,
     paginationEnabled: row.paginationEnabled,
@@ -131,5 +135,7 @@ export function toPrismaPageUpdateData(
     blocks: toJsonValue(page.blocks),
     sitemap: toNullableJsonValue(page.sitemap),
     paginationEnabled: page.paginationEnabled,
+    metaCreatedAt: new Date(page.meta.createdAt),
+    metaUpdatedAt: new Date(page.meta.updatedAt),
   };
 }

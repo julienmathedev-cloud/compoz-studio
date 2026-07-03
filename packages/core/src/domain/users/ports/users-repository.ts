@@ -33,6 +33,7 @@ export interface UsersRepository {
   putMany(users: ReadonlyArray<User>): Promise<void>;
 
   setPassword(userId: string, password: string): Promise<void>;
+  verifyPassword(userId: string, password: string): Promise<boolean>;
 
   deleteById(userId: string): Promise<void>;
   deleteByEmail(email: string): Promise<void>;

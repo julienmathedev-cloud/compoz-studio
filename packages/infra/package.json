@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@compoz/core": "workspace:*",
+    "@compoz/http": "workspace:*",
     "@compoz/validation": "workspace:*",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
@@ -39,10 +40,20 @@
       "import": "./src/kv/kv-redis.ts",
       "default": "./src/kv/kv-redis.ts"
     },
+    "./http/abort-error": {
+      "types": "./src/http/abort-error.ts",
+      "import": "./src/http/abort-error.ts",
+      "default": "./src/http/abort-error.ts"
+    },
     "./lib/normalize-tenant-id": {
       "types": "./src/lib/normalize-tenant-id.ts",
       "import": "./src/lib/normalize-tenant-id.ts",
       "default": "./src/lib/normalize-tenant-id.ts"
+    },
+    "./lib/log": {
+      "types": "./src/lib/log.ts",
+      "import": "./src/lib/log.ts",
+      "default": "./src/lib/log.ts"
     },
     "./pages/kv-pages-repository": {
       "types": "./src/pages/kv-pages-repository.ts",
@@ -88,6 +99,26 @@
       "types": "./src/site/mappers/site-settings.mapper.ts",
       "import": "./src/site/mappers/site-settings.mapper.ts",
       "default": "./src/site/mappers/site-settings.mapper.ts"
+    },
+    "./users": {
+      "types": "./src/users/index.ts",
+      "import": "./src/users/index.ts",
+      "default": "./src/users/index.ts"
+    },
+    "./users/in-memory-users-repository": {
+      "types": "./src/users/in-memory-users-repository.ts",
+      "import": "./src/users/in-memory-users-repository.ts",
+      "default": "./src/users/in-memory-users-repository.ts"
+    },
+    "./users/kv-users-repository": {
+      "types": "./src/users/kv-users-repository.ts",
+      "import": "./src/users/kv-users-repository.ts",
+      "default": "./src/users/kv-users-repository.ts"
+    },
+    "./users/prisma-users-repository": {
+      "types": "./src/users/prisma-users-repository.ts",
+      "import": "./src/users/prisma-users-repository.ts",
+      "default": "./src/users/prisma-users-repository.ts"
     }
   },
   "devDependencies": {

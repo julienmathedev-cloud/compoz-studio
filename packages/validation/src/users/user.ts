@@ -77,15 +77,14 @@ export const UserStatusSchema = z.enum(["active", "disabled"], {
  * - trim
  * - lower-case
  * - non vide
- *
- * @remarks
- * On autorise "*" (wildcard) pour super-admin.
+ * - pas de wildcard "*"
  */
 export const TenantIdSchema = z
   .string()
   .trim()
   .min(1, ERROR_CODES.USER_TENANT_IDS_REQUIRED)
-  .transform((v) => v.toLowerCase());
+  .transform((v) => v.toLowerCase())
+  .refine((v) => v !== "*", ERROR_CODES.USER_TENANT_IDS_INVALID);
 
 /**
  * Liste de tenants :
@@ -137,9 +136,7 @@ export const UserRbacSchema = z
   })
   .strict()
   .superRefine((rbac, ctx) => {
-    const hasWildcard = rbac.tenantIds.includes("*");
-
-    if (!hasWildcard && !rbac.tenantIds.includes(rbac.defaultTenantId)) {
+    if (!rbac.tenantIds.includes(rbac.defaultTenantId)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: ERROR_CODES.USER_DEFAULT_TENANT_NOT_ALLOWED,

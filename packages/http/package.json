@@ -11,6 +11,7 @@
     "@compoz/core": "workspace:*"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./http-error": "./src/http-error.ts"
   }
 }

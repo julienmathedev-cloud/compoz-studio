@@ -142,6 +142,18 @@ export function assertTenantIds(
     new Set(raw.map((t) => normalizeLower(t)).filter(Boolean)),
   );
 
+  const wildcardIndex = tenantIds.indexOf("*");
+  if (wildcardIndex >= 0) {
+    throw new DomainError({
+      code: EC.USER_TENANT_IDS_INVALID,
+      message: EC.USER_TENANT_IDS_INVALID,
+      details: {
+        path: [...path, wildcardIndex],
+        meta: { reason: "wildcard_not_allowed" },
+      },
+    });
+  }
+
   if (tenantIds.length === 0) {
     throw new DomainError({
       code: EC.USER_TENANT_IDS_REQUIRED,
@@ -154,7 +166,7 @@ export function assertTenantIds(
 }
 
 /**
- * defaultTenantId requis + normalisé + doit être dans tenantIds sauf wildcard "*".
+ * defaultTenantId requis + normalisé + doit être dans tenantIds.
  */
 export function assertDefaultTenantId(args: {
   defaultTenantId: unknown;
@@ -173,9 +185,7 @@ export function assertDefaultTenantId(args: {
     path,
   }).toLowerCase();
 
-  const hasWildcard = tenantIds.includes("*");
-
-  if (!hasWildcard && !tenantIds.includes(v)) {
+  if (!tenantIds.includes(v)) {
     throw new DomainError({
       code: EC.USER_DEFAULT_TENANT_NOT_ALLOWED,
       message: EC.USER_DEFAULT_TENANT_NOT_ALLOWED,

@@ -158,6 +158,16 @@ export class InMemoryUsersRepository implements UsersRepository {
     this.store.pwdById.set(id, hash);
   }
 
+  async verifyPassword(userId: string, password: string): Promise<boolean> {
+    const id = String(userId ?? "").trim();
+    if (!id) return false;
+
+    const hash = this.store.pwdById.get(id) ?? "";
+    if (!hash) return false;
+
+    return bcrypt.compare(String(password ?? ""), hash);
+  }
+
   /* -------------------------------------------------------------------------- */
   /* Deletes                                                                    */
   /* -------------------------------------------------------------------------- */

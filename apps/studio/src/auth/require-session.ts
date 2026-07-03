@@ -106,12 +106,37 @@ export async function getSessionWithTenantOrNull(): Promise<SessionTenantResult 
   const role = String(session.user?.role ?? "").trim();
 
   const tenantIds = Array.isArray(session.user?.tenantIds)
-    ? (session.user.tenantIds as unknown[]).map((t) =>
-        String(t ?? "")
-          .trim()
-          .toLowerCase(),
-      )
+    ? [
+        ...new Set(
+          (session.user.tenantIds as unknown[])
+            .map((t) =>
+              String(t ?? "")
+                .trim()
+                .toLowerCase(),
+            )
+            .filter(Boolean),
+        ),
+      ]
     : [];
+
+  if (defaultTenantId === "*" || tenantIds.includes("*")) {
+    throwHttp(400, {
+      code: ERROR_CODES.VALIDATION_ERROR,
+      message: "Wildcard tenant access is not supported",
+      where: "auth.session.tenantIds",
+    });
+  }
+
+  if (!tenantIds.includes(defaultTenantId)) {
+    throwHttp(403, {
+      code: ERROR_CODES.FORBIDDEN,
+      message: ERROR_CODES.FORBIDDEN,
+      extras: {
+        where: "auth.session.defaultTenantId",
+        reason: "DEFAULT_TENANT_NOT_ALLOWED",
+      },
+    });
+  }
 
   const user: SessionUserLite = {
     id: normalizeId(session.user.id),
@@ -141,12 +166,8 @@ export async function getSessionWithTenantOrNull(): Promise<SessionTenantResult 
     .trim()
     .toLowerCase();
 
-  const hasWildcard = tenantIds.includes("*");
-
   const tenantId =
-    active && (hasWildcard || tenantIds.includes(active))
-      ? active
-      : defaultTenantId;
+    active && tenantIds.includes(active) ? active : defaultTenantId;
 
   return { tenantId, role, tenantIds, defaultTenantId, user };
 }

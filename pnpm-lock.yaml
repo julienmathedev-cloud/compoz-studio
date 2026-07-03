@@ -277,6 +277,9 @@ importers:
       '@compoz/core':
         specifier: workspace:*
         version: link:../core
+      '@compoz/http':
+        specifier: workspace:*
+        version: link:../http
       '@compoz/validation':
         specifier: workspace:*
         version: link:../validation

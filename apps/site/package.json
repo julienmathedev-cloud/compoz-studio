@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev -p 3001 --turbo",
+    "prebuild": "pnpm --filter @compoz/infra db:generate",
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "eslint"

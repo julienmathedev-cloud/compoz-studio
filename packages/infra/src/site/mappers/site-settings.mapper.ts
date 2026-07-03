@@ -17,7 +17,7 @@ import { DEFAULT_THEME_SETTINGS } from "@compoz/core/domain/site/defaults/theme"
 
 import type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "@compoz/infra/prisma/generated";
 
 export type PrismaContentState = "draft" | "published";
 

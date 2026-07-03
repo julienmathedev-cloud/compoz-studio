@@ -9,7 +9,7 @@
  * - WebsiteAccess.websiteId -> rbac.tenantIds
  */
 
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@compoz/infra/prisma/generated";
 import bcrypt from "bcryptjs";
 
 import type {

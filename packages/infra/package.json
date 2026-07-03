@@ -11,14 +11,14 @@
     "db:validate": "prisma validate --schema prisma/schema.prisma",
     "db:generate": "prisma generate --schema prisma/schema.prisma",
     "db:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio --schema prisma/schema.prisma"
   },
   "dependencies": {
     "@compoz/core": "workspace:*",
     "@compoz/http": "workspace:*",
     "@compoz/validation": "workspace:*",
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
+    "@prisma/adapter-pg": "7.8.0",
+    "@prisma/client": "7.8.0",
     "@upstash/redis": "^1.36.3",
     "@vercel/blob": "^2.3.1",
     "bcryptjs": "^3.0.3",
@@ -80,6 +80,11 @@
       "import": "./src/prisma/prisma-client.ts",
       "default": "./src/prisma/prisma-client.ts"
     },
+    "./prisma/generated": {
+      "types": "./src/prisma/generated/client.ts",
+      "import": "./src/prisma/generated/client.ts",
+      "default": "./src/prisma/generated/client.ts"
+    },
     "./site/kv-site-repository": {
       "types": "./src/site/kv-site-repository.ts",
       "import": "./src/site/kv-site-repository.ts",
@@ -124,6 +129,6 @@
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
     "@types/pg": "^8.20.0",
-    "prisma": "^7.8.0"
+    "prisma": "7.8.0"
   }
 }

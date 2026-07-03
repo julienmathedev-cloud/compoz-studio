@@ -17,7 +17,7 @@
  */
 
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@compoz/infra/prisma/generated";
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -52,4 +52,4 @@ if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 
-export type { PrismaClient } from "@prisma/client";
+export type { PrismaClient } from "@compoz/infra/prisma/generated";

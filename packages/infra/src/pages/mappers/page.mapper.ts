@@ -6,7 +6,7 @@
  * Mapper between Prisma Page rows and the domain Page entity.
  */
 
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@compoz/infra/prisma/generated";
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";
 import type { Page, PageMeta } from "@compoz/core/domain/pages/entities/page";

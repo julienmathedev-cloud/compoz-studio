@@ -4,6 +4,10 @@
  *
  * @description
  * Synchronise le cache React Query après une mutation block renvoyant `{ page }`.
+ *
+ * @remarks
+ * - Le cache Studio est scopé par Website.id.
+ * - Aucune URL publique n’est construite ici, donc pas de Website.slug.
  */
 
 import type { QueryClient } from "@tanstack/react-query";
@@ -15,15 +19,24 @@ import { setPageBlocksCache } from "@compoz/studio/features/pages/blocks/cache/c
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
 
 export function syncBlocksFromPageCache(
-  qc: QueryClient,
-  tenantId: string,
+  queryClient: QueryClient,
+  websiteId: string,
   pageId: string,
   page: PageDTO,
   state: ContentState = DEFAULT_CONTENT_STATE,
 ) {
+  const websiteIdKey = String(websiteId ?? "").trim();
   const pageIdKey = String(pageId ?? "").trim();
-  if (!pageIdKey) return;
 
-  qc.setQueryData(pageByIdKey(tenantId, pageIdKey, state), page);
-  setPageBlocksCache(qc, tenantId, pageIdKey, state, page.blocks ?? []);
+  if (!websiteIdKey || !pageIdKey) return;
+
+  queryClient.setQueryData(pageByIdKey(websiteIdKey, pageIdKey, state), page);
+
+  setPageBlocksCache(
+    queryClient,
+    websiteIdKey,
+    pageIdKey,
+    state,
+    page.blocks ?? [],
+  );
 }

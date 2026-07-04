@@ -5,31 +5,35 @@
  * @layer hooks/studio/site/status
  *
  * @description
- * Hook React Query : récupère l’état global du site (draft vs published).
+ * Hook React Query : récupère l’état global du site draft vs published.
  *
  * @remarks
- * V0.5 : read-only. Le calcul est fait côté API `/api/studio/site/status`.
- * Tenant-scoped : la queryKey inclut tenantId (sinon cache cross-tenant).
+ * - Read-only.
+ * - Le calcul est fait côté API `/api/studio/site/status`.
+ * - Website-scoped : la queryKey inclut Prisma Website.id pour éviter
+ *   les collisions de cache lors d’un switch de Website actif.
  */
+
+import { useQuery } from "@tanstack/react-query";
 
 import type { SiteStatusDTO } from "@compoz/core/domain/site/dto";
 import { siteStudioApi } from "@compoz/infra/http/studio/site.client";
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { siteStatusKey } from "@compoz/studio/features/site/status/keys";
-import { useQuery } from "@tanstack/react-query";
 
 export function useSiteStatus() {
-  const tenantId = useTenantId();
-  const enabled = Boolean(String(tenantId ?? "").trim());
+  const websiteId = useWebsiteId();
+  const enabled = Boolean(String(websiteId ?? "").trim());
 
   const options = {
-    queryKey: siteStatusKey(tenantId),
+    queryKey: siteStatusKey(websiteId),
     enabled,
     queryFn: async (): Promise<SiteStatusDTO> => {
-      const res = await siteStudioApi.status();
-      return res.status;
+      const response = await siteStudioApi.status();
+
+      return response.status;
     },
-    placeholderData: (prev?: SiteStatusDTO) => prev,
+    placeholderData: (previous?: SiteStatusDTO) => previous,
   } as const;
 
   return useQuery<SiteStatusDTO>(options);

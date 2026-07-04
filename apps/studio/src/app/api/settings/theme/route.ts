@@ -1,14 +1,19 @@
 /**
  * @file apps/studio/src/app/api/settings/theme/route.ts
  * @layer studio/app/api
- * @description
- * Route API Studio pour la lecture et la mise à jour des réglages Theme du site.
  *
+ * @description
+ * Route API Studio pour la lecture et la mise à jour des réglages Theme
+ * du Website actif.
+ *
+ * @remarks
  * Responsabilités :
- * - GET   : retourne les settings Theme selon le state (draft/published).
- * - PATCH : met à jour les settings Theme (draft-only) via un DTO intent,
- *           adaptation en patch domaine, et exécution du use-case `updateThemeSettings`.
+ * - GET   : retourne les settings Theme selon le state demandé.
+ * - PATCH : met à jour les settings Theme en draft via un DTO intent,
+ *   adaptation en patch domaine, puis exécution du use-case
+ *   `updateThemeSettings`.
  * - Le repository merge avec les defaults pour assurer la cohérence.
+ * - Le repository et le cache de status sont scopés par Prisma Website.id.
  */
 
 import "server-only";
@@ -23,46 +28,57 @@ import type {
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 import { adaptUpdateThemeIntent } from "@compoz/studio/app/api/_adapters/theme";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { UpdateThemeSettingsIntentSchema } from "@compoz/validation/site/settings/theme/theme-intents";
+
+/* -------------------------------------------------------------------------- */
+/* GET                                                                        */
+/* -------------------------------------------------------------------------- */
 
 export async function GET(req: Request) {
   const NS = "api.studio.site.theme.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
-    return logSpan(NS, { ns: NS, method: "GET", state, tenantId }, async () => {
-      const repo = getSiteRepository({ tenantId });
-      const settings = await repo.readSettings(state);
+    return logSpan(
+      NS,
+      { ns: NS, method: "GET", state, websiteId },
+      async () => {
+        const repo = getSiteRepository({ websiteId });
+        const settings = await repo.readSettings(state);
 
-      const res: GetThemeResponse = { settings: settings.theme };
-      return res;
-    });
+        const res: GetThemeResponse = {
+          settings: settings.theme,
+        };
+
+        return res;
+      },
+    );
   });
 }
+
+/* -------------------------------------------------------------------------- */
+/* PATCH                                                                      */
+/* -------------------------------------------------------------------------- */
 
 export async function PATCH(req: Request) {
   const NS = "api.studio.site.theme.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
-    return logSpan(NS, { ns: NS, method: "PATCH", tenantId }, async () => {
-      const lg = log.child({ ns: NS });
+    return logSpan(NS, { ns: NS, method: "PATCH", websiteId }, async () => {
+      const logger = log.child({ ns: NS });
 
       const raw = await readJsonOr400(req);
 
-      lg.debug?.("route.theme.patch.start", {
-        tenantId,
+      logger.debug?.("route.theme.patch.start", {
+        websiteId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
-        hasKvUrl: Boolean(
-          process.env["KV_REST_API_URL"] ??
-          process.env["UPSTASH_REDIS_REST_URL"],
-        ),
       });
 
       const dto = parseDTOOrHttp(UpdateThemeSettingsIntentSchema, raw, {
@@ -72,29 +88,47 @@ export async function PATCH(req: Request) {
 
       const input = adaptUpdateThemeIntent(dto);
 
-      const repo = getSiteRepository({ tenantId });
-      const statusCache = getSiteStatusCache({ tenantId });
+      const repo = getSiteRepository({ websiteId });
+      const statusCache = getSiteStatusCache({ websiteId });
 
       const run = updateThemeSettings({ repo });
       const { settings } = await run(input);
 
-      lg.debug?.("route.theme.patch.afterWrite", {
-        tenantId,
-        themeKeys: settings?.theme ? Object.keys(settings.theme) : [],
+      logger.debug?.("route.theme.patch.afterWrite", {
+        websiteId,
+        themeKeys: settings.theme ? Object.keys(settings.theme) : [],
       });
 
+      /**
+       * Invalidation du cache de status du Website actif.
+       *
+       * Le cache peut encore être implémenté en KV côté infra,
+       * mais son scope métier est le Prisma Website.id.
+       */
       try {
-        lg.debug?.("route.theme.patch.invalidate.start", { tenantId });
+        logger.debug?.("route.theme.patch.invalidate.start", {
+          websiteId,
+          invalidateStatus: true,
+        });
+
         await statusCache.invalidateStatus();
-        lg.debug?.("route.theme.patch.invalidate.done", { tenantId });
-      } catch (e) {
-        lg.error?.("route.theme.patch.invalidate.failed", {
-          tenantId,
-          err: String(e),
+
+        logger.debug?.("route.theme.patch.invalidate.done", {
+          websiteId,
+          invalidateStatus: true,
+        });
+      } catch (error) {
+        logger.error?.("route.theme.patch.invalidate.failed", {
+          websiteId,
+          err: String(error),
+          invalidateStatus: true,
         });
       }
 
-      const res: PatchThemeResponse = { settings: settings.theme };
+      const res: PatchThemeResponse = {
+        settings: settings.theme,
+      };
+
       return res;
     });
   });

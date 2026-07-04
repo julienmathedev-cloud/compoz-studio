@@ -5,19 +5,20 @@
  * @layer hooks/studio/site/identity
  *
  * @description
- * Hook studio spécialisé pour gérer les réglages d’identité du site via l’API.
+ * Hook Studio spécialisé pour gérer les réglages d’identité du site via l’API.
  *
  * @remarks
- * - Basé sur le pattern **Settings RHF-first** (`useSettingsResource`).
- * - Travaille exclusivement sur le modèle **UI** (`IdentityFormValues`).
+ * - Basé sur le pattern Settings RHF-first (`useSettingsResource`).
+ * - Travaille exclusivement sur le modèle UI (`IdentityFormValues`).
  * - Orchestration UI-only : defaults, load, diff minimal, save, notifications.
  * - Mapping domaine ↔ UI assuré par des mappers dédiés.
  * - Aucune logique métier ni validation domaine.
+ * - Le cache settings/status est scopé par Prisma Website.id.
  *
- * Option B (bundle read) :
- * - READ : provient du bundle global (React Query).
- * - WRITE : reste slice-by-slice (PATCH identity).
- * - Après un save : patch du cache bundle (identity) + invalidate status.
+ * Option B, bundle read :
+ * - READ : provient du bundle global React Query.
+ * - WRITE : reste slice-by-slice via PATCH identity.
+ * - Après un save : patch du cache bundle identity + invalidate status.
  */
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -27,7 +28,7 @@ import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_IDENTITY_SETTINGS } from "@compoz/core/domain/site/defaults/identity";
 import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
@@ -43,6 +44,7 @@ import {
 } from "@compoz/studio/features/settings/mappers/identity-form";
 import { invalidateSiteStatus } from "@compoz/studio/features/site/status/invalidate";
 import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
+
 import type { IdentityFormValues } from "@compoz/validation/site/settings/identity/identity-form";
 
 type UseIdentitySettingsResult = SettingsHookResult<IdentityFormValues>;
@@ -50,7 +52,7 @@ type UseIdentitySettingsResult = SettingsHookResult<IdentityFormValues>;
 export function useIdentitySettings(): UseIdentitySettingsResult {
   const t = useTranslations();
   const queryClient = useQueryClient();
-  const tenantId = useTenantId();
+  const websiteId = useWebsiteId();
 
   const entityLabel = t("studio.shared.entities.identity");
 
@@ -61,25 +63,30 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
       toIdentityFormValuesFromDTO(DEFAULT_IDENTITY_SETTINGS),
     ),
 
-    /** READ (bundle) : cache-first + fetchQuery fallback. */
+    /**
+     * READ bundle : cache-first + fetchQuery fallback.
+     */
     load: async (state: ContentState) => {
-      const bundle = await getSettingsBundle(queryClient, tenantId, state);
+      const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
       return normalizeIdentityFormValues(
         toIdentityFormValuesFromDTO(bundle.identity),
       );
     },
 
+    /**
+     * WRITE slice PATCH + patch bundle cache.
+     */
     save: async (next, opts) => {
       const patch = toUpdateIdentityIntentDTOFromFormValues(next);
       const dto = await settingsStudioApi.identity.patch(patch, opts);
 
       patchSettingsBundleCache(
         queryClient,
-        tenantId,
+        websiteId,
         DEFAULT_CONTENT_STATE,
-        (prev) => ({
-          ...prev,
+        (previous) => ({
+          ...previous,
           identity: dto.settings,
         }),
       );
@@ -89,6 +96,9 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
       );
     },
 
+    /**
+     * Diff minimal : ne renvoie que les champs réellement modifiés.
+     */
     buildPatch: (baseline, next) =>
       buildShallowDiff(
         normalizeIdentityFormValues(baseline),
@@ -98,11 +108,14 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
     onLoaded: normalizeIdentityFormValues,
     beforeSave: normalizeIdentityFormValues,
 
+    /**
+     * Après save : invalide le read-model status et le bundle settings.
+     */
     onSaved: () => {
-      void invalidateSiteStatus(queryClient, tenantId);
+      void invalidateSiteStatus(queryClient, websiteId);
 
       void queryClient.invalidateQueries({
-        queryKey: settingsBundleKey(tenantId, DEFAULT_CONTENT_STATE),
+        queryKey: settingsBundleKey(websiteId, DEFAULT_CONTENT_STATE),
       });
     },
   });
@@ -116,3 +129,5 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
     }),
   };
 }
+
+useIdentitySettings.displayName = "useIdentitySettings";

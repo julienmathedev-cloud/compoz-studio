@@ -3,14 +3,14 @@
  * @layer studio/app
  *
  * @description
- * Page builder d’un bloc d’une page (Builder Studio).
+ * Page builder d’un bloc d’une page dans le Builder Studio.
  *
  * @remarks
- * - Résout le tenant via la session.
- * - Charge la page (state par défaut), retrouve le block ciblé
- *   puis rend l’écran builder.
- * - 404 si `pageId` / `blockId` manquants, page introuvable
- *   ou block introuvable / incompatible.
+ * - Résout la session Studio et le Website actif côté server.
+ * - Charge la page depuis le scope du Prisma Website.id actif.
+ * - Retrouve le block ciblé puis rend l’écran builder.
+ * - Retourne une 404 si `pageId` / `blockId` sont manquants,
+ *   si la page est introuvable ou si le block est introuvable / incompatible.
  */
 
 import { notFound } from "next/navigation";
@@ -19,7 +19,7 @@ import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-sta
 import { getPagesRepository } from "@compoz/infra/pages";
 import {
   isAdminRole,
-  requireSessionWithTenant,
+  requireSessionWithWebsite,
 } from "@compoz/studio/auth/require-session";
 import { BuilderScreen } from "@compoz/studio/features/builder/BuilderScreen";
 import { toSectionBlockFormValuesFromDTO } from "@compoz/studio/features/pages/mappers/blocks-form";
@@ -36,17 +36,26 @@ type BuilderPageProps = Readonly<{
 }>;
 
 export default async function BuilderPage({ params }: BuilderPageProps) {
-  const { tenantId, role } = await requireSessionWithTenant();
-  if (!tenantId) notFound();
+  const { websiteId, role } = await requireSessionWithWebsite();
+
+  if (!websiteId) {
+    notFound();
+  }
+
   const isAdmin = isAdminRole(role);
 
   const { pageId, blockId } = await unwrapParams(params);
-  if (!pageId || !blockId) notFound();
 
-  const pagesRepo = getPagesRepository({ tenantId });
+  if (!pageId || !blockId) {
+    notFound();
+  }
+
+  const pagesRepo = getPagesRepository({ websiteId });
   const page = await pagesRepo.readById(DEFAULT_CONTENT_STATE, pageId);
 
-  if (!page) notFound();
+  if (!page) {
+    notFound();
+  }
 
   const block = (page.blocks ?? []).find((item) => item.id === blockId);
 

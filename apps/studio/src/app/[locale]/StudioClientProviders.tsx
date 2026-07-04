@@ -9,14 +9,16 @@
  *
  * @remarks
  * - Doit être au-dessus de la Sidebar (SidebarProvider + Dirty Guard).
- * - Contient uniquement des providers UI (pas de fetch, pas de logique métier server).
- * - Expose aussi un TenantContext (tenantId résolu côté server) pour les query keys.
+ * - Contient uniquement des providers UI.
+ * - Ne contient pas de fetch ni de logique métier server.
+ * - Expose aussi un WebsiteContext avec le Website actif résolu côté server,
+ *   utilisé notamment pour les query keys et les scopes client.
  */
 
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 
-import { TenantContext } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { WebsiteContext } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { ConfirmDialogProvider } from "@compoz/studio/features/confirm/ConfirmDialogProvider";
 import { StudioDirtyGuardProvider } from "@compoz/studio/features/dirty-guard/StudioDirtyGuardProvider";
 import { StudioThemeProvider } from "@compoz/studio/features/theme/StudioThemeProvider";
@@ -32,19 +34,44 @@ type StudioClientProvidersProps = Readonly<{
   children: ReactNode;
 
   /**
-   * TenantId résolu côté server (requireSessionWithTenant()).
-   * Important : reflète le cookie httpOnly "tenant actif" pour les admins.
+   * Website.id résolu côté server via requireSessionWithWebsite().
+   *
+   * Pour les admins, cette valeur reflète le Website actif sélectionné.
+   * À terme, elle doit être portée par le cookie httpOnly
+   * "compoz_active_website".
    */
-  tenantId: string;
+  websiteId: string;
+
+  /**
+   * Website.slug public canonique du Website actif.
+   *
+   * Utilisé pour les URLs publiques, preview, skins et features runtime.
+   */
+  websiteSlug: string;
+
+  /**
+   * Website.name affichable du Website actif.
+   */
+  websiteName?: string;
+
   hasSidebar?: boolean;
 }>;
 
 export function StudioClientProviders({
   children,
-  tenantId,
+  websiteId,
+  websiteSlug,
+  websiteName,
   hasSidebar = true,
 }: StudioClientProvidersProps) {
-  const value = useMemo(() => ({ tenantId }), [tenantId]);
+  const value = useMemo(
+    () => ({
+      websiteId,
+      websiteSlug,
+      websiteName,
+    }),
+    [websiteId, websiteSlug, websiteName],
+  );
 
   const content = hasSidebar ? (
     <SidebarProvider>{children}</SidebarProvider>
@@ -57,7 +84,7 @@ export function StudioClientProviders({
       {/* Applique la classe studio-theme sur <html> (Radix portals inclus). */}
       <StudioThemeScope />
 
-      <TenantContext.Provider value={value}>
+      <WebsiteContext.Provider value={value}>
         <NotifyProvider>
           <StudioThemeProvider>
             <ConfirmDialogProvider>
@@ -65,7 +92,7 @@ export function StudioClientProviders({
             </ConfirmDialogProvider>
           </StudioThemeProvider>
         </NotifyProvider>
-      </TenantContext.Provider>
+      </WebsiteContext.Provider>
     </>
   );
 }

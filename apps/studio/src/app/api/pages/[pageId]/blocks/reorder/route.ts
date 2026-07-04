@@ -1,55 +1,56 @@
 /**
  * @file apps/studio/src/app/api/pages/[pageId]/blocks/reorder/route.ts
  * @layer studio/app/api
+ *
  * @description
- * Route API Studio — réordonne les blocks d’une page (draft-only).
+ * Route API Studio — réordonne les blocks d’une page du Website actif.
+ *
+ * @remarks
+ * Responsabilités :
+ * - POST : réordonne les blocks d’une page en draft.
+ * - Valide le paramètre `pageId` et le payload via Zod.
+ * - Appelle le use-case côté domaine.
+ * - Invalide le cache de status du Website actif après mutation.
+ * - Les repositories sont scopés par Prisma Website.id.
  */
 
 import "server-only";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
-
 import type { PageDTO } from "@compoz/core/domain/pages/dto";
-
 import { reorderBlocks } from "@compoz/core/domain/pages/use-cases/blocks/reorder-blocks";
-
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
-
 import type { ReorderBlocksResponse } from "@compoz/infra/http/studio/pages.types";
-
 import { log, logSpan } from "@compoz/infra/lib/log";
-
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteStatusCache } from "@compoz/infra/site";
-
 import { adaptReorderBlocksIntent } from "@compoz/studio/app/api/_adapters/pages/blocks/blocks";
-
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
-
+import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
-
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
-
 import {
   ReorderBlocksIntentSchema,
   type ReorderBlocksIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
-
 import { PageIdParamSchema } from "@compoz/validation/pages/page";
+
+/* -------------------------------------------------------------------------- */
+/* POST /api/pages/:pageId/blocks/reorder                                     */
+/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.blocks.reorder.POST" as const;
 
   return handleRoute(NS, req, async () => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
     return logSpan(
       NS,
-      { ns: NS, method: "POST", state: DEFAULT_CONTENT_STATE, tenantId },
+      { ns: NS, method: "POST", state: DEFAULT_CONTENT_STATE, websiteId },
       async () => {
-        const lg = log.child({ ns: NS });
+        const logger = log.child({ ns: NS });
 
         const params = await unwrapParams(ctx.params);
 
@@ -75,8 +76,8 @@ export async function POST(req: Request, ctx: { params: unknown }) {
 
         const adapted = adaptReorderBlocksIntent(dto);
 
-        const pagesRepo = getPagesRepository({ tenantId });
-        const statusCache = getSiteStatusCache({ tenantId });
+        const pagesRepo = getPagesRepository({ websiteId });
+        const statusCache = getSiteStatusCache({ websiteId });
 
         const run = reorderBlocks({
           pages: pagesRepo,
@@ -87,18 +88,35 @@ export async function POST(req: Request, ctx: { params: unknown }) {
           ...adapted,
         });
 
+        /**
+         * Invalidation du cache de status du Website actif.
+         *
+         * Le cache peut encore être implémenté en KV côté infra,
+         * mais son scope métier est le Prisma Website.id.
+         */
         try {
-          lg.debug?.("route.statusCache.invalidate.start", {});
+          logger.debug?.("route.statusCache.invalidate.start", {
+            websiteId,
+            invalidateStatus: true,
+            invalidateStatusDetails: true,
+          });
 
           await Promise.all([
             statusCache.invalidateStatus(),
             statusCache.invalidateStatusDetails(),
           ]);
 
-          lg.debug?.("route.statusCache.invalidate.done", {});
-        } catch (e) {
-          lg.error?.("route.statusCache.invalidate.failed", {
-            err: String(e),
+          logger.debug?.("route.statusCache.invalidate.done", {
+            websiteId,
+            invalidateStatus: true,
+            invalidateStatusDetails: true,
+          });
+        } catch (error) {
+          logger.error?.("route.statusCache.invalidate.failed", {
+            websiteId,
+            err: String(error),
+            invalidateStatus: true,
+            invalidateStatusDetails: true,
           });
         }
 

@@ -5,12 +5,14 @@
  * @layer ui/organisms
  *
  * @description
- * Section “RBAC avancé” du formulaire Users : role / tenantIds / defaultTenantId.
+ * Section RBAC avancée du formulaire Users :
+ * role / websiteIds / defaultWebsiteId.
  *
  * @remarks
  * - Strictement UI-only : aucun fetch, aucune logique métier.
  * - Encapsule l’`ExpandableLayout` et le bouton “reset RBAC”.
  * - Le contenu summary est fourni via `children`.
+ * - Les accès RBAC sont exprimés en Prisma Website.id.
  */
 
 import { RotateCcw } from "lucide-react";
@@ -35,8 +37,20 @@ import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 
-type RoleOption = Readonly<{ value: "admin" | "editor"; label: string }>;
-type FieldErrorState = Readonly<{ invalid: boolean; message?: string }>;
+type RoleOption = Readonly<{
+  value: "admin" | "editor";
+  label: string;
+}>;
+
+type SelectOption = Readonly<{
+  value: string;
+  label: string;
+}>;
+
+type FieldErrorState = Readonly<{
+  invalid: boolean;
+  message?: string;
+}>;
 
 type AdminUsersFormRbacFieldsProps = Readonly<{
   mode: "create" | "edit";
@@ -45,7 +59,7 @@ type AdminUsersFormRbacFieldsProps = Readonly<{
   initialValues: UserFormValues;
   values: UserFormValues;
 
-  tenantIdOptions?: ReadonlyArray<{ value: string; label: string }>;
+  websiteOptions?: ReadonlyArray<SelectOption>;
 
   control: Control<UserFormValues>;
   rhfReset: UseFormReset<UserFormValues>;
@@ -57,8 +71,8 @@ type AdminUsersFormRbacFieldsProps = Readonly<{
   passwordIds: FieldIds;
 
   roleIds: FieldIds;
-  tenantIdsIds: FieldIds;
-  defaultTenantIdIds: FieldIds;
+  websiteIdsIds: FieldIds;
+  defaultWebsiteIdIds: FieldIds;
 
   showError: boolean;
   touchedFields: FieldNamesMarkedBoolean<UserFormValues>;
@@ -68,8 +82,8 @@ type AdminUsersFormRbacFieldsProps = Readonly<{
   nameState: FieldErrorState;
   passwordState: FieldErrorState;
   roleState: FieldErrorState;
-  tenantIdsState: FieldErrorState;
-  defaultTenantIdState: FieldErrorState;
+  websiteIdsState: FieldErrorState;
+  defaultWebsiteIdState: FieldErrorState;
 
   children: ReactNode;
 }>;
@@ -79,19 +93,19 @@ export function AdminUsersFormRbacFields({
   isBusy,
   initialValues,
   values,
-  tenantIdOptions,
+  websiteOptions,
   control,
   rhfReset,
   formIdPrefix,
   roleIds,
-  tenantIdsIds,
-  defaultTenantIdIds,
+  websiteIdsIds,
+  defaultWebsiteIdIds,
   showError,
   touchedFields,
   errors,
   roleState,
-  tenantIdsState,
-  defaultTenantIdState,
+  websiteIdsState,
+  defaultWebsiteIdState,
   children,
 }: AdminUsersFormRbacFieldsProps) {
   const t = useTranslations();
@@ -99,8 +113,14 @@ export function AdminUsersFormRbacFields({
   const isEdit = mode === "edit";
 
   const roles: ReadonlyArray<RoleOption> = [
-    { value: "admin", label: t("studio.users.form.rbac.role.options.admin") },
-    { value: "editor", label: t("studio.users.form.rbac.role.options.editor") },
+    {
+      value: "admin",
+      label: t("studio.users.form.rbac.role.options.admin"),
+    },
+    {
+      value: "editor",
+      label: t("studio.users.form.rbac.role.options.editor"),
+    },
   ];
 
   const resetDisabledTooltip = isBusy ? t("common.saving") : t("common.reset");
@@ -124,20 +144,21 @@ export function AdminUsersFormRbacFields({
                 label={t("studio.users.form.rbac.role.label")}
                 help={t("studio.users.form.rbac.role.help")}
                 value={field.value ?? "editor"}
-                onChange={(val) => {
-                  const v = String(val ?? "").trim();
-                  field.onChange(v === "admin" ? "admin" : "editor");
+                onChange={(value) => {
+                  const role = String(value ?? "").trim();
+
+                  field.onChange(role === "admin" ? "admin" : "editor");
                 }}
-                items={roles.map((r) => ({
-                  value: r.value,
-                  label: r.label,
+                items={roles.map((role) => ({
+                  value: role.value,
+                  label: role.label,
                 }))}
                 disabled={isBusy}
                 invalid={roleState.invalid}
                 error={
                   (showError || Boolean(touchedFields.rbac?.role)) &&
                   errors.rbac?.role?.message
-                    ? String(errors.rbac?.role?.message)
+                    ? String(errors.rbac.role.message)
                     : undefined
                 }
               />
@@ -145,7 +166,7 @@ export function AdminUsersFormRbacFields({
           />
 
           <Controller
-            name="rbac.tenantIds"
+            name="rbac.websiteIds"
             control={control}
             render={({ field }) => {
               const value = Array.isArray(field.value)
@@ -154,28 +175,30 @@ export function AdminUsersFormRbacFields({
 
               return (
                 <InputField
-                  ids={tenantIdsIds}
-                  label={t("studio.users.form.rbac.tenantIds.label")}
-                  help={t("studio.users.form.rbac.tenantIds.help")}
+                  ids={websiteIdsIds}
+                  label={t("studio.users.form.rbac.websiteIds.label")}
+                  help={t("studio.users.form.rbac.websiteIds.help")}
                   value={value}
-                  onChange={(v) => {
-                    const raw = String(v ?? "");
-                    const parts = raw
+                  onChange={(nextValue) => {
+                    const raw = String(nextValue ?? "");
+
+                    const websiteIds = raw
                       .split(",")
-                      .map((x) => x.trim())
+                      .map((item) => item.trim())
                       .filter(Boolean);
-                    field.onChange(parts);
+
+                    field.onChange(websiteIds);
                   }}
                   onBlur={field.onBlur}
                   placeholder={t(
-                    "studio.users.form.rbac.tenantIds.placeholder",
+                    "studio.users.form.rbac.websiteIds.placeholder",
                   )}
                   disabled={isBusy}
-                  invalid={tenantIdsState.invalid}
+                  invalid={websiteIdsState.invalid}
                   error={
-                    (showError || Boolean(touchedFields.rbac?.tenantIds)) &&
-                    errors.rbac?.tenantIds?.message
-                      ? String(errors.rbac?.tenantIds?.message)
+                    (showError || Boolean(touchedFields.rbac?.websiteIds)) &&
+                    errors.rbac?.websiteIds?.message
+                      ? String(errors.rbac.websiteIds.message)
                       : undefined
                   }
                 />
@@ -184,30 +207,32 @@ export function AdminUsersFormRbacFields({
           />
 
           <Controller
-            name="rbac.defaultTenantId"
+            name="rbac.defaultWebsiteId"
             control={control}
             render={({ field }) => {
-              const options = tenantIdOptions ?? [];
+              const options = websiteOptions ?? [];
 
               if (options.length > 0) {
                 return (
                   <SelectField
-                    ids={defaultTenantIdIds}
-                    label={t("studio.users.form.rbac.defaultTenantId.label")}
-                    help={t("studio.users.form.rbac.defaultTenantId.help")}
+                    ids={defaultWebsiteIdIds}
+                    label={t("studio.users.form.rbac.defaultWebsiteId.label")}
+                    help={t("studio.users.form.rbac.defaultWebsiteId.help")}
                     value={field.value ?? ""}
-                    onChange={(val) => field.onChange(String(val ?? "").trim())}
-                    items={options.map((o) => ({
-                      value: o.value,
-                      label: o.label,
+                    onChange={(value) =>
+                      field.onChange(String(value ?? "").trim())
+                    }
+                    items={options.map((option) => ({
+                      value: option.value,
+                      label: option.label,
                     }))}
                     disabled={isBusy}
-                    invalid={defaultTenantIdState.invalid}
+                    invalid={defaultWebsiteIdState.invalid}
                     error={
                       (showError ||
-                        Boolean(touchedFields.rbac?.defaultTenantId)) &&
-                      errors.rbac?.defaultTenantId?.message
-                        ? String(errors.rbac?.defaultTenantId?.message)
+                        Boolean(touchedFields.rbac?.defaultWebsiteId)) &&
+                      errors.rbac?.defaultWebsiteId?.message
+                        ? String(errors.rbac.defaultWebsiteId.message)
                         : undefined
                     }
                   />
@@ -216,22 +241,24 @@ export function AdminUsersFormRbacFields({
 
               return (
                 <InputField
-                  ids={defaultTenantIdIds}
-                  label={t("studio.users.form.rbac.defaultTenantId.label")}
-                  help={t("studio.users.form.rbac.defaultTenantId.help")}
+                  ids={defaultWebsiteIdIds}
+                  label={t("studio.users.form.rbac.defaultWebsiteId.label")}
+                  help={t("studio.users.form.rbac.defaultWebsiteId.help")}
                   value={field.value ?? ""}
-                  onChange={(v) => field.onChange(String(v ?? "").trim())}
+                  onChange={(value) =>
+                    field.onChange(String(value ?? "").trim())
+                  }
                   onBlur={field.onBlur}
                   placeholder={t(
-                    "studio.users.form.rbac.defaultTenantId.placeholder",
+                    "studio.users.form.rbac.defaultWebsiteId.placeholder",
                   )}
                   disabled={isBusy}
-                  invalid={defaultTenantIdState.invalid}
+                  invalid={defaultWebsiteIdState.invalid}
                   error={
                     (showError ||
-                      Boolean(touchedFields.rbac?.defaultTenantId)) &&
-                    errors.rbac?.defaultTenantId?.message
-                      ? String(errors.rbac?.defaultTenantId?.message)
+                      Boolean(touchedFields.rbac?.defaultWebsiteId)) &&
+                    errors.rbac?.defaultWebsiteId?.message
+                      ? String(errors.rbac.defaultWebsiteId.message)
                       : undefined
                   }
                 />
@@ -246,13 +273,14 @@ export function AdminUsersFormRbacFields({
                 variant="outline"
                 visualMode="studio"
                 size="icon"
-                onPointerDown={(e) => {
-                  e.preventDefault();
+                onPointerDown={(event) => {
+                  event.preventDefault();
                 }}
                 onClick={() => {
-                  const r = initialValues.rbac;
+                  const rbac = initialValues.rbac;
+
                   rhfReset(
-                    { ...values, rbac: r },
+                    { ...values, rbac },
                     {
                       keepDirty: true,
                       keepTouched: true,

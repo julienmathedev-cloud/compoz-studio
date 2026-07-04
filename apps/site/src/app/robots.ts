@@ -36,21 +36,21 @@ function parseRobotsTokens(input: string | null | undefined): Set<string> {
   const tokens = raw
     .toLowerCase()
     .split(",")
-    .map((t) => t.trim())
+    .map((token) => token.trim())
     .filter(Boolean);
 
   return new Set(tokens);
 }
 
 function hostFromBaseUrl(baseUrl: string): string | undefined {
-  const s = stripTrailingSlashes(baseUrl);
+  const normalizedBaseUrl = stripTrailingSlashes(baseUrl);
 
-  if (!s) {
+  if (!normalizedBaseUrl) {
     return undefined;
   }
 
   try {
-    return new URL(s).host || undefined;
+    return new URL(normalizedBaseUrl).host || undefined;
   } catch {
     return undefined;
   }
@@ -82,18 +82,20 @@ function resolveRequestBaseUrl(
 /* -------------------------------------------------------------------------- */
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
-  const h = await headers();
+  const headersList = await headers();
 
-  const hostRaw = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+  const hostRaw =
+    headersList.get("x-forwarded-host") ?? headersList.get("host") ?? "";
+
   const website = await resolvePublicWebsiteFromHost({ hostRaw });
 
   if (!website) {
-    return notFound();
+    notFound();
   }
 
   const websiteId = website.websiteId;
 
-  const repo = getSiteRepository({ tenantId: websiteId });
+  const repo = getSiteRepository({ websiteId });
   const settings = await repo.readSettings(CONTENT_STATE.PUBLISHED);
 
   const seo = settings?.seo ?? null;
@@ -105,7 +107,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   const envBaseUrl = stripTrailingSlashes(
     process.env["NEXT_PUBLIC_SITE_URL"] ?? "",
   );
-  const requestBaseUrl = resolveRequestBaseUrl(h);
+  const requestBaseUrl = resolveRequestBaseUrl(headersList);
 
   const baseUrl = seoBaseUrl || envBaseUrl || requestBaseUrl;
   const hostOut = baseUrl ? hostFromBaseUrl(baseUrl) : undefined;

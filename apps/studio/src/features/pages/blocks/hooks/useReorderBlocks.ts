@@ -5,11 +5,12 @@
  * @layer hooks/studio/pages/blocks
  *
  * @description
- * Hook studio React Query pour réordonner les blocks d’une page draft via l’API.
+ * Hook Studio React Query pour réordonner les blocks d’une page draft via l’API.
  *
  * @remarks
  * - Optimistic update pour drag-and-drop fluide.
  * - Rollback automatique si erreur API.
+ * - Le cache et les queryKeys sont scopés par Prisma Website.id.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -20,21 +21,15 @@ import type { BlockDTO } from "@compoz/core/domain/pages/dto";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log } from "@compoz/infra/lib/log";
 
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
-
-import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
-
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { patchPageBlocksCache } from "@compoz/studio/features/pages/blocks/cache/cache";
-
 import { syncBlocksFromPageCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
-
+import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
 import { normalizeReorderBlocksIntentDTO } from "@compoz/studio/features/pages/mappers/blocks-form";
-
 import {
   invalidateBlockStatusViews,
   invalidateSiteStatus,
 } from "@compoz/studio/features/site/status/invalidate";
-
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 
@@ -52,20 +47,21 @@ type ReorderBlocksArgs = Readonly<{
   values: ReorderBlocksIntentDTO;
 }>;
 
-const lg = log.child({ ns: "hook", name: "useReorderBlocks" });
+const logger = log.child({ ns: "hook", name: "useReorderBlocks" });
 
 export function useReorderBlocks(
   onSuccess?: () => void,
 ): UseReorderBlocksResult {
   const t = useTranslations();
-  const qc = useQueryClient();
-  const tenantId = useTenantId();
+  const queryClient = useQueryClient();
+  const websiteId = useWebsiteId();
+
   const entityLabel = t("studio.shared.entities.blocks");
 
   const mutation = useMutation({
     mutationKey: [
-      "t",
-      tenantId,
+      "w",
+      websiteId,
       "studio",
       "pages",
       "blocks",
@@ -78,25 +74,28 @@ export function useReorderBlocks(
 
     onMutate: async ({ pageId, values }: ReorderBlocksArgs) => {
       const pageIdKey = String(pageId ?? "").trim();
-      const key = pageBlocksKey(tenantId, pageIdKey, DEFAULT_CONTENT_STATE);
 
-      await qc.cancelQueries({ queryKey: key });
+      const key = pageBlocksKey(websiteId, pageIdKey, DEFAULT_CONTENT_STATE);
 
-      const previous = qc.getQueryData<ReadonlyArray<BlockDTO>>(key);
+      await queryClient.cancelQueries({ queryKey: key });
+
+      const previous = queryClient.getQueryData<ReadonlyArray<BlockDTO>>(key);
 
       if (previous) {
-        const ordered = values.orderedBlockIds;
+        const orderedBlockIds = values.orderedBlockIds;
 
         patchPageBlocksCache(
-          qc,
-          tenantId,
+          queryClient,
+          websiteId,
           pageIdKey,
           DEFAULT_CONTENT_STATE,
-          (prev) => {
-            const map = new Map(prev.map((b) => [b.id, b]));
+          (previousBlocks) => {
+            const blockById = new Map(
+              previousBlocks.map((block) => [block.id, block]),
+            );
 
-            return ordered
-              .map((id) => map.get(id))
+            return orderedBlockIds
+              .map((blockId) => blockById.get(blockId))
               .filter(Boolean) as ReadonlyArray<BlockDTO>;
           },
         );
@@ -123,7 +122,7 @@ export function useReorderBlocks(
         {
           entity: entityLabel,
           pageId: pageIdKey,
-          tenantId,
+          websiteId,
         },
       );
 
@@ -141,8 +140,8 @@ export function useReorderBlocks(
     onSuccess: async ({ pageId, payload, page }) => {
       if (pageId && page) {
         syncBlocksFromPageCache(
-          qc,
-          tenantId,
+          queryClient,
+          websiteId,
           pageId,
           page,
           DEFAULT_CONTENT_STATE,
@@ -150,12 +149,12 @@ export function useReorderBlocks(
       }
 
       await Promise.all([
-        invalidateSiteStatus(qc, tenantId),
-        invalidateBlockStatusViews(qc, tenantId, pageId),
+        invalidateSiteStatus(queryClient, websiteId),
+        invalidateBlockStatusViews(queryClient, websiteId, pageId),
       ]);
 
-      lg.debug("reorder.ok", {
-        tenantId,
+      logger.debug("reorder.ok", {
+        websiteId,
         pageId,
         count: payload.orderedBlockIds.length,
       });
@@ -167,17 +166,20 @@ export function useReorderBlocks(
     /* Rollback                                                            */
     /* ------------------------------------------------------------------ */
 
-    onError: (error: unknown, _vars, context) => {
+    onError: (error: unknown, _variables, context) => {
       notify.fromError(error, UiError.unexpectedSave);
 
       if (context?.previous && context?.pageIdKey) {
-        qc.setQueryData(
-          pageBlocksKey(tenantId, context.pageIdKey, DEFAULT_CONTENT_STATE),
+        queryClient.setQueryData(
+          pageBlocksKey(websiteId, context.pageIdKey, DEFAULT_CONTENT_STATE),
           context.previous,
         );
       }
 
-      lg.error("reorder.failed", { tenantId, msg: String(error) });
+      logger.error("reorder.failed", {
+        websiteId,
+        msg: String(error),
+      });
     },
 
     retry: false,
@@ -188,7 +190,7 @@ export function useReorderBlocks(
       await mutation.mutateAsync({ pageId, values });
     },
     isReordering: mutation.isPending,
-  } as const;
+  };
 }
 
 useReorderBlocks.displayName = "useReorderBlocks";

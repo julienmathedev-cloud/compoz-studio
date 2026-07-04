@@ -6,21 +6,22 @@
  * Layout racine neutre du site public.
  *
  * @remarks
- * - Ne résout aucun tenant.
+ * - Ne résout aucun website.
  * - Ne charge aucun settings publié.
- * - Les shells tenant-aware vivent dans des layouts enfants :
- *   - `(hosted)` pour le mode host-based
- *   - `t/[tenantId]` pour le mode fallback explicite
+ * - Les shells website-aware vivent dans des layouts enfants :
+ *   - `(hosted)` pour le mode host-based via WebsiteDomain.
+ *   - `t/[websiteSlug]` pour le fallback explicite via Website.slug.
  */
 
 import type { ReactNode } from "react";
 
 import "@compoz/site/app/globals.css";
 
-import { cn } from "@compoz/ui/lib/utils";
-import { SITE_APP_SHELL } from "@compoz/ui/styles/site/layout";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+
+import { cn } from "@compoz/ui/lib/utils";
+import { SITE_APP_SHELL } from "@compoz/ui/styles/site/layout";
 
 type LayoutProps = Readonly<{
   children: ReactNode;

@@ -10,7 +10,7 @@
  * - Renders a grid of `SiteExtendedCard`.
  * - Ignores items without a title.
  * - Columns, alignment, and reveal behavior are owned by the parent cell.
- * - Exposes stable `data-*` attributes for skins and tenant overrides.
+ * - Exposes stable `data-*` attributes for skins and Website overrides.
  */
 
 import type { ExtendedCardItemShape } from "@compoz/validation/pages/blocks/cells/cell";

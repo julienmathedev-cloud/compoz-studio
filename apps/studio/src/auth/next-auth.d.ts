@@ -3,18 +3,19 @@
  * @layer studio/auth
  *
  * @description
- * Module augmentation NextAuth/Auth.js :
- * - Ajoute les champs RBAC/tenants au User, Session et JWT.
- * - Prépare aussi les champs de session liés aux sandboxes démo.
+ * Module augmentation NextAuth/Auth.js.
  *
  * @remarks
- * - Fichier .d.ts inclus par TypeScript (via tsconfig "include").
+ * - Ajoute les champs RBAC websites au User, Session et JWT.
+ * - Ajoute aussi les champs de session liés aux sandboxes démo.
+ * - Fichier .d.ts inclus par TypeScript via tsconfig.
  */
 
 import type { DefaultSession } from "next-auth";
 
 /**
- * Rôle auth Studio (aligné sur la validation actuelle du Credentials provider).
+ * Rôle auth Studio.
+ *
  * TS-only : n’impacte pas le runtime.
  */
 type AuthRole = "admin" | "editor";
@@ -23,8 +24,8 @@ declare module "next-auth" {
   interface User {
     id: string;
     role: AuthRole;
-    tenantIds: string[];
-    defaultTenantId: string;
+    websiteIds: string[];
+    defaultWebsiteId: string;
     isDemo?: boolean;
     demoInstanceId?: string;
     demoExpiresAt?: string;
@@ -34,8 +35,8 @@ declare module "next-auth" {
     user: DefaultSession["user"] & {
       id: string;
       role: AuthRole;
-      tenantIds: string[];
-      defaultTenantId: string;
+      websiteIds: string[];
+      defaultWebsiteId: string;
       isDemo?: boolean;
       demoInstanceId?: string;
       demoExpiresAt?: string;
@@ -47,8 +48,8 @@ declare module "next-auth/jwt" {
   interface JWT {
     userId?: string;
     role: AuthRole;
-    tenantIds: string[];
-    defaultTenantId: string;
+    websiteIds: string[];
+    defaultWebsiteId: string;
     isDemo?: boolean;
     demoInstanceId?: string;
     demoExpiresAt?: string;

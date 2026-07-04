@@ -1,28 +1,27 @@
 /**
  * @file packages/core/src/domain/users/use-cases/update-user.ts
  * @layer core/domain
+ *
  * @description
  * Use-case : mise à jour d’un utilisateur Studio via patch partiel.
  *
  * @remarks
- * - No-op : si rien ne change (hors password), aucune écriture User n’est effectuée.
+ * - No-op : si rien ne change hors password, aucune écriture User n’est effectuée.
  * - Email : si modifié, normalisé + vérifie l’unicité.
  * - RBAC : validé si présent.
- * - Status : validé si présent (active|disabled).
- * - Password : optionnel, via `users.setPassword` (infra-only).
+ * - Status : validé si présent : active | disabled.
+ * - Password : optionnel, via `users.setPassword` côté infra.
  * - Meta : met à jour `updatedAt` si un champ du profil change.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
-
 import type { User } from "@compoz/core/domain/users/entities/user";
 import type {
   UpdateUserDeps,
   UpdateUserInput,
   UpdateUserResult,
 } from "@compoz/core/domain/users/use-cases/update-user.types";
-
 import {
   assertUserEmail,
   assertUserName,
@@ -40,6 +39,7 @@ export function updateUser({
 }: UpdateUserDeps) {
   return async function run(input: UpdateUserInput): Promise<UpdateUserResult> {
     const userId = String(input.userId ?? "").trim();
+
     if (!userId) {
       throw new DomainError({
         code: EC.INVALID_ARGUMENT,
@@ -51,6 +51,7 @@ export function updateUser({
     await users.ensureBase();
 
     const existing = await users.readById(userId);
+
     if (!existing) {
       throw new DomainError({
         code: EC.USER_NOT_FOUND,
@@ -63,7 +64,7 @@ export function updateUser({
     const changed: ChangedKey[] = [];
 
     /* ---------------------------------------------------------------------- */
-    /* Email                                                                   */
+    /* Email                                                                  */
     /* ---------------------------------------------------------------------- */
 
     if (typeof input.email === "string") {
@@ -71,6 +72,7 @@ export function updateUser({
 
       if (email !== existing.email) {
         const conflict = await users.existsByEmail(email);
+
         if (conflict) {
           throw new DomainError({
             code: EC.USER_EMAIL_CONFLICT,
@@ -85,11 +87,12 @@ export function updateUser({
     }
 
     /* ---------------------------------------------------------------------- */
-    /* Name                                                                    */
+    /* Name                                                                   */
     /* ---------------------------------------------------------------------- */
 
     if (typeof input.name === "string") {
       const name = assertUserName(input.name, ["name"]);
+
       if (name !== existing.name) {
         next.name = name;
         changed.push("name");
@@ -97,11 +100,12 @@ export function updateUser({
     }
 
     /* ---------------------------------------------------------------------- */
-    /* Status                                                                  */
+    /* Status                                                                 */
     /* ---------------------------------------------------------------------- */
 
     if (input.status !== undefined) {
       const status = assertUserStatus(input.status, ["status"]);
+
       if (status !== existing.status) {
         next.status = status;
         changed.push("status");
@@ -109,18 +113,19 @@ export function updateUser({
     }
 
     /* ---------------------------------------------------------------------- */
-    /* RBAC                                                                    */
+    /* RBAC                                                                   */
     /* ---------------------------------------------------------------------- */
 
     if (input.rbac !== undefined) {
       const rbac = assertUserRbac(input.rbac, ["rbac"]);
 
-      // comparaison simple (ok V0.5)
       const same =
         existing.rbac.role === rbac.role &&
-        existing.rbac.defaultTenantId === rbac.defaultTenantId &&
-        existing.rbac.tenantIds.length === rbac.tenantIds.length &&
-        existing.rbac.tenantIds.every((t, i) => t === rbac.tenantIds[i]);
+        existing.rbac.defaultWebsiteId === rbac.defaultWebsiteId &&
+        existing.rbac.websiteIds.length === rbac.websiteIds.length &&
+        existing.rbac.websiteIds.every(
+          (websiteId, index) => websiteId === rbac.websiteIds[index],
+        );
 
       if (!same) {
         next.rbac = rbac;
@@ -129,12 +134,13 @@ export function updateUser({
     }
 
     /* ---------------------------------------------------------------------- */
-    /* Password (infra-only)                                                   */
+    /* Password — infra only                                                   */
     /* ---------------------------------------------------------------------- */
 
     if (typeof input.password === "string") {
-      const pwd = input.password.trim();
-      if (!pwd) {
+      const password = input.password.trim();
+
+      if (!password) {
         throw new DomainError({
           code: EC.USER_PASSWORD_REQUIRED,
           message: EC.USER_PASSWORD_REQUIRED,
@@ -142,15 +148,13 @@ export function updateUser({
         });
       }
 
-      await users.setPassword(userId, pwd);
+      await users.setPassword(userId, password);
     }
 
-    // No-op : si rien n'a changé côté profil, on ne touche pas au user
     if (changed.length === 0) {
       return { user: existing };
     }
 
-    // Meta updatedAt si modification profil
     next.meta = { ...existing.meta, updatedAt: nowIso() };
 
     await users.put(next);

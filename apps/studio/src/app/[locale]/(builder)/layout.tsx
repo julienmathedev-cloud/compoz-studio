@@ -3,11 +3,12 @@
  * @layer studio/app
  *
  * @description
- * Layout localisé i18n (Builder Studio).
+ * Layout localisé i18n du Builder Studio.
  *
  * @remarks
  * - Initialise la locale (`setRequestLocale`).
  * - Monte les providers globaux (React Query, thème, sidebar, toasts, etc.).
+ * - Résout la session Studio et le Website actif côté server.
  * - S’arrête volontairement au `StudioShell`.
  * - La composition visuelle builder (sidebar + header + main + drawer)
  *   est portée par `BuilderScreen` pour conserver un seul arbre RHF partagé.
@@ -21,13 +22,12 @@ import { notFound, redirect } from "next/navigation";
 import { Toaster } from "sonner";
 
 import { StudioClientProviders } from "@compoz/studio/app/[locale]/StudioClientProviders";
-import { getSessionWithTenantOrNull } from "@compoz/studio/auth/require-session";
+import { getSessionWithWebsiteOrNull } from "@compoz/studio/auth/require-session";
 import { StudioShell } from "@compoz/studio/features/shell/components/StudioShell";
 import { routing } from "@compoz/studio/i18n/routing";
 import { ReactQueryProvider } from "@compoz/studio/lib/react-query/ReactQueryProvider";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import { TooltipProvider } from "@compoz/ui/components/ui/tooltip";
-import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 type Locale = (typeof routing.locales)[number];
 
@@ -40,13 +40,39 @@ type LocaleLayoutProps = Readonly<{
   >;
 }>;
 
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
 function isLocale(value: string): value is Locale {
   return routing.locales.includes(value as Locale);
 }
 
+function normalizeWebsiteId(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
+function normalizeWebsiteSlug(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
+function normalizeWebsiteName(value: unknown): string | undefined {
+  const websiteName = String(value ?? "").trim();
+
+  return websiteName ? websiteName : undefined;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Static params                                                              */
+/* -------------------------------------------------------------------------- */
+
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
+
+/* -------------------------------------------------------------------------- */
+/* Layout                                                                     */
+/* -------------------------------------------------------------------------- */
 
 export default async function LocaleLayout({
   children,
@@ -61,23 +87,34 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const messages = await getMessages();
 
-  const session = await getSessionWithTenantOrNull();
+  const session = await getSessionWithWebsiteOrNull();
 
   if (!session) {
     redirect(`/${locale}/signin?next=/${locale}`);
   }
 
-  const tenantId = toTenantId(session.tenantId);
-  if (!tenantId) notFound();
+  const websiteId = normalizeWebsiteId(session.websiteId);
+  const websiteSlug = normalizeWebsiteSlug(session.websiteSlug);
+  const websiteName = normalizeWebsiteName(session.websiteName);
+
+  if (!websiteId || !websiteSlug) {
+    notFound();
+  }
 
   return (
     <ReactQueryProvider>
       <NextIntlClientProvider messages={messages}>
         <TooltipProvider delayDuration={400} skipDelayDuration={100}>
-          <StudioClientProviders tenantId={tenantId} hasSidebar={false}>
+          <StudioClientProviders
+            websiteId={websiteId}
+            websiteSlug={websiteSlug}
+            websiteName={websiteName}
+            hasSidebar={false}
+          >
             <main className="flex h-dvh min-h-0 min-w-0">
               <StudioShell>{children}</StudioShell>
             </main>
+
             <Toaster position="top-center" />
           </StudioClientProviders>
         </TooltipProvider>

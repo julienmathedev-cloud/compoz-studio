@@ -5,21 +5,25 @@
  * @layer hooks/studio/site
  *
  * @description
- * Hook Studio React Query pour publier le site (draft → published).
+ * Hook Studio React Query pour publier le site draft vers published.
  *
  * @remarks
- * - Orchestration UI-only (mutation, logs, notifications).
- * - Invalide les queries liées à l’état du site (status + details).
- * - Aucune logique métier : la route + use-case sont la SoT.
- * - Tenant-scoped : les query keys incluent tenantId.
+ * - Orchestration UI-only : mutation, logs, notifications.
+ * - Invalide les queries liées à l’état du site : status + details.
+ * - Aucune logique métier : la route + use-case sont la source de vérité.
+ * - Website-scoped : les query keys incluent Prisma Website.id.
  */
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
+import { useCallback, useMemo } from "react";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import type { PublishSiteResultDTO } from "@compoz/core/domain/site/dto";
 import { siteStudioApi } from "@compoz/infra/http/studio/site.client";
 import type { PublishSiteResponse } from "@compoz/infra/http/studio/site.types";
 import { log } from "@compoz/infra/lib/log";
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import {
   invalidateSiteStatus,
   invalidateSiteStatusDetails,
@@ -27,27 +31,24 @@ import {
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
-import { useCallback, useMemo } from "react";
 
 type UsePublishSiteResult = Readonly<{
   publish: () => Promise<PublishSiteResultDTO | null>;
   isPublishing: boolean;
 }>;
 
-const lg = log.child({ ns: "hook", name: "usePublishSite" });
+const logger = log.child({ ns: "hook", name: "usePublishSite" });
 
 export function usePublishSite(onSuccess?: () => void): UsePublishSiteResult {
   const t = useTranslations();
-  const qc = useQueryClient();
-  const tenantId = useTenantId();
+  const queryClient = useQueryClient();
+  const websiteId = useWebsiteId();
 
   const mutation = useMutation({
-    mutationKey: ["t", tenantId, "studio", "site", "publish"] as const,
+    mutationKey: ["w", websiteId, "studio", "site", "publish"] as const,
 
     mutationFn: async (): Promise<PublishSiteResultDTO> => {
-      const res: PublishSiteResponse = await withSaveLogs(
+      const response: PublishSiteResponse = await withSaveLogs(
         "usePublishSite",
         DEFAULT_CONTENT_STATE,
         () =>
@@ -56,10 +57,14 @@ export function usePublishSite(onSuccess?: () => void): UsePublishSiteResult {
             to: "published",
             cleanOrphans: true,
           }),
-        { entity: t("studio.shared.entities.site"), fields: ["publish"] },
+        {
+          entity: t("studio.shared.entities.site"),
+          fields: ["publish"],
+          websiteId,
+        },
       );
 
-      return res.publishResult;
+      return response.publishResult;
     },
 
     onSuccess: async (publishResult) => {
@@ -77,14 +82,13 @@ export function usePublishSite(onSuccess?: () => void): UsePublishSiteResult {
         );
       }
 
-      // ✅ SoT invalidations (tenant-scoped)
       await Promise.all([
-        invalidateSiteStatus(qc, tenantId),
-        invalidateSiteStatusDetails(qc, tenantId),
+        invalidateSiteStatus(queryClient, websiteId),
+        invalidateSiteStatusDetails(queryClient, websiteId),
       ]);
 
-      lg.debug("publish.ok", {
-        tenantId,
+      logger.debug("publish.ok", {
+        websiteId,
         from: publishResult.from,
         to: publishResult.to,
         pagesCopied: publishResult.pagesCopied,
@@ -95,9 +99,13 @@ export function usePublishSite(onSuccess?: () => void): UsePublishSiteResult {
       onSuccess?.();
     },
 
-    onError: (e: unknown) => {
-      notify.fromError(e, UiError.unexpectedSave);
-      lg.error("publish.failed", { tenantId, msg: String(e) });
+    onError: (error: unknown) => {
+      notify.fromError(error, UiError.unexpectedSave);
+
+      logger.error("publish.failed", {
+        websiteId,
+        msg: String(error),
+      });
     },
 
     retry: false,
@@ -105,15 +113,15 @@ export function usePublishSite(onSuccess?: () => void): UsePublishSiteResult {
 
   const publish = useCallback(async () => {
     if (mutation.isPending) return null;
+
     return mutation.mutateAsync();
   }, [mutation]);
 
   return useMemo(
-    () =>
-      ({
-        publish,
-        isPublishing: mutation.isPending,
-      }) as const,
+    () => ({
+      publish,
+      isPublishing: mutation.isPending,
+    }),
     [publish, mutation.isPending],
   );
 }

@@ -15,10 +15,10 @@ import { notFound } from "next/navigation";
 import { SITE_PATH } from "@compoz/core/constants/web/paths";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import {
-  getPublishedHomePageByTenantId,
-  getPublishedIndexByTenantId,
-  getPublishedSettingsByTenantId,
-  getTenantId,
+  getPublishedHomePageByWebsiteId,
+  getPublishedIndexByWebsiteId,
+  getPublishedSettingsByWebsiteId,
+  getWebsiteId,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import {
   buildSiteJsonLd,
@@ -51,12 +51,12 @@ function applyTitleTemplate(
 /* -------------------------------------------------------------------------- */
 
 export async function generateMetadata(): Promise<Metadata> {
-  const tenantId = await getTenantId();
-  const page = await getPublishedHomePageByTenantId(tenantId);
+  const websiteId = await getWebsiteId();
+  const page = await getPublishedHomePageByWebsiteId(websiteId);
 
   if (!page) return {};
 
-  const settings = await getPublishedSettingsByTenantId(tenantId);
+  const settings = await getPublishedSettingsByWebsiteId(websiteId);
 
   const defaultSeoTitle =
     (settings?.seo?.defaultTitle ?? "").trim() || undefined;
@@ -108,17 +108,17 @@ export async function generateMetadata(): Promise<Metadata> {
 /* -------------------------------------------------------------------------- */
 
 export default async function SiteRootPage() {
-  const tenantId = await getTenantId();
-  const ui = resolveSiteUi(tenantId);
-  const runtimeFeatures = resolveSiteRuntimeFeatures(tenantId);
-  const settings = await getPublishedSettingsByTenantId(tenantId);
+  const websiteId = await getWebsiteId();
+  const ui = resolveSiteUi(websiteId);
+  const runtimeFeatures = resolveSiteRuntimeFeatures(websiteId);
+  const settings = await getPublishedSettingsByWebsiteId(websiteId);
   const revealPreset = settings?.theme?.revealPreset ?? "fade-up";
   const revealUi = ui.reveal[revealPreset];
 
-  const index = await getPublishedIndexByTenantId(tenantId);
+  const index = await getPublishedIndexByWebsiteId(websiteId);
   if (!index) return notFound();
 
-  const page = await getPublishedHomePageByTenantId(tenantId);
+  const page = await getPublishedHomePageByWebsiteId(websiteId);
   if (!page) return notFound();
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])

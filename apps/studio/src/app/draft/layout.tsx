@@ -17,8 +17,8 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import {
-  getDraftSettingsByTenantId,
-  getTenantId,
+  getDraftSettingsByWebsiteId,
+  getWebsiteId,
 } from "@compoz/studio/lib/pages/draft-page-loaders";
 import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
 import { allFontVariablesClassName } from "@compoz/ui/lib/fonts";
@@ -54,8 +54,8 @@ type LayoutProps = Readonly<{
 /* -------------------------------------------------------------------------- */
 
 export async function generateMetadata(): Promise<Metadata> {
-  const tenantId = await getTenantId();
-  const settings = await getDraftSettingsByTenantId(tenantId);
+  const websiteId = await getWebsiteId();
+  const settings = await getDraftSettingsByWebsiteId(websiteId);
 
   if (!settings) return {};
 
@@ -113,13 +113,13 @@ export async function generateMetadata(): Promise<Metadata> {
 /* -------------------------------------------------------------------------- */
 
 export default async function DraftLayout({ children }: LayoutProps) {
-  const tenantId = await getTenantId();
+  const websiteId = await getWebsiteId();
 
-  const settings = await getDraftSettingsByTenantId(tenantId);
+  const settings = await getDraftSettingsByWebsiteId(websiteId);
   if (!settings) notFound();
 
-  const ui = resolveSiteUi(tenantId);
-  const skinCssHref = resolveSiteSkinCssHref(tenantId);
+  const ui = resolveSiteUi(websiteId);
+  const skinCssHref = resolveSiteSkinCssHref(websiteId);
 
   return (
     <>

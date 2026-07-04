@@ -1,27 +1,27 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/cleanup-expired-demo-sandboxes.ts
  * @layer core/domain
+ *
  * @description
  * Use-case : supprime les sandboxes démo expirées ainsi que leurs données associées.
  *
  * @remarks
  * - Supprime le record `DemoSandbox`.
  * - Supprime le user démo associé.
- * - Nettoie les données KV du tenant sandbox.
+ * - Nettoie les données associées à la sandbox.
  * - V1 : traitement séquentiel simple, sans sur-ingénierie.
  */
-
-import {
-  ERROR_CODES as EC,
-  type ErrorCode,
-} from "@compoz/core/domain/errors/codes";
-import { DomainError } from "@compoz/core/domain/errors/domain-error";
 
 import type {
   CleanupExpiredDemoSandboxesDeps,
   CleanupExpiredDemoSandboxesInput,
   CleanupExpiredDemoSandboxesResult,
 } from "@compoz/core/domain/demo/use-cases/cleanup-expired-demo-sandboxes.types";
+import {
+  ERROR_CODES as EC,
+  type ErrorCode,
+} from "@compoz/core/domain/errors/codes";
+import { DomainError } from "@compoz/core/domain/errors/domain-error";
 
 function assertIsoDateString(
   value: unknown,
@@ -48,7 +48,7 @@ function isExpired(expiresAt: string, nowIso: string): boolean {
 export function cleanupExpiredDemoSandboxes({
   demoSandboxes,
   users,
-  tenantCleaner,
+  sandboxDataCleaner,
   nowIso = () => new Date().toISOString(),
 }: CleanupExpiredDemoSandboxesDeps) {
   return async function run(
@@ -67,7 +67,7 @@ export function cleanupExpiredDemoSandboxes({
 
     const items: Array<{
       demoInstanceId: string;
-      tenantId: string;
+      websiteId: string;
       userId: string;
       status: "cleaned" | "failed";
       keysMatched?: number;
@@ -77,8 +77,8 @@ export function cleanupExpiredDemoSandboxes({
 
     for (const sandbox of expiredSandboxes) {
       try {
-        const tenantCleanup = await tenantCleaner.deleteTenantData(
-          sandbox.tenantId,
+        const sandboxDataCleanup = await sandboxDataCleaner.deleteSandboxData(
+          sandbox.websiteId,
         );
 
         await users.deleteById(sandbox.userId);
@@ -86,16 +86,16 @@ export function cleanupExpiredDemoSandboxes({
 
         items.push({
           demoInstanceId: sandbox.demoInstanceId,
-          tenantId: sandbox.tenantId,
+          websiteId: sandbox.websiteId,
           userId: sandbox.userId,
           status: "cleaned",
-          keysMatched: tenantCleanup.keysMatched,
-          keysDeleted: tenantCleanup.keysDeleted,
+          keysMatched: sandboxDataCleanup.keysMatched,
+          keysDeleted: sandboxDataCleanup.keysDeleted,
         });
       } catch (error) {
         items.push({
           demoInstanceId: sandbox.demoInstanceId,
-          tenantId: sandbox.tenantId,
+          websiteId: sandbox.websiteId,
           userId: sandbox.userId,
           status: "failed",
           error: error instanceof Error ? error.message : String(error),

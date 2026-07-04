@@ -1,12 +1,13 @@
 /**
  * @file packages/infra/src/demo/kv-demo-seed-reader.ts
  * @layer infra/demo
+ *
  * @description
  * Implémentation KV du lecteur de seed démo.
  *
  * @remarks
- * - Vérifie qu'un tenant seed est exploitable pour créer une sandbox démo.
- * - En V1, un seed est considéré valide si son index draft contient
+ * - Vérifie qu’un Website seed est exploitable pour créer une sandbox démo.
+ * - En V1, un seed est considéré valide si son index published contient
  *   au moins une page exploitable.
  * - Ne lit volontairement pas un snapshot complet du contenu :
  *   le clonage réel est délégué au sandbox cloner.
@@ -14,14 +15,8 @@
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import type { DemoSandboxSeedReader } from "@compoz/core/domain/demo/use-cases/create-demo-sandbox-from-seed.types";
-
+import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import { KvSiteRepository } from "@compoz/infra/site/kv-site-repository";
-
-function normalizeTenantId(value: unknown): string {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase();
-}
 
 function hasUsableSeedPages(
   pages: ReadonlyArray<{ id: string | null | undefined }> | undefined,
@@ -32,21 +27,21 @@ function hasUsableSeedPages(
 
   return pages.some((page) => {
     const pageId = String(page?.id ?? "").trim();
+
     return pageId.length > 0;
   });
 }
 
 export class KvDemoSeedReader implements DemoSandboxSeedReader {
-  async readSeedSnapshot(seedTenantId: string): Promise<{ tenantId: string }> {
-    const tenantId = normalizeTenantId(seedTenantId);
+  async readSeedSnapshot(
+    seedWebsiteId: string,
+  ): Promise<{ websiteId: string }> {
+    const websiteId = requireWebsiteId(
+      seedWebsiteId,
+      "KvDemoSeedReader.readSeedSnapshot",
+    ).toLowerCase();
 
-    if (!tenantId) {
-      throw new Error(
-        "KvDemoSeedReader.readSeedSnapshot: seedTenantId is required.",
-      );
-    }
-
-    const site = new KvSiteRepository({ tenantId });
+    const site = new KvSiteRepository({ websiteId });
     const index = await site.readIndex(CONTENT_STATE.PUBLISHED);
 
     if (!hasUsableSeedPages(index.pages)) {
@@ -55,6 +50,6 @@ export class KvDemoSeedReader implements DemoSandboxSeedReader {
       );
     }
 
-    return { tenantId };
+    return { websiteId };
   }
 }

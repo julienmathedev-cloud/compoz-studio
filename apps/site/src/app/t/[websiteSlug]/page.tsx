@@ -1,24 +1,26 @@
 /**
- * @file apps/site/src/app/t/[tenantId]/[slug]/page.tsx
+ * @file apps/site/src/app/t/[websiteSlug]/page.tsx
  * @layer site/app
  *
  * @description
- * Fallback multi-website : "/t/[tenantId]/[slug]" -> rend une page published du website.
+ * Fallback public explicite : `/t/:websiteSlug` rend la home publiée du Website.
  *
  * @remarks
- * Le segment de route `[tenantId]` est conservé pour éviter un rename Next large,
- * mais sa valeur est maintenant interprétée comme un Website.slug.
+ * - Le segment de route `websiteSlug` correspond au Prisma `Website.slug`.
+ * - Le Website est résolu via Prisma avant le chargement du contenu.
+ * - Les loaders de contenu utilisent le Prisma `Website.id`.
+ * - L’UI/skin et les URLs fallback utilisent le Prisma `Website.slug`.
  */
 
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { resolvePublicWebsiteFromRouteSlug } from "@compoz/infra/websites/resolve-public-website";
 import {
-  getPublishedIndexByTenantId,
-  getPublishedPageBySlugByTenantId,
-  getPublishedSettingsByTenantId,
+  getPublishedHomePageByWebsiteId,
+  getPublishedIndexByWebsiteId,
+  getPublishedSettingsByWebsiteId,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import {
   buildSiteJsonLd,
@@ -35,12 +37,7 @@ import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
 type PageParams = Readonly<{
-  params: Promise<
-    Readonly<{
-      tenantId: string;
-      slug: string;
-    }>
-  >;
+  params: Promise<Readonly<{ websiteSlug: string }>>;
 }>;
 
 /* -------------------------------------------------------------------------- */
@@ -58,6 +55,20 @@ function applyTitleTemplate(
   return template.replace("%s", title);
 }
 
+async function resolveWebsiteFromParams(params: PageParams["params"]) {
+  const { websiteSlug } = await unwrapParams(params);
+
+  const website = await resolvePublicWebsiteFromRouteSlug({
+    slug: websiteSlug,
+  });
+
+  if (!website) {
+    notFound();
+  }
+
+  return website;
+}
+
 /* -------------------------------------------------------------------------- */
 /* Metadata                                                                   */
 /* -------------------------------------------------------------------------- */
@@ -65,29 +76,17 @@ function applyTitleTemplate(
 export async function generateMetadata({
   params,
 }: PageParams): Promise<Metadata> {
-  const { tenantId: websiteSlug, slug } = await unwrapParams(params);
-
-  const website = await resolvePublicWebsiteFromRouteSlug({
-    slug: websiteSlug,
-  });
-
-  if (!website) {
-    return {};
-  }
-
-  if (slug === HOME_SLUG) {
-    return {};
-  }
-
+  const website = await resolveWebsiteFromParams(params);
   const websiteId = website.websiteId;
+  const websiteSlug = website.slug;
 
-  const page = await getPublishedPageBySlugByTenantId(websiteId, slug);
+  const page = await getPublishedHomePageByWebsiteId(websiteId);
 
   if (!page) {
     return {};
   }
 
-  const settings = await getPublishedSettingsByTenantId(websiteId);
+  const settings = await getPublishedSettingsByWebsiteId(websiteId);
 
   const defaultSeoTitle =
     (settings?.seo?.defaultTitle ?? "").trim() || undefined;
@@ -101,15 +100,15 @@ export async function generateMetadata({
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
     .map(toBlockShapeFromDTO)
-    .filter((b): b is BlockShape => Boolean(b));
+    .filter((block): block is BlockShape => Boolean(block));
 
   const h1 = getPageH1(blocks);
 
   const title =
     (page.seoTitle ?? "").trim() ||
+    defaultSeoTitle ||
     h1 ||
     (page.name ?? "").trim() ||
-    defaultSeoTitle ||
     brandTitle;
 
   const titleTemplate = ensureTitleTemplate(
@@ -120,10 +119,10 @@ export async function generateMetadata({
   const resolvedTitle = applyTitleTemplate(title, titleTemplate);
 
   return {
-    title,
+    title: resolvedTitle,
     description,
     alternates: {
-      canonical: `/t/${encodeURIComponent(website.slug)}/${encodeURIComponent(page.slug)}`,
+      canonical: `/t/${encodeURIComponent(websiteSlug)}`,
     },
     openGraph: {
       title: resolvedTitle,
@@ -140,62 +139,52 @@ export async function generateMetadata({
 /* Page                                                                       */
 /* -------------------------------------------------------------------------- */
 
-export default async function SiteTenantPage({ params }: PageParams) {
-  const { tenantId: websiteSlug, slug } = await unwrapParams(params);
-
-  const website = await resolvePublicWebsiteFromRouteSlug({
-    slug: websiteSlug,
-  });
-
-  if (!website) {
-    return notFound();
-  }
-
-  if (slug === HOME_SLUG) {
-    return redirect(`/t/${encodeURIComponent(website.slug)}`);
-  }
-
+export default async function WebsiteFallbackRootPage({ params }: PageParams) {
+  const website = await resolveWebsiteFromParams(params);
   const websiteId = website.websiteId;
+  const websiteSlug = website.slug;
 
-  const index = await getPublishedIndexByTenantId(websiteId);
+  const index = await getPublishedIndexByWebsiteId(websiteId);
 
   if (!index) {
-    return notFound();
+    notFound();
   }
 
-  const page = await getPublishedPageBySlugByTenantId(websiteId, slug);
+  const page = await getPublishedHomePageByWebsiteId(websiteId);
 
   if (!page) {
-    return notFound();
+    notFound();
   }
+
+  const settings = await getPublishedSettingsByWebsiteId(websiteId);
+
+  const ui = resolveSiteUi(websiteSlug);
+  const runtimeFeatures = resolveSiteRuntimeFeatures(websiteSlug);
+
+  const revealPreset = settings?.theme?.revealPreset ?? "fade-up";
+  const revealUi = ui.reveal[revealPreset];
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
     .map(toBlockShapeFromDTO)
-    .filter((b): b is BlockShape => Boolean(b));
+    .filter((block): block is BlockShape => Boolean(block));
 
-  const tenantPrefix = `/t/${encodeURIComponent(website.slug)}`;
+  const websitePrefix = `/t/${encodeURIComponent(websiteSlug)}`;
 
   const pager = computeSitePager({
     page,
     index,
-    hrefForSlug: (s) =>
-      s === HOME_SLUG
-        ? tenantPrefix
-        : `${tenantPrefix}/${encodeURIComponent(s)}`,
+    hrefForSlug: (pageSlug) =>
+      pageSlug === HOME_SLUG
+        ? websitePrefix
+        : `${websitePrefix}/${encodeURIComponent(pageSlug)}`,
   });
-
-  const ui = resolveSiteUi(websiteId);
-  const runtimeFeatures = resolveSiteRuntimeFeatures(websiteId);
-  const settings = await getPublishedSettingsByTenantId(websiteId);
-  const revealPreset = settings?.theme?.revealPreset ?? "fade-up";
-  const revealUi = ui.reveal[revealPreset];
 
   const jsonLd = settings
     ? buildSiteJsonLd({
         settings,
         page,
         index,
-        pathname: `${tenantPrefix}/${encodeURIComponent(page.slug)}`,
+        pathname: websitePrefix,
       })
     : null;
 
@@ -219,4 +208,4 @@ export default async function SiteTenantPage({ params }: PageParams) {
   );
 }
 
-SiteTenantPage.displayName = "SiteTenantPage";
+WebsiteFallbackRootPage.displayName = "WebsiteFallbackRootPage";

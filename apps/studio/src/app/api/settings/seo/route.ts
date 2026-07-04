@@ -1,14 +1,19 @@
 /**
  * @file apps/studio/src/app/api/settings/seo/route.ts
  * @layer studio/app/api
- * @description
- * Route API Studio pour la lecture et la mise à jour des réglages SEO du site.
  *
+ * @description
+ * Route API Studio pour la lecture et la mise à jour des réglages SEO
+ * du Website actif.
+ *
+ * @remarks
  * Responsabilités :
- * - GET   : retourne les settings SEO selon le state (draft/published).
- * - PATCH : met à jour les settings SEO (draft-only) via un DTO intent,
- *           adaptation en patch domaine, et exécution du use-case `updateSeoSettings`.
+ * - GET   : retourne les settings SEO selon le state demandé.
+ * - PATCH : met à jour les settings SEO en draft via un DTO intent,
+ *   adaptation en patch domaine, puis exécution du use-case
+ *   `updateSeoSettings`.
  * - Le repository merge avec les defaults pour assurer la cohérence.
+ * - Le repository et le cache de status sont scopés par Prisma Website.id.
  */
 
 import "server-only";
@@ -23,46 +28,57 @@ import type {
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 import { adaptUpdateSeoIntent } from "@compoz/studio/app/api/_adapters/seo";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { createUpdateSeoSettingsIntentSchema } from "@compoz/validation/site/settings/seo/seo-intents";
+
+/* -------------------------------------------------------------------------- */
+/* GET                                                                        */
+/* -------------------------------------------------------------------------- */
 
 export async function GET(req: Request) {
   const NS = "api.studio.site.seo.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
-    return logSpan(NS, { ns: NS, method: "GET", state, tenantId }, async () => {
-      const repo = getSiteRepository({ tenantId });
-      const settings = await repo.readSettings(state);
+    return logSpan(
+      NS,
+      { ns: NS, method: "GET", state, websiteId },
+      async () => {
+        const repo = getSiteRepository({ websiteId });
+        const settings = await repo.readSettings(state);
 
-      const res: GetSeoResponse = { settings: settings.seo };
-      return res;
-    });
+        const res: GetSeoResponse = {
+          settings: settings.seo,
+        };
+
+        return res;
+      },
+    );
   });
 }
+
+/* -------------------------------------------------------------------------- */
+/* PATCH                                                                      */
+/* -------------------------------------------------------------------------- */
 
 export async function PATCH(req: Request) {
   const NS = "api.studio.site.seo.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
-    return logSpan(NS, { ns: NS, method: "PATCH", tenantId }, async () => {
-      const lg = log.child({ ns: NS });
+    return logSpan(NS, { ns: NS, method: "PATCH", websiteId }, async () => {
+      const logger = log.child({ ns: NS });
 
       const raw = await readJsonOr400(req);
 
-      lg.debug?.("route.seo.patch.start", {
-        tenantId,
+      logger.debug?.("route.seo.patch.start", {
+        websiteId,
         hasBody: raw != null,
         bodyKeys: raw && typeof raw === "object" ? Object.keys(raw) : [],
-        hasKvUrl: Boolean(
-          process.env["KV_REST_API_URL"] ??
-          process.env["UPSTASH_REDIS_REST_URL"],
-        ),
       });
 
       const isProd = process.env.NODE_ENV === "production";
@@ -78,29 +94,47 @@ export async function PATCH(req: Request) {
 
       const input = adaptUpdateSeoIntent(dto);
 
-      const repo = getSiteRepository({ tenantId });
-      const statusCache = getSiteStatusCache({ tenantId });
+      const repo = getSiteRepository({ websiteId });
+      const statusCache = getSiteStatusCache({ websiteId });
 
       const run = updateSeoSettings({ repo });
       const { settings } = await run(input);
 
-      lg.debug?.("route.seo.patch.afterWrite", {
-        tenantId,
-        seoKeys: settings?.seo ? Object.keys(settings.seo) : [],
+      logger.debug?.("route.seo.patch.afterWrite", {
+        websiteId,
+        seoKeys: settings.seo ? Object.keys(settings.seo) : [],
       });
 
+      /**
+       * Invalidation du cache de status du Website actif.
+       *
+       * Le cache peut encore être implémenté en KV côté infra,
+       * mais son scope métier est le Prisma Website.id.
+       */
       try {
-        lg.debug?.("route.seo.patch.invalidate.start", { tenantId });
+        logger.debug?.("route.seo.patch.invalidate.start", {
+          websiteId,
+          invalidateStatus: true,
+        });
+
         await statusCache.invalidateStatus();
-        lg.debug?.("route.seo.patch.invalidate.done", { tenantId });
-      } catch (e) {
-        lg.error?.("route.seo.patch.invalidate.failed", {
-          tenantId,
-          err: String(e),
+
+        logger.debug?.("route.seo.patch.invalidate.done", {
+          websiteId,
+          invalidateStatus: true,
+        });
+      } catch (error) {
+        logger.error?.("route.seo.patch.invalidate.failed", {
+          websiteId,
+          err: String(error),
+          invalidateStatus: true,
         });
       }
 
-      const res: PatchSeoResponse = { settings: settings.seo };
+      const res: PatchSeoResponse = {
+        settings: settings.seo,
+      };
+
       return res;
     });
   });

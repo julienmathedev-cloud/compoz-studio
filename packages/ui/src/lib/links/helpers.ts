@@ -1,6 +1,7 @@
 /**
  * @file packages/ui/src/lib/links/helpers.ts
  * @layer ui/lib/links
+ *
  * @description
  * Helpers **purs** de gestion des liens (href, sécurité, active link), sans UI ni dépendance Next.
  * Utilisés par les composants publics, le Studio (preview) et le rendu du site publié.
@@ -31,26 +32,26 @@ export type LinkFlags = Readonly<{
   rawExternal: boolean;
   /** Protocole spécial (mailto/tel). */
   special: boolean;
-  /** Externe “classique” http(s) (donc rawExternal && !special). */
+  /** Externe “classique” http(s), donc rawExternal && !special. */
   external: boolean;
-  /** Href interdit (schéma dangereux). */
+  /** Href interdit, schéma dangereux. */
   unsafe: boolean;
-  /** Raison de blocage (si unsafe). */
+  /** Raison de blocage, si unsafe. */
   unsafeReason?: UnsafeReason;
 }>;
 
 /* -------------------------------------------------------------------------- */
-/*                          External / Special detection                       */
+/*                          External / Special detection                      */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Vrai si `href` est une URL http(s) **absolue** (avec protocole ou protocole relatif `//`).
+ * Vrai si `href` est une URL http(s) absolue, avec protocole ou protocole relatif `//`.
  */
 function isAbsoluteUrl(href: string): boolean {
   return /^(https?:)?\/\//i.test(href);
 }
 
-/** @internal Protocoles “spéciaux” (non http) considérés comme externes. */
+/** @internal Protocoles “spéciaux”, non http, considérés comme externes. */
 const SPECIAL_PROTOCOLS = ["mailto:", "tel:"] as const;
 
 /** @internal Schémas explicitement interdits dans un `href`. */
@@ -69,15 +70,19 @@ type UnsafeHrefResult = Readonly<{
 }>;
 
 /**
- * Vrai si `href` commence par un protocole spécial (ex. `mailto:` ou `tel:`).
+ * Vrai si `href` commence par un protocole spécial, ex. `mailto:` ou `tel:`.
  */
 function isSpecialProtocol(
   href?: string | null,
   list: readonly string[] = SPECIAL_PROTOCOLS,
 ): boolean {
-  if (typeof href !== "string") return false;
+  if (typeof href !== "string") {
+    return false;
+  }
+
   const lower = href.toLowerCase();
-  return list.some((p) => lower.startsWith(p));
+
+  return list.some((protocol) => lower.startsWith(protocol));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -85,26 +90,28 @@ function isSpecialProtocol(
 /* -------------------------------------------------------------------------- */
 
 /**
- * Fabrique un slug simple à partir d’un libellé (usage UI).
+ * Fabrique un slug simple à partir d’un libellé, usage UI.
  *
  * @remarks
- * - retire les accents (NFD)
- * - convertit en kebab-case
+ * - retire les accents, NFD ;
+ * - convertit en kebab-case.
  */
 export function slugifyPath(input: string): string {
   return input
     .trim()
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // retire accents
-    .replace(/[^a-z0-9]+/g, "-") // espaces/ponctuation -> "-"
-    .replace(/^-+|-+$/g, ""); // trim "-"
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 /**
- * Normaliser un chemin d’URL pour comparaison fiable.
- * - Extrait `pathname` si URL absolue
- * - Retire le slash final (sauf racine "/")
+ * Normalise un chemin d’URL pour comparaison fiable.
+ *
+ * @remarks
+ * - Extrait `pathname` si URL absolue.
+ * - Retire le slash final, sauf racine "/".
  */
 export function normalizePath(path: string): string {
   try {
@@ -114,17 +121,25 @@ export function normalizePath(path: string): string {
     if (pathname.length > 1 && pathname.endsWith("/")) {
       pathname = pathname.slice(0, -1);
     }
+
     return pathname;
   } catch {
-    let p = path || "/";
-    if (!p.startsWith("/")) p = "/" + p;
-    if (p.length > 1) p = p.replace(/\/+$/, "");
-    return p;
+    let normalized = path || "/";
+
+    if (!normalized.startsWith("/")) {
+      normalized = "/" + normalized;
+    }
+
+    if (normalized.length > 1) {
+      normalized = normalized.replace(/\/+$/, "");
+    }
+
+    return normalized;
   }
 }
 
 /**
- * Déterminer si un lien est **actif** selon le chemin courant.
+ * Détermine si un lien est actif selon le chemin courant.
  */
 export function isActiveLink(
   currentPath: string,
@@ -140,14 +155,15 @@ export function isActiveLink(
 }
 
 /* -------------------------------------------------------------------------- */
-/*                              Unsafe href detection                          */
+/*                              Unsafe href detection                         */
 /* -------------------------------------------------------------------------- */
 
 /**
  * Normalise un href pour la détection de schémas dangereux.
  *
- * Objectif : neutraliser les préfixes “invisibles” et obfuscations triviales
- * (espaces/contrôles), sans essayer de “réparer” l’URL.
+ * @remarks
+ * Objectif : neutraliser les préfixes invisibles et obfuscations triviales
+ * espaces/contrôles, sans essayer de réparer l’URL.
  */
 function normalizeUnsafeCandidate(href: string): string {
   const leadingStripped = href.replace(/^[\s\u0000-\u001F]+/, "");
@@ -157,22 +173,25 @@ function normalizeUnsafeCandidate(href: string): string {
 }
 
 /**
- * Détecter les **protocoles non sûrs** pour `<a href=...>` (XSS, schémas interdits).
+ * Détecte les protocoles non sûrs pour `<a href=...>`.
  */
 function isUnsafeHref(href?: string | null): UnsafeHrefResult {
-  if (typeof href !== "string") return { unsafe: false };
+  if (typeof href !== "string") {
+    return { unsafe: false };
+  }
 
   const cleaned = normalizeUnsafeCandidate(href);
 
-  for (const proto of UNSAFE_PROTOCOLS) {
-    if (cleaned.startsWith(`${proto}:`)) {
-      return { unsafe: true, reason: proto };
+  for (const protocol of UNSAFE_PROTOCOLS) {
+    if (cleaned.startsWith(`${protocol}:`)) {
+      return { unsafe: true, reason: protocol };
     }
   }
 
   const encodedProtoRe = new RegExp(
     `^(${UNSAFE_PROTOCOLS.join("|")})(%3a|&#58;|&#x3a;)`,
   );
+
   if (encodedProtoRe.test(cleaned)) {
     return { unsafe: true, reason: "encoded" };
   }
@@ -185,9 +204,9 @@ function isUnsafeHref(href?: string | null): UnsafeHrefResult {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Résoudre les **flags de lien** (externe, spécial, non sûr…).
+ * Résout les flags de lien : externe, spécial, non sûr…
  *
- * @param href Href à analyser (idéalement déjà normalisé via un normalize string UI)
+ * @param href Href à analyser, idéalement déjà normalisé via un normalize string UI.
  */
 export function resolveLinkFlags(href: string): LinkFlags {
   const raw = String(href ?? "").trim();
@@ -207,7 +226,7 @@ export function resolveLinkFlags(href: string): LinkFlags {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                          Mount / preview helpers                            */
+/*                          Mount / preview helpers                           */
 /* -------------------------------------------------------------------------- */
 
 function isMountPath(path: string, mount: string): boolean {
@@ -216,10 +235,11 @@ function isMountPath(path: string, mount: string): boolean {
 
 function isPreviewPath(path: string): boolean {
   const current = normalizePath(path);
+
   return isMountPath(current, "/preview");
 }
 
-function resolveTenantMountBase(currentPath: string): string | null {
+function resolveWebsiteSlugMountBase(currentPath: string): string | null {
   const current = normalizePath(currentPath);
   const match = /^\/t\/([^/]+)(?:\/.*)?$/.exec(current);
 
@@ -236,52 +256,77 @@ export function shouldDisableLinksInPreview(currentPath: string): boolean {
 
 /**
  * Résout la base de mount site selon le chemin courant.
- * - /preview/*     => /preview
- * - /draft/*       => /draft
- * - /t/:tenant/*   => /t/:tenant
- * - sinon          => /
+ *
+ * @remarks
+ * - /preview/*          → /preview
+ * - /draft/*            → /draft
+ * - /t/:websiteSlug/*   → /t/:websiteSlug
+ * - sinon               → /
  */
 export function resolveSiteMountBase(currentPath: string): string {
-  const p = normalizePath(currentPath || "/");
+  const path = normalizePath(currentPath || "/");
 
-  if (isMountPath(p, STUDIO_PATH.preview)) return STUDIO_PATH.preview;
-  if (isMountPath(p, STUDIO_PATH.draft)) return STUDIO_PATH.draft;
+  if (isMountPath(path, STUDIO_PATH.preview)) {
+    return STUDIO_PATH.preview;
+  }
 
-  const tenantMountBase = resolveTenantMountBase(p);
-  if (tenantMountBase) return tenantMountBase;
+  if (isMountPath(path, STUDIO_PATH.draft)) {
+    return STUDIO_PATH.draft;
+  }
+
+  const websiteSlugMountBase = resolveWebsiteSlugMountBase(path);
+
+  if (websiteSlugMountBase) {
+    return websiteSlugMountBase;
+  }
 
   return SITE_PATH.home;
 }
 
 /**
- * Préfixe un href interne (commençant par "/") avec la base de mount.
+ * Préfixe un href interne, commençant par "/", avec la base de mount.
  *
- * Exemples:
- * - current="/draft/contact", href="/contact" => "/draft/contact"
- * - current="/t/default/contact", href="/contact" => "/t/default/contact"
- * - current="/", href="/contact" => "/contact"
+ * @example
+ * current="/draft/contact", href="/contact" → "/draft/contact"
+ * current="/t/demo/contact", href="/contact" → "/t/demo/contact"
+ * current="/", href="/contact" → "/contact"
  *
- * Invariants:
- * - ne modifie pas les href externes/specials/unsafe
- * - évite le double préfixe
+ * @remarks
+ * Invariants :
+ * - ne modifie pas les href externes / specials / unsafe ;
+ * - évite le double préfixe.
  */
 export function resolveInternalHref(currentPath: string, href: string): string {
   const raw = String(href ?? "").trim();
-  if (!raw) return raw;
+
+  if (!raw) {
+    return raw;
+  }
 
   const flags = resolveLinkFlags(raw);
-  if (flags.rawExternal || flags.unsafe) return raw;
 
-  if (!raw.startsWith("/")) return raw;
+  if (flags.rawExternal || flags.unsafe) {
+    return raw;
+  }
+
+  if (!raw.startsWith("/")) {
+    return raw;
+  }
 
   const url = new URL(raw, "http://dummy");
   const suffix = `${url.search}${url.hash}`;
   const base = resolveSiteMountBase(currentPath);
-  if (base === "/") return `${normalizePath(raw)}${suffix}`;
+
+  if (base === "/") {
+    return `${normalizePath(raw)}${suffix}`;
+  }
 
   const target = normalizePath(raw);
 
-  if (target === "/") return `${base}${suffix}`;
+  if (target === "/") {
+    return `${base}${suffix}`;
+  }
+
   if (target === base || target.startsWith(base + "/")) {
     return `${target}${suffix}`;
   }

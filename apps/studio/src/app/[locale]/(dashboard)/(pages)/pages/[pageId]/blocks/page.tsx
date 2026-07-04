@@ -3,20 +3,21 @@
  * @layer studio/app
  *
  * @description
- * Page “Blocks” d’une page (Dashboard Studio) — V0.5.
+ * Page “Blocks” d’une page dans le Dashboard Studio.
  *
  * @remarks
- * - Route : /[locale]/pages/[pageId]/blocks
- * - Server Component : charge la page par id (draft).
- * - ✅ Multi-tenant : repo instancié avec `tenantId` depuis la session.
- * - Délègue la logique (query/mutations + action bar) au container.
+ * - Route : `/[locale]/pages/[pageId]/blocks`.
+ * - Server Component : charge la page par id en draft.
+ * - Résout la session Studio et le Website actif côté server.
+ * - Le repository est instancié avec le Prisma Website.id actif.
+ * - Délègue la logique client (query/mutations + action bar) au container.
  */
 
 import { notFound } from "next/navigation";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { getPagesRepository } from "@compoz/infra/pages";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { PageBlocksListPage } from "@compoz/studio/features/pages/pages/PageBlocksListPage";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 
@@ -32,17 +33,25 @@ type StudioPageBlocksPageProps = Readonly<{
 export default async function StudioPageBlocksPage({
   params,
 }: StudioPageBlocksPageProps) {
-  const { tenantId } = await requireSessionWithTenant();
-  if (!tenantId) notFound();
+  const { websiteId } = await requireSessionWithWebsite();
+
+  if (!websiteId) {
+    notFound();
+  }
 
   const { pageId } = await unwrapParams(params);
-  if (!pageId) notFound();
 
-  const pagesRepo = getPagesRepository({ tenantId });
+  if (!pageId) {
+    notFound();
+  }
 
-  // Fetch par ID directement (draft-only)
+  const pagesRepo = getPagesRepository({ websiteId });
+
   const page = await pagesRepo.readById(DEFAULT_CONTENT_STATE, pageId);
-  if (!page) notFound();
+
+  if (!page) {
+    notFound();
+  }
 
   return <PageBlocksListPage pageId={pageId} slug={page.slug} />;
 }

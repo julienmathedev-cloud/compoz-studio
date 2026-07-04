@@ -32,12 +32,12 @@ export type ThemeCssVars = Record<string, string>;
 /* -------------------------------------------------------------------------- */
 
 /**
- * Résout les tokens actifs (light / dark).
+ * Résout les tokens actifs, light / dark.
  *
  * @remarks
  * - `mode = light` → lightTokens
- * - `mode = dark` → darkTokens (si dark mode activé)
- * - `mode = system` → fallback light (support system plus tard)
+ * - `mode = dark` → darkTokens, si dark mode activé
+ * - `mode = system` → fallback light, support system plus tard
  */
 export function resolveThemeTokens(
   theme: ThemeSettingsShape,
@@ -107,8 +107,8 @@ export function themeSettingsToCssVars(
 
   return {
     ...themeTokensToCssVars(tokens),
-    "--tenant-font-body": bodyFont,
-    "--tenant-font-heading": headingFont,
+    "--website-font-body": bodyFont,
+    "--website-font-heading": headingFont,
   };
 }
 

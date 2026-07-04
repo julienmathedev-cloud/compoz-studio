@@ -5,13 +5,15 @@
  * @layer ui/sections
  *
  * @description
- * Section Users (Studio) :
- * - header (tenant + user select)
- * - form create/edit
+ * Section Users Studio.
  *
  * @remarks
- * - Container/orchestrateur : state UI + wiring hooks + submit/delete.
+ * Responsabilités :
+ * - Affiche le header : Website actif + user sélectionné.
+ * - Affiche le formulaire create/edit.
+ * - Orchestre le state UI, les hooks users, le submit et la suppression.
  * - UI-only : aucune logique métier.
+ * - Les valeurs de Website manipulées ici sont des Prisma Website.id.
  */
 
 import { useTranslations } from "next-intl";
@@ -32,13 +34,15 @@ import {
   toUserFormValuesFromDTO,
 } from "@compoz/studio/features/admin/users/mappers/users-form";
 
-import { toTenantId } from "@compoz/ui/lib/tenant-id";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_LG } from "@compoz/ui/styles/studio/layout";
 
 import type { UserFormValues } from "@compoz/validation/users/user-form";
 
-type SelectOption = Readonly<{ value: string; label: string }>;
+type SelectOption = Readonly<{
+  value: string;
+  label: string;
+}>;
 
 type CurrentUser = Readonly<{
   id: string;
@@ -46,30 +50,35 @@ type CurrentUser = Readonly<{
 }>;
 
 type AdminUsersSectionProps = Readonly<{
-  currentTenantId: string;
-  tenantOptions: ReadonlyArray<SelectOption>;
-  onTenantChange: (tenantId: string) => void | Promise<void>;
+  currentWebsiteId: string;
+  websiteOptions: ReadonlyArray<SelectOption>;
+  onWebsiteChange: (websiteId: string) => void | Promise<void>;
   isFormSaving?: boolean;
 
   /** Utilisé pour bloquer la suppression de soi-même. */
   currentUser: CurrentUser;
 }>;
 
+function normalizeWebsiteId(input: unknown): string {
+  return String(input ?? "").trim();
+}
+
 function toUserSelectOptions(
   users: ReadonlyArray<{ id?: unknown; name?: unknown; email?: unknown }>,
 ): ReadonlyArray<SelectOption> {
   return users
-    .map((u) => {
-      const id = String(u.id ?? "").trim();
+    .map((user) => {
+      const id = String(user.id ?? "").trim();
+
       if (!id) return null;
 
-      const name = String(u.name ?? "").trim();
-      const email = String(u.email ?? "").trim();
+      const name = String(user.name ?? "").trim();
+      const email = String(user.email ?? "").trim();
       const label = name ? `${name} — ${email}` : email;
 
       return { value: id, label } as const;
     })
-    .filter((x): x is SelectOption => Boolean(x));
+    .filter((option): option is SelectOption => Boolean(option));
 }
 
 function canDeleteUser(args: {
@@ -83,55 +92,73 @@ function canDeleteUser(args: {
   if (mode !== "edit") return false;
 
   const targetId = String(selectedUserId ?? "").trim();
+
   if (!targetId) return false;
 
-  const meId = String(currentUser.id ?? "").trim();
-  if (meId && targetId === meId) return false;
+  const currentUserId = String(currentUser.id ?? "").trim();
 
-  // fallback : comparaison email (si jamais l’id session est absent / différent)
+  if (currentUserId && targetId === currentUserId) return false;
+
+  /**
+   * Fallback : comparaison email si jamais l’id session est absent
+   * ou différent.
+   */
   const target = String(targetEmail ?? "")
     .trim()
     .toLowerCase();
-  const me = String(currentUser.email ?? "")
+
+  const current = String(currentUser.email ?? "")
     .trim()
     .toLowerCase();
-  if (target && me && target === me) return false;
+
+  if (target && current && target === current) return false;
 
   return true;
 }
 
 export function AdminUsersSection({
-  currentTenantId,
-  tenantOptions,
-  onTenantChange,
+  currentWebsiteId,
+  websiteOptions,
+  onWebsiteChange,
   isFormSaving,
   currentUser,
 }: AdminUsersSectionProps) {
   const t = useTranslations();
 
-  // ---------------------------------------------------------------------------
-  // Users list (Studio)
-  // ---------------------------------------------------------------------------
+  /* ------------------------------------------------------------------------ */
+  /* Users list                                                               */
+  /* ------------------------------------------------------------------------ */
+
   const { users, isLoading: isLoadingUsers } = useListUsers();
 
   const userOptions: ReadonlyArray<SelectOption> = useMemo(() => {
     return toUserSelectOptions(users);
   }, [users]);
 
-  // ---------------------------------------------------------------------------
-  // State UI
-  // ---------------------------------------------------------------------------
-  const [selectedSiteId, setSelectedSiteId] = useState<string>(() =>
-    String(currentTenantId ?? "").trim(),
+  /* ------------------------------------------------------------------------ */
+  /* UI state                                                                 */
+  /* ------------------------------------------------------------------------ */
+
+  const [selectedWebsiteId, setSelectedWebsiteId] = useState<string>(() =>
+    normalizeWebsiteId(currentWebsiteId),
   );
 
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const mode: "create" | "edit" = selectedUserId ? "edit" : "create";
 
-  // ---------------------------------------------------------------------------
-  // Form reset helpers
-  // ---------------------------------------------------------------------------
+  /**
+   * Si le Website actif change côté parent après refresh, on resynchronise
+   * le state local du select.
+   */
+  useEffect(() => {
+    setSelectedWebsiteId(normalizeWebsiteId(currentWebsiteId));
+  }, [currentWebsiteId]);
+
+  /* ------------------------------------------------------------------------ */
+  /* Form reset helpers                                                       */
+  /* ------------------------------------------------------------------------ */
+
   const [formKey, setFormKey] = useState(0);
   const [isDirtyLocal, setIsDirtyLocal] = useState(false);
   const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
@@ -139,46 +166,51 @@ export function AdminUsersSection({
   const resetFormUi = useCallback(() => {
     setBlockingErrorsCount(0);
     setIsDirtyLocal(false);
-    setFormKey((k) => k + 1);
+    setFormKey((key) => key + 1);
   }, []);
 
-  // ---------------------------------------------------------------------------
-  // Header handlers
-  // ---------------------------------------------------------------------------
-  const handleSiteChange = useCallback(
-    async (siteId: string) => {
-      const next = toTenantId(siteId);
-      if (!next) return;
+  /* ------------------------------------------------------------------------ */
+  /* Header handlers                                                          */
+  /* ------------------------------------------------------------------------ */
 
-      setSelectedSiteId(next);
-      await onTenantChange(next);
+  const handleWebsiteChange = useCallback(
+    async (websiteId: string) => {
+      const nextWebsiteId = normalizeWebsiteId(websiteId);
+
+      if (!nextWebsiteId) return;
+
+      setSelectedWebsiteId(nextWebsiteId);
+      await onWebsiteChange(nextWebsiteId);
     },
-    [onTenantChange],
+    [onWebsiteChange],
   );
 
   const handleUserChange = useCallback(
     (userId: string | null) => {
       const next = String(userId ?? "").trim();
-      const nextId = next ? next : null;
+      const nextUserId = next ? next : null;
 
       resetFormUi();
-      setSelectedUserId(nextId);
+      setSelectedUserId(nextUserId);
     },
     [resetFormUi],
   );
 
-  // ---------------------------------------------------------------------------
-  // Read selected user (edit mode)
-  // ---------------------------------------------------------------------------
+  /* ------------------------------------------------------------------------ */
+  /* Read selected user                                                       */
+  /* ------------------------------------------------------------------------ */
+
   const { user, isLoading: isLoadingUser } = useReadUser(selectedUserId ?? "");
 
-  // ---------------------------------------------------------------------------
-  // Baseline (pour update)
-  // ---------------------------------------------------------------------------
+  /* ------------------------------------------------------------------------ */
+  /* Baseline for update                                                      */
+  /* ------------------------------------------------------------------------ */
+
   const baselineRef = useRef<UserFormValues | null>(null);
 
   const initialValues = useMemo<UserFormValues>(() => {
     if (mode === "create") return toUserFormValuesFromDTO(null);
+
     return toUserFormValuesFromDTO(user);
   }, [mode, user]);
 
@@ -186,9 +218,10 @@ export function AdminUsersSection({
     baselineRef.current = initialValues;
   }, [initialValues]);
 
-  // ---------------------------------------------------------------------------
-  // Mutations
-  // ---------------------------------------------------------------------------
+  /* ------------------------------------------------------------------------ */
+  /* Mutations                                                                */
+  /* ------------------------------------------------------------------------ */
+
   const { create, isCreating } = useCreateUser();
 
   const { update, isUpdating } = useUpdateUser(async () => {
@@ -201,9 +234,10 @@ export function AdminUsersSection({
   const isSaving = isCreating || isUpdating || Boolean(isFormSaving);
   const isBusy = Boolean(isSaving || isDeleting);
 
-  // ---------------------------------------------------------------------------
-  // Delete (edit only) + guard self-delete
-  // ---------------------------------------------------------------------------
+  /* ------------------------------------------------------------------------ */
+  /* Delete guard                                                             */
+  /* ------------------------------------------------------------------------ */
+
   const canDelete = useMemo(() => {
     return canDeleteUser({
       mode,
@@ -217,6 +251,7 @@ export function AdminUsersSection({
     if (!canDelete) return;
 
     const id = String(selectedUserId ?? "").trim();
+
     if (!id) return;
 
     const label = String(user?.email ?? "").trim() || undefined;
@@ -227,9 +262,10 @@ export function AdminUsersSection({
     setSelectedUserId(null);
   }, [canDelete, deleteUser, resetFormUi, selectedUserId, user?.email]);
 
-  // ---------------------------------------------------------------------------
-  // Submit
-  // ---------------------------------------------------------------------------
+  /* ------------------------------------------------------------------------ */
+  /* Submit                                                                   */
+  /* ------------------------------------------------------------------------ */
+
   const handleSubmit = useCallback(
     async (values: UserFormValues) => {
       const normalized = normalizeUserFormValues(values);
@@ -237,10 +273,12 @@ export function AdminUsersSection({
       if (mode === "create") {
         await create(normalized);
         resetFormUi();
+
         return;
       }
 
       const originalId = String(user?.id ?? selectedUserId ?? "").trim();
+
       if (!originalId) return;
 
       const baseline = baselineRef.current ?? initialValues;
@@ -258,9 +296,10 @@ export function AdminUsersSection({
     ],
   );
 
-  // ---------------------------------------------------------------------------
-  // Titles / loading
-  // ---------------------------------------------------------------------------
+  /* ------------------------------------------------------------------------ */
+  /* Titles / loading                                                         */
+  /* ------------------------------------------------------------------------ */
+
   const title =
     mode === "edit"
       ? t("studio.users.section.titleEdit", {
@@ -286,11 +325,11 @@ export function AdminUsersSection({
         isLoading={Boolean(isLoadingUsers)}
       >
         <AdminUsersHeader
-          siteId={selectedSiteId}
+          websiteId={selectedWebsiteId}
           userId={selectedUserId}
-          siteOptions={tenantOptions}
+          websiteOptions={websiteOptions}
           userOptions={userOptions}
-          onSiteChange={handleSiteChange}
+          onWebsiteChange={handleWebsiteChange}
           onUserChange={handleUserChange}
           isLoadingUsers={isLoadingUsers}
         />
@@ -313,11 +352,14 @@ export function AdminUsersSection({
           onSubmit={handleSubmit}
           onReset={() => {
             resetFormUi();
-            if (mode === "edit") setSelectedUserId(null);
+
+            if (mode === "edit") {
+              setSelectedUserId(null);
+            }
           }}
           onDirtyChange={(dirty) => setIsDirtyLocal(Boolean(dirty))}
           onBlockingErrorsCountChange={setBlockingErrorsCount}
-          // --- delete wiring (edit only)
+          websiteOptions={websiteOptions}
           canDelete={canDelete}
           isDeleting={Boolean(isDeleting && deletingUserId === selectedUserId)}
           onDelete={handleDelete}

@@ -1,28 +1,28 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/find-reusable-demo-sandbox.ts
  * @layer core/domain
+ *
  * @description
  * Use-case : résout une sandbox démo existante et réutilisable à partir de son
  * `demoInstanceId`.
  *
  * @remarks
- * - Vérifie l'existence de la sandbox.
- * - Vérifie qu'elle n'est pas expirée.
+ * - Vérifie l’existence de la sandbox.
+ * - Vérifie qu’elle n’est pas expirée.
  * - Vérifie la cohérence minimale avec le user démo associé.
- * - Ne gère pas les cookies HTTP ni l'ouverture de session.
+ * - Ne gère pas les cookies HTTP ni l’ouverture de session.
  */
-
-import {
-  ERROR_CODES as EC,
-  type ErrorCode,
-} from "@compoz/core/domain/errors/codes";
-import { DomainError } from "@compoz/core/domain/errors/domain-error";
 
 import type {
   FindReusableDemoSandboxDeps,
   FindReusableDemoSandboxInput,
   FindReusableDemoSandboxResult,
 } from "@compoz/core/domain/demo/use-cases/find-reusable-demo-sandbox.types";
+import {
+  ERROR_CODES as EC,
+  type ErrorCode,
+} from "@compoz/core/domain/errors/codes";
+import { DomainError } from "@compoz/core/domain/errors/domain-error";
 
 function assertNonEmptyTrimmed(
   value: unknown,
@@ -141,18 +141,18 @@ export function findReusableDemoSandbox({
       });
     }
 
-    if (user.rbac.defaultTenantId !== sandbox.tenantId) {
+    if (user.rbac.defaultWebsiteId !== sandbox.websiteId) {
       throw new DomainError({
         code: EC.FORBIDDEN,
         message: EC.FORBIDDEN,
         details: {
-          path: ["user", "rbac", "defaultTenantId"],
+          path: ["user", "rbac", "defaultWebsiteId"],
           meta: {
             demoInstanceId,
             userId: user.id,
-            sandboxTenantId: sandbox.tenantId,
-            userDefaultTenantId: user.rbac.defaultTenantId,
-            reason: "DEMO_SANDBOX_TENANT_MISMATCH",
+            sandboxWebsiteId: sandbox.websiteId,
+            userDefaultWebsiteId: user.rbac.defaultWebsiteId,
+            reason: "DEMO_SANDBOX_WEBSITE_MISMATCH",
           },
         },
       });
@@ -161,7 +161,7 @@ export function findReusableDemoSandbox({
     return {
       sandbox,
       user,
-      tenantId: sandbox.tenantId,
+      websiteId: sandbox.websiteId,
     };
   };
 }

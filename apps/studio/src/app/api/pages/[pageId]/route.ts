@@ -1,14 +1,19 @@
 /**
  * @file apps/studio/src/app/api/pages/[pageId]/route.ts
  * @layer studio/app/api
- * @description
- * Route API Studio pour la lecture, la suppression et la mise à jour d’une page par ID.
  *
+ * @description
+ * Route API Studio pour la lecture, la suppression et la mise à jour
+ * d’une page par ID dans le Website actif.
+ *
+ * @remarks
  * Responsabilités :
- * - GET    : retourne une page selon le state (draft/published).
- * - DELETE : supprime une page (draft-only) + détache ses enfants directs.
- * - PATCH  : met à jour une page (draft-only).
- * - Index (SiteIndexDTO) : SoT maintenue par patch (pas de rebuild/list post-mutation).
+ * - GET    : retourne une page selon le state demandé (draft/published).
+ * - DELETE : supprime une page en draft + détache ses enfants directs.
+ * - PATCH  : met à jour une page en draft.
+ * - Index (SiteIndexDTO) : source of truth maintenue par patch,
+ *   sans rebuild/list post-mutation.
+ * - Les repositories sont scopés par Prisma Website.id.
  */
 
 import "server-only";
@@ -35,7 +40,7 @@ import { log, logSpan } from "@compoz/infra/lib/log";
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 import { adaptUpdatePagePayload } from "@compoz/studio/app/api/_adapters/pages/pages";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
@@ -45,52 +50,60 @@ import {
   type UpdatePageIntentDTO,
 } from "@compoz/validation/pages/page-intents";
 
-// -------------------------------------------------
-// GET /api/pages/:pageId → lire une page
-// -------------------------------------------------
+/* -------------------------------------------------------------------------- */
+/* GET /api/pages/:pageId                                                     */
+/* -------------------------------------------------------------------------- */
 
 export async function GET(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.GET" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
-    return logSpan(NS, { ns: NS, method: "GET", state, tenantId }, async () => {
-      const params = await unwrapParams(ctx.params);
+    return logSpan(
+      NS,
+      { ns: NS, method: "GET", state, websiteId },
+      async () => {
+        const params = await unwrapParams(ctx.params);
 
-      const { pageId } = parseDTOOrHttp(PageIdParamSchema, params, {
-        message: EC.INVALID_ARGUMENT,
-        extras: { where: "api.studio.pages.id.GET.params" },
-      });
+        const { pageId } = parseDTOOrHttp(PageIdParamSchema, params, {
+          message: EC.INVALID_ARGUMENT,
+          extras: { where: "api.studio.pages.id.GET.params" },
+        });
 
-      const pagesRepo = getPagesRepository({ tenantId });
-      const page = await pagesRepo.readById(state, pageId);
+        const pagesRepo = getPagesRepository({ websiteId });
+        const page = await pagesRepo.readById(state, pageId);
 
-      if (!page) {
-        throwHttp(404, { code: EC.PAGE_NOT_FOUND, message: EC.PAGE_NOT_FOUND });
-      }
+        if (!page) {
+          throwHttp(404, {
+            code: EC.PAGE_NOT_FOUND,
+            message: EC.PAGE_NOT_FOUND,
+          });
+        }
 
-      const res: GetPageByIdResponse = { page: page as PageDTO };
-      return res;
-    });
+        const res: GetPageByIdResponse = { page: page as PageDTO };
+
+        return res;
+      },
+    );
   });
 }
 
-// -------------------------------------------------
-// DELETE /api/pages/:pageId → supprimer (draft-only)
-// -------------------------------------------------
+/* -------------------------------------------------------------------------- */
+/* DELETE /api/pages/:pageId                                                  */
+/* -------------------------------------------------------------------------- */
 
 export async function DELETE(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.DELETE" as const;
 
   return handleRoute(NS, req, async () => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
     return logSpan(
       NS,
-      { ns: NS, method: "DELETE", state: DEFAULT_CONTENT_STATE, tenantId },
+      { ns: NS, method: "DELETE", state: DEFAULT_CONTENT_STATE, websiteId },
       async () => {
-        const lg = log.child({ ns: NS });
+        const logger = log.child({ ns: NS });
 
         const params = await unwrapParams(ctx.params);
 
@@ -99,28 +112,32 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
           extras: { where: "api.studio.pages.id.DELETE.params" },
         });
 
-        const pagesRepo = getPagesRepository({ tenantId });
-        const siteRepo = getSiteRepository({ tenantId });
-        const statusCache = getSiteStatusCache({ tenantId });
+        const pagesRepo = getPagesRepository({ websiteId });
+        const siteRepo = getSiteRepository({ websiteId });
+        const statusCache = getSiteStatusCache({ websiteId });
 
         await pagesRepo.ensureBase();
         await siteRepo.ensureBase();
 
         const nowIso = new Date().toISOString();
 
-        // ✅ 1) Détacher les enfants directs (1 niveau) avant suppression (KV-optimized)
-        // - On lit l’index SoT (beaucoup moins coûteux qu’un list pages)
-        // - On détache côté pages via readManyById + putMany
+        /**
+         * 1) Détacher les enfants directs avant suppression.
+         *
+         * - On lit l’index source of truth.
+         * - On détache côté pages via readManyById + putMany.
+         * - On garde uniquement le détachement direct à 1 niveau.
+         */
         const currentIndex = await siteRepo.readIndex(DEFAULT_CONTENT_STATE);
 
         const childIds =
           currentIndex?.pages
-            .filter((p) => p.parentId === pageId)
-            .map((p) => p.id) ?? [];
+            .filter((pageRef) => pageRef.parentId === pageId)
+            .map((pageRef) => pageRef.id) ?? [];
 
         if (childIds.length > 0) {
-          lg.debug("route.delete.detachChildren.start", {
-            tenantId,
+          logger.debug("route.delete.detachChildren.start", {
+            websiteId,
             pageId,
             childrenCount: childIds.length,
           });
@@ -131,33 +148,38 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
           );
 
           const detached = children
-            .filter((p): p is NonNullable<typeof p> => Boolean(p))
-            .filter((p) => p.parentId !== null)
-            .map((p) => ({
-              ...p,
+            .filter((page): page is NonNullable<typeof page> => Boolean(page))
+            .filter((page) => page.parentId !== null)
+            .map((page) => ({
+              ...page,
               parentId: null,
-              meta: { ...p.meta, updatedAt: nowIso },
+              meta: { ...page.meta, updatedAt: nowIso },
             }));
 
           if (detached.length > 0) {
             await pagesRepo.putMany(DEFAULT_CONTENT_STATE, detached);
           }
 
-          lg.debug("route.delete.detachChildren.done", {
-            tenantId,
+          logger.debug("route.delete.detachChildren.done", {
+            websiteId,
             pageId,
             childrenCount: childIds.length,
             detachedCount: detached.length,
           });
         }
 
-        // ✅ 2) Supprimer la page (domain pur)
+        /**
+         * 2) Supprimer la page via le use-case domaine.
+         */
         const runDelete = deletePage({ pages: pagesRepo });
         await runDelete({ pageId });
 
-        // ✅ 3) Patch index SoT (no rebuild)
-        // - detachChildrenByParentId: parentId -> null dans l’index
-        // - removePageById: retire la page supprimée
+        /**
+         * 3) Patch de l’index source of truth, sans rebuild global.
+         *
+         * - detachChildrenByParentId : parentId -> null dans l’index.
+         * - removePageById : retire la page supprimée.
+         */
         const baseIndex =
           currentIndex ??
           ({
@@ -171,26 +193,32 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
         const nextIndexEntity = removed.next;
 
         const index: SiteIndexDTO = {
-          pages: nextIndexEntity.pages.map((p) => ({
-            id: p.id,
-            slug: p.slug,
-            name: p.name,
-            parentId: p.parentId,
+          pages: nextIndexEntity.pages.map((pageRef) => ({
+            id: pageRef.id,
+            slug: pageRef.slug,
+            name: pageRef.name,
+            parentId: pageRef.parentId,
           })),
           updatedAt: nowIso,
         };
 
         await siteRepo.putIndex(DEFAULT_CONTENT_STATE, index);
 
-        lg.debug("route.index.patched", {
-          tenantId,
+        logger.debug("route.index.patched", {
+          websiteId,
           pagesCount: index.pages.length,
           removed: removed.removed,
         });
 
-        // ✅ Invalidation KV snapshots (best-effort)
+        /**
+         * Invalidation du cache de status du Website actif.
+         *
+         * Le cache peut encore être implémenté en KV côté infra,
+         * mais son scope métier est le Prisma Website.id.
+         */
         try {
-          lg.debug?.("route.statusCache.invalidate.start", {
+          logger.debug?.("route.statusCache.invalidate.start", {
+            websiteId,
             invalidateStatus: true,
             invalidateStatusDetails: true,
           });
@@ -200,40 +228,43 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
             statusCache.invalidateStatusDetails(),
           ]);
 
-          lg.debug?.("route.statusCache.invalidate.done", {
+          logger.debug?.("route.statusCache.invalidate.done", {
+            websiteId,
             invalidateStatus: true,
             invalidateStatusDetails: true,
           });
-        } catch (e) {
-          lg.error?.("route.statusCache.invalidate.failed", {
-            err: String(e),
+        } catch (error) {
+          logger.error?.("route.statusCache.invalidate.failed", {
+            websiteId,
+            err: String(error),
             invalidateStatus: true,
             invalidateStatusDetails: true,
           });
         }
 
         const res: DeletePageResponse = { index };
+
         return res;
       },
     );
   });
 }
 
-// -------------------------------------------------
-// PATCH /api/pages/:pageId → update (draft-only)
-// -------------------------------------------------
+/* -------------------------------------------------------------------------- */
+/* PATCH /api/pages/:pageId                                                   */
+/* -------------------------------------------------------------------------- */
 
 export async function PATCH(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.PATCH" as const;
 
   return handleRoute(NS, req, async () => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
     return logSpan(
       NS,
-      { ns: NS, method: "PATCH", state: DEFAULT_CONTENT_STATE, tenantId },
+      { ns: NS, method: "PATCH", state: DEFAULT_CONTENT_STATE, websiteId },
       async () => {
-        const lg = log.child({ ns: NS });
+        const logger = log.child({ ns: NS });
 
         const params = await unwrapParams(ctx.params);
 
@@ -253,13 +284,12 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
           },
         );
 
-        const pagesRepo = getPagesRepository({ tenantId });
-        const siteRepo = getSiteRepository({ tenantId }); // slug rename → update menus (domain)
-        const statusCache = getSiteStatusCache({ tenantId });
+        const pagesRepo = getPagesRepository({ websiteId });
+        const siteRepo = getSiteRepository({ websiteId });
+        const statusCache = getSiteStatusCache({ websiteId });
 
         const payload = adaptUpdatePagePayload(dto);
 
-        // domain pur (pas de statusCache)
         const runUpdate = updatePage({
           pages: pagesRepo,
           site: siteRepo,
@@ -267,7 +297,9 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
 
         const { page } = await runUpdate({ pageId, ...payload });
 
-        // ✅ Patch index SoT (no rebuild)
+        /**
+         * Patch de l’index source of truth, sans rebuild global.
+         */
         await siteRepo.ensureBase();
 
         const nowIso = new Date().toISOString();
@@ -289,25 +321,31 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
         });
 
         const index: SiteIndexDTO = {
-          pages: nextIndexEntity.pages.map((p) => ({
-            id: p.id,
-            slug: p.slug,
-            name: p.name,
-            parentId: p.parentId,
+          pages: nextIndexEntity.pages.map((pageRef) => ({
+            id: pageRef.id,
+            slug: pageRef.slug,
+            name: pageRef.name,
+            parentId: pageRef.parentId,
           })),
           updatedAt: nowIso,
         };
 
         await siteRepo.putIndex(DEFAULT_CONTENT_STATE, index);
 
-        lg.debug("route.index.patched", {
-          tenantId,
+        logger.debug("route.index.patched", {
+          websiteId,
           pagesCount: index.pages.length,
         });
 
-        // ✅ Invalidation KV snapshots (best-effort)
+        /**
+         * Invalidation du cache de status du Website actif.
+         *
+         * Le cache peut encore être implémenté en KV côté infra,
+         * mais son scope métier est le Prisma Website.id.
+         */
         try {
-          lg.debug?.("route.statusCache.invalidate.start", {
+          logger.debug?.("route.statusCache.invalidate.start", {
+            websiteId,
             invalidateStatus: true,
             invalidateStatusDetails: true,
           });
@@ -317,13 +355,15 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
             statusCache.invalidateStatusDetails(),
           ]);
 
-          lg.debug?.("route.statusCache.invalidate.done", {
+          logger.debug?.("route.statusCache.invalidate.done", {
+            websiteId,
             invalidateStatus: true,
             invalidateStatusDetails: true,
           });
-        } catch (e) {
-          lg.error?.("route.statusCache.invalidate.failed", {
-            err: String(e),
+        } catch (error) {
+          logger.error?.("route.statusCache.invalidate.failed", {
+            websiteId,
+            err: String(error),
             invalidateStatus: true,
             invalidateStatusDetails: true,
           });
@@ -333,6 +373,7 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
           page: page as PageDTO,
           index,
         };
+
         return res;
       },
     );

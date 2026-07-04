@@ -3,7 +3,7 @@
  * @layer ui/site/skins
  *
  * @description
- * Résout les runtime features site à partir du tenant courant.
+ * Résout les runtime features site à partir du `websiteSlug` courant.
  *
  * @remarks
  * - Socle neutre par défaut.
@@ -19,16 +19,16 @@ const DEFAULT_SITE_RUNTIME_FEATURES: SiteRuntimeFeatures = {
   autoHideSingleH1Block: false,
 } as const;
 
-function normalizeTenantId(tenantId?: string): string {
-  return String(tenantId ?? "")
+function normalizeWebsiteSlug(websiteSlug?: string): string {
+  return String(websiteSlug ?? "")
     .trim()
     .toLowerCase();
 }
 
 export function resolveSiteRuntimeFeatures(
-  tenantId?: string,
+  websiteSlug?: string,
 ): SiteRuntimeFeatures {
-  if (normalizeTenantId(tenantId) === "lola") {
+  if (normalizeWebsiteSlug(websiteSlug) === "lola") {
     return {
       autoHideSingleH1Block: true,
     } as const;

@@ -1,15 +1,27 @@
 /**
- * @file apps/site/src/app/t/[tenantId]/layout.tsx
+ * @file apps/site/src/app/t/[websiteSlug]/layout.tsx
  * @layer site/app
+ *
+ * @description
+ * Layout public du fallback explicite `/t/:websiteSlug`.
+ *
+ * @remarks
+ * - Le paramètre de route `websiteSlug` correspond au Prisma `Website.slug`.
+ * - Le Website est résolu via Prisma avant de charger les settings publiés.
+ * - Les loaders de contenu utilisent le Prisma `Website.id`.
+ * - L’UI/skin utilise le Prisma `Website.slug`.
+ * - Les routes host-based possèdent leur propre layout dans `(hosted)`.
  */
 
 import type { Metadata } from "next";
 import type { Icons } from "next/dist/lib/metadata/types/metadata-types";
+import { notFound } from "next/navigation";
 import type { CSSProperties, ReactNode } from "react";
 import { preload } from "react-dom";
 
+import { resolvePublicWebsiteFromRouteSlug } from "@compoz/infra/websites/resolve-public-website";
 import { SiteNotFoundClient } from "@compoz/site/components/system/SiteNotFoundClient";
-import { getPublishedSettingsByTenantId } from "@compoz/site/lib/pages/published-page-loaders";
+import { getPublishedSettingsByWebsiteId } from "@compoz/site/lib/pages/published-page-loaders";
 import { resolveSiteBaseUrl } from "@compoz/site/lib/seo/resolveSiteBaseUrl";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
 import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
@@ -36,11 +48,11 @@ import {
   SITE_MAIN,
 } from "@compoz/ui/styles/site/layout";
 
-type TenantLayoutProps = Readonly<{
+type WebsiteSlugLayoutProps = Readonly<{
   children: ReactNode;
   params: Promise<
     Readonly<{
-      tenantId: string;
+      websiteSlug: string;
     }>
   >;
 }>;
@@ -96,16 +108,34 @@ function buildFaviconIcons(favicon: string): Icons {
   };
 }
 
+async function resolveWebsiteFromParams(
+  params: WebsiteSlugLayoutProps["params"],
+) {
+  const { websiteSlug } = await unwrapParams(params);
+
+  const website = await resolvePublicWebsiteFromRouteSlug({
+    slug: websiteSlug,
+  });
+
+  if (!website) {
+    notFound();
+  }
+
+  return website;
+}
+
 /* -------------------------------------------------------------------------- */
 /* Metadata                                                                   */
 /* -------------------------------------------------------------------------- */
 
 export async function generateMetadata({
   params,
-}: Omit<TenantLayoutProps, "children">): Promise<Metadata> {
-  const { tenantId } = await unwrapParams(params);
+}: Omit<WebsiteSlugLayoutProps, "children">): Promise<Metadata> {
+  const website = await resolveWebsiteFromParams(params);
+  const websiteId = website.websiteId;
 
-  const settings = await getPublishedSettingsByTenantId(tenantId);
+  const settings = await getPublishedSettingsByWebsiteId(websiteId);
+
   if (!settings) return {};
 
   const brandTitle = (settings.identity?.siteName ?? "").trim() || "Site";
@@ -164,19 +194,23 @@ export async function generateMetadata({
 /* Layout                                                                     */
 /* -------------------------------------------------------------------------- */
 
-export default async function TenantSiteLayout({
+export default async function WebsiteSlugSiteLayout({
   children,
   params,
-}: TenantLayoutProps) {
-  const { tenantId } = await unwrapParams(params);
+}: WebsiteSlugLayoutProps) {
+  const website = await resolveWebsiteFromParams(params);
+  const websiteId = website.websiteId;
+  const websiteSlug = website.slug;
 
-  const settings = await getPublishedSettingsByTenantId(tenantId);
-  const ui = resolveSiteUi(tenantId);
+  const settings = await getPublishedSettingsByWebsiteId(websiteId);
+  const ui = resolveSiteUi(websiteSlug);
+
   const publicFonts = resolvePublicThemeFonts(
     settings?.theme?.fontFamily,
     settings?.theme?.headingFont,
   );
-  const skinCssHref = resolveSiteSkinCssHref(tenantId);
+
+  const skinCssHref = resolveSiteSkinCssHref(websiteSlug);
 
   const fontStyle = Object.fromEntries(
     publicFonts.map((font) => [font.variableName, font.fontFamily]),

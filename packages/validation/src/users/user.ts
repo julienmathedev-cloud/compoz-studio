@@ -1,9 +1,10 @@
 /**
  * @file packages/validation/src/users/user.ts
  * @layer schemas
+ *
  * @description
  * Définit les schémas Zod décrivant la forme frontière d’un utilisateur Studio.
- * Ces schémas valident uniquement la structure des données exposées (API / infra) ;
+ * Ces schémas valident uniquement la structure des données exposées API / infra ;
  * les invariants métier et règles globales sont traités dans le domaine.
  */
 
@@ -24,8 +25,8 @@ import { IsoDateStringSchema } from "@compoz/validation/common/date";
  * - non vide
  *
  * @remarks
- * À ce stade on ne contraint pas le format (uuid, prefix, etc.)
- * car l’infra peut évoluer (KV, DB, migration).
+ * À ce stade on ne contraint pas le format, uuid, prefix, etc.,
+ * car l’infra peut évoluer : KV, DB, migration.
  */
 export const UserIdSchema = z
   .string()
@@ -35,23 +36,23 @@ export const UserIdSchema = z
 /**
  * Email :
  * - trim
- * - lower-case (boundary normalization)
- * - format email (validation Zod)
+ * - lower-case, boundary normalization
+ * - format email, validation Zod
  */
 export const UserEmailSchema = z
   .string()
   .trim()
   .min(1, ERROR_CODES.USER_EMAIL_REQUIRED)
   .email(ERROR_CODES.USER_EMAIL_INVALID_FORMAT)
-  .transform((v) => v.toLowerCase());
+  .transform((value) => value.toLowerCase());
 
 /**
  * Nom affiché :
  * - trim
- * - optionnel au niveau "storage DTO"
+ * - optionnel au niveau storage DTO
  *
  * @remarks
- * Les use-cases peuvent imposer "required" selon le flow (ex: create user).
+ * Les use-cases peuvent imposer required selon le flow, ex: create user.
  */
 export const UserNameSchema = z
   .string()
@@ -59,7 +60,7 @@ export const UserNameSchema = z
   .min(1, ERROR_CODES.USER_NAME_REQUIRED);
 
 /**
- * Role RBAC minimal (V0.5).
+ * Role RBAC minimal, V0.5.
  */
 export const UserRoleSchema = z.enum(["admin", "editor"], {
   message: ERROR_CODES.USER_ROLE_INVALID,
@@ -73,42 +74,46 @@ export const UserStatusSchema = z.enum(["active", "disabled"], {
 });
 
 /**
- * Tenant id (normalisé).
+ * Website id normalisé.
+ *
+ * Contrat :
  * - trim
  * - lower-case
  * - non vide
  * - pas de wildcard "*"
  */
-export const TenantIdSchema = z
+export const WebsiteIdSchema = z
   .string()
   .trim()
-  .min(1, ERROR_CODES.USER_TENANT_IDS_REQUIRED)
-  .transform((v) => v.toLowerCase())
-  .refine((v) => v !== "*", ERROR_CODES.USER_TENANT_IDS_INVALID);
+  .min(1, ERROR_CODES.USER_WEBSITE_IDS_REQUIRED)
+  .transform((value) => value.toLowerCase())
+  .refine((value) => value !== "*", ERROR_CODES.USER_WEBSITE_IDS_INVALID);
 
 /**
- * Liste de tenants :
+ * Liste de Websites :
  * - array non vide
  * - strings normalisées
- * - unique (best-effort)
+ * - unique, best-effort
  */
-export const TenantIdsSchema = z
-  .array(TenantIdSchema)
-  .min(1, ERROR_CODES.USER_TENANT_IDS_REQUIRED)
-  .superRefine((arr, ctx) => {
+export const WebsiteIdsSchema = z
+  .array(WebsiteIdSchema)
+  .min(1, ERROR_CODES.USER_WEBSITE_IDS_REQUIRED)
+  .superRefine((websiteIds, ctx) => {
     const seen = new Set<string>();
 
-    for (let i = 0; i < arr.length; i++) {
-      const t = arr[i];
-      if (seen.has(t)) {
+    for (let index = 0; index < websiteIds.length; index++) {
+      const websiteId = websiteIds[index];
+
+      if (seen.has(websiteId)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          path: [i],
-          message: ERROR_CODES.USER_TENANT_IDS_INVALID,
+          path: [index],
+          message: ERROR_CODES.USER_WEBSITE_IDS_INVALID,
         });
         return;
       }
-      seen.add(t);
+
+      seen.add(websiteId);
     }
   });
 
@@ -131,16 +136,16 @@ export const DemoInstanceIdSchema = z.string().trim().min(1);
 export const UserRbacSchema = z
   .object({
     role: UserRoleSchema,
-    tenantIds: TenantIdsSchema,
-    defaultTenantId: TenantIdSchema,
+    websiteIds: WebsiteIdsSchema,
+    defaultWebsiteId: WebsiteIdSchema,
   })
   .strict()
   .superRefine((rbac, ctx) => {
-    if (!rbac.tenantIds.includes(rbac.defaultTenantId)) {
+    if (!rbac.websiteIds.includes(rbac.defaultWebsiteId)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: ERROR_CODES.USER_DEFAULT_TENANT_NOT_ALLOWED,
-        path: ["defaultTenantId"],
+        message: ERROR_CODES.USER_DEFAULT_WEBSITE_NOT_ALLOWED,
+        path: ["defaultWebsiteId"],
       });
     }
   });
@@ -191,8 +196,10 @@ export const UserSchema = z
   .strict();
 
 /**
- * Résumé minimal (list/admin).
- * Note: name reste optionnel (aligné domaine).
+ * Résumé minimal, list/admin.
+ *
+ * @remarks
+ * `name` reste aligné domaine.
  */
 export const UserSummarySchema = z
   .object({
@@ -214,7 +221,7 @@ export type UserRoleShape = z.infer<typeof UserRoleSchema>;
 export type UserStatusShape = z.infer<typeof UserStatusSchema>;
 export type UserIdShape = z.infer<typeof UserIdSchema>;
 export type UserIdParamShape = z.infer<typeof UserIdParamSchema>;
-export type TenantIdShape = z.infer<typeof TenantIdSchema>;
-export type TenantIdsShape = z.infer<typeof TenantIdsSchema>;
+export type WebsiteIdShape = z.infer<typeof WebsiteIdSchema>;
+export type WebsiteIdsShape = z.infer<typeof WebsiteIdsSchema>;
 export type DemoInstanceIdShape = z.infer<typeof DemoInstanceIdSchema>;
 export type UserDemoMetaShape = z.infer<typeof UserDemoMetaSchema>;

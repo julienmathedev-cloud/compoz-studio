@@ -5,12 +5,13 @@
  * @layer hooks/studio/pages
  *
  * @description
- * Hook studio React Query pour supprimer une page draft via l’API.
+ * Hook Studio React Query pour supprimer une page draft via l’API.
  *
  * @remarks
- * - Tenant-scoped cache : toutes les query keys incluent `tenantId`.
+ * - Website-scoped cache : toutes les query keys incluent `websiteId`.
  * - Pousse immédiatement le nouvel index dans le cache après suppression.
  * - Purge les caches `pageById` et `pageBlocks` pour éviter une UI fantôme.
+ * - Le scope utilisé ici est Prisma Website.id.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -20,7 +21,7 @@ import { useCallback, useState } from "react";
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log } from "@compoz/infra/lib/log";
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { removePageBlocksCache } from "@compoz/studio/features/pages/blocks/cache/cache";
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
 import { setSiteIndexCache } from "@compoz/studio/features/site-index/cache";
@@ -44,21 +45,19 @@ type UseDeletePageResult = Readonly<{
   remove: (args: DeletePageArgs) => Promise<void>;
 }>;
 
-const lg = log.child({ ns: "hook", name: "useDeletePage" });
+const logger = log.child({ ns: "hook", name: "useDeletePage" });
 
-/**
- * Hook de suppression d’une page (tenant-scoped).
- */
 export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
   const t = useTranslations();
-  const qc = useQueryClient();
-  const tenantId = useTenantId();
+  const queryClient = useQueryClient();
+  const websiteId = useWebsiteId();
+
   const entityLabel = t("studio.shared.entities.page");
 
   const [deletingPageId, setDeletingPageId] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationKey: ["t", tenantId, "studio", "pages", "delete"] as const,
+    mutationKey: ["w", websiteId, "studio", "pages", "delete"] as const,
 
     mutationFn: async (args: DeletePageArgs) => {
       const pageId = String(args.pageId ?? "").trim();
@@ -68,7 +67,12 @@ export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
         "useDeletePage",
         DEFAULT_CONTENT_STATE,
         () => pagesStudioApi.remove(pageId),
-        { entity: entityLabel, fields, pageId, tenantId },
+        {
+          entity: entityLabel,
+          fields,
+          pageId,
+          websiteId,
+        },
       );
 
       return {
@@ -88,23 +92,33 @@ export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
       );
 
       if (args.nextIndex) {
-        setSiteIndexCache(qc, tenantId, DEFAULT_CONTENT_STATE, args.nextIndex);
+        setSiteIndexCache(
+          queryClient,
+          websiteId,
+          DEFAULT_CONTENT_STATE,
+          args.nextIndex,
+        );
       }
 
-      qc.removeQueries({
-        queryKey: pageByIdKey(tenantId, args.pageId, DEFAULT_CONTENT_STATE),
+      queryClient.removeQueries({
+        queryKey: pageByIdKey(websiteId, args.pageId, DEFAULT_CONTENT_STATE),
         exact: true,
       });
 
-      removePageBlocksCache(qc, tenantId, args.pageId, DEFAULT_CONTENT_STATE);
+      removePageBlocksCache(
+        queryClient,
+        websiteId,
+        args.pageId,
+        DEFAULT_CONTENT_STATE,
+      );
 
       await Promise.all([
-        invalidateSiteStatus(qc, tenantId),
-        invalidatePageStatusViews(qc, tenantId),
+        invalidateSiteStatus(queryClient, websiteId),
+        invalidatePageStatusViews(queryClient, websiteId),
       ]);
 
-      lg.debug("delete.ok", {
-        tenantId,
+      logger.debug("delete.ok", {
+        websiteId,
         pageId: args.pageId,
         pagesInIndex: args.nextIndex?.pages?.length ?? undefined,
       });
@@ -114,8 +128,9 @@ export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
 
     onError: (error: unknown, args) => {
       notify.fromError(error, UiError.unexpectedSave);
-      lg.error("delete.failed", {
-        tenantId,
+
+      logger.error("delete.failed", {
+        websiteId,
         pageId: args.pageId,
         msg: String(error),
       });
@@ -131,11 +146,16 @@ export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
   const remove = useCallback(
     async (args: DeletePageArgs) => {
       const pageId = String(args.pageId ?? "").trim();
+
       if (!pageId) return;
       if (deletingPageId === pageId) return;
 
       setDeletingPageId(pageId);
-      await mutation.mutateAsync({ ...args, pageId });
+
+      await mutation.mutateAsync({
+        ...args,
+        pageId,
+      });
     },
     [deletingPageId, mutation],
   );
@@ -144,7 +164,7 @@ export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
     remove,
     deletingPageId,
     isDeleting: mutation.isPending,
-  } as const;
+  };
 }
 
 useDeletePage.displayName = "useDeletePage";

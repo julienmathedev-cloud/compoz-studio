@@ -1,22 +1,24 @@
 /**
  * @file apps/studio/src/lib/demo/start-demo-sandbox.ts
  * @layer studio/lib/demo
+ *
  * @description
  * Composition serveur du démarrage de sandbox démo.
  *
  * @remarks
  * - Branche les dépendances infra + auth nécessaires au use-case
  *   `startDemoSandbox`.
- * - Point d'entrée serveur réutilisable par la future route `/demo/start`.
+ * - Point d’entrée serveur réutilisable par la future route `/demo/start`.
  * - Ne gère pas encore les cookies HTTP, la session NextAuth
  *   ni la redirection finale.
+ * - La sandbox démo est créée depuis un Website seed explicite.
  */
 
 import "server-only";
 
 import {
   DEMO_SANDBOX_TTL_MS,
-  DEMO_SEED_TENANT_ID,
+  DEMO_SEED_WEBSITE_ID,
 } from "@compoz/core/constants/demo/demo";
 import { createDemoSandboxFromSeed } from "@compoz/core/domain/demo/use-cases/create-demo-sandbox-from-seed";
 import { findReusableDemoSandbox } from "@compoz/core/domain/demo/use-cases/find-reusable-demo-sandbox";
@@ -70,7 +72,7 @@ export async function runStartDemoSandbox({
   });
 
   return run({
-    seedTenantId: DEMO_SEED_TENANT_ID,
+    seedWebsiteId: DEMO_SEED_WEBSITE_ID,
     demoInstanceId,
   });
 }

@@ -5,16 +5,18 @@
  * @layer hooks/studio/pages
  *
  * @description
- * Hook studio React Query : réordonnancement des enfants d’un parent (index-only).
+ * Hook Studio React Query : réordonnancement des enfants d’un parent.
  *
  * @remarks
  * - Draft-only par défaut (`DEFAULT_CONTENT_STATE`).
- * - Orchestration UI-only (mutation + cache update + logs + notifications).
+ * - Orchestration UI-only : mutation + cache update + logs + notifications.
  * - Aucune logique métier : la défense du set / order est côté route.
+ * - Le cache est scopé par Prisma Website.id.
  *
  * @why cache update
- * Pour que l’UI (et la preview qui consomme `useReadSiteIndex`) reflète immédiatement
- * le nouvel ordre après un reorder, on pousse `index` dans le cache React Query via `setQueryData`.
+ * Pour que l’UI et la preview qui consomme `useReadSiteIndex` reflètent
+ * immédiatement le nouvel ordre après un reorder, on pousse `index` dans le
+ * cache React Query via `setQueryData`.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -26,7 +28,7 @@ import {
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log, logSpan } from "@compoz/infra/lib/log";
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { setSiteIndexCache } from "@compoz/studio/features/site-index/cache";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
@@ -41,18 +43,18 @@ type UseReorderPageChildrenResult = Readonly<{
   isReordering: boolean;
 }>;
 
-const lg = log.child({ ns: "hook", name: "useReorderPageChildren" });
+const logger = log.child({ ns: "hook", name: "useReorderPageChildren" });
 
 export function useReorderPageChildren(
   state: ContentState = DEFAULT_CONTENT_STATE,
 ): UseReorderPageChildrenResult {
-  const qc = useQueryClient();
-  const tenantId = useTenantId();
+  const queryClient = useQueryClient();
+  const websiteId = useWebsiteId();
 
   const mutation = useMutation<SiteIndexDTO, unknown, ReorderChildrenArgs>({
     mutationKey: [
-      "t",
-      tenantId,
+      "w",
+      websiteId,
       "studio",
       "pages",
       "children",
@@ -66,7 +68,12 @@ export function useReorderPageChildren(
 
       const response = await logSpan(
         "ui.pages.children.reorder",
-        { state, parentId: parentIdKey, count: orderedChildIds.length },
+        {
+          state,
+          websiteId,
+          parentId: parentIdKey,
+          count: orderedChildIds.length,
+        },
         () => pagesStudioApi.reorderChildren(parentIdKey, orderedChildIds),
       );
 
@@ -74,9 +81,10 @@ export function useReorderPageChildren(
     },
 
     onSuccess: async (nextIndex, variables) => {
-      setSiteIndexCache(qc, tenantId, state, nextIndex);
+      setSiteIndexCache(queryClient, websiteId, state, nextIndex);
 
-      lg.debug("reorder.ok", {
+      logger.debug("reorder.ok", {
+        websiteId,
         state,
         parentId: variables.parentId,
         count: variables.childIds.length,
@@ -85,7 +93,12 @@ export function useReorderPageChildren(
 
     onError: (error: unknown) => {
       notify.fromError(error, UiError.unexpectedSave);
-      lg.error("reorder.failed", { state, msg: String(error) });
+
+      logger.error("reorder.failed", {
+        websiteId,
+        state,
+        msg: String(error),
+      });
     },
 
     retry: false,
@@ -106,7 +119,7 @@ export function useReorderPageChildren(
       });
     },
     isReordering: mutation.isPending,
-  } as const;
+  };
 }
 
 useReorderPageChildren.displayName = "useReorderPageChildren";

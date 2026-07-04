@@ -5,12 +5,13 @@
  * @layer hooks/studio/pages/blocks
  *
  * @description
- * Hook studio React Query pour ajouter un block draft à une page via l’API.
+ * Hook Studio React Query pour ajouter un block draft à une page via l’API.
  *
  * @remarks
- * - Orchestration UI-only (mutation, logs, notifications).
+ * - Orchestration UI-only : mutation, logs, notifications.
  * - Le formulaire fournit des FormValues UI.
  * - Aucune logique métier ni validation domaine.
+ * - Le cache et les queryKeys sont scopés par Prisma Website.id.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -20,17 +21,13 @@ import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-sta
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log } from "@compoz/infra/lib/log";
 
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
-
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { syncBlocksFromPageCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
-
 import { toCreateSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
-
 import {
   invalidateBlockStatusViews,
   invalidateSiteStatus,
 } from "@compoz/studio/features/site/status/invalidate";
-
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { notifyCreated } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
@@ -51,19 +48,19 @@ type UseCreateBlockResult = Readonly<{
   isCreating: boolean;
 }>;
 
-const lg = log.child({ ns: "hook", name: "useCreateBlock" });
+const logger = log.child({ ns: "hook", name: "useCreateBlock" });
 
 export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
   const t = useTranslations();
-  const qc = useQueryClient();
-  const tenantId = useTenantId();
+  const queryClient = useQueryClient();
+  const websiteId = useWebsiteId();
 
   const entityLabel = t("studio.shared.entities.blocks");
 
   const mutation = useMutation({
     mutationKey: [
-      "t",
-      tenantId,
+      "w",
+      websiteId,
       "studio",
       "pages",
       "blocks",
@@ -88,7 +85,7 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
           entity: entityLabel,
           fields,
           pageId,
-          tenantId,
+          websiteId,
         },
       );
 
@@ -116,8 +113,8 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
 
       if (pageIdKey && page) {
         syncBlocksFromPageCache(
-          qc,
-          tenantId,
+          queryClient,
+          websiteId,
           pageIdKey,
           page,
           DEFAULT_CONTENT_STATE,
@@ -125,12 +122,12 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
       }
 
       await Promise.all([
-        invalidateSiteStatus(qc, tenantId),
-        invalidateBlockStatusViews(qc, tenantId, pageIdKey),
+        invalidateSiteStatus(queryClient, websiteId),
+        invalidateBlockStatusViews(queryClient, websiteId, pageIdKey),
       ]);
 
-      lg.debug("create.ok", {
-        tenantId,
+      logger.debug("create.ok", {
+        websiteId,
         pageId,
         fields,
         returnedPageId: page?.id,
@@ -143,8 +140,8 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
     onError: (error: unknown) => {
       notify.fromError(error, UiError.unexpectedSave);
 
-      lg.error("create.failed", {
-        tenantId,
+      logger.error("create.failed", {
+        websiteId,
         msg: String(error),
       });
     },
@@ -157,7 +154,7 @@ export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
       await mutation.mutateAsync(args);
     },
     isCreating: mutation.isPending,
-  } as const;
+  };
 }
 
 useCreateBlock.displayName = "useCreateBlock";

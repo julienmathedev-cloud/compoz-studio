@@ -1,26 +1,27 @@
 /**
  * @file packages/infra/src/http/endpoints.ts
  * @layer infra/http
+ *
  * @description
  * Table centralisée des endpoints HTTP pour l’API Studio.
  *
+ * @remarks
  * Responsabilités :
- * - construction de chemins robustes (normalisation des segments),
- * - gestion d’un préfixe/une version via env,
+ * - construction de chemins robustes avec normalisation des segments ;
+ * - gestion d’un préfixe / d’une version via env ;
  * - source unique des URLs consommées côté client et tests.
  *
- * @remarks
  * Variables supportées :
- * - NEXT_PUBLIC_API_PREFIX (ex: "/api")
- * - NEXT_PUBLIC_API_VERSION (ex: "v1")
+ * - NEXT_PUBLIC_API_PREFIX, ex: "/api"
+ * - NEXT_PUBLIC_API_VERSION, ex: "v1"
  */
 
 const TRIM_SLASHES_RE = /^\/+|\/+$/g;
 
 function ep(...segs: Array<string | number | null | undefined>): string {
   const parts = segs
-    .filter((s): s is string | number => s != null)
-    .map((s) => String(s).replace(TRIM_SLASHES_RE, ""))
+    .filter((segment): segment is string | number => segment != null)
+    .map((segment) => String(segment).replace(TRIM_SLASHES_RE, ""))
     .filter(Boolean);
 
   return "/" + parts.join("/");
@@ -32,7 +33,9 @@ const VERSION_SEG = API_VERSION ? [API_VERSION] : [];
 
 /**
  * Base API pour l’app Studio.
- * Exemple: "/api" ou "/api/v1" si versionnée.
+ *
+ * @example
+ * "/api" ou "/api/v1" si versionnée.
  */
 const STUDIO_BASE = ep(API_PREFIX, ...VERSION_SEG);
 
@@ -56,9 +59,9 @@ export const ENDPOINTS = {
       byId: (userId: string | number) => ep(STUDIO_BASE, "admin/users", userId),
     },
 
-    TENANT: {
-      base: ep(STUDIO_BASE, "admin/tenant"),
-      active: ep(STUDIO_BASE, "admin/tenant", "active"),
+    WEBSITE: {
+      base: ep(STUDIO_BASE, "admin/website"),
+      active: ep(STUDIO_BASE, "admin/website", "active"),
     },
 
     SETTINGS: {

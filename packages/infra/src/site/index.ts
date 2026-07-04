@@ -1,29 +1,32 @@
 /**
  * @file packages/infra/src/site/index.ts
  * @layer infra/site
+ *
  * @description
  * Factory et singleton(s) pour l’implémentation du `SiteRepository`.
+ *
+ * @remarks
  * Permet de choisir entre InMemory, KV ou Prisma selon la variable
  * d’environnement.
+ *
  * Instanciation lazy et HMR-safe.
  *
- * ✅ Multi-tenant:
- * - Les impl KV et Prisma sont instanciées par tenant (`tenantId`) pour éviter
- *   de partager un repo entre plusieurs sites.
+ * Multi-website :
+ * - Les implémentations sont instanciées par `websiteId`.
+ * - Aucun fallback implicite n’est appliqué : le Website doit être résolu
+ *   en amont par la session, le resolver public ou l’appelant applicatif.
  */
 
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 import type { SiteStatusCachePort } from "@compoz/core/domain/site/ports/site-status-cache-port";
-
+import { log } from "@compoz/infra/lib/log";
+import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import { InMemorySiteRepository } from "@compoz/infra/site/in-memory-site-repository";
 import { KvSiteRepository } from "@compoz/infra/site/kv-site-repository";
 import { KvSiteStatusSnapshot } from "@compoz/infra/site/kv-site-status-snapshot";
 import { PrismaSiteRepository } from "@compoz/infra/site/prisma-site-repository";
 
-import { log } from "@compoz/infra/lib/log";
-import { normalizeTenantId } from "@compoz/infra/lib/normalize-tenant-id";
-
-const lg = log.child({ ns: "infra:site", factory: "siteRepo" });
+const logger = log.child({ ns: "infra:site", factory: "siteRepo" });
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -31,24 +34,23 @@ const lg = log.child({ ns: "infra:site", factory: "siteRepo" });
 
 type SiteRepoImpl = "memory" | "kv" | "prisma";
 
-export type SiteRepoOptions = {
-  /** Tenant cible (siteId). Recommandé dans le Studio (via session). */
-  tenantId?: string;
-};
+export type SiteRepoOptions = Readonly<{
+  websiteId: string;
+}>;
 
 /* -------------------------------------------------------------------------- */
-/* Repo cache (HMR-safe)                                                      */
+/* Repo cache HMR-safe                                                        */
 /* -------------------------------------------------------------------------- */
 
 const repoByKey = new Map<string, SiteRepository>();
-let inited = false;
+let hasLoggedReuse = false;
 
 /**
  * Résout l’implémentation de repository à utiliser.
  *
  * @remarks
  * - `memory` est utile pour des tests ou un environnement local isolé.
- * - `kv` reste le fallback par défaut pendant la migration.
+ * - `kv` reste le fallback d’implémentation pendant la migration.
  * - `prisma` active la nouvelle persistance PostgreSQL.
  * - Toute valeur inconnue retombe volontairement sur `kv`.
  */
@@ -59,7 +61,7 @@ function resolveSiteRepoImpl(): SiteRepoImpl {
     return raw;
   }
 
-  lg.warn("site.repository.unknownImplFallback", {
+  logger.warn("site.repository.unknownImplFallback", {
     requestedImpl: raw,
     fallbackImpl: "kv",
   });
@@ -67,20 +69,19 @@ function resolveSiteRepoImpl(): SiteRepoImpl {
   return "kv";
 }
 
+function resolveWebsiteId(opts: SiteRepoOptions): string {
+  return requireWebsiteId(opts.websiteId, "getSiteRepository");
+}
+
 /**
  * Retourne la clé de cache de repository.
  *
  * @remarks
- * - `memory` reste global et partage une seule instance.
- * - `kv` et `prisma` doivent être isolés par tenant pour éviter toute
- *   contamination entre sites.
+ * Toutes les implémentations sont isolées par `websiteId`, y compris memory,
+ * afin d’éviter une contamination entre sites pendant les tests ou le dev.
  */
-function cacheKey(impl: SiteRepoImpl, opts: SiteRepoOptions): string {
-  const tenant = normalizeTenantId(opts.tenantId);
-
-  if (impl === "memory") return "memory";
-
-  return `${impl}:${tenant}`;
+function cacheKey(impl: SiteRepoImpl, websiteId: string): string {
+  return `${impl}:${websiteId}`;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -90,77 +91,80 @@ function cacheKey(impl: SiteRepoImpl, opts: SiteRepoOptions): string {
 /**
  * Crée une implémentation concrète du `SiteRepository`.
  *
- * Contrat :
- * - `SITE_REPO_IMPL=memory` -> InMemory
- * - `SITE_REPO_IMPL=kv`     -> KV (Upstash/Vercel KV) tenant-aware
- * - `SITE_REPO_IMPL=prisma` -> Prisma/PostgreSQL tenant-aware
- * - sinon                   -> KV (fallback par défaut)
+ * @remarks
+ * - `SITE_REPO_IMPL=memory` → InMemory
+ * - `SITE_REPO_IMPL=kv`     → KV, Upstash/Vercel KV
+ * - `SITE_REPO_IMPL=prisma` → Prisma/PostgreSQL
+ * - sinon                   → KV
  */
-function createRepo(opts: SiteRepoOptions): SiteRepository {
-  const impl = resolveSiteRepoImpl();
+function createRepo(args: {
+  impl: SiteRepoImpl;
+  websiteId: string;
+}): SiteRepository {
+  const { impl, websiteId } = args;
 
   if (impl === "memory") {
-    lg.debug("site.repository.init", { impl: "memory" });
+    logger.debug("site.repository.init", { impl: "memory", websiteId });
+
     return new InMemorySiteRepository();
   }
 
-  const tenantId = normalizeTenantId(opts.tenantId);
-
   if (impl === "prisma") {
-    lg.debug("site.repository.init", { impl: "prisma", tenantId });
-    return new PrismaSiteRepository({ tenantId });
+    logger.debug("site.repository.init", { impl: "prisma", websiteId });
+
+    return new PrismaSiteRepository({ websiteId });
   }
 
-  lg.debug("site.repository.init", { impl: "kv", tenantId });
-  return new KvSiteRepository({ tenantId });
+  logger.debug("site.repository.init", { impl: "kv", websiteId });
+
+  return new KvSiteRepository({ websiteId });
 }
 
 /**
- * Retourne le repository (cache HMR-safe).
+ * Retourne le repository avec cache HMR-safe.
  *
- * ✅ Multi-tenant:
- * - en KV, le cache est par `tenantId`
- * - en Prisma, le cache est par `tenantId`
- * - en memory, une seule instance globale
+ * @remarks
+ * Le cache est par `websiteId` pour éviter tout partage involontaire entre
+ * Websites, quelle que soit l’implémentation choisie.
  */
-export function getSiteRepository(opts: SiteRepoOptions = {}): SiteRepository {
+export function getSiteRepository(opts: SiteRepoOptions): SiteRepository {
   const impl = resolveSiteRepoImpl();
-  const key = cacheKey(impl, opts);
+  const websiteId = resolveWebsiteId(opts);
+  const key = cacheKey(impl, websiteId);
 
   const existing = repoByKey.get(key);
+
   if (existing) {
-    if (!inited) {
-      lg.debug("site.repository.reuse", { key });
-      inited = true;
+    if (!hasLoggedReuse) {
+      logger.debug("site.repository.reuse", { key, websiteId });
+      hasLoggedReuse = true;
     }
 
     return existing;
   }
 
-  const created = createRepo(opts);
+  const created = createRepo({ impl, websiteId });
+
   repoByKey.set(key, created);
-  inited = true;
+  hasLoggedReuse = true;
 
   return created;
 }
 
 /* -------------------------------------------------------------------------- */
-/* SiteStatusCachePort (no singleton)                                         */
+/* SiteStatusCachePort                                                        */
 /* -------------------------------------------------------------------------- */
 
 /**
  * Pas de singleton : éviter tout cache mémoire involontaire
- * (dev/HMR + instances long-lived).
- *
- * ✅ tenant-aware (KV)
+ * en dev/HMR et avec des instances long-lived.
  *
  * @remarks
- * Même lorsque `SITE_REPO_IMPL=prisma`, les snapshots de statut restent
- * volontairement gérés par KV pour cette première phase de migration.
+ * Même lorsque `SITE_REPO_IMPL=prisma`, le cache/read-model de statut reste
+ * volontairement géré par KV pour cette phase de migration.
  */
-export function getSiteStatusCache(
-  opts: SiteRepoOptions = {},
-): SiteStatusCachePort {
-  const tenantId = normalizeTenantId(opts.tenantId);
-  return new KvSiteStatusSnapshot({ tenantId });
+export function getSiteStatusCache(opts: SiteRepoOptions): SiteStatusCachePort {
+  const websiteId = requireWebsiteId(opts.websiteId, "getSiteStatusCache");
+
+  return new KvSiteStatusSnapshot({ websiteId });
 }

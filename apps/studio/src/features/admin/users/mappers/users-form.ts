@@ -3,16 +3,16 @@
  * @layer ui-mappers/studio/users
  *
  * @description
- * Mappers "forms studio" pour les users :
- * - normalisations UI (trim/coercitions simples)
- * - construction des Intent DTO pour l’API Studio
+ * Mappers formulaire Studio pour les users.
  *
  * @remarks
- * - Users = Studio-only (pas de mapper shared runtime).
+ * Responsabilités :
+ * - Normalisations UI simples : trim, lowercase email, coercitions.
+ * - Construction des Intent DTO pour l’API Studio.
+ * - Users = Studio-only, pas de mapper shared runtime.
  * - Le password n'est jamais renvoyé depuis l’API.
+ * - Les droits RBAC sont exprimés en Prisma Website.id.
  */
-
-import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 import type { UserDTO } from "@compoz/core/domain/users/dto";
 import type { UserFormValues } from "@compoz/validation/users/user-form";
@@ -27,43 +27,45 @@ import type {
 
 const DEFAULT_RBAC: UserFormValues["rbac"] = {
   role: "editor",
-  tenantIds: ["default"],
-  defaultTenantId: "default",
+  websiteIds: ["default"],
+  defaultWebsiteId: "default",
 };
 
 /* -------------------------------------------------------------------------- */
 /* Normalizers                                                                */
 /* -------------------------------------------------------------------------- */
 
-/** Normalise une liste de tenantIds (trim + lowercase + filter). */
-function normalizeTenantIds(input: unknown): string[] {
+function normalizeWebsiteId(input: unknown): string {
+  return String(input ?? "")
+    .trim()
+    .toLowerCase();
+}
+
+/** Normalise une liste de Website.id. */
+function normalizeWebsiteIds(input: unknown): string[] {
   const raw = Array.isArray(input) ? input : [];
-  const out = raw
-    .map((t) => toTenantId(t))
-    .filter((x): x is string => Boolean(x));
 
-  return out.length > 0 ? out : DEFAULT_RBAC.tenantIds;
+  const websiteIds = raw
+    .map(normalizeWebsiteId)
+    .filter((websiteId): websiteId is string => Boolean(websiteId));
+
+  return websiteIds.length > 0 ? websiteIds : DEFAULT_RBAC.websiteIds;
 }
 
-/** Normalise un tenantId unique (trim + lowercase). */
-function normalizeTenantId(input: unknown): string {
-  return toTenantId(input) ?? DEFAULT_RBAC.defaultTenantId;
-}
-
-/** Normalise un email (trim + lowercase). */
+/** Normalise un email. */
 function normalizeEmail(input: unknown): string {
   return String(input ?? "")
     .trim()
     .toLowerCase();
 }
 
-/** Normalise un nom (trim). */
+/** Normalise un nom. */
 function normalizeName(input: unknown): string {
   return String(input ?? "").trim();
 }
 
 /* -------------------------------------------------------------------------- */
-/* Domain (DTO) -> UI (form values)                                           */
+/* Domain DTO -> UI form values                                               */
 /* -------------------------------------------------------------------------- */
 
 export function toUserFormValuesFromDTO(
@@ -82,17 +84,19 @@ export function toUserFormValuesFromDTO(
     id: user.id,
     email: user.email ?? "",
     name: user.name ?? "",
-    password: "", // jamais exposé
+    password: "",
     rbac: {
       role: user.rbac?.role ?? DEFAULT_RBAC.role,
-      tenantIds: normalizeTenantIds(user.rbac?.tenantIds),
-      defaultTenantId: normalizeTenantId(user.rbac?.defaultTenantId),
+      websiteIds: normalizeWebsiteIds(user.rbac?.websiteIds),
+      defaultWebsiteId:
+        normalizeWebsiteId(user.rbac?.defaultWebsiteId) ||
+        DEFAULT_RBAC.defaultWebsiteId,
     },
   };
 }
 
 /* -------------------------------------------------------------------------- */
-/* Normalisations UI (forms)                                                  */
+/* UI form values normalization                                               */
 /* -------------------------------------------------------------------------- */
 
 export function normalizeUserFormValues(
@@ -102,57 +106,71 @@ export function normalizeUserFormValues(
     ...(values.id ? { id: String(values.id).trim() } : {}),
     email: normalizeEmail(values.email),
     name: normalizeName(values.name),
-    // ⚠️ on ne trim pas ici pour éviter de surprendre l’UI (le trim est fait au submit)
+    /**
+     * On ne trim pas ici pour éviter de surprendre l’UI.
+     * Le trim du password est fait au submit.
+     */
     password: String(values.password ?? ""),
     rbac: {
       role: values.rbac?.role ?? DEFAULT_RBAC.role,
-      tenantIds: normalizeTenantIds(values.rbac?.tenantIds),
-      defaultTenantId: normalizeTenantId(values.rbac?.defaultTenantId),
+      websiteIds: normalizeWebsiteIds(values.rbac?.websiteIds),
+      defaultWebsiteId:
+        normalizeWebsiteId(values.rbac?.defaultWebsiteId) ||
+        DEFAULT_RBAC.defaultWebsiteId,
     },
   };
 }
 
 /* -------------------------------------------------------------------------- */
-/* UI -> INTENTS (API studio)                                                 */
+/* UI -> intents API Studio                                                   */
 /* -------------------------------------------------------------------------- */
 
 export function toCreateUserIntentDTOFromFormValues(
   values: UserFormValues,
 ): CreateUserIntentDTO {
-  const v = normalizeUserFormValues(values);
+  const normalized = normalizeUserFormValues(values);
 
   return {
-    email: v.email,
-    name: v.name,
-    password: String(v.password ?? "").trim(),
-    rbac: v.rbac,
+    email: normalized.email,
+    name: normalized.name,
+    password: String(normalized.password ?? "").trim(),
+    rbac: normalized.rbac,
   };
 }
 
 export function toUpdateUserIntentDTOFromFormValues(
-  p: Partial<UserFormValues>,
+  values: Partial<UserFormValues>,
 ): UpdateUserIntentDTO {
   const out: UpdateUserIntentDTO = {};
 
-  if ("email" in p && p.email !== undefined) {
-    out.email = normalizeEmail(p.email);
+  if ("email" in values && values.email !== undefined) {
+    out.email = normalizeEmail(values.email);
   }
 
-  if ("name" in p && p.name !== undefined) {
-    out.name = normalizeName(p.name);
+  if ("name" in values && values.name !== undefined) {
+    out.name = normalizeName(values.name);
   }
 
-  // password : optionnel, "" = no change
-  if ("password" in p && typeof p.password === "string") {
-    const pwd = p.password.trim();
-    if (pwd.length > 0) out.password = pwd;
+  /**
+   * Password optionnel :
+   * - chaîne vide = no change.
+   * - chaîne non vide = update password.
+   */
+  if ("password" in values && typeof values.password === "string") {
+    const password = values.password.trim();
+
+    if (password.length > 0) {
+      out.password = password;
+    }
   }
 
-  if ("rbac" in p && p.rbac !== undefined) {
+  if ("rbac" in values && values.rbac !== undefined) {
     out.rbac = {
-      role: p.rbac?.role ?? DEFAULT_RBAC.role,
-      tenantIds: normalizeTenantIds(p.rbac?.tenantIds),
-      defaultTenantId: normalizeTenantId(p.rbac?.defaultTenantId),
+      role: values.rbac?.role ?? DEFAULT_RBAC.role,
+      websiteIds: normalizeWebsiteIds(values.rbac?.websiteIds),
+      defaultWebsiteId:
+        normalizeWebsiteId(values.rbac?.defaultWebsiteId) ||
+        DEFAULT_RBAC.defaultWebsiteId,
     };
   }
 

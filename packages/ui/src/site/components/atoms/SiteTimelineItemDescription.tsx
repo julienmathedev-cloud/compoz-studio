@@ -13,7 +13,7 @@
  * - N’impose pas de balise heading pour éviter une hiérarchie HTML
  *   incohérente selon l’emplacement de la cellule dans la page.
  * - Expose des attributs `data-*` stables pour permettre un ciblage CSS
- *   précis côté skins ou overrides tenant.
+ *   précis côté skins ou overrides Website.
  */
 
 import { cn } from "@compoz/ui/lib/utils";

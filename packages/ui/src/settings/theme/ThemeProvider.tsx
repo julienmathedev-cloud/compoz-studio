@@ -56,7 +56,7 @@ export function ThemeProvider({ theme, children }: ThemeProviderProps) {
 
     return {
       ...(vars as CSSProperties),
-      fontFamily: "var(--tenant-font-body)",
+      fontFamily: "var(--website-font-body)",
     };
   }, [resolvedTheme]);
 

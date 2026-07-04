@@ -5,15 +5,13 @@
  * @layer studio/features/admin/users/components/molecules
  *
  * @description
- * Header “Users” (admin Studio) :
- * - Select du site/tenant actif
- * - Select du user à éditer
+ * Header Users pour l’admin Studio.
  *
  * @remarks
  * - Strictement UI-only : aucun fetch, aucune logique métier.
  * - Les options et handlers sont fournis par le parent.
- * - Site : pas de valeur "none" (doit toujours être un tenant valide).
- * - User : valeur vide = aucun user sélectionné (form en mode create).
+ * - Le Website actif doit toujours être une valeur valide.
+ * - User : valeur vide = aucun user sélectionné, donc formulaire en mode create.
  */
 
 import { useTranslations } from "next-intl";
@@ -21,28 +19,29 @@ import { useTranslations } from "next-intl";
 import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { Card, CardContent } from "@compoz/ui/components/ui/card";
-
 import {
   createFieldIds,
   useIdPrefix,
 } from "@compoz/ui/lib/forms/use-id-prefix";
-import { toTenantId } from "@compoz/ui/lib/tenant-id";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_SM } from "@compoz/ui/styles/studio/layout";
 
-type Option = Readonly<{ value: string; label: string }>;
+type Option = Readonly<{
+  value: string;
+  label: string;
+}>;
 
 export type AdminUsersHeaderProps = Readonly<{
-  /** Tenant/site actif (doit être une valeur valide). */
-  siteId: string;
+  /** Website actif, doit être un Prisma Website.id valide. */
+  websiteId: string;
 
-  /** User sélectionné (null = aucun => form en create). */
+  /** User sélectionné, null = aucun user, donc formulaire en create. */
   userId: string | null;
 
-  siteOptions: ReadonlyArray<Option>;
+  websiteOptions: ReadonlyArray<Option>;
   userOptions: ReadonlyArray<Option>;
 
-  onSiteChange: (siteId: string) => void;
+  onWebsiteChange: (websiteId: string) => void;
   onUserChange: (userId: string | null) => void;
 
   isLoadingUsers?: boolean;
@@ -55,12 +54,16 @@ function normalizeText(input: unknown): string {
   return String(input ?? "").trim();
 }
 
+function normalizeWebsiteId(input: unknown): string {
+  return normalizeText(input);
+}
+
 export function AdminUsersHeader({
-  siteId,
+  websiteId,
   userId,
-  siteOptions,
+  websiteOptions,
   userOptions,
-  onSiteChange,
+  onWebsiteChange,
   onUserChange,
   isLoadingUsers = false,
   disabled = false,
@@ -68,69 +71,73 @@ export function AdminUsersHeader({
   const t = useTranslations();
 
   const formIdPrefix = useIdPrefix("admin-users-header");
-  const siteIds = createFieldIds(formIdPrefix, "siteId");
+  const websiteIds = createFieldIds(formIdPrefix, "websiteId");
   const userIds = createFieldIds(formIdPrefix, "userId");
 
   const baseDisabled = Boolean(disabled || isLoadingUsers);
 
-  const safeSiteOptions = siteOptions
-    .map((o) => {
-      const value = toTenantId(o.value) ?? "";
-      const label = normalizeText(o.label);
+  const safeWebsiteOptions = websiteOptions
+    .map((option) => {
+      const value = normalizeWebsiteId(option.value);
+      const label = normalizeText(option.label);
+
       return { value, label };
     })
-    .filter((o) => Boolean(o.value) && Boolean(o.label));
+    .filter((option) => Boolean(option.value) && Boolean(option.label));
 
   const safeUserOptions = userOptions
-    .map((o) => {
-      const value = normalizeText(o.value);
-      const label = normalizeText(o.label);
+    .map((option) => {
+      const value = normalizeText(option.value);
+      const label = normalizeText(option.label);
+
       return { value, label };
     })
-    .filter((o) => Boolean(o.value) && Boolean(o.label));
+    .filter((option) => Boolean(option.value) && Boolean(option.label));
 
-  const effectiveSiteId = toTenantId(siteId) ?? safeSiteOptions[0]?.value ?? "";
+  const effectiveWebsiteId =
+    normalizeWebsiteId(websiteId) || safeWebsiteOptions[0]?.value || "";
 
   return (
     <Card variant="panel" visualMode="studio">
       <CardContent className={cn(STACK_SM)}>
         <FormGrid>
-          {/* Site (pas de "none") */}
           <SelectField
-            ids={siteIds}
-            label={t("studio.users.header.site.label")}
-            help={t("studio.users.header.site.help")}
-            value={effectiveSiteId}
-            onChange={(val) => {
-              const next = toTenantId(val);
-              if (!next) return;
-              onSiteChange(next);
+            ids={websiteIds}
+            label={t("studio.users.header.website.label")}
+            help={t("studio.users.header.website.help")}
+            value={effectiveWebsiteId}
+            onChange={(value) => {
+              const nextWebsiteId = normalizeWebsiteId(value);
+
+              if (!nextWebsiteId) return;
+
+              onWebsiteChange(nextWebsiteId);
             }}
-            items={safeSiteOptions.map((o) => ({
-              value: o.value,
-              label: o.label,
+            items={safeWebsiteOptions.map((option) => ({
+              value: option.value,
+              label: option.label,
             }))}
-            disabled={baseDisabled || safeSiteOptions.length === 0}
+            disabled={baseDisabled || safeWebsiteOptions.length === 0}
           />
 
-          {/* User (vide = create) */}
           <SelectField
             ids={userIds}
             label={t("studio.users.header.user.label")}
             help={t("studio.users.header.user.help")}
             value={userId ? normalizeText(userId) : NO_USER_VALUE}
-            onChange={(val) => {
-              const next = normalizeText(val);
-              onUserChange(next === NO_USER_VALUE ? null : next);
+            onChange={(value) => {
+              const nextUserId = normalizeText(value);
+
+              onUserChange(nextUserId === NO_USER_VALUE ? null : nextUserId);
             }}
             items={[
               {
                 value: NO_USER_VALUE,
                 label: t("studio.users.header.user.placeholder"),
               },
-              ...safeUserOptions.map((o) => ({
-                value: o.value,
-                label: o.label,
+              ...safeUserOptions.map((option) => ({
+                value: option.value,
+                label: option.label,
               })),
             ]}
             disabled={baseDisabled}

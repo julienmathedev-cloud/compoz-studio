@@ -1,13 +1,14 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/find-reusable-demo-sandbox.types.ts
  * @layer core/domain
+ *
  * @description
- * Contrat du use-case de résolution d'une sandbox démo réutilisable.
+ * Contrat du use-case de résolution d’une sandbox démo réutilisable.
  *
  * @remarks
- * - Ce use-case lit une sandbox existante à partir d'un `demoInstanceId`.
+ * - Ce use-case lit une sandbox existante à partir d’un `demoInstanceId`.
  * - Il vérifie ensuite la cohérence minimale avec le user associé.
- * - Il ne gère pas les cookies HTTP ni l'ouverture de session.
+ * - Il ne gère pas les cookies HTTP ni l’ouverture de session.
  */
 
 import type { DemoSandbox } from "@compoz/core/domain/demo/entities/demo-sandbox";
@@ -28,5 +29,5 @@ export type FindReusableDemoSandboxInput = Readonly<{
 export type FindReusableDemoSandboxResult = Readonly<{
   sandbox: DemoSandbox;
   user: User;
-  tenantId: string;
+  websiteId: string;
 }>;

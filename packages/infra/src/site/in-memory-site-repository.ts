@@ -5,9 +5,11 @@
  * Implémentation InMemory du SiteRepository pour tests unitaires et e2e.
  *
  * @remarks
- * - Mono-tenant : ce repository stocke un seul "site" en mémoire (pas de scope tenantId).
- * - Responsabilités : stockage en mémoire des SiteIndex et SiteSettings pour `draft` et `published`,
- *   clonage structuré pour éviter les mutations externes, aucune I/O.
+ * - Repository mémoire non scopé directement : l’isolation multi-website est
+ *   assurée par la factory qui instancie/cache un repository par `websiteId`.
+ * - Responsabilités : stockage en mémoire des SiteIndex et SiteSettings pour
+ *   `draft` et `published`, clonage structuré pour éviter les mutations externes,
+ *   aucune I/O.
  */
 
 import {

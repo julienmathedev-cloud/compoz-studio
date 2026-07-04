@@ -8,16 +8,20 @@
  * Hook Studio spécialisé pour gérer les réglages du header via l’API.
  *
  * @remarks
- * - Basé sur le pattern **Settings RHF-first** (`useSettingsResource`).
- * - Travaille exclusivement sur le modèle **UI** (`HeaderFormValues`).
+ * - Basé sur le pattern Settings RHF-first (`useSettingsResource`).
+ * - Travaille exclusivement sur le modèle UI (`HeaderFormValues`).
  * - Orchestration UI-only : defaults, load, diff minimal, save, notifications.
  * - Aucune logique métier ni validation domaine.
+ * - Le cache settings/status est scopé par Prisma Website.id.
  *
- * Option B (bundle read) :
- * - READ : provient du bundle global (React Query).
- * - WRITE : reste slice-by-slice (PATCH header).
- * - Après un save : patch du cache bundle (header) + invalidate status.
+ * Option B, bundle read :
+ * - READ : provient du bundle global React Query.
+ * - WRITE : reste slice-by-slice via PATCH header.
+ * - Après un save : patch du cache bundle header + invalidate status.
  */
+
+import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 import {
   DEFAULT_CONTENT_STATE,
@@ -25,7 +29,7 @@ import {
 } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_HEADER_SETTINGS } from "@compoz/core/domain/site/defaults/header";
 import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
@@ -41,70 +45,86 @@ import {
 } from "@compoz/studio/features/settings/mappers/header-form";
 import { invalidateSiteStatus } from "@compoz/studio/features/site/status/invalidate";
 import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
-import type { HeaderFormValues } from "@compoz/validation/site/settings/header/header-form";
-import { useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
 
-/**
- * Alias du contrat de retour du hook `useHeaderSettings`.
- */
+import type { HeaderFormValues } from "@compoz/validation/site/settings/header/header-form";
+
 type UseHeaderSettingsResult = SettingsHookResult<HeaderFormValues>;
 
 export function useHeaderSettings(): UseHeaderSettingsResult {
   const t = useTranslations();
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
+  const websiteId = useWebsiteId();
+
   const entityLabel = t("studio.shared.entities.header");
-  const tenantId = useTenantId();
 
   const resource = useSettingsResource<HeaderFormValues>({
     entityLabel,
 
-    /** Valeurs par défaut (domaine → UI → normalisation). */
+    /**
+     * Valeurs par défaut domaine → UI → normalisation.
+     */
     defaults: normalizeHeaderFormValues(
       toHeaderFormValuesFromDTO(DEFAULT_HEADER_SETTINGS),
     ),
 
-    /** READ (bundle) : cache-first + fetchQuery fallback. */
+    /**
+     * READ bundle : cache-first + fetchQuery fallback.
+     */
     load: async (state: ContentState) => {
-      const bundle = await getSettingsBundle(qc, tenantId, state);
+      const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
       return normalizeHeaderFormValues(
         toHeaderFormValuesFromDTO(bundle.header),
       );
     },
 
-    /** WRITE (slice PATCH) + patch bundle cache. */
+    /**
+     * WRITE slice PATCH + patch bundle cache.
+     */
     save: async (next, opts) => {
       const patch = toUpdateHeaderIntentDTOFromFormValues(next);
       const dto = await settingsStudioApi.header.patch(patch, opts);
 
-      patchSettingsBundleCache(qc, tenantId, DEFAULT_CONTENT_STATE, (prev) => ({
-        ...prev,
-        header: dto.settings,
-      }));
+      patchSettingsBundleCache(
+        queryClient,
+        websiteId,
+        DEFAULT_CONTENT_STATE,
+        (previous) => ({
+          ...previous,
+          header: dto.settings,
+        }),
+      );
 
       return normalizeHeaderFormValues(toHeaderFormValuesFromDTO(dto.settings));
     },
 
-    /** Diff minimal : ne renvoie que les champs réellement modifiés. */
+    /**
+     * Diff minimal : ne renvoie que les champs réellement modifiés.
+     */
     buildPatch: (baseline, next) =>
       buildShallowDiff(
         normalizeHeaderFormValues(baseline),
         normalizeHeaderFormValues(next),
       ) ?? null,
 
-    /** Baseline stable et cohérente à l’entrée/sortie réseau. */
+    /**
+     * Baseline stable et cohérente à l’entrée/sortie réseau.
+     */
     onLoaded: normalizeHeaderFormValues,
 
-    /** Normalisation safe avant diff/save. */
+    /**
+     * Normalisation safe avant diff/save.
+     */
     beforeSave: normalizeHeaderFormValues,
 
-    /** Après save : invalide le read-model "status" et le bundle settings. */
+    /**
+     * Après save : invalide le read-model status et le bundle settings.
+     */
     onSaved: () => {
-      void invalidateSiteStatus(qc, tenantId);
+      void invalidateSiteStatus(queryClient, websiteId);
 
-      void qc.invalidateQueries({
-        queryKey: settingsBundleKey(tenantId, DEFAULT_CONTENT_STATE),
+      void queryClient.invalidateQueries({
+        queryKey: settingsBundleKey(websiteId, DEFAULT_CONTENT_STATE),
       });
     },
   });

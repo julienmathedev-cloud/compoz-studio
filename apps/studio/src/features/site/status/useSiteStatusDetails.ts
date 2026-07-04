@@ -5,14 +5,17 @@
  * @layer hooks/studio/site/status
  *
  * @description
- * Hook React Query (lazy) : détail pages/blocs (draft vs published) pour l’Overview.
+ * Hook React Query lazy : détail pages/blocs draft vs published pour l’Overview.
  *
  * @remarks
- * V0.5 perf:
- * - `scope="dirty"` doit être le défaut côté UI (éviter les full-scans).
- * - On évite les refetch automatiques (focus/reconnect) qui peuvent relancer des scans.
- * Tenant-scoped :
- * - La queryKey inclut tenantId (sinon cache cross-tenant après switch).
+ * V0.5 perf :
+ * - `scope="dirty"` doit être le défaut côté UI pour éviter les full scans.
+ * - On évite les refetch automatiques focus/reconnect qui peuvent relancer
+ *   des scans.
+ *
+ * Website-scoped :
+ * - La queryKey inclut Prisma Website.id pour éviter les collisions de cache
+ *   après switch de Website actif.
  */
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -22,12 +25,12 @@ import type {
   SiteStatusDetailsScopeDTO,
 } from "@compoz/core/domain/site/dto";
 import { siteStudioApi } from "@compoz/infra/http/studio/site.client";
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { siteStatusDetailsKey } from "@compoz/studio/features/site/status/keys";
 
 type UseSiteStatusDetailsParams = Readonly<{
   enabled: boolean;
-  scope?: SiteStatusDetailsScopeDTO; // default "dirty"
+  scope?: SiteStatusDetailsScopeDTO;
   includeBlocks?: boolean;
   pageId?: string | null;
 }>;
@@ -38,33 +41,36 @@ export function useSiteStatusDetails({
   includeBlocks = false,
   pageId,
 }: UseSiteStatusDetailsParams) {
-  const tenantId = useTenantId();
+  const websiteId = useWebsiteId();
 
-  const pid = (pageId ?? "").trim();
-  const pId = pid ? pid : null;
+  const pageIdKey = String(pageId ?? "").trim();
+  const normalizedPageId = pageIdKey ? pageIdKey : null;
 
-  const isEnabled = Boolean(enabled) && Boolean(String(tenantId ?? "").trim());
+  const isEnabled = Boolean(enabled) && Boolean(String(websiteId ?? "").trim());
 
   const options = {
     queryKey: siteStatusDetailsKey({
-      tenantId,
+      websiteId,
       scope,
       includeBlocks,
-      pageId: pId,
+      pageId: normalizedPageId,
     }),
 
     queryFn: async (): Promise<SiteStatusDetailsDTO> => {
-      const res = await siteStudioApi.statusDetails({
+      const response = await siteStudioApi.statusDetails({
         scope,
         includeBlocks,
-        pageId,
+        pageId: normalizedPageId,
       });
-      return res.details; // ✅ flatten
+
+      return response.details;
     },
 
     enabled: isEnabled,
 
-    // ✅ garde l'ancienne data quand la key change
+    /**
+     * Garde l’ancienne data quand la key change.
+     */
     placeholderData: keepPreviousData,
   } as const;
 

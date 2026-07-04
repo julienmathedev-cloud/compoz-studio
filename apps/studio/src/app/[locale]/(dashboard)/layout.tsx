@@ -3,12 +3,13 @@
  * @layer studio/app
  *
  * @description
- * Layout localisé i18n (Dashboard Studio) :
- * - initialise la locale (`setRequestLocale`)
- * - fournit `NextIntlClientProvider`
- * - monte les providers client globaux (React Query, thème, sidebar, toasts, etc.)
+ * Layout localisé i18n du Dashboard Studio.
  *
  * @remarks
+ * - Initialise la locale (`setRequestLocale`).
+ * - Fournit `NextIntlClientProvider`.
+ * - Résout la session Studio et le Website actif côté server.
+ * - Monte les providers client globaux (React Query, thème, sidebar, toasts, etc.).
  * - Ne contient pas `<html>` / `<body>` (réservés au root `app/layout.tsx`).
  * - Génère les params statiques `[locale]` pour Next.js.
  */
@@ -22,7 +23,7 @@ import { Toaster } from "sonner";
 
 import { StudioClientProviders } from "@compoz/studio/app/[locale]/StudioClientProviders";
 import {
-  getSessionWithTenantOrNull,
+  getSessionWithWebsiteOrNull,
   isAdminRole,
 } from "@compoz/studio/auth/require-session";
 import { StudioSidebar } from "@compoz/studio/components/organisms/StudioSidebar";
@@ -33,7 +34,6 @@ import { ReactQueryProvider } from "@compoz/studio/lib/react-query/ReactQueryPro
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import { SidebarInset, SidebarTrigger } from "@compoz/ui/components/ui/sidebar";
 import { TooltipProvider } from "@compoz/ui/components/ui/tooltip";
-import { toTenantId } from "@compoz/ui/lib/tenant-id";
 import { cn } from "@compoz/ui/lib/utils";
 import { STUDIO_CONTAINER, STUDIO_PAGE } from "@compoz/ui/styles/studio/layout";
 
@@ -48,13 +48,39 @@ type LocaleLayoutProps = Readonly<{
   >;
 }>;
 
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
 function isLocale(value: string): value is Locale {
   return routing.locales.includes(value as Locale);
 }
 
+function normalizeWebsiteId(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
+function normalizeWebsiteSlug(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
+function normalizeWebsiteName(value: unknown): string | undefined {
+  const websiteName = String(value ?? "").trim();
+
+  return websiteName ? websiteName : undefined;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Static params                                                              */
+/* -------------------------------------------------------------------------- */
+
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
+
+/* -------------------------------------------------------------------------- */
+/* Layout                                                                     */
+/* -------------------------------------------------------------------------- */
 
 export default async function LocaleLayout({
   children,
@@ -69,14 +95,19 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const messages = await getMessages();
 
-  const session = await getSessionWithTenantOrNull();
+  const session = await getSessionWithWebsiteOrNull();
 
   if (!session) {
     redirect(`/${locale}/signin?next=/${locale}`);
   }
 
-  const tenantId = toTenantId(session.tenantId);
-  if (!tenantId) notFound();
+  const websiteId = normalizeWebsiteId(session.websiteId);
+  const websiteSlug = normalizeWebsiteSlug(session.websiteSlug);
+  const websiteName = normalizeWebsiteName(session.websiteName);
+
+  if (!websiteId || !websiteSlug) {
+    notFound();
+  }
 
   const isAdmin = isAdminRole(session.role);
 
@@ -85,7 +116,11 @@ export default async function LocaleLayout({
       <NextIntlClientProvider messages={messages}>
         <div className="flex h-dvh min-h-0 min-w-0">
           <TooltipProvider delayDuration={400} skipDelayDuration={100}>
-            <StudioClientProviders tenantId={tenantId}>
+            <StudioClientProviders
+              websiteId={websiteId}
+              websiteSlug={websiteSlug}
+              websiteName={websiteName}
+            >
               <StudioShell>
                 <aside className="shrink-0">
                   <StudioSidebar locale={locale} isAdmin={isAdmin} />

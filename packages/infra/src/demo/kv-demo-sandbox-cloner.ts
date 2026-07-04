@@ -1,16 +1,17 @@
 /**
  * @file packages/infra/src/demo/kv-demo-sandbox-cloner.ts
  * @layer infra/demo
+ *
  * @description
- * Implémentation KV du clonage d'une sandbox démo à partir d'un tenant seed.
+ * Implémentation KV du clonage d’une sandbox démo à partir d’un Website seed.
  *
  * @remarks
- * - V1 volontairement limitée au contenu draft uniquement.
+ * - V1 volontairement limitée au contenu publié de la source vers le draft cible.
  * - Copie :
- *   - site settings (draft)
- *   - site index (draft)
- *   - pages référencées par l'index (draft)
- * - Ne copie pas l'état published.
+ *   - site settings published → draft
+ *   - site index published → draft
+ *   - pages référencées par l’index published → draft
+ * - Ne copie pas l’état published vers le target.
  */
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -19,11 +20,10 @@ import type {
   DemoSandboxCloner,
 } from "@compoz/core/domain/demo/use-cases/create-demo-sandbox-from-seed.types";
 import type { Page } from "@compoz/core/domain/pages/entities/page";
-
 import { KvPagesRepository } from "@compoz/infra/pages/kv-pages-repository";
 import { KvSiteRepository } from "@compoz/infra/site/kv-site-repository";
 
-function normalizeTenantId(value: unknown): string {
+function normalizeWebsiteId(value: unknown): string {
   return String(value ?? "")
     .trim()
     .toLowerCase();
@@ -41,6 +41,7 @@ function getPageIdsFromIndex(
 
   for (const page of pages) {
     const pageId = String(page?.id ?? "").trim();
+
     if (!pageId || seen.has(pageId)) {
       continue;
     }
@@ -58,11 +59,12 @@ function assertAllPagesResolved(
 ): Page[] {
   const out: Page[] = [];
 
-  for (let i = 0; i < pageIds.length; i += 1) {
-    const page = pages[i];
+  for (let index = 0; index < pageIds.length; index += 1) {
+    const page = pages[index];
+
     if (!page) {
       throw new Error(
-        `KvDemoSandboxCloner.cloneSeedToTenant: missing seed page "${pageIds[i]}".`,
+        `KvDemoSandboxCloner.cloneSeedToWebsite: missing seed page "${pageIds[index]}".`,
       );
     }
 
@@ -73,30 +75,30 @@ function assertAllPagesResolved(
 }
 
 export class KvDemoSandboxCloner implements DemoSandboxCloner {
-  async cloneSeedToTenant(args: {
-    sourceTenantId: string;
-    targetTenantId: string;
+  async cloneSeedToWebsite(args: {
+    sourceWebsiteId: string;
+    targetWebsiteId: string;
   }): Promise<DemoSandboxCloneResult> {
-    const sourceTenantId = normalizeTenantId(args.sourceTenantId);
-    const targetTenantId = normalizeTenantId(args.targetTenantId);
+    const sourceWebsiteId = normalizeWebsiteId(args.sourceWebsiteId);
+    const targetWebsiteId = normalizeWebsiteId(args.targetWebsiteId);
 
-    if (!sourceTenantId) {
+    if (!sourceWebsiteId) {
       throw new Error(
-        "KvDemoSandboxCloner.cloneSeedToTenant: sourceTenantId is required.",
+        "KvDemoSandboxCloner.cloneSeedToWebsite: sourceWebsiteId is required.",
       );
     }
 
-    if (!targetTenantId) {
+    if (!targetWebsiteId) {
       throw new Error(
-        "KvDemoSandboxCloner.cloneSeedToTenant: targetTenantId is required.",
+        "KvDemoSandboxCloner.cloneSeedToWebsite: targetWebsiteId is required.",
       );
     }
 
-    const sourceSite = new KvSiteRepository({ tenantId: sourceTenantId });
-    const targetSite = new KvSiteRepository({ tenantId: targetTenantId });
+    const sourceSite = new KvSiteRepository({ websiteId: sourceWebsiteId });
+    const targetSite = new KvSiteRepository({ websiteId: targetWebsiteId });
 
-    const sourcePages = new KvPagesRepository({ tenantId: sourceTenantId });
-    const targetPages = new KvPagesRepository({ tenantId: targetTenantId });
+    const sourcePages = new KvPagesRepository({ websiteId: sourceWebsiteId });
+    const targetPages = new KvPagesRepository({ websiteId: targetWebsiteId });
 
     const [settings, index] = await Promise.all([
       sourceSite.readSettings(CONTENT_STATE.PUBLISHED),
@@ -124,7 +126,7 @@ export class KvDemoSandboxCloner implements DemoSandboxCloner {
     await targetSite.putIndex(CONTENT_STATE.DRAFT, index);
 
     return {
-      tenantId: targetTenantId,
+      websiteId: targetWebsiteId,
     };
   }
 }

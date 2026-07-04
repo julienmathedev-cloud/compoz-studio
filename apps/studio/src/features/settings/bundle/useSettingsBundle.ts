@@ -5,21 +5,22 @@
  * @layer hooks/studio/site/settings-bundle
  *
  * @description
- * Hook React Query lisant le bundle complet des settings (read global).
+ * Hook React Query lisant le bundle complet des settings.
  *
  * @remarks
- * - Tenant-scoped : le cache inclut tenantId.
- * - Utilisé comme source READ canonique pour les sections (Option B).
+ * - Website-scoped : le cache inclut Prisma Website.id.
+ * - Utilisé comme source READ canonique pour les sections.
  * - Les sections font ensuite des PATCH slice et patchent le cache bundle.
+ * - L’API résout le Website actif côté session/cookie.
  */
+
+import type { QueryFunctionContext } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
-import type { QueryFunctionContext } from "@tanstack/react-query";
-import { useQuery } from "@tanstack/react-query";
-
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
 
 type UseSettingsBundleResult = ReturnType<typeof useQuery<SiteSettings, Error>>;
@@ -27,11 +28,11 @@ type UseSettingsBundleResult = ReturnType<typeof useQuery<SiteSettings, Error>>;
 export function useSettingsBundle(
   state: ContentState,
 ): UseSettingsBundleResult {
-  const tenantId = useTenantId();
-  const enabled = Boolean(tenantId);
+  const websiteId = useWebsiteId();
+  const enabled = Boolean(websiteId);
 
   return useQuery({
-    queryKey: settingsBundleKey(tenantId, state),
+    queryKey: settingsBundleKey(websiteId, state),
     enabled,
 
     queryFn: async (
@@ -49,10 +50,10 @@ export function useSettingsBundle(
     },
 
     /**
-     * ✅ Conserve la dernière donnée connue pendant un refetch (dev/HMR/abort),
-     * afin d'éviter les "flaps" data=undefined → sections qui passent temporairement en "vide".
+     * Conserve la dernière donnée connue pendant un refetch dev/HMR/abort,
+     * afin d'éviter les flaps `data=undefined`.
      */
-    placeholderData: (prev: SiteSettings | undefined) => prev,
+    placeholderData: (previous: SiteSettings | undefined) => previous,
   });
 }
 

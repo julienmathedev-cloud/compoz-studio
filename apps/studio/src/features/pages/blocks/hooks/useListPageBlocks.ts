@@ -5,12 +5,14 @@
  * @layer hooks/studio/pages/blocks
  *
  * @description
- * Hook studio React Query pour lire les blocks d’une page via l’API.
+ * Hook Studio React Query pour lire les blocks d’une page via l’API.
  *
  * @remarks
  * - Read-only.
  * - Draft-only par défaut.
- * - Tenant-scoped : la queryKey inclut `tenantId` pour éviter les caches croisés au switch.
+ * - Website-scoped : la queryKey inclut `websiteId` pour éviter les caches
+ *   croisés lors d’un switch de Website actif.
+ * - Le scope utilisé ici est Prisma Website.id.
  */
 
 import { useQuery } from "@tanstack/react-query";
@@ -23,12 +25,12 @@ import type { BlockDTO } from "@compoz/core/domain/pages/dto";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import type { ListPageBlocksResponse } from "@compoz/infra/http/studio/pages.types";
 import { log } from "@compoz/infra/lib/log";
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { withLoadLogs } from "@compoz/ui/hooks/instrumentation";
 
-const lg = log.child({ ns: "hook", name: "useListPageBlocks" });
+const logger = log.child({ ns: "hook", name: "useListPageBlocks" });
 
 type UseListPageBlocksResult = Readonly<{
   blocks: ReadonlyArray<BlockDTO>;
@@ -41,14 +43,15 @@ export function useListPageBlocks(
   state: ContentState = DEFAULT_CONTENT_STATE,
 ): UseListPageBlocksResult {
   const t = useTranslations();
-  const tenantId = useTenantId();
+  const websiteId = useWebsiteId();
+
   const entityLabel = t("studio.shared.entities.blocks");
 
   const pageIdKey = String(pageId ?? "").trim();
-  const enabled = Boolean(tenantId && pageIdKey);
+  const enabled = Boolean(websiteId && pageIdKey);
 
-  const options = {
-    queryKey: pageBlocksKey(tenantId, pageIdKey, state),
+  const query = useQuery({
+    queryKey: pageBlocksKey(websiteId, pageIdKey, state),
     enabled,
 
     queryFn: async ({
@@ -60,13 +63,17 @@ export function useListPageBlocks(
         "useListPageBlocks",
         state,
         () => pagesStudioApi.getPageBlocks(pageIdKey, state, { signal }),
-        { entity: entityLabel, tenantId: tenantId, pageId: pageIdKey },
+        {
+          entity: entityLabel,
+          websiteId,
+          pageId: pageIdKey,
+        },
       );
 
       const blocks = response.blocks ?? [];
 
-      lg.debug("read.ok", {
-        tenantId: tenantId,
+      logger.debug("read.ok", {
+        websiteId,
         pageId: pageIdKey,
         state,
         count: blocks.length,
@@ -76,28 +83,27 @@ export function useListPageBlocks(
     },
 
     refetchOnWindowFocus: false,
-    placeholderData: (prev?: ReadonlyArray<BlockDTO>) => prev ?? [],
-  } as const;
-
-  const query = useQuery(options);
+    placeholderData: (previous?: ReadonlyArray<BlockDTO>) => previous ?? [],
+  });
 
   useEffect(() => {
     if (!query.error) return;
 
     notify.fromError(query.error);
-    lg.error("read.failed", {
-      tenantId: tenantId,
+
+    logger.error("read.failed", {
+      websiteId,
       pageId: pageIdKey,
       state,
       msg: String(query.error),
     });
-  }, [query.error, tenantId, pageIdKey, state]);
+  }, [query.error, websiteId, pageIdKey, state]);
 
   return {
     blocks: enabled ? (query.data ?? []) : [],
     isLoading: enabled ? query.isPending : false,
     isFetching: enabled ? query.isFetching : false,
-  } as const;
+  };
 }
 
 useListPageBlocks.displayName = "useListPageBlocks";

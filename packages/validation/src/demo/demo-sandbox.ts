@@ -1,6 +1,7 @@
 /**
  * @file packages/validation/src/demo/demo-sandbox.ts
  * @layer schemas
+ *
  * @description
  * Schémas Zod décrivant la forme frontière d’une sandbox démo.
  *
@@ -36,14 +37,14 @@ export const DemoInstanceIdSchema = z.string().trim().min(1);
 export const DemoSandboxUserIdSchema = z.string().trim().min(1);
 
 /**
- * Identifiant technique du tenant sandbox associé.
+ * Identifiant technique du Website sandbox associé.
  *
  * Contrat :
  * - trim
  * - lower-case
  * - non vide
  */
-export const DemoSandboxTenantIdSchema = z
+export const DemoSandboxWebsiteIdSchema = z
   .string()
   .trim()
   .min(1)
@@ -57,7 +58,7 @@ export const DemoSandboxSchema = z
   .object({
     demoInstanceId: DemoInstanceIdSchema,
     userId: DemoSandboxUserIdSchema,
-    tenantId: DemoSandboxTenantIdSchema,
+    websiteId: DemoSandboxWebsiteIdSchema,
     expiresAt: IsoDateStringSchema,
     createdAt: IsoDateStringSchema,
   })
@@ -70,6 +71,6 @@ export const DemoSandboxSchema = z
 export type DemoSandboxShape = z.infer<typeof DemoSandboxSchema>;
 export type DemoInstanceIdShape = z.infer<typeof DemoInstanceIdSchema>;
 export type DemoSandboxUserIdShape = z.infer<typeof DemoSandboxUserIdSchema>;
-export type DemoSandboxTenantIdShape = z.infer<
-  typeof DemoSandboxTenantIdSchema
+export type DemoSandboxWebsiteIdShape = z.infer<
+  typeof DemoSandboxWebsiteIdSchema
 >;

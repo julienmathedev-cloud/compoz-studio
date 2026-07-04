@@ -7,7 +7,7 @@
  *
  * @remarks
  * - Contrairement à `next/font`, ce fichier ne bundle aucune police.
- * - Il charge uniquement la police réellement utilisée par le tenant courant.
+ * - Il charge uniquement la police réellement utilisée par le Website courant.
  * - Les polices sont self-hosted via `/public/fonts/...`
  * - Compatible avec le runtime actuel basé sur `var(--font-*)`.
  * - IMPORTANT :
@@ -114,8 +114,7 @@ const PUBLIC_FONTS: Readonly<Record<PublicFontKey, PublicFontConfig>> = {
   "space-grotesk": {
     key: "space-grotesk",
     href: "/fonts/space-grotesk/space-grotesk.css",
-    preloadHref:
-      "/fonts/space-grotesk/space-grotesk-latin-wght-normal.woff2",
+    preloadHref: "/fonts/space-grotesk/space-grotesk-latin-wght-normal.woff2",
     variableName: "--font-space-grotesk",
     fontFamily: '"Space Grotesk", ui-sans-serif, system-ui, sans-serif',
   },
@@ -149,8 +148,7 @@ const PUBLIC_FONTS: Readonly<Record<PublicFontKey, PublicFontConfig>> = {
   merriweather: {
     key: "merriweather",
     href: "/fonts/merriweather/merriweather.css",
-    preloadHref:
-      "/fonts/merriweather/merriweather-latin-wght-normal.woff2",
+    preloadHref: "/fonts/merriweather/merriweather-latin-wght-normal.woff2",
     variableName: "--font-merriweather",
     fontFamily: '"Merriweather", ui-serif, Georgia, serif',
   },
@@ -158,8 +156,7 @@ const PUBLIC_FONTS: Readonly<Record<PublicFontKey, PublicFontConfig>> = {
   "source-serif-4": {
     key: "source-serif-4",
     href: "/fonts/source-serif-4/source-serif-4.css",
-    preloadHref:
-      "/fonts/source-serif-4/source-serif-4-latin-wght-normal.woff2",
+    preloadHref: "/fonts/source-serif-4/source-serif-4-latin-wght-normal.woff2",
     variableName: "--font-source-serif-4",
     fontFamily: '"Source Serif 4", ui-serif, Georgia, serif',
   },
@@ -192,8 +189,7 @@ const PUBLIC_FONTS: Readonly<Record<PublicFontKey, PublicFontConfig>> = {
   "abril-fatface": {
     key: "abril-fatface",
     href: "/fonts/abril-fatface/abril-fatface.css",
-    preloadHref:
-      "/fonts/abril-fatface/abril-fatface-v25-latin-regular.woff2",
+    preloadHref: "/fonts/abril-fatface/abril-fatface-v25-latin-regular.woff2",
     variableName: "--font-abril-fatface",
     fontFamily: '"Abril Fatface", Georgia, serif',
   },
@@ -248,7 +244,7 @@ export function resolveFontPreloadHref(
  *
  * @remarks
  * Fallback sécurisé :
- * si une police inconnue arrive (ancien tenant / donnée corrompue),
+ * si une police inconnue arrive, ancienne donnée ou donnée corrompue,
  * on force Inter.
  */
 export function resolvePublicFontConfig(

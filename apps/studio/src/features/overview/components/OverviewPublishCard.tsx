@@ -5,13 +5,14 @@
  * @layer ui/studio/overview
  *
  * @description
- * Carte “Publication & état” : résumé (publié + dernière publication + changements)
- * + actions + warnings.
+ * Carte “Publication & état” : résumé publication, état courant,
+ * changements, actions et warnings.
  *
  * @remarks
  * - UI-only : lit `SiteStatusDTO` et déclenche `usePublishSite`.
  * - Les warnings de pré-publication proviennent du status.
  * - Les warnings post-publication proviennent du use-case de publish.
+ * - Le lien public published fallback utilise Website.slug via `/t/:websiteSlug`.
  */
 
 import { useTranslations } from "next-intl";
@@ -28,7 +29,7 @@ import { Heading } from "@compoz/studio/components/atoms/typography/Heading";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { getPublishedSiteUrl } from "@compoz/studio/config/siteOrigin";
 import { StudioHintsPanel } from "@compoz/studio/features/_shared/components/StudioHintsPanel";
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useWebsiteSlug } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { useConfirmList } from "@compoz/studio/features/confirm/useConfirmList";
 import { usePublishSite } from "@compoz/studio/features/site/publish/usePublishSite";
 import { Button } from "@compoz/ui/components/ui/button";
@@ -60,11 +61,17 @@ type AnyWarningLike = Readonly<{
 
 type PublicationKind = Parameters<typeof PublicationStatusBadge>[0]["kind"];
 
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
 function formatLastPublishedAt(input?: string): string {
   const iso = String(input ?? "").trim();
+
   if (!iso) return "";
 
   const date = new Date(iso);
+
   if (Number.isNaN(date.getTime())) return iso;
 
   return date.toLocaleString();
@@ -78,6 +85,7 @@ function getPublicationStateKind(params: {
   const { isError, hasData, publishedExists } = params;
 
   if (isError || !hasData) return "error";
+
   return publishedExists ? "published" : "never";
 }
 
@@ -91,8 +99,13 @@ function getPipelineKind(params: {
 
   if (isPublishing) return "publishing";
   if (isError || !hasData) return "error";
+
   return siteHasChanges ? "changesPending" : "upToDate";
 }
+
+/* -------------------------------------------------------------------------- */
+/* Component                                                                  */
+/* -------------------------------------------------------------------------- */
 
 export function OverviewPublishCard({
   data,
@@ -102,10 +115,11 @@ export function OverviewPublishCard({
   isDemo = false,
 }: OverviewPublishCardProps) {
   const t = useTranslations();
-  const tenantId = useTenantId();
+  const websiteSlug = useWebsiteSlug();
   const confirmList = useConfirmList();
 
   const { publish, isPublishing } = usePublishSite();
+
   const [last, setLast] = useState<PublishSiteResultDTO | null>(null);
   const [publishWarnings, setPublishWarnings] = useState<
     ReadonlyArray<PublishSiteResultDTO["warnings"][number]>
@@ -113,18 +127,20 @@ export function OverviewPublishCard({
 
   const hasData = Boolean(data);
   const publishedExists = Boolean(data?.published?.exists);
+
   const lastPublishedLabel = formatLastPublishedAt(
     data?.published?.lastPublishedAt,
   );
+
   const siteHasChanges = Boolean(data?.hasChanges?.site);
 
   const publishedUrl = useMemo(
     () =>
       getPublishedSiteUrl({
-        tenantId,
+        websiteSlug,
         publishedBaseUrl,
       }),
-    [tenantId, publishedBaseUrl],
+    [websiteSlug, publishedBaseUrl],
   );
 
   const changesSummary = useMemo(() => {
@@ -175,10 +191,12 @@ export function OverviewPublishCard({
       const path = Array.isArray(warning?.path)
         ? warning.path.join(".")
         : undefined;
+
       const key = `errors.${code}`;
 
       try {
         const message = t(key);
+
         return path ? `${message} (${path})` : message;
       } catch {
         return path ? `${code} (${path})` : code;
@@ -189,6 +207,7 @@ export function OverviewPublishCard({
 
   const prePublishWarningHints = useMemo(() => {
     const warnings = data?.prePublishWarnings ?? [];
+
     return warnings.map((warning) => toWarningHint(warning as AnyWarningLike));
   }, [data?.prePublishWarnings, toWarningHint]);
 
@@ -229,6 +248,7 @@ export function OverviewPublishCard({
     }
 
     const result = await publish();
+
     if (!result) return;
 
     setLast(result);
@@ -244,6 +264,7 @@ export function OverviewPublishCard({
     >
       <CardHeader>
         <Heading as="h3">{t("studio.overviewSection.publish.title")}</Heading>
+
         <Text as="p" variant="muted">
           {t("studio.overviewSection.publish.description")}
         </Text>
@@ -346,6 +367,7 @@ export function OverviewPublishCard({
                   <DropdownMenuLabel visualMode="studio">
                     {t("studio.overviewSection.publish.view")}
                   </DropdownMenuLabel>
+
                   <DropdownMenuSeparator />
 
                   <DropdownMenuItem visualMode="studio" asChild>

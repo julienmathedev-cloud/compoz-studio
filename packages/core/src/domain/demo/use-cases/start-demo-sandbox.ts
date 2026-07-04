@@ -1,8 +1,9 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/start-demo-sandbox.ts
  * @layer core/domain
+ *
  * @description
- * Use-case : démarre une sandbox démo en tentant d'abord une réutilisation,
+ * Use-case : démarre une sandbox démo en tentant d’abord une réutilisation,
  * puis en créant une nouvelle sandbox si nécessaire.
  *
  * @remarks
@@ -10,17 +11,16 @@
  * - Ne gère ni cookies HTTP, ni session, ni redirection.
  */
 
-import {
-  ERROR_CODES as EC,
-  type ErrorCode,
-} from "@compoz/core/domain/errors/codes";
-import { DomainError } from "@compoz/core/domain/errors/domain-error";
-
 import type {
   StartDemoSandboxDeps,
   StartDemoSandboxInput,
   StartDemoSandboxResult,
 } from "@compoz/core/domain/demo/use-cases/start-demo-sandbox.types";
+import {
+  ERROR_CODES as EC,
+  type ErrorCode,
+} from "@compoz/core/domain/errors/codes";
+import { DomainError } from "@compoz/core/domain/errors/domain-error";
 
 function assertNonEmptyTrimmed(
   value: unknown,
@@ -72,8 +72,8 @@ export function startDemoSandbox({
   return async function run(
     input: StartDemoSandboxInput,
   ): Promise<StartDemoSandboxResult> {
-    const seedTenantId = assertNonEmptyTrimmed(input.seedTenantId, [
-      "seedTenantId",
+    const seedWebsiteId = assertNonEmptyTrimmed(input.seedWebsiteId, [
+      "seedWebsiteId",
     ]);
 
     const candidateDemoInstanceId = String(input.demoInstanceId ?? "").trim();
@@ -88,7 +88,7 @@ export function startDemoSandbox({
           mode: "reused",
           sandbox: reused.sandbox,
           user: reused.user,
-          tenantId: reused.tenantId,
+          websiteId: reused.websiteId,
           demoInstanceId: reused.sandbox.demoInstanceId,
           expiresAt: reused.sandbox.expiresAt,
         };
@@ -102,14 +102,14 @@ export function startDemoSandbox({
     const expiresAt = addMsToIso(now, ttlMs);
 
     const created = await createDemoSandboxFromSeed({
-      seedTenantId,
+      seedWebsiteId,
       expiresAt,
     });
 
     const registered = await registerDemoSandbox({
       demoInstanceId: created.demoInstanceId,
       userId: created.user.id,
-      tenantId: created.tenantId,
+      websiteId: created.websiteId,
       expiresAt,
     });
 
@@ -117,7 +117,7 @@ export function startDemoSandbox({
       mode: "created",
       sandbox: registered.sandbox,
       user: created.user,
-      tenantId: created.tenantId,
+      websiteId: created.websiteId,
       demoInstanceId: created.demoInstanceId,
       expiresAt,
     };

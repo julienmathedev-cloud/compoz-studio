@@ -1,21 +1,22 @@
 /**
  * @file packages/validation/src/users/user-intents.ts
  * @layer schemas
+ *
  * @description
  * Schémas Zod décrivant la forme frontière des intentions liées aux utilisateurs (Studio).
- * Ces schémas valident la structure des payloads (API / UI) ; les invariants métier
- * et décisions (unicité email, règles RBAC, etc.) restent dans le domaine.
+ * Ces schémas valident la structure des payloads API / UI ; les invariants métier
+ * et décisions, unicité email, règles RBAC, etc. restent dans le domaine.
  */
 
 import { z } from "zod";
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import {
-  TenantIdSchema,
-  TenantIdsSchema,
   UserEmailSchema,
   UserIdParamSchema,
   UserRoleSchema,
+  WebsiteIdSchema,
+  WebsiteIdsSchema,
 } from "@compoz/validation/users/user";
 
 /* -------------------------------------------------------------------------- */
@@ -23,9 +24,9 @@ import {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Name (forme frontière) :
+ * Name, forme frontière :
  * - trim
- * - requis (pour la création)
+ * - requis pour la création
  */
 export const UserNameSchema = z
   .string()
@@ -33,30 +34,30 @@ export const UserNameSchema = z
   .min(1, ERROR_CODES.USER_NAME_REQUIRED);
 
 /**
- * Password (forme frontière) :
- * - trim (via preprocess)
+ * Password, forme frontière :
+ * - trim via preprocess
  * - requis / non vide quand présent
  *
  * @remarks
- * Le hash/stockage est infra-only ; le domaine vérifie aussi "non vide".
+ * Le hash/stockage est infra-only ; le domaine vérifie aussi non vide.
  */
 export const UserPasswordSchema = z.preprocess(
-  (v) => (typeof v === "string" ? v.trim() : v),
+  (value) => (typeof value === "string" ? value.trim() : value),
   z.string().min(1, ERROR_CODES.USER_PASSWORD_REQUIRED),
 );
 
 /**
- * RBAC (forme frontière intent).
+ * RBAC, forme frontière intent.
  *
  * @remarks
- * On réutilise les schémas canonique (normalisation + contraintes minimales).
- * Les règles métier avancées (permissions, transitions, etc.) restent dans le domaine.
+ * On réutilise les schémas canoniques, normalisation + contraintes minimales.
+ * Les règles métier avancées, permissions, transitions, etc. restent dans le domaine.
  */
 export const UserRbacIntentSchema = z
   .object({
     role: UserRoleSchema,
-    tenantIds: TenantIdsSchema,
-    defaultTenantId: TenantIdSchema,
+    websiteIds: WebsiteIdsSchema,
+    defaultWebsiteId: WebsiteIdSchema,
   })
   .strict();
 
@@ -87,7 +88,7 @@ export const UpdateUserIntentSchema = z
 export type UpdateUserIntentDTO = z.infer<typeof UpdateUserIntentSchema>;
 
 /**
- * Intention pour un listing (placeholder : pas de payload).
+ * Intention pour un listing, placeholder : pas de payload.
  */
 export const ListUsersIntentSchema = z.object({}).strict();
 export type ListUsersIntentDTO = z.infer<typeof ListUsersIntentSchema>;

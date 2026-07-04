@@ -4,6 +4,12 @@
  *
  * @description
  * Helpers de résolution des URLs publiques depuis le Studio.
+ *
+ * @remarks
+ * - `NEXT_PUBLIC_SITE_ORIGIN` pointe vers l’app publique.
+ * - Les URLs fallback publiques utilisent Website.slug :
+ *   `/t/:websiteSlug`.
+ * - `publishedBaseUrl`, quand il existe, est prioritaire.
  */
 
 function trimTrailingSlashes(input: string): string {
@@ -25,12 +31,13 @@ export function getSiteOrigin(): string {
 }
 
 export function getPublishedSiteUrl(args: {
-  tenantId: string;
+  websiteSlug: string;
   publishedBaseUrl?: string | null;
 }): string {
-  const tenantId = String(args.tenantId ?? "")
+  const websiteSlug = String(args.websiteSlug ?? "")
     .trim()
     .toLowerCase();
+
   const publishedBaseUrl = String(args.publishedBaseUrl ?? "").trim();
 
   if (publishedBaseUrl) {
@@ -39,9 +46,9 @@ export function getPublishedSiteUrl(args: {
 
   const origin = getSiteOrigin();
 
-  if (!tenantId) {
+  if (!websiteSlug) {
     return `${origin}/`;
   }
 
-  return `${origin}/t/${encodeURIComponent(trimLeadingSlashes(tenantId))}`;
+  return `${origin}/t/${encodeURIComponent(trimLeadingSlashes(websiteSlug))}`;
 }

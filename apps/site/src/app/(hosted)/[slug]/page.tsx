@@ -3,12 +3,15 @@
  * @layer site/app
  *
  * @description
- * Route "/[slug]" : rendu PUBLISHED-only (SEO stable).
+ * Route "/[slug]" : rendu PUBLISHED-only d’une page publique host-based.
  *
  * @remarks
- * Multi-tenant host-based:
- * - tenantId résolu explicitement
- * - loaders explicites (pas de dépendance implicite à headers)
+ * Multi-website host-based :
+ * - Le Website est résolu via le host public et Prisma WebsiteDomain.
+ * - Les loaders de contenu utilisent le Prisma Website.id.
+ * - L’UI/skin utilise le Website.slug.
+ * - Les loaders explicites évitent une dépendance implicite à `headers()`
+ *   en dehors de la résolution centralisée du Website.
  */
 
 import type { Metadata } from "next";
@@ -17,10 +20,10 @@ import { notFound, redirect } from "next/navigation";
 import { SITE_PATH } from "@compoz/core/constants/web/paths";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import {
-  getPublishedIndexByTenantId,
-  getPublishedPageBySlugByTenantId,
-  getPublishedSettingsByTenantId,
-  getTenantId,
+  getPublishedIndexByWebsiteId,
+  getPublishedPageBySlugByWebsiteId,
+  getPublishedSettingsByWebsiteId,
+  getWebsite,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import {
   buildSiteJsonLd,
@@ -66,12 +69,14 @@ export async function generateMetadata({
 
   if (slug === HOME_SLUG) return {};
 
-  const tenantId = await getTenantId();
-  const page = await getPublishedPageBySlugByTenantId(tenantId, slug);
+  const website = await getWebsite();
+  const websiteId = website.websiteId;
+
+  const page = await getPublishedPageBySlugByWebsiteId(websiteId, slug);
 
   if (!page) return {};
 
-  const settings = await getPublishedSettingsByTenantId(tenantId);
+  const settings = await getPublishedSettingsByWebsiteId(websiteId);
 
   const defaultSeoTitle =
     (settings?.seo?.defaultTitle ?? "").trim() || undefined;
@@ -85,7 +90,7 @@ export async function generateMetadata({
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
     .map(toBlockShapeFromDTO)
-    .filter((b): b is BlockShape => Boolean(b));
+    .filter((block): block is BlockShape => Boolean(block));
 
   const h1 = getPageH1(blocks);
 
@@ -127,28 +132,34 @@ export default async function SitePage({ params }: PageParams) {
 
   if (slug === HOME_SLUG) return redirect(SITE_PATH.home);
 
-  const tenantId = await getTenantId();
-  const ui = resolveSiteUi(tenantId);
-  const runtimeFeatures = resolveSiteRuntimeFeatures(tenantId);
-  const settings = await getPublishedSettingsByTenantId(tenantId);
+  const website = await getWebsite();
+  const websiteId = website.websiteId;
+  const websiteSlug = website.slug;
+
+  const ui = resolveSiteUi(websiteSlug);
+  const runtimeFeatures = resolveSiteRuntimeFeatures(websiteSlug);
+
+  const settings = await getPublishedSettingsByWebsiteId(websiteId);
   const revealPreset = settings?.theme?.revealPreset ?? "fade-up";
   const revealUi = ui.reveal[revealPreset];
 
-  const index = await getPublishedIndexByTenantId(tenantId);
+  const index = await getPublishedIndexByWebsiteId(websiteId);
   if (!index) return notFound();
 
-  const page = await getPublishedPageBySlugByTenantId(tenantId, slug);
+  const page = await getPublishedPageBySlugByWebsiteId(websiteId, slug);
   if (!page) return notFound();
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
     .map(toBlockShapeFromDTO)
-    .filter((b): b is BlockShape => Boolean(b));
+    .filter((block): block is BlockShape => Boolean(block));
 
   const pager = computeSitePager({
     page,
     index,
-    hrefForSlug: (s) =>
-      s === HOME_SLUG ? SITE_PATH.home : `/${encodeURIComponent(s)}`,
+    hrefForSlug: (pageSlug) =>
+      pageSlug === HOME_SLUG
+        ? SITE_PATH.home
+        : `/${encodeURIComponent(pageSlug)}`,
   });
 
   const jsonLd = settings
@@ -168,6 +179,7 @@ export default async function SitePage({ params }: PageParams) {
           dangerouslySetInnerHTML={{ __html: serializeSiteJsonLd(jsonLd) }}
         />
       ) : null}
+
       <SitePageRenderer
         ui={ui}
         blocks={blocks}

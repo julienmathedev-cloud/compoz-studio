@@ -11,7 +11,7 @@
  * - Columns and reveal behavior are owned by the parent cell.
  * - Items own the content.
  * - Uses `SiteStructuredCard` for visual rendering.
- * - Exposes stable `data-*` attributes for skins and tenant overrides.
+ * - Exposes stable `data-*` attributes for skins and Website overrides.
  */
 
 import type { StructuredCardItemShape } from "@compoz/validation/pages/blocks/cells/cell";

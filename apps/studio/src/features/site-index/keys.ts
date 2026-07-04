@@ -6,19 +6,30 @@
  * Helpers pour construire les query keys React Query du SiteIndex.
  *
  * @remarks
- * - Tenant-scoped : la key inclut `tenantId` pour éviter le cache cross-tenant.
- * - Utilisé par `getSiteIndex`, `setSiteIndexCache`, `patchSiteIndexCache`,
+ * - Website-scoped : la key inclut Prisma Website.id pour éviter le cache
+ *   cross-website lors d’un switch de Website actif.
+ * - Utilisé par `getSiteIndex`, `setSiteIndexCache`, `patchSiteIndexCache`
  *   et `invalidateSiteIndex`.
+ * - `SiteIndex` désigne ici un read-model UI des pages du Website actif.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
-import { requireTenantId } from "@compoz/ui/lib/tenant-id";
+
+function requireWebsiteId(value: unknown, field = "websiteId"): string {
+  const websiteId = String(value ?? "").trim();
+
+  if (!websiteId) {
+    throw new Error(`${field} is required`);
+  }
+
+  return websiteId;
+}
 
 /**
  * Query key React Query du SiteIndex.
  */
-export function siteIndexKey(tenantId: unknown, state: ContentState) {
-  const tid = requireTenantId(tenantId, "siteIndexKey.tenantId");
+export function siteIndexKey(websiteId: unknown, state: ContentState) {
+  const websiteIdKey = requireWebsiteId(websiteId, "siteIndexKey.websiteId");
 
-  return ["t", tid, "studio", "siteIndex", state] as const;
+  return ["w", websiteIdKey, "studio", "siteIndex", state] as const;
 }

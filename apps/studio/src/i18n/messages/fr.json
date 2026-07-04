@@ -425,12 +425,12 @@
     "USER_NAME_REQUIRED": "Le nom de l’utilisateur est requis.",
     "USER_ROLE_REQUIRED": "Le rôle de l’utilisateur est requis.",
     "USER_ROLE_INVALID": "Le rôle de l’utilisateur est invalide.",
-    "USER_TENANT_IDS_INVALID": "Les identifiants de tenant de l’utilisateur sont invalides.",
-    "USER_DEFAULT_TENANT_REQUIRED": "Le tenant par défaut de l’utilisateur est requis.",
-    "USER_DEFAULT_TENANT_NOT_ALLOWED": "Le tenant par défaut sélectionné n’est pas autorisé pour cet utilisateur.",
+    "USER_WEBSITE_IDS_INVALID": "Les accès aux sites de l’utilisateur sont invalides.",
+    "USER_DEFAULT_WEBSITE_REQUIRED": "Le site par défaut de l’utilisateur est requis.",
+    "USER_DEFAULT_WEBSITE_NOT_ALLOWED": "Le site par défaut sélectionné n’est pas autorisé pour cet utilisateur.",
     "USER_RBAC_INVALID": "Le RBAC de l’utilisateur est invalide.",
     "USER_STATUS_INVALID": "Le statut de l’utilisateur est invalide.",
-    "USER_TENANT_IDS_REQUIRED": "Les identifiants de tenant de l’utilisateur sont requis.",
+    "USER_WEBSITE_IDS_REQUIRED": "Les accès aux sites de l’utilisateur sont requis.",
     "USER_PASSWORD_REQUIRED": "Le mot de passe de l’utilisateur est requis.",
     "USER_EMAIL_CONFLICT": "L’adresse e-mail de l’utilisateur est déjà utilisée.",
     "USER_NOT_FOUND": "L’utilisateur est introuvable."
@@ -492,7 +492,7 @@
         "site": "Site",
         "user": "Utilisateur",
         "users": "Utilisateurs",
-        "tenant": "Site",
+        "website": "Site",
         "theme": "Thème"
       },
 
@@ -742,7 +742,7 @@
         "descriptionCreate": "Créez un utilisateur à l’aide du formulaire ci-dessous."
       },
       "header": {
-        "site": {
+        "website": {
           "label": "Site",
           "help": "Choisissez le site à modifier."
         },
@@ -789,12 +789,12 @@
               "editor": "Éditeur"
             }
           },
-          "tenantIds": {
+          "websiteIds": {
             "label": "Sites",
             "placeholder": "Sélectionnez un site",
             "help": "Sélectionnez les sites autorisés pour l’utilisateur."
           },
-          "defaultTenantId": {
+          "defaultWebsiteId": {
             "label": "Site par défaut",
             "placeholder": "Sélectionnez un site",
             "help": "Site utilisé par défaut lorsqu’aucun site spécifique n’est défini."

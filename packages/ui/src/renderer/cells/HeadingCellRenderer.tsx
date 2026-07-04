@@ -76,7 +76,7 @@ export function HeadingCellRenderer({
         id={idAnchor || undefined}
         level={level}
         className={cn(
-          "[font-family:var(--tenant-font-heading)]",
+          "[font-family:var(--website-font-heading)]",
           ui.level[level],
           variant === "hero" && ui.levelHero,
         )}

@@ -7,24 +7,26 @@
  *
  * @remarks
  * - Permet d’updater le bundle après un PATCH slice, sans invalidation globale.
+ * - Le cache Studio est scopé par Prisma Website.id.
  */
+
+import type { QueryClient } from "@tanstack/react-query";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
-import type { QueryClient } from "@tanstack/react-query";
-
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
 
 export function patchSettingsBundleCache(
-  qc: QueryClient,
-  tenantId: string,
+  queryClient: QueryClient,
+  websiteId: string,
   state: ContentState,
   patcher: (prev: SiteSettings) => SiteSettings,
 ) {
-  qc.setQueryData(
-    settingsBundleKey(tenantId, state),
+  queryClient.setQueryData(
+    settingsBundleKey(websiteId, state),
     (prev: SiteSettings | undefined) => {
       if (!prev) return prev;
+
       return patcher(prev);
     },
   );

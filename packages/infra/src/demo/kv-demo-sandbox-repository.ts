@@ -1,6 +1,7 @@
 /**
  * @file packages/infra/src/demo/kv-demo-sandbox-repository.ts
  * @layer infra/demo
+ *
  * @description
  * Implémentation KV du repository des sandboxes démo.
  *
@@ -10,20 +11,18 @@
  *   - lecture directe
  *   - écriture/remplacement
  *   - suppression
- *   - test d'existence
+ *   - test d’existence
  *   - listing pour le cleanup
  */
 
 import type { DemoSandbox } from "@compoz/core/domain/demo/entities/demo-sandbox";
 import type { DemoSandboxRepository } from "@compoz/core/domain/demo/ports/demo-sandbox-repository";
-
+import { getUpstashRedis, parseRedisJson } from "@compoz/infra/kv/kv-redis";
+import { kvCmd } from "@compoz/infra/kv/kv-telemetry";
 import {
   DemoSandboxSchema,
   type DemoSandboxShape,
 } from "@compoz/validation/demo/demo-sandbox";
-
-import { getUpstashRedis, parseRedisJson } from "@compoz/infra/kv/kv-redis";
-import { kvCmd } from "@compoz/infra/kv/kv-telemetry";
 
 /* -------------------------------------------------------------------------- */
 /* Keys                                                                       */
@@ -55,7 +54,7 @@ function toDomainSandbox(input: DemoSandboxShape): DemoSandbox {
   return {
     demoInstanceId: input.demoInstanceId,
     userId: input.userId,
-    tenantId: input.tenantId,
+    websiteId: input.websiteId,
     expiresAt: input.expiresAt,
     createdAt: input.createdAt,
   };
@@ -69,7 +68,7 @@ export class KvDemoSandboxRepository implements DemoSandboxRepository {
   private readonly redis = getUpstashRedis();
 
   async ensureBase(): Promise<void> {
-    // no-op (KV)
+    // no-op KV
   }
 
   async list(): Promise<ReadonlyArray<DemoSandbox>> {
@@ -93,13 +92,16 @@ export class KvDemoSandboxRepository implements DemoSandboxRepository {
 
     for (const raw of raws) {
       const json = parseRedisJson<unknown>(raw);
-      if (!json) continue;
+
+      if (!json) {
+        continue;
+      }
 
       try {
         const parsed = DemoSandboxSchema.parse(json);
         out.push(toDomainSandbox(parsed));
       } catch {
-        // skip doc corrompu
+        // Skip document corrompu.
       }
     }
 
@@ -110,21 +112,29 @@ export class KvDemoSandboxRepository implements DemoSandboxRepository {
     demoInstanceId: string,
   ): Promise<DemoSandbox | null> {
     const id = normalizeDemoInstanceId(demoInstanceId);
-    if (!id) return null;
+
+    if (!id) {
+      return null;
+    }
 
     const raw = await kvCmd(kvCtx("readByDemoInstanceId.get"), "get", () =>
       this.redis.get(sandboxKey(id)),
     );
 
     const json = parseRedisJson<unknown>(raw);
-    if (!json) return null;
+
+    if (!json) {
+      return null;
+    }
 
     const parsed = DemoSandboxSchema.parse(json);
+
     return toDomainSandbox(parsed);
   }
 
   async put(sandbox: DemoSandbox): Promise<void> {
     const demoInstanceId = normalizeDemoInstanceId(sandbox?.demoInstanceId);
+
     if (!demoInstanceId) {
       throw new Error(
         "KvDemoSandboxRepository.put: sandbox.demoInstanceId is required.",
@@ -140,7 +150,10 @@ export class KvDemoSandboxRepository implements DemoSandboxRepository {
 
   async deleteByDemoInstanceId(demoInstanceId: string): Promise<void> {
     const id = normalizeDemoInstanceId(demoInstanceId);
-    if (!id) return;
+
+    if (!id) {
+      return;
+    }
 
     await kvCmd(kvCtx("deleteByDemoInstanceId.del"), "del", () =>
       this.redis.del(sandboxKey(id)),
@@ -149,12 +162,17 @@ export class KvDemoSandboxRepository implements DemoSandboxRepository {
 
   async existsByDemoInstanceId(demoInstanceId: string): Promise<boolean> {
     const id = normalizeDemoInstanceId(demoInstanceId);
-    if (!id) return false;
 
-    const n = await kvCmd(kvCtx("existsByDemoInstanceId.exists"), "other", () =>
-      this.redis.exists(sandboxKey(id)),
+    if (!id) {
+      return false;
+    }
+
+    const count = await kvCmd(
+      kvCtx("existsByDemoInstanceId.exists"),
+      "other",
+      () => this.redis.exists(sandboxKey(id)),
     );
 
-    return n === 1;
+    return count === 1;
   }
 }

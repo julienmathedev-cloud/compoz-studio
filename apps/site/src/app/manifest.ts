@@ -6,8 +6,8 @@
 import type { MetadataRoute } from "next";
 
 import {
-  getPublishedSettingsByTenantId,
-  getTenantId,
+  getPublishedSettingsByWebsiteId,
+  getWebsiteId,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import { resolveIconHref } from "@compoz/ui/lib/seo/metadata-helpers";
 
@@ -50,8 +50,8 @@ function buildManifestIcons(favicon: string): MetadataRoute.Manifest["icons"] {
 /* -------------------------------------------------------------------------- */
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
-  const tenantId = await getTenantId();
-  const settings = await getPublishedSettingsByTenantId(tenantId);
+  const websiteId = await getWebsiteId();
+  const settings = await getPublishedSettingsByWebsiteId(websiteId);
 
   if (!settings) {
     return {

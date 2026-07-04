@@ -6,24 +6,24 @@
  * Helpers pour construire des query keys React Query liées aux blocks.
  *
  * @remarks
- * - Tenant-scoped : on préfixe par ["t", tenantId, ...]
- *   pour éviter les collisions de cache lors d'un switch tenant.
+ * - Website-scoped : on préfixe par ["w", websiteId, ...]
+ *   pour éviter les collisions de cache lors d'un switch Website.
+ * - Le scope utilisé ici est Prisma Website.id.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
-import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 export function pageBlocksKey(
-  tenantId: string,
+  websiteId: string,
   pageId: string,
   state: ContentState,
 ) {
-  const t = toTenantId(tenantId);
+  const websiteIdKey = String(websiteId ?? "").trim();
   const pageIdKey = String(pageId ?? "").trim();
 
   return [
-    "t",
-    t,
+    "w",
+    websiteIdKey,
     "studio",
     "pages",
     "blocks",

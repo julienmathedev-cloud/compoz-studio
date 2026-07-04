@@ -5,15 +5,16 @@
  * @layer ui/organisms
  *
  * @description
- * Formulaire d’édition / création d’un user Studio — Shell RHF + Zod (SoT UI).
+ * Formulaire d’édition / création d’un user Studio — Shell RHF + Zod.
  *
  * @remarks
- * - Ce fichier est le “shell” : init RHF, submit/reset, Card layout, orchestration.
+ * - Ce fichier est le shell : init RHF, submit/reset, Card layout,
+ *   orchestration.
  * - Les sections UI sont extraites :
- *   - `AdminUsersFormSummaryFields` (email/name/password)
- *   - `AdminUsersFormRbacFields` (rbac avancé)
- *   - `AdminUsersFormFooter` (delete + actions)
- * - Focus/scroll du premier champ invalide au submit via `focusByFieldId` (helper dédié).
+ *   - `AdminUsersFormSummaryFields` pour email/name/password.
+ *   - `AdminUsersFormRbacFields` pour le RBAC websites.
+ *   - `AdminUsersFormFooter` pour delete + actions.
+ * - Focus/scroll du premier champ invalide au submit via `focusByFieldId`.
  * - Users = Studio-only : pas de draft/published, pas de state.
  */
 
@@ -25,40 +26,45 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 
 import { Card, CardContent, CardFooter } from "@compoz/ui/components/ui/card";
+import { focusByFieldId } from "@compoz/ui/lib/focus";
 import {
   createFieldIds,
   useIdPrefix,
 } from "@compoz/ui/lib/forms/use-id-prefix";
+
+import { notify } from "@compoz/studio/lib/ui/notify";
+
+import { AdminUsersFormFooter } from "@compoz/studio/features/admin/users/components/forms/AdminUsersFormFooter";
+import { AdminUsersFormRbacFields } from "@compoz/studio/features/admin/users/components/forms/AdminUsersFormRbacFields";
+import { AdminUsersFormSummaryFields } from "@compoz/studio/features/admin/users/components/forms/AdminUsersFormSummaryFields";
 
 import {
   UserFormSchema,
   type UserFormValues,
 } from "@compoz/validation/users/user-form";
 
-import { notify } from "@compoz/studio/lib/ui/notify";
-import { focusByFieldId } from "@compoz/ui/lib/focus";
-
-import { AdminUsersFormFooter } from "@compoz/studio/features/admin/users/components/forms/AdminUsersFormFooter";
-import { AdminUsersFormRbacFields } from "@compoz/studio/features/admin/users/components/forms/AdminUsersFormRbacFields";
-import { AdminUsersFormSummaryFields } from "@compoz/studio/features/admin/users/components/forms/AdminUsersFormSummaryFields";
+type SelectOption = Readonly<{
+  value: string;
+  label: string;
+}>;
 
 type AdminUsersFormProps = Readonly<{
   initialValues: UserFormValues;
   isSaving?: boolean;
 
-  /** Mode UI (impacte labels et actions). */
+  /** Mode UI, impacte les labels et les actions. */
   mode?: "create" | "edit";
 
-  /** Active/désactive l’auto-focus des champs du formulaire (sauf celui des erreurs). */
+  /** Active/désactive l’auto-focus des champs du formulaire, sauf erreurs. */
   bFocusFields?: boolean;
 
   /** Permet d’annuler le comportement bouton “annuler” toujours actif en mode edit. */
   bCancelAlwaysEnabledInEdit?: boolean;
 
-  /** Options de tenantIds (si tu veux proposer un select). */
-  tenantIdOptions?: ReadonlyArray<{ value: string; label: string }>;
+  /** Options de Website.id accessibles pour le RBAC du user Studio. */
+  websiteOptions?: ReadonlyArray<SelectOption>;
 
-  /** Delete (edit only). */
+  /** Delete, edit only. */
   onDelete?: () => void | Promise<void>;
   isDeleting?: boolean;
   canDelete?: boolean;
@@ -76,11 +82,11 @@ type FieldErrorState = Readonly<{
 }>;
 
 /**
- * Calcule l’état d’erreur d’un champ (invalid + message optionnel) de façon stable.
+ * Calcule l’état d’erreur d’un champ.
  *
  * @remarks
- * - Ne change pas la logique métier : on garde les mêmes règles que le code initial.
- * - `showError` = submitted || submitCount>0.
+ * - Ne change pas les règles métier du formulaire.
+ * - `showError` = submitted || submitCount > 0.
  */
 function getFieldErrorState(opts: {
   showError: boolean;
@@ -93,12 +99,15 @@ function getFieldErrorState(opts: {
     shouldShow &&
     Boolean((opts.error as { message?: unknown })?.message ?? opts.error);
 
-  const msg =
+  const message =
     shouldShow && (opts.error as { message?: unknown })?.message
       ? String((opts.error as { message?: unknown })?.message)
       : undefined;
 
-  return { invalid: Boolean(hasError), message: msg } as const;
+  return {
+    invalid: Boolean(hasError),
+    message,
+  };
 }
 
 export function AdminUsersForm({
@@ -107,7 +116,7 @@ export function AdminUsersForm({
   mode = "create",
   bFocusFields = true,
   bCancelAlwaysEnabledInEdit = false,
-  tenantIdOptions,
+  websiteOptions,
   onDelete,
   isDeleting = false,
   canDelete = true,
@@ -141,21 +150,27 @@ export function AdminUsersForm({
 
   const isBusy = Boolean(isSaving || isSubmitting || isDeleting);
 
-  // Dirty signal vers le parent (guard / navigation).
+  /**
+   * Dirty signal vers le parent.
+   *
+   * Exemple : guard de navigation.
+   */
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
 
-  // Préfixe d’ID stable pour ce formulaire.
   const formIdPrefix = useIdPrefix("user-form");
+
   const emailIds = createFieldIds(formIdPrefix, "email");
   const nameIds = createFieldIds(formIdPrefix, "name");
   const passwordIds = createFieldIds(formIdPrefix, "password");
   const roleIds = createFieldIds(formIdPrefix, "role");
-  const tenantIdsIds = createFieldIds(formIdPrefix, "tenantIds");
-  const defaultTenantIdIds = createFieldIds(formIdPrefix, "defaultTenantId");
+  const websiteIdsIds = createFieldIds(formIdPrefix, "websiteIds");
+  const defaultWebsiteIdIds = createFieldIds(formIdPrefix, "defaultWebsiteId");
 
-  // Resynchronisation RHF lorsque `initialValues` change (reload côté section).
+  /**
+   * Resynchronisation RHF lorsque `initialValues` change.
+   */
   useEffect(() => {
     rhfReset(initialValues, {
       keepDirty: false,
@@ -164,7 +179,9 @@ export function AdminUsersForm({
     });
   }, [initialValues, rhfReset]);
 
-  // Focus auto du champ email en mode edit (changement de user).
+  /**
+   * Focus auto du champ email en mode edit lors du changement de user.
+   */
   useEffect(() => {
     if (mode !== "edit" || !bFocusFields) return;
     if (isBusy) return;
@@ -183,8 +200,8 @@ export function AdminUsersForm({
       password: "",
       rbac: {
         role: "editor",
-        tenantIds: ["default"],
-        defaultTenantId: "default",
+        websiteIds: ["default"],
+        defaultWebsiteId: "default",
       },
     } as UserFormValues);
 
@@ -214,16 +231,16 @@ export function AdminUsersForm({
     error: errors.rbac?.role,
   });
 
-  const tenantIdsState = getFieldErrorState({
+  const websiteIdsState = getFieldErrorState({
     showError,
-    touched: Boolean(touchedFields.rbac?.tenantIds),
-    error: errors.rbac?.tenantIds,
+    touched: Boolean(touchedFields.rbac?.websiteIds),
+    error: errors.rbac?.websiteIds,
   });
 
-  const defaultTenantIdState = getFieldErrorState({
+  const defaultWebsiteIdState = getFieldErrorState({
     showError,
-    touched: Boolean(touchedFields.rbac?.defaultTenantId),
-    error: errors.rbac?.defaultTenantId,
+    touched: Boolean(touchedFields.rbac?.defaultWebsiteId),
+    error: errors.rbac?.defaultWebsiteId,
   });
 
   const blockingErrorsCount = useMemo(() => {
@@ -232,17 +249,18 @@ export function AdminUsersForm({
       nameState.invalid,
       passwordState.invalid,
       roleState.invalid,
-      tenantIdsState.invalid,
-      defaultTenantIdState.invalid,
+      websiteIdsState.invalid,
+      defaultWebsiteIdState.invalid,
     ];
+
     return invalids.filter(Boolean).length;
   }, [
     emailState.invalid,
     nameState.invalid,
     passwordState.invalid,
     roleState.invalid,
-    tenantIdsState.invalid,
-    defaultTenantIdState.invalid,
+    websiteIdsState.invalid,
+    defaultWebsiteIdState.invalid,
   ]);
 
   useEffect(() => {
@@ -250,6 +268,7 @@ export function AdminUsersForm({
   }, [blockingErrorsCount, onBlockingErrorsCountChange]);
 
   const submitLabel = mode === "edit" ? t("common.save") : t("common.create");
+
   const submitLoadingLabel =
     mode === "edit" ? t("common.saving") : t("common.creating");
 
@@ -262,16 +281,17 @@ export function AdminUsersForm({
       { has: () => Boolean(formErrors.password), id: passwordIds.fieldId },
       { has: () => Boolean(formErrors.rbac?.role), id: roleIds.fieldId },
       {
-        has: () => Boolean(formErrors.rbac?.tenantIds),
-        id: tenantIdsIds.fieldId,
+        has: () => Boolean(formErrors.rbac?.websiteIds),
+        id: websiteIdsIds.fieldId,
       },
       {
-        has: () => Boolean(formErrors.rbac?.defaultTenantId),
-        id: defaultTenantIdIds.fieldId,
+        has: () => Boolean(formErrors.rbac?.defaultWebsiteId),
+        id: defaultWebsiteIdIds.fieldId,
       },
     ] as const;
 
-    const first = PRIORITY.find((x) => x.has());
+    const first = PRIORITY.find((item) => item.has());
+
     if (!first) return;
 
     focusByFieldId(first.id);
@@ -293,7 +313,7 @@ export function AdminUsersForm({
             isBusy={isBusy}
             initialValues={initialValues}
             values={values}
-            tenantIdOptions={tenantIdOptions}
+            websiteOptions={websiteOptions}
             control={control}
             rhfReset={rhfReset}
             formIdPrefix={formIdPrefix}
@@ -301,8 +321,8 @@ export function AdminUsersForm({
             nameIds={nameIds}
             passwordIds={passwordIds}
             roleIds={roleIds}
-            tenantIdsIds={tenantIdsIds}
-            defaultTenantIdIds={defaultTenantIdIds}
+            websiteIdsIds={websiteIdsIds}
+            defaultWebsiteIdIds={defaultWebsiteIdIds}
             showError={showError}
             touchedFields={touchedFields}
             errors={errors}
@@ -310,8 +330,8 @@ export function AdminUsersForm({
             nameState={nameState}
             passwordState={passwordState}
             roleState={roleState}
-            tenantIdsState={tenantIdsState}
-            defaultTenantIdState={defaultTenantIdState}
+            websiteIdsState={websiteIdsState}
+            defaultWebsiteIdState={defaultWebsiteIdState}
           >
             <AdminUsersFormSummaryFields
               mode={mode}
@@ -346,6 +366,7 @@ export function AdminUsersForm({
                 keepTouched: false,
                 keepErrors: false,
               });
+
               onReset?.();
             }}
           />

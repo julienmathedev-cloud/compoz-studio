@@ -5,12 +5,13 @@
  * @layer hooks/studio/pages
  *
  * @description
- * Hook studio React Query pour mettre à jour une page draft via l’API.
+ * Hook Studio React Query pour mettre à jour une page draft via l’API.
  *
  * @remarks
- * - Tenant-scoped cache : toutes les query keys incluent `tenantId`.
- * - Orchestration UI-only (mutation, cache update, notifications, logs).
+ * - Website-scoped cache : toutes les query keys incluent `websiteId`.
+ * - Orchestration UI-only : mutation, cache update, notifications, logs.
  * - Aucune logique métier ni validation domaine.
+ * - Le scope utilisé ici est Prisma Website.id.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -24,7 +25,7 @@ import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import type { UpdatePageResponse } from "@compoz/infra/http/studio/pages.types";
 import { log } from "@compoz/infra/lib/log";
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
 import { toUpdatePageIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/pages-form";
 import { setSiteIndexCache } from "@compoz/studio/features/site-index/cache";
@@ -40,6 +41,7 @@ import {
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
 import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
+
 import type { PageFormValues } from "@compoz/validation/pages/page-form";
 import type { UpdatePageIntentDTO } from "@compoz/validation/pages/page-intents";
 
@@ -67,18 +69,19 @@ type UseUpdatePageResult = Readonly<{
   isUpdating: boolean;
 }>;
 
-const lg = log.child({ ns: "hook", name: "useUpdatePage" });
+const logger = log.child({ ns: "hook", name: "useUpdatePage" });
 
 export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
   const t = useTranslations();
-  const qc = useQueryClient();
-  const tenantId = useTenantId();
+  const queryClient = useQueryClient();
+  const websiteId = useWebsiteId();
+
   const entityLabel = t("studio.shared.entities.page");
 
   const [updatingPageId, setUpdatingPageId] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationKey: ["t", tenantId, "studio", "pages", "update"] as const,
+    mutationKey: ["w", websiteId, "studio", "pages", "update"] as const,
 
     mutationFn: async (
       args: UpdatePageArgs,
@@ -93,16 +96,28 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
             pageId,
             payload,
           );
+
           return result;
         },
-        { entity: entityLabel, fields, pageId, tenantId },
+        {
+          entity: entityLabel,
+          fields,
+          pageId,
+          websiteId,
+        },
       );
 
       const page = response.page;
       const index = (response as Partial<UpdatePageResponse>).index;
       const nextSlug = String(payload.slug ?? "").trim();
 
-      return { pageId, nextSlug, fields, page, index } as const;
+      return {
+        pageId,
+        nextSlug,
+        fields,
+        page,
+        index,
+      } as const;
     },
 
     onSuccess: async ({ pageId, nextSlug, fields, page, index }) => {
@@ -112,26 +127,36 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
       );
 
       if (index) {
-        setSiteIndexCache(qc, tenantId, DEFAULT_CONTENT_STATE, index);
+        setSiteIndexCache(queryClient, websiteId, DEFAULT_CONTENT_STATE, index);
       }
 
-      qc.setQueryData(
-        pageByIdKey(tenantId, pageId, DEFAULT_CONTENT_STATE),
+      queryClient.setQueryData(
+        pageByIdKey(websiteId, pageId, DEFAULT_CONTENT_STATE),
         page,
       );
 
       await Promise.all([
-        invalidateSiteStatus(qc, tenantId),
-        invalidatePageStatusViews(qc, tenantId),
+        invalidateSiteStatus(queryClient, websiteId),
+        invalidatePageStatusViews(queryClient, websiteId),
       ]);
 
-      lg.debug("update.ok", { tenantId, pageId, nextSlug, fields });
+      logger.debug("update.ok", {
+        websiteId,
+        pageId,
+        nextSlug,
+        fields,
+      });
+
       onSuccess?.();
     },
 
     onError: (error: unknown) => {
       notify.fromError(error, UiError.unexpectedSave);
-      lg.error("update.failed", { tenantId, msg: String(error) });
+
+      logger.error("update.failed", {
+        websiteId,
+        msg: String(error),
+      });
     },
 
     onSettled: () => {
@@ -146,12 +171,18 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
       if (mutation.isPending) return;
 
       const pageIdKey = String(pageId ?? "").trim();
+
       if (!pageIdKey) {
         notify.error(
           t("uiErrors.errorGeneric"),
           t(ERROR_CODES.PAGE_ID_REQUIRED),
         );
-        lg.error("update.invalidPageId", { tenantId, pageId });
+
+        logger.error("update.invalidPageId", {
+          websiteId,
+          pageId,
+        });
+
         return;
       }
 
@@ -164,6 +195,7 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
           t("notifications.noChanges.title"),
           t("notifications.noChanges.description", { entity: entityLabel }),
         );
+
         return;
       }
 
@@ -175,6 +207,7 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
           t("notifications.noChanges.title"),
           t("notifications.noChanges.description", { entity: entityLabel }),
         );
+
         return;
       }
 
@@ -186,16 +219,15 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
         fields,
       });
     },
-    [entityLabel, mutation, t, tenantId, updatingPageId],
+    [entityLabel, mutation, t, websiteId, updatingPageId],
   );
 
   return useMemo(
-    () =>
-      ({
-        update,
-        updatingPageId,
-        isUpdating: mutation.isPending,
-      }) as const,
+    () => ({
+      update,
+      updatingPageId,
+      isUpdating: mutation.isPending,
+    }),
     [update, updatingPageId, mutation.isPending],
   );
 }

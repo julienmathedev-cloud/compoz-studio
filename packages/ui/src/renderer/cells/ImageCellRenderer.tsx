@@ -13,7 +13,7 @@
  * - Si une caption est présente, l’image est rendue dans un `figure`
  *   avec `figcaption`.
  * - Expose des attributs `data-*` stables pour permettre un ciblage CSS
- *   précis côté skins ou overrides tenant.
+ *   précis côté skins ou overrides Website.
  */
 
 import type { ImageCellShape } from "@compoz/validation/pages/blocks/cells/cell";

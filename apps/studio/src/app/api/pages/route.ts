@@ -1,13 +1,17 @@
 /**
  * @file apps/studio/src/app/api/pages/route.ts
  * @layer studio/app/api
- * @description
- * Route API Studio pour la création et le listing des pages (index du site).
  *
+ * @description
+ * Route API Studio pour la création et le listing des pages du Website actif.
+ *
+ * @remarks
  * Responsabilités :
- * - GET  : retourne l’index des pages (draft-only).
- * - POST : crée une page (draft-only) et met à jour l’index (SoT) par patch (pas de rebuild).
- * - Draft-only : pas de résolution de state (body/query), toujours DEFAULT_CONTENT_STATE.
+ * - GET  : retourne l’index des pages en draft.
+ * - POST : crée une page en draft et met à jour l’index draft par patch.
+ * - Draft-only : pas de résolution de state via body/query,
+ *   toujours DEFAULT_CONTENT_STATE.
+ * - Les repositories sont scopés par Prisma Website.id.
  */
 
 import "server-only";
@@ -28,7 +32,7 @@ import { log, logSpan } from "@compoz/infra/lib/log";
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 import { adaptCreatePagePayload } from "@compoz/studio/app/api/_adapters/pages/pages";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import {
@@ -36,47 +40,48 @@ import {
   type CreatePageIntentDTO,
 } from "@compoz/validation/pages/page-intents";
 
-// -------------------------------------------------
-// GET /api/pages → index des pages (draft-only)
-// -------------------------------------------------
+/* -------------------------------------------------------------------------- */
+/* GET /api/pages                                                             */
+/* -------------------------------------------------------------------------- */
 
 export async function GET(req: Request) {
   const NS = "api.studio.pages.GET" as const;
 
   return handleRoute(NS, req, async () => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
     return logSpan(
       NS,
-      { ns: NS, method: "GET", state: DEFAULT_CONTENT_STATE, tenantId },
+      { ns: NS, method: "GET", state: DEFAULT_CONTENT_STATE, websiteId },
       async () => {
-        const siteRepo = getSiteRepository({ tenantId });
+        const siteRepo = getSiteRepository({ websiteId });
 
-        // L’index est la source de vérité pour la liste des pages côté studio.
+        // L’index est la source de vérité pour la liste des pages côté Studio.
         const index = await siteRepo.readIndex(DEFAULT_CONTENT_STATE);
 
         const res: GetPagesIndexResponse = { index };
+
         return res;
       },
     );
   });
 }
 
-// -------------------------------------------------
-// POST /api/pages → créer une page + mettre l’index à jour (draft-only)
-// -------------------------------------------------
+/* -------------------------------------------------------------------------- */
+/* POST /api/pages                                                            */
+/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
   const NS = "api.studio.pages.POST" as const;
 
   return handleRoute(NS, req, async () => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
     return logSpan(
       NS,
-      { ns: NS, method: "POST", state: DEFAULT_CONTENT_STATE, tenantId },
+      { ns: NS, method: "POST", state: DEFAULT_CONTENT_STATE, websiteId },
       async () => {
-        const lg = log.child({ ns: NS });
+        const logger = log.child({ ns: NS });
 
         const raw = await readJsonOr400(req);
 
@@ -89,27 +94,30 @@ export async function POST(req: Request) {
           },
         );
 
-        const pagesRepo = getPagesRepository({ tenantId });
-        const siteRepo = getSiteRepository({ tenantId });
-        const statusCache = getSiteStatusCache({ tenantId });
+        const pagesRepo = getPagesRepository({ websiteId });
+        const siteRepo = getSiteRepository({ websiteId });
+        const statusCache = getSiteStatusCache({ websiteId });
 
         await pagesRepo.ensureBase();
         await siteRepo.ensureBase();
 
         const nowIso = new Date().toISOString();
 
-        // ✅ A) Lire l’index SoT une seule fois :
-        // - sert de base pour patcher l’index après création
-        // - sert aussi à construire l’ensemble des slugs existants
+        /**
+         * A) Lire l’index source of truth une seule fois :
+         * - sert de base pour patcher l’index après création,
+         * - sert aussi à construire l’ensemble des slugs existants.
+         */
         const currentIndex = await siteRepo.readIndex(DEFAULT_CONTENT_STATE);
 
         const existingSlugs = new Set(
           (currentIndex?.pages ?? [])
-            .map((p) => String(p.slug ?? "").trim())
+            .map((pageRef) => String(pageRef.slug ?? "").trim())
             .filter(Boolean),
         );
 
         const idGenerator = getIdGenerator();
+
         const runCreate = createPage({
           pages: pagesRepo,
           idGenerator,
@@ -119,7 +127,9 @@ export async function POST(req: Request) {
         const payload = adaptCreatePagePayload(dto);
         const { page } = await runCreate({ ...payload, existingSlugs });
 
-        // ✅ B) Patch index SoT (no rebuild)
+        /**
+         * B) Patch de l’index source of truth, sans rebuild global.
+         */
         const baseIndex: SiteIndexDTO =
           currentIndex ??
           ({
@@ -135,27 +145,33 @@ export async function POST(req: Request) {
         });
 
         const index: SiteIndexDTO = {
-          pages: nextIndexEntity.pages.map((p) => ({
-            id: p.id,
-            slug: p.slug,
-            name: p.name,
-            parentId: p.parentId,
+          pages: nextIndexEntity.pages.map((pageRef) => ({
+            id: pageRef.id,
+            slug: pageRef.slug,
+            name: pageRef.name,
+            parentId: pageRef.parentId,
           })),
           updatedAt: nowIso,
         };
 
         await siteRepo.putIndex(DEFAULT_CONTENT_STATE, index);
 
-        lg.debug("route.index.patched", {
-          tenantId,
+        logger.debug("route.index.patched", {
+          websiteId,
           pagesCount: index.pages.length,
           createdPageId: page.id,
           createdSlug: page.slug,
         });
 
-        // ✅ Invalidation KV snapshots (best-effort)
+        /**
+         * Invalidation du cache de status du Website actif.
+         *
+         * Le cache peut encore être implémenté en KV côté infra,
+         * mais son scope métier est le Prisma Website.id.
+         */
         try {
-          lg.debug?.("route.statusCache.invalidate.start", {
+          logger.debug?.("route.statusCache.invalidate.start", {
+            websiteId,
             invalidateStatus: true,
             invalidateStatusDetails: true,
           });
@@ -165,13 +181,15 @@ export async function POST(req: Request) {
             statusCache.invalidateStatusDetails(),
           ]);
 
-          lg.debug?.("route.statusCache.invalidate.done", {
+          logger.debug?.("route.statusCache.invalidate.done", {
+            websiteId,
             invalidateStatus: true,
             invalidateStatusDetails: true,
           });
-        } catch (e) {
-          lg.error?.("route.statusCache.invalidate.failed", {
-            err: String(e),
+        } catch (error) {
+          logger.error?.("route.statusCache.invalidate.failed", {
+            websiteId,
+            err: String(error),
             invalidateStatus: true,
             invalidateStatusDetails: true,
           });

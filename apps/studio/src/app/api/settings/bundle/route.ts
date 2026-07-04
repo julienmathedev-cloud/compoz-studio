@@ -1,26 +1,26 @@
 /**
  * @file apps/studio/src/app/api/settings/bundle/route.ts
  * @layer studio/app/api
- * @description
- * Route Studio — Settings bundle (READ global).
  *
- * GET:
- * - Retourne l'agrégat `SiteSettings` pour un `state` donné (draft|published).
+ * @description
+ * Route Studio — Settings bundle du Website actif.
  *
  * @remarks
- * - Read-model canonique pour Studio (Option B).
- * - L’impl repo est choisie via la factory (`SITE_REPO_IMPL`) et est tenant-aware.
+ * GET:
+ * - Retourne l'agrégat `SiteSettings` pour un `state` donné.
+ * - Le state lu est `draft` par défaut, ou `published` si demandé.
+ * - Read-model canonique pour Studio.
+ * - L’implémentation repository est choisie via la factory.
+ * - Le repository est scopé par Prisma Website.id.
  */
 
 import "server-only";
 
-import { logSpan } from "@compoz/infra/lib/log";
-
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import type { GetSettingsBundleResponse } from "@compoz/infra/http/studio/site-settings.types";
-
+import { logSpan } from "@compoz/infra/lib/log";
 import { getSiteRepository } from "@compoz/infra/site";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 
 /* -------------------------------------------------------------------------- */
@@ -29,6 +29,7 @@ import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 
 function parseState(url: URL): ContentState {
   const raw = url.searchParams.get("state");
+
   return raw === "published" ? "published" : "draft";
 }
 
@@ -40,17 +41,24 @@ export async function GET(req: Request) {
   const NS = "api.studio.settings.bundle.GET" as const;
 
   return handleRoute(NS, req, async () => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
     const state = parseState(new URL(req.url));
 
-    return logSpan(NS, { ns: NS, method: "GET", state, tenantId }, async () => {
-      const repo = getSiteRepository({ tenantId });
-      await repo.ensureBase(); // no-op KV, mais garde le contrat (FS en a besoin)
-      const settings = await repo.readSettings(state);
+    return logSpan(
+      NS,
+      { ns: NS, method: "GET", state, websiteId },
+      async () => {
+        const repo = getSiteRepository({ websiteId });
 
-      const res: GetSettingsBundleResponse = { settings };
-      return res;
-    });
+        await repo.ensureBase();
+
+        const settings = await repo.readSettings(state);
+
+        const res: GetSettingsBundleResponse = { settings };
+
+        return res;
+      },
+    );
   });
 }

@@ -1,9 +1,17 @@
 /**
  * @file apps/studio/src/app/api/media/upload/image/prepare/route.ts
  * @layer studio/app/api
+ *
  * @description
- * Prépare un upload raster temporaire côté Blob :
- * génère une clé temp tenant-scoped qui servira de pathname pour le client upload.
+ * Prépare un upload image temporaire côté Blob :
+ * génère une clé temp scopée par Website.id qui servira de pathname
+ * pour le client upload.
+ *
+ * @remarks
+ * - Nécessite une session Studio valide.
+ * - Les uploads temporaires sont scopés par Prisma Website.id.
+ * - Le `tempKey` généré suit la convention :
+ *   `websites/:websiteId/_tmp/media/:year/:month/:filename`
  */
 
 import "server-only";
@@ -17,7 +25,7 @@ import type {
   PrepareImageUploadResponse,
   UploadImageKind,
 } from "@compoz/infra/http/studio/media.types";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 
 const MAX_IMAGE_UPLOAD_BYTES = Number(
@@ -35,19 +43,27 @@ const ALLOWED_MIMES = new Set([
   "image/vnd.microsoft.icon",
 ]);
 
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
 function readString(value: unknown, key: string): string {
   if (!isRecord(value)) return "";
+
   const raw = value[key];
+
   return typeof raw === "string" ? raw : "";
 }
 
 function readNumber(value: unknown, key: string): number {
   if (!isRecord(value)) return 0;
+
   const raw = value[key];
+
   return typeof raw === "number" && Number.isFinite(raw) ? raw : 0;
 }
 
@@ -68,9 +84,10 @@ function sanitizeFilename(name: string): string {
 }
 
 function nowParts(d = new Date()) {
-  const y = String(d.getUTCFullYear());
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  return { y, m };
+  const year = String(d.getUTCFullYear());
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+
+  return { year, month };
 }
 
 function splitFilename(name: string): Readonly<{ base: string; ext: string }> {
@@ -86,19 +103,23 @@ function splitFilename(name: string): Readonly<{ base: string; ext: string }> {
 }
 
 function buildTempStorageKey(args: {
-  tenantId: string;
+  websiteId: string;
   year: string;
   month: string;
   filename: string;
 }): string {
-  return `tenants/${args.tenantId}/_tmp/media/${args.year}/${args.month}/${args.filename}`;
+  return `websites/${args.websiteId}/_tmp/media/${args.year}/${args.month}/${args.filename}`;
 }
+
+/* -------------------------------------------------------------------------- */
+/* POST                                                                       */
+/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
   const NS = "api.studio.media.upload.image.prepare.POST" as const;
 
   return handleRoute(NS, req, async () => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
     const body = (await req.json()) as PrepareImageUploadRequest;
 
     const filename = readString(body, "filename").trim();
@@ -167,13 +188,13 @@ export async function POST(req: Request) {
 
     const { base, ext } = splitFilename(filename);
     const safeBase = sanitizeFilename(base);
-    const { y, m } = nowParts();
+    const { year, month } = nowParts();
 
     const tempFilename = `${safeBase}-${randomUUID()}${ext}`;
     const tempKey = buildTempStorageKey({
-      tenantId,
-      year: y,
-      month: m,
+      websiteId,
+      year,
+      month,
       filename: tempFilename,
     });
 

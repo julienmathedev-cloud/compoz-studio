@@ -10,8 +10,9 @@
  * @remarks
  * - Injecte le thème CSS du site via le scope preview `theme`.
  * - Utilise un fallback global `initialTheme` chargé côté serveur.
- * - Injecte le skin UI public résolu pour le tenant courant.
+ * - Injecte le skin UI public résolu pour le Website courant.
  * - Évite la répétition dans chaque preview page.
+ * - Le skin public est résolu avec Website.slug.
  */
 
 import type { ReactNode } from "react";
@@ -23,16 +24,21 @@ import type { ThemeSettingsShape } from "@compoz/validation/site/settings/theme/
 
 type PreviewProvidersProps = Readonly<{
   children: ReactNode;
-  tenantId: string;
+
+  /**
+   * Website.slug utilisé pour résoudre le skin UI public.
+   */
+  websiteSlug: string;
+
   initialTheme?: ThemeSettingsShape | null;
 }>;
 
 export function PreviewProviders({
   children,
-  tenantId,
+  websiteSlug,
   initialTheme = null,
 }: PreviewProvidersProps) {
-  const ui = resolveSiteUi(tenantId);
+  const ui = resolveSiteUi(websiteSlug);
 
   const theme = usePreviewOverride<ThemeSettingsShape>("theme");
   const visibleTheme = theme.override ?? theme.baseline ?? initialTheme ?? null;

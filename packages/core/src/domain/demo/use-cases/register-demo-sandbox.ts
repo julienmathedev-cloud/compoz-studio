@@ -1,25 +1,25 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/register-demo-sandbox.ts
  * @layer core/domain
+ *
  * @description
- * Use-case : enregistre le record de résolution d'une sandbox démo.
+ * Use-case : enregistre le record de résolution d’une sandbox démo.
  *
  * @remarks
- * - Utilisé après la création réussie d'une sandbox démo.
+ * - Utilisé après la création réussie d’une sandbox démo.
  * - Ne gère ni cookies HTTP, ni session, ni clonage.
  */
-
-import {
-  ERROR_CODES as EC,
-  type ErrorCode,
-} from "@compoz/core/domain/errors/codes";
-import { DomainError } from "@compoz/core/domain/errors/domain-error";
 
 import type {
   RegisterDemoSandboxDeps,
   RegisterDemoSandboxInput,
   RegisterDemoSandboxResult,
 } from "@compoz/core/domain/demo/use-cases/register-demo-sandbox.types";
+import {
+  ERROR_CODES as EC,
+  type ErrorCode,
+} from "@compoz/core/domain/errors/codes";
+import { DomainError } from "@compoz/core/domain/errors/domain-error";
 
 function assertNonEmptyTrimmed(
   value: unknown,
@@ -68,7 +68,7 @@ export function registerDemoSandbox({
       "demoInstanceId",
     ]);
     const userId = assertNonEmptyTrimmed(input.userId, ["userId"]);
-    const tenantId = assertNonEmptyTrimmed(input.tenantId, ["tenantId"]);
+    const websiteId = assertNonEmptyTrimmed(input.websiteId, ["websiteId"]);
     const expiresAt = assertIsoDateString(input.expiresAt, ["expiresAt"]);
 
     await demoSandboxes.ensureBase();
@@ -76,7 +76,7 @@ export function registerDemoSandbox({
     const sandbox = {
       demoInstanceId,
       userId,
-      tenantId,
+      websiteId,
       expiresAt,
       createdAt: nowIso(),
     } as const;

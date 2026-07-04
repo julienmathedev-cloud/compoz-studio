@@ -1,9 +1,12 @@
 /**
  * @file packages/core/src/domain/users/validators/users.ts
  * @layer core/domain
+ *
  * @description
- * Invariants métier des users (Studio) : validation email/name/rbac.
- * Domaine-only : pas de Zod/HTTP/UI.
+ * Invariants métier des users Studio : validation email/name/rbac.
+ *
+ * @remarks
+ * Domaine-only : pas de Zod / HTTP / UI.
  */
 
 import {
@@ -22,12 +25,12 @@ import type {
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
-function normalizeString(v: unknown): string {
-  return String(v ?? "").trim();
+function normalizeString(value: unknown): string {
+  return String(value ?? "").trim();
 }
 
-function normalizeLower(v: unknown): string {
-  return normalizeString(v).toLowerCase();
+function normalizeLower(value: unknown): string {
+  return normalizeString(value).toLowerCase();
 }
 
 function assertNonEmptyString(args: {
@@ -35,21 +38,26 @@ function assertNonEmptyString(args: {
   code: ErrorCode;
   path: (string | number)[];
 }): string {
-  const v = normalizeString(args.value);
-  if (!v) {
+  const value = normalizeString(args.value);
+
+  if (!value) {
     throw new DomainError({
       code: args.code,
       message: args.code,
       details: { path: args.path },
     });
   }
-  return v;
+
+  return value;
 }
 
-/** Validation email de base (domaine-only, pas RFC complète). */
+/**
+ * Validation email de base domaine-only, pas RFC complète.
+ */
 function assertEmailFormat(emailLower: string, path: (string | number)[]) {
-  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLower);
-  if (!ok) {
+  const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLower);
+
+  if (!isValid) {
     throw new DomainError({
       code: EC.USER_EMAIL_INVALID_FORMAT,
       message: EC.USER_EMAIL_INVALID_FORMAT,
@@ -78,11 +86,12 @@ export function assertUserEmail(
   );
 
   assertEmailFormat(emailLower, path);
+
   return emailLower;
 }
 
 /**
- * Name requis (trim).
+ * Name requis, trim.
  */
 export function assertUserName(
   raw: unknown,
@@ -96,15 +105,15 @@ export function assertUserName(
 }
 
 /**
- * Rôle : admin | editor
+ * Rôle : admin | editor.
  */
 export function assertUserRole(
   raw: unknown,
   path: (string | number)[] = ["rbac", "role"],
 ): UserRole {
-  const v = normalizeLower(raw);
+  const value = normalizeLower(raw);
 
-  if (!v) {
+  if (!value) {
     throw new DomainError({
       code: EC.USER_ROLE_REQUIRED,
       message: EC.USER_ROLE_REQUIRED,
@@ -112,41 +121,42 @@ export function assertUserRole(
     });
   }
 
-  if (v !== "admin" && v !== "editor") {
+  if (value !== "admin" && value !== "editor") {
     throw new DomainError({
       code: EC.USER_ROLE_INVALID,
       message: EC.USER_ROLE_INVALID,
-      details: { path, meta: { role: v } },
+      details: { path, meta: { role: value } },
     });
   }
 
-  return v as UserRole;
+  return value as UserRole;
 }
 
 /**
- * tenantIds : array non vide, strings trim/lower, unique.
+ * websiteIds : array non vide, strings trim/lower, unique.
  */
-export function assertTenantIds(
+export function assertWebsiteIds(
   raw: unknown,
-  path: (string | number)[] = ["rbac", "tenantIds"],
+  path: (string | number)[] = ["rbac", "websiteIds"],
 ): string[] {
   if (!Array.isArray(raw)) {
     throw new DomainError({
-      code: EC.USER_TENANT_IDS_INVALID,
-      message: EC.USER_TENANT_IDS_INVALID,
+      code: EC.USER_WEBSITE_IDS_INVALID,
+      message: EC.USER_WEBSITE_IDS_INVALID,
       details: { path, meta: { reason: "not_array" } },
     });
   }
 
-  const tenantIds = Array.from(
-    new Set(raw.map((t) => normalizeLower(t)).filter(Boolean)),
+  const websiteIds = Array.from(
+    new Set(raw.map((websiteId) => normalizeLower(websiteId)).filter(Boolean)),
   );
 
-  const wildcardIndex = tenantIds.indexOf("*");
+  const wildcardIndex = websiteIds.indexOf("*");
+
   if (wildcardIndex >= 0) {
     throw new DomainError({
-      code: EC.USER_TENANT_IDS_INVALID,
-      message: EC.USER_TENANT_IDS_INVALID,
+      code: EC.USER_WEBSITE_IDS_INVALID,
+      message: EC.USER_WEBSITE_IDS_INVALID,
       details: {
         path: [...path, wildcardIndex],
         meta: { reason: "wildcard_not_allowed" },
@@ -154,52 +164,52 @@ export function assertTenantIds(
     });
   }
 
-  if (tenantIds.length === 0) {
+  if (websiteIds.length === 0) {
     throw new DomainError({
-      code: EC.USER_TENANT_IDS_REQUIRED,
-      message: EC.USER_TENANT_IDS_REQUIRED,
+      code: EC.USER_WEBSITE_IDS_REQUIRED,
+      message: EC.USER_WEBSITE_IDS_REQUIRED,
       details: { path },
     });
   }
 
-  return tenantIds;
+  return websiteIds;
 }
 
 /**
- * defaultTenantId requis + normalisé + doit être dans tenantIds.
+ * defaultWebsiteId requis + normalisé + doit être dans websiteIds.
  */
-export function assertDefaultTenantId(args: {
-  defaultTenantId: unknown;
-  tenantIds: ReadonlyArray<string>;
+export function assertDefaultWebsiteId(args: {
+  defaultWebsiteId: unknown;
+  websiteIds: ReadonlyArray<string>;
   path?: (string | number)[];
 }): string {
   const {
-    defaultTenantId,
-    tenantIds,
-    path = ["rbac", "defaultTenantId"],
+    defaultWebsiteId,
+    websiteIds,
+    path = ["rbac", "defaultWebsiteId"],
   } = args;
 
-  const v = assertNonEmptyString({
-    value: defaultTenantId,
-    code: EC.USER_DEFAULT_TENANT_REQUIRED,
+  const value = assertNonEmptyString({
+    value: defaultWebsiteId,
+    code: EC.USER_DEFAULT_WEBSITE_REQUIRED,
     path,
   }).toLowerCase();
 
-  if (!tenantIds.includes(v)) {
+  if (!websiteIds.includes(value)) {
     throw new DomainError({
-      code: EC.USER_DEFAULT_TENANT_NOT_ALLOWED,
-      message: EC.USER_DEFAULT_TENANT_NOT_ALLOWED,
+      code: EC.USER_DEFAULT_WEBSITE_NOT_ALLOWED,
+      message: EC.USER_DEFAULT_WEBSITE_NOT_ALLOWED,
       details: {
         path,
         meta: {
-          reason: "defaultTenantId_must_be_in_tenantIds",
-          defaultTenantId: v,
+          reason: "defaultWebsiteId_must_be_in_websiteIds",
+          defaultWebsiteId: value,
         },
       },
     });
   }
 
-  return v;
+  return value;
 }
 
 /**
@@ -217,42 +227,46 @@ export function assertUserRbac(
     });
   }
 
-  const r = raw as Record<string, unknown>;
+  const record = raw as Record<string, unknown>;
 
-  const role = assertUserRole(r["role"], [...path, "role"]);
-  const tenantIds = assertTenantIds(r["tenantIds"], [...path, "tenantIds"]);
-  const defaultTenantId = assertDefaultTenantId({
-    defaultTenantId: r["defaultTenantId"],
-    tenantIds,
-    path: [...path, "defaultTenantId"],
+  const role = assertUserRole(record["role"], [...path, "role"]);
+  const websiteIds = assertWebsiteIds(record["websiteIds"], [
+    ...path,
+    "websiteIds",
+  ]);
+  const defaultWebsiteId = assertDefaultWebsiteId({
+    defaultWebsiteId: record["defaultWebsiteId"],
+    websiteIds,
+    path: [...path, "defaultWebsiteId"],
   });
 
-  return { role, tenantIds, defaultTenantId };
+  return { role, websiteIds, defaultWebsiteId };
 }
 
 /**
  * Entité User complète.
  */
-export function assertUser(u: User): void {
+export function assertUser(user: User): void {
   assertNonEmptyString({
-    value: u.id,
+    value: user.id,
     code: EC.USER_ID_REQUIRED,
     path: ["user", "id"],
   });
 
-  assertUserEmail(u.email, ["user", "email"]);
-  assertUserName(u.name, ["user", "name"]);
-  assertUserRbac(u.rbac, ["user", "rbac"]);
+  assertUserEmail(user.email, ["user", "email"]);
+  assertUserName(user.name, ["user", "name"]);
+  assertUserRbac(user.rbac, ["user", "rbac"]);
 }
 
 export function assertUserStatus(
   raw: unknown,
   path: (string | number)[] = ["status"],
 ): UserStatus {
-  const v = String(raw ?? "")
+  const value = String(raw ?? "")
     .trim()
     .toLowerCase();
-  if (!v) {
+
+  if (!value) {
     throw new DomainError({
       code: EC.USER_STATUS_REQUIRED,
       message: EC.USER_STATUS_REQUIRED,
@@ -260,13 +274,13 @@ export function assertUserStatus(
     });
   }
 
-  if (v !== "active" && v !== "disabled") {
+  if (value !== "active" && value !== "disabled") {
     throw new DomainError({
       code: EC.USER_STATUS_INVALID,
       message: EC.USER_STATUS_INVALID,
-      details: { path, meta: { status: v } },
+      details: { path, meta: { status: value } },
     });
   }
 
-  return v as UserStatus;
+  return value as UserStatus;
 }

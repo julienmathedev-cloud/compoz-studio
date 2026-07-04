@@ -6,8 +6,9 @@
  * Helpers React Query pour invalider / refetch le cache du statut du site.
  *
  * @remarks
- * Tenant-scoped : toutes les invalidations/refetch doivent inclure tenantId
- * pour éviter les collisions entre sites quand on switch de tenant.
+ * Website-scoped : toutes les invalidations/refetch doivent inclure
+ * Prisma Website.id pour éviter les collisions entre sites quand on switch
+ * de Website actif.
  */
 
 import type { QueryClient } from "@tanstack/react-query";
@@ -22,13 +23,18 @@ import {
 /* Status                                                                     */
 /* -------------------------------------------------------------------------- */
 
-export function invalidateSiteStatus(qc: QueryClient, tenantId: string) {
-  return qc.invalidateQueries({ queryKey: siteStatusKey(tenantId) });
+export function invalidateSiteStatus(
+  queryClient: QueryClient,
+  websiteId: string,
+) {
+  return queryClient.invalidateQueries({
+    queryKey: siteStatusKey(websiteId),
+  });
 }
 
-export function refetchSiteStatus(qc: QueryClient, tenantId: string) {
-  return qc.refetchQueries({
-    queryKey: siteStatusKey(tenantId),
+export function refetchSiteStatus(queryClient: QueryClient, websiteId: string) {
+  return queryClient.refetchQueries({
+    queryKey: siteStatusKey(websiteId),
     type: "all",
   });
 }
@@ -37,15 +43,21 @@ export function refetchSiteStatus(qc: QueryClient, tenantId: string) {
 /* Status details                                                             */
 /* -------------------------------------------------------------------------- */
 
-export function invalidateSiteStatusDetails(qc: QueryClient, tenantId: string) {
-  return qc.invalidateQueries({
-    queryKey: siteStatusDetailsPrefix(tenantId),
+export function invalidateSiteStatusDetails(
+  queryClient: QueryClient,
+  websiteId: string,
+) {
+  return queryClient.invalidateQueries({
+    queryKey: siteStatusDetailsPrefix(websiteId),
   });
 }
 
-export function refetchSiteStatusDetails(qc: QueryClient, tenantId: string) {
-  return qc.refetchQueries({
-    queryKey: siteStatusDetailsPrefix(tenantId),
+export function refetchSiteStatusDetails(
+  queryClient: QueryClient,
+  websiteId: string,
+) {
+  return queryClient.refetchQueries({
+    queryKey: siteStatusDetailsPrefix(websiteId),
     type: "all",
   });
 }
@@ -57,21 +69,21 @@ export function refetchSiteStatusDetails(qc: QueryClient, tenantId: string) {
 type StatusDetailsScope = "all" | "dirty";
 
 type InvalidateStatusDetailsArgs = Readonly<{
-  tenantId: string;
+  websiteId: string;
   scope: StatusDetailsScope;
   includeBlocks: boolean;
   pageId?: string | null;
 }>;
 
 export function invalidateStatusDetailsByKey(
-  qc: QueryClient,
+  queryClient: QueryClient,
   args: InvalidateStatusDetailsArgs,
 ) {
-  const pageId = (args.pageId ?? "").trim();
+  const pageId = String(args.pageId ?? "").trim();
 
-  return qc.invalidateQueries({
+  return queryClient.invalidateQueries({
     queryKey: siteStatusDetailsKey({
-      tenantId: args.tenantId,
+      websiteId: args.websiteId,
       scope: args.scope,
       includeBlocks: args.includeBlocks,
       pageId: pageId || null,
@@ -80,14 +92,14 @@ export function invalidateStatusDetailsByKey(
 }
 
 export function refetchStatusDetailsByKey(
-  qc: QueryClient,
+  queryClient: QueryClient,
   args: InvalidateStatusDetailsArgs,
 ) {
-  const pageId = (args.pageId ?? "").trim();
+  const pageId = String(args.pageId ?? "").trim();
 
-  return qc.refetchQueries({
+  return queryClient.refetchQueries({
     queryKey: siteStatusDetailsKey({
-      tenantId: args.tenantId,
+      websiteId: args.websiteId,
       scope: args.scope,
       includeBlocks: args.includeBlocks,
       pageId: pageId || null,
@@ -101,11 +113,11 @@ export function refetchStatusDetailsByKey(
 /* -------------------------------------------------------------------------- */
 
 export function invalidateDirtyPagesStatusList(
-  qc: QueryClient,
-  tenantId: string,
+  queryClient: QueryClient,
+  websiteId: string,
 ) {
-  return invalidateStatusDetailsByKey(qc, {
-    tenantId,
+  return invalidateStatusDetailsByKey(queryClient, {
+    websiteId,
     scope: "dirty",
     includeBlocks: false,
     pageId: null,
@@ -113,18 +125,18 @@ export function invalidateDirtyPagesStatusList(
 }
 
 export function invalidateOverviewBlocksStatusDetails(
-  qc: QueryClient,
-  tenantId: string,
+  queryClient: QueryClient,
+  websiteId: string,
 ) {
   return Promise.all([
-    invalidateStatusDetailsByKey(qc, {
-      tenantId,
+    invalidateStatusDetailsByKey(queryClient, {
+      websiteId,
       scope: "dirty",
       includeBlocks: true,
       pageId: null,
     }),
-    invalidateStatusDetailsByKey(qc, {
-      tenantId,
+    invalidateStatusDetailsByKey(queryClient, {
+      websiteId,
       scope: "all",
       includeBlocks: true,
       pageId: null,
@@ -137,29 +149,30 @@ export function invalidateOverviewBlocksStatusDetails(
 /* -------------------------------------------------------------------------- */
 
 export function invalidateBlocksBadgesForPage(
-  qc: QueryClient,
-  tenantId: string,
+  queryClient: QueryClient,
+  websiteId: string,
   pageId: string,
 ) {
-  const pid = (pageId ?? "").trim();
-  if (!pid) return Promise.resolve([]);
+  const pageIdKey = String(pageId ?? "").trim();
 
-  return invalidateStatusDetailsByKey(qc, {
-    tenantId,
+  if (!pageIdKey) return Promise.resolve([]);
+
+  return invalidateStatusDetailsByKey(queryClient, {
+    websiteId,
     scope: "dirty",
     includeBlocks: true,
-    pageId: pid,
+    pageId: pageIdKey,
   });
 }
 
 export function refetchBlocksStatusDetails(
-  qc: QueryClient,
-  tenantId: string,
+  queryClient: QueryClient,
+  websiteId: string,
   pageId?: string,
   scope: StatusDetailsScope = "dirty",
 ) {
-  return refetchStatusDetailsByKey(qc, {
-    tenantId,
+  return refetchStatusDetailsByKey(queryClient, {
+    websiteId,
     scope,
     includeBlocks: true,
     pageId,
@@ -167,30 +180,31 @@ export function refetchBlocksStatusDetails(
 }
 
 export function invalidatePageStatusDetails(
-  qc: QueryClient,
-  tenantId: string,
+  queryClient: QueryClient,
+  websiteId: string,
   pageId: string,
   scope: StatusDetailsScope = "dirty",
 ) {
-  const pid = (pageId ?? "").trim();
-  if (!pid) return Promise.resolve([]);
+  const pageIdKey = String(pageId ?? "").trim();
 
-  return invalidateStatusDetailsByKey(qc, {
-    tenantId,
+  if (!pageIdKey) return Promise.resolve([]);
+
+  return invalidateStatusDetailsByKey(queryClient, {
+    websiteId,
     scope,
     includeBlocks: false,
-    pageId: pid,
+    pageId: pageIdKey,
   });
 }
 
 export function refetchPageStatusDetails(
-  qc: QueryClient,
-  tenantId: string,
+  queryClient: QueryClient,
+  websiteId: string,
   pageId?: string,
   scope: StatusDetailsScope = "dirty",
 ) {
-  return refetchStatusDetailsByKey(qc, {
-    tenantId,
+  return refetchStatusDetailsByKey(queryClient, {
+    websiteId,
     scope,
     includeBlocks: false,
     pageId,
@@ -201,21 +215,24 @@ export function refetchPageStatusDetails(
 /* Compositions métier                                                        */
 /* -------------------------------------------------------------------------- */
 
-export function invalidatePageStatusViews(qc: QueryClient, tenantId: string) {
+export function invalidatePageStatusViews(
+  queryClient: QueryClient,
+  websiteId: string,
+) {
   return Promise.all([
-    invalidateDirtyPagesStatusList(qc, tenantId),
-    invalidateOverviewBlocksStatusDetails(qc, tenantId),
+    invalidateDirtyPagesStatusList(queryClient, websiteId),
+    invalidateOverviewBlocksStatusDetails(queryClient, websiteId),
   ]);
 }
 
 export function invalidateBlockStatusViews(
-  qc: QueryClient,
-  tenantId: string,
+  queryClient: QueryClient,
+  websiteId: string,
   pageId: string,
 ) {
   return Promise.all([
-    invalidateBlocksBadgesForPage(qc, tenantId, pageId),
-    invalidateDirtyPagesStatusList(qc, tenantId),
-    invalidateOverviewBlocksStatusDetails(qc, tenantId),
+    invalidateBlocksBadgesForPage(queryClient, websiteId, pageId),
+    invalidateDirtyPagesStatusList(queryClient, websiteId),
+    invalidateOverviewBlocksStatusDetails(queryClient, websiteId),
   ]);
 }

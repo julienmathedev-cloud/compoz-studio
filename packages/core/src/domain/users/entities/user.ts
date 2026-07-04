@@ -1,17 +1,19 @@
 /**
  * @file src/core/domain/users/entities/user.ts
  * @layer core/domain
- * @description
- * Entité métier représentant un utilisateur Studio : identité, statut, RBAC,
- * et rattachement multi-tenant.
  *
- * Invariant : ce fichier définit uniquement la forme canonique (types).
+ * @description
+ * Entité métier représentant un utilisateur Studio : identité, statut, RBAC
+ * et rattachement multi-website.
+ *
+ * @remarks
+ * Invariant : ce fichier définit uniquement la forme canonique des types.
  */
 
 export type UserRole = "admin" | "editor";
 export type UserStatus = "active" | "disabled";
 
-/** Métadonnées de l'utilisateur (timestamps ISO 8601). */
+/** Métadonnées de l’utilisateur, timestamps ISO 8601. */
 export interface UserMeta {
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -21,7 +23,7 @@ export interface UserMeta {
 /**
  * Métadonnées de sandbox démo associées à un utilisateur temporaire.
  *
- * Remarques :
+ * @remarks
  * - Présent uniquement pour les utilisateurs de démo.
  * - `demoInstanceId` permet de rattacher le user à une sandbox isolée.
  * - `expiresAt` permet de déterminer si la sandbox est encore valide.
@@ -33,24 +35,26 @@ export interface UserDemoMeta {
 }
 
 /**
- * RBAC + multi-tenant associé à un utilisateur.
+ * RBAC + accès Websites associé à un utilisateur.
  *
- * Remarques :
- * - tenantIds peut contenir "*" pour signifier accès global (super-admin).
- * - defaultTenantId : tenant "principal" utilisé par défaut (login + fallback).
+ * @remarks
+ * - `websiteIds` contient les Prisma Website.id autorisés pour l’utilisateur.
+ * - `websiteIds` peut contenir "*" pour signifier un accès global admin.
+ * - `defaultWebsiteId` est le Prisma Website.id utilisé par défaut
+ *   au login et en fallback de session.
  */
 export interface UserRbac {
   readonly role: UserRole;
-  readonly tenantIds: ReadonlyArray<string>;
-  readonly defaultTenantId: string;
+  readonly websiteIds: ReadonlyArray<string>;
+  readonly defaultWebsiteId: string;
 }
 
 /**
  * Entité principale représentant un utilisateur du Studio.
  *
- * Notes :
- * - Le mot de passe n'appartient pas au domaine (stockage/crypto = infra).
- * - L'email est canonisé en lower-case côté infra/validation.
+ * @remarks
+ * - Le mot de passe n’appartient pas au domaine : stockage / crypto = infra.
+ * - L’email est canonisé en lower-case côté infra / validation.
  * - `demo` est présent uniquement pour les utilisateurs créés pour une sandbox démo.
  */
 export interface User {

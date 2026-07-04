@@ -6,29 +6,42 @@
  * Helpers React Query pour invalider le cache du SiteIndex.
  *
  * @remarks
- * - Utilisé après certaines mutations (create / reorder / delete).
- * - Tenant-scoped : la queryKey inclut `tenantId`.
+ * - Utilisé après certaines mutations create / reorder / delete.
+ * - Website-scoped : la queryKey inclut Prisma Website.id.
  * - UI-only : aucune logique métier.
+ * - `SiteIndex` désigne ici un read-model UI des pages du Website actif.
  */
+
+import type { QueryClient } from "@tanstack/react-query";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-import type { QueryClient } from "@tanstack/react-query";
-
 import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
-import { requireTenantId } from "@compoz/ui/lib/tenant-id";
+
+function requireWebsiteId(value: unknown, field = "websiteId"): string {
+  const websiteId = String(value ?? "").trim();
+
+  if (!websiteId) {
+    throw new Error(`${field} is required`);
+  }
+
+  return websiteId;
+}
 
 /**
- * Invalide le cache du SiteIndex pour un tenant donné.
+ * Invalide le cache du SiteIndex pour un Website donné.
  */
 export function invalidateSiteIndex(
-  qc: QueryClient,
-  tenantId: unknown,
+  queryClient: QueryClient,
+  websiteId: unknown,
   state: ContentState = DEFAULT_CONTENT_STATE,
 ): Promise<void> {
-  const tid = requireTenantId(tenantId, "invalidateSiteIndex.tenantId");
+  const websiteIdKey = requireWebsiteId(
+    websiteId,
+    "invalidateSiteIndex.websiteId",
+  );
 
-  return qc.invalidateQueries({
-    queryKey: siteIndexKey(tid, state),
+  return queryClient.invalidateQueries({
+    queryKey: siteIndexKey(websiteIdKey, state),
   });
 }

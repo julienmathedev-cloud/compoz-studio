@@ -1,16 +1,15 @@
 /**
  * @file packages/infra/src/users/prisma-users-repository.ts
  * @layer infra/users
+ *
  * @description
  * Prisma implementation of the UsersRepository.
  *
- * The domain still uses tenant wording. In Prisma, tenant ids are Website ids:
- * - User.defaultWebsiteId -> rbac.defaultTenantId
- * - WebsiteAccess.websiteId -> rbac.tenantIds
+ * @remarks
+ * The domain uses Website wording:
+ * - User.rbac.defaultWebsiteId maps to User.defaultWebsiteId in Prisma.
+ * - User.rbac.websiteIds maps to WebsiteAccess.websiteId in Prisma.
  */
-
-import { Prisma } from "@compoz/infra/prisma/generated";
-import bcrypt from "bcryptjs";
 
 import type {
   User,
@@ -20,9 +19,10 @@ import type {
   UserSummary,
 } from "@compoz/core/domain/users/entities/user";
 import type { UsersRepository } from "@compoz/core/domain/users/ports/users-repository";
-
+import { Prisma } from "@compoz/infra/prisma/generated";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
 import { UserSchema } from "@compoz/validation/users/user";
+import bcrypt from "bcryptjs";
 
 type CreateUserInput = Parameters<UsersRepository["create"]>[0];
 
@@ -87,8 +87,9 @@ async function readPrismaUserById(id: string) {
 }
 
 function toDomainUser(row: NonNullable<PrismaUserWithAccesses>): User {
-  const tenantIds = row.accesses.map((access) => access.websiteId);
-  const defaultTenantId = row.defaultWebsiteId ?? tenantIds[0] ?? "";
+  const websiteIds = row.accesses.map((access) => access.websiteId);
+  const defaultWebsiteId = row.defaultWebsiteId ?? websiteIds[0] ?? "";
+  const demo = toDemoMeta(row.demo);
 
   return {
     id: row.id,
@@ -97,8 +98,8 @@ function toDomainUser(row: NonNullable<PrismaUserWithAccesses>): User {
     status: row.status as UserStatus,
     rbac: {
       role: row.role as UserRole,
-      tenantIds,
-      defaultTenantId,
+      websiteIds,
+      defaultWebsiteId,
     },
     meta: {
       createdAt: row.createdAt.toISOString(),
@@ -107,26 +108,26 @@ function toDomainUser(row: NonNullable<PrismaUserWithAccesses>): User {
         ? { lastLoginAt: row.lastLoginAt.toISOString() }
         : {}),
     },
-    ...(toDemoMeta(row.demo) ? { demo: toDemoMeta(row.demo) } : {}),
+    ...(demo ? { demo } : {}),
   };
 }
 
 function assertValidUserForWrite(user: User, source: string): User {
   const parsed = UserSchema.parse(user);
-  const defaultTenantId = normalizeId(parsed.rbac.defaultTenantId);
-  const tenantIds = parsed.rbac.tenantIds.map(normalizeId).filter(Boolean);
+  const defaultWebsiteId = normalizeId(parsed.rbac.defaultWebsiteId);
+  const websiteIds = parsed.rbac.websiteIds.map(normalizeId).filter(Boolean);
 
-  if (!defaultTenantId) {
-    throw new Error(`${source}: user.rbac.defaultTenantId is required.`);
+  if (!defaultWebsiteId) {
+    throw new Error(`${source}: user.rbac.defaultWebsiteId is required.`);
   }
 
-  if (tenantIds.includes("*")) {
-    throw new Error(`${source}: wildcard tenantIds are not supported.`);
+  if (websiteIds.includes("*")) {
+    throw new Error(`${source}: wildcard websiteIds are not supported.`);
   }
 
-  if (!tenantIds.includes(defaultTenantId)) {
+  if (!websiteIds.includes(defaultWebsiteId)) {
     throw new Error(
-      `${source}: user.rbac.defaultTenantId must be included in user.rbac.tenantIds.`,
+      `${source}: user.rbac.defaultWebsiteId must be included in user.rbac.websiteIds.`,
     );
   }
 
@@ -135,14 +136,14 @@ function assertValidUserForWrite(user: User, source: string): User {
     email: normalizeEmail(parsed.email),
     rbac: {
       ...parsed.rbac,
-      tenantIds,
-      defaultTenantId,
+      websiteIds,
+      defaultWebsiteId,
     },
   };
 }
 
 function accessWebsiteIds(user: User): string[] {
-  return [...new Set(user.rbac.tenantIds.map(normalizeId).filter(Boolean))];
+  return [...new Set(user.rbac.websiteIds.map(normalizeId).filter(Boolean))];
 }
 
 export class PrismaUsersRepository implements UsersRepository {
@@ -152,18 +153,25 @@ export class PrismaUsersRepository implements UsersRepository {
 
   async readById(userId: string): Promise<User | null> {
     const id = String(userId ?? "").trim();
-    if (!id) return null;
+
+    if (!id) {
+      return null;
+    }
 
     const row = await readPrismaUserById(id);
+
     return row ? toDomainUser(row) : null;
   }
 
   async readByEmail(email: string): Promise<User | null> {
-    const e = normalizeEmail(email);
-    if (!e) return null;
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!normalizedEmail) {
+      return null;
+    }
 
     const row = await prisma.user.findUnique({
-      where: { email: e },
+      where: { email: normalizedEmail },
       include: {
         accesses: {
           orderBy: [{ websiteId: "asc" }],
@@ -177,6 +185,7 @@ export class PrismaUsersRepository implements UsersRepository {
 
   async create(input: CreateUserInput): Promise<User> {
     const password = String(input?.password ?? "").trim();
+
     if (!password) {
       throw new Error("PrismaUsersRepository.create: password is required.");
     }
@@ -195,7 +204,7 @@ export class PrismaUsersRepository implements UsersRepository {
         name: user.name,
         status: user.status,
         role: user.rbac.role,
-        defaultWebsiteId: user.rbac.defaultTenantId,
+        defaultWebsiteId: user.rbac.defaultWebsiteId,
         passwordHash,
         createdAt: new Date(user.meta.createdAt),
         updatedAt: new Date(user.meta.updatedAt),
@@ -238,7 +247,7 @@ export class PrismaUsersRepository implements UsersRepository {
           name: next.name,
           status: next.status,
           role: next.rbac.role,
-          defaultWebsiteId: next.rbac.defaultTenantId,
+          defaultWebsiteId: next.rbac.defaultWebsiteId,
           updatedAt: new Date(next.meta.updatedAt),
           lastLoginAt: next.meta.lastLoginAt
             ? new Date(next.meta.lastLoginAt)
@@ -273,14 +282,19 @@ export class PrismaUsersRepository implements UsersRepository {
   async setPassword(userId: string, password: string): Promise<void> {
     const id = String(userId ?? "").trim();
     const pwd = String(password ?? "").trim();
-    if (!id || !pwd) return;
+
+    if (!id || !pwd) {
+      return;
+    }
 
     const existing = await prisma.user.findUnique({
       where: { id },
       select: { id: true },
     });
 
-    if (!existing) return;
+    if (!existing) {
+      return;
+    }
 
     const passwordHash = await bcrypt.hash(pwd, 10);
 
@@ -292,7 +306,10 @@ export class PrismaUsersRepository implements UsersRepository {
 
   async verifyPassword(userId: string, password: string): Promise<boolean> {
     const id = String(userId ?? "").trim();
-    if (!id) return false;
+
+    if (!id) {
+      return false;
+    }
 
     const row = await prisma.user.findUnique({
       where: { id },
@@ -300,14 +317,20 @@ export class PrismaUsersRepository implements UsersRepository {
     });
 
     const hash = row?.passwordHash ?? "";
-    if (!hash) return false;
+
+    if (!hash) {
+      return false;
+    }
 
     return bcrypt.compare(String(password ?? ""), hash);
   }
 
   async deleteById(userId: string): Promise<void> {
     const id = String(userId ?? "").trim();
-    if (!id) return;
+
+    if (!id) {
+      return;
+    }
 
     await prisma.user.deleteMany({
       where: { id },
@@ -315,27 +338,40 @@ export class PrismaUsersRepository implements UsersRepository {
   }
 
   async deleteByEmail(email: string): Promise<void> {
-    const e = normalizeEmail(email);
-    if (!e) return;
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!normalizedEmail) {
+      return;
+    }
 
     await prisma.user.deleteMany({
-      where: { email: e },
+      where: { email: normalizedEmail },
     });
   }
 
   async existsById(userId: string): Promise<boolean> {
     const id = String(userId ?? "").trim();
-    if (!id) return false;
+
+    if (!id) {
+      return false;
+    }
 
     const count = await prisma.user.count({ where: { id } });
+
     return count > 0;
   }
 
   async existsByEmail(email: string): Promise<boolean> {
-    const e = normalizeEmail(email);
-    if (!e) return false;
+    const normalizedEmail = normalizeEmail(email);
 
-    const count = await prisma.user.count({ where: { email: e } });
+    if (!normalizedEmail) {
+      return false;
+    }
+
+    const count = await prisma.user.count({
+      where: { email: normalizedEmail },
+    });
+
     return count > 0;
   }
 

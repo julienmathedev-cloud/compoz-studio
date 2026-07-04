@@ -1,42 +1,50 @@
 /**
  * @file packages/infra/src/pages/index.ts
  * @layer infra/pages
+ *
  * @description
  * Factory et singleton(s) du PagesRepository.
- * Permet de choisir l’implémentation (KV / InMemory / Prisma) via variable
+ *
+ * @remarks
+ * Permet de choisir l’implémentation KV / InMemory / Prisma via variable
  * d’environnement.
+ *
  * Instanciation lazy et HMR-safe.
  *
- * ✅ Multi-tenant:
- * - Le repository est instancié par `tenantId` pour chaque implémentation.
+ * Multi-website :
+ * - Le repository est instancié par `websiteId` pour chaque implémentation.
+ * - Aucun fallback implicite n’est appliqué : le scope Website doit être résolu
+ *   en amont par la session, le resolver public ou l’appelant applicatif.
  */
 
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
-
 import { log } from "@compoz/infra/lib/log";
-import { normalizeTenantId } from "@compoz/infra/lib/normalize-tenant-id";
+import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import { InMemoryPagesRepository } from "@compoz/infra/pages/in-memory-pages-repository";
 import { KvPagesRepository } from "@compoz/infra/pages/kv-pages-repository";
 import { PrismaPagesRepository } from "@compoz/infra/pages/prisma-pages-repository";
 
 /**
- * Namespace standard (SoT) :
+ * Namespace standard SoT :
  * compoz:<surface>:<layer>:<module>
  */
-const lg = log.child({ ns: "compoz:studio:repo:pages", factory: "pagesRepo" });
+const logger = log.child({
+  ns: "compoz:studio:repo:pages",
+  factory: "pagesRepo",
+});
 
 type PagesRepoImpl = "memory" | "kv" | "prisma";
 
 export type PagesRepoOptions = Readonly<{
-  tenantId?: string;
+  websiteId: string;
 }>;
 
 /* -------------------------------------------------------------------------- */
-/* Repo cache (HMR-safe)                                                      */
+/* Repo cache HMR-safe                                                        */
 /* -------------------------------------------------------------------------- */
 
 const repoByKey = new Map<string, PagesRepository>();
-let inited = false;
+let hasLoggedReuse = false;
 
 /**
  * Résout l’implémentation de repository à utiliser.
@@ -54,7 +62,7 @@ function resolvePagesRepoImpl(): PagesRepoImpl {
     return raw;
   }
 
-  lg.warn("pages.repository.unknownImplFallback", {
+  logger.warn("pages.repository.unknownImplFallback", {
     requestedImpl: raw,
     fallbackImpl: "kv",
   });
@@ -62,52 +70,61 @@ function resolvePagesRepoImpl(): PagesRepoImpl {
   return "kv";
 }
 
-function cacheKey(impl: PagesRepoImpl, opts: PagesRepoOptions): string {
-  const tenant = normalizeTenantId(opts.tenantId);
-  return `${impl}:${tenant}`;
+function resolveWebsiteId(opts: PagesRepoOptions): string {
+  return requireWebsiteId(opts.websiteId, "getPagesRepository");
+}
+
+function cacheKey(impl: PagesRepoImpl, websiteId: string): string {
+  return `${impl}:${websiteId}`;
 }
 
 /* -------------------------------------------------------------------------- */
 /* Factory                                                                    */
 /* -------------------------------------------------------------------------- */
 
-function createRepo(opts: PagesRepoOptions): PagesRepository {
-  const impl = resolvePagesRepoImpl();
-  const tenantId = normalizeTenantId(opts.tenantId);
+function createRepo(args: {
+  impl: PagesRepoImpl;
+  websiteId: string;
+}): PagesRepository {
+  const { impl, websiteId } = args;
 
   if (impl === "memory") {
-    lg.debug("pages.repository.init", { impl: "memory", tenantId });
+    logger.debug("pages.repository.init", { impl: "memory", websiteId });
+
     return new InMemoryPagesRepository();
   }
 
   if (impl === "prisma") {
-    lg.debug("pages.repository.init", { impl: "prisma", tenantId });
-    return new PrismaPagesRepository({ tenantId });
+    logger.debug("pages.repository.init", { impl: "prisma", websiteId });
+
+    return new PrismaPagesRepository({ websiteId });
   }
 
-  lg.debug("pages.repository.init", { impl: "kv", tenantId });
-  return new KvPagesRepository({ tenantId });
+  logger.debug("pages.repository.init", { impl: "kv", websiteId });
+
+  return new KvPagesRepository({ websiteId });
 }
 
-export function getPagesRepository(
-  opts: PagesRepoOptions = {},
-): PagesRepository {
+export function getPagesRepository(opts: PagesRepoOptions): PagesRepository {
   const impl = resolvePagesRepoImpl();
-  const key = cacheKey(impl, opts);
+  const websiteId = resolveWebsiteId(opts);
+  const key = cacheKey(impl, websiteId);
 
   const existing = repoByKey.get(key);
+
   if (existing) {
-    if (!inited) {
-      lg.debug("pages.repository.reuse", { key });
-      inited = true;
+    if (!hasLoggedReuse) {
+      logger.debug("pages.repository.reuse", { key, websiteId });
+      hasLoggedReuse = true;
     }
 
     return existing;
   }
 
-  const created = createRepo(opts);
+  const created = createRepo({ impl, websiteId });
+
   repoByKey.set(key, created);
-  inited = true;
+  hasLoggedReuse = true;
 
   return created;
 }

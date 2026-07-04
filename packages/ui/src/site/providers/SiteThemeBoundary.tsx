@@ -22,7 +22,7 @@ export function SiteThemeBoundary({ theme, children }: SiteThemeBoundaryProps) {
   const style = resolvedTheme
     ? ({
         ...(themeSettingsToCssVars(resolvedTheme) as CSSProperties),
-        fontFamily: "var(--tenant-font-body)",
+        fontFamily: "var(--website-font-body)",
       } satisfies CSSProperties)
     : undefined;
 

@@ -5,15 +5,18 @@
  * @layer hooks/studio/site-index
  *
  * @description
- * Helper "cache-first" pour obtenir le SiteIndex (READ global).
+ * Helper cache-first pour obtenir le SiteIndex.
  *
  * @remarks
  * - Centralise la logique cache -> fetchQuery fallback.
- * - Utilisable depuis d’autres hooks (pages/menus/etc.) sans multiplier les reads.
+ * - Utilisable depuis d’autres hooks pages/menus/etc. sans multiplier les reads.
  * - Aligné sur le pattern `getSettingsBundle`.
- * - Tenant-scoped : la queryKey inclut tenantId (sinon cache cross-tenant).
+ * - Website-scoped : la queryKey inclut Prisma Website.id pour éviter les
+ *   collisions de cache lors d’un switch de Website actif.
  * - UI-only : aucune logique métier.
  */
+
+import type { QueryClient } from "@tanstack/react-query";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -21,43 +24,52 @@ import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 import type { HttpOpts } from "@compoz/infra/http/internal";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
-import { requireTenantId } from "@compoz/ui/lib/tenant-id";
-import type { QueryClient } from "@tanstack/react-query";
+
+function requireWebsiteId(value: unknown, field = "websiteId"): string {
+  const websiteId = String(value ?? "").trim();
+
+  if (!websiteId) {
+    throw new Error(`${field} is required`);
+  }
+
+  return websiteId;
+}
 
 /**
- * Lit le SiteIndex en "cache-first".
+ * Lit le SiteIndex en cache-first.
  *
  * @remarks
- * - Retourne le cache si présent, sinon déclenche un `fetchQuery` (dedupe par key).
- * - `opts.signal` (si fourni) prend le dessus sur le `signal` React Query.
+ * - Retourne le cache si présent.
+ * - Sinon déclenche un `fetchQuery`, dedupe par queryKey.
+ * - `opts.signal`, si fourni, prend le dessus sur le `signal` React Query.
  */
 export async function getSiteIndex(
-  qc: QueryClient,
-  tenantId: string,
+  queryClient: QueryClient,
+  websiteId: string,
   state: ContentState = DEFAULT_CONTENT_STATE,
   opts?: HttpOpts,
 ): Promise<SiteIndexDTO> {
-  const tid = requireTenantId(tenantId, "getSiteIndex.tenantId");
-  const key = siteIndexKey(tid, state);
+  const websiteIdKey = requireWebsiteId(websiteId, "getSiteIndex.websiteId");
+  const key = siteIndexKey(websiteIdKey, state);
 
-  // 1) Cache-first
-  const cached = qc.getQueryData<SiteIndexDTO>(key);
+  const cached = queryClient.getQueryData<SiteIndexDTO>(key);
+
   if (cached) return cached;
 
-  // 2) Fallback fetchQuery (dedupe + AbortSignal)
-  return qc.fetchQuery<SiteIndexDTO>({
+  return queryClient.fetchQuery<SiteIndexDTO>({
     queryKey: key,
     queryFn: async ({ signal }) => {
-      const res = await pagesStudioApi.getIndex(state, {
+      const response = await pagesStudioApi.getIndex(state, {
         signal: opts?.signal ?? signal,
       });
 
-      const index = res?.index;
+      const index = response?.index;
+
       if (!index) {
-        throw new Error("getSiteIndex: missing res.index");
+        throw new Error("getSiteIndex: missing response.index");
       }
 
-      return index; // ✅ flatten
+      return index;
     },
   });
 }

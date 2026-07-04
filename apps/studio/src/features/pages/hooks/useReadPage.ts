@@ -5,13 +5,14 @@
  * @layer hooks/studio/pages
  *
  * @description
- * Hook studio React Query pour lire une page via l’API.
+ * Hook Studio React Query pour lire une page via l’API.
  *
  * @remarks
- * - Tenant-scoped cache : toutes les query keys incluent `tenantId`.
- * - Orchestration UI-only (query, logs, notifications).
+ * - Website-scoped cache : toutes les query keys incluent `websiteId`.
+ * - Orchestration UI-only : query, logs, notifications.
  * - Retourne `PageDTO | null` pour rester compatible avec l’UI.
  * - Aucune logique métier ni validation domaine.
+ * - Le scope utilisé ici est Prisma Website.id.
  */
 
 import { useQuery } from "@tanstack/react-query";
@@ -23,7 +24,7 @@ import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-sta
 import type { PageDTO } from "@compoz/core/domain/pages/dto";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log } from "@compoz/infra/lib/log";
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { withLoadLogs } from "@compoz/ui/hooks/instrumentation";
@@ -33,56 +34,59 @@ type UseReadPageResult = Readonly<{
   isLoading: boolean;
 }>;
 
-const lg = log.child({ ns: "hook", name: "useReadPage" });
+const logger = log.child({ ns: "hook", name: "useReadPage" });
 
 export function useReadPage(
   pageId: string,
   state: ContentState = DEFAULT_CONTENT_STATE,
 ): UseReadPageResult {
   const t = useTranslations();
-  const tenantId = useTenantId();
+  const websiteId = useWebsiteId();
+
   const entityLabel = t("studio.shared.entities.page");
 
   const pageIdKey = String(pageId ?? "").trim();
-  const enabled = Boolean(tenantId && pageIdKey);
+  const enabled = Boolean(websiteId && pageIdKey);
 
-  const options = {
-    queryKey: pageByIdKey(tenantId, pageIdKey, state),
+  const query = useQuery<PageDTO, Error>({
+    queryKey: pageByIdKey(websiteId, pageIdKey, state),
     enabled,
 
     queryFn: async ({ signal }: { signal: AbortSignal }): Promise<PageDTO> => {
-      const res = await withLoadLogs(
+      const response = await withLoadLogs(
         "useReadPage",
         state,
         () => pagesStudioApi.getById(pageIdKey, state, { signal }),
-        { entity: entityLabel, pageId: pageIdKey, tenantId },
+        {
+          entity: entityLabel,
+          pageId: pageIdKey,
+          websiteId,
+        },
       );
 
-      return res.page;
+      return response.page;
     },
 
-    placeholderData: (prev: PageDTO | undefined) => prev,
-  } as const;
-
-  const query = useQuery<PageDTO, Error>(options);
+    placeholderData: (previous: PageDTO | undefined) => previous,
+  });
 
   useEffect(() => {
     if (!query.error) return;
 
     notify.fromError(query.error);
 
-    lg.error("read.failed", {
-      tenantId,
+    logger.error("read.failed", {
+      websiteId,
       pageId: pageIdKey,
       state,
       msg: String(query.error),
     });
-  }, [query.error, tenantId, pageIdKey, state]);
+  }, [query.error, websiteId, pageIdKey, state]);
 
   return {
     page: enabled ? (query.data ?? null) : null,
     isLoading: enabled ? query.isPending : false,
-  } as const;
+  };
 }
 
 useReadPage.displayName = "useReadPage";

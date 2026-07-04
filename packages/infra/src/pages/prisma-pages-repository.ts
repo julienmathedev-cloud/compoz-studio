@@ -10,13 +10,9 @@ import {
   CONTENT_STATE,
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
-
 import type { Page } from "@compoz/core/domain/pages/entities/page";
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
-
-import { PageSchema } from "@compoz/validation/pages/page";
-
-import { normalizeTenantId } from "@compoz/infra/lib/normalize-tenant-id";
+import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import {
   toDomainPage,
   toPrismaPageCreateData,
@@ -24,9 +20,10 @@ import {
   type PrismaContentState,
 } from "@compoz/infra/pages/mappers/page.mapper";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
+import { PageSchema } from "@compoz/validation/pages/page";
 
 type PrismaPagesRepositoryOptions = Readonly<{
-  tenantId?: string;
+  websiteId: string;
 }>;
 
 type PreparedPage = Readonly<{
@@ -45,11 +42,13 @@ function toPrismaContentState(state: ContentState): PrismaContentState {
 
 function assertValidPageForPut(page: Page): PreparedPage {
   const id = normalizeValue(page?.id);
+
   if (!id) {
     throw new Error("PrismaPagesRepository.put: page.id is required.");
   }
 
   const slug = normalizeValue(page?.slug);
+
   if (!slug) {
     throw new Error("PrismaPagesRepository.put: page.slug is required.");
   }
@@ -66,14 +65,19 @@ function preparePagesForPutMany(
 
   for (const page of pages) {
     const id = normalizeValue(page?.id);
-    if (!id) continue;
+
+    if (!id) {
+      continue;
+    }
 
     const slug = normalizeValue(page?.slug);
+
     if (!slug) {
       throw new Error("PrismaPagesRepository.putMany: page.slug is required.");
     }
 
     PageSchema.parse(page);
+
     prepared.push({ id, slug, page });
   }
 
@@ -83,8 +87,11 @@ function preparePagesForPutMany(
 export class PrismaPagesRepository implements PagesRepository {
   private readonly websiteId: string;
 
-  constructor(opts: PrismaPagesRepositoryOptions = {}) {
-    this.websiteId = normalizeTenantId(opts.tenantId);
+  constructor(opts: PrismaPagesRepositoryOptions) {
+    this.websiteId = requireWebsiteId(
+      opts.websiteId,
+      "PrismaPagesRepository.constructor",
+    );
   }
 
   async ensureBase(): Promise<void> {
@@ -102,7 +109,10 @@ export class PrismaPagesRepository implements PagesRepository {
 
   async readById(state: ContentState, pageId: string): Promise<Page | null> {
     const id = normalizeValue(pageId);
-    if (!id) return null;
+
+    if (!id) {
+      return null;
+    }
 
     const row = await prisma.page.findUnique({
       where: {
@@ -119,7 +129,10 @@ export class PrismaPagesRepository implements PagesRepository {
 
   async readBySlug(state: ContentState, slug: string): Promise<Page | null> {
     const targetSlug = normalizeValue(slug);
-    if (!targetSlug) return null;
+
+    if (!targetSlug) {
+      return null;
+    }
 
     const row = await prisma.page.findUnique({
       where: {
@@ -157,9 +170,12 @@ export class PrismaPagesRepository implements PagesRepository {
     const rowByPageId = new Map(rows.map((row) => [row.pageId, row]));
 
     return ids.map((id) => {
-      if (!id) return null;
+      if (!id) {
+        return null;
+      }
 
       const row = rowByPageId.get(id);
+
       return row ? toDomainPage(row) : null;
     });
   }
@@ -231,10 +247,16 @@ export class PrismaPagesRepository implements PagesRepository {
     pages: ReadonlyArray<Page>,
   ): Promise<void> {
     await this.ensureBase();
-    if (pages.length === 0) return;
+
+    if (pages.length === 0) {
+      return;
+    }
 
     const prepared = preparePagesForPutMany(pages);
-    if (prepared.length === 0) return;
+
+    if (prepared.length === 0) {
+      return;
+    }
 
     const slugOwnerByBatch = new Map<string, string>();
 
@@ -326,7 +348,10 @@ export class PrismaPagesRepository implements PagesRepository {
 
   async deleteById(state: ContentState, pageId: string): Promise<void> {
     const id = normalizeValue(pageId);
-    if (!id) return;
+
+    if (!id) {
+      return;
+    }
 
     await prisma.page.deleteMany({
       where: {
@@ -339,7 +364,10 @@ export class PrismaPagesRepository implements PagesRepository {
 
   async existsById(state: ContentState, pageId: string): Promise<boolean> {
     const id = normalizeValue(pageId);
-    if (!id) return false;
+
+    if (!id) {
+      return false;
+    }
 
     const row = await prisma.page.findUnique({
       where: {
@@ -357,7 +385,10 @@ export class PrismaPagesRepository implements PagesRepository {
 
   async existsBySlug(state: ContentState, slug: string): Promise<boolean> {
     const targetSlug = normalizeValue(slug);
-    if (!targetSlug) return false;
+
+    if (!targetSlug) {
+      return false;
+    }
 
     const row = await prisma.page.findUnique({
       where: {

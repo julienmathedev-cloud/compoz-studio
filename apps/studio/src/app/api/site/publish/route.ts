@@ -1,19 +1,24 @@
 /**
  * @file apps/studio/src/app/api/site/publish/route.ts
  * @layer studio/app/api
- * @description
- * Route API Studio pour publier le site (copie d’un state vers un autre).
  *
- * Responsabilités :
- * - POST : déclenche la publication du site.
- * - Body optionnel : { from?, to?, cleanOrphans? }.
- * - Query optionnelle : ?from=…&to=… (le body a priorité).
- * - Résolution des states : body > query > défaut.
- * - Appel du use-case `publishSite` pour la logique métier (copie index, settings, pages, warnings).
- * - Invalidation best-effort des snapshots status/statusDetails (route-level).
+ * @description
+ * Route API Studio pour publier le Website actif.
  *
  * @remarks
- * - En V0.5, on déclenche une revalidation ISR des routes publiques après publication.
+ * Responsabilités :
+ * - POST : déclenche la publication du Website actif.
+ * - Body optionnel : { from?, to?, cleanOrphans? }.
+ * - Query optionnelle : ?from=…&to=… ; le body a priorité.
+ * - Résolution des states : body > query > défaut.
+ * - Appel du use-case `publishSite` pour la logique métier :
+ *   copie index, settings, pages et warnings.
+ * - Invalidation best-effort du cache status/statusDetails.
+ * - Déclenche une revalidation ISR des routes publiques après publication.
+ *
+ * Notes de scope :
+ * - Les repositories Studio sont scopés par Prisma Website.id.
+ * - La revalidation publique utilise Website.slug pour les routes `/t/:websiteSlug`.
  */
 
 import "server-only";
@@ -38,6 +43,10 @@ import {
   type PublishSiteIntentDTO,
 } from "@compoz/validation/site/publish/publish-intents";
 
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
 function parseStatesFromQuery(req: Request): {
   from?: ContentState;
   to?: ContentState;
@@ -46,8 +55,8 @@ function parseStatesFromQuery(req: Request): {
   const qsFrom = url.searchParams.get("from");
   const qsTo = url.searchParams.get("to");
 
-  const isState = (v: string | null): v is ContentState =>
-    v === CONTENT_STATE.DRAFT || v === CONTENT_STATE.PUBLISHED;
+  const isState = (value: string | null): value is ContentState =>
+    value === CONTENT_STATE.DRAFT || value === CONTENT_STATE.PUBLISHED;
 
   return {
     from: isState(qsFrom) ? qsFrom : undefined,
@@ -56,19 +65,21 @@ function parseStatesFromQuery(req: Request): {
 }
 
 /**
- * Résout un ContentState à partir des sources (priorité : body > query > fallback).
- * - `undefined` => fallback
- * - valeur invalide => 422 (validation_error)
+ * Résout un ContentState à partir des sources :
+ * body > query > fallback.
+ *
+ * - `undefined` => fallback.
+ * - valeur invalide => 422 validation_error.
  */
 function resolveStateOr422(args: {
   value: unknown;
   fallback: ContentState;
   where: string;
 }): ContentState {
-  const v = args.value ?? args.fallback;
+  const value = args.value ?? args.fallback;
 
-  if (v === CONTENT_STATE.DRAFT || v === CONTENT_STATE.PUBLISHED) {
-    return v;
+  if (value === CONTENT_STATE.DRAFT || value === CONTENT_STATE.PUBLISHED) {
+    return value;
   }
 
   throwHttp(422, {
@@ -76,22 +87,25 @@ function resolveStateOr422(args: {
     message: EC.CONTENT_STATE_INVALID,
     extras: {
       where: args.where,
-      value: typeof v === "string" ? v : String(v),
+      value: typeof value === "string" ? value : String(value),
       allowed: [CONTENT_STATE.DRAFT, CONTENT_STATE.PUBLISHED],
     },
   });
 }
 
 async function revalidatePublicAfterPublish(params: {
-  siteBaseUrl?: string; // ex: http://localhost:3001
-  tenantId: string;
+  siteBaseUrl?: string;
+  websiteSlug: string;
   slugs: ReadonlyArray<string>;
 }) {
   const baseUrl = String(
     params.siteBaseUrl ?? process.env["NEXT_PUBLIC_SITE_ORIGIN"] ?? "",
   ).trim();
 
-  // Si pas configuré : no-op (mais publication OK)
+  /**
+   * Si l’origine publique n’est pas configurée, la publication reste valide.
+   * La revalidation publique est best-effort.
+   */
   if (!baseUrl) return;
 
   const secret = String(process.env["COMPOZ_REVALIDATE_SECRET"] ?? "").trim();
@@ -104,46 +118,48 @@ async function revalidatePublicAfterPublish(params: {
         ...(secret ? { "x-revalidate-secret": secret } : {}),
       },
       body: JSON.stringify({
-        tenantId: params.tenantId,
+        websiteSlug: params.websiteSlug,
         slugs: params.slugs,
       }),
     });
 
     if (!res.ok) {
-      // best-effort : pas bloquant
       throw new Error(`public_revalidate_failed:${res.status}`);
     }
-  } catch (e) {
-    // best-effort : pas bloquant
+  } catch (error) {
     log.warn?.("publish.revalidate.public.failed", {
-      err: e instanceof Error ? e.message : String(e),
+      err: error instanceof Error ? error.message : String(error),
       baseUrl,
-      tenantId: params.tenantId,
+      websiteSlug: params.websiteSlug,
     });
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* POST                                                                       */
+/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
   const NS = "api.studio.site.publish.POST" as const;
 
   return handleRoute(NS, req, async () => {
-    const { tenantId } = await requireNonDemoSession();
+    const { websiteId, websiteSlug } = await requireNonDemoSession();
 
     return logSpan(
       NS,
       {
         ns: NS,
         method: "POST",
-        tenantId,
+        websiteId,
+        websiteSlug,
         contentTypeHeader: req.headers.get("content-type") ?? undefined,
       },
       async () => {
-        const lg = log.child({ ns: NS });
+        const logger = log.child({ ns: NS });
 
         const qs = parseStatesFromQuery(req);
         const raw = await readJsonOptionalOrEmpty(req);
 
-        // ✅ DTO Zod (unchanged)
         const dto: PublishSiteIntentDTO = parseDTOOrHttp(
           PublishSiteIntentSchema,
           raw,
@@ -155,7 +171,6 @@ export async function POST(req: Request) {
 
         const isProd = process.env.NODE_ENV === "production";
 
-        // ✅ Body > Query > defaults
         const from = resolveStateOr422({
           value: dto.from,
           fallback: qs.from ?? CONTENT_STATE.DRAFT,
@@ -169,13 +184,13 @@ export async function POST(req: Request) {
         });
 
         const run = publishSite({
-          site: getSiteRepository({ tenantId }),
-          pages: getPagesRepository({ tenantId }),
+          site: getSiteRepository({ websiteId }),
+          pages: getPagesRepository({ websiteId }),
           runtime: { isProd },
           revalidator: {
             async revalidatePublished({ slugs }) {
               await revalidatePublicAfterPublish({
-                tenantId,
+                websiteSlug,
                 slugs,
               });
             },
@@ -188,8 +203,9 @@ export async function POST(req: Request) {
           cleanOrphans: dto.cleanOrphans,
         });
 
-        lg.debug?.("publish.metrics", {
-          tenantId,
+        logger.debug?.("publish.metrics", {
+          websiteId,
+          websiteSlug,
           from: result.from,
           to: result.to,
           pagesCopied: result.pagesCopied,
@@ -197,19 +213,35 @@ export async function POST(req: Request) {
           warnings: result.warnings.length,
         });
 
-        // ✅ Invalidation snapshots (route-level, best-effort)
-        const statusCache = getSiteStatusCache({ tenantId });
+        /**
+         * Invalidation du cache de status du Website actif.
+         *
+         * Le cache peut encore être implémenté en KV côté infra,
+         * mais son scope métier est le Prisma Website.id.
+         */
+        const statusCache = getSiteStatusCache({ websiteId });
+
         try {
-          lg.debug?.("route.statusCache.invalidateAll.start", {});
+          logger.debug?.("route.statusCache.invalidateAll.start", {
+            websiteId,
+          });
+
           await statusCache.invalidateAll();
-          lg.debug?.("route.statusCache.invalidateAll.done", {});
-        } catch (e) {
-          lg.error?.("route.statusCache.invalidateAll.failed", {
-            err: String(e),
+
+          logger.debug?.("route.statusCache.invalidateAll.done", {
+            websiteId,
+          });
+        } catch (error) {
+          logger.error?.("route.statusCache.invalidateAll.failed", {
+            websiteId,
+            err: String(error),
           });
         }
 
-        const res: PublishSiteResponse = { publishResult: result };
+        const res: PublishSiteResponse = {
+          publishResult: result,
+        };
+
         return res;
       },
     );

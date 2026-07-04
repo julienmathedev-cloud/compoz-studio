@@ -7,7 +7,7 @@
  */
 
 import { PagePreviewClient } from "@compoz/studio/app/preview/pages/[slug]/PagePreviewClient";
-import { getTenantId } from "@compoz/studio/lib/pages/draft-page-loaders";
+import { getWebsiteId } from "@compoz/studio/lib/pages/draft-page-loaders";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import { resolveSiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRuntimeFeatures";
 
@@ -19,8 +19,8 @@ export default async function PagePreviewPage({
   params,
 }: PagePreviewPageProps) {
   const { slug } = await unwrapParams(params);
-  const tenantId = await getTenantId();
-  const runtimeFeatures = resolveSiteRuntimeFeatures(tenantId);
+  const websiteId = await getWebsiteId();
+  const runtimeFeatures = resolveSiteRuntimeFeatures(websiteId);
 
   return (
     <PagePreviewClient

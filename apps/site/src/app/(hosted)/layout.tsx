@@ -8,8 +8,10 @@
  * @remarks
  * - Utilisé pour les routes publiques standards résolues par host
  *   (ex: "/", "/[slug]").
- * - Charge les settings publiés via la résolution host-based.
- * - Le fallback explicite `/t/[tenantId]` possède son propre layout dédié.
+ * - Résout le Website via WebsiteDomain en Prisma.
+ * - Charge les settings publiés avec le Prisma Website.id.
+ * - Résout l’UI/skin avec le Website.slug.
+ * - Le fallback explicite `/t/[websiteSlug]` possède son propre layout dédié.
  */
 
 import type { Metadata } from "next";
@@ -19,8 +21,8 @@ import { preload } from "react-dom";
 
 import { SiteNotFoundClient } from "@compoz/site/components/system/SiteNotFoundClient";
 import {
-  getPublishedSettingsByTenantId,
-  getTenantId,
+  getPublishedSettingsByWebsiteId,
+  getWebsite,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import { resolveSiteBaseUrl } from "@compoz/site/lib/seo/resolveSiteBaseUrl";
 import { ScrollTopOnRouteChange } from "@compoz/ui/hooks/behaviors/ScrollTopOnRouteChange";
@@ -51,9 +53,8 @@ type LayoutProps = Readonly<{
   children: ReactNode;
 }>;
 
-const GOOGLE_SITE_VERIFICATION_BY_TENANT_ID: Record<string, string> = {
+const GOOGLE_SITE_VERIFICATION_BY_WEBSITE_SLUG: Record<string, string> = {
   portfolio: process.env.GOOGLE_SITE_VERIFICATION_PORTFOLIO ?? "",
-
   demo: process.env.GOOGLE_SITE_VERIFICATION_DEMO ?? "",
 };
 
@@ -113,8 +114,11 @@ function buildFaviconIcons(favicon: string): Icons {
 /* -------------------------------------------------------------------------- */
 
 export async function generateMetadata(): Promise<Metadata> {
-  const tenantId = await getTenantId();
-  const settings = await getPublishedSettingsByTenantId(tenantId);
+  const website = await getWebsite();
+  const websiteId = website.websiteId;
+  const websiteSlug = website.slug;
+
+  const settings = await getPublishedSettingsByWebsiteId(websiteId);
 
   if (!settings) return {};
 
@@ -147,7 +151,7 @@ export async function generateMetadata(): Promise<Metadata> {
     robotsContent ?? (shouldForceNoindex ? "noindex, nofollow" : undefined);
 
   const googleSiteVerification =
-    GOOGLE_SITE_VERIFICATION_BY_TENANT_ID[tenantId]?.trim() || undefined;
+    GOOGLE_SITE_VERIFICATION_BY_WEBSITE_SLUG[websiteSlug]?.trim() || undefined;
 
   return {
     metadataBase,
@@ -156,7 +160,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
     title: {
       default: defaultTitle,
-
       template: titleTemplate,
     },
 
@@ -174,23 +177,16 @@ export async function generateMetadata(): Promise<Metadata> {
 
     openGraph: {
       title: defaultTitle,
-
       description,
-
       type: "website",
-
       siteName: brandTitle,
-
       images: ogImage ? [{ url: ogImage }] : undefined,
     },
 
     twitter: {
       card: settings.seo?.twitter?.card ?? undefined,
-
       site: settings.seo?.twitter?.site ?? undefined,
-
       creator: settings.seo?.twitter?.creator ?? undefined,
-
       images: ogImage ? [ogImage] : undefined,
     },
   };
@@ -201,14 +197,19 @@ export async function generateMetadata(): Promise<Metadata> {
 /* -------------------------------------------------------------------------- */
 
 export default async function HostedSiteLayout({ children }: LayoutProps) {
-  const tenantId = await getTenantId();
-  const settings = await getPublishedSettingsByTenantId(tenantId);
-  const ui = resolveSiteUi(tenantId);
+  const website = await getWebsite();
+  const websiteId = website.websiteId;
+  const websiteSlug = website.slug;
+
+  const settings = await getPublishedSettingsByWebsiteId(websiteId);
+  const ui = resolveSiteUi(websiteSlug);
+
   const publicFonts = resolvePublicThemeFonts(
     settings?.theme?.fontFamily,
     settings?.theme?.headingFont,
   );
-  const skinCssHref = resolveSiteSkinCssHref(tenantId);
+
+  const skinCssHref = resolveSiteSkinCssHref(websiteSlug);
 
   const fontStyle = Object.fromEntries(
     publicFonts.map((font) => [font.variableName, font.fontFamily]),

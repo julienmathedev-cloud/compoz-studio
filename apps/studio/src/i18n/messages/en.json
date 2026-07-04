@@ -424,12 +424,12 @@
     "USER_NAME_REQUIRED": "User name is required.",
     "USER_ROLE_REQUIRED": "User role is required.",
     "USER_ROLE_INVALID": "User role is invalid.",
-    "USER_TENANT_IDS_INVALID": "User tenant IDs are invalid.",
-    "USER_DEFAULT_TENANT_REQUIRED": "User default tenant is required.",
-    "USER_DEFAULT_TENANT_NOT_ALLOWED": "The selected default tenant is not allowed for this user.",
+    "USER_WEBSITE_IDS_INVALID": "User site access is invalid.",
+    "USER_DEFAULT_WEBSITE_REQUIRED": "User default site is required.",
+    "USER_DEFAULT_WEBSITE_NOT_ALLOWED": "The selected default site is not allowed for this user.",
+    "USER_WEBSITE_IDS_REQUIRED": "User site access is required.",
     "USER_RBAC_INVALID": "User RBAC is invalid.",
     "USER_STATUS_INVALID": "User status is invalid.",
-    "USER_TENANT_IDS_REQUIRED": "User tenant IDs are required.",
     "USER_PASSWORD_REQUIRED": "User password is required.",
     "USER_EMAIL_CONFLICT": "User email is already in use.",
     "USER_NOT_FOUND": "User not found."
@@ -491,7 +491,7 @@
         "site": "Site",
         "user": "User",
         "users": "Users",
-        "tenant": "Site",
+        "website": "Site",
         "theme": "Theme"
       },
 
@@ -741,7 +741,7 @@
         "descriptionCreate": "Create a user using the form below."
       },
       "header": {
-        "site": {
+        "website": {
           "label": "Site",
           "help": "Choose the site to edit."
         },
@@ -788,12 +788,12 @@
               "editor": "Editor"
             }
           },
-          "tenantIds": {
+          "websiteIds": {
             "label": "Sites",
             "placeholder": "Select a site",
             "help": "Select the sites allowed for the user."
           },
-          "defaultTenantId": {
+          "defaultWebsiteId": {
             "label": "Default site",
             "placeholder": "Select a site",
             "help": "Site used by default when no specific site is defined."

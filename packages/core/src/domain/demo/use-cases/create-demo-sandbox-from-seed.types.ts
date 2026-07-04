@@ -1,12 +1,13 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/create-demo-sandbox-from-seed.types.ts
  * @layer core/domain
+ *
  * @description
- * Contrat du use-case de création d'une sandbox démo à partir du tenant seed.
+ * Contrat du use-case de création d’une sandbox démo à partir du Website seed.
  *
  * @remarks
  * - Ce use-case crée une sandbox entièrement nouvelle.
- * - Il ne gère pas la réutilisation d'une sandbox existante.
+ * - Il ne gère pas la réutilisation d’une sandbox existante.
  * - Il ne gère pas non plus la session HTTP / cookies.
  */
 
@@ -15,21 +16,21 @@ import type { User } from "@compoz/core/domain/users/entities/user";
 import type { UsersRepository } from "@compoz/core/domain/users/ports/users-repository";
 
 export type DemoSandboxSeedSnapshot = Readonly<{
-  tenantId: string;
+  websiteId: string;
 }>;
 
 export type DemoSandboxCloneResult = Readonly<{
-  tenantId: string;
+  websiteId: string;
 }>;
 
 export interface DemoSandboxSeedReader {
-  readSeedSnapshot: (seedTenantId: string) => Promise<DemoSandboxSeedSnapshot>;
+  readSeedSnapshot: (seedWebsiteId: string) => Promise<DemoSandboxSeedSnapshot>;
 }
 
 export interface DemoSandboxCloner {
-  cloneSeedToTenant: (args: {
-    sourceTenantId: string;
-    targetTenantId: string;
+  cloneSeedToWebsite: (args: {
+    sourceWebsiteId: string;
+    targetWebsiteId: string;
   }) => Promise<DemoSandboxCloneResult>;
 }
 
@@ -47,12 +48,12 @@ export interface CreateDemoSandboxFromSeedDeps {
 }
 
 export type CreateDemoSandboxFromSeedInput = Readonly<{
-  seedTenantId: string;
+  seedWebsiteId: string;
   expiresAt: string;
 }>;
 
 export type CreateDemoSandboxFromSeedResult = Readonly<{
   demoInstanceId: string;
-  tenantId: string;
+  websiteId: string;
   user: User;
 }>;

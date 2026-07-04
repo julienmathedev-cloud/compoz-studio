@@ -1,9 +1,18 @@
 /**
  * @file apps/studio/src/app/api/media/upload/image/finalize/route.ts
  * @layer studio/app/api
+ *
  * @description
- * Finalise un upload raster temporaire :
+ * Finalise un upload image temporaire lié au Website actif du Studio :
  * relit le blob temp, optimise l’image, écrit le média final, puis supprime le temp.
+ *
+ * @remarks
+ * - Nécessite une session Studio valide.
+ * - Les blobs temporaires et finaux sont scopés par Prisma Website.id.
+ * - Le `tempKey` attendu suit la convention :
+ *   `websites/:websiteId/_tmp/media/...`
+ * - Le média final est écrit sous :
+ *   `websites/:websiteId/:year/:month/:filename`
  */
 
 import "server-only";
@@ -25,8 +34,12 @@ import {
   optimizeOgImage,
 } from "@compoz/infra/media/optimizers";
 import { getMediaStorage } from "@compoz/infra/media/storage";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -34,13 +47,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function readString(value: unknown, key: string): string {
   if (!isRecord(value)) return "";
+
   const raw = value[key];
+
   return typeof raw === "string" ? raw : "";
 }
 
 function readNumber(value: unknown, key: string): number {
   if (!isRecord(value)) return 0;
+
   const raw = value[key];
+
   return typeof raw === "number" && Number.isFinite(raw) ? raw : 0;
 }
 
@@ -61,22 +78,23 @@ function sanitizeFilename(name: string): string {
 }
 
 function nowParts(d = new Date()) {
-  const y = String(d.getUTCFullYear());
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  return { y, m };
+  const year = String(d.getUTCFullYear());
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+
+  return { year, month };
 }
 
 function buildStorageKey(args: {
-  tenantId: string;
+  websiteId: string;
   year: string;
   month: string;
   filename: string;
 }): string {
-  return `tenants/${args.tenantId}/${args.year}/${args.month}/${args.filename}`;
+  return `websites/${args.websiteId}/${args.year}/${args.month}/${args.filename}`;
 }
 
-function assertTenantTempKey(tempKey: string, tenantId: string): void {
-  const expectedPrefix = `tenants/${tenantId}/_tmp/media/`;
+function assertWebsiteTempKey(tempKey: string, websiteId: string): void {
+  const expectedPrefix = `websites/${websiteId}/_tmp/media/`;
 
   if (!tempKey.startsWith(expectedPrefix)) {
     throwHttp(400, {
@@ -91,12 +109,16 @@ function assertTenantTempKey(tempKey: string, tenantId: string): void {
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/* POST                                                                       */
+/* -------------------------------------------------------------------------- */
+
 export async function POST(req: Request) {
   const NS = "api.studio.media.upload.image.finalize.POST" as const;
 
   return handleRoute(NS, req, async () => {
     const storage = getMediaStorage();
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
     const body = (await req.json()) as FinalizeImageUploadRequest;
 
@@ -129,7 +151,7 @@ export async function POST(req: Request) {
       });
     }
 
-    assertTenantTempKey(tempKey, tenantId);
+    assertWebsiteTempKey(tempKey, websiteId);
 
     const temp = await storage.read({ key: tempKey });
     const inputBuffer = temp.buffer;
@@ -139,7 +161,7 @@ export async function POST(req: Request) {
       const safeBase = sanitizeFilename(
         originalFilename.replace(/\.[^.]+$/, ""),
       );
-      const { y, m } = nowParts();
+      const { year, month } = nowParts();
       const baseName = `${safeBase}-${Date.now()}`;
 
       const urls: Record<number, string> = {};
@@ -147,9 +169,9 @@ export async function POST(req: Request) {
       for (const px of FAVICON_SIZES) {
         const filename = `${baseName}-${px}.png`;
         const key = buildStorageKey({
-          tenantId,
-          year: y,
-          month: m,
+          websiteId,
+          year,
+          month,
           filename,
         });
 
@@ -218,19 +240,18 @@ export async function POST(req: Request) {
         optimized.originalHeight !== optimized.finalHeight);
 
     const mimeChanged = optimized.mime !== originalContentType;
-
     const wasCompressed = mimeChanged || optimizedSize < originalSize;
 
     const safeBase = sanitizeFilename(originalFilename.replace(/\.[^.]+$/, ""));
-    const { y, m } = nowParts();
+    const { year, month } = nowParts();
     const filename = `${safeBase}-${Date.now()}-${Math.random()
       .toString(36)
       .slice(2)}.${optimized.ext}`;
 
     const key = buildStorageKey({
-      tenantId,
-      year: y,
-      month: m,
+      websiteId,
+      year,
+      month,
       filename,
     });
 

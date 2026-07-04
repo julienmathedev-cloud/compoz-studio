@@ -5,11 +5,13 @@
  * @layer app/admin/users
  *
  * @description
- * Page Users (Studio) : orchestration “tenant switch” + rendu de la section.
+ * Page Users Studio : orchestration du switch Website + rendu de la section.
  *
  * @remarks
  * - UI-only : pas de fetch ici.
- * - Le changement de tenant passe par `useSetActiveTenant()` puis `router.refresh()`.
+ * - Le changement de Website actif passe par `useSetActiveWebsite()`
+ *   puis `router.refresh()`.
+ * - Les valeurs manipulées ici sont des Prisma Website.id.
  */
 
 import { useTranslations } from "next-intl";
@@ -17,14 +19,15 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
 import { Heading } from "@compoz/studio/components/atoms/typography/Heading";
-import { useSetActiveTenant } from "@compoz/studio/features/admin/tenant/useSetActiveTenant";
 import { AdminUsersSection } from "@compoz/studio/features/admin/users/sections/AdminUsersSection";
-
-import { requireTenantId } from "@compoz/ui/lib/tenant-id";
+import { useSetActiveWebsite } from "@compoz/studio/features/admin/website/useSetActiveWebsite";
 import { cn } from "@compoz/ui/lib/utils";
 import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 
-type SelectOption = Readonly<{ value: string; label: string }>;
+type SelectOption = Readonly<{
+  value: string;
+  label: string;
+}>;
 
 type CurrentUser = Readonly<{
   id: string;
@@ -32,28 +35,40 @@ type CurrentUser = Readonly<{
 }>;
 
 type AdminUsersPageProps = Readonly<{
-  currentTenantId: string;
-  tenantOptions: ReadonlyArray<SelectOption>;
+  currentWebsiteId: string;
+  websiteOptions: ReadonlyArray<SelectOption>;
   currentUser: CurrentUser;
 }>;
 
+function requireWebsiteId(value: unknown, field = "websiteId"): string {
+  const websiteId = String(value ?? "").trim();
+
+  if (!websiteId) {
+    throw new Error(`${field} is required`);
+  }
+
+  return websiteId;
+}
+
 export function AdminUsersPage({
-  currentTenantId,
-  tenantOptions,
+  currentWebsiteId,
+  websiteOptions,
   currentUser,
 }: AdminUsersPageProps) {
   const t = useTranslations();
   const router = useRouter();
 
-  const { setActiveTenant, isSaving } = useSetActiveTenant();
+  const { setActiveWebsite, isSaving } = useSetActiveWebsite();
 
-  const handleTenantChange = useCallback(
-    async (tenantId: string) => {
-      const next = requireTenantId(tenantId, "tenantId");
-      await setActiveTenant(next);
+  const handleWebsiteChange = useCallback(
+    async (websiteId: string) => {
+      const nextWebsiteId = requireWebsiteId(websiteId, "websiteId");
+
+      await setActiveWebsite(nextWebsiteId);
+
       router.refresh();
     },
-    [setActiveTenant, router],
+    [setActiveWebsite, router],
   );
 
   return (
@@ -63,9 +78,9 @@ export function AdminUsersPage({
       </Heading>
 
       <AdminUsersSection
-        currentTenantId={currentTenantId}
-        tenantOptions={tenantOptions}
-        onTenantChange={handleTenantChange}
+        currentWebsiteId={currentWebsiteId}
+        websiteOptions={websiteOptions}
+        onWebsiteChange={handleWebsiteChange}
         isFormSaving={isSaving}
         currentUser={currentUser}
       />

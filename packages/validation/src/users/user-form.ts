@@ -1,10 +1,11 @@
 /**
  * @file packages/validation/src/users/user-form.ts
  * @layer schemas
+ *
  * @description
  * Définit le schéma Zod décrivant la forme du formulaire UI de création / édition d’un user Studio.
- * UI-first (RHF) : on autorise des champs “draft-friendly” côté form, puis le domaine tranche
- * (unicité email, règles RBAC complètes, etc.).
+ * UI-first (RHF) : on autorise des champs draft-friendly côté form, puis le domaine tranche
+ * unicité email, règles RBAC complètes, etc.
  */
 
 import { z } from "zod";
@@ -39,14 +40,18 @@ const UserNameFormSchema = z
 
 /**
  * Password UI :
- * - "" autorisé pendant l’édition (si on ne veut pas changer le mot de passe)
+ * - "" autorisé pendant l’édition, si on ne veut pas changer le mot de passe
  * - si non vide : doit être non vide après trim
  */
-const UserPasswordFormSchema = z.string().superRefine((val, ctx) => {
-  const v = String(val ?? "").trim();
-  if (v.length === 0) return; // ✅ "no change" (edit mode)
-  // Si tu veux imposer un minimum (ex: 8), tu pourras le renforcer ici.
-  if (v.length < 1) {
+const UserPasswordFormSchema = z.string().superRefine((value, ctx) => {
+  const password = String(value ?? "").trim();
+
+  if (password.length === 0) {
+    return;
+  }
+
+  // Si tu veux imposer un minimum, ex: 8, tu pourras le renforcer ici.
+  if (password.length < 1) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: [],
@@ -63,26 +68,26 @@ const UserRoleFormSchema = z.enum(["admin", "editor"], {
 });
 
 /**
- * tenantIds UI :
+ * websiteIds UI :
  * - array de strings trim
  * - non vide
  *
  * @remarks
- * On garde ça UI-friendly. La règle "defaultTenantId ∈ tenantIds sauf wildcard"
- * est revalidée plus bas via superRefine.
+ * On garde ça UI-friendly. La règle `defaultWebsiteId ∈ websiteIds`,
+ * sauf wildcard, est revalidée plus bas via superRefine.
  */
-const TenantIdsFormSchema = z
+const WebsiteIdsFormSchema = z
   .array(z.string().trim().min(1))
-  .min(1, ERROR_CODES.USER_TENANT_IDS_REQUIRED);
+  .min(1, ERROR_CODES.USER_WEBSITE_IDS_REQUIRED);
 
 /**
- * defaultTenantId UI :
+ * defaultWebsiteId UI :
  * - requis
  */
-const DefaultTenantIdFormSchema = z
+const DefaultWebsiteIdFormSchema = z
   .string()
   .trim()
-  .min(1, ERROR_CODES.USER_DEFAULT_TENANT_REQUIRED);
+  .min(1, ERROR_CODES.USER_DEFAULT_WEBSITE_REQUIRED);
 
 /**
  * RBAC UI.
@@ -90,25 +95,27 @@ const DefaultTenantIdFormSchema = z
 const UserRbacFormSchema = z
   .object({
     role: UserRoleFormSchema,
-    tenantIds: TenantIdsFormSchema,
-    defaultTenantId: DefaultTenantIdFormSchema,
+    websiteIds: WebsiteIdsFormSchema,
+    defaultWebsiteId: DefaultWebsiteIdFormSchema,
   })
   .strict()
   .superRefine((rbac, ctx) => {
-    const tenantIds = rbac.tenantIds.map((t) => t.trim()).filter(Boolean);
+    const websiteIds = rbac.websiteIds
+      .map((websiteId) => websiteId.trim())
+      .filter(Boolean);
 
-    const defaultTenantId = rbac.defaultTenantId.trim();
-    const hasWildcard = tenantIds.includes("*");
+    const defaultWebsiteId = rbac.defaultWebsiteId.trim();
+    const hasWildcard = websiteIds.includes("*");
 
     if (
       !hasWildcard &&
-      defaultTenantId &&
-      !tenantIds.includes(defaultTenantId)
+      defaultWebsiteId &&
+      !websiteIds.includes(defaultWebsiteId)
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["defaultTenantId"],
-        message: ERROR_CODES.USER_DEFAULT_TENANT_NOT_ALLOWED,
+        path: ["defaultWebsiteId"],
+        message: ERROR_CODES.USER_DEFAULT_WEBSITE_NOT_ALLOWED,
       });
     }
   });
@@ -121,7 +128,7 @@ const UserRbacFormSchema = z
  * Schéma du formulaire User.
  *
  * @remarks
- * - `id` est optionnel : utile pour le mode edit (form “bound” à un user existant).
+ * - `id` est optionnel : utile pour le mode edit, form bound à un user existant.
  * - `password` : "" = pas de changement.
  */
 export const UserFormSchema = z

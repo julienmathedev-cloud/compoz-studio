@@ -1,15 +1,20 @@
 /**
  * @file packages/infra/src/site/kv-site-repository.ts
  * @layer infra/site
+ *
  * @description
- * Implémentation du SiteRepository basé sur une base KV (Upstash/Vercel KV).
+ * Implémentation du SiteRepository basé sur une base KV, Upstash/Vercel KV.
+ *
+ * @remarks
+ * - Stocke le SiteIndex et les SiteSettings par état de contenu.
+ * - Le repository est strictement scopé par `websiteId`.
+ * - Aucun fallback implicite n’est appliqué.
  */
 
 import {
   CONTENT_STATE,
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
-
 import { DEFAULT_FOOTER_SETTINGS } from "@compoz/core/domain/site/defaults/footer";
 import { DEFAULT_HEADER_SETTINGS } from "@compoz/core/domain/site/defaults/header";
 import { DEFAULT_IDENTITY_SETTINGS } from "@compoz/core/domain/site/defaults/identity";
@@ -18,34 +23,32 @@ import { DEFAULT_PRIMARY_MENU_SETTINGS } from "@compoz/core/domain/site/defaults
 import { DEFAULT_SEO_SETTINGS } from "@compoz/core/domain/site/defaults/seo";
 import { DEFAULT_SOCIAL_SETTINGS } from "@compoz/core/domain/site/defaults/social";
 import { DEFAULT_THEME_SETTINGS } from "@compoz/core/domain/site/defaults/theme";
-
 import type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
 import type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
-
 import { getUpstashRedis, parseRedisJson } from "@compoz/infra/kv/kv-redis";
 import { kvCmd } from "@compoz/infra/kv/kv-telemetry";
-import { normalizeTenantId } from "@compoz/infra/lib/normalize-tenant-id";
+import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 
 /* -------------------------------------------------------------------------- */
 /* Options                                                                    */
 /* -------------------------------------------------------------------------- */
 
-type KvSiteRepositoryOptions = {
-  tenantId?: string;
-};
+type KvSiteRepositoryOptions = Readonly<{
+  websiteId: string;
+}>;
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
-function indexKey(tenant: string, state: ContentState): string {
-  return `compoz:${tenant}:${state}:site:index`;
+function indexKey(websiteId: string, state: ContentState): string {
+  return `compoz:${websiteId}:${state}:site:index`;
 }
 
-function settingsKey(tenant: string, state: ContentState): string {
-  return `compoz:${tenant}:${state}:site:settings`;
+function settingsKey(websiteId: string, state: ContentState): string {
+  return `compoz:${websiteId}:${state}:site:settings`;
 }
 
 function defaultIndex(state: ContentState): SiteIndex {
@@ -143,52 +146,59 @@ function kvCtx(base: string, state: ContentState): string {
 
 export class KvSiteRepository implements SiteRepository {
   private readonly redis = getUpstashRedis();
-  private readonly tenantId: string;
+  private readonly websiteId: string;
 
-  constructor(opts: KvSiteRepositoryOptions = {}) {
-    this.tenantId = normalizeTenantId(opts.tenantId);
+  constructor(opts: KvSiteRepositoryOptions) {
+    this.websiteId = requireWebsiteId(
+      opts.websiteId,
+      "KvSiteRepository.constructor",
+    );
   }
 
   async ensureBase(): Promise<void> {
-    // no-op
+    // no-op KV
   }
 
   async readIndex(state: ContentState): Promise<SiteIndex> {
     const raw = await kvCmd(kvCtx("readIndex.get", state), "get", () =>
-      this.redis.get(indexKey(this.tenantId, state)),
+      this.redis.get(indexKey(this.websiteId, state)),
     );
 
     const json = parseRedisJson<SiteIndex>(raw);
 
-    if (!json) return defaultIndex(state);
+    if (!json) {
+      return defaultIndex(state);
+    }
 
     return json;
   }
 
   async putIndex(state: ContentState, index: SiteIndex): Promise<void> {
     await kvCmd(kvCtx("putIndex.set", state), "set", () =>
-      this.redis.set(indexKey(this.tenantId, state), JSON.stringify(index)),
+      this.redis.set(indexKey(this.websiteId, state), JSON.stringify(index)),
     );
   }
 
   async readSettings(state: ContentState): Promise<SiteSettings> {
     const raw = await kvCmd(kvCtx("readSettings.get", state), "get", () =>
-      this.redis.get(settingsKey(this.tenantId, state)),
+      this.redis.get(settingsKey(this.websiteId, state)),
     );
 
     const json = parseRedisJson<Partial<SiteSettings>>(raw);
 
-    if (!json) return defaultSettings();
+    if (!json) {
+      return defaultSettings();
+    }
 
-    const d = defaultSettings();
+    const defaults = defaultSettings();
 
     return {
-      header: json.header ?? d.header,
-      footer: json.footer ?? d.footer,
-      primaryMenu: json.primaryMenu ?? d.primaryMenu,
-      legalMenu: json.legalMenu ?? d.legalMenu,
-      identity: json.identity ?? d.identity,
-      social: json.social ?? d.social,
+      header: json.header ?? defaults.header,
+      footer: json.footer ?? defaults.footer,
+      primaryMenu: json.primaryMenu ?? defaults.primaryMenu,
+      legalMenu: json.legalMenu ?? defaults.legalMenu,
+      identity: json.identity ?? defaults.identity,
+      social: json.social ?? defaults.social,
       seo: normalizeSeoSettings(json.seo as PersistedSeoSettings | undefined),
       theme: mergeThemeSettings(json.theme),
     };
@@ -200,7 +210,7 @@ export class KvSiteRepository implements SiteRepository {
   ): Promise<void> {
     await kvCmd(kvCtx("putSettings.set", state), "set", () =>
       this.redis.set(
-        settingsKey(this.tenantId, state),
+        settingsKey(this.websiteId, state),
         JSON.stringify(settings),
       ),
     );

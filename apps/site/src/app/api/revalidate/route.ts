@@ -1,20 +1,26 @@
 /**
  * @file apps/site/src/app/api/revalidate/route.ts
  * @layer site/app/api
+ *
  * @description
- * Webhook de revalidation (appelé par Studio après publication).
- *
- * Sécurité :
- * - vérifie `x-revalidate-secret` si `COMPOZ_REVALIDATE_SECRET` est défini
- *
- * Payload :
- * - { tenantId: string; slugs: string[] }
+ * Webhook de revalidation appelé par le Studio après publication.
  *
  * @remarks
- * - On revalide :
- *   - le mode "host-based" (/) si tu utilises lvh.me / domaines mappés
- *   - ET le fallback vercel "/t/:tenant" (toujours safe, et pratique)
- * - Best-effort : si un slug est invalide, on le skip.
+ * Sécurité :
+ * - Vérifie `x-revalidate-secret` si `COMPOZ_REVALIDATE_SECRET` est défini.
+ *
+ * Payload attendu :
+ * - `{ websiteSlug: string; slugs: string[] }`
+ *
+ * Revalidation :
+ * - Routes host-based : `/`, `/:pageSlug`, `/sitemap.xml`, `/robots.txt`.
+ * - Routes fallback explicites : `/t/:websiteSlug`, `/t/:websiteSlug/:pageSlug`,
+ *   `/t/:websiteSlug/sitemap.xml`, `/t/:websiteSlug/robots.txt`.
+ *
+ * Notes :
+ * - `websiteSlug` correspond au `Website.slug` public.
+ * - `slugs` correspond aux slugs des pages publiées.
+ * - Best-effort : les slugs invalides sont normalisés/filtrés avant revalidation.
  */
 
 import "server-only";
@@ -22,43 +28,59 @@ import "server-only";
 import { revalidatePath } from "next/cache";
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
+import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { throwHttp } from "@compoz/http/http-error";
 import { handleRoute } from "@compoz/site/lib/api/handle-route";
-import { toSlugsList } from "@compoz/ui/lib/routing/slug";
-import { toTenantId } from "@compoz/ui/lib/tenant-id";
+import { toSlug, toSlugsList } from "@compoz/ui/lib/routing/slug";
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
-function revalidatePublishedForTenant(params: {
-  tenantId: string;
+
+function hostedPathForPageSlug(pageSlug: string): string {
+  return pageSlug === HOME_SLUG ? "/" : `/${pageSlug}`;
+}
+
+function fallbackPathForPageSlug(params: {
+  websiteSlug: string;
+  pageSlug: string;
+}): string {
+  const { websiteSlug, pageSlug } = params;
+
+  return pageSlug === HOME_SLUG
+    ? `/t/${websiteSlug}`
+    : `/t/${websiteSlug}/${pageSlug}`;
+}
+
+function revalidatePublishedForWebsite(params: {
+  websiteSlug: string;
   slugs: ReadonlyArray<string>;
 }) {
-  const { tenantId, slugs } = params;
+  const { websiteSlug, slugs } = params;
 
   // -----------------------------------------------------------------------
-  // A) Host-based (lvh.me / domaine client)
+  // A) Host-based public routes: "/", "/:pageSlug"
   // -----------------------------------------------------------------------
   revalidatePath("/");
 
-  for (const slug of slugs) {
-    revalidatePath(`/${slug}`);
+  for (const pageSlug of slugs) {
+    revalidatePath(hostedPathForPageSlug(pageSlug));
   }
 
   revalidatePath("/sitemap.xml");
   revalidatePath("/robots.txt");
 
   // -----------------------------------------------------------------------
-  // B) Fallback vercel "/t/:tenant"
+  // B) Explicit fallback routes: "/t/:websiteSlug"
   // -----------------------------------------------------------------------
-  revalidatePath(`/t/${tenantId}`);
+  revalidatePath(`/t/${websiteSlug}`);
 
-  for (const slug of slugs) {
-    revalidatePath(`/t/${tenantId}/${slug}`);
+  for (const pageSlug of slugs) {
+    revalidatePath(fallbackPathForPageSlug({ websiteSlug, pageSlug }));
   }
 
-  revalidatePath(`/t/${tenantId}/sitemap.xml`);
-  revalidatePath(`/t/${tenantId}/robots.txt`);
+  revalidatePath(`/t/${websiteSlug}/sitemap.xml`);
+  revalidatePath(`/t/${websiteSlug}/robots.txt`);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -74,12 +96,12 @@ export async function POST(req: Request) {
       req.headers.get("x-revalidate-secret") ?? "",
     ).trim();
 
-    // Si un secret est configuré, il devient obligatoire
     if (secret && provided !== secret) {
       throwHttp(401, { code: EC.UNAUTHORIZED, message: EC.UNAUTHORIZED });
     }
 
     let body: unknown;
+
     try {
       body = await req.json();
     } catch {
@@ -89,23 +111,24 @@ export async function POST(req: Request) {
       });
     }
 
-    const tenantId = toTenantId((body as Record<string, unknown>)?.tenantId);
-    const slugs = toSlugsList((body as Record<string, unknown>)?.slugs);
+    const payload = body as Record<string, unknown>;
 
-    if (!tenantId) {
+    const websiteSlug = toSlug(payload.websiteSlug);
+    const slugs = toSlugsList(payload.slugs);
+
+    if (!websiteSlug) {
       throwHttp(400, {
         code: EC.VALIDATION_ERROR,
-        message: "Missing tenantId",
-        where: "api.site.revalidate.tenantId",
+        message: "Missing websiteSlug",
+        where: "api.site.revalidate.websiteSlug",
       });
     }
 
-    revalidatePublishedForTenant({ tenantId, slugs });
+    revalidatePublishedForWebsite({ websiteSlug, slugs });
 
-    // IMPORTANT: handleRoute enveloppe déjà en jsonOk()
     return {
       ok: true,
-      tenantId,
+      websiteSlug,
       revalidated: {
         hostBased: {
           home: true,
@@ -114,7 +137,7 @@ export async function POST(req: Request) {
           robots: true,
         },
         fallback: {
-          tenantHome: true,
+          websiteHome: true,
           pages: slugs.length,
           sitemap: true,
           robots: true,

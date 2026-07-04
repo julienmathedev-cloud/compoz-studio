@@ -1,53 +1,83 @@
 /**
  * @file apps/studio/src/app/api/pages/[pageId]/blocks/[blockId]/route.ts
  * @layer studio/app/api
- * @description
- * Route API Studio — ressource block d’une page.
  *
+ * @description
+ * Route API Studio — ressource block d’une page du Website actif.
+ *
+ * @remarks
  * Responsabilités :
- * - PATCH  : met à jour un block Section
- * - DELETE : supprime un block
- * - Validation params + payload
- * - Appel des use-cases domaine
- * - Invalidation statusCache KV
+ * - PATCH  : met à jour un block Section.
+ * - DELETE : supprime un block.
+ * - Valide les params et le payload via Zod.
+ * - Appelle les use-cases côté domaine.
+ * - Invalide le cache de status du Website actif après mutation.
+ * - Les repositories sont scopés par Prisma Website.id.
  */
 
 import "server-only";
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import type { PageDTO } from "@compoz/core/domain/pages/dto";
-
 import { deleteBlock } from "@compoz/core/domain/pages/use-cases/blocks/delete-block";
 import { updateSectionBlock } from "@compoz/core/domain/pages/use-cases/blocks/update-section-block";
-
 import { throwHttp } from "@compoz/http/http-error";
-
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import type {
   DeleteBlockResponse,
   UpdateSectionBlockResponse,
 } from "@compoz/infra/http/studio/pages.types";
-
 import { log, logSpan } from "@compoz/infra/lib/log";
-
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteStatusCache } from "@compoz/infra/site";
-
 import { adaptUpdateSectionBlockIntent } from "@compoz/studio/app/api/_adapters/pages/blocks/blocks";
-
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
-
+import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
-
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
-
 import {
   UpdateSectionBlockIntentSchema,
   type UpdateSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
-
 import { PageIdAndBlockIdParamSchema } from "@compoz/validation/routes/params";
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+async function invalidateWebsiteStatusCache(params: {
+  websiteId: string;
+  statusCache: ReturnType<typeof getSiteStatusCache>;
+  logger: ReturnType<typeof log.child>;
+}) {
+  const { websiteId, statusCache, logger } = params;
+
+  try {
+    logger.debug?.("route.statusCache.invalidate.start", {
+      websiteId,
+      invalidateStatus: true,
+      invalidateStatusDetails: true,
+    });
+
+    await Promise.all([
+      statusCache.invalidateStatus(),
+      statusCache.invalidateStatusDetails(),
+    ]);
+
+    logger.debug?.("route.statusCache.invalidate.done", {
+      websiteId,
+      invalidateStatus: true,
+      invalidateStatusDetails: true,
+    });
+  } catch (error) {
+    logger.error?.("route.statusCache.invalidate.failed", {
+      websiteId,
+      err: String(error),
+      invalidateStatus: true,
+      invalidateStatusDetails: true,
+    });
+  }
+}
 
 /* -------------------------------------------------------------------------- */
 /* PATCH                                                                      */
@@ -57,13 +87,13 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.blocks.blockId.PATCH" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
     return logSpan(
       NS,
-      { ns: NS, method: "PATCH", state, tenantId },
+      { ns: NS, method: "PATCH", state, websiteId },
       async () => {
-        const lg = log.child({ ns: NS });
+        const logger = log.child({ ns: NS });
 
         const params = await unwrapParams(ctx.params);
 
@@ -102,8 +132,8 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
           });
         }
 
-        const pagesRepo = getPagesRepository({ tenantId });
-        const statusCache = getSiteStatusCache({ tenantId });
+        const pagesRepo = getPagesRepository({ websiteId });
+        const statusCache = getSiteStatusCache({ websiteId });
 
         const runUpdate = updateSectionBlock({
           pages: pagesRepo,
@@ -117,20 +147,11 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
           patch: adapted.patch,
         });
 
-        try {
-          lg.debug?.("route.statusCache.invalidate.start", {});
-
-          await Promise.all([
-            statusCache.invalidateStatus(),
-            statusCache.invalidateStatusDetails(),
-          ]);
-
-          lg.debug?.("route.statusCache.invalidate.done", {});
-        } catch (e) {
-          lg.error?.("route.statusCache.invalidate.failed", {
-            err: String(e),
-          });
-        }
+        await invalidateWebsiteStatusCache({
+          websiteId,
+          statusCache,
+          logger,
+        });
 
         const res: UpdateSectionBlockResponse = {
           page: page as PageDTO,
@@ -150,13 +171,13 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.blocks.blockId.DELETE" as const;
 
   return handleRoute(NS, req, async ({ state }) => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
     return logSpan(
       NS,
-      { ns: NS, method: "DELETE", state, tenantId },
+      { ns: NS, method: "DELETE", state, websiteId },
       async () => {
-        const lg = log.child({ ns: NS });
+        const logger = log.child({ ns: NS });
 
         const params = await unwrapParams(ctx.params);
 
@@ -171,8 +192,8 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
           },
         );
 
-        const pagesRepo = getPagesRepository({ tenantId });
-        const statusCache = getSiteStatusCache({ tenantId });
+        const pagesRepo = getPagesRepository({ websiteId });
+        const statusCache = getSiteStatusCache({ websiteId });
 
         const runDelete = deleteBlock({
           pages: pagesRepo,
@@ -183,20 +204,11 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
           blockId: paramBlockId,
         });
 
-        try {
-          lg.debug?.("route.statusCache.invalidate.start", {});
-
-          await Promise.all([
-            statusCache.invalidateStatus(),
-            statusCache.invalidateStatusDetails(),
-          ]);
-
-          lg.debug?.("route.statusCache.invalidate.done", {});
-        } catch (e) {
-          lg.error?.("route.statusCache.invalidate.failed", {
-            err: String(e),
-          });
-        }
+        await invalidateWebsiteStatusCache({
+          websiteId,
+          statusCache,
+          logger,
+        });
 
         const res: DeleteBlockResponse = {
           page: page as PageDTO,

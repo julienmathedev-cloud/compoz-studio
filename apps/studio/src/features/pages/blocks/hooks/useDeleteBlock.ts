@@ -5,13 +5,14 @@
  * @layer hooks/studio/pages/blocks
  *
  * @description
- * Hook studio React Query pour supprimer un block draft via l’API.
+ * Hook Studio React Query pour supprimer un block draft via l’API.
  *
  * @remarks
- * - Orchestration UI-only (mutation, logs, notifications).
+ * - Orchestration UI-only : mutation, logs, notifications.
  * - Gère l’état de suppression ciblé via `deletingBlockId`.
  * - Option B : ne bloque que si c’est le même `blockId`.
  * - Aucune logique métier ni validation domaine.
+ * - Le cache et les queryKeys sont scopés par Prisma Website.id.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,7 +23,7 @@ import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-sta
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import type { DeleteBlockResponse } from "@compoz/infra/http/studio/pages.types";
 import { log } from "@compoz/infra/lib/log";
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { syncBlocksFromPageCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
 import {
   invalidateBlockStatusViews,
@@ -44,20 +45,21 @@ type UseDeleteBlockResult = Readonly<{
   remove: (pageId: string, blockId: string) => Promise<void>;
 }>;
 
-const lg = log.child({ ns: "hook", name: "useDeleteBlock" });
+const logger = log.child({ ns: "hook", name: "useDeleteBlock" });
 
 export function useDeleteBlock(onSuccess?: () => void): UseDeleteBlockResult {
   const t = useTranslations();
-  const qc = useQueryClient();
-  const tenantId = useTenantId();
+  const queryClient = useQueryClient();
+  const websiteId = useWebsiteId();
+
   const entityLabel = t("studio.shared.entities.blocks");
 
   const [deletingBlockId, setDeletingBlockId] = useState<string | null>(null);
 
   const mutation = useMutation({
     mutationKey: [
-      "t",
-      tenantId,
+      "w",
+      websiteId,
       "studio",
       "pages",
       "blocks",
@@ -76,7 +78,7 @@ export function useDeleteBlock(onSuccess?: () => void): UseDeleteBlockResult {
           entity: entityLabel,
           pageId: pageIdKey,
           blockId: blockIdKey,
-          tenantId,
+          websiteId,
         },
       );
 
@@ -100,8 +102,8 @@ export function useDeleteBlock(onSuccess?: () => void): UseDeleteBlockResult {
 
       if (pageIdKey && page) {
         syncBlocksFromPageCache(
-          qc,
-          tenantId,
+          queryClient,
+          websiteId,
           pageIdKey,
           page,
           DEFAULT_CONTENT_STATE,
@@ -109,18 +111,24 @@ export function useDeleteBlock(onSuccess?: () => void): UseDeleteBlockResult {
       }
 
       await Promise.all([
-        invalidateSiteStatus(qc, tenantId),
-        invalidateBlockStatusViews(qc, tenantId, pageIdKey),
+        invalidateSiteStatus(queryClient, websiteId),
+        invalidateBlockStatusViews(queryClient, websiteId, pageIdKey),
       ]);
 
-      lg.debug("delete.ok", { tenantId, pageId, blockId });
+      logger.debug("delete.ok", {
+        websiteId,
+        pageId,
+        blockId,
+      });
+
       onSuccess?.();
     },
 
     onError: (error: unknown, variables) => {
       notify.fromError(error, UiError.unexpectedSave);
-      lg.error("delete.failed", {
-        tenantId,
+
+      logger.error("delete.failed", {
+        websiteId,
         pageId: variables.pageId,
         blockId: variables.blockId,
         msg: String(error),
@@ -129,14 +137,15 @@ export function useDeleteBlock(onSuccess?: () => void): UseDeleteBlockResult {
 
     onSettled: (_data, _error, variables) => {
       const blockIdKey = String(variables?.blockId ?? "").trim();
+
       if (!blockIdKey) return;
 
       setDeletingBlockId((current) =>
         current === blockIdKey ? null : current,
       );
 
-      lg.debug("delete.done", {
-        tenantId,
+      logger.debug("delete.done", {
+        websiteId,
         pageId: variables?.pageId,
         blockId: blockIdKey,
       });
@@ -154,7 +163,11 @@ export function useDeleteBlock(onSuccess?: () => void): UseDeleteBlockResult {
       if (deletingBlockId === blockIdKey) return;
 
       setDeletingBlockId(blockIdKey);
-      await mutation.mutateAsync({ pageId: pageIdKey, blockId: blockIdKey });
+
+      await mutation.mutateAsync({
+        pageId: pageIdKey,
+        blockId: blockIdKey,
+      });
     },
     [deletingBlockId, mutation],
   );
@@ -163,7 +176,7 @@ export function useDeleteBlock(onSuccess?: () => void): UseDeleteBlockResult {
     remove,
     deletingBlockId,
     isDeleting: mutation.isPending,
-  } as const;
+  };
 }
 
 useDeleteBlock.displayName = "useDeleteBlock";

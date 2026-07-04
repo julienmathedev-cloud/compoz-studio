@@ -3,37 +3,42 @@
  * @layer hooks/studio/site/status
  *
  * @description
- * Query keys tenant-scoped pour le statut du site.
+ * Query keys Website-scoped pour le statut du site.
+ *
+ * @remarks
+ * - Le scope utilisé ici est Prisma Website.id.
+ * - On préfixe par `["w", websiteId, ...]` pour éviter les collisions
+ *   lors d’un switch de Website actif.
  */
 
 import type { SiteStatusDetailsScopeDTO } from "@compoz/core/domain/site/dto";
 
-import { toTenantId } from "@compoz/ui/lib/tenant-id";
+/** Key SoT Website-scoped. */
+export function siteStatusKey(websiteId: string) {
+  const websiteIdKey = String(websiteId ?? "").trim();
 
-/** Key SoT (tenant-scoped) */
-export function siteStatusKey(tenantId: string) {
-  const tid = toTenantId(tenantId);
-  return ["t", tid, "studio", "site", "status"] as const;
+  return ["w", websiteIdKey, "studio", "site", "status"] as const;
 }
 
-/** Key prefix SoT (tenant-scoped) */
-export function siteStatusDetailsPrefix(tenantId: string) {
-  const tid = toTenantId(tenantId);
-  return ["t", tid, "studio", "site", "statusDetails"] as const;
+/** Key prefix SoT Website-scoped. */
+export function siteStatusDetailsPrefix(websiteId: string) {
+  const websiteIdKey = String(websiteId ?? "").trim();
+
+  return ["w", websiteIdKey, "studio", "site", "statusDetails"] as const;
 }
 
 export function siteStatusDetailsKey(args: {
-  tenantId: string;
+  websiteId: string;
   scope: SiteStatusDetailsScopeDTO;
   includeBlocks: boolean;
   pageId?: string | null;
 }) {
-  const tid = toTenantId(args.tenantId);
-  const pageId = (args.pageId ?? "").trim();
+  const websiteIdKey = String(args.websiteId ?? "").trim();
+  const pageId = String(args.pageId ?? "").trim();
 
   return [
-    "t",
-    tid,
+    "w",
+    websiteIdKey,
     "studio",
     "site",
     "statusDetails",

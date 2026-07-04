@@ -1,9 +1,16 @@
 /**
  * @file apps/studio/src/app/api/media/upload/image/client/route.ts
  * @layer studio/app/api
+ *
  * @description
  * Route Vercel Blob de génération de client token pour l’upload direct
- * du blob temporaire.
+ * d’un blob image temporaire lié au Website actif du Studio.
+ *
+ * @remarks
+ * - Nécessite une session Studio valide.
+ * - Les uploads temporaires sont scopés par Prisma Website.id.
+ * - Le `tempKey` attendu suit la convention :
+ *   `websites/:websiteId/_tmp/media/...`
  */
 
 import "server-only";
@@ -17,7 +24,7 @@ import type {
   UploadImageClientPayload,
   UploadImageKind,
 } from "@compoz/infra/http/studio/media.types";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 
@@ -34,6 +41,18 @@ const ALLOWED_MIMES = [
   "image/vnd.microsoft.icon",
 ] as const;
 
+const UploadImageClientPayloadSchema = z.object({
+  tempKey: z.string().trim().min(1),
+  kind: z.string().trim().min(1),
+  originalFilename: z.string().trim().min(1),
+  originalContentType: z.string().trim().min(1),
+  originalSize: z.number().positive(),
+});
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
 function isUploadKind(input: string): input is UploadImageKind {
   return (
     input === "content" ||
@@ -42,14 +61,6 @@ function isUploadKind(input: string): input is UploadImageKind {
     input === "favicon"
   );
 }
-
-const UploadImageClientPayloadSchema = z.object({
-  tempKey: z.string().trim().min(1),
-  kind: z.string().trim().min(1),
-  originalFilename: z.string().trim().min(1),
-  originalContentType: z.string().trim().min(1),
-  originalSize: z.number().positive(),
-});
 
 async function parseClientPayload(
   raw: string | null | undefined,
@@ -102,8 +113,8 @@ async function parseClientPayload(
   };
 }
 
-function assertTenantTempKey(tempKey: string, tenantId: string): void {
-  const expectedPrefix = `tenants/${tenantId}/_tmp/media/`;
+function assertWebsiteTempKey(tempKey: string, websiteId: string): void {
+  const expectedPrefix = `websites/${websiteId}/_tmp/media/`;
 
   if (!tempKey.startsWith(expectedPrefix)) {
     throwHttp(400, {
@@ -118,11 +129,15 @@ function assertTenantTempKey(tempKey: string, tenantId: string): void {
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/* POST                                                                       */
+/* -------------------------------------------------------------------------- */
+
 export async function POST(req: Request) {
   const NS = "api.studio.media.upload.image.client.POST" as const;
 
   return handleRoute(NS, req, async () => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
     const body = (await req.json()) as HandleUploadBody;
 
     const json = await handleUpload({
@@ -143,14 +158,14 @@ export async function POST(req: Request) {
           });
         }
 
-        assertTenantTempKey(payload.tempKey, tenantId);
+        assertWebsiteTempKey(payload.tempKey, websiteId);
 
         return {
           allowedContentTypes: Array.from(ALLOWED_MIMES),
           maximumSizeInBytes: MAX_IMAGE_UPLOAD_BYTES,
           addRandomSuffix: false,
           tokenPayload: JSON.stringify({
-            tenantId,
+            websiteId,
             tempKey: payload.tempKey,
           }),
         };

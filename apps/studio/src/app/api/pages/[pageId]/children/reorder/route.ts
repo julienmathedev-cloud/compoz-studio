@@ -1,16 +1,20 @@
 /**
  * @file apps/studio/src/app/api/pages/[pageId]/children/reorder/route.ts
  * @layer studio/app/api
- * @description
- * Route API Studio : réordonne les enfants d’un parent (index-only, draft).
  *
- * POST: body = { childIds: string[] }
- * - Réordonne uniquement les pages dont parentId === parentId
- * - Écrit l’index (SoT)
+ * @description
+ * Route API Studio : réordonne les enfants d’un parent dans l’index draft
+ * du Website actif.
  *
  * @remarks
- * - Mutation index-only : ne modifie ni le contenu des pages, ni les blocks, ni les settings.
- * - N’invalide pas les snapshots `status` / `statusDetails`.
+ * POST: body = { childIds: string[] }
+ *
+ * - Réordonne uniquement les pages dont parentId === pageId.
+ * - Écrit l’index draft, source of truth côté Studio.
+ * - Mutation index-only : ne modifie ni le contenu des pages, ni les blocks,
+ *   ni les settings.
+ * - N’invalide pas les caches `status` / `statusDetails`.
+ * - Le repository est scopé par Prisma Website.id.
  */
 
 import "server-only";
@@ -22,7 +26,7 @@ import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import type { ReorderChildrenResponse } from "@compoz/infra/http/studio/pages.types";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getSiteRepository } from "@compoz/infra/site";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
@@ -32,17 +36,21 @@ import {
   type ReorderChildrenIntentDTO,
 } from "@compoz/validation/pages/page-intents";
 
+/* -------------------------------------------------------------------------- */
+/* POST /api/pages/:pageId/children/reorder                                   */
+/* -------------------------------------------------------------------------- */
+
 export async function POST(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.children.reorder.POST" as const;
 
   return handleRoute(NS, req, async () => {
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
     return logSpan(
       NS,
-      { ns: NS, method: "POST", state: DEFAULT_CONTENT_STATE, tenantId },
+      { ns: NS, method: "POST", state: DEFAULT_CONTENT_STATE, websiteId },
       async () => {
-        const lg = log.child({ ns: NS });
+        const logger = log.child({ ns: NS });
 
         const params = await unwrapParams(ctx.params);
 
@@ -62,9 +70,8 @@ export async function POST(req: Request, ctx: { params: unknown }) {
           },
         );
 
-        const siteRepo = getSiteRepository({ tenantId });
+        const siteRepo = getSiteRepository({ websiteId });
 
-        // domain pur
         const run = reorderPageChildren({
           site: siteRepo,
         });
@@ -74,13 +81,14 @@ export async function POST(req: Request, ctx: { params: unknown }) {
           childIds: dto.childIds,
         });
 
-        lg.debug("route.children.reordered", {
-          tenantId,
+        logger.debug("route.children.reordered", {
+          websiteId,
           pageId,
           count: dto.childIds.length,
         });
 
         const res: ReorderChildrenResponse = { index };
+
         return res;
       },
     );

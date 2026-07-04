@@ -4,25 +4,28 @@
  *
  * @description
  * Helpers React Query pour invalider le cache des blocks d’une page.
+ *
+ * @remarks
+ * - Le cache Studio est scopé par Prisma Website.id.
+ * - Aucune route publique n’est construite ici, donc pas de Website.slug.
  */
 
 import type { QueryClient } from "@tanstack/react-query";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
-import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 export function invalidateDraftBlocksList(
-  qc: QueryClient,
-  tenantId: string,
+  queryClient: QueryClient,
+  websiteId: string,
   pageId: string,
 ) {
-  const tid = toTenantId(tenantId);
+  const websiteIdKey = String(websiteId ?? "").trim();
   const pageIdKey = String(pageId ?? "").trim();
 
-  if (!tid || !pageIdKey) return;
+  if (!websiteIdKey || !pageIdKey) return;
 
-  return qc.invalidateQueries({
-    queryKey: pageBlocksKey(tid, pageIdKey, DEFAULT_CONTENT_STATE),
+  return queryClient.invalidateQueries({
+    queryKey: pageBlocksKey(websiteIdKey, pageIdKey, DEFAULT_CONTENT_STATE),
   });
 }

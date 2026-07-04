@@ -23,13 +23,17 @@ import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { getSiteRepository } from "@compoz/infra/site";
 import { resolvePublicWebsiteFromHost } from "@compoz/infra/websites/resolve-public-website";
 import {
-  getPublishedHomePageByTenantId,
-  getPublishedPageBySlugByTenantId,
+  getPublishedHomePageByWebsiteId,
+  getPublishedPageBySlugByWebsiteId,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import {
   canonicalFromBase,
   stripTrailingSlashes,
 } from "@compoz/ui/lib/urls/formats";
+
+/* -------------------------------------------------------------------------- */
+/* Internals                                                                  */
+/* -------------------------------------------------------------------------- */
 
 function toLastModified(value: string | null | undefined): Date | undefined {
   if (!value || Number.isNaN(Date.parse(value))) {
@@ -39,19 +43,25 @@ function toLastModified(value: string | null | undefined): Date | undefined {
   return new Date(value);
 }
 
+/* -------------------------------------------------------------------------- */
+/* Route                                                                      */
+/* -------------------------------------------------------------------------- */
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const h = await headers();
-  const hostRaw = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+  const headersList = await headers();
+
+  const hostRaw =
+    headersList.get("x-forwarded-host") ?? headersList.get("host") ?? "";
 
   const website = await resolvePublicWebsiteFromHost({ hostRaw });
 
   if (!website) {
-    return notFound();
+    notFound();
   }
 
   const websiteId = website.websiteId;
 
-  const siteRepo = getSiteRepository({ tenantId: websiteId });
+  const siteRepo = getSiteRepository({ websiteId });
   await siteRepo.ensureBase();
 
   const [index, settings] = await Promise.all([
@@ -60,7 +70,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   if (!index) {
-    return notFound();
+    notFound();
   }
 
   const pages = index.pages ?? [];
@@ -79,8 +89,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       const page =
         slug === HOME_SLUG
-          ? await getPublishedHomePageByTenantId(websiteId)
-          : await getPublishedPageBySlugByTenantId(websiteId, slug);
+          ? await getPublishedHomePageByWebsiteId(websiteId)
+          : await getPublishedPageBySlugByWebsiteId(websiteId, slug);
 
       if (!page) {
         return null;

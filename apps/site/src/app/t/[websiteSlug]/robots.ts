@@ -1,18 +1,18 @@
 /**
- * @file apps/site/src/app/t/[tenantId]/robots.ts
+ * @file apps/site/src/app/t/[websiteSlug]/robots.ts
  * @layer site/app/metadata
  *
  * @description
- * Route metadata `robots` pour le fallback multi-website /t/:websiteSlug.
- *
- * Règle : on force NOINDEX (fallback technique, pas une URL canonique).
- *
- * URL:
- *   /t/[tenantId]/robots.txt
+ * Route metadata `robots` pour le fallback public explicite `/t/:websiteSlug`.
  *
  * @remarks
- * Le segment de route `[tenantId]` est conservé pour éviter un rename Next large,
- * mais sa valeur est maintenant interprétée comme un Website.slug.
+ * - Le segment de route `websiteSlug` correspond au Prisma `Website.slug`.
+ * - Le Website est résolu via Prisma pour éviter d’exposer un fallback inconnu.
+ * - On force `noindex` car `/t/:websiteSlug` est un fallback technique,
+ *   pas l’URL canonique du site.
+ *
+ * URL :
+ * - `/t/[websiteSlug]/robots.txt`
  */
 
 import "server-only";
@@ -29,8 +29,12 @@ import {
 } from "@compoz/ui/lib/urls/formats";
 
 type Params = Readonly<{
-  params: Promise<Readonly<{ tenantId: string }>>;
+  params: Promise<Readonly<{ websiteSlug: string }>>;
 }>;
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
 
 function resolveRequestBaseUrl(
   headersList: Awaited<ReturnType<typeof headers>>,
@@ -53,26 +57,32 @@ function resolveRequestBaseUrl(
   return stripTrailingSlashes(`${protoRaw}://${host}`);
 }
 
+/* -------------------------------------------------------------------------- */
+/* Route                                                                      */
+/* -------------------------------------------------------------------------- */
+
 export default async function robots({
   params,
 }: Params): Promise<MetadataRoute.Robots> {
-  const { tenantId: websiteSlug } = await unwrapParams(params);
+  const { websiteSlug: websiteSlugParam } = await unwrapParams(params);
 
   const website = await resolvePublicWebsiteFromRouteSlug({
-    slug: websiteSlug,
+    slug: websiteSlugParam,
   });
 
   if (!website) {
-    return notFound();
+    notFound();
   }
 
-  const h = await headers();
+  const websiteSlug = website.slug;
+
+  const headersList = await headers();
 
   const baseUrl =
     stripTrailingSlashes(process.env["NEXT_PUBLIC_SITE_URL"] ?? "") ||
-    resolveRequestBaseUrl(h);
+    resolveRequestBaseUrl(headersList);
 
-  const sitemapPath = `/t/${encodeURIComponent(website.slug)}/sitemap.xml`;
+  const sitemapPath = `/t/${encodeURIComponent(websiteSlug)}/sitemap.xml`;
 
   return {
     rules: [

@@ -13,18 +13,17 @@
  * - There is no SiteIndex table.
  * - The functional page order is persisted through Page.position.
  * - The SiteIndex entity remains a domain projection used by the app/use-cases.
+ * - The repository is strictly scoped by `websiteId`.
  */
 
 import {
   CONTENT_STATE,
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
-
 import type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
-
-import { normalizeTenantId } from "@compoz/infra/lib/normalize-tenant-id";
+import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
 import { toDomainSiteIndex } from "@compoz/infra/site/mappers/site-index.mapper";
 import {
@@ -38,9 +37,9 @@ import {
 /* Options                                                                    */
 /* -------------------------------------------------------------------------- */
 
-type PrismaSiteRepositoryOptions = {
-  tenantId?: string;
-};
+type PrismaSiteRepositoryOptions = Readonly<{
+  websiteId: string;
+}>;
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
@@ -57,8 +56,11 @@ function toPrismaContentState(state: ContentState): PrismaContentState {
 export class PrismaSiteRepository implements SiteRepository {
   private readonly websiteId: string;
 
-  constructor(opts: PrismaSiteRepositoryOptions = {}) {
-    this.websiteId = normalizeTenantId(opts.tenantId);
+  constructor(opts: PrismaSiteRepositoryOptions) {
+    this.websiteId = requireWebsiteId(
+      opts.websiteId,
+      "PrismaSiteRepository.constructor",
+    );
   }
 
   async ensureBase(): Promise<void> {

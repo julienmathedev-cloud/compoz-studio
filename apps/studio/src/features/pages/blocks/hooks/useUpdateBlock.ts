@@ -5,12 +5,13 @@
  * @layer hooks/studio/pages/blocks
  *
  * @description
- * Hook studio React Query pour mettre à jour un block `Section` draft via l’API.
+ * Hook Studio React Query pour mettre à jour un block `Section` draft via l’API.
  *
  * @remarks
- * - Orchestration UI-only (mutation, logs, notifications).
- * - Applique un patch minimal à partir d’un baseline + next (UI).
+ * - Orchestration UI-only : mutation, logs, notifications.
+ * - Applique un patch minimal à partir d’un baseline + next UI.
  * - Gère explicitement le cas “no changes”.
+ * - Le cache et les queryKeys sont scopés par Prisma Website.id.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,29 +19,21 @@ import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log } from "@compoz/infra/lib/log";
-
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
-
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { syncBlocksFromPageCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
-
 import { toUpdateSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
-
 import {
   invalidateBlockStatusViews,
   invalidateSiteStatus,
 } from "@compoz/studio/features/site/status/invalidate";
-
 import { notify } from "@compoz/studio/lib/ui/notify";
 import {
   notifyNoChanges,
   notifyUpdated,
 } from "@compoz/studio/lib/ui/notify-presets";
-
 import { UiError } from "@compoz/studio/lib/ui/uiError";
-
 import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
 import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
 
@@ -66,12 +59,13 @@ type UpdateBlockArgs = Readonly<{
   fields: ReadonlyArray<string>;
 }>;
 
-const lg = log.child({ ns: "hook", name: "useUpdateBlock" });
+const logger = log.child({ ns: "hook", name: "useUpdateBlock" });
 
 export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
   const t = useTranslations();
-  const qc = useQueryClient();
-  const tenantId = useTenantId();
+  const queryClient = useQueryClient();
+  const websiteId = useWebsiteId();
+
   const entityLabel = t("studio.shared.entities.blocks");
 
   const [lcpWasActivated, setLcpWasActivated] = useState(false);
@@ -79,8 +73,8 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
 
   const mutation = useMutation({
     mutationKey: [
-      "t",
-      tenantId,
+      "w",
+      websiteId,
       "studio",
       "pages",
       "blocks",
@@ -94,7 +88,13 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
         "useUpdateBlock",
         DEFAULT_CONTENT_STATE,
         () => pagesStudioApi.updateBlock(pageId, blockId, payload, { signal }),
-        { entity: entityLabel, fields, pageId, blockId, tenantId },
+        {
+          entity: entityLabel,
+          fields,
+          pageId,
+          blockId,
+          websiteId,
+        },
       );
 
       return {
@@ -121,8 +121,8 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
 
       if (pageIdKey && page) {
         syncBlocksFromPageCache(
-          qc,
-          tenantId,
+          queryClient,
+          websiteId,
           pageIdKey,
           page,
           DEFAULT_CONTENT_STATE,
@@ -130,12 +130,12 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
       }
 
       await Promise.all([
-        invalidateSiteStatus(qc, tenantId),
-        invalidateBlockStatusViews(qc, tenantId, pageIdKey),
+        invalidateSiteStatus(queryClient, websiteId),
+        invalidateBlockStatusViews(queryClient, websiteId, pageIdKey),
       ]);
 
-      lg.debug("update.ok", {
-        tenantId,
+      logger.debug("update.ok", {
+        websiteId,
         pageId: pageIdKey,
         blockId,
         fields,
@@ -146,7 +146,11 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
 
     onError: (error: unknown) => {
       notify.fromError(error, UiError.unexpectedSave);
-      lg.error("update.failed", { tenantId, msg: String(error) });
+
+      logger.error("update.failed", {
+        websiteId,
+        msg: String(error),
+      });
     },
 
     onSettled: () => {
@@ -180,6 +184,7 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
           t("notifications.noChanges.title"),
           t("notifications.noChanges.description", { entity: entityLabel }),
         );
+
         return;
       }
 
@@ -201,6 +206,7 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
           t("notifications.noChanges.title"),
           t("notifications.noChanges.description", { entity: entityLabel }),
         );
+
         return;
       }
 
@@ -217,12 +223,11 @@ export function useUpdateBlock(onSuccess?: () => void): UseUpdateBlockResult {
   );
 
   return useMemo(
-    () =>
-      ({
-        update,
-        updatingBlockId,
-        isUpdating: mutation.isPending,
-      }) as const,
+    () => ({
+      update,
+      updatingBlockId,
+      isUpdating: mutation.isPending,
+    }),
     [update, updatingBlockId, mutation.isPending],
   );
 }

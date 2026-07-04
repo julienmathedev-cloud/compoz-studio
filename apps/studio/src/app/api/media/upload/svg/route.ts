@@ -1,8 +1,15 @@
 /**
  * @file apps/studio/src/app/api/media/upload/svg/route.ts
  * @layer studio/app/api
+ *
  * @description
- * Upload SVG “safe” (logo) vers le storage média.
+ * Upload SVG “safe” vers le storage média du Website actif.
+ *
+ * @remarks
+ * - Nécessite une session Studio valide.
+ * - Les SVG sont scopés par Prisma Website.id.
+ * - Le média final est écrit sous :
+ *   `websites/:websiteId/:year/:month/:filename`
  */
 
 import "server-only";
@@ -12,38 +19,45 @@ import { throwHttp } from "@compoz/http/http-error";
 import type { UploadSvgResponse } from "@compoz/infra/http/studio/media.types";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getMediaStorage } from "@compoz/infra/media/storage";
-import { requireSessionWithTenant } from "@compoz/studio/auth/require-session";
+import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 
 const MAX_IMAGE_UPLOAD_BYTES = Number(
   process.env["MAX_IMAGE_UPLOAD_BYTES"] ?? 5_000_000,
 );
 
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
 function sanitizeFilename(name: string): string {
   const base = name.normalize("NFKC").toLowerCase().replace(/\s+/g, "-");
   const trimmed = base.slice(0, 80);
+
   return trimmed.replace(/[^a-z0-9._-]/g, "-").replace(/-+/g, "-");
 }
 
 function nowParts(d = new Date()) {
-  const y = String(d.getUTCFullYear());
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  return { y, m };
+  const year = String(d.getUTCFullYear());
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+
+  return { year, month };
 }
 
 function buildStorageKey(args: {
-  tenantId: string;
+  websiteId: string;
   year: string;
   month: string;
   filename: string;
 }): string {
-  return `tenants/${args.tenantId}/${args.year}/${args.month}/${args.filename}`;
+  return `websites/${args.websiteId}/${args.year}/${args.month}/${args.filename}`;
 }
 
 function parseSvgLength(raw: string | null | undefined): number | null {
   if (!raw) return null;
 
   const value = raw.trim().toLowerCase();
+
   if (!value) return null;
 
   /**
@@ -55,9 +69,11 @@ function parseSvgLength(raw: string | null | undefined): number | null {
    * - "240px"
    */
   const match = value.match(/^([0-9]+(?:\.[0-9]+)?)(px)?$/);
+
   if (!match) return null;
 
   const n = Number(match[1]);
+
   if (!Number.isFinite(n) || n <= 0) return null;
 
   return n;
@@ -67,6 +83,7 @@ function extractSvgDimensions(
   svg: string,
 ): { width: number; height: number } | null {
   const svgTagMatch = svg.match(/<svg\b[^>]*>/i);
+
   if (!svgTagMatch) return null;
 
   const svgTag = svgTagMatch[0];
@@ -85,6 +102,7 @@ function extractSvgDimensions(
   }
 
   const viewBoxAttr = svgTag.match(/\bviewBox\s*=\s*["']([^"']+)["']/i)?.[1];
+
   if (!viewBoxAttr) return null;
 
   const parts = viewBoxAttr
@@ -96,33 +114,37 @@ function extractSvgDimensions(
     return null;
   }
 
-  const vbWidth = parts[2];
-  const vbHeight = parts[3];
+  const viewBoxWidth = parts[2];
+  const viewBoxHeight = parts[3];
 
-  if (vbWidth <= 0 || vbHeight <= 0) {
+  if (viewBoxWidth <= 0 || viewBoxHeight <= 0) {
     return null;
   }
 
   return {
-    width: Math.round(vbWidth),
-    height: Math.round(vbHeight),
+    width: Math.round(viewBoxWidth),
+    height: Math.round(viewBoxHeight),
   };
 }
+
+/* -------------------------------------------------------------------------- */
+/* POST                                                                       */
+/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
   const NS = "api.studio.media.upload.svg.POST" as const;
 
   return handleRoute(NS, req, async () => {
-    const lg = log.child({ ns: NS });
+    const logger = log.child({ ns: NS });
     const storage = getMediaStorage();
-    const { tenantId } = await requireSessionWithTenant();
+    const { websiteId } = await requireSessionWithWebsite();
 
     return logSpan(
       NS,
       {
         ns: NS,
         method: "POST",
-        tenantId,
+        websiteId,
         contentTypeHeader: req.headers.get("content-type") ?? undefined,
       },
       async () => {
@@ -162,7 +184,10 @@ export async function POST(req: Request) {
           throwHttp(413, {
             code: EC.PAYLOAD_TOO_LARGE,
             message: EC.UPLOAD_FILE_TOO_LARGE,
-            details: { maxBytes: MAX_IMAGE_UPLOAD_BYTES, receivedBytes: size },
+            details: {
+              maxBytes: MAX_IMAGE_UPLOAD_BYTES,
+              receivedBytes: size,
+            },
           });
         }
 
@@ -180,7 +205,10 @@ export async function POST(req: Request) {
           "href=",
         ];
 
-        const hit = forbiddenPatterns.find((p) => lower.includes(p));
+        const hit = forbiddenPatterns.find((pattern) =>
+          lower.includes(pattern),
+        );
+
         if (hit) {
           throwHttp(415, {
             code: EC.UNSUPPORTED_MEDIA_TYPE,
@@ -194,6 +222,7 @@ export async function POST(req: Request) {
         }
 
         const dimensions = extractSvgDimensions(text);
+
         if (!dimensions) {
           throwHttp(422, {
             code: EC.INVALID_ARGUMENT,
@@ -204,15 +233,16 @@ export async function POST(req: Request) {
           });
         }
 
-        const origName = file.name || "logo";
-        const safeBase = sanitizeFilename(origName.replace(/\.[^.]+$/, ""));
+        const originalName = file.name || "logo";
+        const safeBase = sanitizeFilename(originalName.replace(/\.[^.]+$/, ""));
 
-        const { y, m } = nowParts();
+        const { year, month } = nowParts();
         const filename = `${safeBase}-${Date.now()}.svg`;
+
         const key = buildStorageKey({
-          tenantId,
-          year: y,
-          month: m,
+          websiteId,
+          year,
+          month,
           filename,
         });
 
@@ -222,8 +252,8 @@ export async function POST(req: Request) {
           contentType,
         });
 
-        lg.debug("upload.svg.ok", {
-          tenantId,
+        logger.debug("upload.svg.ok", {
+          websiteId,
           contentType,
           size,
           width: dimensions.width,

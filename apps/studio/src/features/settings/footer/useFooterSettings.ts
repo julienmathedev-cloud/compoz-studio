@@ -8,11 +8,15 @@
  * Hook Studio spécialisé pour gérer les réglages du footer via l’API.
  *
  * @remarks
- * - Basé sur le pattern **Settings RHF-first** (`useSettingsResource`).
- * - Travaille exclusivement sur le modèle **UI** (`FooterFormValues`).
+ * - Basé sur le pattern Settings RHF-first (`useSettingsResource`).
+ * - Travaille exclusivement sur le modèle UI (`FooterFormValues`).
  * - Orchestration UI-only : defaults, load, diff minimal, save, notifications.
  * - Aucune logique métier ni validation domaine.
+ * - Le cache settings/status est scopé par Prisma Website.id.
  */
+
+import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 import {
   DEFAULT_CONTENT_STATE,
@@ -20,7 +24,7 @@ import {
 } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_FOOTER_SETTINGS } from "@compoz/core/domain/site/defaults/footer";
 import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
-import { useTenantId } from "@compoz/studio/features/admin/tenant/TenantContext";
+import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
@@ -36,32 +40,33 @@ import {
 } from "@compoz/studio/features/settings/mappers/footer-form";
 import { invalidateSiteStatus } from "@compoz/studio/features/site/status/invalidate";
 import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
-import type { FooterFormValues } from "@compoz/validation/site/settings/footer/footer-form";
-import { useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
 
-/**
- * Alias du contrat de retour du hook `useFooterSettings`.
- */
+import type { FooterFormValues } from "@compoz/validation/site/settings/footer/footer-form";
+
 type UseFooterSettingsResult = SettingsHookResult<FooterFormValues>;
 
 export function useFooterSettings(): UseFooterSettingsResult {
   const t = useTranslations();
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
+  const websiteId = useWebsiteId();
+
   const entityLabel = t("studio.shared.entities.footer");
-  const tenantId = useTenantId();
 
   const resource = useSettingsResource<FooterFormValues>({
     entityLabel,
 
-    /** Valeurs par défaut (domaine → UI → normalisation). */
+    /**
+     * Valeurs par défaut domaine → UI → normalisation.
+     */
     defaults: normalizeFooterFormValues(
       toFooterFormValuesFromDTO(DEFAULT_FOOTER_SETTINGS),
     ),
 
-    /** GET → DTO domaine → UI normalisée. */
+    /**
+     * GET bundle → DTO domaine → UI normalisée.
+     */
     load: async (state: ContentState) => {
-      const bundle = await getSettingsBundle(qc, tenantId, state);
+      const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
       return normalizeFooterFormValues(
         toFooterFormValuesFromDTO(bundle.footer),
@@ -72,37 +77,49 @@ export function useFooterSettings(): UseFooterSettingsResult {
       const patch = toUpdateFooterIntentDTOFromFormValues(next);
       const dto = await settingsStudioApi.footer.patch(patch, opts);
 
-      patchSettingsBundleCache(qc, tenantId, DEFAULT_CONTENT_STATE, (prev) => ({
-        ...prev,
-        footer: dto.settings,
-      }));
+      patchSettingsBundleCache(
+        queryClient,
+        websiteId,
+        DEFAULT_CONTENT_STATE,
+        (previous) => ({
+          ...previous,
+          footer: dto.settings,
+        }),
+      );
 
       return normalizeFooterFormValues(toFooterFormValuesFromDTO(dto.settings));
     },
 
-    /** Diff minimal : ne renvoie que les champs réellement modifiés. */
+    /**
+     * Diff minimal : ne renvoie que les champs réellement modifiés.
+     */
     buildPatch: (baseline, next) =>
       buildShallowDiff(
         normalizeFooterFormValues(baseline),
         normalizeFooterFormValues(next),
       ) ?? null,
 
-    /** Baseline stable et cohérente à l’entrée/sortie réseau. */
+    /**
+     * Baseline stable et cohérente à l’entrée/sortie réseau.
+     */
     onLoaded: normalizeFooterFormValues,
 
-    /** Normalisation safe avant diff/save. */
+    /**
+     * Normalisation safe avant diff/save.
+     */
     beforeSave: normalizeFooterFormValues,
 
     /**
-     * Après un save : on invalide le read-model "status" (Overview badges).
-     * - Côté serveur, le use-case a déjà invalidé le snapshot KV `status`.
-     * - Côté client, on force React Query à refetch `useSiteStatus()`.
+     * Après un save :
+     * - côté serveur, le use-case a invalidé le snapshot status ;
+     * - côté client, on force React Query à refetch `useSiteStatus()`
+     *   et le bundle settings courant.
      */
     onSaved: () => {
-      void invalidateSiteStatus(qc, tenantId);
+      void invalidateSiteStatus(queryClient, websiteId);
 
-      void qc.invalidateQueries({
-        queryKey: settingsBundleKey(tenantId, DEFAULT_CONTENT_STATE),
+      void queryClient.invalidateQueries({
+        queryKey: settingsBundleKey(websiteId, DEFAULT_CONTENT_STATE),
       });
     },
   });

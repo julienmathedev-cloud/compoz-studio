@@ -109,7 +109,7 @@ export function SiteGalleryZoomList({
 
   const opened = openIndex != null ? normalizedImages[openIndex] : null;
   const cols = clampColumns(columns);
-  const resolvedSizes = ui.sizesByColumns[cols];
+  const thumbWidth = getGalleryThumbnailWidth(cols);
 
   return (
     <>
@@ -133,10 +133,13 @@ export function SiteGalleryZoomList({
                   image={{
                     src: img.src,
                     alt: img.alt,
-                    width: img.width,
-                    height: img.height,
+                    width: thumbWidth,
+                    height: getGalleryThumbnailHeight({
+                      width: thumbWidth,
+                      originalWidth: img.width,
+                      originalHeight: img.height,
+                    }),
                   }}
-                  sizes={resolvedSizes}
                   className={cn(ui.image)}
                   priority={priority && index === 0}
                   fetchPriority={priority && index === 0 ? "high" : "auto"}
@@ -187,4 +190,27 @@ SiteGalleryZoomList.displayName = "SiteGalleryZoomList";
 
 function clampColumns(v: unknown): 1 | 2 | 3 | 4 | 5 | 6 {
   return v === 1 || v === 2 || v === 3 || v === 4 || v === 5 || v === 6 ? v : 3;
+}
+
+function getGalleryThumbnailWidth(columns: number): number {
+  if (columns >= 4) return 384;
+  if (columns === 3) return 512;
+  if (columns === 2) return 640;
+
+  return 768;
+}
+
+function getGalleryThumbnailHeight(params: {
+  width: number;
+  originalWidth: number;
+  originalHeight: number;
+}): number {
+  if (params.originalWidth <= 0 || params.originalHeight <= 0) {
+    return params.width;
+  }
+
+  return Math.max(
+    1,
+    Math.round((params.width * params.originalHeight) / params.originalWidth),
+  );
 }

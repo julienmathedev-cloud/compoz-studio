@@ -7,6 +7,9 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+const SECONDS_PER_DAY = 60 * 60 * 24;
+const CACHE_FOR_45_DAYS = SECONDS_PER_DAY * 45;
+
 const nextConfig: NextConfig = {
   reactCompiler: false,
 
@@ -19,6 +22,9 @@ const nextConfig: NextConfig = {
   ],
 
   images: {
+    minimumCacheTTL: CACHE_FOR_45_DAYS,
+    deviceSizes: [640, 1024, 1536, 1920],
+    imageSizes: [128, 256, 384, 512],
     remotePatterns: [
       {
         protocol: "https",

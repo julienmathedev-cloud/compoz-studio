@@ -64,7 +64,7 @@ export function SiteGalleryNavList({
 }: SiteGalleryNavListProps) {
   const pathname = usePathname() || "/";
   const cols = clampColumns(columns);
-  const resolvedSizes = ui.sizesByColumns[cols];
+  const thumbWidth = getGalleryThumbnailWidth(cols);
 
   return (
     <ul className={cn(ui.list)} data-reveal={reveal ? "true" : "false"}>
@@ -72,6 +72,10 @@ export function SiteGalleryNavList({
         const normalized = normalizeImage(img);
 
         if (!normalized.src) {
+          return null;
+        }
+
+        if (!normalized.width || !normalized.height) {
           return null;
         }
 
@@ -85,10 +89,13 @@ export function SiteGalleryNavList({
               image={{
                 src: normalized.src,
                 alt: normalized.alt,
-                width: normalized.width,
-                height: normalized.height,
+                width: thumbWidth,
+                height: getGalleryThumbnailHeight({
+                  width: thumbWidth,
+                  originalWidth: normalized.width,
+                  originalHeight: normalized.height,
+                }),
               }}
-              sizes={resolvedSizes}
               className={cn(ui.image)}
               priority={priority && index === 0}
               fetchPriority={priority && index === 0 ? "high" : "auto"}
@@ -199,4 +206,27 @@ function normalizeImage(img: ImageEditorShape): NormalizedImage {
 
 function clampColumns(v: unknown): 1 | 2 | 3 | 4 | 5 | 6 {
   return v === 1 || v === 2 || v === 3 || v === 4 || v === 5 || v === 6 ? v : 3;
+}
+
+function getGalleryThumbnailWidth(columns: number): number {
+  if (columns >= 4) return 384;
+  if (columns === 3) return 512;
+  if (columns === 2) return 640;
+
+  return 768;
+}
+
+function getGalleryThumbnailHeight(params: {
+  width: number;
+  originalWidth: number;
+  originalHeight: number;
+}): number {
+  if (params.originalWidth <= 0 || params.originalHeight <= 0) {
+    return params.width;
+  }
+
+  return Math.max(
+    1,
+    Math.round((params.width * params.originalHeight) / params.originalWidth),
+  );
 }

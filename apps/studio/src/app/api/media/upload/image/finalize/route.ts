@@ -17,6 +17,8 @@
 
 import "server-only";
 
+import { randomUUID } from "node:crypto";
+
 import sharp from "sharp";
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -162,7 +164,7 @@ export async function POST(req: Request) {
         originalFilename.replace(/\.[^.]+$/, ""),
       );
       const { year, month } = nowParts();
-      const baseName = `${safeBase}-${Date.now()}`;
+      const baseName = `${safeBase}-${Date.now()}-${randomUUID()}`;
 
       const urls: Record<number, string> = {};
 
@@ -244,9 +246,7 @@ export async function POST(req: Request) {
 
     const safeBase = sanitizeFilename(originalFilename.replace(/\.[^.]+$/, ""));
     const { year, month } = nowParts();
-    const filename = `${safeBase}-${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2)}.${optimized.ext}`;
+    const filename = `${safeBase}-${Date.now()}-${randomUUID()}.${optimized.ext}`;
 
     const key = buildStorageKey({
       websiteId,

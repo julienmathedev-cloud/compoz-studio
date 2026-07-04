@@ -50,8 +50,8 @@ export const defaultImageUi: SiteImageUi = {
   variantSizes: {
     default: "(max-width: 1024px) 100vw, 1024px",
     wide: "(max-width: 1024px) 100vw, 1024px",
-    square: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
-    portrait: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
+    square: "(max-width: 1024px) 100vw, 1024px",
+    portrait: "(max-width: 1024px) 100vw, 1024px",
   },
 
   // Présence visuelle dans le layout

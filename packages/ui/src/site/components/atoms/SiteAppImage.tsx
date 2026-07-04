@@ -70,10 +70,7 @@ export function SiteAppImage({
   style,
 }: SiteAppImageProps) {
   const normalizedAlt = normalizeString(image.alt, "");
-  const normalizedSizes = normalizeString(
-    sizes,
-    "(max-width: 767px) 100vw, 50vw",
-  );
+  const normalizedSizes = normalizeString(sizes, "");
   const normalizedDescribedBy = normalizeString(ariaDescribedBy);
   const normalizedLabelledBy = normalizeString(ariaLabelledBy);
 
@@ -113,7 +110,7 @@ export function SiteAppImage({
       fetchPriority={fetchPriority}
       decoding={decoding}
       loading={loading}
-      sizes={normalizedSizes}
+      sizes={normalizedSizes || undefined}
       fill={fill}
       className={className}
       aria-describedby={describedBy}

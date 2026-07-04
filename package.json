@@ -9,13 +9,17 @@
     "dev:studio": "pnpm --filter @compoz/studio dev",
     "dev:site": "pnpm --filter @compoz/site dev",
     "db:generate": "pnpm --filter @compoz/infra db:generate",
-    "build": "pnpm db:generate && pnpm -r --filter @compoz/studio --filter @compoz/site build",
+    "db:validate": "pnpm --filter @compoz/infra db:validate",
+    "build": "pnpm build:studio && pnpm build:site",
     "build:studio": "pnpm --filter @compoz/studio build",
     "build:site": "pnpm --filter @compoz/site build",
     "start": "pnpm -r --parallel --filter @compoz/studio --filter @compoz/site start",
     "start:studio": "pnpm --filter @compoz/studio start",
     "start:site": "pnpm --filter @compoz/site start",
-    "lint": "pnpm -r lint",
+    "lint": "pnpm -r --if-present lint",
+    "lint:strict": "pnpm -r --if-present lint:strict",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "check": "pnpm lint:strict && pnpm typecheck && pnpm build",
     "check:i18n": "tsx --tsconfig ./scripts/tsconfig.json ./scripts/check-i18n.ts",
     "backup:upstash": "pnpm --filter @compoz/infra backup:upstash"
   },
@@ -38,7 +42,8 @@
   },
   "dependencies": {
     "sanitize-html": "^2.17.1",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "typescript": "^5"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

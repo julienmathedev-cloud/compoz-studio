@@ -6,6 +6,8 @@
   "sideEffects": false,
   "scripts": {
     "lint": "eslint .",
+    "lint:strict": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit --project tsconfig.json",
     "migrate:default-to-demo": "tsx src/scripts/migrate-default-to-demo.ts",
     "backup:upstash": "tsx src/scripts/backup-upstash-local.ts",
     "db:validate": "prisma validate --schema prisma/schema.prisma",
@@ -31,99 +33,15 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./kv/kv-telemetry": {
-      "types": "./src/kv/kv-telemetry.ts",
-      "default": "./src/kv/kv-telemetry.ts"
-    },
-    "./kv/kv-redis": {
-      "types": "./src/kv/kv-redis.ts",
-      "import": "./src/kv/kv-redis.ts",
-      "default": "./src/kv/kv-redis.ts"
-    },
-    "./http/abort-error": {
-      "types": "./src/http/abort-error.ts",
-      "import": "./src/http/abort-error.ts",
-      "default": "./src/http/abort-error.ts"
-    },
-    "./lib/normalize-tenant-id": {
-      "types": "./src/lib/normalize-tenant-id.ts",
-      "import": "./src/lib/normalize-tenant-id.ts",
-      "default": "./src/lib/normalize-tenant-id.ts"
-    },
-    "./lib/log": {
-      "types": "./src/lib/log.ts",
-      "import": "./src/lib/log.ts",
-      "default": "./src/lib/log.ts"
-    },
-    "./pages/kv-pages-repository": {
-      "types": "./src/pages/kv-pages-repository.ts",
-      "import": "./src/pages/kv-pages-repository.ts",
-      "default": "./src/pages/kv-pages-repository.ts"
-    },
-    "./pages/prisma-pages-repository": {
-      "types": "./src/pages/prisma-pages-repository.ts",
-      "import": "./src/pages/prisma-pages-repository.ts",
-      "default": "./src/pages/prisma-pages-repository.ts"
-    },
-    "./pages/mappers/page.mapper": {
-      "types": "./src/pages/mappers/page.mapper.ts",
-      "import": "./src/pages/mappers/page.mapper.ts",
-      "default": "./src/pages/mappers/page.mapper.ts"
-    },
-    "./pages/mappers/page-legacy-normalizer": {
-      "types": "./src/pages/mappers/page-legacy-normalizer.ts",
-      "import": "./src/pages/mappers/page-legacy-normalizer.ts",
-      "default": "./src/pages/mappers/page-legacy-normalizer.ts"
-    },
-    "./prisma/prisma-client": {
-      "types": "./src/prisma/prisma-client.ts",
-      "import": "./src/prisma/prisma-client.ts",
-      "default": "./src/prisma/prisma-client.ts"
-    },
     "./prisma/generated": {
       "types": "./src/prisma/generated/client.ts",
       "import": "./src/prisma/generated/client.ts",
       "default": "./src/prisma/generated/client.ts"
     },
-    "./site/kv-site-repository": {
-      "types": "./src/site/kv-site-repository.ts",
-      "import": "./src/site/kv-site-repository.ts",
-      "default": "./src/site/kv-site-repository.ts"
-    },
-    "./site/prisma-site-repository": {
-      "types": "./src/site/prisma-site-repository.ts",
-      "import": "./src/site/prisma-site-repository.ts",
-      "default": "./src/site/prisma-site-repository.ts"
-    },
-    "./site/mappers/site-index.mapper": {
-      "types": "./src/site/mappers/site-index.mapper.ts",
-      "import": "./src/site/mappers/site-index.mapper.ts",
-      "default": "./src/site/mappers/site-index.mapper.ts"
-    },
-    "./site/mappers/site-settings.mapper": {
-      "types": "./src/site/mappers/site-settings.mapper.ts",
-      "import": "./src/site/mappers/site-settings.mapper.ts",
-      "default": "./src/site/mappers/site-settings.mapper.ts"
-    },
-    "./users": {
-      "types": "./src/users/index.ts",
-      "import": "./src/users/index.ts",
-      "default": "./src/users/index.ts"
-    },
-    "./users/in-memory-users-repository": {
-      "types": "./src/users/in-memory-users-repository.ts",
-      "import": "./src/users/in-memory-users-repository.ts",
-      "default": "./src/users/in-memory-users-repository.ts"
-    },
-    "./users/kv-users-repository": {
-      "types": "./src/users/kv-users-repository.ts",
-      "import": "./src/users/kv-users-repository.ts",
-      "default": "./src/users/kv-users-repository.ts"
-    },
-    "./users/prisma-users-repository": {
-      "types": "./src/users/prisma-users-repository.ts",
-      "import": "./src/users/prisma-users-repository.ts",
-      "default": "./src/users/prisma-users-repository.ts"
+    "./*": {
+      "types": "./src/*.ts",
+      "import": "./src/*.ts",
+      "default": "./src/*.ts"
     }
   },
   "devDependencies": {

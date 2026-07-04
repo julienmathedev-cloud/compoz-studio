@@ -3,21 +3,26 @@
  * @layer site/app/metadata
  *
  * @description
- * Route metadata `robots` pour le fallback multi-tenant /t/:tenant.
+ * Route metadata `robots` pour le fallback multi-website /t/:websiteSlug.
  *
  * Règle : on force NOINDEX (fallback technique, pas une URL canonique).
  *
  * URL:
  *   /t/[tenantId]/robots.txt
+ *
+ * @remarks
+ * Le segment de route `[tenantId]` est conservé pour éviter un rename Next large,
+ * mais sa valeur est maintenant interprétée comme un Website.slug.
  */
 
 import "server-only";
 
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 
+import { resolvePublicWebsiteFromRouteSlug } from "@compoz/infra/websites/resolve-public-website";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
-import { toTenantId } from "@compoz/ui/lib/tenant-id";
 import {
   canonicalFromBase,
   stripTrailingSlashes,
@@ -29,7 +34,7 @@ type Params = Readonly<{
 
 function resolveRequestBaseUrl(
   headersList: Awaited<ReturnType<typeof headers>>,
-) {
+): string {
   const hostRaw =
     headersList.get("x-forwarded-host") ?? headersList.get("host") ?? "";
 
@@ -41,7 +46,9 @@ function resolveRequestBaseUrl(
 
   const host = hostRaw.trim();
 
-  if (!host) return "";
+  if (!host) {
+    return "";
+  }
 
   return stripTrailingSlashes(`${protoRaw}://${host}`);
 }
@@ -49,16 +56,23 @@ function resolveRequestBaseUrl(
 export default async function robots({
   params,
 }: Params): Promise<MetadataRoute.Robots> {
-  const { tenantId } = await unwrapParams(params);
+  const { tenantId: websiteSlug } = await unwrapParams(params);
 
-  const t = toTenantId(tenantId);
+  const website = await resolvePublicWebsiteFromRouteSlug({
+    slug: websiteSlug,
+  });
+
+  if (!website) {
+    return notFound();
+  }
+
   const h = await headers();
 
   const baseUrl =
     stripTrailingSlashes(process.env["NEXT_PUBLIC_SITE_URL"] ?? "") ||
     resolveRequestBaseUrl(h);
 
-  const sitemapPath = t ? `/t/${t}/sitemap.xml` : undefined;
+  const sitemapPath = `/t/${encodeURIComponent(website.slug)}/sitemap.xml`;
 
   return {
     rules: [
@@ -67,9 +81,8 @@ export default async function robots({
         disallow: "/",
       },
     ],
-    sitemap:
-      sitemapPath && baseUrl
-        ? (canonicalFromBase(baseUrl, sitemapPath) ?? sitemapPath)
-        : sitemapPath,
+    sitemap: baseUrl
+      ? (canonicalFromBase(baseUrl, sitemapPath) ?? sitemapPath)
+      : sitemapPath,
   };
 }

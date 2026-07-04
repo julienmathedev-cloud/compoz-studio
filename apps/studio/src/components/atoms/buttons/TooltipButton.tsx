@@ -19,6 +19,7 @@ import { Button } from "@compoz/ui/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@compoz/ui/components/ui/tooltip";
 import { cn } from "@compoz/ui/lib/utils";
@@ -52,7 +53,7 @@ export function TooltipButton({
   tooltip,
   side = "top",
   align = "center",
-  delayDuration = 150,
+  delayDuration = 300,
   className,
   ...buttonProps
 }: TooltipButtonProps) {
@@ -65,21 +66,23 @@ export function TooltipButton({
   const button = <Button {...buttonProps} className={className} />;
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        {isDisabled ? (
-          <span tabIndex={0} className={cn("flex")}>
-            {button}
-          </span>
-        ) : (
-          button
-        )}
-      </TooltipTrigger>
+    <TooltipProvider delayDuration={delayDuration}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {isDisabled ? (
+            <span tabIndex={0} className={cn("flex")}>
+              {button}
+            </span>
+          ) : (
+            button
+          )}
+        </TooltipTrigger>
 
-      <TooltipContent side={side} align={align}>
-        {tooltip}
-      </TooltipContent>
-    </Tooltip>
+        <TooltipContent side={side} align={align}>
+          {tooltip}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 

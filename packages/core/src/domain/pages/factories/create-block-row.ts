@@ -16,6 +16,11 @@ export function createBlockRowEntity(columnsCount: 1 | 2 | 3): BlockRow {
   return {
     id: randomUUID(),
     columnsCount,
+    reverseOn: {
+      mobile: false,
+      tablet: false,
+      desktop: false,
+    },
     columns,
   };
 }

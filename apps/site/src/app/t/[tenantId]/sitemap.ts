@@ -3,14 +3,17 @@
  * @layer site/app/metadata
  *
  * @description
- * Sitemap fallback multi-tenant (route metadata) : `/t/[tenantId]/sitemap.xml`.
+ * Sitemap fallback multi-website (route metadata) : `/t/[tenantId]/sitemap.xml`.
  *
  * @remarks
- * - Fallback technique (debug / vercel) : les URLs sont préfixées par `/t/:tenant`.
+ * - Fallback technique (debug / vercel) : les URLs sont préfixées par `/t/:websiteSlug`.
  * - Base URL :
  *   1) settings.seo.baseUrl (published)
  *   2) NEXT_PUBLIC_SITE_URL
  *   Sinon : URLs relatives (paths).
+ *
+ * Le segment de route `[tenantId]` est conservé pour éviter un rename Next large,
+ * mais sa valeur est maintenant interprétée comme un Website.slug.
  */
 
 import "server-only";
@@ -21,13 +24,13 @@ import { notFound } from "next/navigation";
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { getSiteRepository } from "@compoz/infra/site";
+import { resolvePublicWebsiteFromRouteSlug } from "@compoz/infra/websites/resolve-public-website";
 import {
   getPublishedHomePageByTenantId,
   getPublishedPageBySlugByTenantId,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
 import { toSlug } from "@compoz/ui/lib/routing/slug";
-import { requireTenantId } from "@compoz/ui/lib/tenant-id";
 import {
   canonicalFromBase,
   stripTrailingSlashes,
@@ -56,11 +59,19 @@ function toLastModified(value: string | null | undefined): Date | undefined {
 export default async function sitemap({
   params,
 }: Params): Promise<MetadataRoute.Sitemap> {
-  const { tenantId } = await unwrapParams(params);
+  const { tenantId: websiteSlug } = await unwrapParams(params);
 
-  const t = requireTenantId(tenantId, "sitemap.tenantId");
+  const website = await resolvePublicWebsiteFromRouteSlug({
+    slug: websiteSlug,
+  });
 
-  const repo = getSiteRepository({ tenantId: t });
+  if (!website) {
+    return notFound();
+  }
+
+  const websiteId = website.websiteId;
+
+  const repo = getSiteRepository({ tenantId: websiteId });
   await repo.ensureBase();
 
   const [index, settings] = await Promise.all([
@@ -68,7 +79,9 @@ export default async function sitemap({
     repo.readSettings(CONTENT_STATE.PUBLISHED),
   ]);
 
-  if (!index) return notFound();
+  if (!index) {
+    return notFound();
+  }
 
   const pages = index.pages ?? [];
   const indexLastModified = toLastModified(index.updatedAt) ?? new Date();
@@ -82,20 +95,28 @@ export default async function sitemap({
   const entries = await Promise.all(
     pages.map(async (ref) => {
       const slug = toSlug(ref.slug);
-      if (!slug) return null;
+
+      if (!slug) {
+        return null;
+      }
 
       const page =
         slug === HOME_SLUG
-          ? await getPublishedHomePageByTenantId(t)
-          : await getPublishedPageBySlugByTenantId(t, slug);
-      if (!page) return null;
+          ? await getPublishedHomePageByTenantId(websiteId)
+          : await getPublishedPageBySlugByTenantId(websiteId, slug);
+
+      if (!page) {
+        return null;
+      }
 
       if (page.sitemap?.include === false) {
         return null;
       }
 
       const path =
-        slug === HOME_SLUG ? `/t/${t}` : `/t/${t}/${encodeURIComponent(slug)}`;
+        slug === HOME_SLUG
+          ? `/t/${encodeURIComponent(website.slug)}`
+          : `/t/${encodeURIComponent(website.slug)}/${encodeURIComponent(slug)}`;
 
       const url = baseUrl ? (canonicalFromBase(baseUrl, path) ?? path) : path;
 

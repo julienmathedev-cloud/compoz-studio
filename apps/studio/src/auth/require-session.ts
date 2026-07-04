@@ -5,7 +5,7 @@
  * @description
  * Helpers d'auth pour les routes API et pages server Studio :
  * - centralise `auth()`
- * - résout le tenantId "actif" (session + cookie admin)
+ * - résout le tenantId / websiteId actif
  * - expose un sous-objet user minimal (id/email) pour les pages server
  * - expose aussi les métadonnées utiles des sessions sandbox démo
  * - lève des erreurs HTTP standardisées via `throwHttp`
@@ -18,9 +18,16 @@ import { cookies } from "next/headers";
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { throwHttp } from "@compoz/http/http-error";
+import { resolveStudioWebsite } from "@compoz/infra/websites/resolve-studio-website";
 import { authOptions } from "@compoz/studio/auth/auth";
 
 const ACTIVE_TENANT_COOKIE = "compoz_active_tenant" as const;
+
+type WebsiteSource =
+  | "cookie"
+  | "user-default"
+  | "first-accessible"
+  | "fallback";
 
 export function isAdminRole(role: unknown): boolean {
   return (
@@ -48,7 +55,24 @@ type SessionUserLite = Readonly<{
 }>;
 
 export type SessionTenantResult = Readonly<{
+  /**
+   * Legacy name kept for compatibility with existing Studio callers.
+   * For regular Prisma websites, this is equal to websiteId.
+   * For demo sandbox sessions, this can still be the KV sandbox tenant id.
+   */
   tenantId: string;
+
+  /**
+   * Prisma Website id for regular websites.
+   * For demo sandbox sessions, this currently mirrors tenantId until sandbox
+   * storage is migrated to Prisma.
+   */
+  websiteId: string;
+
+  websiteSlug: string;
+  websiteName: string;
+  websiteSource: WebsiteSource | "demo-session";
+
   role: string;
   tenantIds?: string[];
   defaultTenantId?: string;
@@ -75,8 +99,25 @@ function normalizeOptionalString(value: unknown): string | undefined {
   return normalized ? normalized : undefined;
 }
 
+function normalizeUniqueIds(input: ReadonlyArray<unknown>): string[] {
+  return [...new Set(input.map(normalizeId).filter(Boolean))];
+}
+
+function assertNoWildcardTenantAccess(args: {
+  defaultTenantId: string;
+  tenantIds: ReadonlyArray<string>;
+}): void {
+  if (args.defaultTenantId === "*" || args.tenantIds.includes("*")) {
+    throwHttp(400, {
+      code: ERROR_CODES.VALIDATION_ERROR,
+      message: "Wildcard tenant access is not supported",
+      where: "auth.session.tenantIds",
+    });
+  }
+}
+
 /**
- * Résout la session Studio + tenant actif.
+ * Résout la session Studio + tenant / website actif.
  *
  * @remarks
  * - Retourne `null` si aucune session n'est présente.
@@ -91,55 +132,20 @@ export async function getSessionWithTenantOrNull(): Promise<SessionTenantResult 
     return null;
   }
 
-  const defaultTenantId = String(session.user?.defaultTenantId ?? "")
-    .trim()
-    .toLowerCase();
-
-  if (!defaultTenantId) {
-    throwHttp(400, {
-      code: ERROR_CODES.VALIDATION_ERROR,
-      message: "Missing tenant",
-      where: "auth.session.defaultTenantId",
-    });
-  }
-
-  const role = String(session.user?.role ?? "").trim();
+  const role = normalizeId(session.user?.role);
+  const defaultTenantId = normalizeId(session.user?.defaultTenantId);
 
   const tenantIds = Array.isArray(session.user?.tenantIds)
-    ? [
-        ...new Set(
-          (session.user.tenantIds as unknown[])
-            .map((t) =>
-              String(t ?? "")
-                .trim()
-                .toLowerCase(),
-            )
-            .filter(Boolean),
-        ),
-      ]
+    ? normalizeUniqueIds(session.user.tenantIds as unknown[])
     : [];
 
-  if (defaultTenantId === "*" || tenantIds.includes("*")) {
-    throwHttp(400, {
-      code: ERROR_CODES.VALIDATION_ERROR,
-      message: "Wildcard tenant access is not supported",
-      where: "auth.session.tenantIds",
-    });
-  }
-
-  if (!tenantIds.includes(defaultTenantId)) {
-    throwHttp(403, {
-      code: ERROR_CODES.FORBIDDEN,
-      message: ERROR_CODES.FORBIDDEN,
-      extras: {
-        where: "auth.session.defaultTenantId",
-        reason: "DEFAULT_TENANT_NOT_ALLOWED",
-      },
-    });
-  }
+  assertNoWildcardTenantAccess({
+    defaultTenantId,
+    tenantIds,
+  });
 
   const user: SessionUserLite = {
-    id: normalizeId(session.user.id),
+    id: normalizeId(session.user?.id),
     email: normalizeEmail(session.user?.email),
     isDemo:
       typeof session.user?.isDemo === "boolean"
@@ -149,27 +155,84 @@ export async function getSessionWithTenantOrNull(): Promise<SessionTenantResult 
     demoExpiresAt: normalizeOptionalString(session.user?.demoExpiresAt),
   };
 
-  // ✅ Non-admin : tenant fixé
-  if (!isAdminRole(role)) {
+  if (!user.id || !user.email) {
+    throwHttp(401, {
+      code: ERROR_CODES.UNAUTHORIZED,
+      message: ERROR_CODES.UNAUTHORIZED,
+      extras: {
+        where: "auth.session.user",
+        reason: "INVALID_SESSION_USER",
+      },
+    });
+  }
+
+  /**
+   * Keep demo sandbox sessions on the legacy KV tenant id for now.
+   *
+   * Sandbox storage is intentionally not migrated to Prisma yet, so demo
+   * sessions must not be resolved through the Prisma Website resolver.
+   */
+  if (isDemoSessionUser(user)) {
+    const demoInstanceId = normalizeOptionalString(user.demoInstanceId);
+
+    if (!demoInstanceId) {
+      throwHttp(401, {
+        code: ERROR_CODES.UNAUTHORIZED,
+        message: ERROR_CODES.UNAUTHORIZED,
+        extras: {
+          where: "auth.session.user.demoInstanceId",
+          reason: "INVALID_DEMO_SESSION",
+        },
+      });
+    }
+
     return {
-      tenantId: defaultTenantId,
+      tenantId: demoInstanceId,
+      websiteId: demoInstanceId,
+      websiteSlug: demoInstanceId,
+      websiteName: "Demo sandbox",
+      websiteSource: "demo-session",
       role,
       tenantIds,
-      defaultTenantId,
+      defaultTenantId: defaultTenantId || demoInstanceId,
       user,
     };
   }
 
-  // ✅ Admin : cookie "tenant actif" si valide
   const c = await cookies();
-  const active = String(c.get(ACTIVE_TENANT_COOKIE)?.value ?? "")
-    .trim()
-    .toLowerCase();
+  const activeWebsiteId = normalizeId(c.get(ACTIVE_TENANT_COOKIE)?.value);
 
-  const tenantId =
-    active && tenantIds.includes(active) ? active : defaultTenantId;
+  const website = await resolveStudioWebsite({
+    activeWebsiteId,
+    user: {
+      id: user.id,
+      role,
+      defaultWebsiteId: defaultTenantId,
+      accessibleWebsiteIds: tenantIds,
+    },
+  }).catch((error: unknown) => {
+    throwHttp(403, {
+      code: ERROR_CODES.FORBIDDEN,
+      message: ERROR_CODES.FORBIDDEN,
+      extras: {
+        where: "auth.session.website",
+        reason: "WEBSITE_NOT_ALLOWED",
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
+  });
 
-  return { tenantId, role, tenantIds, defaultTenantId, user };
+  return {
+    tenantId: website.websiteId,
+    websiteId: website.websiteId,
+    websiteSlug: website.slug,
+    websiteName: website.name,
+    websiteSource: website.source,
+    role,
+    tenantIds,
+    defaultTenantId: defaultTenantId || website.websiteId,
+    user,
+  };
 }
 
 export async function requireSessionWithTenant(): Promise<SessionTenantResult> {

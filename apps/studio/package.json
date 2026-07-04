@@ -8,7 +8,9 @@
     "prebuild": "pnpm --filter @compoz/infra db:generate",
     "build": "next build",
     "start": "next start -p 3000",
-    "lint": "eslint",
+    "lint": "eslint .",
+    "lint:strict": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit --project tsconfig.json",
     "seed:admin": "tsx scripts/seed-admin.ts"
   },
   "dependencies": {

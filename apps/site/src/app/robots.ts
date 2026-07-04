@@ -3,21 +3,24 @@
  * @layer site/app/metadata
  *
  * @description
- * Route metadata `robots` (site) — directives d’indexation + lien sitemap.
+ * Route metadata `robots` du site public — directives d’indexation + lien sitemap.
  *
- * ✅ Multi-tenant
- * - Host-based : lvh.me (subdomain) + mapping env
- * - Fallback : sur *.vercel.app, sitemap sous /t/:tenant/sitemap.xml
+ * @remarks
+ * Multi-website :
+ * - Host-based : résolution via WebsiteDomain en Prisma.
+ * - Si le host ne correspond à aucun domaine connu, on retourne une 404.
+ * - Les routes fallback explicites `/t/:websiteSlug` ont leur propre robots dédié.
  */
 
 import "server-only";
 
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { getSiteRepository } from "@compoz/infra/site";
-import { resolveTenantFromHost } from "@compoz/site/lib/tenant/resolve-site-tenant";
+import { resolvePublicWebsiteFromHost } from "@compoz/infra/websites/resolve-public-website";
 import {
   canonicalFromBase,
   stripTrailingSlashes,
@@ -41,7 +44,10 @@ function parseRobotsTokens(input: string | null | undefined): Set<string> {
 
 function hostFromBaseUrl(baseUrl: string): string | undefined {
   const s = stripTrailingSlashes(baseUrl);
-  if (!s) return undefined;
+
+  if (!s) {
+    return undefined;
+  }
 
   try {
     return new URL(s).host || undefined;
@@ -52,7 +58,7 @@ function hostFromBaseUrl(baseUrl: string): string | undefined {
 
 function resolveRequestBaseUrl(
   headersList: Awaited<ReturnType<typeof headers>>,
-) {
+): string {
   const hostRaw =
     headersList.get("x-forwarded-host") ?? headersList.get("host") ?? "";
 
@@ -64,7 +70,9 @@ function resolveRequestBaseUrl(
 
   const host = hostRaw.trim();
 
-  if (!host) return "";
+  if (!host) {
+    return "";
+  }
 
   return stripTrailingSlashes(`${protoRaw}://${host}`);
 }
@@ -77,17 +85,15 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   const h = await headers();
 
   const hostRaw = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+  const website = await resolvePublicWebsiteFromHost({ hostRaw });
 
-  const resolved = resolveTenantFromHost({
-    hostRaw,
-    defaultTenantId: process.env["COMPOZ_DEFAULT_TENANT_ID"],
-    tenantByHostJson: process.env["COMPOZ_TENANT_BY_HOST_JSON"],
-  });
+  if (!website) {
+    return notFound();
+  }
 
-  const tenantId = resolved.tenantId;
-  const usePathTenantFallback = resolved.kind === "fallback";
+  const websiteId = website.websiteId;
 
-  const repo = getSiteRepository({ tenantId });
+  const repo = getSiteRepository({ tenantId: websiteId });
   const settings = await repo.readSettings(CONTENT_STATE.PUBLISHED);
 
   const seo = settings?.seo ?? null;
@@ -104,10 +110,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   const baseUrl = seoBaseUrl || envBaseUrl || requestBaseUrl;
   const hostOut = baseUrl ? hostFromBaseUrl(baseUrl) : undefined;
 
-  const sitemapPath = usePathTenantFallback
-    ? `/t/${encodeURIComponent(tenantId)}/sitemap.xml`
-    : "/sitemap.xml";
-
+  const sitemapPath = "/sitemap.xml";
   const sitemapAbs = baseUrl
     ? canonicalFromBase(baseUrl, sitemapPath)
     : undefined;

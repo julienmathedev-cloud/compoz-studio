@@ -5,13 +5,23 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "lint:strict": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit --project tsconfig.json"
   },
   "dependencies": {
     "@compoz/core": "workspace:*"
   },
   "exports": {
-    ".": "./src/index.ts",
-    "./http-error": "./src/http-error.ts"
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./http-error": {
+      "types": "./src/http-error.ts",
+      "import": "./src/http-error.ts",
+      "default": "./src/http-error.ts"
+    }
   }
 }

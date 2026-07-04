@@ -8,10 +8,9 @@
  * Élément triable générique basé sur dnd-kit.
  */
 
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 
 type SortableRenderArgs = Pick<
   ReturnType<typeof useSortable>,

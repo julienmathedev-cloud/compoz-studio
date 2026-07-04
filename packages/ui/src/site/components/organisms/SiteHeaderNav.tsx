@@ -27,7 +27,6 @@ import type { SocialSettingsShape } from "@compoz/validation/site/settings/socia
 export type SiteHeaderNavProps = Readonly<{
   primaryMenu: PrimaryMenuSettingsShape;
   social?: SocialSettingsShape;
-  blurClassName?: string;
   className?: string;
   primaryMenuUi: SitePrimaryMenuUi;
   socialMenuUi: SiteSocialMenuUi;
@@ -37,7 +36,6 @@ export type SiteHeaderNavProps = Readonly<{
 export function SiteHeaderNav({
   primaryMenu,
   social,
-  blurClassName,
   className,
   primaryMenuUi,
   socialMenuUi,
@@ -51,11 +49,7 @@ export function SiteHeaderNav({
   }
 
   const primary = hasMenu ? (
-    <SitePrimaryMenu
-      settings={primaryMenu}
-      ui={primaryMenuUi}
-      blurClassName={blurClassName}
-    />
+    <SitePrimaryMenu settings={primaryMenu} ui={primaryMenuUi} />
   ) : null;
 
   const socials = hasSocial ? (

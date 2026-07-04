@@ -18,7 +18,10 @@
 import { useMemo } from "react";
 import { usePathname } from "next/navigation";
 
-import { collectSectionIds, useActiveSection } from "@compoz/ui/hooks/useActiveSection";
+import {
+  collectSectionIds,
+  useActiveSection,
+} from "@compoz/ui/hooks/useActiveSection";
 import { cn } from "@compoz/ui/lib/utils";
 import {
   SiteNavActiveSectionProvider,
@@ -32,9 +35,6 @@ export type SitePrimaryMenuProps = Readonly<{
   /** Settings du menu principal (shape preview/site). */
   settings: PrimaryMenuSettingsShape;
 
-  /** Active le blur sur le menu (V0.5). */
-  blurClassName?: string;
-
   /** Optionnel : classes UI injectées par le skin/template. */
   ui: SitePrimaryMenuUi;
 }>;
@@ -42,11 +42,7 @@ export type SitePrimaryMenuProps = Readonly<{
 /**
  * Menu principal public (UI).
  */
-export function SitePrimaryMenu({
-  settings,
-  blurClassName,
-  ui,
-}: SitePrimaryMenuProps) {
+export function SitePrimaryMenu({ settings, ui }: SitePrimaryMenuProps) {
   const pathname = usePathname() || "/";
   const items = Array.isArray(settings?.items) ? settings.items : [];
   const sectionIds = useMemo(
@@ -117,7 +113,6 @@ export function SitePrimaryMenu({
                   label={label || undefined}
                   ariaLabel={label || undefined}
                   items={safeChildren}
-                  blurClassName={blurClassName}
                   itemContainerClass={ui.interactive}
                   itemLinkClass={ui.link}
                   itemLabelClass={ui.label}

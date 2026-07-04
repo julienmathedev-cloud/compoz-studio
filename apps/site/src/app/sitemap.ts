@@ -3,45 +3,55 @@
  * @layer site/app/metadata
  *
  * @description
- * Route metadata `sitemap` (site) — génère le sitemap à partir de l’index publié.
+ * Route metadata `sitemap` du site public — génère le sitemap à partir de l’index publié.
  *
- * ✅ Multi-tenant
- * - Host-based : lvh.me (subdomain) + mapping env
- * - Fallback : si sur *.vercel.app, on génère pour le tenant résolu (souvent default) sous /t/:tenant
+ * @remarks
+ * Multi-website :
+ * - Host-based : résolution via WebsiteDomain en Prisma.
+ * - Si le host ne correspond à aucun domaine connu, on retourne une 404.
+ * - Les routes fallback explicites `/t/:websiteSlug` ont leur propre sitemap dédié.
  */
 
 import "server-only";
 
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { getSiteRepository } from "@compoz/infra/site";
+import { resolvePublicWebsiteFromHost } from "@compoz/infra/websites/resolve-public-website";
 import {
   getPublishedHomePageByTenantId,
   getPublishedPageBySlugByTenantId,
 } from "@compoz/site/lib/pages/published-page-loaders";
-import { resolveTenantFromHost } from "@compoz/site/lib/tenant/resolve-site-tenant";
 import {
   canonicalFromBase,
   stripTrailingSlashes,
 } from "@compoz/ui/lib/urls/formats";
 
+function toLastModified(value: string | null | undefined): Date | undefined {
+  if (!value || Number.isNaN(Date.parse(value))) {
+    return undefined;
+  }
+
+  return new Date(value);
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const h = await headers();
   const hostRaw = h.get("x-forwarded-host") ?? h.get("host") ?? "";
 
-  const resolved = resolveTenantFromHost({
-    hostRaw,
-    defaultTenantId: process.env["COMPOZ_DEFAULT_TENANT_ID"],
-    tenantByHostJson: process.env["COMPOZ_TENANT_BY_HOST_JSON"],
-  });
+  const website = await resolvePublicWebsiteFromHost({ hostRaw });
 
-  const tenantId = resolved.tenantId;
-  const usePathTenantFallback = resolved.kind === "fallback";
+  if (!website) {
+    return notFound();
+  }
 
-  const siteRepo = getSiteRepository({ tenantId });
+  const websiteId = website.websiteId;
+
+  const siteRepo = getSiteRepository({ tenantId: websiteId });
   await siteRepo.ensureBase();
 
   const [index, settings] = await Promise.all([
@@ -49,8 +59,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     siteRepo.readSettings(CONTENT_STATE.PUBLISHED),
   ]);
 
-  const pages = index?.pages ?? [];
-  const updatedAt = index?.updatedAt;
+  if (!index) {
+    return notFound();
+  }
+
+  const pages = index.pages ?? [];
+  const indexLastModified = toLastModified(index.updatedAt) ?? new Date();
 
   const seoBaseUrl = settings?.seo?.baseUrl ?? "";
   const envBaseUrl = process.env["NEXT_PUBLIC_SITE_URL"] ?? "";
@@ -58,49 +72,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl =
     stripTrailingSlashes(seoBaseUrl) || stripTrailingSlashes(envBaseUrl) || "";
 
-  const indexLastModified =
-    updatedAt && !Number.isNaN(Date.parse(updatedAt))
-      ? new Date(updatedAt)
-      : new Date();
-
   const entries = await Promise.all(
     pages.map(async (ref) => {
       const slugRaw = String(ref.slug ?? "").trim();
-      const slug = slugRaw ? slugRaw : HOME_SLUG;
+      const slug = slugRaw || HOME_SLUG;
 
       const page =
         slug === HOME_SLUG
-          ? await getPublishedHomePageByTenantId(tenantId)
-          : await getPublishedPageBySlugByTenantId(tenantId, slug);
-      if (!page) return null;
+          ? await getPublishedHomePageByTenantId(websiteId)
+          : await getPublishedPageBySlugByTenantId(websiteId, slug);
+
+      if (!page) {
+        return null;
+      }
 
       if (page.sitemap?.include === false) {
         return null;
       }
 
-      const slugPath = slug === HOME_SLUG ? "" : `/${encodeURIComponent(slug)}`;
+      const path = slug === HOME_SLUG ? "/" : `/${encodeURIComponent(slug)}`;
 
-      const finalPath = usePathTenantFallback
-        ? slug === HOME_SLUG
-          ? `/t/${encodeURIComponent(tenantId)}`
-          : `/t/${encodeURIComponent(tenantId)}${slugPath}`
-        : slug === HOME_SLUG
-          ? "/"
-          : slugPath;
-
-      const url = baseUrl
-        ? (canonicalFromBase(baseUrl, finalPath) ?? finalPath)
-        : finalPath;
-
-      const pageUpdatedAt = page.meta?.updatedAt;
-      const lastModified =
-        pageUpdatedAt && !Number.isNaN(Date.parse(pageUpdatedAt))
-          ? new Date(pageUpdatedAt)
-          : indexLastModified;
+      const url = baseUrl ? (canonicalFromBase(baseUrl, path) ?? path) : path;
 
       return {
         url,
-        lastModified,
+        lastModified: toLastModified(page.meta?.updatedAt) ?? indexLastModified,
         changeFrequency: page.sitemap?.changefreq ?? "weekly",
         priority: page.sitemap?.priority ?? (slug === HOME_SLUG ? 1 : 0.7),
       } satisfies MetadataRoute.Sitemap[number];

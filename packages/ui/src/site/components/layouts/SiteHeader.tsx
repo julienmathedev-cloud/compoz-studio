@@ -96,7 +96,6 @@ export function SiteHeader({
           <SiteHeaderNav
             primaryMenu={primaryMenu}
             social={social}
-            blurClassName={blurClassName}
             className={cn(ui.nav)}
             primaryMenuUi={ui.menu}
             socialMenuUi={ui.social}

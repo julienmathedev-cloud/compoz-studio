@@ -18,12 +18,10 @@ import { renaudFormUi } from "@compoz/ui/site/skins/renaud/cells/form-cell.ui";
 import { renaudHeadingUi } from "@compoz/ui/site/skins/renaud/cells/heading-cell.ui";
 import { renaudImageUi } from "@compoz/ui/site/skins/renaud/cells/image-cell.ui";
 import { renaudRichTextUi } from "@compoz/ui/site/skins/renaud/cells/richtext-cell.ui";
-import { renaudFooterUi } from "@compoz/ui/site/skins/renaud/footer.ui";
 import { renaudHeaderUi } from "@compoz/ui/site/skins/renaud/header.ui";
 
 export const renaudGlobalUi: SiteGlobalUiOverride = {
   header: renaudHeaderUi,
-  footer: renaudFooterUi,
   cells: {
     card: renaudCardUi,
     form: renaudFormUi,

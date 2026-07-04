@@ -15,7 +15,6 @@
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
-import type { HttpOpts } from "@compoz/infra/http/internal";
 import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
 import type { QueryClient } from "@tanstack/react-query";
 

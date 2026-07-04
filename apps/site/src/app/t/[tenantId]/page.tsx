@@ -3,13 +3,18 @@
  * @layer site/app
  *
  * @description
- * Fallback multi-tenant : "/t/[tenantId]" -> rend la home published du tenant.
+ * Fallback multi-website : "/t/[tenantId]" -> rend la home published du website.
+ *
+ * @remarks
+ * Le segment de route `[tenantId]` est conservé pour éviter un rename Next large,
+ * mais sa valeur est maintenant interprétée comme un Website.slug.
  */
 
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
+import { resolvePublicWebsiteFromRouteSlug } from "@compoz/infra/websites/resolve-public-website";
 import {
   getPublishedHomePageByTenantId,
   getPublishedIndexByTenantId,
@@ -41,7 +46,9 @@ function applyTitleTemplate(
   title: string | undefined,
   template: string,
 ): string | undefined {
-  if (!title) return undefined;
+  if (!title) {
+    return undefined;
+  }
 
   return template.replace("%s", title);
 }
@@ -53,12 +60,25 @@ function applyTitleTemplate(
 export async function generateMetadata({
   params,
 }: PageParams): Promise<Metadata> {
-  const { tenantId } = await unwrapParams(params);
+  const { tenantId: websiteSlug } = await unwrapParams(params);
 
-  const page = await getPublishedHomePageByTenantId(tenantId);
-  if (!page) return {};
+  const website = await resolvePublicWebsiteFromRouteSlug({
+    slug: websiteSlug,
+  });
 
-  const settings = await getPublishedSettingsByTenantId(tenantId);
+  if (!website) {
+    return {};
+  }
+
+  const websiteId = website.websiteId;
+
+  const page = await getPublishedHomePageByTenantId(websiteId);
+
+  if (!page) {
+    return {};
+  }
+
+  const settings = await getPublishedSettingsByTenantId(websiteId);
 
   const defaultSeoTitle =
     (settings?.seo?.defaultTitle ?? "").trim() || undefined;
@@ -93,7 +113,9 @@ export async function generateMetadata({
   return {
     title: resolvedTitle,
     description,
-    alternates: { canonical: `/t/${encodeURIComponent(tenantId)}` },
+    alternates: {
+      canonical: `/t/${encodeURIComponent(website.slug)}`,
+    },
     openGraph: {
       title: resolvedTitle,
       description,
@@ -110,19 +132,35 @@ export async function generateMetadata({
 /* -------------------------------------------------------------------------- */
 
 export default async function SiteTenantRootPage({ params }: PageParams) {
-  const { tenantId } = await unwrapParams(params);
+  const { tenantId: websiteSlug } = await unwrapParams(params);
 
-  const index = await getPublishedIndexByTenantId(tenantId);
-  if (!index) return notFound();
+  const website = await resolvePublicWebsiteFromRouteSlug({
+    slug: websiteSlug,
+  });
 
-  const page = await getPublishedHomePageByTenantId(tenantId);
-  if (!page) return notFound();
+  if (!website) {
+    return notFound();
+  }
+
+  const websiteId = website.websiteId;
+
+  const index = await getPublishedIndexByTenantId(websiteId);
+
+  if (!index) {
+    return notFound();
+  }
+
+  const page = await getPublishedHomePageByTenantId(websiteId);
+
+  if (!page) {
+    return notFound();
+  }
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
     .map(toBlockShapeFromDTO)
     .filter((b): b is BlockShape => Boolean(b));
 
-  const tenantPrefix = `/t/${encodeURIComponent(tenantId)}`;
+  const tenantPrefix = `/t/${encodeURIComponent(website.slug)}`;
 
   const pager = computeSitePager({
     page,
@@ -133,11 +171,12 @@ export default async function SiteTenantRootPage({ params }: PageParams) {
         : `${tenantPrefix}/${encodeURIComponent(slug)}`,
   });
 
-  const ui = resolveSiteUi(tenantId);
-  const runtimeFeatures = resolveSiteRuntimeFeatures(tenantId);
-  const settings = await getPublishedSettingsByTenantId(tenantId);
+  const ui = resolveSiteUi(websiteId);
+  const runtimeFeatures = resolveSiteRuntimeFeatures(websiteId);
+  const settings = await getPublishedSettingsByTenantId(websiteId);
   const revealPreset = settings?.theme?.revealPreset ?? "fade-up";
   const revealUi = ui.reveal[revealPreset];
+
   const jsonLd = settings
     ? buildSiteJsonLd({
         settings,
@@ -155,6 +194,7 @@ export default async function SiteTenantRootPage({ params }: PageParams) {
           dangerouslySetInnerHTML={{ __html: serializeSiteJsonLd(jsonLd) }}
         />
       ) : null}
+
       <SitePageRenderer
         ui={ui}
         blocks={blocks}

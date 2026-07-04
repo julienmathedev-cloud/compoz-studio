@@ -64,7 +64,6 @@ export type SiteNavDropdownProps = Readonly<{
   label?: string;
   ariaLabel?: string;
   className?: string;
-  blurClassName?: string;
   children?: ReactNode;
   items: ReadonlyArray<SiteNavItem>;
   itemContainerClass?: string;
@@ -77,7 +76,6 @@ export function SiteNavDropdown({
   href = "#",
   ariaLabel,
   className,
-  blurClassName,
   label,
   children,
   items,

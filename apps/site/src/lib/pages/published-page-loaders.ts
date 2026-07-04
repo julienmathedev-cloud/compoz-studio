@@ -3,62 +3,75 @@
  * @layer site/lib/pages
  *
  * @description
- * Loaders server (Next/React) pour les pages PUBLISHED
+ * Loaders server (Next/React) pour les pages PUBLISHED.
  *
  * @remarks
- * - API principale : `...ByTenantId`
+ * - API principale legacy : `...ByTenantId`
+ * - En interne, `tenantId` correspond maintenant au Prisma `websiteId`
  * - Façade host-based conservée
  */
 
-import { headers } from "next/headers";
-import { cache } from "react";
 import "server-only";
+
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
+import { cache } from "react";
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { resolvePageIdFromIndex } from "@compoz/core/domain/pages/helpers/resolve-page-id-from-index";
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteRepository } from "@compoz/infra/site";
-import { resolveTenantFromHost } from "@compoz/site/lib/tenant/resolve-site-tenant";
+import { resolvePublicWebsiteFromHost } from "@compoz/infra/websites/resolve-public-website";
 import { toSlug } from "@compoz/ui/lib/routing/slug";
-import { toTenantId } from "@compoz/ui/lib/tenant-id";
 
 /* -------------------------------------------------------------------------- */
-/* Tenant resolution                                                          */
+/* Website resolution                                                         */
 /* -------------------------------------------------------------------------- */
 
-async function resolveTenantIdFromRequest(): Promise<string> {
+function normalizeId(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
+async function resolveWebsiteIdFromRequest(): Promise<string> {
   const h = await headers();
 
   const hostRaw = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+  const website = await resolvePublicWebsiteFromHost({ hostRaw });
 
-  const res = resolveTenantFromHost({
-    hostRaw,
-    defaultTenantId: process.env["COMPOZ_DEFAULT_TENANT_ID"],
-    tenantByHostJson: process.env["COMPOZ_TENANT_BY_HOST_JSON"],
-  });
+  if (!website) {
+    notFound();
+  }
 
-  return res.tenantId;
+  return website.websiteId;
 }
 
-export const getTenantId = cache(resolveTenantIdFromRequest);
+export const getWebsiteId = cache(resolveWebsiteIdFromRequest);
+
+/**
+ * @deprecated Use getWebsiteId instead.
+ *
+ * Legacy compatibility alias.
+ * In the Prisma Website model, this value is now a websiteId.
+ */
+export const getTenantId = getWebsiteId;
 
 /* -------------------------------------------------------------------------- */
 /* Internal cached loaders                                                    */
 /* -------------------------------------------------------------------------- */
 
-const readPublishedSettingsCached = cache(async (tenantId: string) => {
-  const repo = getSiteRepository({ tenantId });
+const readPublishedSettingsCached = cache(async (websiteId: string) => {
+  const repo = getSiteRepository({ tenantId: websiteId });
   return repo.readSettings(CONTENT_STATE.PUBLISHED);
 });
 
-const readPublishedIndexCached = cache(async (tenantId: string) => {
-  const repo = getSiteRepository({ tenantId });
+const readPublishedIndexCached = cache(async (websiteId: string) => {
+  const repo = getSiteRepository({ tenantId: websiteId });
   return repo.readIndex(CONTENT_STATE.PUBLISHED);
 });
 
 const readPublishedPageByIdCached = cache(
-  async (tenantId: string, pageId: string) => {
-    const pagesRepo = getPagesRepository({ tenantId });
+  async (websiteId: string, pageId: string) => {
+    const pagesRepo = getPagesRepository({ tenantId: websiteId });
     return pagesRepo.readById(CONTENT_STATE.PUBLISHED, pageId);
   },
 );
@@ -67,53 +80,74 @@ const readPublishedPageByIdCached = cache(
 /* Core helpers                                                               */
 /* -------------------------------------------------------------------------- */
 
-async function getPublishedPageByResolvedSlugForTenant(
-  tenantId: string,
+async function getPublishedPageByResolvedSlugForWebsite(
+  websiteId: string,
   slug: string,
 ) {
-  const index = await readPublishedIndexCached(tenantId);
-  if (!index) return null;
+  const index = await readPublishedIndexCached(websiteId);
+
+  if (!index) {
+    return null;
+  }
 
   const pageId = resolvePageIdFromIndex({ slug, index });
-  if (!pageId) return null;
 
-  return readPublishedPageByIdCached(tenantId, pageId);
+  if (!pageId) {
+    return null;
+  }
+
+  return readPublishedPageByIdCached(websiteId, pageId);
 }
 
 /* -------------------------------------------------------------------------- */
-/* Public API (tenant explicite)                                              */
+/* Public API — explicit website/tenant id                                    */
 /* -------------------------------------------------------------------------- */
 
 export async function getPublishedSettingsByTenantId(tenantId: string) {
-  const t = toTenantId(tenantId);
-  if (!t) return null;
+  const websiteId = normalizeId(tenantId);
 
-  return readPublishedSettingsCached(t);
+  if (!websiteId) {
+    return null;
+  }
+
+  return readPublishedSettingsCached(websiteId);
 }
 
 export async function getPublishedIndexByTenantId(tenantId: string) {
-  const t = toTenantId(tenantId);
-  if (!t) return null;
+  const websiteId = normalizeId(tenantId);
 
-  return readPublishedIndexCached(t);
+  if (!websiteId) {
+    return null;
+  }
+
+  return readPublishedIndexCached(websiteId);
 }
 
 export async function getPublishedPageBySlugByTenantId(
   tenantId: string,
   slug: string,
 ) {
-  const t = toTenantId(tenantId);
-  if (!t) return null;
+  const websiteId = normalizeId(tenantId);
 
-  const s = toSlug(slug);
-  if (!s || s === "home") return null;
+  if (!websiteId) {
+    return null;
+  }
 
-  return getPublishedPageByResolvedSlugForTenant(t, s);
+  const normalizedSlug = toSlug(slug);
+
+  if (!normalizedSlug || normalizedSlug === "home") {
+    return null;
+  }
+
+  return getPublishedPageByResolvedSlugForWebsite(websiteId, normalizedSlug);
 }
 
 export async function getPublishedHomePageByTenantId(tenantId: string) {
-  const t = toTenantId(tenantId);
-  if (!t) return null;
+  const websiteId = normalizeId(tenantId);
 
-  return getPublishedPageByResolvedSlugForTenant(t, "home");
+  if (!websiteId) {
+    return null;
+  }
+
+  return getPublishedPageByResolvedSlugForWebsite(websiteId, "home");
 }

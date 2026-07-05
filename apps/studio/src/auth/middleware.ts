@@ -1,5 +1,5 @@
 /**
- * @file apps/studio/src/middleware.ts
+ * @file apps/studio/auth/middleware.ts
  * @layer studio/auth
  *
  * @description
@@ -34,6 +34,7 @@ function isPublicPath(pathname: string): boolean {
 
   // Demo bootstrap endpoint
   if (pathname === "/api/demo/start") return true;
+  if (pathname === "/demo/start") return true;
 
   // Next static/assets
   if (pathname.startsWith("/_next")) return true;

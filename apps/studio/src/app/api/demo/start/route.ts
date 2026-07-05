@@ -36,6 +36,12 @@ function normalizeInternalNextPath(value: string | null): string {
   return raw;
 }
 
+function shouldReturnJson(value: string | null): boolean {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase() === "json";
+}
+
 function extractCookiePairs(setCookieHeaders: string[]): string {
   return setCookieHeaders
     .map((value) => value.split(";", 1)[0]?.trim() ?? "")
@@ -149,6 +155,7 @@ export async function GET(req: NextRequest) {
   const origin = url.origin;
 
   const nextPath = normalizeInternalNextPath(url.searchParams.get("next"));
+  const jsonMode = shouldReturnJson(url.searchParams.get("mode"));
 
   const existingDemoInstanceId =
     req.cookies.get(DEMO_INSTANCE_COOKIE_NAME)?.value ?? undefined;
@@ -171,7 +178,9 @@ export async function GET(req: NextRequest) {
     incomingCookieHeader: req.headers.get("cookie") ?? "",
   });
 
-  const response = NextResponse.redirect(new URL(nextPath, origin));
+  const response = jsonMode
+    ? NextResponse.json({ ok: true, redirectTo: nextPath })
+    : NextResponse.redirect(new URL(nextPath, origin));
 
   appendSetCookieHeaders(response, authCookies);
   response.headers.append(

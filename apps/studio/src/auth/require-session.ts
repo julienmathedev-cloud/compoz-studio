@@ -14,10 +14,8 @@
  * - Lève des erreurs HTTP standardisées via `throwHttp`.
  *
  * Notes de scope :
- * - Les sessions Studio classiques sont scopées par Prisma Website.id.
+ * - Les sessions Studio sont scopées par Prisma Website.id.
  * - Les routes publiques `/t/:websiteSlug` utilisent Website.slug ailleurs.
- * - Les sandboxes démo peuvent encore exposer un `sandboxTenantId`
- *   explicite tant que leur stockage reste côté KV.
  */
 
 import "server-only";
@@ -65,10 +63,10 @@ type SessionUserLite = Readonly<{
 
 export type SessionWebsiteResult = Readonly<{
   /**
-   * Prisma Website.id pour les sessions Studio classiques.
+   * Prisma Website.id du Website actif.
    *
-   * Pour les sessions démo, ce champ reflète encore l’id de sandbox tant que
-   * le stockage sandbox reste côté KV.
+   * Les sessions démo suivent le même flow que les sessions Studio classiques :
+   * elles pointent vers un vrai Website Prisma de type sandbox.
    */
   websiteId: string;
 
@@ -79,19 +77,11 @@ export type SessionWebsiteResult = Readonly<{
   websiteSlug: string;
 
   websiteName: string;
-  websiteSource: WebsiteSource | "demo-session";
+  websiteSource: WebsiteSource;
 
   role: string;
   websiteIds: string[];
   defaultWebsiteId: string;
-
-  /**
-   * Identifiant technique de sandbox KV.
-   *
-   * Présent uniquement pour les sessions démo, tant que les sandboxes ne sont
-   * pas encore stockées comme de vrais Websites Prisma.
-   */
-  sandboxTenantId?: string;
 
   /**
    * Sous-ensemble minimal pour UI server.
@@ -190,39 +180,6 @@ export async function getSessionWithWebsiteOrNull(): Promise<SessionWebsiteResul
         reason: "INVALID_SESSION_USER",
       },
     });
-  }
-
-  /**
-   * Les sessions démo restent sur leur identifiant technique de sandbox.
-   *
-   * Le nom `sandboxTenantId` est volontairement explicite : il désigne le
-   * stockage sandbox KV, pas le modèle Website Prisma.
-   */
-  if (isDemoSessionUser(user)) {
-    const sandboxTenantId = normalizeOptionalString(user.demoInstanceId);
-
-    if (!sandboxTenantId) {
-      throwHttp(401, {
-        code: ERROR_CODES.UNAUTHORIZED,
-        message: ERROR_CODES.UNAUTHORIZED,
-        extras: {
-          where: "auth.session.user.demoInstanceId",
-          reason: "INVALID_DEMO_SESSION",
-        },
-      });
-    }
-
-    return {
-      websiteId: sandboxTenantId,
-      websiteSlug: sandboxTenantId,
-      websiteName: "Demo sandbox",
-      websiteSource: "demo-session",
-      role,
-      websiteIds: [sandboxTenantId],
-      defaultWebsiteId: sandboxTenantId,
-      sandboxTenantId,
-      user,
-    };
   }
 
   const cookieStore = await cookies();

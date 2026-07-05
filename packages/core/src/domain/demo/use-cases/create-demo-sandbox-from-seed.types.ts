@@ -32,6 +32,8 @@ export interface DemoSandboxCloner {
     sourceWebsiteId: string;
     targetWebsiteId: string;
   }) => Promise<DemoSandboxCloneResult>;
+
+  deleteSandboxWebsite?: (websiteId: string) => Promise<void>;
 }
 
 export interface DemoSandboxPasswordBuilder {

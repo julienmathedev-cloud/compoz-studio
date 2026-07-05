@@ -142,18 +142,20 @@ export function createDemoSandboxFromSeed({
 
     const password = passwordBuilder.buildDemoUserPassword(demoInstanceId);
 
-    await users.create({
-      user,
-      password,
+    await sandboxCloner.cloneSeedToWebsite({
+      sourceWebsiteId: resolvedSeedWebsiteId,
+      targetWebsiteId: websiteId,
     });
 
     try {
-      await sandboxCloner.cloneSeedToWebsite({
-        sourceWebsiteId: resolvedSeedWebsiteId,
-        targetWebsiteId: websiteId,
+      await users.create({
+        user,
+        password,
       });
     } catch (error) {
-      await users.deleteById(user.id).catch(() => undefined);
+      await sandboxCloner
+        .deleteSandboxWebsite?.(websiteId)
+        .catch(() => undefined);
 
       throw error;
     }

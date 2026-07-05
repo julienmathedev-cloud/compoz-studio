@@ -64,7 +64,9 @@ function toResolution(
   };
 }
 
-async function readSiteById(websiteId: string): Promise<WebsiteRow | null> {
+async function readStudioWebsiteById(
+  websiteId: string,
+): Promise<WebsiteRow | null> {
   if (!websiteId) {
     return null;
   }
@@ -72,7 +74,9 @@ async function readSiteById(websiteId: string): Promise<WebsiteRow | null> {
   return prisma.website.findFirst({
     where: {
       id: websiteId,
-      type: "site",
+      type: {
+        in: ["site", "sandbox"],
+      },
     },
     select: {
       id: true,
@@ -122,7 +126,7 @@ export async function resolveStudioWebsite(args: {
       allowedWebsiteIds,
     })
   ) {
-    const website = await readSiteById(activeWebsiteId);
+    const website = await readStudioWebsiteById(activeWebsiteId);
 
     if (website) {
       return toResolution(website, "cookie");
@@ -136,7 +140,7 @@ export async function resolveStudioWebsite(args: {
       allowedWebsiteIds,
     })
   ) {
-    const website = await readSiteById(defaultWebsiteId);
+    const website = await readStudioWebsiteById(defaultWebsiteId);
 
     if (website) {
       return toResolution(website, "user-default");
@@ -144,7 +148,7 @@ export async function resolveStudioWebsite(args: {
   }
 
   for (const websiteId of allowedWebsiteIds) {
-    const website = await readSiteById(websiteId);
+    const website = await readStudioWebsiteById(websiteId);
 
     if (website) {
       return toResolution(website, "first-accessible");

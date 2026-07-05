@@ -8,7 +8,8 @@
  * @remarks
  * Multi-website :
  * - Host-based : résolution via WebsiteDomain en Prisma.
- * - Si le host ne correspond à aucun domaine connu, on retourne une 404.
+ * - Si le host ne correspond à aucun domaine connu, on retourne
+ *   des directives robots safe sans sitemap.
  * - Les routes fallback explicites `/t/:websiteSlug` ont leur propre robots dédié.
  */
 
@@ -16,7 +17,6 @@ import "server-only";
 
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { getSiteRepository } from "@compoz/infra/site";
@@ -87,10 +87,25 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   const hostRaw =
     headersList.get("x-forwarded-host") ?? headersList.get("host") ?? "";
 
-  const website = await resolvePublicWebsiteFromHost({ hostRaw });
+  let website: Awaited<ReturnType<typeof resolvePublicWebsiteFromHost>> = null;
+
+  try {
+    website = await resolvePublicWebsiteFromHost({ hostRaw });
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[site] failed to resolve robots website", error);
+    }
+  }
 
   if (!website) {
-    notFound();
+    return {
+      rules: [
+        {
+          userAgent: "*",
+          disallow: "/",
+        },
+      ],
+    };
   }
 
   const websiteId = website.websiteId;

@@ -1,29 +1,13 @@
 /**
- * @file apps/site/src/app/t/[websiteSlug]/sitemap.ts
+ * @file apps/site/src/app/t/[websiteSlug]/sitemap.xml/route.ts
  * @layer site/app/metadata
- *
- * @description
- * Sitemap du fallback public explicite `/t/:websiteSlug/sitemap.xml`.
- *
- * @remarks
- * - Le segment de route `websiteSlug` correspond au Prisma `Website.slug`.
- * - Le Website est résolu via Prisma avant de générer le sitemap.
- * - Les lectures de contenu utilisent le Prisma `Website.id`.
- * - Les URLs générées sont préfixées par `/t/:websiteSlug`.
- *
- * Base URL :
- * 1. `settings.seo.baseUrl` publié.
- * 2. `NEXT_PUBLIC_SITE_URL`.
- * 3. URLs relatives si aucune base URL n’est disponible.
- *
- * Ce sitemap est destiné au fallback technique `/t/:websiteSlug`.
- * Les routes host-based possèdent leur propre sitemap racine `/sitemap.xml`.
  */
 
 import "server-only";
 
 import type { MetadataRoute } from "next";
 import { notFound } from "next/navigation";
+import { NextResponse } from "next/server";
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
@@ -40,13 +24,20 @@ import {
   stripTrailingSlashes,
 } from "@compoz/ui/lib/urls/formats";
 
-type Params = Readonly<{
-  params: Promise<Readonly<{ websiteSlug: string }>>;
+type RouteContext = Readonly<{
+  params:
+    | Promise<Readonly<{ websiteSlug: string }>>
+    | Readonly<{ websiteSlug: string }>;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
+function escapeXml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
 
 function toLastModified(value: string | null | undefined): Date | undefined {
   if (!value || Number.isNaN(Date.parse(value))) {
@@ -68,13 +59,45 @@ function fallbackPathForPageSlug(params: {
     : `${websitePrefix}/${encodeURIComponent(pageSlug)}`;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Sitemap                                                                    */
-/* -------------------------------------------------------------------------- */
+function renderSitemap(entries: MetadataRoute.Sitemap): string {
+  const urls = entries
+    .map((entry) => {
+      const lastModified =
+        entry.lastModified instanceof Date
+          ? entry.lastModified.toISOString()
+          : entry.lastModified;
 
-export default async function sitemap({
-  params,
-}: Params): Promise<MetadataRoute.Sitemap> {
+      return [
+        "  <url>",
+        `    <loc>${escapeXml(String(entry.url))}</loc>`,
+        lastModified
+          ? `    <lastmod>${escapeXml(String(lastModified))}</lastmod>`
+          : "",
+        entry.changeFrequency
+          ? `    <changefreq>${escapeXml(String(entry.changeFrequency))}</changefreq>`
+          : "",
+        typeof entry.priority === "number"
+          ? `    <priority>${entry.priority}</priority>`
+          : "",
+        "  </url>",
+      ]
+        .filter(Boolean)
+        .join("\n");
+    })
+    .join("\n");
+
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    urls,
+    "</urlset>",
+    "",
+  ]
+    .filter((line) => line !== "")
+    .join("\n");
+}
+
+export async function GET(_request: Request, { params }: RouteContext) {
   const { websiteSlug: websiteSlugParam } = await unwrapParams(params);
 
   const website = await resolvePublicWebsiteFromRouteSlug({
@@ -97,7 +120,12 @@ export default async function sitemap({
   ]);
 
   if (!index) {
-    notFound();
+    return new NextResponse(renderSitemap([]), {
+      headers: {
+        "Cache-Control": "public, max-age=0, must-revalidate",
+        "Content-Type": "application/xml; charset=utf-8",
+      },
+    });
   }
 
   const pages = index.pages ?? [];
@@ -146,5 +174,13 @@ export default async function sitemap({
     }),
   );
 
-  return entries.filter(Boolean) as MetadataRoute.Sitemap;
+  return new NextResponse(
+    renderSitemap(entries.filter(Boolean) as MetadataRoute.Sitemap),
+    {
+      headers: {
+        "Cache-Control": "public, max-age=0, must-revalidate",
+        "Content-Type": "application/xml; charset=utf-8",
+      },
+    },
+  );
 }

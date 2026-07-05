@@ -4,11 +4,10 @@
  */
 
 import type { MetadataRoute } from "next";
+import { headers } from "next/headers";
 
-import {
-  getPublishedSettingsByWebsiteId,
-  getWebsiteId,
-} from "@compoz/site/lib/pages/published-page-loaders";
+import { resolvePublicWebsiteFromHost } from "@compoz/infra/websites/resolve-public-website";
+import { getPublishedSettingsByWebsiteId } from "@compoz/site/lib/pages/published-page-loaders";
 import { resolveIconHref } from "@compoz/ui/lib/seo/metadata-helpers";
 
 /* -------------------------------------------------------------------------- */
@@ -45,12 +44,49 @@ function buildManifestIcons(favicon: string): MetadataRoute.Manifest["icons"] {
   ];
 }
 
+function buildFallbackManifest(): MetadataRoute.Manifest {
+  return {
+    id: "/",
+    name: "Compoz",
+    short_name: "Compoz",
+    start_url: "/",
+    scope: "/",
+    display: "standalone",
+    background_color: "#ffffff",
+    theme_color: "#ffffff",
+    icons: [],
+  };
+}
+
+async function resolveWebsiteIdFromRequest(): Promise<string | null> {
+  try {
+    const headersList = await headers();
+
+    const hostRaw =
+      headersList.get("x-forwarded-host") ?? headersList.get("host") ?? "";
+
+    const website = await resolvePublicWebsiteFromHost({ hostRaw });
+    return website?.websiteId ?? null;
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[site] failed to resolve manifest website", error);
+    }
+
+    return null;
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* Manifest                                                                   */
 /* -------------------------------------------------------------------------- */
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
-  const websiteId = await getWebsiteId();
+  const websiteId = await resolveWebsiteIdFromRequest();
+
+  if (!websiteId) {
+    return buildFallbackManifest();
+  }
+
   const settings = await getPublishedSettingsByWebsiteId(websiteId);
 
   if (!settings) {

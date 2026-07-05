@@ -8,7 +8,8 @@
  * @remarks
  * Multi-website :
  * - Host-based : résolution via WebsiteDomain en Prisma.
- * - Si le host ne correspond à aucun domaine connu, on retourne une 404.
+ * - Si le host ne correspond à aucun domaine connu, on retourne
+ *   un sitemap vide valide.
  * - Les routes fallback explicites `/t/:websiteSlug` ont leur propre sitemap dédié.
  */
 
@@ -53,10 +54,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const hostRaw =
     headersList.get("x-forwarded-host") ?? headersList.get("host") ?? "";
 
-  const website = await resolvePublicWebsiteFromHost({ hostRaw });
+  let website: Awaited<ReturnType<typeof resolvePublicWebsiteFromHost>> = null;
+
+  try {
+    website = await resolvePublicWebsiteFromHost({ hostRaw });
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[site] failed to resolve sitemap website", error);
+    }
+  }
 
   if (!website) {
-    notFound();
+    return [];
   }
 
   const websiteId = website.websiteId;

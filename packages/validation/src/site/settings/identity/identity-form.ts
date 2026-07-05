@@ -22,6 +22,8 @@ export const IdentityFormSchema = z
 
     // Form: toujours string pour rester contrôlé côté UI
     faviconUrl: z.string().trim(),
+
+    faviconMediaAssetId: z.string().trim().min(1).optional(),
   })
   .strict()
   .superRefine((val, ctx) => {

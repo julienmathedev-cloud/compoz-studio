@@ -22,4 +22,7 @@ export interface IdentitySettings {
 
   /** URL du favicon (null si aucun favicon). */
   faviconUrl: AssetUrlOrNull;
+
+  /** Identifiant média de la favicon uploadée (optionnel, null-safe legacy). */
+  faviconMediaAssetId?: string;
 }

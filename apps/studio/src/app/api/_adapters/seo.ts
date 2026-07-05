@@ -52,6 +52,13 @@ function trimOptionalString(
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+function optionalTrimmedString(
+  value: string | null | undefined,
+): string | undefined {
+  const trimmed = trimOrKeep(value ?? "");
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 function cleanStringList(
   values: ReadonlyArray<string | null> | null | undefined,
 ): string[] | undefined {
@@ -117,6 +124,8 @@ function adaptStructuredData(
  * - Les strings sont trimées ; les valeurs vides deviennent `null`.
  * - `openGraph` / `twitter` : patch superficiel, uniquement sur les champs présents.
  * - `defaultImageUrl` : ""/null => null (clear explicite), sinon normalisé via `asAssetUrlOrNull`.
+ * - `defaultImageMediaAssetId` : lien optionnel vers MediaAsset, supprimé si l’URL image est clear
+ *   ou remplacée sans id associé.
  */
 export function adaptUpdateSeoIntent(
   dto: UpdateSeoSettingsIntentDTO,
@@ -199,9 +208,35 @@ export function adaptUpdateSeoIntent(
         if (raw === null) {
           ogOut.defaultImageUrl = null;
         } else if (typeof raw === "string") {
-          const t = trimOrKeep(raw);
-          ogOut.defaultImageUrl = t.length === 0 ? null : asAssetUrlOrNull(t);
+          const trimmedUrl = trimOrKeep(raw);
+          ogOut.defaultImageUrl =
+            trimmedUrl.length === 0 ? null : asAssetUrlOrNull(trimmedUrl);
         }
+
+        /**
+         * URL is the rendering source of truth.
+         *
+         * If the image URL is patched but no MediaAsset id is provided,
+         * the previous id must not survive. This covers manual URL edits and
+         * clears, because `undefined` is usually omitted from JSON payloads.
+         */
+        if (!("defaultImageMediaAssetId" in ogIn)) {
+          ogOut.defaultImageMediaAssetId = undefined;
+        }
+      }
+
+      if ("defaultImageMediaAssetId" in ogIn) {
+        ogOut.defaultImageMediaAssetId = optionalTrimmedString(
+          ogIn.defaultImageMediaAssetId,
+        );
+      }
+
+      /**
+       * Clearing the URL always wins over any stale id still present in the
+       * incoming payload.
+       */
+      if ("defaultImageUrl" in ogIn && !ogOut.defaultImageUrl) {
+        ogOut.defaultImageMediaAssetId = undefined;
       }
 
       if (Object.keys(ogOut).length > 0) {

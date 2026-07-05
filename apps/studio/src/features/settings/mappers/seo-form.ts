@@ -25,6 +25,14 @@ import { toSeoSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/seo-shape
 
 const DEFAULT_TWITTER_CARD = TWITTER_CARD_TYPES[1] ?? TWITTER_CARD_TYPES[0];
 
+function optionalTrimmedString(
+  value: string | null | undefined,
+): string | undefined {
+  const trimmed = trimKeepEmpty(value);
+
+  return trimmed ? trimmed : undefined;
+}
+
 function normalizeStructuredDataFormValues(
   value: SeoFormValues["structuredData"],
 ): SeoFormValues["structuredData"] {
@@ -90,6 +98,9 @@ export function toSeoFormValuesFromDTO(dto: SeoSettingsDTO): SeoFormValues {
       title: trimKeepEmpty(dto.openGraph?.title),
       description: trimKeepEmpty(dto.openGraph?.description),
       defaultImageUrl: trimKeepEmpty(dto.openGraph?.defaultImageUrl),
+      defaultImageMediaAssetId: optionalTrimmedString(
+        dto.openGraph?.defaultImageMediaAssetId,
+      ),
       imageAlt: trimKeepEmpty(dto.openGraph?.imageAlt),
     },
 
@@ -118,6 +129,9 @@ export function normalizeSeoFormValues(values: SeoFormValues): SeoFormValues {
       title: trimKeepEmpty(values.openGraph.title),
       description: trimKeepEmpty(values.openGraph.description),
       defaultImageUrl: trimKeepEmpty(values.openGraph.defaultImageUrl),
+      defaultImageMediaAssetId: optionalTrimmedString(
+        values.openGraph.defaultImageMediaAssetId,
+      ),
       imageAlt: trimKeepEmpty(values.openGraph.imageAlt),
     },
 
@@ -202,6 +216,9 @@ export function toUpdateSeoIntentDTOFromFormValues(
         title: trimKeepEmpty(ogIn.title),
         description: trimKeepEmpty(ogIn.description),
         defaultImageUrl: trimKeepEmpty(ogIn.defaultImageUrl),
+        defaultImageMediaAssetId: optionalTrimmedString(
+          ogIn.defaultImageMediaAssetId,
+        ),
         imageAlt: trimKeepEmpty(ogIn.imageAlt),
       };
     } else {

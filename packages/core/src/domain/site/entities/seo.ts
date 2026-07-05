@@ -21,6 +21,9 @@ export interface OpenGraphSettings {
   /** Image OG (null = aucune image). */
   defaultImageUrl: AssetUrlOrNull;
 
+  /** Identifiant média de l'image OG uploadée (optionnel, null-safe legacy). */
+  defaultImageMediaAssetId?: string;
+
   /** Texte alternatif de l’image OG. */
   imageAlt: string;
 }

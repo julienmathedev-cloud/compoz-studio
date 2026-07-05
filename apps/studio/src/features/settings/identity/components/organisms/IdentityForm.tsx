@@ -201,6 +201,11 @@ export function IdentityForm({
     control,
   });
 
+  const faviconMediaAssetIdCtrl = useController({
+    name: "faviconMediaAssetId",
+    control,
+  });
+
   const showError = isSubmitted || submitCount > 0;
 
   /**
@@ -352,6 +357,7 @@ export function IdentityForm({
               siteName={values.siteName ?? ""}
               logoAlt={values.logo?.alt ?? ""}
               faviconUrlField={faviconUrlCtrl.field}
+              faviconMediaAssetIdField={faviconMediaAssetIdCtrl.field}
               faviconIds={faviconIds}
               disabled={disabledControls}
               onUploadFavicon={onUploadFavicon}

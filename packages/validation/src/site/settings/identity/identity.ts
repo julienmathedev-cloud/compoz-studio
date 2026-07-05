@@ -23,6 +23,8 @@ export const IdentitySettingsBaseSchema = z
     logo: z.union([ImageSchema, z.null()]),
 
     faviconUrl: z.union([AssetUrlSchema, z.null()]),
+
+    faviconMediaAssetId: z.string().trim().min(1).optional(),
   })
   .strict();
 

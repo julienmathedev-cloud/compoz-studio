@@ -21,11 +21,21 @@ import type { IdentitySettings } from "@compoz/core/domain/site/entities/identit
 import type { UpdateIdentitySettingsInput } from "@compoz/core/domain/site/use-cases/identity/update-identity-settings.types";
 import type { UpdateIdentitySettingsIntentDTO } from "@compoz/validation/site/settings/identity/identity-intents";
 
-function optionalTrimmedString(value: string | undefined): string | undefined {
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function optionalTrimmedString(
+  value: string | null | undefined,
+): string | undefined {
   const trimmed = typeof value === "string" ? value.trim() : "";
 
   return trimmed ? trimmed : undefined;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Adapter                                                                    */
+/* -------------------------------------------------------------------------- */
 
 export function adaptUpdateIdentityIntent(
   dto: UpdateIdentitySettingsIntentDTO,
@@ -37,6 +47,7 @@ export function adaptUpdateIdentityIntent(
     hasTagline: "tagline" in dto,
     hasLogo: dto.logo !== undefined,
     hasFaviconUrl: dto.faviconUrl !== undefined,
+    hasFaviconMediaAssetId: dto.faviconMediaAssetId !== undefined,
   });
 
   const patch: Partial<IdentitySettings> = {};
@@ -82,8 +93,33 @@ export function adaptUpdateIdentityIntent(
   // - undefined → inchangé
   // - null / "" → effacement
   // - string → normalisation
-  if (dto.faviconUrl !== undefined) {
+  // - faviconUrl est la source de rendu ; si elle change sans id associé,
+  //   l’ancien mediaAssetId ne doit pas survivre.
+  if ("faviconUrl" in dto) {
     patch.faviconUrl = asAssetUrlOrNull(dto.faviconUrl);
+
+    /**
+     * URL is the rendering source of truth.
+     *
+     * If the favicon URL is patched but no MediaAsset id is provided,
+     * the previous id must not survive. This covers manual URL edits and
+     * clears, because `undefined` is usually omitted from JSON payloads.
+     */
+    if (!("faviconMediaAssetId" in dto)) {
+      patch.faviconMediaAssetId = undefined;
+    }
+  }
+
+  if ("faviconMediaAssetId" in dto) {
+    patch.faviconMediaAssetId = optionalTrimmedString(dto.faviconMediaAssetId);
+  }
+
+  /**
+   * Clearing the URL always wins over any stale id still present in the
+   * incoming payload.
+   */
+  if ("faviconUrl" in dto && patch.faviconUrl === null) {
+    patch.faviconMediaAssetId = undefined;
   }
 
   log.debug("studio.adapter.identity.patch.end", {

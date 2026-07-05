@@ -25,6 +25,13 @@ function trimUndef(value: string | null | undefined): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+function optionalTrimmedString(
+  value: string | null | undefined,
+): string | undefined {
+  const trimmed = String(value ?? "").trim();
+  return trimmed ? trimmed : undefined;
+}
+
 function trimArrayUndef(
   values: ReadonlyArray<string> | null | undefined,
 ): string[] | undefined {
@@ -77,6 +84,9 @@ export function toSeoSettingsShapeFromDTO(
       title: trimKeepEmpty(dto?.openGraph?.title ?? ""),
       description: trimKeepEmpty(dto?.openGraph?.description ?? ""),
       defaultImageUrl: trimKeepEmpty(dto?.openGraph?.defaultImageUrl ?? ""),
+      defaultImageMediaAssetId: optionalTrimmedString(
+        dto?.openGraph?.defaultImageMediaAssetId,
+      ),
       imageAlt: trimKeepEmpty(dto?.openGraph?.imageAlt ?? ""),
     },
 

@@ -40,6 +40,10 @@ type OpenGraphImageFieldsProps = Readonly<{
     SeoFormValues,
     "openGraph.defaultImageUrl"
   >;
+  imageMediaAssetIdField: ControllerRenderProps<
+    SeoFormValues,
+    "openGraph.defaultImageMediaAssetId"
+  >;
   imageAltField: ControllerRenderProps<SeoFormValues, "openGraph.imageAlt">;
   disabled?: boolean;
   invalidUrl?: boolean;
@@ -52,6 +56,7 @@ type OpenGraphImageFieldsProps = Readonly<{
 export function OpenGraphImageFields({
   idPrefix,
   imageUrlField,
+  imageMediaAssetIdField,
   imageAltField,
   disabled,
   invalidUrl,
@@ -94,6 +99,7 @@ export function OpenGraphImageFields({
         onUrlChange={(v) => {
           const nextUrl = String(v ?? "");
           imageUrlField.onChange(nextUrl);
+          imageMediaAssetIdField.onChange(undefined);
 
           if (!nextUrl.trim()) {
             imageAltField.onChange("");
@@ -104,6 +110,12 @@ export function OpenGraphImageFields({
         help={t("studio.seoForm.openGraph.defaultImageUrl.help")}
         accept={OG_ACCEPT}
         onFileSelect={onUploadOgImage}
+        onUploaded={(uploaded) => {
+          imageUrlField.onChange(uploaded.url);
+          imageMediaAssetIdField.onChange(
+            uploaded.mediaAssetId ?? undefined,
+          );
+        }}
         preferredTypes={PREFERRED_OG}
         preferredTypeHint={t(
           "studio.seoForm.openGraph.defaultImageUrl.preferredTypeHint",

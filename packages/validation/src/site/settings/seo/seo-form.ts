@@ -79,6 +79,8 @@ export const SeoOpenGraphFormSchema = z
 
     defaultImageUrl: AssetUrlDraftFormSchema,
 
+    defaultImageMediaAssetId: z.string().trim().min(1).optional(),
+
     imageAlt: z
       .string()
       .trim()

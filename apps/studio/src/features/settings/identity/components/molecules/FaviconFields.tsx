@@ -39,6 +39,11 @@ type FaviconFieldsProps = Readonly<{
   logoAlt: string;
   /** Champ RHF contrôlé pour l’URL de la favicon. */
   faviconUrlField: ControllerRenderProps<IdentityFormValues, "faviconUrl">;
+  /** Champ RHF contrôlé pour l’id MediaAsset associé à la favicon. */
+  faviconMediaAssetIdField: ControllerRenderProps<
+    IdentityFormValues,
+    "faviconMediaAssetId"
+  >;
   /** IDs ARIA du champ favicon (générés via `createFieldIds` + `useIdPrefix`). */
   faviconIds: FieldIds;
   /** Désactive toute interaction (save / submit / upload). */
@@ -84,6 +89,7 @@ export function FaviconFields({
   siteName,
   logoAlt,
   faviconUrlField,
+  faviconMediaAssetIdField,
   faviconIds,
   disabled,
   onUploadFavicon,
@@ -99,12 +105,19 @@ export function FaviconFields({
       ids={faviconIds}
       label={t("studio.favicon.label")}
       url={previewUrl}
-      onUrlChange={(value) => faviconUrlField.onChange(String(value ?? ""))}
+      onUrlChange={(value) => {
+        faviconUrlField.onChange(String(value ?? ""));
+        faviconMediaAssetIdField.onChange(undefined);
+      }}
       disabled={disabled}
       previewAlt={alt}
       help={t("studio.favicon.help")}
       accept={FAVICON_ACCEPT}
       onFileSelect={onUploadFavicon}
+      onUploaded={(uploaded) => {
+        faviconUrlField.onChange(uploaded.url);
+        faviconMediaAssetIdField.onChange(uploaded.mediaAssetId ?? undefined);
+      }}
       preferredTypes={FAVICON_PREFERRED_TYPES}
       preferredTypeHint={t("studio.favicon.preferredTypeHint")}
       maxBytes={MAX_IMAGE_UPLOAD_BYTES}

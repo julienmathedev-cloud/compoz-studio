@@ -54,6 +54,8 @@ export const OpenGraphSettingsSchema = z
 
     defaultImageUrl: OptionalAssetUrlDraftSchema,
 
+    defaultImageMediaAssetId: z.string().trim().min(1).optional(),
+
     imageAlt: z
       .string()
       .trim()

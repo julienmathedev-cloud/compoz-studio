@@ -53,5 +53,6 @@ export function toIdentitySettingsShapeFromDTO(
           }
         : null,
     faviconUrl: assetUiToSettings(dto?.faviconUrl),
+    faviconMediaAssetId: optionalTrimmedString(dto?.faviconMediaAssetId),
   };
 }

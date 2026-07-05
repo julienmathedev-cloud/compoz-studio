@@ -18,6 +18,7 @@ export const UpdateIdentitySettingsIntentSchema =
     .extend({
       logo: LogoPatchableSchema.optional(),
       faviconUrl: AssetUrlPatchableSchema.optional(),
+      faviconMediaAssetId: z.string().trim().min(1).optional(),
     })
     .superRefine((val, ctx) => {
       if (typeof val.siteName === "string") {

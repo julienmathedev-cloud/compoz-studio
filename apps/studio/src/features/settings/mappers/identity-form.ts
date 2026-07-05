@@ -41,6 +41,7 @@ export function toIdentityFormValuesFromDTO(
   dto: IdentitySettingsDTO,
 ): IdentityFormValues {
   const logoMediaAssetId = optionalTrimmedString(dto.logo?.mediaAssetId);
+  const faviconUrl = trimKeepEmpty(dto.faviconUrl);
 
   return {
     siteName: trimKeepEmpty(dto.siteName),
@@ -55,7 +56,10 @@ export function toIdentityFormValuesFromDTO(
             ...(logoMediaAssetId ? { mediaAssetId: logoMediaAssetId } : {}),
           }
         : null,
-    faviconUrl: trimKeepEmpty(dto.faviconUrl),
+    faviconUrl,
+    faviconMediaAssetId: faviconUrl
+      ? optionalTrimmedString(dto.faviconMediaAssetId)
+      : undefined,
   };
 }
 
@@ -65,6 +69,10 @@ export function toIdentitySettingsShapeFromFormValues(
   values: IdentityFormValues,
 ): IdentitySettingsShape {
   const logoMediaAssetId = optionalTrimmedString(values.logo?.mediaAssetId);
+  const faviconUrl = trimKeepEmpty(values.faviconUrl);
+  const faviconMediaAssetId = faviconUrl
+    ? optionalTrimmedString(values.faviconMediaAssetId)
+    : undefined;
 
   const candidate = {
     siteName: trimKeepEmpty(values.siteName),
@@ -80,10 +88,8 @@ export function toIdentitySettingsShapeFromFormValues(
             ...(logoMediaAssetId ? { mediaAssetId: logoMediaAssetId } : {}),
           }
         : null,
-    faviconUrl:
-      values.faviconUrl.trim().length > 0
-        ? trimKeepEmpty(values.faviconUrl)
-        : null,
+    faviconUrl: faviconUrl.length > 0 ? faviconUrl : null,
+    faviconMediaAssetId,
   } satisfies IdentitySettingsShape;
 
   const parsed = IdentitySettingsSchema.safeParse(candidate);
@@ -109,6 +115,10 @@ export function normalizeIdentityFormValues(
   values: IdentityFormValues,
 ): IdentityFormValues {
   const logoMediaAssetId = optionalTrimmedString(values.logo?.mediaAssetId);
+  const faviconUrl = trimKeepEmpty(values.faviconUrl);
+  const faviconMediaAssetId = faviconUrl
+    ? optionalTrimmedString(values.faviconMediaAssetId)
+    : undefined;
 
   return {
     siteName: trimKeepEmpty(values.siteName),
@@ -123,7 +133,8 @@ export function normalizeIdentityFormValues(
             ...(logoMediaAssetId ? { mediaAssetId: logoMediaAssetId } : {}),
           }
         : null,
-    faviconUrl: trimKeepEmpty(values.faviconUrl),
+    faviconUrl,
+    faviconMediaAssetId,
   };
 }
 
@@ -160,6 +171,19 @@ export function toUpdateIdentityIntentDTOFromFormValues(
 
   if ("faviconUrl" in p) {
     out.faviconUrl = assetUiToPatch(p.faviconUrl);
+  }
+
+  if ("faviconMediaAssetId" in p) {
+    out.faviconMediaAssetId = optionalTrimmedString(p.faviconMediaAssetId);
+  }
+
+  /**
+   * URL is the rendering source of truth.
+   * If the favicon URL is explicitly cleared, the linked MediaAsset id must not
+   * survive the patch, even if an outdated form value is still present.
+   */
+  if ("faviconUrl" in p && !out.faviconUrl) {
+    out.faviconMediaAssetId = undefined;
   }
 
   return out;

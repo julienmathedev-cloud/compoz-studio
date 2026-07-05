@@ -69,6 +69,7 @@ export const OpenGraphPatchSchema = z
     title: ClearableStringSchema.optional(),
     description: ClearableStringSchema.optional(),
     defaultImageUrl: AssetUrlPatchableSchema.optional(),
+    defaultImageMediaAssetId: z.string().trim().min(1).optional(),
     imageAlt: ClearableStringSchema.optional(),
   })
   .strict();

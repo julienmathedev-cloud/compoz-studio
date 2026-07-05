@@ -45,6 +45,11 @@ export function SeoOpenGraphFields({
     control,
   });
 
+  const ogImageMediaAssetId = useController({
+    name: "openGraph.defaultImageMediaAssetId",
+    control,
+  });
+
   const ogImageAlt = useController({
     name: "openGraph.imageAlt",
     control,
@@ -85,6 +90,7 @@ export function SeoOpenGraphFields({
       <OpenGraphImageFields
         idPrefix={idPrefix}
         imageUrlField={ogImageUrl.field}
+        imageMediaAssetIdField={ogImageMediaAssetId.field}
         imageAltField={ogImageAlt.field}
         disabled={isBusy}
         invalidUrl={invalidOgUrl}

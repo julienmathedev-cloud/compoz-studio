@@ -6,8 +6,10 @@
  *
  * @remarks
  * - Sert de base commune pour tous les usages d'image dans le domaine.
- * - Valide uniquement la structure canonique `Image` :
+ * - Valide la structure canonique `Image` :
  *   `src`, `alt`, `width`, `height`.
+ * - `mediaAssetId` est optionnel, mais doit être une chaîne non vide
+ *   lorsqu’il est fourni.
  * - Les validateurs plus spécialisés (ex: ImageEditor) peuvent s'appuyer dessus.
  */
 
@@ -39,7 +41,7 @@ export function assertImage(
     });
   }
 
-  const { src, alt, width, height } = image as Image;
+  const { src, alt, width, height, mediaAssetId } = image as Image;
 
   if (typeof src !== "string" || !src.trim()) {
     throw new DomainError({
@@ -76,6 +78,17 @@ export function assertImage(
         path: [...path, "height"],
         meta: { height },
       },
+    });
+  }
+
+  if (
+    mediaAssetId !== undefined &&
+    (typeof mediaAssetId !== "string" || !mediaAssetId.trim())
+  ) {
+    throw new DomainError({
+      code: EC.CELL_IMAGE_INVALID,
+      message: EC.CELL_IMAGE_INVALID,
+      details: { path: [...path, "mediaAssetId"] },
     });
   }
 }

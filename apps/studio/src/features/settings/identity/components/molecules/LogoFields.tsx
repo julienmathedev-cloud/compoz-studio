@@ -32,6 +32,7 @@ type UploadedRasterImage = Readonly<{
   url: string;
   width: number;
   height: number;
+  mediaAssetId?: string;
 }>;
 
 /**
@@ -128,8 +129,13 @@ export function LogoFields({
         throw new Error("LogoFields: onUploadLogo is not provided.");
       }
 
-      const { url, width, height } = await onUploadLogo(file);
-      return { url, width, height };
+      const { url, width, height, mediaAssetId } = await onUploadLogo(file);
+      return {
+        url,
+        width,
+        height,
+        ...(mediaAssetId ? { mediaAssetId } : {}),
+      };
     },
     [onUploadLogo],
   );
@@ -164,6 +170,9 @@ export function LogoFields({
             alt: currentAlt,
             width: currentLogo.width,
             height: currentLogo.height,
+            ...(currentLogo.mediaAssetId
+              ? { mediaAssetId: currentLogo.mediaAssetId }
+              : {}),
           });
         }}
         disabled={isBusy}
@@ -177,6 +186,9 @@ export function LogoFields({
             alt: currentAlt,
             width: uploaded.width,
             height: uploaded.height,
+            ...(uploaded.mediaAssetId
+              ? { mediaAssetId: uploaded.mediaAssetId }
+              : {}),
           });
         }}
         preferredTypes={PREFERRED_LOGO}

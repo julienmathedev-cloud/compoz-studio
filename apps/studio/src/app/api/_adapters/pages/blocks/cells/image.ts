@@ -13,7 +13,15 @@ import type {
   ImageEditorIntentDTO,
 } from "@compoz/validation/pages/blocks/cells/cell-intents";
 
+function optionalTrimmedString(value: string | undefined): string | undefined {
+  const trimmed = typeof value === "string" ? value.trim() : "";
+
+  return trimmed ? trimmed : undefined;
+}
+
 export function adaptImage(dto: ImageEditorIntentDTO): ImageEditor {
+  const mediaAssetId = optionalTrimmedString(dto.mediaAssetId);
+
   return {
     id: trimOrKeep(dto.id),
     src: trimOrKeep(dto.src),
@@ -23,6 +31,7 @@ export function adaptImage(dto: ImageEditorIntentDTO): ImageEditor {
     href: typeof dto.href === "string" ? trimOrKeep(dto.href) : dto.href,
     width: dto.width ?? 0,
     height: dto.height ?? 0,
+    ...(mediaAssetId ? { mediaAssetId } : {}),
   };
 }
 

@@ -46,6 +46,7 @@ type UploadedRasterImage = Readonly<{
   url: string;
   width: number;
   height: number;
+  mediaAssetId?: string;
 }>;
 
 type StructuredCardFieldBasePath =

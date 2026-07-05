@@ -39,6 +39,7 @@ export type FinalizeImageUploadRequest = Readonly<{
 }>;
 
 export type UploadImageResponse = Readonly<{
+  mediaAssetId: string;
   url: string;
   filename: string;
   size: number;
@@ -52,6 +53,7 @@ export type UploadImageResponse = Readonly<{
 }>;
 
 export type UploadSvgResponse = Readonly<{
+  mediaAssetId: string;
   url: string;
   filename: string;
   size: number;

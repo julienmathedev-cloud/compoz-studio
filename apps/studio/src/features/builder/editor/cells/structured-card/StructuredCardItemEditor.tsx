@@ -61,6 +61,7 @@ type UploadedRasterImage = Readonly<{
   url: string;
   width: number;
   height: number;
+  mediaAssetId?: string;
 }>;
 
 type StructuredCardFieldBasePath =
@@ -156,6 +157,12 @@ export function StructuredCardItemEditor({
     name: toSectionBlockFieldPath(`${itemBasePath}.image.height`),
     control,
     defaultValue: watchedItem?.image?.height,
+  });
+
+  const imageMediaAssetIdCtrl = useController({
+    name: toSectionBlockFieldPath(`${itemBasePath}.image.mediaAssetId`),
+    control,
+    defaultValue: watchedItem?.image?.mediaAssetId,
   });
 
   const titleCtrl = useController({
@@ -374,6 +381,7 @@ export function StructuredCardItemEditor({
                       imageCaptionCtrl.field.onChange("");
                       imageWidthCtrl.field.onChange(undefined);
                       imageHeightCtrl.field.onChange(undefined);
+                      imageMediaAssetIdCtrl.field.onChange(undefined);
                       return;
                     }
 
@@ -401,6 +409,9 @@ export function StructuredCardItemEditor({
                   imageSrcCtrl.field.onChange(meta.url);
                   imageWidthCtrl.field.onChange(meta.width);
                   imageHeightCtrl.field.onChange(meta.height);
+                  imageMediaAssetIdCtrl.field.onChange(
+                    meta.mediaAssetId ?? undefined,
+                  );
                 }}
                 accept="image/jpeg,image/png,image/webp,image/avif"
                 preferredTypes={["image/webp", "image/avif"]}

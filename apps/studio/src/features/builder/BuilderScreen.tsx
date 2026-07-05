@@ -145,6 +145,7 @@ type UploadedRasterImage = Readonly<{
   url: string;
   width: number;
   height: number;
+  mediaAssetId?: string;
 }>;
 
 export function BuilderScreen({
@@ -241,6 +242,7 @@ export function BuilderScreen({
         url: res.url,
         width: res.width,
         height: res.height,
+        mediaAssetId: res.mediaAssetId,
       };
     },
     [t],

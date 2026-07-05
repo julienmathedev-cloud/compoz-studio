@@ -1,6 +1,6 @@
 /**
  * @file packages/core/src/domain/assets/entities/image.ts
- * @layer core/domain/site
+ * @layer core/domain/assets
  * @description
  * Entités métier Image
  */
@@ -10,4 +10,5 @@ export type Image = {
   alt: string;
   width: number;
   height: number;
+  mediaAssetId?: string;
 };

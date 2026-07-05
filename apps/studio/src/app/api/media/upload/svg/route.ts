@@ -19,6 +19,11 @@ import { throwHttp } from "@compoz/http/http-error";
 import type { UploadSvgResponse } from "@compoz/infra/http/studio/media.types";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getMediaStorage } from "@compoz/infra/media/storage";
+import {
+  MediaAssetKind,
+  MediaStorageProvider,
+} from "@compoz/infra/prisma/generated";
+import { prisma } from "@compoz/infra/prisma/prisma-client";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 
@@ -51,6 +56,58 @@ function buildStorageKey(args: {
   filename: string;
 }): string {
   return `websites/${args.websiteId}/${args.year}/${args.month}/${args.filename}`;
+}
+
+function currentMediaProvider(): MediaStorageProvider {
+  return String(process.env["BLOB_READ_WRITE_TOKEN"] ?? "").trim()
+    ? MediaStorageProvider.vercel_blob
+    : MediaStorageProvider.local;
+}
+
+async function upsertSvgMediaAsset(args: {
+  websiteId: string;
+  key: string;
+  url: string;
+  filename: string;
+  contentType: string;
+  size: number;
+  width: number;
+  height: number;
+}): Promise<string> {
+  const provider = currentMediaProvider();
+
+  const asset = await prisma.mediaAsset.upsert({
+    where: {
+      provider_key: {
+        provider,
+        key: args.key,
+      },
+    },
+    create: {
+      websiteId: args.websiteId,
+      provider,
+      kind: MediaAssetKind.svg,
+      key: args.key,
+      url: args.url,
+      filename: args.filename,
+      contentType: args.contentType,
+      size: args.size,
+      width: args.width,
+      height: args.height,
+    },
+    update: {
+      websiteId: args.websiteId,
+      kind: MediaAssetKind.svg,
+      url: args.url,
+      filename: args.filename,
+      contentType: args.contentType,
+      size: args.size,
+      width: args.width,
+      height: args.height,
+    },
+  });
+
+  return asset.id;
 }
 
 function parseSvgLength(raw: string | null | undefined): number | null {
@@ -261,7 +318,19 @@ export async function POST(req: Request) {
           url: stored.url,
         });
 
+        const mediaAssetId = await upsertSvgMediaAsset({
+          websiteId,
+          key,
+          url: stored.url,
+          filename,
+          contentType,
+          size,
+          width: dimensions.width,
+          height: dimensions.height,
+        });
+
         const res: UploadSvgResponse = {
+          mediaAssetId,
           url: stored.url,
           filename,
           size,

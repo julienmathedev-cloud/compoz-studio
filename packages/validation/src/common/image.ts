@@ -24,6 +24,7 @@ export const ImageSchema = z
       })
       .int()
       .positive(ERROR_CODES.CELL_IMAGE_HEIGHT_REQUIRED),
+    mediaAssetId: z.string().trim().min(1).optional(),
   })
   .strict();
 

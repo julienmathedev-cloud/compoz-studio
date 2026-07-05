@@ -38,6 +38,7 @@ type UploadedRasterImage = Readonly<{
   url: string;
   width: number;
   height: number;
+  mediaAssetId?: string;
 }>;
 
 const lg = log.child({ ns: "ui", area: "studio", name: "IdentitySection" });
@@ -72,6 +73,7 @@ export function IdentitySection() {
           url: res.url,
           width: res.width,
           height: res.height,
+          mediaAssetId: res.mediaAssetId,
         };
       }
 
@@ -90,6 +92,7 @@ export function IdentitySection() {
         url: res.url,
         width: res.width,
         height: res.height,
+        mediaAssetId: res.mediaAssetId,
       };
     },
     [t],
@@ -115,6 +118,7 @@ export function IdentitySection() {
         url: res.url,
         width: res.width,
         height: res.height,
+        mediaAssetId: res.mediaAssetId,
       };
     },
     [t],

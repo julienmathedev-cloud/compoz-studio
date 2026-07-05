@@ -33,6 +33,7 @@ type UploadedRasterImage = Readonly<{
   url: string;
   width: number;
   height: number;
+  mediaAssetId?: string;
 }>;
 
 type SelectedCellLocation = Readonly<{
@@ -95,6 +96,11 @@ export function ImageCellEditor({
 
   const heightCtrl = useController({
     name: `${basePath}.image.height` as `${ImageFieldBasePath}.image.height`,
+    control,
+  });
+
+  const mediaAssetIdCtrl = useController({
+    name: `${basePath}.image.mediaAssetId` as `${ImageFieldBasePath}.image.mediaAssetId`,
     control,
   });
 
@@ -248,6 +254,7 @@ export function ImageCellEditor({
               captionCtrl.field.onChange("");
               widthCtrl.field.onChange(undefined);
               heightCtrl.field.onChange(undefined);
+              mediaAssetIdCtrl.field.onChange(undefined);
               return;
             }
 
@@ -275,6 +282,7 @@ export function ImageCellEditor({
           srcCtrl.field.onChange(meta.url);
           widthCtrl.field.onChange(meta.width);
           heightCtrl.field.onChange(meta.height);
+          mediaAssetIdCtrl.field.onChange(meta.mediaAssetId ?? undefined);
         }}
         accept="image/jpeg,image/png,image/webp,image/avif"
         preferredTypes={["image/webp", "image/avif"]}

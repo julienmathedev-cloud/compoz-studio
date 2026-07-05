@@ -23,11 +23,25 @@ import type { UpdateIdentitySettingsIntentDTO } from "@compoz/validation/site/se
 import { assetUiToPatch, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 import { toIdentitySettingsShapeFromDTO } from "@compoz/ui/settings/mappers/identity-shape";
 
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function optionalTrimmedString(
+  value: string | null | undefined,
+): string | undefined {
+  const trimmed = trimKeepEmpty(value);
+
+  return trimmed ? trimmed : undefined;
+}
+
 /* ----------------------- Domaine (DTO) -> UI (form values) ------------------ */
 
 export function toIdentityFormValuesFromDTO(
   dto: IdentitySettingsDTO,
 ): IdentityFormValues {
+  const logoMediaAssetId = optionalTrimmedString(dto.logo?.mediaAssetId);
+
   return {
     siteName: trimKeepEmpty(dto.siteName),
     tagline: trimKeepEmpty(dto.tagline),
@@ -38,6 +52,7 @@ export function toIdentityFormValuesFromDTO(
             alt: trimKeepEmpty(dto.logo.alt),
             width: dto.logo.width,
             height: dto.logo.height,
+            ...(logoMediaAssetId ? { mediaAssetId: logoMediaAssetId } : {}),
           }
         : null,
     faviconUrl: trimKeepEmpty(dto.faviconUrl),
@@ -45,9 +60,12 @@ export function toIdentityFormValuesFromDTO(
 }
 
 /* ------------------- Studio (RHF) -> Preview/Public (SettingsShape) ----------- */
+
 export function toIdentitySettingsShapeFromFormValues(
   values: IdentityFormValues,
 ): IdentitySettingsShape {
+  const logoMediaAssetId = optionalTrimmedString(values.logo?.mediaAssetId);
+
   const candidate = {
     siteName: trimKeepEmpty(values.siteName),
     tagline:
@@ -59,6 +77,7 @@ export function toIdentitySettingsShapeFromFormValues(
             alt: trimKeepEmpty(values.logo.alt),
             width: values.logo.width,
             height: values.logo.height,
+            ...(logoMediaAssetId ? { mediaAssetId: logoMediaAssetId } : {}),
           }
         : null,
     faviconUrl:
@@ -89,6 +108,8 @@ export function toIdentitySettingsShape(
 export function normalizeIdentityFormValues(
   values: IdentityFormValues,
 ): IdentityFormValues {
+  const logoMediaAssetId = optionalTrimmedString(values.logo?.mediaAssetId);
+
   return {
     siteName: trimKeepEmpty(values.siteName),
     tagline: trimKeepEmpty(values.tagline),
@@ -99,6 +120,7 @@ export function normalizeIdentityFormValues(
             alt: trimKeepEmpty(values.logo.alt),
             width: values.logo.width,
             height: values.logo.height,
+            ...(logoMediaAssetId ? { mediaAssetId: logoMediaAssetId } : {}),
           }
         : null,
     faviconUrl: trimKeepEmpty(values.faviconUrl),
@@ -122,6 +144,8 @@ export function toUpdateIdentityIntentDTOFromFormValues(
   }
 
   if ("logo" in p) {
+    const logoMediaAssetId = optionalTrimmedString(p.logo?.mediaAssetId);
+
     out.logo =
       p.logo !== null && p.logo !== undefined
         ? {
@@ -129,6 +153,7 @@ export function toUpdateIdentityIntentDTOFromFormValues(
             alt: trimKeepEmpty(p.logo.alt),
             width: p.logo.width,
             height: p.logo.height,
+            ...(logoMediaAssetId ? { mediaAssetId: logoMediaAssetId } : {}),
           }
         : null;
   }

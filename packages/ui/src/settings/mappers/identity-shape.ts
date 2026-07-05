@@ -18,9 +18,27 @@ import type { IdentitySettingsShape } from "@compoz/validation/site/settings/ide
 
 import { assetUiToSettings, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function optionalTrimmedString(
+  value: string | null | undefined,
+): string | undefined {
+  const trimmed = trimKeepEmpty(value);
+
+  return trimmed ? trimmed : undefined;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Mapper                                                                     */
+/* -------------------------------------------------------------------------- */
+
 export function toIdentitySettingsShapeFromDTO(
   dto: IdentitySettingsDTO | null | undefined,
 ): IdentitySettingsShape {
+  const logoMediaAssetId = optionalTrimmedString(dto?.logo?.mediaAssetId);
+
   return {
     siteName: trimKeepEmpty(dto?.siteName),
     tagline: dto?.tagline !== null ? trimKeepEmpty(dto?.tagline) : null,
@@ -31,6 +49,7 @@ export function toIdentitySettingsShapeFromDTO(
             alt: trimKeepEmpty(dto.logo.alt),
             width: dto.logo.width,
             height: dto.logo.height,
+            ...(logoMediaAssetId ? { mediaAssetId: logoMediaAssetId } : {}),
           }
         : null,
     faviconUrl: assetUiToSettings(dto?.faviconUrl),

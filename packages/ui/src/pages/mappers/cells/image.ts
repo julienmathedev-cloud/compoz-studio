@@ -9,9 +9,27 @@
 import type { CellDTO } from "@compoz/core/domain/pages/dto";
 import type { ImageCellFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function optionalTrimmedString(
+  value: string | null | undefined,
+): string | undefined {
+  const trimmed = String(value ?? "").trim();
+
+  return trimmed ? trimmed : undefined;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Mapper                                                                     */
+/* -------------------------------------------------------------------------- */
+
 export function toImageCellShapeFromDTO(
   cell: Extract<CellDTO, { kind: "image" }>,
 ): ImageCellFormValues {
+  const mediaAssetId = optionalTrimmedString(cell.image.mediaAssetId);
+
   return {
     id: cell.id,
     kind: "image",
@@ -24,6 +42,7 @@ export function toImageCellShapeFromDTO(
       href: cell.image.href,
       width: cell.image.width,
       height: cell.image.height,
+      ...(mediaAssetId ? { mediaAssetId } : {}),
     },
     variant: cell.variant,
     size: cell.size,

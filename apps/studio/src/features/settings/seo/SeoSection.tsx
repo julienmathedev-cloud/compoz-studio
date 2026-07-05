@@ -37,6 +37,7 @@ type UploadedRasterImage = Readonly<{
   url: string;
   width: number;
   height: number;
+  mediaAssetId?: string;
 }>;
 
 export function SeoSection() {
@@ -74,6 +75,7 @@ export function SeoSection() {
         url: res.url,
         width: res.width,
         height: res.height,
+        mediaAssetId: res.mediaAssetId,
       };
     },
     [t],

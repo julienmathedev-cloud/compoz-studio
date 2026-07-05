@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/builder/editor/images/ImageItemEditor.tsx
+ * @file apps/studio/src/features/builder/editor/cells/images/ImageItemEditor.tsx
  * @layer ui/studio/pages/blocks/editor/images
  *
  * @description
@@ -40,6 +40,7 @@ type UploadedRasterImage = Readonly<{
   url: string;
   width: number;
   height: number;
+  mediaAssetId?: string;
 }>;
 
 type ImageFieldBasePath = `rows.${number}.columns.${number}.cells.${number}`;
@@ -114,6 +115,12 @@ export function ImageItemEditor({
     name: `${itemBasePath}.height` as `${ImageItemBasePath}.height`,
     control,
     defaultValue: watchedItem?.height,
+  });
+
+  const mediaAssetIdCtrl = useController({
+    name: `${itemBasePath}.mediaAssetId` as `${ImageItemBasePath}.mediaAssetId`,
+    control,
+    defaultValue: watchedItem?.mediaAssetId,
   });
 
   const {
@@ -197,6 +204,7 @@ export function ImageItemEditor({
               srcCtrl.field.onChange(meta.url);
               widthCtrl.field.onChange(meta.width);
               heightCtrl.field.onChange(meta.height);
+              mediaAssetIdCtrl.field.onChange(meta.mediaAssetId ?? undefined);
             }}
             accept="image/jpeg,image/png,image/webp,image/avif"
             preferredTypes={["image/webp", "image/avif"]}
@@ -230,6 +238,9 @@ export function ImageItemEditor({
                 );
                 heightCtrl.field.onChange(
                   hasSrc ? heightCtrl.field.value : undefined,
+                );
+                mediaAssetIdCtrl.field.onChange(
+                  hasSrc ? mediaAssetIdCtrl.field.value : undefined,
                 );
               },
               onBlur: srcCtrl.field.onBlur,

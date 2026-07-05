@@ -21,6 +21,12 @@ import type { IdentitySettings } from "@compoz/core/domain/site/entities/identit
 import type { UpdateIdentitySettingsInput } from "@compoz/core/domain/site/use-cases/identity/update-identity-settings.types";
 import type { UpdateIdentitySettingsIntentDTO } from "@compoz/validation/site/settings/identity/identity-intents";
 
+function optionalTrimmedString(value: string | undefined): string | undefined {
+  const trimmed = typeof value === "string" ? value.trim() : "";
+
+  return trimmed ? trimmed : undefined;
+}
+
 export function adaptUpdateIdentityIntent(
   dto: UpdateIdentitySettingsIntentDTO,
 ): UpdateIdentitySettingsInput {
@@ -59,11 +65,14 @@ export function adaptUpdateIdentityIntent(
     if (dto.logo === null) {
       patch.logo = null;
     } else if (dto.logo !== undefined) {
+      const mediaAssetId = optionalTrimmedString(dto.logo.mediaAssetId);
+
       patch.logo = {
         src: trimOrKeep(dto.logo.src),
         alt: trimOrKeep(dto.logo.alt),
         width: dto.logo.width,
         height: dto.logo.height,
+        ...(mediaAssetId ? { mediaAssetId } : {}),
       };
     }
   }

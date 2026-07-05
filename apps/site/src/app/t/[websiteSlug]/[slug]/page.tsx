@@ -27,6 +27,7 @@ import {
   buildSiteJsonLd,
   serializeSiteJsonLd,
 } from "@compoz/site/lib/seo/buildSiteJsonLd";
+import { buildPageMetadata } from "@compoz/site/lib/seo/buildPageMetadata";
 import { unwrapParams } from "@compoz/site/lib/unwrap-params";
 import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { getPageH1 } from "@compoz/ui/lib/seo/get-page-h1";
@@ -142,24 +143,17 @@ export async function generateMetadata({
 
   const resolvedTitle = applyTitleTemplate(title, titleTemplate);
 
-  return {
+  return buildPageMetadata({
+    settings,
     title,
     description,
-    alternates: {
-      canonical: fallbackPathForPageSlug({
-        websiteSlug,
-        pageSlug: page.slug,
-      }),
-    },
-    openGraph: {
-      title: resolvedTitle,
-      description,
-    },
-    twitter: {
-      title: resolvedTitle,
-      description,
-    },
-  };
+    pathname: fallbackPathForPageSlug({
+      websiteSlug,
+      pageSlug: page.slug,
+    }),
+    brandTitle,
+    socialTitle: resolvedTitle,
+  });
 }
 
 /* -------------------------------------------------------------------------- */

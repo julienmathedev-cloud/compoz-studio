@@ -22,6 +22,7 @@ import {
   getPublishedIndexByWebsiteId,
   getPublishedSettingsByWebsiteId,
 } from "@compoz/site/lib/pages/published-page-loaders";
+import { buildPageMetadata } from "@compoz/site/lib/seo/buildPageMetadata";
 import {
   buildSiteJsonLd,
   serializeSiteJsonLd,
@@ -118,21 +119,13 @@ export async function generateMetadata({
 
   const resolvedTitle = applyTitleTemplate(title, titleTemplate);
 
-  return {
+  return buildPageMetadata({
+    settings,
     title: resolvedTitle,
     description,
-    alternates: {
-      canonical: `/t/${encodeURIComponent(websiteSlug)}`,
-    },
-    openGraph: {
-      title: resolvedTitle,
-      description,
-    },
-    twitter: {
-      title: resolvedTitle,
-      description,
-    },
-  };
+    pathname: `/t/${encodeURIComponent(websiteSlug)}`,
+    brandTitle,
+  });
 }
 
 /* -------------------------------------------------------------------------- */

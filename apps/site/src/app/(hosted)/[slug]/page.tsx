@@ -25,6 +25,7 @@ import {
   getPublishedSettingsByWebsiteId,
   getWebsite,
 } from "@compoz/site/lib/pages/published-page-loaders";
+import { buildPageMetadata } from "@compoz/site/lib/seo/buildPageMetadata";
 import {
   buildSiteJsonLd,
   serializeSiteJsonLd,
@@ -107,20 +108,16 @@ export async function generateMetadata({
   );
 
   const resolvedTitle = applyTitleTemplate(title, titleTemplate);
+  const pathname = `/${encodeURIComponent(slug)}`;
 
-  return {
+  return buildPageMetadata({
+    settings,
     title,
     description,
-    alternates: { canonical: `/${encodeURIComponent(slug)}` },
-    openGraph: {
-      title: resolvedTitle,
-      description,
-    },
-    twitter: {
-      title: resolvedTitle,
-      description,
-    },
-  };
+    pathname,
+    brandTitle,
+    socialTitle: resolvedTitle,
+  });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -162,12 +159,14 @@ export default async function SitePage({ params }: PageParams) {
         : `/${encodeURIComponent(pageSlug)}`,
   });
 
+  const pathname = `/${encodeURIComponent(slug)}`;
+
   const jsonLd = settings
     ? buildSiteJsonLd({
         settings,
         page,
         index,
-        pathname: `/${encodeURIComponent(slug)}`,
+        pathname,
       })
     : null;
 

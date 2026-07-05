@@ -18,8 +18,9 @@ import {
   getPublishedHomePageByWebsiteId,
   getPublishedIndexByWebsiteId,
   getPublishedSettingsByWebsiteId,
-  getWebsiteId,
+  getWebsite,
 } from "@compoz/site/lib/pages/published-page-loaders";
+import { buildPageMetadata } from "@compoz/site/lib/seo/buildPageMetadata";
 import {
   buildSiteJsonLd,
   serializeSiteJsonLd,
@@ -51,7 +52,9 @@ function applyTitleTemplate(
 /* -------------------------------------------------------------------------- */
 
 export async function generateMetadata(): Promise<Metadata> {
-  const websiteId = await getWebsiteId();
+  const website = await getWebsite();
+  const websiteId = website.websiteId;
+
   const page = await getPublishedHomePageByWebsiteId(websiteId);
 
   if (!page) return {};
@@ -88,19 +91,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const resolvedTitle = applyTitleTemplate(title, titleTemplate);
 
-  return {
+  return buildPageMetadata({
+    settings,
     title: resolvedTitle,
     description,
-    alternates: { canonical: SITE_PATH.home },
-    openGraph: {
-      title: resolvedTitle,
-      description,
-    },
-    twitter: {
-      title: resolvedTitle,
-      description,
-    },
-  };
+    pathname: SITE_PATH.home,
+    brandTitle,
+  });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -108,9 +105,13 @@ export async function generateMetadata(): Promise<Metadata> {
 /* -------------------------------------------------------------------------- */
 
 export default async function SiteRootPage() {
-  const websiteId = await getWebsiteId();
-  const ui = resolveSiteUi(websiteId);
-  const runtimeFeatures = resolveSiteRuntimeFeatures(websiteId);
+  const website = await getWebsite();
+  const websiteId = website.websiteId;
+  const websiteSlug = website.slug;
+
+  const ui = resolveSiteUi(websiteSlug);
+  const runtimeFeatures = resolveSiteRuntimeFeatures(websiteSlug);
+
   const settings = await getPublishedSettingsByWebsiteId(websiteId);
   const revealPreset = settings?.theme?.revealPreset ?? "fade-up";
   const revealUi = ui.reveal[revealPreset];

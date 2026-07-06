@@ -10,7 +10,9 @@
  * @remarks
  * - Atome UI : aucune logique métier.
  * - Appelle `signOut()` côté client.
- * - Redirige vers la page de login après déconnexion.
+ * - Redirige vers la page de login localisée après déconnexion.
+ * - Conserve une destination `next` localisée pour éviter de revenir
+ *   sur la locale par défaut après reconnexion.
  * - Utilise TooltipButton + StudioIcon (standard header).
  */
 
@@ -22,11 +24,14 @@ import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
 import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
 
 /**
- * Déconnecte l’utilisateur et renvoie vers `/[locale]/signin` via `callbackUrl`.
+ * Déconnecte l’utilisateur et renvoie vers `/[locale]/signin?next=/[locale]`.
  */
 export function SignOutButton() {
   const locale = useLocale();
   const t = useTranslations();
+
+  const signinPath = `/${locale}/signin`;
+  const nextPath = `/${locale}`;
 
   return (
     <TooltipButton
@@ -37,7 +42,9 @@ export function SignOutButton() {
       aria-label={t("studio.login.signOut")}
       tooltip={t("studio.login.signOut")}
       onClick={() => {
-        void signOut({ callbackUrl: `/${locale}/signin` });
+        void signOut({
+          callbackUrl: `${signinPath}?next=${encodeURIComponent(nextPath)}`,
+        });
       }}
     >
       <StudioIcon icon={LogOut} />

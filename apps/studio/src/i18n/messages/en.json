@@ -727,7 +727,8 @@
         "passwordRequired": "Password is required.",
         "emailNotFound": "No account is associated with this email address.",
         "invalidPassword": "The password is incorrect.",
-        "invalidCredentials": "The email address or password is incorrect."
+        "invalidCredentials": "The email address or password is incorrect.",
+        "staleSession": "Your session has expired or is no longer compatible with the current version of Compoz. Please sign in again."
       }
     },
 

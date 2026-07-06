@@ -26,9 +26,11 @@ import { throwHttp } from "@compoz/http/http-error";
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import { resolveStudioWebsite } from "@compoz/infra/websites/resolve-studio-website";
 import { requireAdminSession } from "@compoz/studio/auth/require-session";
+import {
+  ACTIVE_WEBSITE_COOKIE,
+  STUDIO_SESSION_MAX_AGE_SECONDS,
+} from "@compoz/studio/auth/session-cookies";
 import { jsonOk } from "@compoz/studio/lib/api/responses";
-
-const ACTIVE_WEBSITE_COOKIE = "compoz_active_website" as const;
 
 type Payload = Readonly<{
   websiteId?: string;
@@ -66,7 +68,7 @@ export async function POST(req: Request) {
     });
   }
 
-  const accessibleWebsiteIds = normalizeUniqueWebsiteIds(websiteIds ?? []);
+  const accessibleWebsiteIds = normalizeUniqueWebsiteIds(websiteIds);
   const normalizedDefaultWebsiteId = normalizeWebsiteId(defaultWebsiteId);
 
   const website = await resolveStudioWebsite({
@@ -112,6 +114,7 @@ export async function POST(req: Request) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
+    maxAge: STUDIO_SESSION_MAX_AGE_SECONDS,
   });
 
   return res;

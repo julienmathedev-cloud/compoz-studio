@@ -728,7 +728,8 @@
         "passwordRequired": "Le mot de passe est requis.",
         "emailNotFound": "Aucun compte n’est associé à cette adresse e-mail.",
         "invalidPassword": "Le mot de passe est incorrect.",
-        "invalidCredentials": "L’adresse e-mail ou le mot de passe est incorrect."
+        "invalidCredentials": "L’adresse e-mail ou le mot de passe est incorrect.",
+        "staleSession": "Votre session a expiré ou n’est plus compatible avec la version actuelle de Compoz. Veuillez vous reconnecter."
       }
     },
 

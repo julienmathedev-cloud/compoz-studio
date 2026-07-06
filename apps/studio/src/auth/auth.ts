@@ -18,6 +18,7 @@
  * - Aucun store auth séparé.
  */
 
+import { STUDIO_SESSION_MAX_AGE_SECONDS } from "@compoz/studio/auth/session-cookies";
 import type { NextAuthOptions } from "next-auth";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
@@ -32,7 +33,14 @@ const CredentialsSchema = z.object({
 
 export const authOptions: NextAuthOptions = {
   secret: process.env["AUTH_SECRET"],
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: STUDIO_SESSION_MAX_AGE_SECONDS,
+    updateAge: 24 * 60 * 60,
+  },
+  jwt: {
+    maxAge: STUDIO_SESSION_MAX_AGE_SECONDS,
+  },
 
   providers: [
     Credentials({

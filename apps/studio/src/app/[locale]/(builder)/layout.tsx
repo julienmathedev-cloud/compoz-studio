@@ -22,7 +22,10 @@ import { notFound, redirect } from "next/navigation";
 import { Toaster } from "sonner";
 
 import { StudioClientProviders } from "@compoz/studio/app/[locale]/StudioClientProviders";
-import { getSessionWithWebsiteOrNull } from "@compoz/studio/auth/require-session";
+import {
+  getSessionWithWebsiteOrNull,
+  isStaleWebsiteSessionError,
+} from "@compoz/studio/auth/require-session";
 import { StudioShell } from "@compoz/studio/features/shell/components/StudioShell";
 import { routing } from "@compoz/studio/i18n/routing";
 import { ReactQueryProvider } from "@compoz/studio/lib/react-query/ReactQueryProvider";
@@ -87,10 +90,20 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const messages = await getMessages();
 
-  const session = await getSessionWithWebsiteOrNull();
+  const session = await getSessionWithWebsiteOrNull().catch(
+    (error: unknown) => {
+      if (isStaleWebsiteSessionError(error)) {
+        redirect("/api/auth/reset-stale-session");
+      }
+
+      throw error;
+    },
+  );
 
   if (!session) {
-    redirect(`/${locale}/signin?next=/${locale}`);
+    const nextPath = `/${locale}`;
+
+    redirect(`/${locale}/signin?next=${encodeURIComponent(nextPath)}`);
   }
 
   const websiteId = normalizeWebsiteId(session.websiteId);

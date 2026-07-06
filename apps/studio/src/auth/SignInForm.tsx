@@ -32,6 +32,7 @@ import { STUDIO_CONTAINER, STUDIO_PAGE } from "@compoz/ui/styles/studio/layout";
 type SignInFormProps = Readonly<{
   locale: string;
   nextPath: string;
+  staleSession?: boolean;
 }>;
 
 type FieldErrors = {
@@ -40,7 +41,11 @@ type FieldErrors = {
   form?: string;
 };
 
-export function SignInForm({ locale: _locale, nextPath }: SignInFormProps) {
+export function SignInForm({
+  locale: _locale,
+  nextPath,
+  staleSession = false,
+}: SignInFormProps) {
   const t = useTranslations();
 
   const idPrefix = useIdPrefix("signin-form");
@@ -133,6 +138,10 @@ export function SignInForm({ locale: _locale, nextPath }: SignInFormProps) {
             <Text variant="muted" className="text-center">
               {t("studio.login.tagline")}
             </Text>
+
+            {staleSession ? (
+              <ErrorText error={t("studio.login.errors.staleSession")} />
+            ) : null}
 
             <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>
               <InputField

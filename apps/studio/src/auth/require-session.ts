@@ -24,11 +24,11 @@ import { getServerSession } from "next-auth";
 import { cookies } from "next/headers";
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
-import { throwHttp } from "@compoz/http/http-error";
+import type { HttpErrorBody } from "@compoz/http/http-error";
+import { isUnknownObject, throwHttp } from "@compoz/http/http-error";
 import { resolveStudioWebsite } from "@compoz/infra/websites/resolve-studio-website";
 import { authOptions } from "@compoz/studio/auth/auth";
-
-const ACTIVE_WEBSITE_COOKIE = "compoz_active_website" as const;
+import { ACTIVE_WEBSITE_COOKIE } from "@compoz/studio/auth/session-cookies";
 
 type WebsiteSource =
   | "cookie"
@@ -126,6 +126,30 @@ function assertNoWildcardWebsiteAccess(args: {
       where: "auth.session.websiteIds",
     });
   }
+}
+
+function isHttpErrorBody(value: unknown): value is HttpErrorBody {
+  return isUnknownObject(value) && typeof value["code"] === "string";
+}
+
+export function isStaleWebsiteSessionError(error: unknown): boolean {
+  if (!isUnknownObject(error)) return false;
+
+  const http = error["__http__"];
+  if (!isUnknownObject(http)) return false;
+
+  const status = http["status"];
+  const body = http["body"];
+
+  if (status !== 403 || !isHttpErrorBody(body)) return false;
+
+  const extras = body["extras"];
+  if (!isUnknownObject(extras)) return false;
+
+  return (
+    extras["where"] === "auth.session.website" &&
+    extras["reason"] === "WEBSITE_NOT_ALLOWED"
+  );
 }
 
 /* -------------------------------------------------------------------------- */

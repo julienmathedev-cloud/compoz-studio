@@ -25,6 +25,7 @@ import { StudioClientProviders } from "@compoz/studio/app/[locale]/StudioClientP
 import {
   getSessionWithWebsiteOrNull,
   isAdminRole,
+  isStaleWebsiteSessionError,
 } from "@compoz/studio/auth/require-session";
 import { StudioSidebar } from "@compoz/studio/components/organisms/StudioSidebar";
 import { Header } from "@compoz/studio/features/shell/components/Header";
@@ -95,10 +96,20 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const messages = await getMessages();
 
-  const session = await getSessionWithWebsiteOrNull();
+  const session = await getSessionWithWebsiteOrNull().catch(
+    (error: unknown) => {
+      if (isStaleWebsiteSessionError(error)) {
+        redirect("/api/auth/reset-stale-session");
+      }
+
+      throw error;
+    },
+  );
 
   if (!session) {
-    redirect(`/${locale}/signin?next=/${locale}`);
+    const nextPath = `/${locale}`;
+
+    redirect(`/${locale}/signin?next=${encodeURIComponent(nextPath)}`);
   }
 
   const websiteId = normalizeWebsiteId(session.websiteId);

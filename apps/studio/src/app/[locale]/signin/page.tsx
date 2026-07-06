@@ -12,10 +12,14 @@
  */
 
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
 
 import { SignInForm } from "@compoz/studio/auth/SignInForm";
+import { routing } from "@compoz/studio/i18n/routing";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
+
+type Locale = (typeof routing.locales)[number];
 
 type LocaleSignInPageProps = Readonly<{
   params: Promise<
@@ -25,6 +29,10 @@ type LocaleSignInPageProps = Readonly<{
   >;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }>;
+
+function isLocale(value: string): value is Locale {
+  return routing.locales.includes(value as Locale);
+}
 
 function sanitizeNextPath(nextRaw: unknown): string {
   const raw =
@@ -37,9 +45,20 @@ function sanitizeNextPath(nextRaw: unknown): string {
   const n = raw.trim();
   if (!n) return "/";
   if (!n.startsWith("/")) return "/";
-  // défense simple contre //evil.com
+  // Défense simple contre //evil.com
   if (n.startsWith("//")) return "/";
   return n;
+}
+
+function hasStaleSessionError(errorRaw: unknown): boolean {
+  const error =
+    typeof errorRaw === "string"
+      ? errorRaw
+      : Array.isArray(errorRaw)
+        ? (errorRaw[0] ?? "")
+        : "";
+
+  return error.trim() === "stale-session";
 }
 
 export default async function SignInPage({
@@ -47,14 +66,26 @@ export default async function SignInPage({
   searchParams,
 }: LocaleSignInPageProps) {
   const { locale } = await unwrapParams(params);
+
+  if (!isLocale(locale)) {
+    notFound();
+  }
+
+  setRequestLocale(locale);
+
   const messages = await getMessages();
 
   const sp = (await searchParams) ?? {};
   const nextPath = sanitizeNextPath(sp["next"]);
+  const staleSession = hasStaleSessionError(sp["error"]);
 
   return (
     <NextIntlClientProvider messages={messages}>
-      <SignInForm locale={locale} nextPath={nextPath} />
+      <SignInForm
+        locale={locale}
+        nextPath={nextPath}
+        staleSession={staleSession}
+      />
     </NextIntlClientProvider>
   );
 }

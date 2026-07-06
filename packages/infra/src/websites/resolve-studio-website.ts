@@ -118,8 +118,10 @@ export async function resolveStudioWebsite(args: {
   const allowedWebsiteIds = normalizeUniqueIds(args.user.accessibleWebsiteIds);
   const activeWebsiteId = normalizeId(args.activeWebsiteId);
   const defaultWebsiteId = normalizeId(args.user.defaultWebsiteId);
+  const isAdmin = isAdminRole(args.user.role);
 
   if (
+    isAdmin &&
     activeWebsiteId &&
     canUseWebsite({
       websiteId: activeWebsiteId,
@@ -147,6 +149,18 @@ export async function resolveStudioWebsite(args: {
     }
   }
 
+  if (!isAdmin && allowedWebsiteIds.length === 1) {
+    const website = await readStudioWebsiteById(allowedWebsiteIds[0] ?? "");
+
+    if (website) {
+      return toResolution(website, "first-accessible");
+    }
+  }
+
+  if (!isAdmin) {
+    throw new Error("No unique accessible Studio website could be resolved.");
+  }
+
   for (const websiteId of allowedWebsiteIds) {
     const website = await readStudioWebsiteById(websiteId);
 
@@ -155,12 +169,10 @@ export async function resolveStudioWebsite(args: {
     }
   }
 
-  if (isAdminRole(args.user.role)) {
-    const website = await readFallbackWebsite();
+  const website = await readFallbackWebsite();
 
-    if (website) {
-      return toResolution(website, "fallback");
-    }
+  if (website) {
+    return toResolution(website, "fallback");
   }
 
   throw new Error("No accessible Studio website could be resolved.");

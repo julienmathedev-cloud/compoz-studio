@@ -3,13 +3,10 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer site/preview : rendu RichText (HTML TipTap).
+ * Renders a validated TipTap rich text HTML cell.
  *
  * @remarks
- * - On stocke le HTML brut (output TipTap) côté data.
- * - Ce composant rend le HTML tel quel via `dangerouslySetInnerHTML`.
- * - La sanitization (allowlist) doit être gérée en amont (pipeline de contenu) ou ajoutée dans une passe dédiée.
- * - `reveal` active/désactive l’enrobage `SiteReveal`.
+ * The renderer uses `dangerouslySetInnerHTML`; sanitization must happen upstream in the content pipeline or in a dedicated pass.
  */
 
 import type { RichTextCellShape } from "@compoz/validation/pages/blocks/cells/cell";
@@ -21,24 +18,11 @@ import type {
   SiteRichTextUi,
 } from "@compoz/ui/site/site-ui.types";
 
-/* -------------------------------------------------------------------------- */
-/* Types                                                                      */
-/* -------------------------------------------------------------------------- */
-
 export type RichTextCellRendererProps = Readonly<{
-  /** Shape frontière (cell richText). */
   cell?: RichTextCellShape | null;
-
-  /** UI fine (skin). */
   ui: SiteRichTextUi;
-
-  /** Préférence pour l’enrobage (preview). */
   revealUi: SiteRevealPresetUi;
 }>;
-
-/* -------------------------------------------------------------------------- */
-/* Component                                                                  */
-/* -------------------------------------------------------------------------- */
 
 export function RichTextCellRenderer({
   cell,

@@ -1,15 +1,9 @@
 /**
  * @file apps/studio/src/features/settings/mappers/footer-form.ts
- * @layer ui-mappers/studio/site
- * @description
- * Mappers UI Footer (studio forms) :
- * - DTO -> valeurs de formulaire RHF
- * - normalisation UI
- * - PATCH intent DTO pour l’API studio
+ * @layer studio/features/settings/mappers
  *
- * @remarks
- * - Pour la shape runtime (site/preview), utiliser le mapper shared
- *   `toFooterSettingsShapeFromDTO`.
+ * @description
+ * Studio footer settings mappers for form values, preview shape, and API intents.
  */
 
 import type { FooterSettingsDTO } from "@compoz/core/domain/site/dto";
@@ -20,8 +14,6 @@ import type { UpdateFooterSettingsIntentDTO } from "@compoz/validation/site/sett
 import { trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 import { toFooterSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/footer-shape";
 
-/* ----------------------- Domaine (DTO) -> UI (form values) ------------------ */
-
 export function toFooterFormValuesFromDTO(
   dto: FooterSettingsDTO,
 ): FooterFormValues {
@@ -31,13 +23,6 @@ export function toFooterFormValuesFromDTO(
   };
 }
 
-/**
- * FormValues -> Shape (contrat frontière)
- *
- * @remarks
- * - Utilisable côté studio (preview draft) si tu construis un draft à partir du form.
- * - Si tu pars d’un DTO, préfère `toFooterSettingsShapeFromDTO`.
- */
 export function toFooterSettingsShapeFromFormValues(
   values: FooterFormValues,
 ): FooterSettingsShape {
@@ -47,20 +32,12 @@ export function toFooterSettingsShapeFromFormValues(
   };
 }
 
-/**
- * DTO -> Shape (re-export studio convenience)
- *
- * @remarks
- * Si tu veux éviter d’importer depuis le package ui dans certains fichiers studio.
- * Sinon tu peux supprimer ce wrapper et importer direct `@compoz/ui/site/mappers/footer-shape`.
- */
+/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
 export function toFooterSettingsShape(
   dto: FooterSettingsDTO,
 ): FooterSettingsShape {
   return toFooterSettingsShapeFromDTO(dto);
 }
-
-/* ---------------------------- Normalisations UI ---------------------------- */
 
 export function normalizeFooterFormValues(
   values: FooterFormValues,
@@ -71,8 +48,7 @@ export function normalizeFooterFormValues(
   };
 }
 
-/* ------------------------------ UI -> PATCH (API) --------------------------- */
-
+/** Builds a partial API intent while preserving PATCH semantics. */
 export function toUpdateFooterIntentDTOFromFormValues(
   p: Partial<FooterFormValues>,
 ): UpdateFooterSettingsIntentDTO {

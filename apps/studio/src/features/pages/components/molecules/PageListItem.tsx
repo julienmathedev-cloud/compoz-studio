@@ -2,16 +2,15 @@
 
 /**
  * @file apps/studio/src/features/pages/components/molecules/PageListItem.tsx
- * @layer ui/studio/pages/molecules
+ * @layer studio/features/pages/components/molecules
  *
  * @description
- * Ligne compacte pour afficher une page (titre + slug) avec des actions rapides.
+ * Compact page list row showing status, title, slug, and edit/delete actions.
  *
  * @remarks
- * - Molecule UI : compose `Text`, `TooltipButton`, `DeleteButton`, `StudioButtonGroup`.
- * - Les callbacks sont fournis par le parent (orchestration via hooks / sections).
- * - Supporte un état occupé local (`isDeleting`) : ARIA + désactivation cohérente.
- * - Strictement UI-only : aucune logique métier.
+ * - Parent components provide edit/delete callbacks and own confirmation or I/O orchestration.
+ * - Keeps the deleting state reflected through ARIA attributes and disabled actions.
+ * - Parent components own list semantics.
  */
 
 import { FileText, Settings } from "lucide-react";
@@ -28,38 +27,18 @@ import { StudioButtonGroup } from "@compoz/studio/components/molecules/controls/
 import { formatPagePath } from "@compoz/studio/lib/ui/pages";
 import { cn } from "@compoz/ui/lib/utils";
 
-/**
- * Props du composant `PageListItem`.
- */
 type PageListItemProps = Readonly<{
-  /** Référence minimaliste de la page (titre + slug). */
   page: PageSummaryDTO;
-
-  /** Statut draft vs published (clean / new / dirty / deleted). */
+  /** Status draft vs published (published / new / modified / deleted). */
   statusKind?: SiteDiffKindDTO;
-
-  /** Action : éditer les métadonnées (id). */
   onEditMeta?: (pageId: string) => void;
-
-  /** Action : éditer le contenu (id). */
   onEditContent?: (pageId: string) => void;
-
-  /** Action : suppression (confirmation + I/O gérées par le parent). */
   onDelete?: () => void;
-
-  /** Indique une suppression en cours (désactive les actions concernées). */
   isDeleting?: boolean;
-
-  /** Désactive toute la ligne (verrouillage global optionnel). */
   disabled?: boolean;
 }>;
 
-/**
- * Ligne UI d’une page dans la liste (studio).
- *
- * @remarks
- * Ne rend pas de `<li>` : le conteneur parent gère la sémantique de liste.
- */
+/** Renders a page row; the parent owns list semantics. */
 export function PageListItem({
   page,
   statusKind,

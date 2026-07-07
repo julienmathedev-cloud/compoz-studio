@@ -2,17 +2,14 @@
 
 /**
  * @file apps/studio/src/features/preview/PreviewProviders.tsx
- * @layer ui/studio/preview
+ * @layer studio/features/preview
  *
  * @description
- * Providers globaux utilisés dans la preview iframe.
+ * Runtime providers shared by Studio preview iframe pages.
  *
  * @remarks
- * - Injecte le thème CSS du site via le scope preview `theme`.
- * - Utilise un fallback global `initialTheme` chargé côté serveur.
- * - Injecte le skin UI public résolu pour le Website courant.
- * - Évite la répétition dans chaque preview page.
- * - Le skin public est résolu avec Website.slug.
+ * - Applies theme overrides from the preview `theme` scope with a server-loaded fallback.
+ * - Resolves the public UI skin from Website.slug.
  */
 
 import type { ReactNode } from "react";
@@ -24,12 +21,7 @@ import type { ThemeSettingsShape } from "@compoz/validation/site/settings/theme/
 
 type PreviewProvidersProps = Readonly<{
   children: ReactNode;
-
-  /**
-   * Website.slug utilisé pour résoudre le skin UI public.
-   */
   websiteSlug: string;
-
   initialTheme?: ThemeSettingsShape | null;
 }>;
 

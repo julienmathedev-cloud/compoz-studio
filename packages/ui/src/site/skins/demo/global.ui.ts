@@ -1,14 +1,9 @@
 /**
- * @file packages/ui/src/site/skins/démo/global.ui.ts
- * @layer ui/site/skins
+ * @file packages/ui/src/site/skins/demo/global.ui.ts
+ * @layer ui/site/skins/demo
  *
  * @description
- * Skin UI — site (thème Démo).
- *
- * @remarks
- * - Compose header/footer/systemPage.
- * - Fournit les valeurs minimales pour le renderer (container + H1 layout).
- * - Fournit uniquement des classes Tailwind (aucune logique).
+ * Composes the demo public site skin overrides from layout, cell, and pager UI class maps.
  */
 
 import type { SiteGlobalUiOverride } from "@compoz/ui/site/site-ui.types";

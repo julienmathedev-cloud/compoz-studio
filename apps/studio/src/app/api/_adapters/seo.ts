@@ -3,17 +3,12 @@
  * @layer studio/app/api/adapters
  *
  * @description
- * Adaptateur API Studio pour les réglages SEO : convertit un intent DTO reçu
- * en patch partiel domaine (`Partial<SeoSettings>`).
- *
- * Responsabilités :
- * - trimming défensif des chaînes
- * - application uniquement des clés présentes
- * - adaptation partielle des blocs `openGraph` et `twitter`
+ * Studio API adapter for SEO settings update intents.
  *
  * @remarks
- * - Draft-only côté route : pas de state dans l’intent.
- * - Les invariants et defaults (ex: twitter.card) sont garantis par le domaine/repo.
+ * - Builds a partial domain patch from the fields present in the intent.
+ * - Partially adapts `openGraph`, `twitter`, and structured data blocks.
+ * - Leaves defaults and invariants such as `twitter.card` to the domain/repository layer.
  */
 
 import type {
@@ -31,10 +26,6 @@ import type {
   TwitterPatchDTO,
   UpdateSeoSettingsIntentDTO,
 } from "@compoz/validation/site/settings/seo/seo-intents";
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function trimNullableString(value: string | null | undefined): string | null {
   if (value === null || typeof value === "undefined") return null;
@@ -112,20 +103,19 @@ function adaptStructuredData(
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Intent → Domain patch                                                      */
-/* -------------------------------------------------------------------------- */
+// Intent to domain patch.
 
 /**
- * Transforme un intent DTO SEO en patch partiel domaine `SeoSettings`.
+ * Converts an SEO intent DTO into a partial `SeoSettings` domain patch.
  *
- * Contrat :
- * - Seules les clés présentes dans l’intent sont posées.
- * - Les strings sont trimées ; les valeurs vides deviennent `null`.
- * - `openGraph` / `twitter` : patch superficiel, uniquement sur les champs présents.
- * - `defaultImageUrl` : ""/null => null (clear explicite), sinon normalisé via `asAssetUrlOrNull`.
- * - `defaultImageMediaAssetId` : lien optionnel vers MediaAsset, supprimé si l’URL image est clear
- *   ou remplacée sans id associé.
+ * Contract:
+ * - Only keys present in the intent are set.
+ * - Strings are trimmed; empty values become `null`.
+ * - `openGraph` / `twitter`: shallow patch, only for present fields.
+ * - `defaultImageUrl`: ""/null => null (explicit clear), otherwise normalized
+ *   through `asAssetUrlOrNull`.
+ * - `defaultImageMediaAssetId`: optional MediaAsset link, removed when the
+ *   image URL is cleared or replaced without an associated id.
  */
 export function adaptUpdateSeoIntent(
   dto: UpdateSeoSettingsIntentDTO,
@@ -146,8 +136,6 @@ export function adaptUpdateSeoIntent(
   });
 
   const patch: Partial<SeoSettings> = {};
-
-  /* ------------------------------ Root fields ------------------------------ */
 
   if ("baseUrl" in dto) {
     patch.baseUrl = trimNullableString(dto.baseUrl);
@@ -180,7 +168,7 @@ export function adaptUpdateSeoIntent(
     );
   }
 
-  /* ------------------------------ OpenGraph ------------------------------ */
+  // OpenGraph patch.
 
   if ("openGraph" in dto) {
     const ogIn = dto.openGraph as OpenGraphPatchDTO | null | undefined;
@@ -245,7 +233,7 @@ export function adaptUpdateSeoIntent(
     }
   }
 
-  /* -------------------------------- Twitter ------------------------------- */
+  // Twitter patch.
 
   if ("twitter" in dto) {
     const twIn = dto.twitter as TwitterPatchDTO | null | undefined;

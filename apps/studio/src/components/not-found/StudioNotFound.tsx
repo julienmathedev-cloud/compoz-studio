@@ -5,12 +5,7 @@
  * @layer studio/components
  *
  * @description
- * Page 404 de l’espace Studio.
- *
- * @remarks
- * - Affichée lorsque la route Studio demandée n’existe pas.
- * - UI-only : aucune logique métier.
- * - Fournit une action de retour vers l’accueil Studio.
+ * Studio 404 page for unknown Studio routes.
  */
 
 import { useTranslations } from "next-intl";
@@ -20,9 +15,6 @@ import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { cn } from "@compoz/ui/lib/utils";
 import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 
-/**
- * Affiche la page “Not Found” pour le Studio.
- */
 export function StudioNotFound() {
   const t = useTranslations();
 

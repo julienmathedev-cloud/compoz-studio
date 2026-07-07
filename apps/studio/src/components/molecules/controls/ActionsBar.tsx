@@ -5,13 +5,11 @@
  * @layer studio/molecules
  *
  * @description
- * Barre d’actions (Studio) pour formulaires : Reset / Add / Submit, avec états et tooltips.
+ * Standard Studio form actions bar for reset, add, and submit controls.
  *
  * @remarks
- * - Molecule UI : compose des atoms (`TooltipButton`, `LoadingStatus`, `StudioIcon`) et des layouts (`StudioButtonGroup`).
- * - Centralise le calcul des états `disabled` à partir de `isSaving`, `disabled` et `isDirty`.
- * - Peut fonctionner en mode `<form onSubmit>` (`submitType="submit"`) ou via callback (`submitType="button"`).
- * - Strictement UI-only : aucune logique métier.
+ * - Centralizes disabled-state computation from `isSaving`, `disabled`, and `isDirty`.
+ * - Supports native form submit mode and callback-driven button mode.
  */
 
 import { Plus, RotateCcw, Save } from "lucide-react";
@@ -26,62 +24,26 @@ import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
 import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
 import { StudioButtonGroup } from "@compoz/studio/components/molecules/controls/StudioButtonGroup";
 
-/**
- * Variantes d’affichage de la barre d’actions.
- */
 type Variant = "resetSubmit" | "addResetSubmit" | "submitOnly";
 
-/**
- * Props du composant `ActionsBar`.
- */
 type ActionsBarProps = Readonly<{
-  /** Contrôle la disposition des boutons. */
   variant?: Variant;
-
-  /** Indique qu’une sauvegarde est en cours. */
   isSaving?: boolean;
-
-  /** Indique si le formulaire contient des changements non sauvegardés. */
   isDirty?: boolean;
-
-  /** Désactive explicitement toute la barre d’actions. */
   disabled?: boolean;
-
-  /** Callback submit (utilisé si `submitType="button"`). */
   onSubmit?: () => void;
-
-  /** Callback reset. */
   onReset?: () => void;
-
-  /** Callback ajouter. */
   onAdd?: () => void;
-
-  /** Type HTML du bouton submit (`submit` par défaut). */
   submitType?: "submit" | "button";
-
-  /** Libellé du bouton submit (fallback i18n). */
   submitLabel?: string;
-
-  /** Libellé submit pendant la sauvegarde (fallback i18n). */
   submitLoadingLabel?: string;
-
-  /** Libellé du bouton reset (fallback i18n). */
   resetLabel?: string;
-
-  /** Libellé du bouton ajouter (fallback i18n). */
   addLabel?: string;
-
-  /** Override `disabled` du bouton submit. */
   submitDisabled?: boolean;
-  /** Override `disabled` du bouton reset. */
   resetDisabled?: boolean;
-  /** Override `disabled` du bouton ajouter. */
   addDisabled?: boolean;
 }>;
 
-/**
- * Barre d’actions standardisée pour formulaires (Studio).
- */
 export function ActionsBar({
   variant = "resetSubmit",
   isSaving = false,

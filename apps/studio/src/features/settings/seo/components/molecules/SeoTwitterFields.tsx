@@ -2,16 +2,13 @@
 
 /**
  * @file apps/studio/src/features/settings/seo/components/molecules/SeoTwitterFields.tsx
- * @layer ui/studio/molecules
+ * @layer studio/features/settings/seo/components/molecules
  *
  * @description
- * Molécule affichant les champs Twitter d’un formulaire SEO.
- * Inclut `card`, `site` et `creator` avec la logique RHF encapsulée.
+ * Twitter SEO fields for card type, site handle, and creator handle.
  *
  * @remarks
- * - Utilise `Controller` de RHF pour connecter les champs.
- * - Applique un fallback sur `twitter.card` si non défini.
- * - Strictement UI + formulaire RHF, aucune logique métier externe.
+ * - Uses a fallback card value when the nested Twitter form slice is not initialized yet.
  */
 
 import type { Control } from "react-hook-form";

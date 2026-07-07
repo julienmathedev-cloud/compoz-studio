@@ -3,7 +3,10 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Site/preview renderer for a testimonials list.
+ * Renders a validated testimonials cell as static cards or a marquee.
+ *
+ * @remarks
+ * Testimonials without both quote and author name are ignored; marquee mode duplicates the rendered group for continuous scrolling.
  */
 
 import type {

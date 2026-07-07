@@ -1,7 +1,7 @@
 /**
  * @file packages/core/src/constants/seo/seo.ts
  * @layer core/constants/seo
- * @description Constantes SEO (twitter cards, placeholder template).
+ * @description SEO constants for Twitter cards and title templates.
  */
 
 export const TWITTER_CARD_TYPES = ["summary", "summary_large_image"] as const;

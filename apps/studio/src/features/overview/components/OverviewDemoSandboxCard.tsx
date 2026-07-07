@@ -2,10 +2,14 @@
 
 /**
  * @file apps/studio/src/features/overview/components/OverviewDemoSandboxCard.tsx
- * @layer ui/studio/overview
+ * @layer studio/features/overview/components
  *
  * @description
- * Carte informative affichée dans l’Overview lorsqu’un utilisateur explore une sandbox démo.
+ * Informational Overview card shown when the current Studio session is a demo sandbox.
+ *
+ * @remarks
+ * - Reads copy from `next-intl`; all messaging stays translation-driven.
+ * - Keeps the sandbox notice separate from regular overview metrics and actions.
  */
 
 import { Sparkles } from "lucide-react";

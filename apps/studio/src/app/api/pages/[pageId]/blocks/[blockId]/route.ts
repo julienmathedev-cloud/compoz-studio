@@ -3,16 +3,12 @@
  * @layer studio/app/api
  *
  * @description
- * Route API Studio — ressource block d’une page du Website actif.
+ * Studio API route for updating or deleting a section block on a draft page.
  *
  * @remarks
- * Responsabilités :
- * - PATCH  : met à jour un block Section.
- * - DELETE : supprime un block.
- * - Valide les params et le payload via Zod.
- * - Appelle les use-cases côté domaine.
- * - Invalide le cache de status du Website actif après mutation.
- * - Les repositories sont scopés par Prisma Website.id.
+ * - Validates route params and payloads before running domain use cases.
+ * - Invalidates the active Website status cache after mutations.
+ * - Repositories are scoped by Prisma Website.id.
  */
 
 import "server-only";
@@ -40,10 +36,6 @@ import {
   type UpdateSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
 import { PageIdAndBlockIdParamSchema } from "@compoz/validation/routes/params";
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 async function invalidateWebsiteStatusCache(params: {
   websiteId: string;
@@ -78,10 +70,6 @@ async function invalidateWebsiteStatusCache(params: {
     });
   }
 }
-
-/* -------------------------------------------------------------------------- */
-/* PATCH                                                                      */
-/* -------------------------------------------------------------------------- */
 
 export async function PATCH(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.blocks.blockId.PATCH" as const;
@@ -162,10 +150,6 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
     );
   });
 }
-
-/* -------------------------------------------------------------------------- */
-/* DELETE                                                                     */
-/* -------------------------------------------------------------------------- */
 
 export async function DELETE(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.blocks.blockId.DELETE" as const;

@@ -2,16 +2,14 @@
 
 /**
  * @file apps/studio/src/features/site/status/useSiteStatus.ts
- * @layer hooks/studio/site/status
+ * @layer studio/features/site/status
  *
  * @description
- * Hook React Query : récupère l’état global du site draft vs published.
+ * React Query hook for reading the global draft vs published site status.
  *
  * @remarks
- * - Read-only.
- * - Le calcul est fait côté API `/api/studio/site/status`.
- * - Website-scoped : la queryKey inclut Prisma Website.id pour éviter
- *   les collisions de cache lors d’un switch de Website actif.
+ * - Read-only: status computation remains handled by the `/api/studio/site/status` route.
+ * - The query key is scoped by Prisma Website.id to avoid cache collisions when switching the active website.
  */
 
 import { useQuery } from "@tanstack/react-query";

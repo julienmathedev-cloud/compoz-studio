@@ -3,15 +3,10 @@
  * @layer ui/renderer
  *
  * @description
- * Renderer site/preview : block Section (V0.9).
+ * Renders a validated section block with rows, columns, cells, and runtime rendering features.
  *
  * @remarks
- * Structure V0.9 :
- *
- * section
- *  └ rows[]
- *      └ columns[]
- *          └ cells[]
+ * Handles first-media LCP targeting, responsive column reversal, spacer wrapper visibility, and optional SEO-only H1 hiding.
  */
 
 import { cn } from "@compoz/ui/lib/utils";
@@ -150,10 +145,6 @@ export function SectionBlockRenderer({
 
 SectionBlockRenderer.displayName = "SectionBlockRenderer";
 
-/* -------------------------------------------------------------------------- */
-/* Internals                                                                  */
-/* -------------------------------------------------------------------------- */
-
 function isMediaCell(cell: CellShape): boolean {
   return (
     cell.kind === "image" || cell.kind === "gallery" || cell.kind === "carousel"
@@ -222,7 +213,7 @@ function getColumnOrderClass(
   if (row.reverseOn.tablet) {
     classes.push(tabletOrderMap[columnsLength as 2 | 3][colIndex]);
   } else if (row.reverseOn.mobile) {
-    // reset si mobile actif mais pas tablet
+    // Reset mobile reversal when tablet reversal is disabled.
     classes.push("md:order-none");
   }
 
@@ -230,7 +221,7 @@ function getColumnOrderClass(
   if (row.reverseOn.desktop) {
     classes.push(desktopOrderMap[columnsLength as 2 | 3][colIndex]);
   } else if (row.reverseOn.tablet) {
-    // reset si tablet actif mais pas desktop
+    // Reset tablet reversal when desktop reversal is disabled.
     classes.push("lg:order-none");
   }
 

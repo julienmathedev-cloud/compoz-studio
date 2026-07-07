@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/portfolio/primary-menu.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/portfolio
  *
  * @description
- * Skin UI — menu principal site (thème Portfolio).
+ * Defines the portfolio skin overrides for the public site primary menu.
  */
 
 import type { SitePrimaryMenuUiOverride } from "@compoz/ui/site/site-ui.types";

@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/cells/steps-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default/cells
  *
  * @description
- * Skin UI — steps cell (thème Default).
+ * Defines the default skin classes for steps cells.
  */
 
 import type { SiteStepsUi } from "@compoz/ui/site/site-ui.types";

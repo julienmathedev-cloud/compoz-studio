@@ -1,15 +1,9 @@
 /**
  * @file packages/infra/src/http/studio/website.client.ts
  * @layer infra/http/studio
- *
- * @description
- * Client HTTP Studio pour gérer le Website actif, via cookie httpOnly côté serveur.
- *
+ * @description Studio HTTP client for switching the active website through the server-managed cookie.
  * @remarks
- * Route actuelle sous segment "admin" :
- * - POST /api/.../admin/website/active
- *
- * Le mapping est centralisé via ENDPOINTS.
+ * The endpoint still lives under the Studio `admin` segment for legacy compatibility.
  */
 
 import { ENDPOINTS } from "@compoz/infra/http/endpoints";
@@ -20,11 +14,7 @@ export type SetActiveWebsiteResponse = Readonly<{
   defaultWebsiteId?: string;
 }>;
 
-/**
- * @description
- * Certains endpoints Studio retournent `{ data: ... }`, d’autres retournent
- * directement le payload. Ce helper unifie la lecture.
- */
+/** Handles both direct payloads and `{ data: ... }` Studio response envelopes. */
 function unwrapJsonOk<T>(json: unknown): T {
   if (json && typeof json === "object" && "data" in json) {
     const data = (json as { data?: unknown }).data;

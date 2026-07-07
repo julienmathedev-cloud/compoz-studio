@@ -3,14 +3,12 @@
  * @layer studio/app
  *
  * @description
- * Page route "Admin / Users" côté server.
+ * Server-side route page for Admin / Users.
  *
  * @remarks
- * - Guard : nécessite une session admin.
- * - Construit les options de Websites accessibles à partir des IDs de session.
- * - Utilise le Prisma Website.id comme valeur technique.
- * - Utilise le Website.name comme libellé affiché.
- * - Rend la page UI dédiée côté client.
+ * - Guarded by an admin session.
+ * - Builds Website options from session Website ids.
+ * - Uses Prisma Website.id as the option value and Website.name as the label.
  */
 
 import "server-only";
@@ -29,10 +27,6 @@ type CurrentUser = Readonly<{
   email: string;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
 function normalizeWebsiteId(value: unknown): string {
   return String(value ?? "").trim();
 }
@@ -41,17 +35,13 @@ function normalizeWebsiteName(value: unknown): string {
   return String(value ?? "").trim();
 }
 
-/* -------------------------------------------------------------------------- */
-/* Page                                                                       */
-/* -------------------------------------------------------------------------- */
-
 export default async function StudioAdminUsersRoutePage() {
   const session = await requireAdminSession();
 
   const currentWebsiteId = normalizeWebsiteId(session.websiteId);
 
   if (!currentWebsiteId) {
-    // Session admin sans Website.id actif = état invalide.
+    // An admin session without an active Website.id is invalid.
     return null;
   }
 

@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/entities/cells/image-editor.ts
  * @layer core/domain/pages
- * @description
- * Entités métier ImageCell et ImageEditor.
+ * @description Image cell and editor domain entities.
  */
 
 import type { Image } from "@compoz/core/domain/assets/entities/image";

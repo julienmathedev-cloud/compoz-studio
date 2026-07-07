@@ -5,13 +5,12 @@
  * @layer studio/app
  *
  * @description
- * Page « Cookies » (Studio) — politique relative aux cookies pour Compoz Studio.
+ * Studio cookies policy page with a screen-reader-only H1.
  *
  * @remarks
- * - H1 SR-only (convention Studio : un seul H1 global).
- * - Structure via `SettingsSection`.
- * - Contenu statique i18n.
- * - Aucun tracking actuellement (V0.5 : zéro cookies marketing / analytics).
+ * - Studio convention: the page owns the single global H1 as screen-reader-only text.
+ * - Visible content is structured through `SettingsSection`, which provides the visible H2.
+ * - V0.5 has no marketing or analytics cookies.
  */
 
 import { useTranslations } from "next-intl";
@@ -25,15 +24,11 @@ import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 
 const CONTACT_EMAIL = "julien.mathe.dev@gmail.com" as const;
 
-/**
- * Page Cookies (Studio).
- */
 export default function CookiesPage() {
   const t = useTranslations();
 
   return (
     <div className={cn(STUDIO_SECTION)}>
-      {/* H1 global SR-only */}
       <Heading as="h1" className="sr-only">
         {t("studio.legal.cookies.h1")}
       </Heading>
@@ -45,9 +40,6 @@ export default function CookiesPage() {
         showStatusBadge={false}
       >
         <div className="space-y-6">
-          {/* ------------------------------------------------------------------ */}
-          {/* Introduction                                                        */}
-          {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.cookies.sections.intro.title")}
@@ -56,9 +48,6 @@ export default function CookiesPage() {
             <Text as="p">{t("studio.legal.cookies.sections.intro.p1")}</Text>
           </div>
 
-          {/* ------------------------------------------------------------------ */}
-          {/* Utilisation actuelle                                                */}
-          {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.cookies.sections.usage.title")}
@@ -69,9 +58,6 @@ export default function CookiesPage() {
             <Text as="p">{t("studio.legal.cookies.sections.usage.p2")}</Text>
           </div>
 
-          {/* ------------------------------------------------------------------ */}
-          {/* Cookies nécessaires                                                 */}
-          {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.cookies.sections.technical.title")}
@@ -86,9 +72,6 @@ export default function CookiesPage() {
             </Text>
           </div>
 
-          {/* ------------------------------------------------------------------ */}
-          {/* Évolution                                                           */}
-          {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.cookies.sections.future.title")}
@@ -97,9 +80,6 @@ export default function CookiesPage() {
             <Text as="p">{t("studio.legal.cookies.sections.future.p1")}</Text>
           </div>
 
-          {/* ------------------------------------------------------------------ */}
-          {/* Contact                                                             */}
-          {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.cookies.sections.contact.title")}

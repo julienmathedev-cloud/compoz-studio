@@ -3,13 +3,14 @@
  * @layer site/lib/pages
  *
  * @description
- * Loaders server (Next/React) pour les pages PUBLISHED du site public.
+ * Server loaders for published public site pages.
  *
  * @remarks
- * - La résolution host-based est centralisée dans `getWebsite()`.
- * - Le host public est résolu via Prisma WebsiteDomain.
- * - Les loaders explicites utilisent le Prisma Website.id.
- * - Les URLs fallback `/t/:websiteSlug` utilisent Website.slug dans les routes dédiées.
+ * - Centralizes host-based Website resolution in `getWebsite()`.
+ * - Resolves the public host through Prisma WebsiteDomain.
+ * - Uses React `cache()` to dedupe repository and read calls during the same server render.
+ * - Explicit loaders use Prisma Website.id.
+ * - Fallback URLs under `/t/:websiteSlug` use Website.slug in dedicated routes.
  */
 
 import "server-only";
@@ -25,10 +26,6 @@ import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteRepository } from "@compoz/infra/site";
 import { resolvePublicWebsiteFromHost } from "@compoz/infra/websites/resolve-public-website";
 import { toSlug } from "@compoz/ui/lib/routing/slug";
-
-/* -------------------------------------------------------------------------- */
-/* Website resolution                                                         */
-/* -------------------------------------------------------------------------- */
 
 function normalizeId(value: unknown): string {
   return String(value ?? "").trim();
@@ -56,10 +53,6 @@ export const getWebsiteId = cache(async (): Promise<string> => {
   return website.websiteId;
 });
 
-/* -------------------------------------------------------------------------- */
-/* Internal cached loaders                                                    */
-/* -------------------------------------------------------------------------- */
-
 const readPublishedSettingsCached = cache(async (websiteId: string) => {
   const repo = getSiteRepository({ websiteId });
   return repo.readSettings(CONTENT_STATE.PUBLISHED);
@@ -76,10 +69,6 @@ const readPublishedPageByIdCached = cache(
     return pagesRepo.readById(CONTENT_STATE.PUBLISHED, pageId);
   },
 );
-
-/* -------------------------------------------------------------------------- */
-/* Core helpers                                                               */
-/* -------------------------------------------------------------------------- */
 
 async function getPublishedPageByResolvedSlugForWebsite(
   websiteId: string,
@@ -99,10 +88,6 @@ async function getPublishedPageByResolvedSlugForWebsite(
 
   return readPublishedPageByIdCached(websiteId, pageId);
 }
-
-/* -------------------------------------------------------------------------- */
-/* Public API — explicit website id                                           */
-/* -------------------------------------------------------------------------- */
 
 export async function getPublishedSettingsByWebsiteId(websiteIdRaw: string) {
   const websiteId = normalizeId(websiteIdRaw);

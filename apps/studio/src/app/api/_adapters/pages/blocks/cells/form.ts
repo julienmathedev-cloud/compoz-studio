@@ -1,8 +1,9 @@
 /**
  * @file apps/studio/src/app/api/_adapters/pages/blocks/cells/form.ts
  * @layer studio/app/api/adapters
+ *
  * @description
- * Adapteurs API Studio pour les cellules de type `FormCell`.
+ * Studio API adapter for `FormCell` values.
  */
 
 import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";

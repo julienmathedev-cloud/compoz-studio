@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/validators/cells/form.ts
  * @layer core/domain/pages/validators
- * @description
- * Validateur métier de FormCell.
+ * @description Domain validator for form cells.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";

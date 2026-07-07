@@ -1,20 +1,9 @@
 /**
  * @file packages/infra/src/users/in-memory-users-repository.ts
  * @layer infra/users
- * @description
- * Implémentation InMemory du UsersRepository pour tests unitaires et e2e.
- *
- * Responsabilités :
- * - stockage en mémoire process-local
- * - indexation id-first (Map id -> User)
- * - index secondaire email -> id (lookup "DB-like")
- * - gestion d’un store de password hash (infra concern)
- * - clonage structuré pour éviter les mutations croisées
- * - respect strict de l’interface UsersRepository
- *
+ * @description In-memory UsersRepository implementation for tests.
  * @remarks
- * - Aucune validation métier (format email, RBAC, unicité) : le domaine tranche.
- * - Comportement idempotent : delete sur user absent ne jette pas.
+ * Keeps DB-like email indexing and bcrypt password hashes while leaving domain validation outside infra.
  */
 
 import bcrypt from "bcryptjs";
@@ -25,17 +14,9 @@ import type {
 } from "@compoz/core/domain/users/entities/user";
 import type { UsersRepository } from "@compoz/core/domain/users/ports/users-repository";
 
-/**
- * Type d’entrée de `create` déduit depuis le port (SoT = domain).
- */
 type CreateUserInput = Parameters<UsersRepository["create"]>[0];
 
-/**
- * Store interne :
- * - byId : id -> User
- * - emailToId : emailLower -> id
- * - pwdById : id -> bcrypt hash
- */
+/** Internal id-first store with secondary email and password-hash indexes. */
 type Store = Readonly<{
   byId: Map<string, User>;
   emailToId: Map<string, string>;
@@ -55,13 +36,7 @@ export class InMemoryUsersRepository implements UsersRepository {
     pwdById: new Map(),
   };
 
-  async ensureBase(): Promise<void> {
-    // no-op (in-memory)
-  }
-
-  /* -------------------------------------------------------------------------- */
-  /* Reads                                                                      */
-  /* -------------------------------------------------------------------------- */
+  async ensureBase(): Promise<void> {}
 
   async readById(userId: string): Promise<User | null> {
     const id = String(userId ?? "").trim();
@@ -81,10 +56,6 @@ export class InMemoryUsersRepository implements UsersRepository {
     return this.readById(id);
   }
 
-  /* -------------------------------------------------------------------------- */
-  /* Writes                                                                     */
-  /* -------------------------------------------------------------------------- */
-
   async create(input: CreateUserInput): Promise<User> {
     const user = input?.user;
     const password = String(input?.password ?? "").trim();
@@ -92,29 +63,26 @@ export class InMemoryUsersRepository implements UsersRepository {
     const id = String(user?.id ?? "").trim();
     const emailLower = normalizeEmail(user?.email);
 
-    // Contrat infra minimal
+    // Minimal infra guard before hashing and indexing.
     if (!id || !emailLower || !password) {
       throw new Error("InMemoryUsersRepository.create: invalid input.");
     }
 
-    // On stocke l'email canonique (lower-case) côté infra
+    // Store the canonical lower-case email in the infra layer.
     const toStore: User = { ...user, email: emailLower };
 
-    // Nettoyage index si même id existait déjà avec un autre email
+    // Keep the secondary email index in sync when an id changes email.
     const prev = this.store.byId.get(id);
     if (prev?.email && prev.email !== emailLower) {
       const mapped = this.store.emailToId.get(prev.email);
       if (mapped === id) this.store.emailToId.delete(prev.email);
     }
 
-    // Index email -> id (si un autre id utilisait cet email, on remplace le mapping)
     this.store.emailToId.set(emailLower, id);
 
-    // Password hash (infra)
     const hash = await bcrypt.hash(password, 10);
     this.store.pwdById.set(id, hash);
 
-    // Stockage user
     this.store.byId.set(id, structuredClone(toStore));
 
     return structuredClone(toStore);
@@ -128,7 +96,7 @@ export class InMemoryUsersRepository implements UsersRepository {
 
     const prev = this.store.byId.get(id);
 
-    // Si changement d'email, on nettoie l'ancien index.
+    // Keep the secondary email index in sync when an email changes.
     if (prev?.email && prev.email !== emailLower) {
       const mapped = this.store.emailToId.get(prev.email);
       if (mapped === id) this.store.emailToId.delete(prev.email);
@@ -151,7 +119,7 @@ export class InMemoryUsersRepository implements UsersRepository {
     const pwd = String(password ?? "").trim();
     if (!id || !pwd) return;
 
-    // Idempotent-ish : si user absent, on ne jette pas (comme delete)
+    // Missing users are ignored, matching delete-like idempotence.
     if (!this.store.byId.has(id)) return;
 
     const hash = await bcrypt.hash(pwd, 10);
@@ -167,10 +135,6 @@ export class InMemoryUsersRepository implements UsersRepository {
 
     return bcrypt.compare(String(password ?? ""), hash);
   }
-
-  /* -------------------------------------------------------------------------- */
-  /* Deletes                                                                    */
-  /* -------------------------------------------------------------------------- */
 
   async deleteById(userId: string): Promise<void> {
     const id = String(userId ?? "").trim();
@@ -197,10 +161,6 @@ export class InMemoryUsersRepository implements UsersRepository {
     await this.deleteById(id);
   }
 
-  /* -------------------------------------------------------------------------- */
-  /* Exists                                                                     */
-  /* -------------------------------------------------------------------------- */
-
   async existsById(userId: string): Promise<boolean> {
     const id = String(userId ?? "").trim();
     if (!id) return false;
@@ -213,10 +173,6 @@ export class InMemoryUsersRepository implements UsersRepository {
     return this.store.emailToId.has(e);
   }
 
-  /* -------------------------------------------------------------------------- */
-  /* Bulk reads                                                                 */
-  /* -------------------------------------------------------------------------- */
-
   async readManyById(ids: ReadonlyArray<string>): Promise<Array<User | null>> {
     return ids.map((userId) => {
       const id = String(userId ?? "").trim();
@@ -226,10 +182,6 @@ export class InMemoryUsersRepository implements UsersRepository {
       return u ? structuredClone(u) : null;
     });
   }
-
-  /* -------------------------------------------------------------------------- */
-  /* List                                                                       */
-  /* -------------------------------------------------------------------------- */
 
   async list(): Promise<ReadonlyArray<UserSummary>> {
     const out: UserSummary[] = [];
@@ -243,7 +195,6 @@ export class InMemoryUsersRepository implements UsersRepository {
       });
     }
 
-    // Tri stable (optionnel) : pratique en tests
     out.sort((a, b) => a.email.localeCompare(b.email));
 
     return out;

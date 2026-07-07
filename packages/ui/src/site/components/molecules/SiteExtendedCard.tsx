@@ -1,10 +1,9 @@
 /**
  * @file packages/ui/src/site/components/molecules/SiteExtendedCard.tsx
- * @layer ui/site/molecules
+ * @layer ui/site/components/molecules
  *
  * @description
- * Carte étendue utilisée pour afficher des contenus riches
- * dans les cells `extendedCard`.
+ * Renders an extended public site card with optional icon, bullets, footer, and alignment.
  */
 
 import type { ReactNode } from "react";

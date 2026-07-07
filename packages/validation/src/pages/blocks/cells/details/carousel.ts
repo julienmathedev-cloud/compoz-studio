@@ -1,16 +1,12 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/details/carousel.ts
- * @layer schemas
+ * @layer validation/pages/blocks/cells/details
  *
  * @description
- * Zod schema for CarouselCell.
+ * Defines Zod schemas for carousel cell data.
  *
  * @remarks
- * A carousel is a layout cell responsible for rendering a homogeneous list
- * of supported items as slides.
- *
- * The item schemas are defined separately because they can be reused by
- * other higher-level cells such as `cardCollection`.
+ * Item validation depends on `itemKind`, so consistency is enforced in `superRefine`.
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
@@ -36,14 +32,6 @@ export const CarouselItemKindSchema = z.enum(
   },
 );
 
-/**
- * Generic schema for a carousel item.
- *
- * @remarks
- * - Represents the union of all items allowed in a carousel cell.
- * - Does not guarantee consistency with `itemKind` by itself.
- * - This consistency is validated in `CarouselCellSchema.superRefine`.
- */
 export const CarouselItemSchema = z.union([
   ImageEditorSchema,
   CardItemSchema,

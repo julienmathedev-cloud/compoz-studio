@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/validators/cells/timeline.ts
  * @layer core/domain/pages/validators
- * @description
- * Validateur métier de TimelineCell.
+ * @description Domain validator for timeline cells.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";

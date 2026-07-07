@@ -1,15 +1,14 @@
 /**
  * @file apps/studio/src/features/site-index/invalidate.ts
- * @layer hooks/studio/site-index
+ * @layer studio/features/site-index
  *
  * @description
- * Helpers React Query pour invalider le cache du SiteIndex.
+ * React Query helper for invalidating the Studio SiteIndex cache.
  *
  * @remarks
- * - Utilisé après certaines mutations create / reorder / delete.
- * - Website-scoped : la queryKey inclut Prisma Website.id.
- * - UI-only : aucune logique métier.
- * - `SiteIndex` désigne ici un read-model UI des pages du Website actif.
+ * - Used after mutations that can change the page index, such as create, reorder, or delete.
+ * - The query key is scoped by Prisma Website.id to avoid cache collisions when switching the active website.
+ * - `SiteIndex` is the UI read model for pages of the active website.
  */
 
 import type { QueryClient } from "@tanstack/react-query";
@@ -28,9 +27,6 @@ function requireWebsiteId(value: unknown, field = "websiteId"): string {
   return websiteId;
 }
 
-/**
- * Invalide le cache du SiteIndex pour un Website donné.
- */
 export function invalidateSiteIndex(
   queryClient: QueryClient,
   websiteId: unknown,

@@ -2,8 +2,10 @@
 
 /**
  * @file apps/studio/src/features/settings/seo/components/molecules/SeoOpenGraphFields.tsx
- * @layer ui/studio/molecules
- * @description Champs Open Graph SEO (title / description + image via OpenGraphImageFields).
+ * @layer studio/features/settings/seo/components/molecules
+ *
+ * @description
+ * OpenGraph SEO fields for title, description, and default sharing image.
  */
 
 import type { Control } from "react-hook-form";

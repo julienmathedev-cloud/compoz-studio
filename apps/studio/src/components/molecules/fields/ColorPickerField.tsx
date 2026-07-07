@@ -2,21 +2,14 @@
 
 /**
  * @file apps/studio/src/components/molecules/fields/ColorPickerField.tsx
- * @layer ui/studio/molecules
+ * @layer studio/molecules/fields
  *
  * @description
- * Field studio pour l’édition d’une couleur :
- * - label / help / error via `InputField`
- * - input HEX
- * - aperçu couleur (swatch)
- * - bouton ghost icon-only
- * - popover avec `ColorPicker`
+ * Studio field for editing a HEX color through an input, swatch, trigger button, and popover picker.
  *
  * @remarks
- * - HEX only (V1).
- * - Sans alpha.
- * - Sans pipette.
- * - UI-only.
+ * - Composes `InputField` with the low-level `ColorPicker`.
+ * - Supports HEX values only; alpha and eyedropper selection are not available.
  */
 
 import { Palette } from "lucide-react";

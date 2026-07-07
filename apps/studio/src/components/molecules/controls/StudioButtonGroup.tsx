@@ -3,16 +3,11 @@
  * @layer studio/molecules
  *
  * @description
- * Groupe de boutons “studio-safe” compatible avec les wrappers de type tooltip.
+ * Studio-safe button group compatible with tooltip-style wrappers.
  *
  * @remarks
- * - Molecule UI : wrapper autour de `ButtonGroup` (UI shared).
- * - Garantit un rendu cohérent des jointures même si un bouton est wrappé
- *   (ex. `TooltipButton` désactivé → `span > button`).
- * - Applique les styles de jointure pour :
- *   1) `Group > Button`
- *   2) `Group > span > Button`
- * - Strictement UI-only : aucune logique métier.
+ * - Wraps the shared `ButtonGroup` while preserving joined-button styling.
+ * - Handles direct buttons and wrapped buttons such as `span > button` from disabled `TooltipButton` instances.
  */
 
 import type { ReactNode } from "react";
@@ -20,19 +15,11 @@ import type { ReactNode } from "react";
 import { ButtonGroup } from "@compoz/ui/components/ui/button-group";
 import { cn } from "@compoz/ui/lib/utils";
 
-/**
- * Props du composant `StudioButtonGroup`.
- */
 export type StudioButtonGroupProps = Readonly<{
-  /** Boutons enfants à grouper. */
   children?: ReactNode;
-  /** Classes additionnelles appliquées au groupe. */
   className?: string;
 }>;
 
-/**
- * Groupe de boutons avec gestion robuste des wrappers (Studio).
- */
 export function StudioButtonGroup({
   children,
   className,
@@ -40,7 +27,7 @@ export function StudioButtonGroup({
   return (
     <ButtonGroup
       className={cn(
-        // ✅ Fix “2 niveaux” : quand un enfant est wrappé (span > button)
+        // Supports one wrapper level, for example disabled TooltipButton renders span > button.
         "[&>*>*]:rounded-none " +
           "[&>*:first-child>*]:rounded-l-md " +
           "[&>*:last-child>*]:rounded-r-md " +

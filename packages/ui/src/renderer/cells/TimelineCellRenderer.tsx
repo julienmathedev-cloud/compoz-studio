@@ -3,7 +3,7 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer site/preview : rendu d’une timeline structurée.
+ * Renders a validated timeline cell through the shared site timeline component.
  */
 
 import { SiteTimeline } from "@compoz/ui/site/components/organisms/SiteTimeline";
@@ -24,9 +24,7 @@ export function TimelineCellRenderer({ cell, ui }: TimelineCellRendererProps) {
   );
   if (!items.length) return null;
 
-  return (
-    <SiteTimeline items={items} collapsible={cell.collapsible} ui={ui} />
-  );
+  return <SiteTimeline items={items} collapsible={cell.collapsible} ui={ui} />;
 }
 
 TimelineCellRenderer.displayName = "TimelineCellRenderer";

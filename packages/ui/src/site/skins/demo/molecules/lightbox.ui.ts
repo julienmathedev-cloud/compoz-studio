@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/demo/molecules/lightbox.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/demo/molecules
  *
  * @description
- * Override UI — lightbox site (thème Démo).
+ * Defines the demo skin overrides for the site lightbox.
  */
 
 import type { SiteLightboxUiOverride } from "@compoz/ui/site/site-ui.types";

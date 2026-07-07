@@ -1,9 +1,12 @@
 /**
  * @file packages/ui/src/site/components/organisms/SiteCarouselItem.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/organisms
  *
  * @description
- * Rendu partagé d’un item de carousel / slider.
+ * Renders one normalized carousel or slider item.
+ *
+ * @remarks
+ * Image items use `SiteAppImage`; card-like items delegate to the matching public site card component.
  */
 
 import { renderContentIcon } from "@compoz/ui/lib/icons/content-icons";

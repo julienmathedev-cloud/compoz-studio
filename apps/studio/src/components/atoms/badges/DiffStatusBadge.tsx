@@ -3,7 +3,7 @@
  * @layer studio/atoms
  *
  * @description
- * Badge de statut de diff (published/new/modified/deleted) à côté d’une page/bloc.
+ * Diff status badge displayed next to a page or block.
  */
 
 import { useTranslations } from "next-intl";

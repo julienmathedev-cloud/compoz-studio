@@ -2,23 +2,15 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/primary-menu/usePrimaryMenuSettings.ts
- * @layer hooks/studio/site/primary-menu
+ * @layer studio/features/settings/menus/primary-menu
  *
  * @description
- * Hook Studio spécialisé pour gérer les réglages du menu principal via l’API.
+ * Studio hook for loading, diffing, saving, and caching primary menu settings.
  *
  * @remarks
- * - Basé sur le pattern Settings RHF-first (`useSettingsResource`).
- * - Travaille exclusivement sur le modèle UI (`PrimaryMenuFormValues`).
- * - Draft-only, comme Footer / LegalMenu.
- * - Orchestration UI-only : defaults, load, diff minimal, save, notifications.
- * - Aucune logique métier ni validation domaine.
- * - Le cache settings/status est scopé par Prisma Website.id.
- *
- * Option B, bundle read :
- * - READ : provient du bundle global React Query.
- * - WRITE : reste slice-by-slice via PATCH primaryMenu.
- * - Après un save : patch du cache bundle primaryMenu + invalidate status.
+ * - Reads from the shared settings bundle cache, then writes only the `primaryMenu` slice through PATCH.
+ * - Keeps RHF form values as the local editing shape and normalizes values at load/save boundaries.
+ * - After save, patches the bundle cache and invalidates the site status read model.
  */
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -59,16 +51,11 @@ export function usePrimaryMenuSettings(): UsePrimaryMenuSettingsResult {
   const resource = useSettingsResource<PrimaryMenuFormValues>({
     entityLabel,
 
-    /**
-     * Valeurs par défaut domaine → UI → normalisation.
-     */
     defaults: normalizePrimaryMenuFormValues(
       toPrimaryMenuFormValuesFromDTO(DEFAULT_PRIMARY_MENU_SETTINGS),
     ),
 
-    /**
-     * READ bundle : cache-first + fetchQuery fallback.
-     */
+    /** Shared bundle read with cache-first behavior handled by `getSettingsBundle`. */
     load: async (state: ContentState) => {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
@@ -77,11 +64,7 @@ export function usePrimaryMenuSettings(): UsePrimaryMenuSettingsResult {
       );
     },
 
-    /**
-     * WRITE slice PATCH + patch bundle cache.
-     *
-     * `next` est un patch minimal construit par `useSettingsResource`.
-     */
+    /** Writes the primary menu slice, then mirrors the response into the settings bundle cache. */
     save: async (next, opts) => {
       const patch = toUpdatePrimaryMenuIntentDTOFromFormValues(next);
       const dto = await settingsStudioApi.primaryMenu.patch(patch, opts);
@@ -101,28 +84,18 @@ export function usePrimaryMenuSettings(): UsePrimaryMenuSettingsResult {
       );
     },
 
-    /**
-     * Diff minimal : ne renvoie que les champs réellement modifiés.
-     */
+    /** PATCH semantics: only changed form fields are sent to the API. */
     buildPatch: (baseline, next) =>
       buildShallowDiff(
         normalizePrimaryMenuFormValues(baseline),
         normalizePrimaryMenuFormValues(next),
       ) ?? null,
 
-    /**
-     * Baseline stable et cohérente à l’entrée / sortie réseau.
-     */
     onLoaded: normalizePrimaryMenuFormValues,
 
-    /**
-     * Normalisation safe avant diff / save.
-     */
     beforeSave: normalizePrimaryMenuFormValues,
 
-    /**
-     * Après save : invalide le read-model status et le bundle settings.
-     */
+    /** Keeps derived status and shared bundle queries aligned after a successful save. */
     onSaved: () => {
       void invalidateSiteStatus(queryClient, websiteId);
 

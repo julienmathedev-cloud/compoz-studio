@@ -2,18 +2,15 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/buttons/ButtonsCellEditor.tsx
- * @layer ui/studio/pages/blocks/editor/cells
+ * @layer studio/features/builder/editor/cells/buttons
  *
  * @description
- * Éditeur RHF-aware d’une ButtonsCell avec ajout, suppression,
- * réordonnancement et édition des CTA.
+ * RHF-aware ButtonsCell editor for layout options and button item editing.
  *
  * @remarks
- * - Connecté directement à RHF via `useController` et `useFieldArray`.
- * - Réutilise `ButtonListEditor`.
- * - Les items sont gérés par RHF via `useFieldArray` pour garantir
- *   une gestion propre des valeurs, erreurs et reorder.
- * - Les erreurs near-field sont gérées au niveau des items.
+ * - Binds align and gap controls directly through RHF `useController`.
+ * - Manages items through `useFieldArray` so values, errors, and reordering stay consistent.
+ * - Delegates add, remove, reorder, and near-field error rendering to `ButtonListEditor`.
  */
 
 import { useTranslations } from "next-intl";

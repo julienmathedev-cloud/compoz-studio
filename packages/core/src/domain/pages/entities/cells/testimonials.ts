@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/entities/cells/testimonials.ts
  * @layer core/domain/pages
- * @description
- * Entité métier TestimonialsCell.
+ * @description Testimonials cell domain entity.
  */
 
 export type TestimonialsDisplayMode = "static" | "marquee";

@@ -2,18 +2,16 @@
 
 /**
  * @file apps/studio/src/features/site-index/useReadSiteIndex.ts
- * @layer hooks/admin/site
+ * @layer studio/features/site-index
  *
  * @description
- * Hook admin React Query pour charger le SiteIndex.
+ * React Query hook for reading the Studio SiteIndex.
  *
  * @remarks
- * - Orchestration UI-only : query + logs + notifications.
- * - Utilise `AbortSignal` fourni par React Query.
- * - Draft-only par défaut : DEFAULT_CONTENT_STATE.
- * - Aucune logique métier ni validation domaine.
- * - Website-scoped : la queryKey inclut Prisma Website.id.
- * - `SiteIndex` désigne ici un read-model UI des pages du Website actif.
+ * - Defaults to the draft content state used by Studio editors.
+ * - Uses the `AbortSignal` provided by React Query for cancellable reads.
+ * - The query key is scoped by Prisma Website.id to avoid cache collisions when switching the active website.
+ * - `SiteIndex` is the UI read model for pages of the active website.
  */
 
 import { useQuery } from "@tanstack/react-query";
@@ -32,10 +30,8 @@ import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
 import { notify } from "@compoz/studio/lib/ui/notify";
 
 type UseReadSiteIndexResult = Readonly<{
-  /** Dernier index chargé, ou `null` tant que rien n’a été récupéré. */
   index: SiteIndexDTO | null;
 
-  /** `true` pendant un chargement initial. */
   isLoading: boolean;
 }>;
 
@@ -79,9 +75,7 @@ export function useReadSiteIndex(
       return index;
     },
 
-    /**
-     * Évite le flash si le state change ou pendant un refetch.
-     */
+    /** Keeps the previous SiteIndex visible while the state changes or a refetch is pending. */
     placeholderData: (previous: SiteIndexDTO | undefined) => previous,
   });
 

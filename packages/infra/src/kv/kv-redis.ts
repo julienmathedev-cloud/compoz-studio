@@ -1,29 +1,15 @@
-/**
+/****
  * @file packages/infra/src/kv/kv-redis.ts
  * @layer infra/kv
- * @description
- * Helpers Redis communs pour les repositories KV (Upstash / Vercel KV).
- *
- * Responsabilités :
- * - instancier un client Redis singleton
- * - parser les réponses JSON retournées par Redis
+ * @description Shared Redis helpers for KV repositories.
+ * @remarks
+ * Supports both Vercel KV and Upstash Redis REST environment variable names.
  */
 
 import { Redis } from "@upstash/redis";
 
-/* -------------------------------------------------------------------------- */
-/* Redis singleton                                                            */
-/* -------------------------------------------------------------------------- */
-
 let _redisSingleton: Redis | null = null;
 
-/**
- * Retourne le client Redis singleton.
- *
- * Contrat :
- * - lit les variables d’environnement KV_REST_API_URL / KV_REST_API_TOKEN
- * - fallback compatible UPSTASH_REDIS_REST_*
- */
 export function getUpstashRedis(): Redis {
   if (_redisSingleton) return _redisSingleton;
 
@@ -44,21 +30,7 @@ export function getUpstashRedis(): Redis {
   return _redisSingleton;
 }
 
-/* -------------------------------------------------------------------------- */
-/* JSON helpers                                                               */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Upstash peut renvoyer :
- *
- * - un objet JSON
- * - une string JSON
- * - une primitive
- *
- * Contrat :
- * - retourne un objet JSON exploitable
- * - sinon `null`
- */
+/** Parses Redis JSON responses returned either as objects, JSON strings, or primitives. */
 export function parseRedisJson<T>(raw: unknown): T | null {
   if (raw == null) return null;
 

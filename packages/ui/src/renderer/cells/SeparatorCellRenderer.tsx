@@ -3,12 +3,10 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer site/preview : rendu d’un séparateur horizontal stylé.
+ * Renders a validated decorative separator cell.
  *
  * @remarks
- * - UI-only : consomme une shape déjà validée (schema).
- * - Le rendu repose sur `align`, `size` et le skin.
- * - Utilise une simple ligne décorative.
+ * The rendered line is aria-hidden and styled through align, size, and the active skin.
  */
 
 import type { SeparatorCellShape } from "@compoz/validation/pages/blocks/cells/cell";

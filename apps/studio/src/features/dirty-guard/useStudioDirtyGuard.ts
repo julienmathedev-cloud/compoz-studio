@@ -1,13 +1,13 @@
 /**
  * @file apps/studio/src/features/dirty-guard/useStudioDirtyGuard.ts
- * @layer hooks/shared
+ * @layer studio/features/dirty-guard
  *
  * @description
- * Hook d’accès au Dirty Guard Studio.
+ * Hook exposing the Studio Dirty Guard context API.
  *
  * @remarks
- * - Doit être utilisé sous `<StudioDirtyGuardProvider />`.
- * - Expose l’API : `setDirty`, `isDirty`, `getIsDirty`, `navigate`.
+ * - Must be used under `<StudioDirtyGuardProvider />`.
+ * - Throws when used outside the provider to catch missing provider wiring early.
  */
 
 import { useContext } from "react";

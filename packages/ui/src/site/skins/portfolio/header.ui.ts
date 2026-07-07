@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/portfolio/header.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/portfolio
  *
  * @description
- * Override UI du header pour le thème Portfolio.
- *
- * @remarks
- * - Renforce l'effet de translucidité/blur du header.
- * - Repose sur les mêmes tokens du thème public.
+ * Defines the portfolio skin overrides for the public site header.
  */
 
 import type { SiteHeaderUiOverride } from "@compoz/ui/site/site-ui.types";

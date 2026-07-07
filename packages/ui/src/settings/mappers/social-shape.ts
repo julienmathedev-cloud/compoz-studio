@@ -1,15 +1,12 @@
-/**
- * @file packages/ui/src/site/mappers/social-shape.ts
- * @layer ui/site/mappers
+/****
+ * @file packages/ui/src/settings/mappers/social-shape.ts
+ * @layer ui/settings/mappers
  *
  * @description
- * Mapper "shared runtime" Social :
- * - DTO domaine -> SocialSettingsShape (frontière stable)
+ * Maps social settings DTOs to stable runtime social settings shapes shared by site rendering and Studio preview.
  *
  * @remarks
- * - Utilisé par site (public) ET studio (preview / renderer).
- * - Ici, pas de RHF, pas d’intents API, pas de normalisation "draft".
- * - On fait uniquement : DTO -> shape "frontière".
+ * API intents and draft/form-oriented normalization stay outside this boundary mapper.
  */
 
 import type {
@@ -25,11 +22,9 @@ import type {
 import { trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 
 function toHrefString(v: unknown): string {
-  // DTO attendu string | null | undefined. Si jamais "dirty", on force une string best-effort.
   return typeof v === "string" ? v : String(v ?? "");
 }
 
-/** DTO -> Shape : item (renderer). */
 function toSocialSettingsItemShapeFromDTO(it: SocialItemDTO): SocialItemShape {
   return {
     id: trimKeepEmpty(String(it.id ?? "")),
@@ -38,10 +33,6 @@ function toSocialSettingsItemShapeFromDTO(it: SocialItemDTO): SocialItemShape {
   };
 }
 
-/**
- * Domaine (DTO) -> Renderer (Shape)
- * Contrat : retourne une shape stable pour le renderer (arrays mutables).
- */
 export function toSocialSettingsShapeFromDTO(
   dto: SocialSettingsDTO | null | undefined,
 ): SocialSettingsShape {

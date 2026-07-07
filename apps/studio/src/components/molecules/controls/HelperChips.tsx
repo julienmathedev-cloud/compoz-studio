@@ -5,12 +5,11 @@
  * @layer studio/molecules
  *
  * @description
- * Composant réutilisable : série de petits boutons permettant d’insérer des snippets
- * ou valeurs dans un champ de formulaire.
+ * Reusable helper chips for inserting snippets or values into form fields.
  *
  * @remarks
- * - Peut être utilisé pour les champs SEO (titleTemplate, robots) ou tout champ nécessitant des boutons d’aide.
- * - Rend `null` si la liste `items` est vide.
+ * - Useful for SEO fields such as `titleTemplate` and `robots`, or any field that benefits from insertion shortcuts.
+ * - Renders `null` when `items` is empty.
  */
 
 import { Button } from "@compoz/ui/components/ui/button";

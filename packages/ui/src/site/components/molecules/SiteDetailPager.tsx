@@ -1,15 +1,12 @@
 /**
  * @file packages/ui/src/site/components/molecules/SiteDetailPager.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/molecules
  *
  * @description
- * Pager précédent/suivant pour pages de détail (site).
+ * Renders previous and next navigation links for public detail pages.
  *
  * @remarks
- * - Rend jusqu’à deux liens : « précédent » (gauche) et « suivant » (droite).
- * - Ne rend rien si aucun des deux liens n’est fourni.
- * - Utilise `SiteNavLink` (neutralisation preview + sécurité href).
- * - Styles 100% skinnables via `ui` (pas de defaults inline).
+ * Returns nothing when neither link is available; links are delegated to `SiteNavLink` for preview blocking and href guardrails.
  */
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -69,7 +66,7 @@ export function SiteDetailPager({
           <span className={cn(ui.label)}>{prevLabel}</span>
         </SiteNavLink>
       ) : (
-        // Placeholder pour conserver l’alignement “space-between” / grid selon skin
+        // Preserve layout alignment when only the next link is available.
         <span aria-hidden="true" />
       )}
 

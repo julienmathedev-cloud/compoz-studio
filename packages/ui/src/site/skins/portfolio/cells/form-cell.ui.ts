@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/portfolio/cells/form-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/portfolio/cells
  *
  * @description
- * Skin UI — form cell (thème Portfolio).
- *
- * @remarks
- * Définit uniquement les styles Tailwind.
- * Aucune logique ici : le renderer gère les champs et l’envoi.
+ * Defines the portfolio skin overrides for form cells.
  */
 
 import type { SiteFormUiOverride } from "@compoz/ui/site/site-ui.types";

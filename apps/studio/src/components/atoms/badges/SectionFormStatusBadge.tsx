@@ -3,7 +3,7 @@
  * @layer studio/atoms
  *
  * @description
- * Badge de statut de section (none/modified/saved/saving/error) à côté d’un formulaire.
+ * Section form status badge for none, modified, saved, saving, and error states.
  */
 
 import { useTranslations } from "next-intl";
@@ -19,7 +19,7 @@ export type SectionFormStatusKind =
 
 export type SectionFormStatusBadgeProps = Readonly<{
   kind: SectionFormStatusKind;
-  /** Nombre d’erreurs (uniquement pour kind="error"). */
+  /** Error count, only used when `kind` is `"error"`. */
   count?: number;
 }>;
 

@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/demo/social-menu.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/demo
  *
  * @description
- * Skin UI — menu social site (thème Démo).
+ * Defines the demo skin overrides for the public site social menu.
  */
 
 import type { SiteSocialMenuUiOverride } from "@compoz/ui/site/site-ui.types";

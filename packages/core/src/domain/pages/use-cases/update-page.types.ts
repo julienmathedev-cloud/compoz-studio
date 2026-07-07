@@ -1,9 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/update-page.types.ts
  * @layer core/domain/pages/use-cases
- * @description
- * Types du use-case de mise à jour d’une page : entrées, sorties et dépendances.
- * Définit le contrat **sans logique** (implémentation dans `update-page.ts`).
+ * @description Contracts for updating a page through a controlled patch.
  */
 
 import type {
@@ -13,13 +11,7 @@ import type {
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 
-/**
- * Entrée du use-case `updatePage`.
- *
- * @remarks
- * - Les champs restent optionnels car il s’agit d’un patch partiel.
- * - `seoTitle`, `seoDescription` et `sitemap` peuvent être explicitement remis à `null`.
- */
+/** Optional fields are patch fields; `seoTitle`, `seoDescription`, and `sitemap` can explicitly reset to `null`. */
 export type UpdatePageInput = {
   pageId: string;
   name?: string;
@@ -38,10 +30,7 @@ export interface UpdatePageResult {
 export interface UpdatePageDeps {
   pages: PagesRepository;
 
-  /**
-   * Dépôt site optionnel : si fourni, permet de mettre à jour certains href
-   * (menus) lors d’un rename de slug.
-   */
+  /** Optional site repository used to update menu hrefs after a slug rename. */
   site?: SiteRepository;
 
   nowIso?: () => string;

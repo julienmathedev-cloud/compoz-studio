@@ -2,17 +2,16 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/hooks/useListPageBlocks.ts
- * @layer hooks/studio/pages/blocks
+ * @layer studio/features/pages/blocks/hooks
  *
  * @description
- * Hook Studio React Query pour lire les blocks d’une page via l’API.
+ * React Query hook for reading a page block list through the pages Studio API.
  *
  * @remarks
- * - Read-only.
- * - Draft-only par défaut.
- * - Website-scoped : la queryKey inclut `websiteId` pour éviter les caches
- *   croisés lors d’un switch de Website actif.
- * - Le scope utilisé ici est Prisma Website.id.
+ * - Reads draft blocks by default through `DEFAULT_CONTENT_STATE`.
+ * - Uses save/load instrumentation with the requested content state for logs and notifications.
+ * - Keeps previous block data during refetches to avoid UI flicker.
+ * - Studio query keys are scoped by Prisma Website.id and content state.
  */
 
 import { useQuery } from "@tanstack/react-query";

@@ -3,45 +3,31 @@
  * @layer schemas
  *
  * @description
- * Définit le schéma Zod décrivant la forme du formulaire UI de création / édition d’un user Studio.
- * UI-first (RHF) : on autorise des champs draft-friendly côté form, puis le domaine tranche
- * unicité email, règles RBAC complètes, etc.
+ * Zod schema describing the Studio user UI form shape.
+ *
+ * @remarks
+ * This schema is RHF-friendly and accepts draft values where needed. Email
+ * uniqueness, complete RBAC rules, and other business invariants are handled
+ * by the domain layer.
  */
 
 import { z } from "zod";
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 
-/* -------------------------------------------------------------------------- */
-/*                                   Champs                                   */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Email UI :
- * - trim
- * - requis
- * - format email basique
- */
 const UserEmailFormSchema = z
   .string()
   .trim()
   .min(1, ERROR_CODES.USER_EMAIL_REQUIRED)
   .email(ERROR_CODES.USER_EMAIL_INVALID_FORMAT);
 
-/**
- * Name UI :
- * - trim
- * - requis (V0.5)
- */
 const UserNameFormSchema = z
   .string()
   .trim()
   .min(1, ERROR_CODES.USER_NAME_REQUIRED);
 
 /**
- * Password UI :
- * - "" autorisé pendant l’édition, si on ne veut pas changer le mot de passe
- * - si non vide : doit être non vide après trim
+ * Empty password means the existing password should remain unchanged.
  */
 const UserPasswordFormSchema = z.string().superRefine((value, ctx) => {
   const password = String(value ?? "").trim();
@@ -50,7 +36,6 @@ const UserPasswordFormSchema = z.string().superRefine((value, ctx) => {
     return;
   }
 
-  // Si tu veux imposer un minimum, ex: 8, tu pourras le renforcer ici.
   if (password.length < 1) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -60,38 +45,19 @@ const UserPasswordFormSchema = z.string().superRefine((value, ctx) => {
   }
 });
 
-/**
- * Role UI.
- */
 const UserRoleFormSchema = z.enum(["admin", "editor"], {
   message: ERROR_CODES.USER_ROLE_INVALID,
 });
 
-/**
- * websiteIds UI :
- * - array de strings trim
- * - non vide
- *
- * @remarks
- * On garde ça UI-friendly. La règle `defaultWebsiteId ∈ websiteIds`,
- * sauf wildcard, est revalidée plus bas via superRefine.
- */
 const WebsiteIdsFormSchema = z
   .array(z.string().trim().min(1))
   .min(1, ERROR_CODES.USER_WEBSITE_IDS_REQUIRED);
 
-/**
- * defaultWebsiteId UI :
- * - requis
- */
 const DefaultWebsiteIdFormSchema = z
   .string()
   .trim()
   .min(1, ERROR_CODES.USER_DEFAULT_WEBSITE_REQUIRED);
 
-/**
- * RBAC UI.
- */
 const UserRbacFormSchema = z
   .object({
     role: UserRoleFormSchema,
@@ -120,20 +86,13 @@ const UserRbacFormSchema = z
     }
   });
 
-/* -------------------------------------------------------------------------- */
-/*                                   Schema                                   */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Schéma du formulaire User.
- *
- * @remarks
- * - `id` est optionnel : utile pour le mode edit, form bound à un user existant.
- * - `password` : "" = pas de changement.
- */
 export const UserFormSchema = z
   .object({
+    /**
+     * Optional because the same form schema is used for creation and edition.
+     */
     id: z.string().trim().min(1, ERROR_CODES.USER_ID_REQUIRED).optional(),
+
     email: UserEmailFormSchema,
     name: UserNameFormSchema,
     password: UserPasswordFormSchema,

@@ -2,11 +2,10 @@
 
 /**
  * @file packages/ui/src/site/components/atoms/SiteHeaderHeightSync.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/atoms
  *
  * @description
- * Island client minimale : synchronise la hauteur réelle du header public
- * dans la variable CSS `--header-h`.
+ * Synchronizes the measured public header height into the `--header-h` CSS variable.
  */
 
 import { useEffect } from "react";

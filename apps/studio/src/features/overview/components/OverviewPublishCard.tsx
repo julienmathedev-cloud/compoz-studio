@@ -2,17 +2,16 @@
 
 /**
  * @file apps/studio/src/features/overview/components/OverviewPublishCard.tsx
- * @layer ui/studio/overview
+ * @layer studio/features/overview/components
  *
  * @description
- * Carte “Publication & état” : résumé publication, état courant,
- * changements, actions et warnings.
+ * Overview publication card showing publish status, pending changes, warnings, and actions.
  *
  * @remarks
- * - UI-only : lit `SiteStatusDTO` et déclenche `usePublishSite`.
- * - Les warnings de pré-publication proviennent du status.
- * - Les warnings post-publication proviennent du use-case de publish.
- * - Le lien public published fallback utilise Website.slug via `/t/:websiteSlug`.
+ * - Reads `SiteStatusDTO` and triggers publishing through `usePublishSite`.
+ * - Pre-publish warnings come from the status payload; post-publish warnings come from the publish result.
+ * - Published fallback links use Website.slug through `/t/:websiteSlug`.
+ * - Demo sandboxes disable publish and link directly to the draft preview.
  */
 
 import { useTranslations } from "next-intl";
@@ -61,9 +60,7 @@ type AnyWarningLike = Readonly<{
 
 type PublicationKind = Parameters<typeof PublicationStatusBadge>[0]["kind"];
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
+// Publication status helpers.
 
 function formatLastPublishedAt(input?: string): string {
   const iso = String(input ?? "").trim();
@@ -102,10 +99,6 @@ function getPipelineKind(params: {
 
   return siteHasChanges ? "changesPending" : "upToDate";
 }
-
-/* -------------------------------------------------------------------------- */
-/* Component                                                                  */
-/* -------------------------------------------------------------------------- */
 
 export function OverviewPublishCard({
   data,

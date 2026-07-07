@@ -2,15 +2,13 @@
 
 /**
  * @file apps/studio/src/features/settings/theme/ThemePage.tsx
- * @layer ui/studio/settings/theme/pages
+ * @layer studio/features/settings/theme
  *
  * @description
- * Page « Theme » (studio) — affiche la section Theme avec un H1 SR-only.
+ * Studio theme settings page.
  *
  * @remarks
- * - Le H1 est porté par la page (SR-only) pour garantir un seul H1 global.
- * - `ThemeSection` rend un H2 visible via `SettingsSection` (headingLevel="h2" par défaut).
- * - La logique dirty / preview / warnings est encapsulée dans `ThemeSection`.
+ * - Keeps the page-level H1 screen-reader-only so `ThemeSection` can render the visible H2 through `SettingsSection`.
  */
 
 import { useTranslations } from "next-intl";
@@ -20,9 +18,6 @@ import { ThemeSection } from "@compoz/studio/features/settings/theme/ThemeSectio
 import { cn } from "@compoz/ui/lib/utils";
 import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 
-/**
- * Page Theme (studio).
- */
 export function ThemePage() {
   const t = useTranslations();
 

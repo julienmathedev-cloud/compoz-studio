@@ -1,14 +1,9 @@
 /**
  * @file packages/core/src/domain/users/use-cases/delete-user.ts
- * @layer core/domain
- * @description
- * Use-case : suppression idempotente d’un utilisateur Studio par son ID.
- *
+ * @layer core/domain/users/use-cases
+ * @description Idempotently deletes a Studio user by id.
  * @remarks
- * - Idempotent : appeler plusieurs fois avec le même ID produit le même état.
- * - Validation minimale : userId requis (trim non vide).
- * - Ne gère pas de contraintes avancées (ex: empêcher de supprimer le dernier admin) en V0.5.
- *   Ces règles pourront être ajoutées plus tard.
+ * Advanced deletion constraints, such as preserving the last admin, are intentionally out of scope in V0.5.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";

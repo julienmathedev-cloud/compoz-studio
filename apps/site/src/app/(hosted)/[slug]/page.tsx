@@ -3,15 +3,13 @@
  * @layer site/app
  *
  * @description
- * Route "/[slug]" : rendu PUBLISHED-only d’une page publique host-based.
+ * Host-based public page route for published non-home slugs.
  *
  * @remarks
- * Multi-website host-based :
- * - Le Website est résolu via le host public et Prisma WebsiteDomain.
- * - Les loaders de contenu utilisent le Prisma Website.id.
- * - L’UI/skin utilise le Website.slug.
- * - Les loaders explicites évitent une dépendance implicite à `headers()`
- *   en dehors de la résolution centralisée du Website.
+ * - Resolves the active Website from the public host through Prisma WebsiteDomain.
+ * - Content loaders use Prisma Website.id, while skin resolution uses Website.slug.
+ * - Explicit Website-scoped loaders avoid spreading implicit `headers()` access outside centralized Website resolution.
+ * - The reserved `home` slug redirects to the canonical root path.
  */
 
 import type { Metadata } from "next";
@@ -46,10 +44,7 @@ type PageParams = Readonly<{
   params: Promise<Readonly<{ slug: string }>>;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
+/** Applies the SEO title template used for social metadata previews. */
 function applyTitleTemplate(
   title: string | undefined,
   template: string,
@@ -58,10 +53,6 @@ function applyTitleTemplate(
 
   return template.replace("%s", title);
 }
-
-/* -------------------------------------------------------------------------- */
-/* Metadata                                                                   */
-/* -------------------------------------------------------------------------- */
 
 export async function generateMetadata({
   params,
@@ -119,10 +110,6 @@ export async function generateMetadata({
     socialTitle: resolvedTitle,
   });
 }
-
-/* -------------------------------------------------------------------------- */
-/* Page                                                                       */
-/* -------------------------------------------------------------------------- */
 
 export default async function SitePage({ params }: PageParams) {
   const { slug } = await unwrapParams(params);

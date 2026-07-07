@@ -1,4 +1,4 @@
-/* ✅ Shared base (imports tailwind + radix + layers + utilities) */
+/* Shared base: Tailwind, Radix, layers, and utilities. */
 @config "../../tailwind.config.ts";
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
@@ -6,11 +6,7 @@
 
 @import "@compoz/ui/styles/base.css";
 
-/* ---------------------------------------------------------------------------
- * Studio theme mapping
- * - Light : Mauve + Indigo
- * - Dark  : Slate + Indigo
- * ------------------------------------------------------------------------- */
+/* Studio theme mapping: light uses Mauve + Indigo, dark uses Slate + Indigo. */
 :root {
   --background: var(--mauve-2);
   --foreground: var(--mauve-12);
@@ -73,7 +69,7 @@
   --sidebar-ring: var(--indigo-9);
 }
 
-/* Dark mode (studio) */
+/* Studio dark theme mapping. */
 .dark {
   --background: var(--slate-1);
   --foreground: var(--slate-12);

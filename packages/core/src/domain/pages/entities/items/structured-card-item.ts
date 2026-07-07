@@ -1,17 +1,9 @@
-/**
+/***
  * @file packages/core/src/domain/pages/entities/items/structured-card-item.ts
  * @layer core/domain/pages
- *
- * @description
- * Domain entities representing structured card items.
- *
+ * @description Structured card item domain entity.
  * @remarks
- * A structured card item provides richer content than a simple or extended
- * card: optional image, title, optional meta, descriptive sections, and an
- * optional CTA button.
- *
- * Layout concerns such as columns or reveal behavior are handled by
- * higher-level cells such as `cardCollection` or `carousel`.
+ * Layout concerns are handled by higher-level cells such as `cardCollection` or `carousel`.
  */
 
 import type { ButtonItem } from "@compoz/core/domain/pages/entities/cells/buttons";

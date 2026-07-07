@@ -1,13 +1,9 @@
 /**
  * @file packages/core/src/domain/pages/validators/items/extended-card-item.ts
  * @layer core/domain/pages/validators
- *
- * @description
- * Validateur métier d’un item de carte enrichie.
- *
+ * @description Domain validator for extended card items.
  * @remarks
- * Cet item est utilisé par des cellules de plus haut niveau comme
- * `cardCollection` ou `carousel`.
+ * Extended card items are reused by higher-level cells such as `cardCollection` or `carousel`.
  */
 
 import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";

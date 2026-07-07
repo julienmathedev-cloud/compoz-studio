@@ -1,9 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/entities/cell.ts
  * @layer core/domain/pages
- *
- * @description
- * Domain entities representing the cells contained in a page block.
+ * @description Canonical union and public type re-exports for page cells.
  */
 
 import type { ButtonsCell } from "@compoz/core/domain/pages/entities/cells/buttons";

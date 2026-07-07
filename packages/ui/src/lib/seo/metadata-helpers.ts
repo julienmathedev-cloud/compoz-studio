@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/lib/seo/metadata-helpers.ts
  * @layer ui/lib/seo
- *
- * @description
- * Helpers SEO/Metadata (Next.js) : résolution d'URLs et normalisation de templates.
- *
+ * @description SEO metadata helpers for URL resolution and title template normalization.
  * @remarks
- * - Helpers "best-effort" (défensifs) : aucune validation sécurité forte ici.
- * - Réutilisables dans `generateMetadata`, `robots.ts`, `sitemap.ts`, etc.
+ * Best-effort helpers only; strong URL security validation belongs outside this module.
  */
 
 function safeUrl(input: string | null | undefined): URL | undefined {
@@ -21,12 +17,6 @@ function safeUrl(input: string | null | undefined): URL | undefined {
   }
 }
 
-/**
- * Résout une URL d’asset (favicon / og:image) :
- * - si absolute : retourne telle quelle
- * - sinon, si `metadataBase` fourni : construit une URL relative au base
- * - sinon : retourne la string (path relatif) telle quelle
- */
 export function resolveAssetUrl(
   raw: string | null | undefined,
   metadataBase?: URL,
@@ -48,12 +38,6 @@ export function resolveAssetUrl(
   return s;
 }
 
-/**
- * Assure un template de title valide :
- * - si vide → "%s — <siteTitle>"
- * - si contient déjà "%s" → inchangé
- * - sinon → "%s — <siteTitle>"
- */
 export function ensureTitleTemplate(
   template: string,
   siteTitle: string,
@@ -64,14 +48,6 @@ export function ensureTitleTemplate(
   return `%s — ${siteTitle}`;
 }
 
-/**
- * Résout un href d’icône (favicon) :
- * - absolute http(s) → ok
- * - "//domain/..." → force https:
- * - "/path" → ok
- * - "domain.tld/..." → préfixe https:// (heuristique)
- * - sinon : retourne tel quel
- */
 export function resolveIconHref(
   raw: string | null | undefined,
 ): string | undefined {
@@ -88,7 +64,6 @@ export function resolveIconHref(
   return s;
 }
 
-/** Expose `safeUrl` uniquement si tu en as besoin ailleurs. */
 export function toSafeUrl(input: string | null | undefined): URL | undefined {
   return safeUrl(input);
 }

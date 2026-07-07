@@ -3,13 +3,13 @@
  * @layer studio/app
  *
  * @description
- * Layout studio pour le draft : définit les metadata SEO globales à partir des settings DRAFT,
- * tout en forçant un comportement safe pour la preview.
+ * Studio draft layout that defines global SEO metadata from draft settings
+ * while enforcing safe preview behavior.
  *
  * @remarks
- * - Convention V0.5 : draft = "/draft" (pas de querystring state).
- * - Le draft doit rester noindex/nofollow.
- * - Le favicon reste celui de Compoz Studio pour éviter toute confusion avec le site publié.
+ * - V0.5 convention: draft preview uses `/draft` without a state querystring.
+ * - Draft preview must remain noindex/nofollow.
+ * - The favicon stays the Compoz Studio one to avoid confusion with the published site.
  */
 
 import type { Metadata } from "next";
@@ -48,10 +48,6 @@ import {
 type LayoutProps = Readonly<{
   children: ReactNode;
 }>;
-
-/* -------------------------------------------------------------------------- */
-/* Metadata                                                                   */
-/* -------------------------------------------------------------------------- */
 
 export async function generateMetadata(): Promise<Metadata> {
   const websiteId = await getWebsiteId();
@@ -107,10 +103,6 @@ export async function generateMetadata(): Promise<Metadata> {
     },
   };
 }
-
-/* -------------------------------------------------------------------------- */
-/* Layout                                                                     */
-/* -------------------------------------------------------------------------- */
 
 export default async function DraftLayout({ children }: LayoutProps) {
   const websiteId = await getWebsiteId();

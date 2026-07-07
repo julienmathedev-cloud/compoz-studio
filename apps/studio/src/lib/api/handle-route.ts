@@ -3,15 +3,13 @@
  * @layer studio/lib/api
  *
  * @description
- * Enveloppe standard pour les handlers HTTP (Next.js App Router) :
- * - résolution du ContentState (?state=draft|published),
- * - instrumentation (span),
- * - normalisation des erreurs (Zod + DomainError) en réponses JSON,
- * - audit KV optionnel.
+ * Standard wrapper for Next.js App Router HTTP handlers.
  *
  * @remarks
- * - Retourne toujours une `NextResponse` JSON via `jsonOk()` / `jsonHttpError()`.
- * - Le handler métier reçoit `{ req, state }` et ne s'occupe pas du format de réponse.
+ * - Resolves the requested `ContentState` from the query string before calling the handler.
+ * - Wraps the handler in a log span and normalizes Domain/Zod errors into JSON responses.
+ * - The business handler receives `{ req, state }` and does not own response formatting.
+ * - KV telemetry is reset and dumped only when audit mode is enabled.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
@@ -27,20 +25,12 @@ import { jsonHttpError, jsonOk } from "@compoz/studio/lib/api/responses";
 import { parseContentStateFromRequest } from "@compoz/studio/lib/api/urls";
 import type { NextResponse } from "next/server";
 
-/* -------------------------------------------------------------------------- */
-/* Types                                                                      */
-/* -------------------------------------------------------------------------- */
-
 type HandlerProps = {
   req: Request;
   state: ContentState;
 };
 
 type ApiHandler<T> = (props: HandlerProps) => Promise<T>;
-
-/* -------------------------------------------------------------------------- */
-/* Main wrapper                                                                */
-/* -------------------------------------------------------------------------- */
 
 export async function handleRoute<T>(
   ns: string,

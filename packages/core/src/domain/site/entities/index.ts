@@ -1,11 +1,9 @@
 /**
  * @file packages/core/src/domain/site/entities/index.ts
- * @layer core/domain
- * @description
- * Point d’entrée regroupant les exports des entités métier liées aux réglages du site
- * (SiteSettings). Fournit un import unique et lisible pour les adapters.
- *
- * Invariant : ce module ne contient que des types (aucune logique, validation ou default).
+ * @layer core/domain/site/entities
+ * @description Barrel exports for site settings domain entities.
+ * @remarks
+ * This module must stay type-only and contain no runtime logic, validation, or defaults.
  */
 
 export type { FooterSettings } from "@compoz/core/domain/site/entities/footer";

@@ -3,14 +3,12 @@
  * @layer studio/app/api/adapters
  *
  * @description
- * Adaptateur API Studio pour Identity :
- * convertit le DTO d’intention en input domaine pour le use-case.
+ * Studio API adapter for identity settings update intents.
  *
- * Responsabilités :
- * - trimming défensif (champs texte)
- * - normalisation des assets (logo / favicon)
- * - aucune logique métier
- * - aucun handling de state (géré par la route)
+ * @remarks
+ * - Builds a partial domain patch from the fields present in the intent.
+ * - Normalizes logo and favicon asset fields before domain writes.
+ * - Leaves state handling to the route.
  */
 
 import { asAssetUrlOrNull } from "@compoz/core/domain/urls/href";
@@ -21,10 +19,6 @@ import type { IdentitySettings } from "@compoz/core/domain/site/entities/identit
 import type { UpdateIdentitySettingsInput } from "@compoz/core/domain/site/use-cases/identity/update-identity-settings.types";
 import type { UpdateIdentitySettingsIntentDTO } from "@compoz/validation/site/settings/identity/identity-intents";
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
 function optionalTrimmedString(
   value: string | null | undefined,
 ): string | undefined {
@@ -32,10 +26,6 @@ function optionalTrimmedString(
 
   return trimmed ? trimmed : undefined;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Adapter                                                                    */
-/* -------------------------------------------------------------------------- */
 
 export function adaptUpdateIdentityIntent(
   dto: UpdateIdentitySettingsIntentDTO,
@@ -52,8 +42,6 @@ export function adaptUpdateIdentityIntent(
 
   const patch: Partial<IdentitySettings> = {};
 
-  /* --------------------------- Champs texte --------------------------- */
-
   if (typeof dto.siteName === "string") {
     patch.siteName = trimOrKeep(dto.siteName);
   }
@@ -67,11 +55,10 @@ export function adaptUpdateIdentityIntent(
     }
   }
 
-  /* --------------------------- Logo --------------------------- */
-  // Règles :
-  // - undefined → inchangé
-  // - null → effacement
-  // - objet image → normalisation champ par champ
+  // Logo rules:
+  // - undefined -> unchanged
+  // - null -> clear
+  // - image object -> field-by-field normalization
   if ("logo" in dto) {
     if (dto.logo === null) {
       patch.logo = null;
@@ -88,13 +75,12 @@ export function adaptUpdateIdentityIntent(
     }
   }
 
-  /* --------------------------- Favicon --------------------------- */
-  // Règles :
-  // - undefined → inchangé
-  // - null / "" → effacement
-  // - string → normalisation
-  // - faviconUrl est la source de rendu ; si elle change sans id associé,
-  //   l’ancien mediaAssetId ne doit pas survivre.
+  // Favicon rules:
+  // - undefined -> unchanged
+  // - null / "" -> clear
+  // - string -> normalize
+  // - faviconUrl is the rendering source; when it changes without an associated
+  //   id, the previous mediaAssetId must not survive.
   if ("faviconUrl" in dto) {
     patch.faviconUrl = asAssetUrlOrNull(dto.faviconUrl);
 

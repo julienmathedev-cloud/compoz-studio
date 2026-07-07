@@ -1,14 +1,16 @@
 "use client";
 
 /**
- * @file apps/studio/src/app/[locale]/signin/SignInForm.tsx
- * @layer studio/app
+ * @file apps/studio/src/auth/SignInForm.tsx
+ * @layer studio/auth
  *
  * @description
- * Formulaire de connexion (client) :
- * - state email/password
- * - appel Auth.js via `signIn("credentials")`
- * - redirection vers `nextPath`
+ * Client-side Studio sign-in form.
+ *
+ * @remarks
+ * - Manages email/password field state and validation errors.
+ * - Calls Auth.js through `signIn("credentials")`.
+ * - Redirects to `nextPath` after a successful sign-in.
  */
 
 import { signIn } from "next-auth/react";
@@ -114,7 +116,7 @@ export function SignInForm({
           return;
         }
 
-        // fallback si NextAuth renvoie "CredentialsSignin"
+        // Fallback when NextAuth returns "CredentialsSignin".
         setErrors({ form: t("studio.login.errors.invalidCredentials") });
         return;
       }

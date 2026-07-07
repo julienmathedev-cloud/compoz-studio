@@ -2,28 +2,22 @@
 
 /**
  * @file apps/studio/src/features/settings/footer/validate.ts
- * @layer hooks/studio/site/footer
+ * @layer studio/features/settings/footer
  *
  * @description
- * Helpers et hooks de validation UI non bloquante pour le footer.
+ * Non-blocking Studio footer form warnings.
  *
  * @remarks
- * - Validation métier assurée par le domaine (Zod + use-cases serveur).
- * - Ici : UX uniquement (warnings légers, cohérence visuelle).
+ * - Blocking validation stays in Zod schemas and server use cases.
  */
 
 import { useMemo } from "react";
 
 import type { FooterFormValues } from "@compoz/validation/site/settings/footer/footer-form";
 
-/**
- * Clés stables des warnings UI du footer.
- */
 export type FooterWarningKey = "footerLooksEmpty" | "copyrightEmpty";
 
-/**
- * Calcule les warnings UI associés à un brouillon de footer.
- */
+/** Computes non-blocking warnings from footer form values. */
 export function computeFooterWarnings(
   values: Pick<FooterFormValues, "copyright" | "showYear">,
 ): FooterWarningKey[] {
@@ -33,12 +27,11 @@ export function computeFooterWarnings(
   const hasCopyright = copyrightText.length > 0;
   const showsYear = Boolean(values.showYear);
 
-  // 1) Avertissement si aucun texte n’est fourni
   if (!hasCopyright) {
     out.add("copyrightEmpty");
   }
 
-  // 2) Footer considéré “vide” si ni texte ni année affichée
+  // A footer with neither text nor year will render visually empty.
   if (!hasCopyright && !showsYear) {
     out.add("footerLooksEmpty");
   }
@@ -46,9 +39,7 @@ export function computeFooterWarnings(
   return Array.from(out);
 }
 
-/**
- * Hook retournant les warnings UI du footer à partir des valeurs courantes.
- */
+/** Memoizes footer warnings for form consumers. */
 export function useFooterUiWarnings(
   copyright: FooterFormValues["copyright"],
   showYear: FooterFormValues["showYear"],

@@ -1,15 +1,13 @@
 /**
  * @file apps/studio/src/features/site-index/cache.ts
- * @layer hooks/studio/site-index
+ * @layer studio/features/site-index
  *
  * @description
- * Helpers de cache React Query pour le SiteIndex Studio.
+ * React Query cache helpers for the Studio SiteIndex.
  *
  * @remarks
- * - Permet de seed/patch l’index après une mutation reorder/create/delete
- *   sans invalidation globale.
- * - Le cache est scopé par Prisma Website.id pour éviter les collisions.
- * - UI-only : pas de logique métier, uniquement du cache.
+ * - Allows mutations such as reorder, create, and delete to seed or patch the SiteIndex without a broad invalidation.
+ * - Cache entries are scoped by Prisma Website.id to avoid collisions when switching the active website.
  */
 
 import type { QueryClient } from "@tanstack/react-query";
@@ -29,9 +27,6 @@ function requireWebsiteId(value: unknown, field = "websiteId"): string {
   return websiteId;
 }
 
-/**
- * Seed, overwrite le cache SiteIndex.
- */
 export function setSiteIndexCache(
   queryClient: QueryClient,
   websiteId: unknown,
@@ -47,10 +42,10 @@ export function setSiteIndexCache(
 }
 
 /**
- * Patch le cache SiteIndex via une fonction `patcher`.
+ * Patches the cached SiteIndex without creating a new cache entry when none exists.
  *
  * @remarks
- * - No-op si aucun `prev` en cache pour éviter de créer un état incohérent.
+ * - The no-op fallback avoids inventing an incomplete SiteIndex after a mutation response.
  */
 export function patchSiteIndexCache(
   queryClient: QueryClient,

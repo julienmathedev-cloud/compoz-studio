@@ -1,58 +1,28 @@
 /**
  * @file packages/validation/src/demo/demo-sandbox.ts
- * @layer schemas
+ * @layer validation/demo
  *
  * @description
- * Schémas Zod décrivant la forme frontière d’une sandbox démo.
+ * Defines Zod schemas for demo sandbox boundary data.
  *
  * @remarks
- * - Ces schémas valident la structure stockée/exposée.
- * - Les règles métier globales restent traitées dans le domaine.
+ * These schemas validate stored and exposed data shape only; lifecycle rules stay in core.
  */
 
 import { z } from "zod";
 
 import { IsoDateStringSchema } from "@compoz/validation/common/date";
 
-/* -------------------------------------------------------------------------- */
-/*                               Schémas atomiques                            */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Identifiant technique unique d’une sandbox démo.
- *
- * Contrat :
- * - trim
- * - non vide
- */
 export const DemoInstanceIdSchema = z.string().trim().min(1);
 
-/**
- * Identifiant technique du user démo associé.
- *
- * Contrat :
- * - trim
- * - non vide
- */
 export const DemoSandboxUserIdSchema = z.string().trim().min(1);
 
-/**
- * Identifiant technique du Website sandbox associé.
- *
- * Contrat :
- * - trim
- * - lower-case
- * - non vide
- */
+/** Website ids are normalized to lowercase to match persisted routing keys. */
 export const DemoSandboxWebsiteIdSchema = z
   .string()
   .trim()
   .min(1)
   .transform((value) => value.toLowerCase());
-
-/* -------------------------------------------------------------------------- */
-/*                               Sandbox démo                                 */
-/* -------------------------------------------------------------------------- */
 
 export const DemoSandboxSchema = z
   .object({
@@ -63,10 +33,6 @@ export const DemoSandboxSchema = z
     createdAt: IsoDateStringSchema,
   })
   .strict();
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
 
 export type DemoSandboxShape = z.infer<typeof DemoSandboxSchema>;
 export type DemoInstanceIdShape = z.infer<typeof DemoInstanceIdSchema>;

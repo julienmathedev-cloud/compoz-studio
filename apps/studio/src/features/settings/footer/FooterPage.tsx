@@ -2,15 +2,13 @@
 
 /**
  * @file apps/studio/src/features/settings/footer/FooterPage.tsx
- * @layer ui/studio/pages
+ * @layer studio/features/settings/footer
  *
  * @description
- * Page « Footer » (studio) — pilote le H1 global et affiche la section Footer.
+ * Studio page shell for footer settings.
  *
  * @remarks
- * - Le H1 est rendu en `sr-only` pour garantir une hiérarchie sémantique propre.
- * - Les sections (`SettingsSection`) rendent des H2 par défaut.
- * - Strictement UI-only.
+ * - Keeps a unique screen-reader-only H1 while `FooterSection` renders the visible section heading.
  */
 
 import { cn } from "@compoz/ui/lib/utils";
@@ -24,12 +22,10 @@ export function FooterPage() {
 
   return (
     <div className={cn(STUDIO_SECTION)}>
-      {/* H1 global de la page (accessibilité / SEO interne studio) */}
       <Heading as="h1" className="sr-only">
         {t("studio.shared.entities.footer")}
       </Heading>
 
-      {/* Section principale */}
       <FooterSection />
     </div>
   );

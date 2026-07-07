@@ -1,7 +1,13 @@
 /**
  * @file apps/studio/src/app/api/auth/reset-stale-session/route.ts
  * @layer studio/app/api
- * @description Clears stale Studio/Auth cookies and redirects to localized signin.
+ *
+ * @description
+ * Clears stale Studio/Auth cookies and redirects to the localized sign-in page.
+ *
+ * @remarks
+ * - Uses the referer pathname to preserve the current locale when possible.
+ * - Deletes known NextAuth cookies and chunked cookie variants sharing their base names.
  */
 
 import type { NextRequest } from "next/server";

@@ -1,10 +1,9 @@
 /**
  * @file packages/core/src/domain/pages/helpers/resolve-page-id-from-index.ts
  * @layer core/domain/pages/helpers
- *
- * @description
- * Helper pur : résout l’id d’une page à partir d’un index (id/slug),
- * en normalisant le slug d’entrée ("/" => "home", suppression des slashes).
+ * @description Pure helper that resolves a page id from an id/slug index.
+ * @remarks
+ * Input slugs are normalized before lookup: `/` maps to `home`, and leading slashes are removed.
  */
 
 import { SITE_PATH } from "@compoz/core/constants/web/paths";
@@ -14,10 +13,9 @@ function normalizeSiteSlug(input: string): string {
   const raw = String(input ?? "").trim();
   if (!raw) return "";
 
-  // "/" => "home"
+  // Public home path maps to the persisted home slug.
   if (raw === SITE_PATH.home) return HOME_SLUG;
 
-  // "/about" => "about"
   const s = raw.replace(/^\/+/, "");
   return s || "";
 }

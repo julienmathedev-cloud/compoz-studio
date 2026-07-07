@@ -2,16 +2,15 @@
 
 /**
  * @file apps/studio/src/features/admin/users/pages/AdminUsersPage.tsx
- * @layer app/admin/users
+ * @layer studio/features/admin/users/pages
  *
  * @description
- * Page Users Studio : orchestration du switch Website + rendu de la section.
+ * Studio admin users page orchestrating active Website switching and section rendering.
  *
  * @remarks
- * - UI-only : pas de fetch ici.
- * - Le changement de Website actif passe par `useSetActiveWebsite()`
- *   puis `router.refresh()`.
- * - Les valeurs manipulées ici sont des Prisma Website.id.
+ * - Does not fetch directly; data is provided by the server route page.
+ * - Active Website changes go through `useSetActiveWebsite()` and then `router.refresh()`.
+ * - Website values handled here are Prisma Website.id values.
  */
 
 import { useTranslations } from "next-intl";

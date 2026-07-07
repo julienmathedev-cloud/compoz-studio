@@ -3,7 +3,7 @@
  * @layer ui/renderer
  *
  * @description
- * Registry des renderers de blocks.
+ * Registry mapping validated block kinds to their renderer components.
  */
 
 import type { ComponentType } from "react";

@@ -1,8 +1,8 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/details/steps.ts
- * @layer schemas
+ * @layer validation/pages/blocks/cells/details
  * @description
- * Schémas Zod de StepsCell.
+ * Defines Zod schemas for steps cell data.
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";

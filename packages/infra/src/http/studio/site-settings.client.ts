@@ -1,14 +1,9 @@
 /**
  * @file packages/infra/src/http/studio/site-settings.client.ts
  * @layer infra/http/studio
- * @description
- * Client HTTP Studio pour la gestion centralisée des réglages du site :
- * header, footer, menus, identity, social, SEO et theme.
- *
+ * @description Studio HTTP client for centralized site settings endpoints.
  * @remarks
- * - Client HTTP pur (infra-only)
- * - Utilise les DTO SoT définis dans `site-settings.types.ts`
- * - Aucune dépendance vers app/api/... ni vers UI
+ * GET requests can target a content state; PATCH requests always write to the default draft state.
  */
 
 import {
@@ -44,10 +39,6 @@ import type {
   PatchThemeResponse,
 } from "@compoz/infra/http/studio/site-settings.types";
 
-/* -------------------------------------------------------------------------- */
-/*                             Helpers internes                               */
-/* -------------------------------------------------------------------------- */
-
 async function getResponse<TResponse>(
   endpoint: string,
   state: ContentState,
@@ -82,10 +73,6 @@ async function patchResponse<TResponse, TPayload>(
 
   return json;
 }
-
-/* -------------------------------------------------------------------------- */
-/*                               Client HTTP                                  */
-/* -------------------------------------------------------------------------- */
 
 export const settingsStudioApi = {
   bundle: {

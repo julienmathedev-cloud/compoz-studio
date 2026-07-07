@@ -1,15 +1,15 @@
 /**
  * @file apps/site/src/lib/seo/buildSiteJsonLd.ts
- * @layer site/seo
+ * @layer site/lib/seo
  *
  * @description
- * Générateur JSON-LD public pour les sites Compoz.
+ * Public JSON-LD generator for Compoz sites.
  *
  * @remarks
- * - Génère un graphe Schema.org V1 à partir des settings publiés et de la page courante.
- * - Scope volontairement limité : WebSite, entité principale, WebPage, BreadcrumbList.
- * - Ne génère pas de schema par bloc, Review, AggregateRating, FAQ, Product ou Article.
- * - Retourne `null` si les données minimales fiables sont absentes.
+ * - Builds a Schema.org V1 graph from published settings and the current page.
+ * - Scope is intentionally limited to WebSite, the main identity entity, WebPage, and BreadcrumbList.
+ * - Does not generate per-block schemas, Review, AggregateRating, FAQ, Product, or Article nodes.
+ * - Returns `null` when the minimum reliable data is missing.
  */
 
 import type { Page } from "@compoz/core/domain/pages/entities/page";
@@ -49,6 +49,7 @@ function trimOptional(value: string | null | undefined): string | undefined {
   return trimmed || undefined;
 }
 
+/** Removes empty JSON-LD fields so optional structured data does not emit blank schema values. */
 function compactRecord(record: JsonLdNode): JsonLdNode {
   return Object.fromEntries(
     Object.entries(record).filter(([, value]) => {
@@ -66,6 +67,7 @@ function compactRecord(record: JsonLdNode): JsonLdNode {
   );
 }
 
+/** Builds a BreadcrumbList from the published SiteIndex hierarchy when the page has a meaningful trail. */
 function buildBreadcrumbs(
   page: Page,
   index: SiteIndex,
@@ -114,6 +116,7 @@ function buildBreadcrumbs(
   };
 }
 
+/** Builds the public Schema.org graph only when structured data settings are enabled and reliable. */
 export function buildSiteJsonLd({
   settings,
   page,
@@ -232,6 +235,7 @@ export function buildSiteJsonLd({
   };
 }
 
+/** Serializes JSON-LD for safe inline script injection by escaping `<`. */
 export function serializeSiteJsonLd(value: SiteJsonLdGraph): string {
   return JSON.stringify(value).replace(/</g, "\\u003c");
 }

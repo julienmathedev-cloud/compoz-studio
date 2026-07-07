@@ -1,16 +1,12 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/details/card-collection.ts
- * @layer schemas
+ * @layer validation/pages/blocks/cells/details
  *
  * @description
- * Zod schema for CardCollectionCell.
+ * Defines Zod schemas for card collection cell data.
  *
  * @remarks
- * A card collection is a layout cell responsible for rendering a homogeneous
- * list of card-like items.
- *
- * The item schemas are defined separately because they can be reused by
- * other higher-level cells such as `carousel`.
+ * Item and column validation depends on `cardKind`, so consistency is enforced in `superRefine`.
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";

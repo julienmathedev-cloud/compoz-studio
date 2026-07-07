@@ -3,11 +3,11 @@
  * @layer studio/app
  *
  * @description
- * Loading UI pour la route "/draft" (preview DRAFT dans l’app Studio).
+ * Loading UI for the `/draft` route in the Studio draft preview.
  *
  * @remarks
- * - Rendu skinnable via `ui.systemLoading`.
- * - Convention V0.5 : draft preview = "/draft".
+ * - Skinnable through `ui.systemLoading`.
+ * - V0.5 convention: draft preview uses `/draft`.
  */
 
 import { SiteSystemLoading } from "@compoz/ui/site/components/system/SiteSystemLoading";

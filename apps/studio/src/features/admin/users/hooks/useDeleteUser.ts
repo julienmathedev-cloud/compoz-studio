@@ -2,15 +2,14 @@
 
 /**
  * @file apps/studio/src/features/admin/users/hooks/useDeleteUser.ts
- * @layer hooks/admin/users
+ * @layer studio/features/admin/users/hooks
  *
  * @description
- * Hook Studio React Query pour supprimer un user via l’API.
+ * React Query mutation hook for deleting Studio users through the admin API.
  *
  * @remarks
- * - Orchestration UI-only : mutation + notifications + cache.
- * - Supprime le cache `userById` puis invalide la liste.
- * - Expose `deletingUserId` pour désactiver la ligne ciblée.
+ * - Removes the deleted user cache entry before invalidating the users list.
+ * - Exposes `deletingUserId` so the targeted row can be disabled while deleting.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -70,13 +69,13 @@ export function useDeleteUser(onSuccess?: () => void): UseDeleteUserResult {
         }),
       );
 
-      // 1) purge cache user-by-id (évite une UI “fantôme”)
+      // Remove the user-by-id cache entry to avoid stale deleted-user UI.
       qc.removeQueries({
         queryKey: userByIdKey(args.userId),
         exact: true,
       });
 
-      // 2) refresh liste (simple & safe)
+      // Refresh the users list cache after deletion.
       await qc.invalidateQueries({ queryKey: usersListKey() });
 
       lg.debug("delete.ok", { userId: args.userId, fields: args.fields });

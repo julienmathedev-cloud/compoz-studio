@@ -1,17 +1,14 @@
 /**
  * @file packages/ui/src/hooks/use-mobile.ts
- *
- * @description
- * Hook React indiquant si la fenêtre est en mode mobile.
+ * @layer ui/hooks
+ * @description React hook that reports whether the viewport is below the mobile breakpoint.
  */
 import { useEffect, useState } from "react";
 
 const MOBILE_BREAKPOINT = 768;
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState<boolean | undefined>(
-    undefined,
-  );
+  const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);

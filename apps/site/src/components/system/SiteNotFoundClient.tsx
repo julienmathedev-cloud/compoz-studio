@@ -5,7 +5,10 @@
  * @layer site/components/system
  *
  * @description
- * UI client de la page 404 du site.
+ * Client UI for the site 404 page.
+ *
+ * @remarks
+ * - Reads the current pathname so the home action can preserve the active routing context.
  */
 
 import Link from "next/link";

@@ -2,25 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/molecules/SiteZoomableImage.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/molecules
  *
  * @description
- * Image zoomable site/preview : rend une image cliquable ouvrant une lightbox.
+ * Renders a public site image that can optionally open in a lightbox.
  *
  * @remarks
- * - UI-only : aucune logique métier.
- * - Repose sur `SiteAppImage` pour le rendu d’image.
- * - Réutilise `SiteLightbox` pour l’affichage plein écran.
- * - Le style du déclencheur et de l’image est injecté par le parent.
- * - Le composant reste volontairement générique pour être utilisé
- *   dans différents renderers (image simple, variantes futures, etc.).
- *
- * @accessibility
- * - Le déclencheur est un vrai bouton.
- * - `aria-haspopup="dialog"` est exposé pour signaler l’ouverture
- *   d’une lightbox.
- * - Le libellé accessible est dérivé de la caption, de l’alt,
- *   ou d’un fallback neutre.
+ * Uses `SiteAppImage` for inline rendering and `SiteLightbox` for zoomed display; the trigger remains a real button with a derived accessible label.
  */
 
 import { useCallback, useMemo, useState } from "react";
@@ -39,25 +27,15 @@ export type SiteZoomableImageValue = Readonly<{
 }>;
 
 export type SiteZoomableImageProps = Readonly<{
-  /** Image source affichée dans la page et dans la lightbox. */
   image: SiteZoomableImageValue;
-  /** Caption optionnelle utilisée dans la lightbox et pour l’aria-label. */
   caption?: string | null;
-  /** Classes appliquées au bouton déclencheur. */
   buttonClassName?: string;
-  /** Classes appliquées à l’image inline. */
   imageClassName?: string;
-  /** Sizes passées à `SiteAppImage`. */
   sizes?: string;
-  /** Priorité Next/Image. */
   priority?: boolean;
-  /** Fetch priority Next/Image. */
   fetchPriority?: "high" | "auto";
-  /** UI de la lightbox injectée par le parent / skin. */
   lightboxUi: SiteLightboxUi;
-  /** Libellé d’accessibilité optionnel pour le déclencheur. */
   ariaLabel?: string;
-  /** permet de rendre l'image zommable */
   zoomable?: boolean;
 }>;
 

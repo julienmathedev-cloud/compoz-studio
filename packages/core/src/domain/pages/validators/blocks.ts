@@ -1,8 +1,9 @@
 /**
  * @file packages/core/src/domain/pages/validators/blocks.ts
  * @layer core/domain/pages/validators
- * @description
- * Invariants métier bloquants applicables aux blocks d’une page (V0.9).
+ * @description Blocking domain invariants for page blocks.
+ * @remarks
+ * Validates section blocks, nested layout consistency, unique block structure, LCP ownership, and page-level H1 uniqueness.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";

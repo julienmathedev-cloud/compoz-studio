@@ -2,14 +2,14 @@
 
 /**
  * @file apps/studio/src/features/dnd/DragHandle.tsx
- * @layer ui/studio/dnd
+ * @layer studio/features/dnd
  *
  * @description
- * Poignée de drag utilisée dans les listes réordonnables du studio.
+ * Reusable drag handle button for Studio sortable lists.
  *
  * @remarks
- * - Purement visuel : la logique DnD est fournie par `@dnd-kit`.
- * - Réutilisable pour pages, menus, blocks, rows, columns et cells.
+ * - DnD behavior is provided by the parent dnd-kit sortable bindings.
+ * - Shared by pages, menus, blocks, rows, columns, and cells.
  */
 
 import type { ComponentPropsWithoutRef } from "react";

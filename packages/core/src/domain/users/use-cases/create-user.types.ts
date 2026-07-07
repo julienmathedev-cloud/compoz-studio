@@ -1,8 +1,9 @@
-// packages/core/src/domain/users/use-cases/create-user.types.ts
-
 /**
  * @file packages/core/src/domain/users/use-cases/create-user.types.ts
- * @layer core/domain
+ * @layer core/domain/users/use-cases
+ * @description Types for the create user use-case.
+ * @remarks
+ * This file is a type-only contract and must contain no runtime logic.
  */
 
 import type { IdGenerator } from "@compoz/core/domain/ports/id-generator";

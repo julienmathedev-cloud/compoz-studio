@@ -5,14 +5,12 @@
  * @layer studio/organisms
  *
  * @description
- * Sidebar de navigation du Studio (route-based).
+ * Route-based Studio navigation sidebar.
  *
  * @remarks
- * - UI-only : aucune logique métier.
- * - Navigation via routes `/dashboard/...` (Linear-like).
- * - Actif dérivé de l’URL via `usePathname()`.
- * - Accessible : navigation clavier + `aria-current="page"`.
- * - Dirty Guard : intercepte les clics “simples” pour confirmer avant navigation.
+ * - Active state is derived from the URL via `usePathname()`.
+ * - Uses `aria-current="page"` for the active route.
+ * - Dirty Guard intercepts plain clicks to confirm before navigation.
  */
 
 import { useTranslations } from "next-intl";
@@ -67,41 +65,30 @@ export const STUDIO_SIDEBAR_ICONS = {
   theme: Palette,
   seo: Search,
 
-  // ✅ Studio-only
+  // Studio-only
   users: Users,
 } satisfies Record<string, LucideIcon>;
 
 export type StudioSidebarItemKey = keyof typeof STUDIO_SIDEBAR_ICONS;
 
-/**
- * Item de navigation sidebar.
- */
 export type StudioSidebarItem = Readonly<{
-  /** Clé stable (pour key UI). */
   key: StudioSidebarItemKey;
-  /** Libellé visible. */
   label: string;
-  /** Href (route Studio). Ex: "/identity" */
   href: string;
-  /** Désactive l’item. */
   disabled?: boolean;
 }>;
 
 type StudioSidebarProps = Readonly<{
-  /**
-   * Optionnel : titre en haut de sidebar.
-   * (ex: "Compoz — Studio")
-   */
+  /** Optional title displayed at the top of the sidebar. */
   title?: string;
 
   locale: string;
 
-  /** Affiche les items studio-only (ex: Users). */
   isAdmin?: boolean;
 }>;
 
 /**
- * Normalise un pathname en supprimant un trailing slash (sauf "/").
+ * Normalizes a pathname by removing the trailing slash except for `/`.
  */
 function normalizePathname(pathname: string): string {
   if (pathname.length > 1 && pathname.endsWith("/"))
@@ -110,14 +97,14 @@ function normalizePathname(pathname: string): string {
 }
 
 /**
- * Détermine si l’évènement est un “clic simple” :
- * - bouton gauche
- * - pas de modifier (Cmd/Ctrl/Shift/Alt)
- * - pas déjà preventDefault
+ * Determines whether the event is a plain click:
+ * - left mouse button
+ * - no modifier key (Cmd/Ctrl/Shift/Alt)
+ * - not already prevented
  *
  * @remarks
- * On laisse Next/Browser gérer tous les autres cas (nouvel onglet, nouvelle fenêtre, etc.)
- * pour conserver le comportement standard.
+ * Let Next/the browser handle every other case (new tab, new window, etc.)
+ * to preserve standard behavior.
  */
 function isPlainLeftClick(e: MouseEvent): boolean {
   if (e.defaultPrevented) return false;
@@ -126,9 +113,7 @@ function isPlainLeftClick(e: MouseEvent): boolean {
   return true;
 }
 
-/**
- * Sidebar du Studio (route-based).
- */
+/** Route-based Studio sidebar. */
 export function StudioSidebar({
   title,
   locale,
@@ -190,7 +175,7 @@ export function StudioSidebar({
       },
     ];
 
-    // ✅ Studio-only
+    // Admin-only navigation items.
     if (isAdmin) {
       baseItems.push(
         {
@@ -209,13 +194,7 @@ export function StudioSidebar({
     return baseItems;
   }, [t, base, isAdmin]);
 
-  /**
-   * Items “Autre” (routes publiques).
-   *
-   * @remarks
-   * - UI-only : on ne gère ici que l’accès aux pages légales.
-   * - Dirty Guard : utilisé aussi sur ces liens (navigation safe).
-   */
+  /** Legal-page links also use the Dirty Guard before navigation. */
   const otherItems = useMemo(
     () =>
       [
@@ -241,9 +220,6 @@ export function StudioSidebar({
     [base, t],
   );
 
-  /**
-   * Fabrique un handler de navigation “dirty-aware”.
-   */
   const makeNavHandler = useCallback(
     (href: string, disabled?: boolean) => {
       return (e: MouseEvent) => {
@@ -252,8 +228,8 @@ export function StudioSidebar({
           return;
         }
 
-        // On ne bloque que le clic “simple”.
-        // Tous les autres cas doivent rester natifs (nouvel onglet, etc.).
+        // Only plain clicks are blocked.
+        // All other cases must keep native behavior (new tab, etc.).
         if (!isPlainLeftClick(e)) return;
 
         e.preventDefault();

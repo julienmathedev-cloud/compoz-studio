@@ -1,19 +1,14 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/pages/pages/PagesListSection.tsx
- * @layer ui/studio/pages/sections
+ * @file apps/studio/src/features/pages/sections/PagesListSection.tsx
+ * @layer studio/features/pages/sections
  *
  * @description
- * Section “Pages” (listing) : affiche les pages depuis `SiteIndexDTO` et expose
- * les actions UI (éditer métadonnées, éditer contenu, supprimer).
+ * Studio section for listing pages from the SiteIndex and exposing page actions.
  *
  * @remarks
- * - La suppression est orchestrée via `useDeletePage`.
- * - Les confirmations et l’état busy par item sont gérés localement.
- * - `PageListItem` reste strictement présentational.
- * - Le chargement initial est géré par `SettingsSection` (shell) via `isLoadingIndex`.
- * - Strictement UI-only : aucune logique métier.
+ * - Deletion is handled through `useDeletePage`, while per-row busy state comes from `deletingPageId`.
  */
 
 import { useTranslations } from "next-intl";
@@ -35,21 +30,16 @@ import { cn } from "@compoz/ui/lib/utils";
 import { EMPTY_CARD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 
 type PagesListSectionProps = Readonly<{
-  /** Titre de la section (défaut i18n). */
   title?: string;
 
-  /** Index du site (références pages) ou null si indisponible. */
   index: SiteIndexDTO | null;
 
   statusByPageId?: Readonly<Record<string, SiteDiffKindDTO>>;
 
-  /** Indique un chargement de l’index côté parent (shell). */
   isLoadingIndex?: boolean;
 
-  /** Ouvre l’édition des métadonnées (title / slug) d’une page. */
   onEditMeta?: (pageId: string) => void;
 
-  /** Ouvre l’édition du contenu d’une page. */
   onEditContent?: (pageId: string) => void;
 }>;
 
@@ -86,11 +76,7 @@ export function PagesListSection({
   const description = t("studio.pagesListSection.section.description");
   const isBusy = Boolean(isDeleting);
 
-  /**
-   * Grouping UI-only :
-   * - préserve l’ordre du SoT `index.pages`
-   * - profondeur 1 (parents + enfants)
-   */
+  /** Preserves SiteIndex order while grouping pages into one parent/child level. */
   const groups = useMemo<PageGroups>(() => {
     const parents: PageSummaryDTO[] = [];
     const childrenByParentId: Record<string, PageSummaryDTO[]> = {};

@@ -1,9 +1,9 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/create-page.ts
  * @layer core/domain/pages/use-cases
- * @description
- * Use-case de création d’une page (slug/titre) avec métadonnées et configuration sitemap.
- * Génère un slug unique et applique les défauts métier côté domaine.
+ * @description Use case that creates a page with metadata and sitemap configuration.
+ * @remarks
+ * The domain generates a unique slug and applies business defaults before persistence.
  */
 
 import {
@@ -77,7 +77,9 @@ export function createPage({
 
     const seoTitle = input.seoTitle !== null ? input.seoTitle.trim() : null;
     const seoDescription =
-      input.seoDescription !== null ? input.seoDescription.trim() || null : null;
+      input.seoDescription !== null
+        ? input.seoDescription.trim() || null
+        : null;
 
     const sitemap =
       input.sitemap !== null ? applySitemapDefaults(input.sitemap) : null;
@@ -104,10 +106,6 @@ export function createPage({
     return { page };
   };
 }
-
-/* -------------------------------------------------------------------------- */
-/*                               Inline helpers                               */
-/* -------------------------------------------------------------------------- */
 
 type GenerateUniqueSlugProps = {
   pages: CreatePageDeps["pages"];

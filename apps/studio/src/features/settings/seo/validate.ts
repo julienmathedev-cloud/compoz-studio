@@ -2,15 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/seo/validate.ts
- * @layer hooks/studio/site/seo
+ * @layer studio/features/settings/seo
  *
  * @description
- * Validation + warnings UI (front-only) pour le SEO.
+ * Non-blocking studio warning helpers for global SEO settings.
  *
  * @remarks
- * - Pas d’erreurs UI bloquantes en V0.5 : la validation principale reste gérée par Zod côté API.
- * - Ce module fournit uniquement des warnings UX non bloquants.
- * - Pattern : warnings calculés sur le modèle **UI** (FormValues RHF).
+ * - Domain validation remains handled by Zod and server use cases.
+ * - Warnings are computed from the RHF editing shape to support live editor feedback.
  */
 
 import { useMemo } from "react";
@@ -19,25 +18,16 @@ import { SEO } from "@compoz/core/constants/limits/seo";
 import { TITLE_PLACEHOLDER_RE } from "@compoz/core/constants/seo/seo";
 import type { SeoFormValues } from "@compoz/validation/site/settings/seo/seo-form";
 
-/* ───────────────────────────── 2) Warnings UI (non-bloquants, PURE) ───────────────────────── */
-
-/** Clés stables pour l’i18n des warnings SEO. */
 export type SeoWarningKey =
   | "description.length"
   | "titleTemplate.placeholderMissing"
   | "robots.noindex"
   | "openGraph.image.missing";
 
-/**
- * PURE — Calcule les warnings SEO selon les valeurs UI (FormValues RHF).
- *
- * @param i Valeurs `SeoFormValues` issues du formulaire RHF (strings stables).
- * @returns Tableau des warnings à afficher.
- */
+/** Computes non-blocking SEO warnings from RHF form values. */
 export function computeSeoWarnings(i: SeoFormValues): SeoWarningKey[] {
   const out = new Set<SeoWarningKey>();
 
-  /* ----- Description length ----- */
   const desc = (i.defaultDescription ?? "").trim();
   if (
     desc.length > 0 &&
@@ -46,19 +36,16 @@ export function computeSeoWarnings(i: SeoFormValues): SeoWarningKey[] {
     out.add("description.length");
   }
 
-  /* ----- Title template placeholder ----- */
   const template = (i.titleTemplate ?? "").trim();
   if (template.length > 0 && !TITLE_PLACEHOLDER_RE.test(template)) {
     out.add("titleTemplate.placeholderMissing");
   }
 
-  /* ----- Robots ----- */
   const robots = (i.robots ?? "").toLowerCase().trim();
   if (robots.includes("noindex")) {
     out.add("robots.noindex");
   }
 
-  /* ----- OpenGraph image ----- */
   const ogImg = (i.openGraph?.defaultImageUrl ?? "").trim();
   if (ogImg.length === 0) {
     out.add("openGraph.image.missing");
@@ -67,18 +54,16 @@ export function computeSeoWarnings(i: SeoFormValues): SeoWarningKey[] {
   return Array.from(out);
 }
 
-/**
- * Hook UI — mémoïse le résultat des warnings SEO.
- *
- * @param values Valeurs RHF (FormValues).
- */
 export function useSeoUiWarnings(values: SeoFormValues): SeoWarningKey[] {
   return useMemo(() => computeSeoWarnings(values), [values]);
 }
 
 /**
- * Variante “par champs” (optionnelle) si tu veux éviter de passer tout l’objet.
- * Sans cast, car on reconstruit un `SeoFormValues` complet (shape RHF stable).
+ * Computes SEO warnings from isolated fields by rebuilding the stable RHF shape.
+ *
+ * @remarks
+ * - Useful when a caller watches only the fields that affect these warnings.
+ * - Non-warning fields still receive safe defaults because `computeSeoWarnings` expects a complete `SeoFormValues` object.
  */
 export function useSeoUiWarningsFromFields(
   defaultDescription: SeoFormValues["defaultDescription"],
@@ -89,7 +74,6 @@ export function useSeoUiWarningsFromFields(
   return useMemo(
     () =>
       computeSeoWarnings({
-        // Base
         baseUrl: "",
         defaultTitle: "",
         defaultDescription: defaultDescription ?? "",
@@ -115,7 +99,6 @@ export function useSeoUiWarningsFromFields(
           openingHours: [],
         },
 
-        // OpenGraph
         openGraph: {
           title: "",
           description: "",
@@ -123,9 +106,8 @@ export function useSeoUiWarningsFromFields(
           imageAlt: "",
         },
 
-        // Twitter
         twitter: {
-          // La card est hors scope warnings ici, mais il faut une valeur stable.
+          // Card is outside this warning scope but required for a complete RHF shape.
           card: "summary_large_image" as SeoFormValues["twitter"]["card"],
           site: "",
           creator: "",

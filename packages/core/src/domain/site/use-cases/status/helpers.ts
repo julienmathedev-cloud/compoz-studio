@@ -1,12 +1,9 @@
 /**
  * @file packages/core/src/domain/site/use-cases/status/helpers.ts
  * @layer core/domain/site/use-cases/status
- * @description
- * Helpers purs pour calculer le status du site (diff settings + diff pages/blocks).
- *
+ * @description Pure helpers for computing site status diffs.
  * @remarks
- * - Pas d'I/O ici : uniquement du calcul à partir des données déjà lues.
- * - Les comparaisons deep utilisent `safeStringify` (V0.5).
+ * No I/O belongs here; deep comparisons intentionally use `safeStringify` in V0.5.
  */
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";
@@ -16,10 +13,6 @@ import type {
 } from "@compoz/core/domain/pages/entities/page";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import { safeStringify } from "@compoz/core/domain/site/use-cases/status/site-diff";
-
-/* -------------------------------------------------------------------------- */
-/* Settings diff                                                              */
-/* -------------------------------------------------------------------------- */
 
 export function computeSettingsDiff(
   draftSettings: Readonly<SiteSettings>,
@@ -53,10 +46,6 @@ export function computeSettingsDiff(
   return { settingsHasChanges, changedSettings } as const;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Pages + Blocks diff                                                        */
-/* -------------------------------------------------------------------------- */
-
 export function computePagesAndBlocksDiff(args: {
   draftIndexRefs: ReadonlyArray<PageSummary>;
   publishedIndexRefs: ReadonlyArray<PageSummary>;
@@ -73,16 +62,12 @@ export function computePagesAndBlocksDiff(args: {
   const draftRefById = new Map(draftIndexRefs.map((r) => [r.id, r]));
   const publishedRefById = new Map(publishedIndexRefs.map((r) => [r.id, r]));
 
-  // -----------------------
   // Counters: pages
-  // -----------------------
   let pagesNew = 0;
   let pagesModified = 0;
   let pagesDeleted = 0;
 
-  // -----------------------
   // Counters: blocks
-  // -----------------------
   let blocksDraft = 0;
   let blocksPublished = 0;
 
@@ -90,14 +75,14 @@ export function computePagesAndBlocksDiff(args: {
   let blocksModified = 0;
   let blocksDeleted = 0;
 
-  // Compte blocksPublished (toutes pages published indexées)
+  // Count published blocks from the published source-of-truth index.
   for (const ref of publishedIndexRefs) {
     const p = publishedPagesById.get(ref.id);
     const blocks = Array.isArray(p?.blocks) ? p.blocks : [];
     blocksPublished += blocks.length;
   }
 
-  // Pages supprimées du draft (présentes en published index)
+  // Pages present in published but missing from draft are deleted.
   for (const pubRef of publishedIndexRefs) {
     if (!draftRefById.has(pubRef.id)) {
       pagesDeleted++;
@@ -105,12 +90,12 @@ export function computePagesAndBlocksDiff(args: {
       const pubPage = publishedPagesById.get(pubRef.id);
       const pubBlocks = Array.isArray(pubPage?.blocks) ? pubPage.blocks : [];
 
-      // Ces blocks n'existent plus côté draft (via suppression de page) => deleted
+      // Blocks removed through page deletion are considered deleted too.
       blocksDeleted += pubBlocks.length;
     }
   }
 
-  // Passe sur toutes les pages draft indexées (SoT admin)
+  // Draft indexed pages are the admin source of truth.
   for (const dRef of draftIndexRefs) {
     const publishedRef = publishedRefById.get(dRef.id);
 
@@ -123,7 +108,7 @@ export function computePagesAndBlocksDiff(args: {
 
     blocksDraft += draftBlocks.length;
 
-    // Page jamais publiée => new page + tous les blocks "new"
+    // A never-published page makes all its draft blocks new.
     if (!publishedRef) {
       pagesNew++;
       blocksNew += draftBlocks.length;
@@ -132,7 +117,7 @@ export function computePagesAndBlocksDiff(args: {
 
     const publishedPage = publishedPagesById.get(dRef.id);
 
-    // Page modifiée (meta.updatedAt)
+    // Page-level modification is based on the metadata update timestamp.
     const publishedMetaUpdatedAt = String(publishedPage?.meta?.updatedAt ?? "");
     const draftMetaUpdatedAt = String(draftPage?.meta?.updatedAt ?? "");
     const isPageModified = draftMetaUpdatedAt !== publishedMetaUpdatedAt;
@@ -149,7 +134,7 @@ export function computePagesAndBlocksDiff(args: {
       }
     }
 
-    // 1) New/Modified blocks côté draft
+    // Draft blocks determine new and modified block counters.
     const draftBlockIds = new Set<string>();
 
     for (const b of draftBlocks) {
@@ -169,7 +154,7 @@ export function computePagesAndBlocksDiff(args: {
       }
     }
 
-    // 2) Deleted blocks : présents en published mais absents en draft
+    // Published blocks missing from draft are deleted.
     for (const pb of publishedBlocks) {
       const id = typeof pb?.id === "string" ? pb.id : "";
       if (!id) continue;

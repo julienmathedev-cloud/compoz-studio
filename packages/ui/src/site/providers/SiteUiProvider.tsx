@@ -5,12 +5,10 @@
  * @layer ui/site/providers
  *
  * @description
- * Provider du design system global du site.
+ * Exposes the resolved public site UI through React context.
  *
  * @remarks
- * - Expose l'objet `ui` résolu côté server via un contexte React.
- * - La valeur du provider est stabilisée avec `useMemo`
- *   pour éviter les rerenders inutiles des consommateurs.
+ * The UI object is resolved on the server; the provider value is memoized to avoid unnecessary consumer rerenders.
  */
 
 import type { ReactNode } from "react";
@@ -19,14 +17,12 @@ import { createContext, useContext, useMemo } from "react";
 import type { SiteGlobalUi } from "@compoz/ui/site/site-ui.types";
 
 type SiteUiContextValue = Readonly<{
-  /** Design system global du site. */
   ui: SiteGlobalUi;
 }>;
 
 const SiteUiContext = createContext<SiteUiContextValue | null>(null);
 
 export type SiteUiProviderProps = Readonly<{
-  /** Design system global résolu côté server. */
   ui: SiteGlobalUi;
   children: ReactNode;
 }>;

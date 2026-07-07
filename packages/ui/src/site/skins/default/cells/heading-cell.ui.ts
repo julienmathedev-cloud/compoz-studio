@@ -1,28 +1,16 @@
 /**
  * @file packages/ui/src/site/skins/default/cells/heading-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default/cells
  *
  * @description
- * Skin UI — heading cell (thème Default).
- *
- * @remarks
- * Définit uniquement les styles Tailwind.
- * Aucune logique ici : le renderer gère align / level / variant.
+ * Defines the default skin classes for heading cells.
  */
 
 import type { SiteHeadingUi } from "@compoz/ui/site/site-ui.types";
 
 export const defaultHeadingUi: SiteHeadingUi = {
-  /* -------------------------------------------------------------------------- */
-  /* Container                                                                  */
-  /* -------------------------------------------------------------------------- */
-
   container: "flex flex-col gap-4",
   containerHero: "gap-6 md:gap-8",
-
-  /* -------------------------------------------------------------------------- */
-  /* Title                                                                      */
-  /* -------------------------------------------------------------------------- */
 
   level: {
     h1: "text-foreground text-4xl font-bold tracking-tight",
@@ -36,23 +24,11 @@ export const defaultHeadingUi: SiteHeadingUi = {
   levelHero:
     "max-w-3xl text-5xl font-bold tracking-tight text-balance md:text-6xl",
 
-  /* -------------------------------------------------------------------------- */
-  /* Subtitle                                                                   */
-  /* -------------------------------------------------------------------------- */
-
   subtitle: "max-w-prose text-base text-muted-foreground",
   subtitleHero: "max-w-prose text-lg text-muted-foreground md:text-xl",
 
-  /* -------------------------------------------------------------------------- */
-  /* Separator                                                                  */
-  /* -------------------------------------------------------------------------- */
-
   separator: "w-1/3 bg-border",
   separatorHero: "w-1/4 bg-border",
-
-  /* -------------------------------------------------------------------------- */
-  /* Highlight                                                                  */
-  /* -------------------------------------------------------------------------- */
 
   highlight: "text-primary",
 } as const;

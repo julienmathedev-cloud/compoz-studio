@@ -3,22 +3,14 @@
  * @layer ui/users/mappers
  *
  * @description
- * Mapper "shared runtime" pour les users :
- * - DTO domaine -> valeurs frontières stables, utilisées par le Studio côté UI.
+ * Maps user DTOs to stable form-backed UI shapes used by the Studio.
  *
  * @remarks
- * Ici on reste volontairement "runtime/shared" :
- * - pas d’intents API ;
- * - pas de logique métier, unicité, règles RBAC, etc. ;
- * - juste de la mise en forme stable basée sur les schémas Zod du form.
+ * This mapper stays at the shared UI boundary: it does not handle API intents, business rules, uniqueness, or RBAC authorization.
  */
 
 import type { UserDTO } from "@compoz/core/domain/users/dto";
 import type { UserFormValues } from "@compoz/validation/users/user-form";
-
-/* -------------------------------------------------------------------------- */
-/* Defaults (frontière)                                                       */
-/* -------------------------------------------------------------------------- */
 
 const DEFAULT_RBAC: UserFormValues["rbac"] = {
   role: "editor",
@@ -41,8 +33,7 @@ function toLowerEmail(value: unknown): string {
 }
 
 function toRbacRole(value: unknown): UserFormValues["rbac"]["role"] {
-  // On reste strict sur le type string, et on fallback sur le rôle default.
-  // Si le DTO est dirty avec une valeur inattendue, on retombe sur DEFAULT_RBAC.role.
+  // Dirty DTO values fall back to the default role instead of leaking invalid RBAC states into the form.
   if (typeof value !== "string") {
     return DEFAULT_RBAC.role;
   }
@@ -60,17 +51,11 @@ function toWebsiteIds(value: unknown): string[] {
   return value.map((item) => toTrimmedString(item)).filter(Boolean);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Domain (DTO) -> Shape frontière (safe)                                     */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Convertit un `UserDTO` en shape frontière stable basée sur les types Zod form.
+ * Converts a user DTO into a stable UI form shape.
  *
  * @remarks
- * - `password` est toujours "" en sortie, jamais exposé côté UI.
- * - Normalise `email` en lower-case.
- * - `name` fallback "" car le form le requiert en V0.5.
+ * `password` is always reset to an empty string so credential hashes or secrets are never exposed to the UI.
  */
 export function toUserShapeFromDTO(
   user: UserDTO | null | undefined,

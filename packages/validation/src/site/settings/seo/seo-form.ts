@@ -1,9 +1,15 @@
 /**
  * @file packages/validation/src/site/settings/seo/seo-form.ts
  * @layer schemas
+ *
  * @description
- * Schémas Zod décrivant la forme du formulaire SEO côté UI (admin / RHF).
- * UI = strings stables (draft), donc "" est accepté sur les champs “optionnels”.
+ * Zod schemas describing the SEO settings UI form shape.
+ *
+ * @remarks
+ * This schema is RHF-friendly: optional SEO fields remain controlled strings,
+ * so empty values are accepted during editing. Required checks, URL checks, and
+ * cross-field rules are applied in `superRefine` to keep field-level errors
+ * predictable.
  */
 
 import { z } from "zod";
@@ -20,15 +26,6 @@ import {
 } from "@compoz/validation/common/url-fragments";
 import { StructuredDataEntityTypeSchema } from "@compoz/validation/site/settings/seo/seo";
 
-/* -------------------------------------------------------------------------- */
-/*                              Helpers draft (UI)                            */
-/* -------------------------------------------------------------------------- */
-
-/**
- * URL http(s) absolue en “draft UI” :
- * - "" accepté
- * - sinon URL absolue http/https valide
- */
 function absoluteHttpUrlDraftFormSchema(message: string) {
   return z
     .string()
@@ -38,11 +35,6 @@ function absoluteHttpUrlDraftFormSchema(message: string) {
     });
 }
 
-/**
- * URL asset en “draft UI” :
- * - "" accepté
- * - sinon asset URL valide (absolute http/https OU relative "/...")
- */
 export const AssetUrlDraftFormSchema = z
   .string()
   .trim()
@@ -57,10 +49,6 @@ export const BaseUrlDraftFormSchema = absoluteHttpUrlDraftFormSchema(
 export const CanonicalUrlDraftFormSchema = absoluteHttpUrlDraftFormSchema(
   ERROR_CODES.SEO_CANONICAL_URL_INVALID,
 );
-
-/* -------------------------------------------------------------------------- */
-/*                              OpenGraph (UI)                                */
-/* -------------------------------------------------------------------------- */
 
 export const SeoOpenGraphFormSchema = z
   .object({
@@ -90,10 +78,6 @@ export const SeoOpenGraphFormSchema = z
 
 export type SeoOpenGraphFormValues = z.infer<typeof SeoOpenGraphFormSchema>;
 
-/* -------------------------------------------------------------------------- */
-/*                               Twitter (UI)                                 */
-/* -------------------------------------------------------------------------- */
-
 export const TwitterHandleFormSchema = z
   .string()
   .trim()
@@ -110,10 +94,6 @@ export const SeoTwitterFormSchema = z
   .strict();
 
 export type SeoTwitterFormValues = z.infer<typeof SeoTwitterFormSchema>;
-
-/* -------------------------------------------------------------------------- */
-/*                           Structured data (UI)                              */
-/* -------------------------------------------------------------------------- */
 
 const StructuredDataDraftStringSchema = z.string().trim();
 
@@ -147,15 +127,10 @@ export type StructuredDataAddressFormValues = z.infer<
 >;
 export type StructuredDataFormValues = z.infer<typeof StructuredDataFormSchema>;
 
-/* -------------------------------------------------------------------------- */
-/*                               Inline validation                            */
-/* -------------------------------------------------------------------------- */
-
 function validateSeoFormValues(
   val: z.infer<typeof SeoFormObjectSchema>,
   ctx: z.RefinementCtx,
 ) {
-  // --- defaultTitle requis ---
   const title = val.defaultTitle.trim();
   if (title.length < SEO.TITLE.MIN) {
     ctx.addIssue({
@@ -165,7 +140,6 @@ function validateSeoFormValues(
     });
   }
 
-  // --- defaultDescription : si renseignée, min ---
   const desc = val.defaultDescription.trim();
   if (desc.length > 0 && desc.length < SEO.DESCRIPTION.MIN) {
     ctx.addIssue({
@@ -175,7 +149,6 @@ function validateSeoFormValues(
     });
   }
 
-  // --- titleTemplate : si renseigné, min + placeholder ---
   const tpl = val.titleTemplate.trim();
   if (tpl.length > 0) {
     if (tpl.length < SEO.TITLE_TEMPLATE.MIN) {
@@ -185,6 +158,7 @@ function validateSeoFormValues(
         message: ERROR_CODES.SEO_TITLE_TEMPLATE_TOO_SHORT,
       });
     }
+
     if (!tpl.includes(TITLE_PLACEHOLDER)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -194,7 +168,6 @@ function validateSeoFormValues(
     }
   }
 
-  // --- baseUrl : https requis en prod ---
   const REQUIRE_BASEURL_HTTPS = process.env.NODE_ENV === "production";
   const baseUrl = val.baseUrl.trim();
 
@@ -209,7 +182,10 @@ function validateSeoFormValues(
         });
       }
     } catch {
-      // fallback défensif (normalement déjà capté par BaseUrlDraftFormSchema)
+      /**
+       * Defensive fallback: invalid URLs should already be caught by the draft
+       * URL schema before the production HTTPS check runs.
+       */
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["baseUrl"],
@@ -218,10 +194,6 @@ function validateSeoFormValues(
     }
   }
 }
-
-/* -------------------------------------------------------------------------- */
-/*                               Form schema (UI)                             */
-/* -------------------------------------------------------------------------- */
 
 const SeoFormObjectSchema = z
   .object({

@@ -2,20 +2,16 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/steps/StepsCellEditor.tsx
- * @layer ui/studio/pages/blocks/editor/cells
+ * @layer studio/features/builder/editor/cells/steps
  *
  * @description
- * Éditeur RHF-aware d’une StepsCell avec ajout, suppression,
- * réordonnancement et édition des étapes.
+ * RHF-aware StepsCell editor for variant controls and step item editing.
  *
  * @remarks
- * - Connecté directement à RHF via `useController` et `useFieldArray`.
- * - Réutilise `StepListEditor`.
- * - Les items sont gérés par RHF via `useFieldArray` pour garantir
- *   une gestion propre des valeurs, erreurs et reorder.
- * - Les erreurs near-field sont gérées au niveau des items.
- * - Le reorder s’appuie sur `move()` pour conserver l’état RHF.
- * - Les valeurs live restent lues via `useWatch`.
+ * - Binds the variant control directly through RHF `useController`.
+ * - Manages items through `useFieldArray` so values, errors, and reordering stay consistent.
+ * - Uses `move()` to preserve RHF state while reordering.
+ * - Reads live item values through `useWatch` and delegates item rendering to `StepListEditor`.
  */
 
 import { useTranslations } from "next-intl";

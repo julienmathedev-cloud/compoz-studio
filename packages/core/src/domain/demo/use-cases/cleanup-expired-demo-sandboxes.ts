@@ -1,15 +1,9 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/cleanup-expired-demo-sandboxes.ts
- * @layer core/domain
- *
- * @description
- * Use-case : supprime les sandboxes démo expirées ainsi que leurs données associées.
- *
+ * @layer core/domain/demo
+ * @description Use case that removes expired demo sandboxes and their associated data.
  * @remarks
- * - Supprime le record `DemoSandbox`.
- * - Supprime le user démo associé.
- * - Nettoie les données associées à la sandbox.
- * - V1 : traitement séquentiel simple, sans sur-ingénierie.
+ * Cleanup is intentionally sequential in V1 to keep failure handling predictable.
  */
 
 import type {

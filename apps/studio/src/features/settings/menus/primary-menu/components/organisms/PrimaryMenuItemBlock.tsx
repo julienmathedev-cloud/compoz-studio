@@ -2,23 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/primary-menu/components/organisms/PrimaryMenuItemBlock.tsx
- * @layer ui/studio/organisms
+ * @layer studio/features/settings/menus/primary-menu/components/organisms
  *
  * @description
- * Bloc d’édition d’un item du menu principal :
- * - ligne parent
- * - liste des sous-liens
- * - actions locales sur les enfants
+ * UI block that renders one primary menu parent item and its sortable child links.
  *
  * @remarks
- * - Strictement UI-only : aucune logique métier.
- * - Ce composant factorise uniquement le rendu et les callbacks locaux d’un item parent.
- * - Le formulaire parent reste l’orchestrateur RHF global (`useForm`, `useFieldArray`, warnings, submit, reset, etc.).
- * - Les rows spécialisées (`PrimaryMenuParentRow`, `PrimaryMenuChildRow`) restent séparées.
- * - Les enfants utilisent désormais `id` comme identifiant métier stable :
- *   - clés React
- *   - drag and drop
- *   - stabilité du reorder sans dépendre de l’index
+ * - The parent form remains the RHF orchestrator for form state, warnings, submit, and reset.
+ * - Child items use their stable business `id` for React keys and DnD ordering instead of indexes.
  */
 
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
@@ -61,20 +52,10 @@ type PrimaryMenuItemBlockProps = Readonly<{
   createEmptyChild: () => PrimaryMenuChildFormValues;
   enforceParentRulesIfHasChildren: (pIdx: number) => void;
 
-  /**
-   * Vrai pendant un drag de niveau parent.
-   *
-   * @remarks
-   * - Replie temporairement les children.
-   * - Désactive / démonte le DnD enfant pour éviter les collisions visuelles
-   *   entre contextes parent et enfant.
-   */
+  /** Disables child DnD while parent-level sorting is active. */
   isSortingParents: boolean;
 }>;
 
-/**
- * Bloc UI d’un item parent du menu principal.
- */
 export function PrimaryMenuItemBlock({
   sortableId,
   pIdx,
@@ -117,17 +98,13 @@ export function PrimaryMenuItemBlock({
 
       setChildren(pIdx, next);
 
-      // ✅ Recalage des erreurs RHF sur les enfants
+      // Revalidate child fields after reordering so RHF errors stay aligned with row indexes.
       await trigger(`items.${pIdx}.children` as const);
     },
     [children, disabled, isSortingParents, pIdx, setChildren, trigger],
   );
 
-  /**
-   * Pendant un drag parent :
-   * - on démonte totalement le DnD enfant
-   * - on évite ainsi qu’un contexte voisin reste actif visuellement
-   */
+  /** Child DnD is unmounted during parent sorting to prevent overlapping sortable contexts. */
   const renderChildren = !isSortingParents ? (
     <DndContext
       collisionDetection={closestCenter}
@@ -187,10 +164,10 @@ export function PrimaryMenuItemBlock({
             const nextChildren = [...children, nextChild];
             setChildren(pIdx, nextChildren);
 
-            // Force `newTab=false` sur le parent dès qu’il a des enfants.
+            // A parent with children behaves as a group and must not open in a new tab.
             enforceParentRulesIfHasChildren(pIdx);
 
-            // Conserve le comportement actuel : validation du href parent.
+            // Keep the parent href validation in sync after it becomes a group.
             void trigger(`items.${pIdx}.href` as const);
 
             requestAnimationFrame(() => {

@@ -5,13 +5,13 @@
  * @layer studio/app
  *
  * @description
- * Page de preview (iframe) pour le Footer du site.
+ * Iframe preview page for the site footer.
  *
  * @remarks
- * - Lit les données via `usePreviewOverride` pour footer et legalMenu.
- * - Rend uniquement si les baselines nécessaires sont disponibles.
- * - Le skin UI est fourni par `SiteUiProvider` monté dans `PreviewProviders`.
- * - Le thème CSS est fourni par `ThemeProvider` monté dans `PreviewProviders`.
+ * - Reads footer and legal menu data through `usePreviewOverride`.
+ * - Renders only when the required baselines are available.
+ * - The UI skin is provided by `SiteUiProvider` mounted in `PreviewProviders`.
+ * - The CSS theme is provided by `ThemeProvider` mounted in `PreviewProviders`.
  */
 
 import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePreviewOverride";

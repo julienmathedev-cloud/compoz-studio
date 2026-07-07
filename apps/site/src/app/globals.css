@@ -1,4 +1,4 @@
-/* ✅ Shared base (imports tailwind + radix + layers + utilities) */
+/* Shared base imports: Tailwind, Radix tokens, layers, and utilities. */
 @config "../../tailwind.config.ts";
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
@@ -28,7 +28,7 @@
   --border: var(--slate-6);
   --input: var(--slate-6);
 
-  /* CTA sobre (noir “Slate”) */
+  /* Sober slate CTA color. */
   --primary: var(--slate-12);
   --primary-foreground: var(--slate-1);
 

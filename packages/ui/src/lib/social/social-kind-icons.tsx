@@ -1,15 +1,9 @@
 /**
  * @file packages/ui/src/lib/social/social-kind-icons.tsx
  * @layer ui/lib/social
- * @description
- * Source de vérité UI pour les réseaux sociaux :
- * - kinds supportés (ordre),
- * - labels (via i18n),
- * - rendu d’icônes (brands `simple-icons`, génériques `lucide-react`).
- *
- * Invariants :
- * - On renvoie un `ReactNode` (pas un composant) pour éviter le warning React.
- * - `twitter` est un alias legacy : il est normalisé vers `x`.
+ * @description UI source of truth for supported social kinds, labels, and icons.
+ * @remarks
+ * `twitter` is a legacy alias normalized to `x`; icon rendering returns a `ReactNode` to avoid React component warnings.
  */
 
 import type { SocialKind } from "@compoz/core/constants/social/social-kinds";
@@ -31,10 +25,6 @@ import {
   siYoutube,
 } from "simple-icons/icons";
 
-/* -------------------------------------------------------------------------- */
-/* Types                                                                      */
-/* -------------------------------------------------------------------------- */
-
 type SimpleIcon = {
   title: string;
   hex: string;
@@ -51,10 +41,6 @@ export type SocialKindOption = Readonly<{
   label: string;
 }>;
 
-/**
- * Clés i18n canoniques (admin) pour les labels de `SocialKind`.
- * NB : le fallback FR reste défini dans `SOCIAL_KIND_LABEL` pour les usages non i18n.
- */
 export const SOCIAL_KIND_LABEL_KEYS = {
   website: "studio.social.kind.website",
   email: "studio.social.kind.email",
@@ -75,10 +61,6 @@ export const SOCIAL_KIND_LABEL_KEYS = {
 export type SocialKindLabelKey = (typeof SOCIAL_KIND_LABEL_KEYS)[SocialKind];
 
 export type SocialKindTranslator = (key: SocialKindLabelKey) => string;
-
-/* -------------------------------------------------------------------------- */
-/* Simple Icons renderer                                                      */
-/* -------------------------------------------------------------------------- */
 
 type SimpleBrandIconProps = { icon: SimpleIcon } & SVGProps<SVGSVGElement>;
 
@@ -105,10 +87,6 @@ function SimpleBrandIcon({
 }
 
 SimpleBrandIcon.displayName = "SimpleBrandIcon";
-
-/* -------------------------------------------------------------------------- */
-/* Source de vérité                                                           */
-/* -------------------------------------------------------------------------- */
 
 export const SOCIAL_KIND_LABEL: Readonly<Record<SocialKind, string>> = {
   website: "Site web",
@@ -174,17 +152,7 @@ const BRAND_ICONS: Readonly<Partial<Record<SocialKind, SimpleIcon>>> = {
 
 const DEFAULT_ICON_CLASS = "h-4 w-4 flex-none overflow-visible";
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Normalise un kind entrant (legacy) vers un kind UI.
- *
- * @remarks
- * - case-insensitive (admin input / dataset legacy)
- * - `twitter` (legacy dataset) → `x`
- */
+/** Normalizes legacy or case-insensitive input to a UI social kind. */
 export function normalizeSocialKind(kind: string): string {
   const k = String(kind ?? "")
     .trim()
@@ -196,12 +164,6 @@ function isSocialKind(value: string): value is SocialKind {
   return Object.prototype.hasOwnProperty.call(SOCIAL_KIND_LABEL, value);
 }
 
-/**
- * Helper safe : rend une icône (fallback générique si kind inconnu).
- *
- * @remarks
- * - On renvoie un ReactNode (pas un composant) => pas de warning React.
- */
 export function renderSocialKindIcon(
   kind: string,
   props: SocialIconRenderProps = {},
@@ -226,10 +188,6 @@ export function renderSocialKindIcon(
   }
 }
 
-/**
- * Construit des items prêts pour ton `SelectField`.
- * ⚠️ nécessite que `SelectField` accepte `label: ReactNode`.
- */
 export function buildSocialKindSelectItems(
   t?: SocialKindTranslator,
 ): ReadonlyArray<{

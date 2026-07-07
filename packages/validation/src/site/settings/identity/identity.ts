@@ -1,3 +1,15 @@
+/**
+ * @file packages/validation/src/site/settings/identity/identity.ts
+ * @layer schemas
+ *
+ * @description
+ * Zod schemas describing the identity settings boundary shape.
+ *
+ * @remarks
+ * No defaults are applied here. The base schema exposes reusable field
+ * constraints, while the final settings schema enforces the required site name.
+ */
+
 import {
   IDENTITY_SITENAME,
   IDENTITY_TAGLINE,

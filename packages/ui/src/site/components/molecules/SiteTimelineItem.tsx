@@ -1,15 +1,12 @@
 /**
  * @file packages/ui/src/site/components/molecules/SiteTimelineItem.tsx
- * @layer ui/site/molecules
+ * @layer ui/site/components/molecules
  *
  * @description
- * Item public individuel pour la cellule `timeline`.
+ * Renders a public site timeline item with alternating layout and optional desktop offset.
  *
  * @remarks
- * - UI-only.
- * - Tous les styles sont pilotés par `ui`.
- * - Reprend la logique d’alternance gauche / droite du portfolio.
- * - Reçoit un décalage vertical desktop calculé à partir de la hauteur de l’item précédent.
+ * Receives the desktop vertical offset calculated from the previous item height to keep the staggered timeline layout balanced.
  */
 
 import type { CSSProperties } from "react";

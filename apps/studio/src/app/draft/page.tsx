@@ -3,7 +3,7 @@
  * @layer studio/app
  *
  * @description
- * Route publique "/draft" : rend la page DRAFT "home" (preview stable).
+ * Public `/draft` route that renders the draft home page for stable preview.
  */
 
 import type { Metadata } from "next";
@@ -24,10 +24,6 @@ import { toBlockShapeFromDTO } from "@compoz/ui/pages/mappers/block-shape";
 import { resolveSiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRuntimeFeatures";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
-/* -------------------------------------------------------------------------- */
-/* Metadata                                                                   */
-/* -------------------------------------------------------------------------- */
-
 export async function generateMetadata(): Promise<Metadata> {
   const websiteId = await getWebsiteId();
   const page = await getDraftHomePageByWebsiteId(websiteId);
@@ -46,19 +42,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Pager                                                                      */
-/* -------------------------------------------------------------------------- */
-
 function hrefForDraftSlug(slug: string): string {
   const s = toSlug(slug);
   if (!s || s === HOME_SLUG) return STUDIO_PATH.draft;
   return `/${STUDIO_PATH.draft}/${encodeURIComponent(s)}`;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Page                                                                       */
-/* -------------------------------------------------------------------------- */
 
 export default async function DraftRootPage() {
   const websiteId = await getWebsiteId();

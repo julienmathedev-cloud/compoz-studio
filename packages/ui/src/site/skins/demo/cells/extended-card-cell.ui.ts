@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/demo/cells/extended-card-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/demo/cells
  *
  * @description
- * Override UI — cards extended cell (thème Démo).
+ * Defines the demo skin overrides for extended card cells.
  */
 
 import type { SiteExtendedCardUiOverride } from "@compoz/ui/site/site-ui.types";

@@ -1,16 +1,12 @@
 /**
  * @file packages/ui/src/settings/theme/theme-font-runtime.ts
- * @layer ui/runtime/theme
+ * @layer ui/settings/theme
  *
  * @description
- * Résolution runtime des polices du thème :
- * convertit un `ThemeFontId` canonique en valeur CSS réellement appliquée.
+ * Resolves canonical theme font ids to the CSS font-family values applied at runtime.
  *
  * @remarks
- * - Source de vérité métier : `@compoz/core/constants/theme/theme-fonts`
- * - Ici : projection runtime UI uniquement.
- * - Les variables CSS (`--font-*`) sont exposées par les apps Next
- *   via `next/font` au niveau du layout.
+ * Font ids come from core theme constants; CSS variables are exposed by the Next apps through `next/font` at layout level.
  */
 
 import {
@@ -44,13 +40,7 @@ const THEME_FONT_CSS_VARS: Readonly<Record<ThemeFontId, string>> = {
   "fjalla-one": "var(--font-fjalla-one)",
 } as const;
 
-/**
- * Résout l’id de police canonique vers la variable CSS runtime.
- *
- * @remarks
- * - Fallback défensif sur `DEFAULT_THEME_FONT_ID`.
- * - Retourne toujours une valeur exploitable dans `style.fontFamily`.
- */
+/** Resolves a theme font id to a runtime CSS variable, with a defensive default fallback. */
 export function resolveThemeFontFamily(
   fontId: string | null | undefined,
 ): string {

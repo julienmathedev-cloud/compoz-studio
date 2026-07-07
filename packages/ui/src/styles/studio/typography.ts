@@ -1,20 +1,10 @@
 /**
  * @file packages/ui/src/styles/studio/typography.ts
- * @layer styles/studio
- * @description
- * Tokens typographiques pour le Studio : titres H1 → H6, variantes de texte (base, muted, error, meta),
- * et mapping utilisé par les composants <Heading /> et <Text />.
+ * @layer ui/styles/studio
  *
- * Responsabilités :
- * - Fournir des classes Tailwind réutilisables pour tous les titres et textes du Studio.
- * - Assurer la cohérence visuelle et hiérarchique.
- * - Exposer des mappings HEADINGS et TEXT_VARIANT_STYLES pour usage dans les composants UI.
+ * @description
+ * Defines shared Studio typography class tokens for headings, text variants, and UI component mappings.
  */
-
-/* ---------------------------------------------------------------------------
- * TITRES (H1 → H6)
- * Styles hiérarchiques utilisés dans tout le Studio via <Heading>.
- * ------------------------------------------------------------------------- */
 
 export const TITLE_LOGO = [
   "text-lg",
@@ -53,12 +43,8 @@ export const TITLE_H6 = [
   "font-semibold",
   "text-foreground",
   "uppercase",
-  "tracking-wide", // donne un aspect “label” très lisible en Studio
+  "tracking-wide",
 ] as const;
-
-/* ---------------------------------------------------------------------------
- * MAPPING → utilisé par <Heading /> pour résoudre un tag en tokens typographiques.
- * ------------------------------------------------------------------------- */
 
 export type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 
@@ -70,11 +56,6 @@ export const HEADINGS: Readonly<Record<HeadingTag, readonly string[]>> = {
   h5: TITLE_H5,
   h6: TITLE_H6,
 } as const;
-
-/* ---------------------------------------------------------------------------
- * TEXTE (base, muted, error)
- * Variantes courantes utilisées dans les formulaires, hints, panneaux, etc.
- * ------------------------------------------------------------------------- */
 
 export const TEXT_BASE = ["text-sm", "text-foreground"] as const;
 
@@ -88,18 +69,8 @@ export const TEXT_ERROR = [
 
 export const TEXT_META = ["text-xs", "text-muted-foreground"] as const;
 
-/**
- * Variantes typographiques disponibles pour le texte Studio.
- * - `base`  : texte standard.
- * - `muted` : texte secondaire (descriptions, hints).
- * - `error` : texte d’erreur (validation, messages bloquants).
- */
 export type TextVariant = "base" | "muted" | "error" | "meta";
 
-/**
- * Mapping des variantes vers les tokens de typographie.
- * Utilisé par le composant <Text /> côté UI.
- */
 export const TEXT_VARIANT_STYLES: Readonly<
   Record<TextVariant, readonly string[]>
 > = {

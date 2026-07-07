@@ -1,6 +1,14 @@
 /**
  * @file apps/site/src/app/manifest.ts
  * @layer site/app
+ *
+ * @description
+ * Dynamic web app manifest for host-based public sites.
+ *
+ * @remarks
+ * - Resolves the active Website from the request host through Prisma WebsiteDomain.
+ * - Loads published settings with Prisma Website.id.
+ * - Falls back to a neutral Compoz manifest when the host cannot be resolved.
  */
 
 import type { MetadataRoute } from "next";
@@ -10,10 +18,7 @@ import { resolvePublicWebsiteFromHost } from "@compoz/infra/websites/resolve-pub
 import { getPublishedSettingsByWebsiteId } from "@compoz/site/lib/pages/published-page-loaders";
 import { resolveIconHref } from "@compoz/ui/lib/seo/metadata-helpers";
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
+/** Builds installable manifest icons when the favicon follows the generated size naming convention. */
 function buildManifestIcons(favicon: string): MetadataRoute.Manifest["icons"] {
   if (favicon.includes("-32.png")) {
     return [
@@ -44,6 +49,7 @@ function buildManifestIcons(favicon: string): MetadataRoute.Manifest["icons"] {
   ];
 }
 
+/** Returns a safe manifest when no public Website can be resolved from the host. */
 function buildFallbackManifest(): MetadataRoute.Manifest {
   return {
     id: "/",
@@ -58,6 +64,7 @@ function buildFallbackManifest(): MetadataRoute.Manifest {
   };
 }
 
+/** Resolves the Prisma Website.id from the current request host. */
 async function resolveWebsiteIdFromRequest(): Promise<string | null> {
   try {
     const headersList = await headers();
@@ -75,10 +82,6 @@ async function resolveWebsiteIdFromRequest(): Promise<string | null> {
     return null;
   }
 }
-
-/* -------------------------------------------------------------------------- */
-/* Manifest                                                                   */
-/* -------------------------------------------------------------------------- */
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const websiteId = await resolveWebsiteIdFromRequest();

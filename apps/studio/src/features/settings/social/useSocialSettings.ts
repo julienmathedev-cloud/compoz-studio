@@ -2,24 +2,15 @@
 
 /**
  * @file apps/studio/src/features/settings/social/useSocialSettings.ts
- * @layer hooks/studio/site/social
+ * @layer studio/features/settings/social
  *
  * @description
- * Hook Studio spécialisé pour gérer les réglages des réseaux sociaux via l’API.
+ * Studio hook for loading, diffing, saving, and caching social link settings.
  *
  * @remarks
- * - Basé sur le pattern Settings RHF-first (`useSettingsResource`).
- * - Travaille exclusivement sur le modèle UI (`SocialFormValues`).
- * - Draft-only : pas de gestion de state dans le hook.
- * - Orchestration UI-only : defaults, load, diff minimal, save, notifications.
- * - Mapping domaine ↔ UI assuré par des mappers dédiés.
- * - Aucune logique métier ni validation domaine.
- * - Le cache settings/status est scopé par Prisma Website.id.
- *
- * Option B, bundle read :
- * - READ : provient du bundle global React Query.
- * - WRITE : reste slice-by-slice via PATCH social.
- * - Après un save : patch du cache bundle social + invalidate status.
+ * - Reads from the shared settings bundle cache, then writes only the `social` slice through PATCH.
+ * - Keeps RHF form values as the local editing shape and normalizes values at load/save boundaries.
+ * - After save, patches the bundle cache and invalidates the site status read model.
  */
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -60,16 +51,11 @@ export function useSocialSettings(): UseSocialSettingsResult {
   const resource = useSettingsResource<SocialFormValues>({
     entityLabel,
 
-    /**
-     * Valeurs par défaut domaine → UI → normalisation.
-     */
     defaults: normalizeSocialFormValues(
       toSocialFormValuesFromDTO(DEFAULT_SOCIAL_SETTINGS),
     ),
 
-    /**
-     * READ bundle : cache-first + fetchQuery fallback.
-     */
+    /** Shared bundle read with cache-first behavior handled by `getSettingsBundle`. */
     load: async (state: ContentState) => {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
@@ -78,11 +64,7 @@ export function useSocialSettings(): UseSocialSettingsResult {
       );
     },
 
-    /**
-     * WRITE slice PATCH + patch bundle cache.
-     *
-     * `next` est un patch minimal construit par `useSettingsResource`.
-     */
+    /** Writes the social slice, then mirrors the response into the settings bundle cache. */
     save: async (next, opts) => {
       const patch = toUpdateSocialIntentDTOFromFormValues(next);
       const dto = await settingsStudioApi.social.patch(patch, opts);
@@ -100,28 +82,18 @@ export function useSocialSettings(): UseSocialSettingsResult {
       return normalizeSocialFormValues(toSocialFormValuesFromDTO(dto.settings));
     },
 
-    /**
-     * Diff minimal : ne renvoie que les champs réellement modifiés.
-     */
+    /** PATCH semantics: only changed form fields are sent to the API. */
     buildPatch: (baseline, next) =>
       buildShallowDiff(
         normalizeSocialFormValues(baseline),
         normalizeSocialFormValues(next),
       ) ?? null,
 
-    /**
-     * Baseline stable et cohérente à l’entrée/sortie réseau.
-     */
     onLoaded: normalizeSocialFormValues,
 
-    /**
-     * Normalisation safe avant diff/save.
-     */
     beforeSave: normalizeSocialFormValues,
 
-    /**
-     * Après save : invalide le read-model status et le bundle settings.
-     */
+    /** Keeps derived status and shared bundle queries aligned after a successful save. */
     onSaved: () => {
       void invalidateSiteStatus(queryClient, websiteId);
 

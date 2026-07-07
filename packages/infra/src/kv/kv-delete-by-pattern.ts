@@ -1,13 +1,9 @@
 /**
  * @file packages/infra/src/kv/kv-delete-by-pattern.ts
  * @layer infra/kv
- * @description
- * Helper infra pour supprimer des clés KV à partir d’un pattern.
- *
+ * @description Deletes KV keys matching a pattern.
  * @remarks
- * - Utilisé pour les opérations de cleanup ponctuelles (ex: sandboxes démo expirées).
- * - Repose sur `keys(pattern)` puis `del(...keys)`.
- * - Non destiné aux flows applicatifs fréquents.
+ * Intended for cleanup jobs, not frequent application flows.
  */
 
 import { getUpstashRedis } from "@compoz/infra/kv/kv-redis";

@@ -2,19 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/_shared/useSettingsSectionForm.ts
- * @layer hooks/studio/site/settings/shared
+ * @layer studio/features/settings/shared
  *
  * @description
- * Hook commun pour la base RHF d’une section settings Studio.
+ * Shared RHF setup hook for Studio settings sections.
  *
  * @remarks
- * - Centralise l’initialisation RHF (resolver + baseline).
- * - Resync automatiquement la baseline quand `initialValues` change.
- * - Remonte l’état dirty au parent si demandé.
- * - Remonte les valeurs live si demandé (preview draft).
- * - Expose les helpers RHF utiles (`setValue`, `trigger`, `clearErrors`, `getFieldState`,
- *   `getValues`, `setFocus`) pour les sections ayant une logique UI plus riche.
- * - Ne contient aucune logique métier propre à une section.
+ * - Resets the form baseline when `initialValues` changes.
+ * - Reports dirty state and live values to callers for dirty guards and preview drafts.
  */
 
 import { useCallback, useEffect } from "react";

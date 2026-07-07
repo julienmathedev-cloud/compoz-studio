@@ -3,9 +3,11 @@
  * @layer schemas
  *
  * @description
- * Schémas Zod décrivant la forme frontière des intentions liées aux utilisateurs (Studio).
- * Ces schémas valident la structure des payloads API / UI ; les invariants métier
- * et décisions, unicité email, règles RBAC, etc. restent dans le domaine.
+ * Zod schemas describing Studio user intent payload boundaries.
+ *
+ * @remarks
+ * These schemas validate API and UI payload shapes only. Business invariants,
+ * email uniqueness, and complete RBAC rules are handled by the domain layer.
  */
 
 import { z } from "zod";
@@ -19,40 +21,19 @@ import {
   WebsiteIdsSchema,
 } from "@compoz/validation/users/user";
 
-/* -------------------------------------------------------------------------- */
-/*                               Champs intent                                */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Name, forme frontière :
- * - trim
- * - requis pour la création
- */
 export const UserNameSchema = z
   .string()
   .trim()
   .min(1, ERROR_CODES.USER_NAME_REQUIRED);
 
 /**
- * Password, forme frontière :
- * - trim via preprocess
- * - requis / non vide quand présent
- *
- * @remarks
- * Le hash/stockage est infra-only ; le domaine vérifie aussi non vide.
+ * Trims string input before enforcing a non-empty password boundary.
  */
 export const UserPasswordSchema = z.preprocess(
   (value) => (typeof value === "string" ? value.trim() : value),
   z.string().min(1, ERROR_CODES.USER_PASSWORD_REQUIRED),
 );
 
-/**
- * RBAC, forme frontière intent.
- *
- * @remarks
- * On réutilise les schémas canoniques, normalisation + contraintes minimales.
- * Les règles métier avancées, permissions, transitions, etc. restent dans le domaine.
- */
 export const UserRbacIntentSchema = z
   .object({
     role: UserRoleSchema,
@@ -60,10 +41,6 @@ export const UserRbacIntentSchema = z
     defaultWebsiteId: WebsiteIdSchema,
   })
   .strict();
-
-/* -------------------------------------------------------------------------- */
-/*                            Intentions HTTP API                             */
-/* -------------------------------------------------------------------------- */
 
 export const CreateUserIntentSchema = z
   .object({
@@ -87,14 +64,7 @@ export const UpdateUserIntentSchema = z
 
 export type UpdateUserIntentDTO = z.infer<typeof UpdateUserIntentSchema>;
 
-/**
- * Intention pour un listing, placeholder : pas de payload.
- */
 export const ListUsersIntentSchema = z.object({}).strict();
 export type ListUsersIntentDTO = z.infer<typeof ListUsersIntentSchema>;
-
-/* -------------------------------------------------------------------------- */
-/*                                  Params                                    */
-/* -------------------------------------------------------------------------- */
 
 export { UserIdParamSchema };

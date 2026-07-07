@@ -1,14 +1,13 @@
 /**
  * @file apps/studio/src/features/pages/blocks/cache/keys.ts
- * @layer hooks/studio/pages/blocks
+ * @layer studio/features/pages/blocks/cache
  *
  * @description
- * Helpers pour construire des query keys React Query liées aux blocks.
+ * React Query key helper for page block list caches.
  *
  * @remarks
- * - Website-scoped : on préfixe par ["w", websiteId, ...]
- *   pour éviter les collisions de cache lors d'un switch Website.
- * - Le scope utilisé ici est Prisma Website.id.
+ * - Prefixes keys with `["w", websiteId, ...]` to avoid cache collisions when switching Website.
+ * - Studio block caches are scoped by Prisma Website.id and content state.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";

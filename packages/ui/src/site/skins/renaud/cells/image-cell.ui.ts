@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/renaud/cells/image-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/renaud/cells
  *
  * @description
- * Skin UI pour l’image site (thème Renaud).
+ * Defines the Renaud skin overrides for image cells.
  */
 
 import type { SiteImageUiOverride } from "@compoz/ui/site/site-ui.types";

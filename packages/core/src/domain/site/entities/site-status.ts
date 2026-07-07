@@ -1,12 +1,9 @@
 /**
  * @file packages/core/src/domain/site/entities/site-status.ts
- * @layer core/domain
- * @description
- * DTO transporté entre l’API admin et le client : état global draft vs published.
- *
+ * @layer core/domain/site/entities
+ * @description Read-model DTO for global draft versus published site status.
  * @remarks
- * - DTO “read model” (compteurs + indicateurs) : pas une entity, pas une shape RHF.
- * - V0.5 : calculé côté serveur (FS), consommé côté client (Overview).
+ * This is not a domain entity or an RHF shape; it is computed server-side and consumed by the admin overview.
  */
 
 import type { PublishWarning } from "@compoz/core/domain/site/validators/publish";
@@ -14,7 +11,7 @@ import type { PublishWarning } from "@compoz/core/domain/site/validators/publish
 export type SiteStatus = Readonly<{
   published: Readonly<{
     exists: boolean;
-    /** Timestamp ISO (basé sur l’index published) */
+    /** ISO timestamp derived from the published index. */
     lastPublishedAt?: string;
   }>;
 
@@ -41,10 +38,7 @@ export type SiteStatus = Readonly<{
     }>;
   }>;
 
-  /**
-   * Détail “dirty” par sous-réglage (V0.5).
-   * Sert à l’Overview pour afficher un badge par section.
-   */
+  /** Dirty state per settings section, used by the admin overview. */
   changedSettings: Readonly<{
     identity: boolean;
     primaryMenu: boolean;
@@ -56,6 +50,6 @@ export type SiteStatus = Readonly<{
     theme: boolean;
   }>;
 
-  /** Warnings non bloquants visibles avant publication */
+  /** Non-blocking warnings shown before publication. */
   prePublishWarnings?: ReadonlyArray<PublishWarning>;
 }>;

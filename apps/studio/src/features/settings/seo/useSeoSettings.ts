@@ -2,23 +2,15 @@
 
 /**
  * @file apps/studio/src/features/settings/seo/useSeoSettings.ts
- * @layer hooks/studio/site/seo
+ * @layer studio/features/settings/seo
  *
  * @description
- * Hook Studio spécialisé pour gérer les réglages SEO via l’API.
+ * Studio hook for loading, diffing, saving, and caching global SEO settings.
  *
  * @remarks
- * - Basé sur le pattern Settings RHF-first (`useSettingsResource`).
- * - Travaille exclusivement sur le modèle UI (`SeoFormValues`).
- * - Draft-only.
- * - Orchestration UI-only : defaults, load, diff minimal, save, notifications.
- * - Aucune logique métier ni validation domaine.
- * - Le cache settings/status est scopé par Prisma Website.id.
- *
- * Option B, bundle read :
- * - READ : provient du bundle global React Query.
- * - WRITE : reste slice-by-slice via PATCH seo.
- * - Après un save : patch du cache bundle seo + invalidate status.
+ * - Reads from the shared settings bundle cache, then writes only the `seo` slice through PATCH.
+ * - Keeps RHF form values as the local editing shape and normalizes values at load/save boundaries.
+ * - After save, patches the bundle cache and invalidates the site status read model.
  */
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -65,18 +57,14 @@ export function useSeoSettings(): UseSeoSettingsResult {
 
     defaults: DEFAULT_SEO_FORM_VALUES,
 
-    /**
-     * READ bundle : cache-first + fetchQuery fallback.
-     */
+    /** Shared bundle read with cache-first behavior handled by `getSettingsBundle`. */
     load: async (state: ContentState) => {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
       return normalizeSeoFormValues(toSeoFormValuesFromDTO(bundle.seo));
     },
 
-    /**
-     * WRITE slice PATCH + patch bundle cache.
-     */
+    /** Writes the SEO slice, then mirrors the response into the settings bundle cache. */
     save: async (next, opts) => {
       const patch = toUpdateSeoIntentDTOFromFormValues(next);
       const dto = await settingsStudioApi.seo.patch(patch, opts);
@@ -94,9 +82,7 @@ export function useSeoSettings(): UseSeoSettingsResult {
       return normalizeSeoFormValues(toSeoFormValuesFromDTO(dto.settings));
     },
 
-    /**
-     * Diff minimal : ne renvoie que les champs réellement modifiés.
-     */
+    /** PATCH semantics: only changed form fields are sent to the API. */
     buildPatch: (baseline, next) =>
       buildShallowDiff(
         normalizeSeoFormValues(baseline),
@@ -106,9 +92,7 @@ export function useSeoSettings(): UseSeoSettingsResult {
     onLoaded: normalizeSeoFormValues,
     beforeSave: normalizeSeoFormValues,
 
-    /**
-     * Après save : invalide le read-model status et le bundle settings.
-     */
+    /** Keeps derived status and shared bundle queries aligned after a successful save. */
     onSaved: () => {
       void invalidateSiteStatus(queryClient, websiteId);
 

@@ -1,14 +1,9 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/start-demo-sandbox.ts
- * @layer core/domain
- *
- * @description
- * Use-case : démarre une sandbox démo en tentant d’abord une réutilisation,
- * puis en créant une nouvelle sandbox si nécessaire.
- *
+ * @layer core/domain/demo
+ * @description Use case that starts a demo sandbox by reusing an existing one when possible, then creating a new one when needed.
  * @remarks
- * - Orchestrateur métier/applicatif.
- * - Ne gère ni cookies HTTP, ni session, ni redirection.
+ * This application-level orchestrator intentionally leaves HTTP cookies, sessions, and redirects outside the core domain.
  */
 
 import type {
@@ -93,8 +88,7 @@ export function startDemoSandbox({
           expiresAt: reused.sandbox.expiresAt,
         };
       } catch {
-        // Sandbox absente / expirée / incohérente :
-        // on retombe volontairement sur une création neuve.
+        // Missing, expired, or inconsistent sandbox: intentionally fall back to a fresh creation.
       }
     }
 

@@ -2,17 +2,15 @@
 
 /**
  * @file apps/studio/src/features/theme/StudioThemeProvider.tsx
- * @layer ui/theme
+ * @layer studio/features/theme
  *
  * @description
- * Provider de thème pour le Studio (light/dark) — scope `.studio-theme`.
+ * Theme provider for the Studio UI scoped to the `.studio-theme` wrapper.
  *
  * @remarks
- * - Persiste le thème dans `localStorage`.
- * - Applique/retire la classe `dark` sur le wrapper `.studio-theme`.
- * - Ne modifie pas `<html>` pour éviter tout impact sur le rendu public.
- * - Compatible avec la preview en iframe.
- * - Strictement UI-only.
+ * - Persists the selected Studio theme in `localStorage`.
+ * - Applies `dark` only on the Studio wrapper so public rendering and iframe preview remain isolated.
+ * - System theme detection is intentionally not enabled yet.
  */
 
 import {
@@ -42,13 +40,7 @@ const StudioThemeContext = createContext<StudioThemeContextValue | null>(null);
 const STORAGE_KEY = "compoz.studio.theme";
 const DEFAULT_THEME: StudioTheme = "light";
 
-/**
- * Applique le thème sur le scope Studio (wrapper `.studio-theme`).
- *
- * @remarks
- * - On ne touche pas `<html>` : uniquement le wrapper Studio.
- * - La classe `dark` drive les variables Tailwind (darkMode="class").
- */
+/** Applies the Studio theme without mutating the document `<html>` element. */
 function applyThemeToStudioRoot(theme: StudioTheme): void {
   if (typeof document === "undefined") return;
 
@@ -59,13 +51,7 @@ function applyThemeToStudioRoot(theme: StudioTheme): void {
   else root.classList.remove("dark");
 }
 
-/**
- * Lit le thème initial depuis le storage.
- *
- * @remarks
- * - V0.5 : fallback par défaut en `light`.
- * - On n’active pas `system` pour l’instant.
- */
+/** Reads the stored Studio theme, falling back to light until system mode is supported. */
 function readInitialTheme(): StudioTheme {
   if (typeof window === "undefined") return DEFAULT_THEME;
 

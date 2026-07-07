@@ -3,11 +3,7 @@
  * @layer studio/app/api
  *
  * @description
- * Route NextAuth (Studio) : endpoints d’authentification (GET/POST).
- *
- * @remarks
- * - App Router : expose le handler NextAuth sur GET et POST.
- * - La configuration (providers, callbacks, etc.) est définie dans `authOptions`.
+ * Studio NextAuth route exposing the configured authentication handler.
  */
 import "server-only";
 import NextAuth from "next-auth";

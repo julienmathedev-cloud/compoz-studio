@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/portfolio/cells/heading-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/portfolio/cells
  *
  * @description
- * Skin UI — heading cell (thème Portfolio).
- *
- * @remarks
- * Définit uniquement les styles Tailwind.
- * Aucune logique ici : le renderer gère align / level / variant.
+ * Defines the portfolio skin overrides for heading cells.
  */
 
 import type { SiteHeadingUiOverride } from "@compoz/ui/site/site-ui.types";

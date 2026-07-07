@@ -2,18 +2,16 @@
 
 /**
  * @file apps/studio/src/features/pages/components/molecules/ChildPageListItem.tsx
- * @layer ui/studio/pages/molecules
+ * @layer studio/features/pages/components/molecules
  *
  * @description
- * Ligne compacte pour afficher une page enfant (titre + slug) avec poignée
- * de drag & drop.
+ * Compact sortable child page row showing status, title, slug, and list position.
  *
  * @remarks
- * - Molecule UI : calquée sur `PageListItem` pour conserver le même rythme visuel
- *   (grid / colonnes / espacements).
- * - Le réordonnancement est piloté par `dnd-kit` via `useSortable`.
- * - Supporte un état occupé local (`isReordering`) : ARIA + désactivation cohérente.
- * - Strictement UI-only : aucune logique métier.
+ * - Mirrors `PageListItem` spacing and grid rhythm for consistent nested page lists.
+ * - Uses dnd-kit `useSortable` directly while `DragHandle` owns the listeners.
+ * - Keeps the reordering state reflected through ARIA attributes and disabled drag controls.
+ * - Parent components own list semantics.
  */
 
 import { useSortable } from "@dnd-kit/sortable";
@@ -27,35 +25,16 @@ import { DragHandle } from "@compoz/studio/features/dnd/DragHandle";
 import { formatPagePath } from "@compoz/studio/lib/ui/pages";
 import { cn } from "@compoz/ui/lib/utils";
 
-/**
- * Props du composant `ChildPageListItem`.
- */
 type ChildPageListItemProps = Readonly<{
-  /** Référence minimaliste de la page enfant (titre + slug). */
   page: PageSummaryDTO;
-
-  /** Statut draft vs published (optionnel). */
   statusKind?: SiteDiffKindDTO;
-
-  /** Index courant de l’item dans la liste. */
   index: number;
-
-  /** Taille totale de la liste. */
   total: number;
-
-  /** Indique un réordonnancement en cours (désactive le drag). */
   isReordering?: boolean;
-
-  /** Désactive toute la ligne (verrouillage global optionnel). */
   disabled?: boolean;
 }>;
 
-/**
- * Ligne UI d’une page enfant dans la liste (studio).
- *
- * @remarks
- * Ne rend pas de `<li>` : le conteneur parent gère la sémantique de liste.
- */
+/** Renders a sortable child page row; the parent owns list semantics. */
 export function ChildPageListItem({
   page,
   statusKind,

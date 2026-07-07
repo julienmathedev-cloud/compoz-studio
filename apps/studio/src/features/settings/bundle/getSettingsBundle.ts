@@ -2,16 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/bundle/getSettingsBundle.ts
- * @layer hooks/studio/site/settings-bundle
+ * @layer studio/features/settings/bundle
  *
  * @description
- * Helper cache-first pour obtenir le bundle `SiteSettings`.
+ * Cache-first helper for reading the Studio settings bundle.
  *
  * @remarks
- * - Website-scoped : le cache inclut Prisma Website.id.
- * - Centralise la logique cache -> fetchQuery fallback.
- * - Utilisable depuis les hooks settings : footer/header/identity/etc.
- * - L’API résout le Website actif côté session/cookie.
+ * - Falls back to `fetchQuery` when the bundle is not already cached.
+ * - Studio cache keys are scoped by Prisma Website.id and content state.
  */
 
 import type { QueryClient } from "@tanstack/react-query";

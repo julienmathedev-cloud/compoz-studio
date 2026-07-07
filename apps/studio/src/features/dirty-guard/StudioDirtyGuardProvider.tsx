@@ -2,16 +2,17 @@
 
 /**
  * @file apps/studio/src/features/dirty-guard/StudioDirtyGuardProvider.tsx
- * @layer studio/dirty-guard
+ * @layer studio/features/dirty-guard
  *
  * @description
- * Provider global du Dirty Guard pour Studio (route-based).
+ * Route-scoped Dirty Guard provider for Studio navigation.
  *
  * @remarks
- * - UI-only : aucune logique métier.
- * - Empêche la navigation si la page courante contient des changements non sauvegardés.
- * - Centralise la confirmation utilisateur via `useConfirmList()`.
- * - Gère aussi la protection `beforeunload` (refresh / fermeture onglet).
+ * - Tracks dirty state per normalized pathname so different Studio routes stay isolated.
+ * - Blocks internal navigation through `navigate()` when the current route has unsaved changes.
+ * - Centralizes the leave confirmation through `useConfirmList()`.
+ * - Adds `beforeunload` protection for refresh and tab close paths.
+ * - Guards against opening multiple confirmations for the same pending navigation.
  */
 
 import type { ReactNode } from "react";
@@ -29,22 +30,15 @@ import {
 import { useConfirmList } from "@compoz/studio/features/confirm/useConfirmList";
 
 type StudioDirtyGuardContextValue = Readonly<{
-  /** Marque la route courante comme dirty/clean. */
   setDirty: (dirty: boolean) => void;
-  /** État dirty de la route courante (pour UI). */
   isDirty: boolean;
-  /** Lecture à la demande (évite les soucis de stale state dans navigate/beforeunload). */
   getIsDirty: () => boolean;
-  /** Navigation dirty-aware (confirmation si nécessaire). */
   navigate: (href: string) => Promise<void>;
 }>;
 
 export const StudioDirtyGuardContext =
   createContext<StudioDirtyGuardContextValue | null>(null);
 
-/**
- * Normalise un pathname en supprimant le trailing slash (sauf "/").
- */
 function normalizePathname(pathname: string): string {
   if (pathname.length > 1 && pathname.endsWith("/"))
     return pathname.slice(0, -1);
@@ -63,11 +57,10 @@ export function StudioDirtyGuardProvider({
   const t = useTranslations();
   const confirmList = useConfirmList();
 
-  /** Registre dirty par route. */
+  /** Dirty registry keyed by normalized pathname. */
   const dirtyByPathRef = useRef<Record<string, boolean>>({});
   const isConfirmingRef = useRef(false);
 
-  /** UI sync pour la route courante uniquement. */
   const [isDirtyState, setIsDirtyState] = useState(false);
 
   useEffect(() => {
@@ -80,7 +73,6 @@ export function StudioDirtyGuardProvider({
       if (!pathname) return;
       dirtyByPathRef.current[pathname] = dirty;
 
-      // ✅ déclenche un rerender pour la route courante
       setIsDirtyState(Boolean(dirty));
     },
     [pathname],
@@ -108,13 +100,12 @@ export function StudioDirtyGuardProvider({
       const nextHref = String(href ?? "").trim();
       if (!nextHref || nextHref === pathname) return;
 
-      // ✅ pas dirty => navigation directe
       if (!getIsDirty()) {
         router.push(nextHref);
         return;
       }
 
-      // ✅ anti double-confirm
+      // Prevent multiple confirmations for the same pending navigation.
       if (isConfirmingRef.current) return;
       isConfirmingRef.current = true;
 
@@ -122,7 +113,6 @@ export function StudioDirtyGuardProvider({
         const ok = await confirmLeave();
         if (!ok) return;
 
-        // ✅ reset dirty courant + UI sync
         dirtyByPathRef.current[pathname] = false;
         setIsDirtyState(false);
 
@@ -134,9 +124,7 @@ export function StudioDirtyGuardProvider({
     [confirmLeave, getIsDirty, pathname, router],
   );
 
-  /**
-   * Protection refresh / fermeture onglet.
-   */
+  /** Protects refresh and tab close paths through the browser beforeunload flow. */
   useEffect(() => {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!getIsDirty()) return;

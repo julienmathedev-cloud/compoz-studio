@@ -3,15 +3,11 @@
  * @layer studio/app/api
  *
  * @description
- * Route API Studio (admin) pour la création et le listing des users.
- *
- * Responsabilités :
- * - GET  : liste des users (résumés).
- * - POST : crée un user (email/name/rbac + password).
+ * Studio admin API route for listing and creating users.
  *
  * @remarks
- * - Admin-only : garanti par `requireAdminSession()`.
- * - Pas de state draft/published ici : users = données Studio globales.
+ * - `POST` creates users with email, name, RBAC, and password data.
+ * - No draft/published state is involved because users are global Studio data.
  */
 
 import "server-only";
@@ -36,10 +32,6 @@ import {
   type CreateUserIntentDTO,
 } from "@compoz/validation/users/user-intents";
 
-// -------------------------------------------------
-// GET /api/admin/users → list users
-// -------------------------------------------------
-
 export async function GET(req: Request) {
   const NS = "api.studio.admin.users.GET" as const;
 
@@ -57,10 +49,6 @@ export async function GET(req: Request) {
     });
   });
 }
-
-// -------------------------------------------------
-// POST /api/admin/users → create user
-// -------------------------------------------------
 
 export async function POST(req: Request) {
   const NS = "api.studio.admin.users.POST" as const;

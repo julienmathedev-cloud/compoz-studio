@@ -3,7 +3,7 @@
  * @layer studio/app
  *
  * @description
- * Page « Header » (Studio) — route du dashboard.
+ * Studio "Header" dashboard route.
  */
 
 import { HeaderPage } from "@compoz/studio/features/settings/header/HeaderPage";

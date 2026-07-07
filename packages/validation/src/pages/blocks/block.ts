@@ -1,21 +1,19 @@
 /**
  * @file packages/validation/src/pages/blocks/block.ts
  * @layer schemas
- * @description
- * Schémas Zod décrivant la structure frontière des blocks (sections) d’une page.
  *
- * Ces schémas valident uniquement la forme (API / infra).
- * Les invariants métier sont vérifiés dans le domaine.
+ * @description
+ * Zod schemas describing the boundary shape of page blocks.
+ *
+ * @remarks
+ * These schemas validate API and infrastructure payload shapes only. Business
+ * invariants are enforced by the domain layer.
  */
 
 import { z } from "zod";
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { CellSchema } from "@compoz/validation/pages/blocks/cells/cell";
-
-/* -------------------------------------------------------------------------- */
-/*                               Schémas atomiques                            */
-/* -------------------------------------------------------------------------- */
 
 export const BlockIdSchema = z
   .string()
@@ -37,10 +35,7 @@ export const BlockNameSchema = z
   .trim()
   .min(1, ERROR_CODES.BLOCK_NAME_REQUIRED);
 
-export const BlockCssClassNameSchema = z
-  .string()
-  .trim()
-  .optional();
+export const BlockCssClassNameSchema = z.string().trim().optional();
 
 export const BlockRowColumnsCountSchema = z.union(
   [z.literal(1), z.literal(2), z.literal(3)] as const,
@@ -66,20 +61,12 @@ export const BlockRowReverseOnSchema = z
   })
   .strict();
 
-/* -------------------------------------------------------------------------- */
-/*                                   Column                                   */
-/* -------------------------------------------------------------------------- */
-
 export const BlockColumnSchema = z
   .object({
     id: BlockColumnIdSchema,
     cells: z.array(CellSchema),
   })
   .strict();
-
-/* -------------------------------------------------------------------------- */
-/*                                    Row                                     */
-/* -------------------------------------------------------------------------- */
 
 export const BlockRowSchema = z
   .object({
@@ -89,10 +76,6 @@ export const BlockRowSchema = z
     columns: z.array(BlockColumnSchema),
   })
   .strict();
-
-/* -------------------------------------------------------------------------- */
-/*                                   Block                                    */
-/* -------------------------------------------------------------------------- */
 
 export const SectionBlockSchema = z
   .object({
@@ -106,10 +89,9 @@ export const SectionBlockSchema = z
   })
   .strict();
 
-/* -------------------------------------------------------------------------- */
-/*                                Union future                                */
-/* -------------------------------------------------------------------------- */
-
+/**
+ * Kept as a discriminated union to preserve an extensible public block boundary.
+ */
 export const BlockSchema = z.discriminatedUnion("type", [SectionBlockSchema]);
 
 export type BlockShape = z.infer<typeof BlockSchema>;

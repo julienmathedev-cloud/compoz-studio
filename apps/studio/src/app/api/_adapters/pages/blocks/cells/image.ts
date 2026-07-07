@@ -1,5 +1,9 @@
 /**
  * @file apps/studio/src/app/api/_adapters/pages/blocks/cells/image.ts
+ * @layer studio/app/api/adapters
+ *
+ * @description
+ * Studio API adapter for `ImageCell` values.
  */
 
 import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";

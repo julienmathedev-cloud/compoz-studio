@@ -1,6 +1,9 @@
 /**
  * @file apps/studio/postcss.config.mjs
- * @description PostCSS config file
+ * @layer studio/config
+ *
+ * @description
+ * PostCSS configuration for the Studio app.
  */
 
 const config = {

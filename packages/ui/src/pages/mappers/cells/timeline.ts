@@ -1,9 +1,7 @@
 /**
  * @file packages/ui/src/pages/mappers/cells/timeline.ts
  * @layer ui/pages/mappers
- *
- * @description
- * Mapper "shared runtime" pour les cellules de type `timeline`.
+ * @description Maps timeline cell DTOs to form values.
  */
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";

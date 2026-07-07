@@ -1,12 +1,9 @@
 /**
  * @file packages/infra/src/media/storage/index.ts
  * @layer infra/media/storage
- * @description
- * Factory de résolution du backend de stockage média.
- *
+ * @description Resolves the media storage backend.
  * @remarks
- * - Local FS par défaut en développement local.
- * - Vercel Blob si `BLOB_READ_WRITE_TOKEN` est disponible.
+ * Uses local filesystem storage by default, and Vercel Blob when `BLOB_READ_WRITE_TOKEN` is available.
  */
 
 import { BlobMediaStorage } from "@compoz/infra/media/storage/blob-media-storage";

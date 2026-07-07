@@ -2,10 +2,17 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/testimonials/TestimonialItemEditor.tsx
- * @layer ui/studio/pages/blocks/editor/testimonials
+ * @layer studio/features/builder/editor/cells/testimonials
  *
  * @description
- * Éditeur RHF-aware d’un témoignage individuel.
+ * RHF-aware editor for one TestimonialsCell item.
+ *
+ * @remarks
+ * - Binds testimonial fields directly through RHF `useController`.
+ * - Uses `sortableId` only for dnd-kit sorting.
+ * - Shows quote and author name errors only after `showError` or the field has been touched.
+ * - Uses `watchedItem` as a visual fallback to keep rendering stable during RHF rebinding after reordering.
+ * - Stores the optional author image as a raw uploaded image URL.
  */
 
 import { useSortable } from "@dnd-kit/sortable";

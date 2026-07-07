@@ -2,18 +2,17 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/images/ImageCellEditor.tsx
+ * @layer studio/features/builder/editor/cells/images
+ *
  * @description
- * Éditeur RHF-aware d’une ImageCell avec gestion de la source,
- * de l’alt, de la caption, de la variante d’affichage et de la taille visuelle.
+ * RHF-aware ImageCell editor for source, alt text, caption, display variant, and visual size.
  *
  * @remarks
- * - Connecté directement à RHF via `useController`.
- * - S’aligne sur le standard builder :
- *   `showError || fieldState.isTouched`.
- * - Conserve strictement le comportement métier initial :
- *   pas de champ href affiché pour une image simple.
- * - Réutilise `ImageFields` pour l’édition UI.
- * - Réinitialise proprement les métadonnées image quand la source est vidée.
+ * - Binds image, variant, size, reveal, and zoom settings directly through RHF `useController`.
+ * - Reuses `ImageFields` for upload, preview, alt, and caption editing.
+ * - Shows source and alt errors only after `showError` or the field has been touched.
+ * - Keeps simple images link-free by not exposing any href field here.
+ * - Clears image metadata when the source is emptied.
  */
 
 import { useTranslations } from "next-intl";

@@ -5,14 +5,12 @@
  * @layer studio/app/providers
  *
  * @description
- * Providers client nécessaires au Studio (scope global).
+ * Global client providers required by the Studio.
  *
  * @remarks
- * - Doit être au-dessus de la Sidebar (SidebarProvider + Dirty Guard).
- * - Contient uniquement des providers UI.
- * - Ne contient pas de fetch ni de logique métier server.
- * - Expose aussi un WebsiteContext avec le Website actif résolu côté server,
- *   utilisé notamment pour les query keys et les scopes client.
+ * - Must be mounted above the sidebar because it owns `SidebarProvider` and the Dirty Guard.
+ * - Exposes the server-resolved active Website through `WebsiteContext` for query
+ *   keys and client scopes.
  */
 
 import type { ReactNode } from "react";
@@ -26,32 +24,23 @@ import { StudioThemeScope } from "@compoz/studio/features/theme/StudioThemeScope
 import { NotifyProvider } from "@compoz/studio/lib/ui/NotifyProvider";
 import { SidebarProvider } from "@compoz/ui/components/ui/sidebar";
 
-/* -------------------------------------------------------------------------- */
-/* Providers                                                                  */
-/* -------------------------------------------------------------------------- */
-
 type StudioClientProvidersProps = Readonly<{
   children: ReactNode;
 
   /**
-   * Website.id résolu côté server via requireSessionWithWebsite().
+   * Website.id resolved server-side through requireSessionWithWebsite().
    *
-   * Pour les admins, cette valeur reflète le Website actif sélectionné.
-   * À terme, elle doit être portée par le cookie httpOnly
-   * "compoz_active_website".
+   * For admins, this reflects the selected active Website. Eventually this
+   * should be carried by the "compoz_active_website" httpOnly cookie.
    */
   websiteId: string;
 
   /**
-   * Website.slug public canonique du Website actif.
-   *
-   * Utilisé pour les URLs publiques, preview, skins et features runtime.
+   * Canonical public Website.slug for the active Website.
+   * Used for public URLs, preview, skins, and runtime features.
    */
   websiteSlug: string;
 
-  /**
-   * Website.name affichable du Website actif.
-   */
   websiteName?: string;
 
   hasSidebar?: boolean;
@@ -81,7 +70,7 @@ export function StudioClientProviders({
 
   return (
     <>
-      {/* Applique la classe studio-theme sur <html> (Radix portals inclus). */}
+      {/* Applies the studio-theme class to <html>, including Radix portals. */}
       <StudioThemeScope />
 
       <WebsiteContext.Provider value={value}>

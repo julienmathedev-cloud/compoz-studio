@@ -2,17 +2,15 @@
 
 /**
  * @file apps/studio/src/features/_shared/components/StudioHintsPanel.tsx
- * @layer ui/studio/shared/settings
+ * @layer studio/features/_shared/components
  *
  * @description
- * Panneau réutilisable d’affichage d’une liste de messages Studio
- * dans un bloc expansible.
+ * Reusable expandable Studio panel for displaying prepared hint messages.
  *
  * @remarks
- * - Strictement UI-only.
- * - Ne traduit rien : il reçoit des `hints` déjà prêts à afficher.
- * - Réutilise les libellés partagés du panneau warnings (`studio.shared.warningsPanel.*`).
- * - Rend le panneau désactivé si aucun hint n’est présent.
+ * - Does not translate hint content; callers provide display-ready messages.
+ * - Reuses shared warning panel labels from `studio.shared.warningsPanel.*`.
+ * - Disables the panel when no hint is present.
  */
 
 import { useTranslations } from "next-intl";
@@ -21,22 +19,11 @@ import { ExpandableLayout } from "@compoz/studio/components/layouts/ExpandableLa
 import { HintList } from "@compoz/studio/components/molecules/feedback/HintList";
 
 type StudioHintsPanelProps = Readonly<{
-  /** ID DOM stable du panneau expansible. */
   id: string;
-
-  /** Liste des messages à afficher. */
   hints: readonly string[];
-
-  /**
-   * Variante visuelle du panneau.
-   * @default "warning"
-   */
+  /** Visual variant used by the underlying hint list. */
   variant?: "warning" | "info";
-
-  /**
-   * Titre optionnel de la liste.
-   * - Si absent : fallback sur `studio.shared.warningsPanel.title`.
-   */
+  /** Optional list title; falls back to `studio.shared.warningsPanel.title`. */
   title?: string;
 }>;
 

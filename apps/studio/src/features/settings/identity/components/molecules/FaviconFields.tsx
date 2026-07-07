@@ -2,16 +2,13 @@
 
 /**
  * @file apps/studio/src/features/settings/identity/components/molecules/FaviconFields.tsx
- * @layer ui/studio/settings/identity/molecules
+ * @layer studio/features/settings/identity/components/molecules
  *
  * @description
- * Champs favicon (unique) : sélection d’image + preview, compatible RHF.
+ * RHF-aware favicon selector with upload and preview support.
  *
  * @remarks
- * - Molecule UI : compose `ImageSelector`.
- * - La valeur canonique est pilotée via `faviconUrlField` (RHF).
- * - Formats acceptés : ico, png.
- * - Strictement UI-only : aucune logique métier.
+ * - Keeps the canonical favicon URL in RHF while showing a larger generated preview variant when possible.
  */
 
 import { useTranslations } from "next-intl";
@@ -29,37 +26,22 @@ type UploadedRasterImage = Readonly<{
   mediaAssetId?: string;
 }>;
 
-/**
- * Props du composant `FaviconFields`.
- */
 type FaviconFieldsProps = Readonly<{
-  /** Titre du site (fallback pour le texte alternatif). */
   siteName: string;
-  /** Texte alternatif du logo (prioritaire sur `siteName`). */
   logoAlt: string;
-  /** Champ RHF contrôlé pour l’URL de la favicon. */
   faviconUrlField: ControllerRenderProps<IdentityFormValues, "faviconUrl">;
-  /** Champ RHF contrôlé pour l’id MediaAsset associé à la favicon. */
   faviconMediaAssetIdField: ControllerRenderProps<
     IdentityFormValues,
     "faviconMediaAssetId"
   >;
-  /** IDs ARIA du champ favicon (générés via `createFieldIds` + `useIdPrefix`). */
   faviconIds: FieldIds;
-  /** Désactive toute interaction (save / submit / upload). */
   disabled?: boolean;
-  /** Upload optionnel de la favicon : reçoit un fichier et retourne une URL publique. */
   onUploadFavicon?: (file: File) => Promise<UploadedRasterImage>;
 }>;
 
-/**
- * Types MIME acceptés pour les favicons.
- */
+/** Favicon uploads are intentionally limited to ICO and PNG. */
 const FAVICON_ACCEPT = "image/x-icon,image/vnd.microsoft.icon,image/png";
 
-/**
- * Types MIME préférés pour le hint d’upload favicon.
- */
 const FAVICON_PREFERRED_TYPES = [
   "image/x-icon",
   "image/vnd.microsoft.icon",
@@ -70,21 +52,13 @@ function resolveFaviconPreviewUrl(input: string): string {
   const url = String(input ?? "").trim();
   if (!url) return "";
 
-  /**
-   * Convention studio actuelle :
-   * - fichier suffixé par une taille : -16 / -32 / -48 / -180 / -192 / -512
-   * - extension conservée
-   * - querystring éventuelle conservée
-   */
+  // Uploaded favicon variants use size suffixes; preview with the largest generated one.
   return url.replace(
     /-(16|32|48|180|192|512)(\.[a-z0-9]+)(\?.*)?$/i,
     "-512$2$3",
   );
 }
 
-/**
- * Champs favicon standardisés (studio).
- */
 export function FaviconFields({
   siteName,
   logoAlt,

@@ -2,21 +2,17 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/images/ImageListEditor.tsx
- * @layer ui/studio/pages/blocks/editor/images
+ * @layer studio/features/builder/editor/cells/images
  *
  * @description
- * Éditeur UI générique : liste d’images (add/remove/reorder) pour les cellules
- * basées sur une collection d’images.
+ * RHF-aware list editor for image-list cells, including add, remove, and reorder actions.
  *
  * @remarks
- * - S’appuie sur `useFieldArray` côté parent.
- * - Le reorder est géré par drag and drop via dnd-kit.
- * - Les updates métier (append/remove/move) sont déléguées à RHF.
- * - Les clés React utilisent `fieldId`, alors que le DnD s’appuie
- *   sur l’`id` métier stable de chaque image.
- * - Le reorder s’appuie sur `move()` pour conserver l’état RHF.
- * - Les valeurs live restent lues via `watchedItems` et transmises
- *   au sous-éditeur pour stabiliser le rendu pendant le rebinding.
+ * - Receives `useFieldArray` actions from the parent editor.
+ * - Reordering is handled by dnd-kit while append/remove/move stay delegated to RHF.
+ * - React keys use RHF `fieldId`; dnd-kit uses each image item's stable domain `id`.
+ * - Uses `move()` to preserve RHF state while reordering.
+ * - Passes `watchedItems` to nested editors to keep rendering stable during RHF rebinding.
  */
 
 import {

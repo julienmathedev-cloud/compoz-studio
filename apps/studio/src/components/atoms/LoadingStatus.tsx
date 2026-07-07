@@ -5,13 +5,11 @@
  * @layer studio/atoms
  *
  * @description
- * Statut de chargement accessible pour l’interface Studio.
+ * Accessible loading status for the Studio UI.
  *
  * @remarks
- * - Atome UI : aucune logique métier.
- * - Utilise `role="status"` + `aria-live="polite"` pour l’annonce.
- * - Peut afficher un spinner via `StudioIcon`.
- * - Le label SR est toujours rendu dans le DOM (à masquer via classes si nécessaire).
+ * - Uses `role="status"` and `aria-live="polite"` for announcements.
+ * - Can display a spinner through `StudioIcon`.
  */
 
 import { useTranslations } from "next-intl";
@@ -24,9 +22,6 @@ import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { cn } from "@compoz/ui/lib/utils";
 import { ROW_SM } from "@compoz/ui/styles/studio/layout";
 
-/**
- * Props du composant `LoadingStatus`.
- */
 export type LoadingStatusProps = Readonly<{
   label?: string;
   children?: ReactNode;
@@ -35,9 +30,6 @@ export type LoadingStatusProps = Readonly<{
 }> &
   HTMLAttributes<HTMLSpanElement>;
 
-/**
- * Affiche un statut de chargement (Studio).
- */
 export function LoadingStatus({
   label,
   children,

@@ -1,8 +1,8 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/details/separator.ts
- * @layer schemas
+ * @layer validation/pages/blocks/cells/details
  * @description
- * Schéma Zod de SeparatorCell.
+ * Defines Zod schemas for separator cell data.
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";

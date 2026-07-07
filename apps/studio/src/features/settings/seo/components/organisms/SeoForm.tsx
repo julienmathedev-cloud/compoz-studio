@@ -1,18 +1,16 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/settings/seo/SeoForm.tsx
- * @layer ui/studio/organisms
+ * @file apps/studio/src/features/settings/seo/components/organisms/SeoForm.tsx
+ * @layer studio/features/settings/seo/components/organisms
  *
  * @description
- * Formulaire de configuration SEO global (base, indexation, Open Graph, Twitter).
+ * RHF and Zod-backed studio form for editing global SEO settings.
  *
  * @remarks
- * - Contrôlé : le parent fournit `initialValues` et reçoit `onSubmit`.
- * - RHF + Zod sont la source de vérité UI : le modèle `SeoFormValues` est stable côté champs.
- * - Les warnings UI (non bloquants) sont dérivés des valeurs RHF live et remontés au parent.
- * - Les erreurs bloquantes sont affichées au plus près des champs (near-field).
- * - UX : focus/scroll sur le premier champ invalide au submit (IDs stables, sans ref).
+ * - Keeps `SeoFormValues` as the stable editing shape across all SEO slices.
+ * - Reports UI warnings, blocking error count, value changes, and dirty state to the parent section.
+ * - Focuses the first top-level blocking error after a failed submit.
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,33 +56,18 @@ type UploadedRasterImage = Readonly<{
   mediaAssetId?: string;
 }>;
 
-/**
- * Props du composant `SeoForm`.
- */
 type SeoFormProps = Readonly<{
-  /** Valeurs initiales (baseline) fournies par la section. */
   initialValues: SeoFormValues;
-  /** Indique qu’une sauvegarde côté parent est en cours. */
   isSaving?: boolean;
-  /** Callback appelé avec des valeurs validées par Zod (`SeoFormSchema`). */
   onSubmit: (values: SeoFormValues) => void | Promise<void>;
-  /** Handler optionnel : permet au parent de réagir à un reset UI. */
   onReset?: () => void;
-  /** Handler optionnel : remonte les warnings UI (non bloquants). */
   onWarningKeysChange?: (keys: SeoWarningKey[]) => void;
-  /** Handler optionnel : remonte les valeurs live (preview draft). */
   onValuesChange?: (values: SeoFormValues) => void;
-  /** Handler optionnel : remonte l’état dirty (guard / navigation). */
   onDirtyChange?: (dirty: boolean) => void;
-  /** Handler optionnel : remonte le nombre d’erreurs bloquantes (badges section). */
   onBlockingErrorsCountChange?: (count: number) => void;
-  /** Upload optionnel OG image : reçoit un fichier et retourne une URL publique. */
   onUploadOgImage?: (file: File) => Promise<UploadedRasterImage>;
 }>;
 
-/**
- * Formulaire de configuration SEO (studio).
- */
 export function SeoForm({
   initialValues,
   isSaving,
@@ -98,10 +81,10 @@ export function SeoForm({
 }: SeoFormProps) {
   const t = useTranslations();
 
-  // Fallback twitter.card (ex: "summary_large_image")
+  // Default Twitter card used when the nested form slice is incomplete.
   const fallbackCard = TWITTER_CARD_TYPES[1];
 
-  // RHF defaults robustes : évite les `undefined` (ex. twitter.card).
+  // RHF defaults must stay fully initialized to avoid uncontrolled nested fields.
   const rhfDefaults = useMemo((): SeoFormValues => {
     const twitter = initialValues.twitter ?? { card: fallbackCard };
 
@@ -134,20 +117,15 @@ export function SeoForm({
     onDirtyChange,
   });
 
-  // Préfixe d’ID stable pour ce formulaire.
   const idPrefix = useIdPrefix("seo-form");
-
-  // Base
   const defaultTitleIds = createFieldIds(idPrefix, "defaultTitle");
   const titleTemplateIds = createFieldIds(idPrefix, "titleTemplate");
   const defaultDescriptionIds = createFieldIds(idPrefix, "defaultDescription");
   const canonicalUrlIds = createFieldIds(idPrefix, "canonicalUrl");
   const robotsIds = createFieldIds(idPrefix, "robots");
-
-  // Indexation
   const baseUrlIds = createFieldIds(idPrefix, "baseUrl");
 
-  // Sécurité `twitter.card` : force un fallback si le setting est incomplet.
+  // Repair legacy or partial SEO settings without marking the form dirty.
   const watchedTwitter = useWatch({ control, name: "twitter" });
 
   useEffect(() => {
@@ -160,11 +138,8 @@ export function SeoForm({
     }
   }, [watchedTwitter, setValue, fallbackCard]);
 
-  // Preview draft (valeurs live) — remonte le modèle UI.
   const watchedAll = useWatch({ control }) as SeoFormValues | undefined;
   const values = watchedAll ?? rhfDefaults;
-
-  // Warnings UI (non bloquants).
   const warningKeys = useSeoUiWarnings(values);
 
   useStableWarningKeys({
@@ -172,7 +147,6 @@ export function SeoForm({
     onWarningKeysChange,
   });
 
-  // Erreurs near-field (affichées au plus près des champs).
   const showError = submitCount > 0;
 
   const defaultTitleError =
@@ -231,7 +205,7 @@ export function SeoForm({
     (showError || !!touchedFields.robots) &&
     Boolean(errors.robots?.message ?? errors.robots);
 
-  // Badges section : compteur d’erreurs bloquantes (simple & stable)
+  // Section badges only count top-level fields handled directly by this form.
   const blockingErrorsCount = useMemo(() => {
     const invalids = [
       invalidDefaultTitle,
@@ -240,8 +214,6 @@ export function SeoForm({
       invalidBaseUrl,
       invalidCanonicalUrl,
       invalidRobots,
-      // NB: les erreurs “nested” (twitter/openGraph/indexation) restent gérées localement
-      // par leurs sous-composants ; si un jour tu veux les compter, on peut ajouter un comptage deep.
     ];
 
     return invalids.filter(Boolean).length;
@@ -319,7 +291,6 @@ export function SeoForm({
       <Card variant="panel" visualMode="studio">
         <CardContent className={cn(STACK_MD)}>
           <FormGrid>
-            {/* ===== Base ===== */}
             <div className={cn(STACK_MD)}>
               <Controller
                 name="defaultTitle"
@@ -404,7 +375,6 @@ export function SeoForm({
           <Separator />
 
           <FormGrid>
-            {/* ===== Indexation ===== */}
             <SeoIndexationFields
               control={control}
               isBusy={isBusy}
@@ -419,8 +389,6 @@ export function SeoForm({
               invalidRobots={invalidRobots}
               robotsError={robotsError}
             />
-
-            {/* ===== Twitter ===== */}
 
             <SeoTwitterFields
               control={control}
@@ -442,7 +410,6 @@ export function SeoForm({
 
           <Separator />
 
-          {/* ===== Open Graph ===== */}
           <FormGrid>
             <SeoOpenGraphFields
               control={control}

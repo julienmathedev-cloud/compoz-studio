@@ -1,12 +1,9 @@
 /**
  * @file packages/infra/src/lib/log.ts
  * @layer infra/lib
- * @description
- * Nano-logger isomorphe (server + client) :
- * - niveau minimal via `NEXT_PUBLIC_LOG_LEVEL`,
- * - contexte global (`setContext`) + loggers enfants (`child`),
- * - redaction des clés sensibles,
- * - instrumentation via `logSpan` (start/end + durée + erreur).
+ * @description Isomorphic nano-logger with context merging, redaction, and span tracing.
+ * @remarks
+ * Server logs are serialized as JSON; client logs keep the console-native message/context shape.
  */
 
 import { isAbortError } from "@compoz/infra/http/abort-error";
@@ -24,7 +21,6 @@ export type Logger = Readonly<{
 
 const LEVELS = ["debug", "info", "warn", "error"] as const;
 
-/** Détecte l’environnement d’exécution une seule fois (évite le coût dans emit). */
 const IS_SERVER = typeof window === "undefined";
 
 function isLevel(value: string): value is LogLevel {
@@ -35,10 +31,6 @@ function levelIndex(lvl: LogLevel): number {
   return LEVELS.indexOf(lvl);
 }
 
-/**
- * Normalise le niveau minimal à partir de la variable d’environnement.
- * Si la valeur est inconnue, on retombe sur `"info"`.
- */
 const ENV_LEVEL = String(
   process.env["NEXT_PUBLIC_LOG_LEVEL"] ?? "info",
 ).toLowerCase();
@@ -46,10 +38,9 @@ const ENV_LEVEL = String(
 const MIN: LogLevel = isLevel(ENV_LEVEL) ? ENV_LEVEL : "info";
 const MIN_IDX = levelIndex(MIN);
 
-/** Contexte global léger ajouté à chaque log (ex: app, version, env). */
 let baseCtx: LogCtx = {};
 
-/** Clés qui seront masquées si présentes dans un contexte (comparaison case-insensitive). */
+/** Context keys redacted recursively before logs are emitted. */
 const SENSITIVE_KEY_LIST = [
   "password",
   "token",
@@ -59,12 +50,6 @@ const SENSITIVE_KEY_LIST = [
 
 const SENSITIVE_KEYS = new Set<string>(SENSITIVE_KEY_LIST);
 
-/**
- * Met à jour (merge) le contexte global ajouté à chaque log.
- *
- * - Non destructif sur l’objet : utilise une nouvelle référence à chaque fois.
- * - Les nouvelles clés écrasent les anciennes si elles ont le même nom.
- */
 function setLogContext(ctx?: LogCtx): void {
   if (!ctx) return;
   baseCtx = { ...baseCtx, ...ctx };
@@ -191,14 +176,7 @@ export const log: Logger & Readonly<{ setContext: (ctx?: LogCtx) => void }> = {
   setContext: setLogContext,
 } as const;
 
-/**
- * Instrumente une opération avec start/end (+ durée) et logs d'erreur.
- *
- * @remarks
- * Convention recommandée pour `name` :
- * - `compoz:<surface>:<layer>:<module>` (ex: `compoz:studio:svc:users`)
- * Le helper émettra : `${name}.start|.end|.abort|.error`
- */
+/** Wraps an operation with start/end/error logs and duration metadata. */
 export async function logSpan<T>(
   name: string,
   ctx: LogCtx | undefined,

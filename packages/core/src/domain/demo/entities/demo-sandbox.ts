@@ -1,15 +1,9 @@
 /**
  * @file packages/core/src/domain/demo/entities/demo-sandbox.ts
- * @layer core/domain
- *
- * @description
- * Entité métier représentant une sandbox démo.
- *
+ * @layer core/domain/demo
+ * @description Domain entity representing a temporary demo sandbox.
  * @remarks
- * - Une sandbox démo est un clone temporaire d’un Website seed.
- * - Elle est identifiée par un ID technique unique.
- * - Elle est associée à un utilisateur temporaire.
- * - Elle est associée à un Website cible.
+ * A demo sandbox is a temporary clone of a seed website, linked to a temporary user and target website.
  */
 
 export interface DemoSandbox {

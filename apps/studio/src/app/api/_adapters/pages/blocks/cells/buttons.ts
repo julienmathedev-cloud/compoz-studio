@@ -1,8 +1,9 @@
 /**
  * @file apps/studio/src/app/api/_adapters/pages/blocks/cells/buttons.ts
- * @layer ui/studio/pages/blocks/adapters/cells
+ * @layer studio/app/api/adapters
+ *
  * @description
- * Adapteurs métier pour ButtonsCell.
+ * Studio API adapter for `ButtonsCell` values.
  */
 
 import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";

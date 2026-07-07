@@ -3,13 +3,12 @@
  * @layer site/lib/seo
  *
  * @description
- * Construit les métadonnées SEO d'une page publique publiée.
+ * Builds SEO metadata for a published public page.
  *
  * @remarks
- * - Utilisé par les routes publiques qui définissent des metadata au niveau page.
- * - Évite que les metadata page-level écrasent les metadata Open Graph/Twitter
- *   déclarées au niveau layout sans réinjecter `og:image`, `og:url` ou `twitter:image`.
- * - Les champs SEO sociaux globaux restent pilotés par les settings publiés.
+ * - Used by public routes that define page-level metadata.
+ * - Re-injects Open Graph and Twitter metadata so page-level metadata does not accidentally erase values declared by the layout.
+ * - Global social SEO fields remain driven by published settings.
  */
 
 import type { Metadata } from "next";
@@ -28,17 +27,9 @@ type BuildPageMetadataParams = Readonly<{
   metadataBase?: URL;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
 function trimOptional(value: string | null | undefined): string | undefined {
   return (value ?? "").trim() || undefined;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Metadata builder                                                           */
-/* -------------------------------------------------------------------------- */
 
 export function buildPageMetadata({
   settings,

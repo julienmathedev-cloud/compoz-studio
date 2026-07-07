@@ -1,7 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/cells/card-collection-cell.ui.ts
- * @layer ui/site/skins
- * @description Skin de layout CardCollectionCell du thème Default.
+ * @layer ui/site/skins/default/cells
+ *
+ * @description
+ * Defines the default skin layout classes for card collection cells.
  */
 
 import type { SiteCardCollectionUi } from "@compoz/ui/site/site-ui.types";

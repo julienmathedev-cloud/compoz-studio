@@ -1,10 +1,13 @@
 /**
  * @file packages/validation/src/site/settings/menus/legal-menu/legal-menu.ts
  * @layer schemas
+ *
  * @description
- * Définit le schéma Zod décrivant la forme frontière des réglages du menu légal.
- * Ce schéma valide uniquement la structure des données ; les règles métier et
- * dérivations (ex. liens externes) sont traitées dans le domaine.
+ * Zod schemas describing the legal menu settings boundary shape.
+ *
+ * @remarks
+ * These schemas validate data shape only. Business rules and derived behavior,
+ * such as external-link detection, are handled by the domain layer.
  */
 
 import { MENU_ITEM, MENU_LABEL } from "@compoz/core/constants/limits/menu";
@@ -12,41 +15,21 @@ import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { AssetUrlSchema } from "@compoz/validation/common/url-fragments";
 import { z } from "zod";
 
-/* -------------------------------------------------------------------------- */
-/*                                Item individuel                             */
-/* -------------------------------------------------------------------------- */
-
 export const LegalMenuItemSchema = z
   .object({
-    /**
-     * Identifiant stable de l’item.
-     */
     id: z.string().trim().min(1, ERROR_CODES.LEGAL_MENU_ID_REQUIRED),
 
-    /**
-     * Libellé du lien.
-     * - Côté settings : valeur canonique, donc requis (min/max).
-     */
     label: z
       .string()
       .trim()
       .min(MENU_LABEL.MIN, ERROR_CODES.LEGAL_MENU_LABEL_REQUIRED)
       .max(MENU_LABEL.MAX, ERROR_CODES.LEGAL_MENU_LABEL_TOO_LONG),
 
-    /**
-     * URL / chemin.
-     * - Côté settings : valeur canonique, donc URL valide (asset abs/rel) requise.
-     */
     href: AssetUrlSchema,
 
-    /** Ouverture dans un nouvel onglet. */
     newTab: z.boolean(),
   })
   .strict();
-
-/* -------------------------------------------------------------------------- */
-/*                         Schéma global du menu légal                        */
-/* -------------------------------------------------------------------------- */
 
 export const LegalMenuSettingsSchema = z
   .object({
@@ -55,10 +38,6 @@ export const LegalMenuSettingsSchema = z
     }),
   })
   .strict();
-
-/* -------------------------------------------------------------------------- */
-/*                                Types shape                                 */
-/* -------------------------------------------------------------------------- */
 
 export type LegalMenuItemShape = z.infer<typeof LegalMenuItemSchema>;
 export type LegalMenuSettingsShape = z.infer<typeof LegalMenuSettingsSchema>;

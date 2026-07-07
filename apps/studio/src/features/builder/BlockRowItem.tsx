@@ -2,20 +2,17 @@
 
 /**
  * @file apps/studio/src/features/builder/BlockRowItem.tsx
- * @layer ui/studio/builder
+ * @layer studio/features/builder
  *
  * @description
- * Item d’édition d’une row dans la sidebar du builder Studio.
+ * Sortable Studio builder sidebar item for one block row and its nested cells.
  *
  * @remarks
- * - Composant UI-only.
- * - Gère localement son état replié / déplié.
- * - Intègre son comportement sortable via `useSortable`.
- * - Replie visuellement son contenu pendant un drag de rows,
- *   sans muter l’état local via un effect.
- * - Ajoute un mode dédié de réorganisation des cells.
- * - En mode réorganisation, la tuile entière d’une cell devient draggable.
- * - V1 : reorder limité à la même colonne.
+ * - Manages local collapsed state without mutating it during row dragging.
+ * - Uses `useSortable` for row-level sorting.
+ * - Provides a dedicated cell reordering mode where each cell tile becomes draggable.
+ * - Cell reordering is intentionally limited to the same column in this version.
+ * - Uses a 6px pointer activation distance to avoid accidental drags while clicking controls.
  */
 
 import {
@@ -352,9 +349,7 @@ export function BlockRowItem({
 
 BlockRowItem.displayName = "BlockRowItem";
 
-/* -------------------------------------------------------------------------- */
-/* Internals                                                                  */
-/* -------------------------------------------------------------------------- */
+// Internal sortable cell tile.
 
 type SortableCellTileProps = Readonly<{
   cell: BuilderCell;

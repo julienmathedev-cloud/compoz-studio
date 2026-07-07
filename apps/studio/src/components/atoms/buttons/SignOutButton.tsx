@@ -5,15 +5,11 @@
  * @layer studio/atoms
  *
  * @description
- * Bouton de déconnexion (Auth.js / NextAuth) pour l’interface Studio.
+ * Studio sign-out button for Auth.js / NextAuth.
  *
  * @remarks
- * - Atome UI : aucune logique métier.
- * - Appelle `signOut()` côté client.
- * - Redirige vers la page de login localisée après déconnexion.
- * - Conserve une destination `next` localisée pour éviter de revenir
- *   sur la locale par défaut après reconnexion.
- * - Utilise TooltipButton + StudioIcon (standard header).
+ * - Redirects to the localized sign-in page after sign-out.
+ * - Preserves a localized `next` destination to avoid returning to the default locale after sign-in.
  */
 
 import { LogOut } from "lucide-react";
@@ -23,9 +19,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
 import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
 
-/**
- * Déconnecte l’utilisateur et renvoie vers `/[locale]/signin?next=/[locale]`.
- */
 export function SignOutButton() {
   const locale = useLocale();
   const t = useTranslations();

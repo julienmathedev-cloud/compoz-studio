@@ -2,19 +2,17 @@
 
 /**
  * @file apps/studio/src/features/builder/BuilderSidebar.tsx
- * @layer ui/studio/builder
+ * @layer studio/features/builder
  *
  * @description
- * Panneau latéral du builder Studio.
+ * Studio builder sidebar for block settings, row structure, and save/reset actions.
  *
  * @remarks
- * - Panneau simple (sans Sidebar Shadcn).
- * - Header fixe sans badge de statut.
- * - Infos globales du block en zone fixe.
- * - ScrollArea dédiée uniquement à la liste des rows.
- * - Footer avec ActionsBar fixé en bas dans la même surface visuelle.
- * - Ne dépend plus de `useFormContext()` :
- *   le parent passe explicitement `control`, `setValue` et `clearErrors`.
+ * - Keeps block-level fields fixed above a dedicated rows `ScrollArea`.
+ * - Passes RHF helpers explicitly from the parent instead of relying on `useFormContext()`.
+ * - Backfills missing row and column ids without dirtying, touching, or validating the form.
+ * - Guards destructive column-count reductions when they would remove meaningful cell content.
+ * - Uses dnd-kit for row sorting while delegating nested cell sorting to `BlockRowItem`.
  */
 
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
@@ -557,7 +555,9 @@ export function BuilderSidebar({
                 render={({ field }) => (
                   <InputField
                     ids={cssClassNameIds}
-                    label={t("studio.builder.sidebar.section.cssClassName.label")}
+                    label={t(
+                      "studio.builder.sidebar.section.cssClassName.label",
+                    )}
                     help={t("studio.builder.sidebar.section.cssClassName.help")}
                     value={field.value ?? ""}
                     onChange={(value) => field.onChange(value)}

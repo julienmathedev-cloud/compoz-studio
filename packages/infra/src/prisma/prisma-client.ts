@@ -1,19 +1,9 @@
 /**
  * @file packages/infra/src/prisma/prisma-client.ts
  * @layer infra/prisma
- *
- * @description
- * Shared Prisma Client instance used by infrastructure repositories.
- *
+ * @description Shared Prisma Client singleton for infrastructure repositories.
  * @remarks
- * In Prisma 7, PostgreSQL connections require a driver adapter.
- *
- * In development, Next.js hot reload can re-evaluate modules multiple times.
- * Without a global cache, this may create too many PrismaClient instances.
- *
- * This file exposes a singleton Prisma client:
- * - reused across hot reloads in development,
- * - created normally in production/runtime environments.
+ * Prisma 7 requires a PostgreSQL driver adapter; development uses a global cache to survive Next.js hot reloads.
  */
 
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -38,14 +28,6 @@ function createPrismaClient(): PrismaClient {
   });
 }
 
-/**
- * Shared Prisma Client instance.
- *
- * @remarks
- * Repositories should import this instance instead of creating their own
- * PrismaClient. This keeps database access centralized and prevents
- * connection duplication during development.
- */
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {

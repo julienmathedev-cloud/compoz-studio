@@ -1,3 +1,11 @@
+/**
+ * @file packages/validation/src/site/settings/identity/identity-form.ts
+ * @layer schemas
+ *
+ * @description
+ * Zod schema describing the identity settings UI form shape.
+ */
+
 import {
   IDENTITY_SITENAME,
   IDENTITY_TAGLINE,
@@ -20,7 +28,9 @@ export const IdentityFormSchema = z
 
     logo: z.union([ImageSchema, z.null()]),
 
-    // Form: toujours string pour rester contrôlé côté UI
+    /**
+     * Kept as a string so the favicon input remains controlled in the UI.
+     */
     faviconUrl: z.string().trim(),
 
     faviconMediaAssetId: z.string().trim().min(1).optional(),

@@ -2,10 +2,14 @@
 
 /**
  * @file apps/studio/src/features/dnd/SortableItem.tsx
- * @layer ui/studio/dnd
+ * @layer studio/features/dnd
  *
  * @description
- * Élément triable générique basé sur dnd-kit.
+ * Generic dnd-kit sortable wrapper for Studio list items.
+ *
+ * @remarks
+ * - Owns the sortable node ref and transform style.
+ * - Exposes dnd-kit attributes and listeners through a render prop so callers can attach them to their chosen handle.
  */
 
 import type { ReactNode } from "react";

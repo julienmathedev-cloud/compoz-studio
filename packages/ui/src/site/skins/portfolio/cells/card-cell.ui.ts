@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/portfolio/cells/card-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/portfolio/cells
  *
  * @description
- * Skin UI — cards cell (thème Portfolio).
+ * Defines the portfolio skin overrides for card cells.
  */
 
 import type { SiteCardUiOverride } from "@compoz/ui/site/site-ui.types";

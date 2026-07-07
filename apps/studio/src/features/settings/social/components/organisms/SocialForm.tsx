@@ -1,18 +1,16 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/settings/social/SocialForm.tsx
- * @layer ui/studio/organisms
+ * @file apps/studio/src/features/settings/social/components/organisms/SocialForm.tsx
+ * @layer studio/features/settings/social/components/organisms
  *
  * @description
- * Formulaire d’édition des liens sociaux (liste éditable) — RHF + Zod comme source de vérité UI.
+ * RHF and Zod-backed studio form for editing social links.
  *
  * @remarks
- * - Contrôlé : le parent fournit `initialValues` et reçoit `onSubmit`.
- * - Les items sont gérés via `useFieldArray` et une row dédiée (obligatoire pour `useController`).
- * - Les erreurs bloquantes sont affichées au plus près des champs (au niveau row).
- * - Les warnings UI (non bloquants) sont dérivés des valeurs RHF live et remontés au parent.
- * - UX : focus / scroll sur la première erreur au submit (IDs stables, sans ref).
+ * - Uses `useFieldArray` with a dedicated row so each social item owns its controllers.
+ * - Reports UI warnings, blocking error count, value changes, and dirty state to the parent section.
+ * - Focuses the first row-level blocking error after a failed submit.
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,42 +56,27 @@ import {
   type SocialItemFormValues,
 } from "@compoz/validation/site/settings/social/social-form";
 
-/**
- * Props du composant `SocialForm`.
- */
 type SocialFormProps = Readonly<{
-  /** Valeurs initiales (baseline) fournies par la section. */
   initialValues: SocialFormValues;
 
-  /** Indique qu’une sauvegarde est en cours côté parent. */
   isSaving?: boolean;
 
-  /** Callback appelé avec des valeurs validées par Zod (`SocialFormSchema`). */
   onSubmit: (values: SocialFormValues) => void | Promise<void>;
 
-  /** Handler optionnel : permet au parent de réagir à un reset UI. */
   onReset?: () => void;
 
-  /** Handler optionnel : remonte les warnings UI (non bloquants). */
   onWarningKeysChange?: (keys: SocialWarningKey[]) => void;
 
-  /** Handler optionnel : remonte les valeurs live (preview draft). */
   onValuesChange?: (values: SocialFormValues) => void;
 
-  /** Handler optionnel : remonte le nombre d’erreurs bloquantes (badge “error”). */
   onBlockingErrorsCountChange?: (count: number) => void;
 
-  /** Handler optionnel : remonte l’état dirty (guard / navigation). */
   onDirtyChange?: (dirty: boolean) => void;
 }>;
 
-// Types UI locaux (erreurs / invalid par champ).
 type RowErrorMessages = Partial<Record<"kind" | "href", string | undefined>>;
 type RowInvalidFlags = Partial<Record<"kind" | "href", boolean>>;
 
-/**
- * Props de la row RHF (un item social).
- */
 type SocialItemRowProps = Readonly<{
   index: number;
   field: FieldArrayWithId<SocialFormValues, "items", "fieldId">;
@@ -111,9 +94,7 @@ type SocialItemRowProps = Readonly<{
   onMoveDown: () => void;
 }>;
 
-/**
- * Row RHF (un item) — construit `invalid` / `error` depuis `fieldState`.
- */
+/** RHF-connected row for one social item. */
 function SocialItemRow({
   index,
   field,
@@ -162,6 +143,7 @@ function SocialItemRow({
         : undefined,
   };
 
+  /** Forces href validation after programmatic link-field updates. */
   const validateHrefNow = (markTouched?: boolean) => {
     if (markTouched) {
       hrefCtrl.field.onBlur();
@@ -170,6 +152,7 @@ function SocialItemRow({
     void trigger(`items.${index}.href` as const);
   };
 
+  /** Clears href without validation so switching email/URL mode preserves PATCH intent. */
   const clearHrefBySwitch = () => {
     const name = `items.${index}.href` as const;
 
@@ -212,9 +195,6 @@ function SocialItemRow({
   );
 }
 
-/**
- * Formulaire de configuration des liens sociaux (studio).
- */
 export function SocialForm({
   initialValues,
   isSaving,
@@ -245,7 +225,7 @@ export function SocialForm({
     onDirtyChange,
   });
 
-  // État “scopé” sur items : rerender quand errors / touched sous items bougent.
+  // Subscribe to item-level form state so row errors update without watching the whole form state.
   const itemsState = useFormState({ control, name: "items" });
 
   const [hasSubmittedOnce, setHasSubmittedOnce] = useState(false);
@@ -281,7 +261,7 @@ export function SocialForm({
 
   const showError = hasSubmittedOnce || submitCount > 0;
 
-  // Compteur d’erreurs bloquantes (pour badge section).
+  // Section badges count row-level blocking errors from the current field-array state.
   const blockingErrorsCount = useMemo(() => {
     const items = values.items ?? [];
     let count = 0;

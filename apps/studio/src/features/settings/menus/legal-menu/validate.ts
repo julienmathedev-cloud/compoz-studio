@@ -1,15 +1,15 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/settings/legal-menu/validate.ts
- * @layer hooks/studio/site/legal-menu
+ * @file apps/studio/src/features/settings/menus/legal-menu/validate.ts
+ * @layer studio/features/settings/menus/legal-menu
  *
  * @description
- * Helpers et hooks de validation UI non bloquante pour le menu légal.
+ * Non-blocking studio warning helpers for the legal menu.
  *
  * @remarks
- * - Validation métier assurée par le domaine (Zod + use-cases serveur).
- * - Ici : UX uniquement (warnings légers, cohérence et doublons).
+ * - Domain validation remains handled by Zod and server use cases.
+ * - These warnings only support editor UX: consistency checks, duplicates, and draft-friendly href hints.
  */
 
 import { useMemo } from "react";
@@ -20,11 +20,6 @@ import { resolveLinkFlags } from "@compoz/ui/lib/links/helpers";
 import { hrefCompareKey, labelCompareKey } from "@compoz/ui/lib/urls/compare";
 import type { LegalMenuItemFormValues } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-form";
 
-/* ────────────────────────────── 2) Warnings UI (non-bloquants) ───────────────────────────── */
-
-/**
- * Clés stables des warnings UI du menu légal.
- */
 export type LegalMenuWarningKey =
   | "legalMenuEmpty"
   | "dupLabelsTop"
@@ -33,24 +28,18 @@ export type LegalMenuWarningKey =
   | "externalPrefixOnly"
   | "internalHrefNotFound";
 
-/**
- * Paramètres nécessaires au calcul des warnings UI du menu légal.
- */
 type WarningProps = {
   items: ReadonlyArray<LegalMenuItemFormValues>;
   hrefSet?: ReadonlySet<string>;
 };
 
-/**
- * Calcule les warnings UI associés à un brouillon de menu légal.
- */
 export function computeLegalMenuWarnings(
   props: WarningProps,
 ): LegalMenuWarningKey[] {
   const { items, hrefSet } = props;
   const out = new Set<LegalMenuWarningKey>();
 
-  // Aucun élément → footer légal vide
+  // An empty legal footer is allowed but should stay visible to the editor.
   if (!items || items.length === 0) {
     out.add("legalMenuEmpty");
     return Array.from(out);
@@ -69,23 +58,21 @@ export function computeLegalMenuWarnings(
     labelKeys.push(labelKey);
     hrefKeys.push(hrefKey);
 
-    // Option 1 : externe dérivé depuis href
     const href = (it.href ?? "").trim();
     const flags = resolveLinkFlags(href);
     const isExternal = flags.rawExternal;
 
-    // Lien externe sans ouverture dans un nouvel onglet
+    // External links are safer when they do not replace the edited site preview.
     if (isExternal && !it.newTab) {
       hasExternalNoNewTab = true;
     }
 
-    // Forme douteuse du href : "http" / "https" sans URL complète
-    // ("/" est accepté comme homepage)
+    // Keep prefix-only URLs editable, but surface them as likely unfinished external links.
     if (href !== "/" && isHttpPrefixOnly(href)) {
       hasExternalPrefixOnly = true;
     }
 
-    // Contrôle de cohérence pour les liens internes : doivent exister dans hrefSet
+    // Internal links should match the current published/draft page href set when available.
     if (!isExternal) {
       if (
         href &&
@@ -99,7 +86,6 @@ export function computeLegalMenuWarnings(
     }
   }
 
-  // Doublons sur les libellés et les href top-level
   if (hasDuplicates(labelKeys)) {
     out.add("dupLabelsTop");
   }
@@ -119,9 +105,6 @@ export function computeLegalMenuWarnings(
   return Array.from(out);
 }
 
-/**
- * Hook retournant les warnings UI du menu légal à partir des valeurs courantes.
- */
 export function useLegalMenuUiWarnings(
   items: ReadonlyArray<LegalMenuItemFormValues>,
   hrefSet?: ReadonlySet<string>,

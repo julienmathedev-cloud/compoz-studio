@@ -5,13 +5,13 @@
  * @layer studio/app
  *
  * @description
- * Error boundary UI pour la route "/draft".
- * Affiche un fallback stable + actions (réessayer + retour accueil).
+ * Error boundary UI for the `/draft` route.
+ * Displays a stable fallback with retry and home actions.
  *
  * @remarks
- * - Composant client obligatoire (Next.js error boundary).
- * - UI skinnable via `SiteUiProvider` : `ui.systemPage`.
- * - Convention V0.5 : draft preview = "/draft" (pas de querystring state).
+ * - Must be a client component for the Next.js error boundary.
+ * - UI is skinnable through `SiteUiProvider`: `ui.systemPage`.
+ * - V0.5 convention: draft preview uses `/draft` without a state querystring.
  */
 
 import Link from "next/link";

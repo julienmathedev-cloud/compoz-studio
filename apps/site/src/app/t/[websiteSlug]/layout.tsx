@@ -3,14 +3,13 @@
  * @layer site/app
  *
  * @description
- * Layout public du fallback explicite `/t/:websiteSlug`.
+ * Explicit public fallback layout for routes under `/t/:websiteSlug`.
  *
  * @remarks
- * - Le paramètre de route `websiteSlug` correspond au Prisma `Website.slug`.
- * - Le Website est résolu via Prisma avant de charger les settings publiés.
- * - Les loaders de contenu utilisent le Prisma `Website.id`.
- * - L’UI/skin utilise le Prisma `Website.slug`.
- * - Les routes host-based possèdent leur propre layout dans `(hosted)`.
+ * - The `websiteSlug` route segment is Prisma `Website.slug`.
+ * - Resolves the Website through Prisma before loading published settings.
+ * - Content loaders use Prisma `Website.id`, while UI and skin resolution use Prisma `Website.slug`.
+ * - Host-based routes have their own dedicated layout in `(hosted)`.
  */
 
 import type { Metadata } from "next";
@@ -57,10 +56,7 @@ type WebsiteSlugLayoutProps = Readonly<{
   >;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
+/** Builds a complete favicon metadata set when the stored icon follows the generated size naming convention. */
 function buildFaviconIcons(favicon: string): Icons {
   if (favicon.includes("-32.png")) {
     return {
@@ -124,10 +120,6 @@ async function resolveWebsiteFromParams(
   return website;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Metadata                                                                   */
-/* -------------------------------------------------------------------------- */
-
 export async function generateMetadata({
   params,
 }: Omit<WebsiteSlugLayoutProps, "children">): Promise<Metadata> {
@@ -160,6 +152,7 @@ export async function generateMetadata({
 
   const robotsContent = (settings.seo?.robots ?? "").trim() || undefined;
   const isProd = process.env.NODE_ENV === "production";
+  // Avoid indexing production fallback routes until a canonical base URL or explicit robots directive is configured.
   const shouldForceNoindex = isProd && !metadataBase && !robotsContent;
   const robots =
     robotsContent ?? (shouldForceNoindex ? "noindex, nofollow" : undefined);
@@ -190,10 +183,6 @@ export async function generateMetadata({
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Layout                                                                     */
-/* -------------------------------------------------------------------------- */
-
 export default async function WebsiteSlugSiteLayout({
   children,
   params,
@@ -210,12 +199,14 @@ export default async function WebsiteSlugSiteLayout({
     settings?.theme?.headingFont,
   );
 
+  // Skin CSS is resolved from the Website slug, not from the Prisma Website id.
   const skinCssHref = resolveSiteSkinCssHref(websiteSlug);
 
   const fontStyle = Object.fromEntries(
     publicFonts.map((font) => [font.variableName, font.fontFamily]),
   ) as CSSProperties;
 
+  // Preload only the fonts selected by the published theme.
   for (const font of publicFonts) {
     preload(font.preloadHref, {
       as: "font",

@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/entities/cells/form.ts
  * @layer core/domain/pages
- * @description
- * Entité métier FormCell (formulaire de contact).
+ * @description Contact form cell domain entity.
  */
 
 import type {
@@ -29,28 +28,13 @@ export type FormCell = {
   kind: "form";
   cssClassName?: string;
 
-  /**
-   * Destination du formulaire au format `mailto:`
-   */
   to: string;
 
-  /**
-   * Bouton de soumission
-   */
   submitButton: FormSubmitButton;
 
-  /**
-   * Message affiché après envoi réussi
-   */
   successMessage: string | null;
 
-  /**
-   * Message affiché en cas d'erreur
-   */
   errorMessage: string | null;
 
-  /**
-   * Champs du formulaire
-   */
   fields: ReadonlyArray<FormField>;
 };

@@ -1,15 +1,12 @@
 /**
  * @file packages/ui/src/site/components/molecules/SiteCard.tsx
- * @layer ui/site/molecules
+ * @layer ui/site/components/molecules
  *
  * @description
- * Carte publique simple utilisée par les cellules marketing du site.
+ * Renders a simple public site card for marketing-oriented cell grids.
  *
  * @remarks
- * - Repose sur les primitives Card ShadCN.
- * - Sert de brique UI pour les grilles de type `cards`.
- * - Gère un titre, une description et une icône optionnelle.
- * - L’alignement est piloté par le parent via prop `align`.
+ * Uses shared card primitives while leaving alignment and visual styling to the parent-provided skin classes.
  */
 
 import type { ReactNode } from "react";

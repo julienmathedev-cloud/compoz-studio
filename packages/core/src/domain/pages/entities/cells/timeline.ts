@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/entities/cells/timeline.ts
  * @layer core/domain/pages
- * @description
- * Entité métier TimelineCell.
+ * @description Timeline cell domain entity.
  */
 
 export type TimelineItem = {

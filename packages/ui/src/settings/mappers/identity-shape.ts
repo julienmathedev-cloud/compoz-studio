@@ -3,24 +3,16 @@
  * @layer ui/settings/mappers
  *
  * @description
- * Mapper "shared runtime" Identity :
- * - DTO domaine -> IdentitySettingsShape (frontière stable)
+ * Maps identity settings DTOs to stable runtime identity settings shapes shared by site rendering and Studio preview.
  *
  * @remarks
- * - Utilisé côté site (public) et côté studio (preview/renderer) dès que tu veux
- *   une shape frontière à partir d’un DTO.
- * - Pas d’intents API ici.
- * - Pas de logique RHF ici.
+ * API intents and form-oriented normalization stay outside this boundary mapper.
  */
 
 import type { IdentitySettingsDTO } from "@compoz/core/domain/site/dto";
 import type { IdentitySettingsShape } from "@compoz/validation/site/settings/identity/identity";
 
 import { assetUiToSettings, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function optionalTrimmedString(
   value: string | null | undefined,
@@ -29,10 +21,6 @@ function optionalTrimmedString(
 
   return trimmed ? trimmed : undefined;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Mapper                                                                     */
-/* -------------------------------------------------------------------------- */
 
 export function toIdentitySettingsShapeFromDTO(
   dto: IdentitySettingsDTO | null | undefined,

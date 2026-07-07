@@ -5,12 +5,11 @@
  * @layer studio/atoms
  *
  * @description
- * Bouton avec tooltip pour l’interface Studio.
+ * Studio button with tooltip support.
  *
  * @remarks
- * - Atome UI : aucune logique métier.
- * - Wrapper autour de `Button` et des composants tooltip (ShadCN).
- * - Gère le cas `disabled` pour préserver l’accessibilité du tooltip.
+ * - Wraps `Button` and the ShadCN tooltip components.
+ * - Handles the `disabled` case to preserve tooltip accessibility.
  */
 
 import type { ComponentProps, ReactNode } from "react";
@@ -24,30 +23,16 @@ import {
 } from "@compoz/ui/components/ui/tooltip";
 import { cn } from "@compoz/ui/lib/utils";
 
-/**
- * Props du composant `TooltipButton`.
- */
 export type TooltipButtonProps = ComponentProps<typeof Button> &
   Readonly<{
-    /** Contenu du tooltip. */
     tooltip?: ReactNode;
-    /** Position du tooltip. */
     side?: "top" | "right" | "bottom" | "left";
-    /** Alignement du tooltip. */
     align?: "start" | "center" | "end";
-    /** Délai d’affichage du tooltip (ms). */
     delayDuration?: number;
   }>;
 
 /**
- * Bouton standardisé avec tooltip (Studio).
- *
- * @remarks
- * - Si `tooltip` est falsy, rend directement `<Button />`.
- * - Si `disabled`, enveloppe le bouton dans un wrapper focusable pour
- *   permettre l’affichage du tooltip (pattern Radix/ShadCN).
- * - Le wrapper reprend la largeur du parent pour éviter les régressions
- *   de layout sur les boutons `w-full`.
+ * Keeps disabled buttons tooltip-accessible without breaking layout-sensitive button widths.
  */
 export function TooltipButton({
   tooltip,

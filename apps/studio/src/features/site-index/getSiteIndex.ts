@@ -2,18 +2,15 @@
 
 /**
  * @file apps/studio/src/features/site-index/getSiteIndex.ts
- * @layer hooks/studio/site-index
+ * @layer studio/features/site-index
  *
  * @description
- * Helper cache-first pour obtenir le SiteIndex.
+ * Cache-first helper for reading the Studio SiteIndex.
  *
  * @remarks
- * - Centralise la logique cache -> fetchQuery fallback.
- * - Utilisable depuis d’autres hooks pages/menus/etc. sans multiplier les reads.
- * - Aligné sur le pattern `getSettingsBundle`.
- * - Website-scoped : la queryKey inclut Prisma Website.id pour éviter les
- *   collisions de cache lors d’un switch de Website actif.
- * - UI-only : aucune logique métier.
+ * - Returns the cached SiteIndex when present, otherwise falls back to `fetchQuery`.
+ * - Shared by page, menu, and settings hooks to avoid duplicated SiteIndex reads.
+ * - Query keys are scoped by Prisma Website.id to avoid cache collisions when switching the active website.
  */
 
 import type { QueryClient } from "@tanstack/react-query";
@@ -36,12 +33,11 @@ function requireWebsiteId(value: unknown, field = "websiteId"): string {
 }
 
 /**
- * Lit le SiteIndex en cache-first.
+ * Reads the SiteIndex from React Query cache or fetches it through the shared query key.
  *
  * @remarks
- * - Retourne le cache si présent.
- * - Sinon déclenche un `fetchQuery`, dedupe par queryKey.
- * - `opts.signal`, si fourni, prend le dessus sur le `signal` React Query.
+ * - `fetchQuery` deduplicates concurrent reads for the same key.
+ * - `opts.signal`, when provided, takes precedence over the React Query signal.
  */
 export async function getSiteIndex(
   queryClient: QueryClient,

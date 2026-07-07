@@ -1,24 +1,18 @@
 /**
  * @file apps/studio/src/features/pages/cache/keys.ts
- * @layer hooks/studio/pages
+ * @layer studio/features/pages/cache
  *
  * @description
- * Helpers pour construire des query keys React Query liées aux pages.
+ * React Query key helpers for Studio page caches.
  *
  * @remarks
- * - Website-scoped : préfixe `["w", websiteId, ...]`
- *   pour éviter les collisions de cache lors d’un switch Website.
- * - Le scope utilisé ici est Prisma Website.id.
+ * - Prefixes keys with `["w", websiteId, ...]` to avoid cache collisions when switching Website.
+ * - Studio page caches are scoped by Prisma Website.id and content state.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 
-/**
- * Source de vérité : query key "page by id".
- *
- * @remarks
- * Permet de seed / patch le cache depuis les mutations create / update / delete.
- */
+/** Page-by-id cache key used by page and block mutations to seed or patch cached pages. */
 export function pageByIdKey(
   websiteId: string,
   pageId: string,

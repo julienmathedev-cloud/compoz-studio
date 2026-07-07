@@ -1,29 +1,14 @@
 "use client";
 
 /**
- * @file ui/src/settings/theme/ThemeProvider.tsx
- * @layer ui/runtime/theme
+ * @file packages/ui/src/settings/theme/ThemeProvider.tsx
+ * @layer ui/settings/theme
  *
  * @description
- * Provider runtime appliquant les variables CSS du thème
- * et exposant le thème courant via un contexte React.
+ * Applies runtime theme CSS variables and exposes the current theme through React context.
  *
  * @remarks
- * Utilisé par :
- * - preview studio
- * - site draft
- * - site public
- *
- * Responsabilités runtime :
- * - appliquer les variables CSS
- * - appliquer la police
- * - appliquer la classe dark si nécessaire
- * - exposer `theme` via `useTheme()`
- *
- * Ce provider reste volontairement simple :
- * - application visuelle du thème via wrapper DOM
- * - exposition du thème courant via contexte dédié
- * - stabilisation des valeurs via `useMemo`
+ * Shared by Studio preview, draft rendering, and public rendering; visual theme application stays isolated in this DOM boundary.
  */
 
 import type { CSSProperties, PropsWithChildren } from "react";
@@ -33,12 +18,10 @@ import { themeSettingsToCssVars } from "@compoz/ui/settings/theme/theme-css-vars
 import type { ThemeSettingsShape } from "@compoz/validation/site/settings/theme/theme";
 
 type ThemeProviderProps = PropsWithChildren<{
-  /** Settings de thème à appliquer au runtime. */
   theme: ThemeSettingsShape | null | undefined;
 }>;
 
 type ThemeContextValue = Readonly<{
-  /** Thème courant normalisé. */
   theme: ThemeSettingsShape | null;
 }>;
 

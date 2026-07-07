@@ -2,20 +2,15 @@
 
 /**
  * @file apps/studio/src/features/theme/StudioThemeScope.tsx
- * @layer ui/theme
+ * @layer studio/features/theme
  *
  * @description
- * Scope de thème Studio : applique la classe `.studio-theme` sur `<html>`
- * afin de couvrir les portals (Radix).
+ * Applies Studio theme scope classes to the document root.
  *
  * @remarks
- * - Nécessaire pour les composants Radix rendus via Portal
- *   (Select, Popover, Dialog, etc.).
- * - Garantit que les variables CSS et styles de thème s’appliquent
- *   hors du wrapper React.
- * - Composant à effet de bord uniquement : ne rend aucun JSX.
- * - À utiliser exclusivement dans le layout Studio.
- * - Strictement UI-only.
+ * - Required for Radix components rendered through portals, such as Select, Popover, and Dialog.
+ * - Applies theme variables outside the React wrapper by setting classes on `<html>`.
+ * - Side-effect-only component intended for the Studio layout.
  */
 
 import { useLayoutEffect } from "react";

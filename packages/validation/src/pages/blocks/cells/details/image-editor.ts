@@ -1,8 +1,8 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/details/image-editor.ts
- * @layer schemas
+ * @layer validation/pages/blocks/cells/details
  * @description
- * Schémas Zod de ImageCell et ImageEditor.
+ * Defines Zod schemas for image cell and editor data.
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";

@@ -2,30 +2,24 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/validate.ts
- * @layer hooks/studio/pages/blocks
+ * @layer studio/features/pages/blocks
  *
  * @description
- * Helpers et hooks de validation UI pour les blocks (warnings légers).
+ * UI warning helpers for draft section block forms.
  *
  * @remarks
- * - Validation métier assurée par le domaine (Zod + use-cases serveur).
- * - Ici : UX uniquement (warnings, incohérences mineures).
- * - V0.5 : uniquement LayoutSectionBlock.
+ * - Domain validation stays in Zod schemas and server use-cases.
+ * - These helpers only surface lightweight UX warnings while editing.
+ * - Currently targets section block form values only.
  */
 
 import { useMemo } from "react";
 
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 
-/* ─────────────────────────── Types ─────────────────────────── */
-
 export type BlockWarningKey = "titleMissing" | "titleLooksThin" | "titleSrOnly";
 
-/* ─────────────────────────── Warnings (PURE + hook) ─────────────────────────── */
-
-/**
- * Calcule les warnings UI pour un LayoutSectionBlock.
- */
+/** Computes lightweight UI warnings for a section block form. */
 export function computeLayoutSectionBlockWarnings(
   values: SectionBlockFormValues,
 ): BlockWarningKey[] {
@@ -43,9 +37,7 @@ export function computeLayoutSectionBlockWarnings(
   return Array.from(warnings);
 }
 
-/**
- * Hook retournant les warnings UI d’un LayoutSectionBlock (form).
- */
+/** Memoizes section block UI warnings for form consumers. */
 export function useLayoutSectionBlockUiWarnings(
   values: SectionBlockFormValues,
 ): BlockWarningKey[] {

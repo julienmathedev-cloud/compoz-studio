@@ -2,12 +2,12 @@
  * @file apps/studio/src/lib/ui/uiError.ts
  * @layer studio/lib/ui
  * @description
- * Source de vérité des tokens d’erreur utilisés par l’UI du Studio.
+ * Source of truth for Studio UI error tokens.
  *
  * @remarks
- * - Utilisés par `notify` pour afficher les toasts.
- * - Les clés sont résolues par i18n sous `uiErrors.<token>`.
- * - Les tokens HTTP sont séparés en `title` et `description`.
+ * - Used by `notify` to display toast messages.
+ * - Keys resolve through i18n under `uiErrors.<token>`.
+ * - HTTP tokens are split between title and description variants.
  */
 
 export const UiError = {

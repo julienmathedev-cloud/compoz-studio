@@ -1,6 +1,8 @@
 /**
  * @file eslint.config.mjs
- * @description ESLint config (monorepo) — règles communes + frontières clean archi.
+ *
+ * @description
+ * ESLint configuration for the Compoz monorepo.
  */
 
 import tsPlugin from "@typescript-eslint/eslint-plugin";
@@ -15,11 +17,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export default defineConfig([
-  /* Next presets UNIQUEMENT dans les apps */
+  // Next.js presets only apply to app packages.
   ...nextVitals.map((c) => ({ ...c, files: ["apps/**/*.{js,jsx,ts,tsx}"] })),
   ...nextTs.map((c) => ({ ...c, files: ["apps/**/*.{js,jsx,ts,tsx}"] })),
 
-  /* 1) Règles communes TS/TSX */
+  // Shared TypeScript rules.
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
@@ -56,17 +58,13 @@ export default defineConfig([
     },
   },
 
-  /* -------------------------------------------------------------------------- */
-  /* 2) Exception contrôlée : logger central                                     */
-  /* -------------------------------------------------------------------------- */
+  // Central logger is the only allowed console boundary.
   {
     files: ["packages/infra/src/lib/log.ts"],
     rules: { "no-console": "off" },
   },
 
-  /* -------------------------------------------------------------------------- */
-  /* 3) Barrels : pas d’export direct de *Schema                                  */
-  /* -------------------------------------------------------------------------- */
+  // Barrels must not re-export Zod schemas directly.
   {
     files: ["**/src/**/index.ts", "**/src/**/index.tsx"],
     rules: {
@@ -82,9 +80,7 @@ export default defineConfig([
     },
   },
 
-  /* -------------------------------------------------------------------------- */
-  /* 4) Frontière du domaine (package core)                                      */
-  /* -------------------------------------------------------------------------- */
+  // Domain code must use typed application errors.
   {
     files: [
       "packages/core/src/domain/**/*.ts",
@@ -102,9 +98,7 @@ export default defineConfig([
     },
   },
 
-  /* -------------------------------------------------------------------------- */
-  /* 5) Schémas Zod (core) : pas de .default() ni .transform()                   */
-  /* -------------------------------------------------------------------------- */
+  // Core schemas must stay free of defaults and normalization side effects.
   {
     files: ["packages/core/src/schemas/**/*.ts"],
     rules: {
@@ -124,9 +118,7 @@ export default defineConfig([
     },
   },
 
-  /* -------------------------------------------------------------------------- */
-  /* 6) Routes API (apps) : pas de parse/safeParse direct                         */
-  /* -------------------------------------------------------------------------- */
+  // API routes must go through shared DTO parsing helpers.
   {
     files: ["apps/*/src/app/api/**/*.{ts,tsx}"],
     rules: {
@@ -146,38 +138,6 @@ export default defineConfig([
     },
   },
 
-  /* -------------------------------------------------------------------------- */
-  /* 7) Bloc type-aware (limité au core pour démarrer)                           */
-  /* -------------------------------------------------------------------------- */
-  {
-    files: ["packages/core/src/**/*.ts"],
-    languageOptions: {
-      parser: tsParser,
-      parserOptions: {
-        project: ["./packages/core/tsconfig.json"],
-        tsconfigRootDir: __dirname,
-      },
-    },
-    rules: {
-      "@typescript-eslint/consistent-type-exports": "error",
-      "@typescript-eslint/await-thenable": "error",
-      "@typescript-eslint/no-misused-promises": [
-        "error",
-        { checksVoidReturn: { attributes: false } },
-      ],
-      "@typescript-eslint/no-floating-promises": "error",
-      "@typescript-eslint/no-unnecessary-type-assertion": "error",
-      "@typescript-eslint/return-await": ["error", "in-try-catch"],
-      "@typescript-eslint/restrict-template-expressions": [
-        "error",
-        { allowNumber: true, allowBoolean: true },
-      ],
-    },
-  },
-
-  /* -------------------------------------------------------------------------- */
-  /* 8) Ignores globaux                                                         */
-  /* -------------------------------------------------------------------------- */
   {
     ignores: [
       "**/node_modules/**",
@@ -190,9 +150,11 @@ export default defineConfig([
       "**/.turbo/**",
       "**/dist/**",
       "**/.vercel/**",
+      "**/packages/infra/src/prisma/generated/**",
     ],
   },
 
+  // Type-aware rules are limited to core for now to keep linting cost controlled.
   {
     files: ["packages/core/src/**/*.ts"],
     languageOptions: {

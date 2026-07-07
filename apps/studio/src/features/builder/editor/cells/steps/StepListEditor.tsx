@@ -2,20 +2,17 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/steps/StepListEditor.tsx
- * @layer ui/studio/pages/blocks/editor/steps
+ * @layer studio/features/builder/editor/cells/steps
  *
  * @description
- * Éditeur UI de liste d’étapes (add/remove/reorder) pour StepsCell.
+ * RHF-aware list editor for StepsCell items, including add, remove, and reorder actions.
  *
  * @remarks
- * - S’appuie sur `useFieldArray` côté parent (`StepsCellEditor`).
- * - Le reorder est géré par drag and drop via dnd-kit.
- * - Les updates métier (append/remove/move) sont déléguées à RHF.
- * - Les clés React utilisent `fieldId`, alors que le DnD s’appuie
- *   sur l’`id` métier stable de chaque étape.
- * - Le reorder s’appuie sur `move()` pour conserver l’état RHF.
- * - Les valeurs live restent lues via `watchedItems` et transmises
- *   au sous-éditeur pour stabiliser le rendu pendant le rebinding.
+ * - Receives `useFieldArray` actions from `StepsCellEditor`.
+ * - Reordering is handled by dnd-kit while append/remove/move stay delegated to RHF.
+ * - React keys use RHF `fieldId`; dnd-kit uses each step item's stable domain `id`.
+ * - Uses `move()` to preserve RHF state while reordering.
+ * - Passes `watchedItems` to nested editors to keep rendering stable during RHF rebinding.
  */
 
 import {

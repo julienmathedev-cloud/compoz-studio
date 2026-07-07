@@ -1,6 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/factories/create-section-block.ts
  * @layer core/domain/pages
+ * @description Factory for creating a default section block entity.
  */
 
 import { randomUUID } from "crypto";

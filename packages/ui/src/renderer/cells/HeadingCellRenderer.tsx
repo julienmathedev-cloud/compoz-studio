@@ -3,18 +3,10 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer site/preview : rendu d’un heading avec gestion du niveau,
- * de l’alignement, de la variante hero, du séparateur décoratif,
- * de l’ancre, du reveal et des segments mis en avant.
+ * Renders a validated heading cell with level, alignment, hero variant, anchor, reveal, and highlighted title segments.
  *
  * @remarks
- * - UI-only : consomme une shape déjà validée (schema).
- * - `level` pilote la balise HTML finale (`h1` à `h6`).
- * - `variant="hero"` permet d’appliquer un style plus fort via le skin.
- * - `separator` affiche un séparateur décoratif entre le titre et le sous-titre.
- * - `idAnchor` pose un `id` HTML sur le heading.
- * - `reveal` active/désactive l’enrobage `SiteReveal`.
- * - `highlights` met en avant certains segments exacts du titre.
+ * `level` controls the final heading tag; exact highlight matches are wrapped with the skin highlight class.
  */
 
 import type { ReactNode } from "react";
@@ -106,10 +98,6 @@ export function HeadingCellRenderer({
 }
 
 HeadingCellRenderer.displayName = "HeadingCellRenderer";
-
-/* -------------------------------------------------------------------------- */
-/* Internals                                                                  */
-/* -------------------------------------------------------------------------- */
 
 type HeadingTagProps = Readonly<{
   id?: string;

@@ -1,8 +1,7 @@
 /**
  * @file packages/ui/src/lib/icons/content-icons.tsx
  * @layer ui/lib/icons
- * @description
- * Source de vérité UI pour les icônes de contenu génériques.
+ * @description UI source of truth for generic content icons and labels.
  */
 
 import type { ContentIconKind } from "@compoz/core/constants/icons/content-icons";

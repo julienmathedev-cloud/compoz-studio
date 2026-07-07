@@ -3,11 +3,12 @@
  * @layer site/app
  *
  * @description
- * Sert les fichiers d’uploads à runtime depuis le dossier configuré.
+ * Runtime route for serving uploaded files from the configured uploads directory.
  *
  * @remarks
- * - Corrige les 404 sur /uploads/* après upload en prod (pnpm start).
- * - Protège contre la path traversal (résolution + check root).
+ * - Serves `/uploads/*` files that are written after build time in production.
+ * - Protects against path traversal by resolving the final path and checking it stays under the uploads root.
+ * - Forces SVG downloads to avoid inline execution risks.
  */
 
 import { readFile } from "node:fs/promises";
@@ -41,11 +42,11 @@ function contentTypeFromExt(ext: string): string {
 type RouteParams = Readonly<{ path: string[] }>;
 
 function safeRelativePath(segments: ReadonlyArray<string>): string {
-  // Nettoie les segments (empêche ".", "..", et slashes/backslashes injectés).
+  // Sanitize route segments before resolving them against the uploads root.
   const safe = segments
     .map((s) => String(s ?? "").trim())
     .filter(Boolean)
-    .map((s) => s.replace(/[\\/]+/g, "")) // retire tout slash/backslash
+    .map((s) => s.replace(/[\\/]+/g, ""))
     .filter((s) => s !== "." && s !== "..");
 
   return safe.join("/");
@@ -61,7 +62,7 @@ export async function GET(
   const root = resolve(UPLOADS_ROOT);
   const abs = resolve(root, rel);
 
-  // ✅ empêche /uploads/../../secret (ou variantes)
+  // Reject traversal attempts such as `/uploads/../../secret` after path resolution.
   if (!abs.startsWith(root + sep) && abs !== root) {
     return new Response("Not found", { status: 404 });
   }
@@ -70,7 +71,7 @@ export async function GET(
     const buf = await readFile(abs);
     const ext = (abs.match(/\.[a-z0-9]+$/i)?.[0] ?? "").toLowerCase();
 
-    // ⚠️ SVG : on évite un rendu inline (vecteur XSS), on force attachment.
+    // Force SVG downloads to reduce inline execution risks.
     const isSvg = ext === ".svg";
     const disposition = isSvg ? "attachment" : "inline";
 

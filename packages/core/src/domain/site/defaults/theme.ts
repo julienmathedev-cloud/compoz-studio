@@ -1,19 +1,9 @@
 /**
  * @file packages/core/src/domain/site/defaults/theme.ts
- * @layer core/domain
- * @description
- * Valeurs par défaut **métier** pour la configuration du thème public (`ThemeSettings`).
- * Utilisées lors de l’initialisation d’un site ou en absence de configuration persistée.
- *
+ * @layer core/domain/site/defaults
+ * @description Default public theme settings.
  * @remarks
- * - Configuration déclarative et neutre.
- * - Scope V1 :
- *   - activation light/dark
- *   - police
- *   - reveal
- *   - tokens couleur public
- * - Les tokens reprennent la base visuelle actuelle de Compoz
- *   afin de fournir un rendu par défaut cohérent dès la création d’un site.
+ * Keep these defaults declarative: runtime theme resolution belongs outside this file.
  */
 
 import type { ThemeFontId } from "@compoz/core/constants/theme/theme-fonts";
@@ -22,15 +12,7 @@ import type {
   ThemeSettings,
 } from "@compoz/core/domain/site/entities/theme";
 
-/**
- * Tokens couleur par défaut — thème clair.
- *
- * @remarks
- * Base inspirée du thème actuel de Compoz / site démo :
- * - fond mauve très léger
- * - accents indigo
- * - contrastes doux mais lisibles
- */
+/** Default light theme tokens used when a site has no persisted theme configuration. */
 export const DEFAULT_LIGHT_THEME_TOKENS: PublicThemeTokens = {
   background: "#FAF9FB",
   foreground: "#211F26",
@@ -63,15 +45,7 @@ export const DEFAULT_LIGHT_THEME_TOKENS: PublicThemeTokens = {
   ring: "#3E63DD",
 };
 
-/**
- * Tokens couleur par défaut — thème sombre.
- *
- * @remarks
- * Déduits du thème dark actuel de Compoz :
- * - base slate
- * - accent primaire indigo
- * - contrastes compatibles avec les primitives ShadCN
- */
+/** Default dark theme tokens used when a site has no persisted theme configuration. */
 export const DEFAULT_DARK_THEME_TOKENS: PublicThemeTokens = {
   background: "#FCFCFD",
   foreground: "#1C2024",
@@ -106,9 +80,6 @@ export const DEFAULT_DARK_THEME_TOKENS: PublicThemeTokens = {
 
 export const DEFAULT_THEME_FONT_ID: ThemeFontId = "inter";
 
-/**
- * Valeurs par défaut pour la configuration du thème public.
- */
 export const DEFAULT_THEME_SETTINGS: ThemeSettings = {
   enableDarkMode: true,
   mode: "light",

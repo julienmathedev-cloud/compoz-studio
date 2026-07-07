@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/validators/cells/carousel.ts
  * @layer core/domain/pages/validators
- * @description
- * Validateur métier de CarouselCell.
+ * @description Domain validator for carousel cells.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";

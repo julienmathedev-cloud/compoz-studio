@@ -2,17 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/seo/SeoSection.tsx
- * @layer ui/studio/sections
+ * @layer studio/features/settings/seo
  *
  * @description
- * Section Studio dédiée au SEO : chargement (shell), édition (form), warnings UI et confirmation au submit.
+ * Studio settings section for loading, editing, saving, and warning-checking global SEO settings.
  *
  * @remarks
- * - Le chargement initial est géré par `SettingsSection` (shell).
- * - Monte `useSeoSettings` (baseline + save) et câble `SeoForm`.
- * - Affiche les warnings non bloquants via `StudioWarningsPanel` (dérivés du form).
- * - Au submit : recalcule les warnings, demande confirmation, puis sauvegarde.
- * - Strictement UI-only : aucune logique métier.
+ * - Form warnings are kept live for editor feedback, then recomputed on submit before the confirmation flow.
+ * - OpenGraph image uploads are routed through the studio media API so MediaAsset metadata can be preserved by the form.
  */
 
 import { useTranslations } from "next-intl";
@@ -46,18 +43,13 @@ export function SeoSection() {
 
   const dirtyGuard = useStudioDirtyGuard();
 
-  // Hook settings : modèle UI (RHF).
   const { baseline, isLoading, isSaving, save } = useSeoSettings();
 
-  // Warnings UI (non bloquants).
   const [warningKeys, setWarningKeys] = useState<SeoWarningKey[]>([]);
 
-  // Erreurs bloquantes (near-field) : count remonté par le form.
   const [blockingErrorsCount, setBlockingErrorsCount] = useState(0);
 
-  /**
-   * Upload OG image : raster uniquement (jpg/png/webp).
-   */
+  /** Uploads only raster images accepted by the studio media pipeline. */
   const onUploadOgImage = useCallback(
     async (file: File): Promise<UploadedRasterImage> => {
       const res = await uploadImage(file, "og");
@@ -81,15 +73,13 @@ export function SeoSection() {
     [t],
   );
 
-  // Submit : confirmation si warnings + save.
   const handleSubmit = useCallback(
     async (values: SeoFormValues) => {
       if (isLoading || isSaving) return;
 
-      // 1) Warnings recalculés au submit (source de vérité).
+      // Recompute warnings at submit time so confirmation uses the latest validated values.
       const warningKeysNow = computeSeoWarnings(values);
 
-      // 2) Confirmation si warnings.
       const ok = await confirmSaveDespiteWarnings(
         warningKeysNow,
         "studio.seoSection.warnings",
@@ -97,7 +87,6 @@ export function SeoSection() {
 
       if (!ok) return;
 
-      // 3) Save.
       await save(values);
       dirtyGuard.setDirty(false);
     },

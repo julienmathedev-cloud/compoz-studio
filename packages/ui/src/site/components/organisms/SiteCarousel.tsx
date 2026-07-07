@@ -2,10 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/organisms/SiteCarousel.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/organisms
  *
  * @description
- * Carousel site/draft générique avec autoplay simple, flèches et pagination optionnelles.
+ * Renders a public site carousel with optional autoplay, arrows, dots, and full-bleed image mode.
+ *
+ * @remarks
+ * Autoplay respects reduced-motion preferences and pauses when the document is hidden.
  */
 
 import { ChevronLeft, ChevronRight } from "lucide-react";

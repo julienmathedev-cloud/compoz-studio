@@ -1,15 +1,9 @@
 /**
  * @file packages/ui/src/lib/fonts.ts
  * @layer ui/lib
- *
- * @description
- * Registre des polices du site public exposées via `next/font/google`
- * sous forme de variables CSS `--font-*`.
- *
+ * @description Public site font registry exposed as `next/font/google` CSS variables.
  * @remarks
- * - Toutes les polices supportées par le thème sont déclarées ici.
- * - Le choix de la police active reste piloté par `ThemeProvider`.
- * - Ici, on se contente d’exposer les variables CSS au runtime.
+ * The active font selection is handled by `ThemeProvider`; this module only exposes supported font variables at runtime.
  */
 
 import {

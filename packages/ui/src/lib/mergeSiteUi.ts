@@ -1,17 +1,9 @@
 /**
  * @file packages/ui/src/lib/mergeSiteUi.ts
  * @layer ui/lib/merge
- *
- * @description
- * Fusion "base (default) -> override (custom)" pour les skins UI site.
- *
+ * @description Deep-merges default site UI skins with partial overrides.
  * @remarks
- * Stratégie :
- * - objects (plain): deep merge
- * - arrays: override (custom gagne)
- * - strings: merge Tailwind (base + override, override gagne sur conflits)
- * - autres primitives (number/boolean/etc): override (custom gagne)
- * - undefined: fallback sur base
+ * Tailwind class strings are merged with conflict resolution; arrays and primitives are replaced by the override value.
  */
 
 import { twMerge } from "tailwind-merge";
@@ -42,12 +34,11 @@ function mergeClassStrings(base: string, override: string): string {
 function deepMerge<T>(base: T, override: unknown): T {
   if (override === undefined) return base;
 
-  // Merge spécial pour les strings Tailwind.
+  // Tailwind class strings need conflict-aware merging instead of plain replacement.
   if (typeof base === "string" && typeof override === "string") {
     return mergeClassStrings(base, override) as T;
   }
 
-  // Objets simples => deep merge récursif.
   if (isPlainObject(base) && isPlainObject(override)) {
     const out: AnyRecord = { ...(base as AnyRecord) };
 
@@ -57,43 +48,30 @@ function deepMerge<T>(base: T, override: unknown): T {
 
       const b = (base as AnyRecord)[key];
 
-      // arrays => override complet
       if (Array.isArray(o)) {
         out[key] = o;
         continue;
       }
 
-      // recurse sur objets simples
       if (isPlainObject(b) && isPlainObject(o)) {
         out[key] = deepMerge(b, o);
         continue;
       }
 
-      // strings => merge de classes
       if (typeof b === "string" && typeof o === "string") {
         out[key] = mergeClassStrings(b, o);
         continue;
       }
 
-      // autres primitives => override simple
       out[key] = o;
     }
 
     return out as T;
   }
 
-  // Fallback : override gagne.
   return override as T;
 }
 
-/**
- * Fusionne un skin complet (base) avec un override partiel.
- *
- * @remarks
- * - base : complet (Default)
- * - override : partiel (custom)
- * - résultat : complet (base avec overrides appliqués)
- */
 export function mergeSiteUi(
   base: SiteGlobalUi,
   override?: SiteGlobalUiOverride,

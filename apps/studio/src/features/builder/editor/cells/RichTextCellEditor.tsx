@@ -2,15 +2,15 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/RichTextCellEditor.tsx
- * @layer ui/studio/pages/blocks/editor
+ * @layer studio/features/builder/editor/cells
  *
  * @description
- * Wrapper RHF-aware pour une cellule `richText`.
+ * RHF-aware RichTextCell editor for reveal behavior and HTML content editing.
  *
  * @remarks
- * - Récupère la valeur HTML et le booléen `reveal` depuis le formulaire RHF.
- * - Délègue l’édition du contenu au composant UI pur `RichTextContentEditor`.
- * - Suit le même pattern que `HeadingCellEditor` : logique formulaire ici, UI riche dans un sous-composant.
+ * - Binds content and reveal fields directly through RHF `useController`.
+ * - Delegates HTML editing to `RichTextContentEditor` while keeping form wiring here.
+ * - Falls back to an empty HTML string and disabled reveal when RHF values are missing.
  */
 
 import { useTranslations } from "next-intl";

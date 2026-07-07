@@ -1,14 +1,9 @@
 /**
  * @file packages/core/src/domain/site/use-cases/status/get-site-status.ts
- * @layer core/domain
- *
- * @description
- * Use-case (read) : calcule l’état global du site (draft vs published) à partir de l’index SoT.
- *
+ * @layer core/domain/site/use-cases/status
+ * @description Returns the global draft versus published site status.
  * @remarks
- * - Source de vérité pages = SiteIndex (draft/published) maintenu côté write.
- * - Lecture pages = batch `readManyById` à partir des ids de l’index.
- * - Snapshot KV = DTO (read-through cache).
+ * Uses a read-through status cache and recomputes from source-of-truth indexes on cache miss.
  */
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -36,15 +31,11 @@ import {
 
 export function getSiteStatus({ pages, site, cache }: GetSiteStatusDeps) {
   return async function run(): Promise<GetSiteStatusResult> {
-    // ---------------------------------------------------------------------
-    // 1) Snapshot (1 read) — read-through cache
-    // ---------------------------------------------------------------------
+    // Read-through cache: hot path is a single status snapshot read.
     const cached = await cache.readStatusSnapshot();
     if (cached) return { status: cached };
 
-    // ---------------------------------------------------------------------
-    // 2) Compute (cold path)
-    // ---------------------------------------------------------------------
+    // Cold path: recompute from persisted pages, settings, and site indexes.
     await Promise.all([pages.ensureBase(), site.ensureBase()]);
 
     const [draftIndex, publishedIndex, draftSettings, publishedSettings] =
@@ -55,10 +46,10 @@ export function getSiteStatus({ pages, site, cache }: GetSiteStatusDeps) {
         site.readSettings(CONTENT_STATE.PUBLISHED),
       ]);
 
-    // ✅ Source de vérité "publié" = index.updatedAt (même avec 0 page publiée)
+    // Published status comes from the published index timestamp, even with zero published pages.
     const lastPublishedAt = asNonEmptyString(publishedIndex.updatedAt);
 
-    // ✅ Publié = déjà publié au moins une fois (updatedAt) OU pages publiées indexées
+    // A site is considered published when it has a publish timestamp or indexed published pages.
     const publishedExists =
       Boolean(lastPublishedAt) || publishedIndex.pages.length > 0;
 
@@ -67,7 +58,7 @@ export function getSiteStatus({ pages, site, cache }: GetSiteStatusDeps) {
       publishedSettings,
     );
 
-    // --- Batch reads pages (pour blocks counts + updatedAt) ---
+    // Batch reads keep page and block counters aligned with the source-of-truth indexes.
     const draftIds = draftIndex.pages.map((r) => r.id);
     const publishedIds = publishedIndex.pages.map((r) => r.id);
 
@@ -132,9 +123,6 @@ export function getSiteStatus({ pages, site, cache }: GetSiteStatusDeps) {
 
     assertSiteStatus(status);
 
-    // ---------------------------------------------------------------------
-    // 3) Write snapshot (KV)
-    // ---------------------------------------------------------------------
     await cache.putStatusSnapshot(status);
 
     return { status };

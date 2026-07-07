@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/validators/cells/step.ts
  * @layer core/domain/pages/validators
- * @description
- * Validateur métier de StepsCell.
+ * @description Domain validator for steps cells.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";

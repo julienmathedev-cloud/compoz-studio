@@ -3,13 +3,11 @@
  * @layer studio/app/api/adapters
  *
  * @description
- * Studio API adapter for CardCollectionCell.
+ * Studio API adapter for `CardCollectionCell` values.
  *
  * @remarks
- * The card collection adapter owns cell-level concerns such as `cardKind`,
- * `columns`, `align`, `reveal`, and `cssClassName`.
- *
- * Reusable item shapes are delegated to item adapters.
+ * - Keeps cell-level fields here, such as `cardKind`, `columns`, `align`, `reveal`, and `cssClassName`.
+ * - Delegates reusable item shapes to item adapters.
  */
 
 import type { CardCollectionCell } from "@compoz/core/domain/pages/entities/cell";

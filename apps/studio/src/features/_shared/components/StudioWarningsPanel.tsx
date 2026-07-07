@@ -2,15 +2,14 @@
 
 /**
  * @file apps/studio/src/features/_shared/components/StudioWarningsPanel.tsx
- * @layer ui/studio/shared/settings
+ * @layer studio/features/_shared/components
  *
  * @description
- * Panneau réutilisable d’affichage des warnings non bloquants d’une section settings Studio.
+ * Reusable Studio settings panel for translated non-blocking warning messages.
  *
  * @remarks
- * - Strictement UI-only.
- * - Traduit les warnings via un préfixe de clés métier fourni par le parent.
- * - Délègue le rendu du panneau expansible à `StudioHintsPanel`.
+ * - Translates warning keys through the business i18n prefix provided by the parent.
+ * - Delegates the expandable panel rendering to `StudioHintsPanel`.
  */
 
 import { useTranslations } from "next-intl";
@@ -19,19 +18,9 @@ import { useMemo } from "react";
 import { StudioHintsPanel } from "@compoz/studio/features/_shared/components/StudioHintsPanel";
 
 type StudioWarningsPanelProps<TWarningKey extends string> = Readonly<{
-  /** ID DOM stable du panneau expansible. */
   id: string;
-
-  /** Liste des warnings métier à afficher. */
   warningKeys: readonly TWarningKey[];
-
-  /**
-   * Préfixe i18n métier des warnings.
-   *
-   * @example
-   * - "studio.footerSection.warnings"
-   * - "studio.headerSection.warnings"
-   */
+  /** Business i18n prefix used to resolve warning messages. */
   warningMessageKeyPrefix: string;
 }>;
 

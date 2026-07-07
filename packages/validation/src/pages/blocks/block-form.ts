@@ -1,8 +1,9 @@
 /**
  * @file packages/validation/src/pages/blocks/block-form.ts
  * @layer schemas
+ *
  * @description
- * Schéma Zod décrivant la forme du formulaire UI d’édition d’un block Section.
+ * Zod schema describing the UI form shape used to edit section blocks.
  */
 
 import { z } from "zod";
@@ -13,10 +14,6 @@ import {
   BlockRowSchema,
   SectionBlockContainerModeSchema,
 } from "@compoz/validation/pages/blocks/block";
-
-/* -------------------------------------------------------------------------- */
-/*                                   Form                                     */
-/* -------------------------------------------------------------------------- */
 
 export const SectionBlockFormSchema = z
   .object({

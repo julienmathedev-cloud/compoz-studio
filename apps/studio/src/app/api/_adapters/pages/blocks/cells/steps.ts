@@ -1,8 +1,9 @@
 /**
  * @file apps/studio/src/app/api/_adapters/pages/blocks/cells/steps.ts
  * @layer studio/app/api/adapters
+ *
  * @description
- * Adapteurs API Studio pour les cellules de type `StepsCell`.
+ * Studio API adapter for `StepsCell` values.
  */
 
 import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";

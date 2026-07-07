@@ -3,7 +3,7 @@
  * @layer studio/app
  *
  * @description
- * Page « Social » (Studio) — route du dashboard.
+ * Studio Dashboard route that delegates social settings to `SocialPage`.
  */
 
 import { SocialPage } from "@compoz/studio/features/settings/social/SocialPage";

@@ -3,13 +3,11 @@
  * @layer studio/atoms
  *
  * @description
- * Titre générique (h1–h6) avec styles cohérents pour l’interface Studio.
+ * Generic heading component with consistent h1–h6 styles for the Studio UI.
  *
  * @remarks
- * - Atome UI : aucune logique métier.
- * - Unifie les styles typographiques via les tokens Studio.
- * - Supporte l’accessibilité (titre masqué visuellement).
- * - Option de troncature sur une ligne.
+ * - Unifies typography styles through Studio tokens.
+ * - Supports accessible visually hidden headings and single-line truncation.
  */
 
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
@@ -18,9 +16,6 @@ import { cn } from "@compoz/ui/lib/utils";
 import type { HeadingTag } from "@compoz/ui/styles/studio/typography";
 import { HEADINGS } from "@compoz/ui/styles/studio/typography";
 
-/**
- * Props du composant `Heading`.
- */
 export type HeadingProps = Readonly<{
   as?: HeadingTag;
   visuallyHidden?: boolean;
@@ -30,9 +25,6 @@ export type HeadingProps = Readonly<{
 }> &
   ComponentPropsWithoutRef<"h2">;
 
-/**
- * Titre typographique standardisé pour le Studio.
- */
 export function Heading({
   as = "h2",
   visuallyHidden = false,
@@ -47,8 +39,8 @@ export function Heading({
     <Tag
       className={cn(
         HEADINGS[as],
-        visuallyHidden && "sr-only", // titre uniquement pour les aides techniques
-        truncate && "truncate", // coupe le texte sur une seule ligne
+        visuallyHidden && "sr-only",
+        truncate && "truncate",
         className,
       )}
       {...rest}

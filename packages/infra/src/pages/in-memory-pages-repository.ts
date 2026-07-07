@@ -1,19 +1,9 @@
 /**
  * @file packages/infra/src/pages/in-memory-pages-repository.ts
  * @layer infra/pages
- * @description
- * Implémentation InMemory du PagesRepository pour tests unitaires et e2e.
- *
- * Responsabilités :
- * - stockage en mémoire process-local par état (`draft`/`published`)
- * - indexation id-first (Map id -> Page)
- * - index secondaire slug -> id (résolution "DB-like")
- * - clonage structuré des pages pour éviter les mutations croisées
- * - respect strict de l’interface PagesRepository
- *
+ * @description In-memory PagesRepository implementation for tests.
  * @remarks
- * - Aucune validation métier (slug/uniqueness) : c’est le domaine qui tranche.
- * - Comportement idempotent : delete sur page absente ne jette pas.
+ * Keeps DB-like slug indexing and defensive cloning while leaving domain validation outside infra.
  */
 
 import {
@@ -27,31 +17,17 @@ import type {
 } from "@compoz/core/domain/pages/entities/page";
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
 
-/**
- * Store interne :
- * - byId : id -> Page
- * - slugToId : slug -> id
- */
+/** Internal id-first store with a secondary slug index. */
 type Store = Readonly<{
   byId: Map<string, Page>;
   slugToId: Map<string, string>;
 }>;
 
-/**
- * Normalise une entrée string (trim + fallback).
- * Contrat : retourne toujours une string.
- */
 function norm(value: unknown): string {
   return String(value ?? "").trim();
 }
 
-/**
- * Clone défensif d’une Page pour éviter les mutations croisées.
- *
- * @remarks
- * - Utilise `structuredClone` si disponible (Node 17+/browsers modernes).
- * - Fallback JSON sinon (suffisant pour nos entités sérialisables).
- */
+/** Defensive clone for serialized page entities stored in memory. */
 function clonePage(page: Page): Page {
   const sc = (globalThis as { structuredClone?: unknown }).structuredClone;
   if (typeof sc === "function") {
@@ -64,17 +40,11 @@ export class InMemoryPagesRepository implements PagesRepository {
   private draft: Store = { byId: new Map(), slugToId: new Map() };
   private published: Store = { byId: new Map(), slugToId: new Map() };
 
-  async ensureBase(): Promise<void> {
-    // no-op (in-memory)
-  }
+  async ensureBase(): Promise<void> {}
 
   private getStore(state: ContentState): Store {
     return state === CONTENT_STATE.PUBLISHED ? this.published : this.draft;
   }
-
-  /* -------------------------------------------------------------------------- */
-  /* Reads                                                                      */
-  /* -------------------------------------------------------------------------- */
 
   async readById(state: ContentState, pageId: string): Promise<Page | null> {
     const id = norm(pageId);
@@ -96,27 +66,21 @@ export class InMemoryPagesRepository implements PagesRepository {
     return p ? clonePage(p) : null;
   }
 
-  /* -------------------------------------------------------------------------- */
-  /* Writes                                                                     */
-  /* -------------------------------------------------------------------------- */
-
   async put(state: ContentState, page: Page): Promise<void> {
     const store = this.getStore(state);
 
     const id = norm(page?.id);
     const slug = norm(page?.slug);
 
-    // Contrat infra minimal : on ne persiste pas d’entrée sans id/slug.
+    // Minimal infra guard: entries without id or slug are ignored.
     if (!id || !slug) return;
 
-    // Si une page existait déjà avec ce même id et un autre slug, on nettoie l’index slug.
+    // Keep the secondary slug index in sync when an id changes slug.
     const prev = store.byId.get(id);
     if (prev && prev.slug && prev.slug !== slug) {
       store.slugToId.delete(prev.slug);
     }
 
-    // On écrase l’éventuelle entrée slug -> id précédente
-    // (si un autre id utilisait ce slug, l’ancien mapping est remplacé).
     store.slugToId.set(slug, id);
 
     store.byId.set(id, clonePage(page));
@@ -133,10 +97,6 @@ export class InMemoryPagesRepository implements PagesRepository {
     }
   }
 
-  /* -------------------------------------------------------------------------- */
-  /* Deletes                                                                    */
-  /* -------------------------------------------------------------------------- */
-
   async deleteById(state: ContentState, pageId: string): Promise<void> {
     const id = norm(pageId);
     if (!id) return;
@@ -145,7 +105,7 @@ export class InMemoryPagesRepository implements PagesRepository {
     const prev = store.byId.get(id);
 
     if (prev?.slug) {
-      // On retire le mapping slug -> id uniquement s’il pointe vers cet id.
+      // Remove the slug mapping only when it still points to this id.
       const mapped = store.slugToId.get(prev.slug);
       if (mapped === id) store.slugToId.delete(prev.slug);
     }
@@ -164,10 +124,6 @@ export class InMemoryPagesRepository implements PagesRepository {
     await this.deleteById(state, id);
   }
 
-  /* -------------------------------------------------------------------------- */
-  /* Exists                                                                     */
-  /* -------------------------------------------------------------------------- */
-
   async existsById(state: ContentState, pageId: string): Promise<boolean> {
     const id = norm(pageId);
     if (!id) return false;
@@ -179,10 +135,6 @@ export class InMemoryPagesRepository implements PagesRepository {
     if (!s) return false;
     return this.getStore(state).slugToId.has(s);
   }
-
-  /* -------------------------------------------------------------------------- */
-  /* Bulk reads                                                                 */
-  /* -------------------------------------------------------------------------- */
 
   async readManyById(
     state: ContentState,
@@ -199,16 +151,11 @@ export class InMemoryPagesRepository implements PagesRepository {
     });
   }
 
-  /* -------------------------------------------------------------------------- */
-  /* List                                                                       */
-  /* -------------------------------------------------------------------------- */
-
   async list(state: ContentState): Promise<PageSummary[]> {
     const store = this.getStore(state);
     const out: PageSummary[] = [];
 
     for (const p of store.byId.values()) {
-      // PageSummary "DB-like" : id + slug + title
       out.push({
         id: p.id,
         slug: p.slug,

@@ -1,15 +1,9 @@
 /**
  * @file apps/studio/src/features/settings/mappers/header-form.ts
- * @layer ui-mappers/studio/site
- * @description
- * Mappers UI Header (studio forms) :
- * - DTO -> valeurs de formulaire RHF
- * - normalisation UI
- * - PATCH intent DTO pour l’API studio
+ * @layer studio/features/settings/mappers
  *
- * @remarks
- * - Pour la shape runtime (site/preview), utiliser le mapper shared
- *   `toHeaderSettingsShapeFromDTO`.
+ * @description
+ * Studio header settings mappers for form values, preview shape, and API intents.
  */
 
 import type { HeaderSettingsDTO } from "@compoz/core/domain/site/dto";
@@ -19,8 +13,6 @@ import type { UpdateHeaderSettingsIntentDTO } from "@compoz/validation/site/sett
 
 import { asBool } from "@compoz/ui/lib/form-utils";
 import { toHeaderSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/header-shape";
-
-/* ----------------------- Domaine (DTO) -> UI (form values) ------------------ */
 
 export function toHeaderFormValuesFromDTO(
   dto: HeaderSettingsDTO,
@@ -34,13 +26,6 @@ export function toHeaderFormValuesFromDTO(
   };
 }
 
-/**
- * FormValues -> Shape (contrat frontière)
- *
- * @remarks
- * - Utilisable côté studio (preview draft) si tu construis un draft à partir du form.
- * - Si tu pars d’un DTO, préfère `toHeaderSettingsShapeFromDTO`.
- */
 export function toHeaderSettingsShapeFromFormValues(
   values: HeaderFormValues,
 ): HeaderSettingsShape {
@@ -53,20 +38,12 @@ export function toHeaderSettingsShapeFromFormValues(
   };
 }
 
-/**
- * DTO -> Shape (re-export studio convenience)
- *
- * @remarks
- * Optionnel : utile si tu veux éviter d’importer `@compoz/ui/site/mappers/header-shape`
- * dans certains fichiers studio. Sinon tu peux supprimer ce wrapper.
- */
+/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
 export function toHeaderSettingsShape(
   dto: HeaderSettingsDTO,
 ): HeaderSettingsShape {
   return toHeaderSettingsShapeFromDTO(dto);
 }
-
-/* ---------------------------- Normalisations UI ---------------------------- */
 
 export function normalizeHeaderFormValues(
   values: HeaderFormValues,
@@ -80,8 +57,7 @@ export function normalizeHeaderFormValues(
   };
 }
 
-/* ------------------------------ UI -> PATCH (API) --------------------------- */
-
+/** Builds a partial API intent while preserving PATCH semantics. */
 export function toUpdateHeaderIntentDTOFromFormValues(
   p: Partial<HeaderFormValues>,
 ): UpdateHeaderSettingsIntentDTO {

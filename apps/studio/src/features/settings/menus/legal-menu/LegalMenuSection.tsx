@@ -1,18 +1,15 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/settings/legal-menu/LegalMenuSection.tsx
- * @layer ui/studio/sections
+ * @file apps/studio/src/features/settings/menus/legal-menu/LegalMenuSection.tsx
+ * @layer studio/features/settings/menus/legal-menu
  *
  * @description
- * Section Studio dédiée au menu légal : chargement (shell), édition (form), warnings UI et preview.
+ * Studio settings section for loading, editing, saving, and previewing the legal menu.
  *
  * @remarks
- * - Le chargement initial est géré par `SettingsSection` (shell).
- * - Monte `useLegalMenuSettings` (baseline + save) et câble `LegalMenuForm`.
- * - Affiche les warnings non bloquants (via `LegalMenuForm` + `computeLegalMenuWarnings` au submit).
- * - La preview `/preview/legal-menu` consomme le scope `legalMenu` en mise à jour live.
- * - Strictement UI-only : aucune logique métier.
+ * - Keeps the persisted baseline and live preview draft separate so reset/save can restore the preview deterministically.
+ * - Non-blocking warnings are computed from both form values and the current internal page href set.
  */
 
 import { useTranslations } from "next-intl";
@@ -35,7 +32,6 @@ import type { LegalMenuSettingsShape } from "@compoz/validation/site/settings/me
 import type { LegalMenuFormValues } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-form";
 
 type LegalMenuSectionProps = Readonly<{
-  /** Remonte l’état dirty (guard / navigation) au parent (Tab/Dashboard). */
   onDirtyChange?: (dirty: boolean) => void;
 }>;
 
@@ -54,19 +50,11 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
   const { options: internalPageOptions, isLoading: isIndexLoading } =
     useInternalPageOptions();
 
-  /**
-   * Baseline preview :
-   * - conversion directe de la baseline RHF en shape runtime
-   */
+  /** Runtime preview shape derived from the persisted RHF baseline. */
   const baselinePreview = useMemo<LegalMenuSettingsShape>(() => {
     return toLegalMenuSettingsShapeFromFormValues(baseline);
   }, [baseline]);
 
-  /**
-   * Valeur affichée dans la preview :
-   * - draft live si le form change
-   * - sinon baseline persistée
-   */
   const previewValue = previewDraft ?? baselinePreview;
 
   const { ready, frame, iframeRef } = useStudioPreview<LegalMenuSettingsShape>(

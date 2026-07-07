@@ -2,16 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/bundle/useSettingsBundle.ts
- * @layer hooks/studio/site/settings-bundle
+ * @layer studio/features/settings/bundle
  *
  * @description
- * Hook React Query lisant le bundle complet des settings.
+ * React Query hook for reading the Studio settings bundle.
  *
  * @remarks
- * - Website-scoped : le cache inclut Prisma Website.id.
- * - Utilisé comme source READ canonique pour les sections.
- * - Les sections font ensuite des PATCH slice et patchent le cache bundle.
- * - L’API résout le Website actif côté session/cookie.
+ * - Studio cache keys are scoped by Prisma Website.id and content state.
+ * - Keeps previous data during refetches to avoid transient `undefined` states.
  */
 
 import type { QueryFunctionContext } from "@tanstack/react-query";
@@ -49,10 +47,7 @@ export function useSettingsBundle(
       return dto.settings as SiteSettings;
     },
 
-    /**
-     * Conserve la dernière donnée connue pendant un refetch dev/HMR/abort,
-     * afin d'éviter les flaps `data=undefined`.
-     */
+    // Avoids transient `data=undefined` states during refetch, HMR, or aborts.
     placeholderData: (previous: SiteSettings | undefined) => previous,
   });
 }

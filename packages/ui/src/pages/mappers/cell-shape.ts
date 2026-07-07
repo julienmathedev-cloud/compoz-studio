@@ -1,9 +1,7 @@
 /**
  * @file packages/ui/src/pages/mappers/cell-shape.ts
  * @layer ui/pages/mappers
- *
- * @description
- * Shared runtime mapper for cells.
+ * @description Dispatches cell DTOs to their matching form-value mappers.
  */
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";

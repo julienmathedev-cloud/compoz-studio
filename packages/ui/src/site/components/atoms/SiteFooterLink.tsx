@@ -2,18 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/atoms/SiteFooterLink.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/atoms
  *
  * @description
- * Atome site : lien texte réutilisable (footer, menu légal, navigation secondaire).
+ * Renders a reusable public site text link for footer and secondary navigation surfaces.
  *
  * @remarks
- * - Interne : rendu via `next/link`.
- * - Externe : rendu via `<a>`.
- * - Supporte `mailto:` / `tel:`.
- * - Sécurise les liens externes (`target`/`rel`) et neutralise les `href` non sûrs.
- * - En preview iframe : désactive toute navigation.
- * - Convention V0.5 : plus de querystring `state` (draft/published via routes dédiées).
+ * Unsafe links are neutralized; external links receive secure target/rel attributes, and Studio preview disables navigation.
  */
 
 import Link from "next/link";

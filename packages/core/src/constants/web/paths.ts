@@ -1,22 +1,13 @@
 /**
  * @file packages/core/src/constants/web/paths.ts
  * @layer core/constants/web
- * @description
- * Paths internes utilisés dans l'application Studio.
- * Centralise les routes de navigation (sidebar / sections / pages système).
- */
-/**
- * Routes liées à l'administration des utilisateurs dans Studio.
- * (gestion comptes / rôles / accès).
+ * @description Internal route constants shared by Studio and public site code.
  */
 const ADMIN_PATH = {
   root: "/admin",
   users: "/admin/users",
 } as const;
 
-/**
- * Routes principales du Studio (navigation sidebar).
- */
 export const STUDIO_PATH = {
   overview: "/",
   identity: "/identity",
@@ -37,9 +28,6 @@ export const STUDIO_PATH = {
   draft: "/draft",
 } as const;
 
-/**
- * Chemins du site (surface "site", non-Studio).
- */
 export const SITE_PATH = {
   home: "/",
 } as const;

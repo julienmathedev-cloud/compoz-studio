@@ -1,6 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/factories/create-block-column.ts
  * @layer core/domain/pages
+ * @description Factory for creating an empty block column entity.
  */
 
 import { randomUUID } from "crypto";

@@ -2,18 +2,13 @@
 
 /**
  * @file apps/studio/src/features/settings/header/HeaderSection.tsx
- * @layer ui/studio/sections
+ * @layer studio/features/settings/header
  *
  * @description
- * Section Studio dédiée au header : chargement (shell), édition (form), warnings UI et preview.
+ * Studio section for editing header settings with warnings and live preview.
  *
  * @remarks
- * - Le chargement initial est géré par `SettingsSection` (shell).
- * - Monte `useHeaderSettings` (baseline + save) et câble `HeaderForm`.
- * - Affiche les warnings non bloquants (via `HeaderForm` + `computeHeaderWarnings` au submit).
- * - La preview `/preview/header` consomme plusieurs scopes :
- *   `header` en live + `identity` / `primaryMenu` / `social` en baseline.
- * - Strictement UI-only : aucune logique métier.
+ * - Preview uses `header` in live mode and injects `identity`, `primaryMenu`, and `social` as baseline-only scopes.
  */
 
 import { useTranslations } from "next-intl";
@@ -75,19 +70,11 @@ export function HeaderSection() {
     });
   }, [isLoading, isSaving, baseline, settingsBundle, isLoadingSettingsBundle]);
 
-  /**
-   * Baseline preview du header :
-   * conversion baseline RHF -> shape runtime.
-   */
+  /** Preview baseline uses the runtime shape derived from the RHF baseline. */
   const baselinePreview = useMemo<HeaderSettingsShape>(() => {
     return toHeaderSettingsShapeFromFormValues(baseline);
   }, [baseline]);
 
-  /**
-   * Valeur réellement injectée dans la preview pour le scope `header` :
-   * - draft live si le form bouge
-   * - sinon baseline persistée
-   */
   const previewValue = previewDraft ?? baselinePreview;
 
   const identityBaselinePreview = useMemo<IdentitySettingsShape | null>(() => {
@@ -115,9 +102,7 @@ export function HeaderSection() {
       liveEnabled: true,
     });
 
-  /**
-   * Scopes baseline-only nécessaires au rendu du header preview.
-   */
+  /** Header preview needs these chrome scopes, but does not edit them live. */
   useStudioPreviewBaselineScope<IdentitySettingsShape>({
     scope: "identity",
     baseline: identityBaselinePreview,
@@ -154,12 +139,7 @@ export function HeaderSection() {
     },
   });
 
-  /**
-   * Empty state :
-   * - data chargée
-   * - toutes les baselines shell disponibles
-   * - mais rien à afficher
-   */
+  /** Avoids showing the empty preview before dependent settings have finished loading. */
   const dataReady = !isLoading && !isLoadingSettingsBundle;
 
   const hasBrand =

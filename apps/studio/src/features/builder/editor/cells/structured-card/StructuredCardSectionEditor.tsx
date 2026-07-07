@@ -2,10 +2,15 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/structured-card/StructuredCardSectionEditor.tsx
- * @layer ui/studio/pages/blocks/editor/items/structured-card
+ * @layer studio/features/builder/editor/cells/structured-card
  *
  * @description
- * RHF-aware editor for a structured card section item.
+ * RHF-aware editor for one nested StructuredCardCell section item.
+ *
+ * @remarks
+ * - Binds section label and content directly through RHF `useController`.
+ * - Shows label and content errors only after `showError` or the field has been touched.
+ * - Keeps section removal controlled by the parent list through `onRemove` and `canRemove`.
  */
 
 import { useTranslations } from "next-intl";

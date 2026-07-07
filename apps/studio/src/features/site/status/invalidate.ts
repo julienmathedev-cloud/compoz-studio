@@ -1,14 +1,13 @@
 /**
  * @file apps/studio/src/features/site/status/invalidate.ts
- * @layer hooks/studio/site/status
+ * @layer studio/features/site/status
  *
  * @description
- * Helpers React Query pour invalider / refetch le cache du statut du site.
+ * React Query helpers for invalidating and refetching site status caches.
  *
  * @remarks
- * Website-scoped : toutes les invalidations/refetch doivent inclure
- * Prisma Website.id pour éviter les collisions entre sites quand on switch
- * de Website actif.
+ * - All keys are scoped by Prisma Website.id to avoid cache collisions when switching the active website.
+ * - Composite helpers invalidate the status views affected by page or block mutations.
  */
 
 import type { QueryClient } from "@tanstack/react-query";
@@ -18,10 +17,6 @@ import {
   siteStatusDetailsPrefix,
   siteStatusKey,
 } from "@compoz/studio/features/site/status/keys";
-
-/* -------------------------------------------------------------------------- */
-/* Status                                                                     */
-/* -------------------------------------------------------------------------- */
 
 export function invalidateSiteStatus(
   queryClient: QueryClient,
@@ -38,10 +33,6 @@ export function refetchSiteStatus(queryClient: QueryClient, websiteId: string) {
     type: "all",
   });
 }
-
-/* -------------------------------------------------------------------------- */
-/* Status details                                                             */
-/* -------------------------------------------------------------------------- */
 
 export function invalidateSiteStatusDetails(
   queryClient: QueryClient,
@@ -61,10 +52,6 @@ export function refetchSiteStatusDetails(
     type: "all",
   });
 }
-
-/* -------------------------------------------------------------------------- */
-/* Helpers ciblés                                                             */
-/* -------------------------------------------------------------------------- */
 
 type StatusDetailsScope = "all" | "dirty";
 
@@ -108,10 +95,6 @@ export function refetchStatusDetailsByKey(
   });
 }
 
-/* -------------------------------------------------------------------------- */
-/* Overview / pages                                                           */
-/* -------------------------------------------------------------------------- */
-
 export function invalidateDirtyPagesStatusList(
   queryClient: QueryClient,
   websiteId: string,
@@ -143,10 +126,6 @@ export function invalidateOverviewBlocksStatusDetails(
     }),
   ]);
 }
-
-/* -------------------------------------------------------------------------- */
-/* Page / blocks ciblés                                                       */
-/* -------------------------------------------------------------------------- */
 
 export function invalidateBlocksBadgesForPage(
   queryClient: QueryClient,
@@ -211,9 +190,7 @@ export function refetchPageStatusDetails(
   });
 }
 
-/* -------------------------------------------------------------------------- */
-/* Compositions métier                                                        */
-/* -------------------------------------------------------------------------- */
+/** Composite invalidations used after page or block mutations. */
 
 export function invalidatePageStatusViews(
   queryClient: QueryClient,

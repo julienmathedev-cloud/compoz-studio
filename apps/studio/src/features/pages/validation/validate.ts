@@ -1,14 +1,13 @@
 /**
  * @file apps/studio/src/features/pages/validation/validate.ts
- * @layer hooks/studio/pages
+ * @layer studio/features/pages/validation
  *
  * @description
- * Helpers et hooks de validation UI pour les pages (warnings UX légers).
+ * Lightweight Studio page form warnings and slug duplicate helpers.
  *
  * @remarks
- * - Validation métier assurée par le domaine (Zod + use-cases serveur).
- * - Ici : UX uniquement (warnings, détection de doublons, incohérences mineures).
- * - Source UI : `PageFormValues` (schéma RHF).
+ * - Blocking validation stays in Zod schemas and server use cases.
+ * - Slug duplicate checks exclude the current page by id so edited slugs do not self-conflict.
  */
 
 import { useMemo } from "react";
@@ -18,19 +17,9 @@ import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 import { normalizeSlug } from "@compoz/core/domain/slug/utils";
 import type { PageFormValues } from "@compoz/validation/pages/page-form";
 
-/* -------------------------------------------------------------------------- */
-/* Types                                                                      */
-/* -------------------------------------------------------------------------- */
-
 export type PageWarningKey = "slugNotNormalized" | "titleLooksThin";
 
-/* -------------------------------------------------------------------------- */
-/* Warnings UI                                                                */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Calcule les warnings UI associés aux valeurs du formulaire Page.
- */
+/** Computes non-blocking warnings from page form values. */
 export function computePageWarnings(values: PageFormValues): PageWarningKey[] {
   const warnings = new Set<PageWarningKey>();
 
@@ -42,7 +31,7 @@ export function computePageWarnings(values: PageFormValues): PageWarningKey[] {
     warnings.add("slugNotNormalized");
   }
 
-  // UX : warning “titre un peu léger” (le form garantit déjà min / max).
+  // Technically valid, but likely too thin to be useful in navigation or SEO.
   if (name && name.length <= Math.max(4, PAGE_NAME.MIN)) {
     warnings.add("titleLooksThin");
   }
@@ -50,24 +39,12 @@ export function computePageWarnings(values: PageFormValues): PageWarningKey[] {
   return Array.from(warnings);
 }
 
-/**
- * Hook retournant les warnings UI d’une page à partir des valeurs courantes du form.
- */
+/** Memoizes page form warnings for form consumers. */
 export function usePageUiWarnings(values: PageFormValues): PageWarningKey[] {
   return useMemo(() => computePageWarnings(values), [values]);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Helper slugs                                                               */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Construit un ensemble de slugs existants pour la détection de doublons.
- *
- * @remarks
- * On exclut la page courante par `id` (plus robuste que par slug),
- * car le slug peut changer pendant l’édition.
- */
+/** Builds existing slugs while excluding the current page by id, not by mutable slug. */
 export function buildSlugSet(
   index: SiteIndexDTO | null | undefined,
   currentPageId?: string,
@@ -87,9 +64,7 @@ export function buildSlugSet(
   return slugs;
 }
 
-/**
- * Hook retournant un `Set` mémoïsé de slugs existants.
- */
+/** Memoizes existing slugs for duplicate checks. */
 export function useSlugSet(
   index: SiteIndexDTO | null | undefined,
   currentPageId?: string,

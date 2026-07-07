@@ -5,11 +5,7 @@
  * @layer studio/components
  *
  * @description
- * UI client de la page 404 du Studio.
- *
- * @remarks
- * - Composant UI uniquement.
- * - Utilise le layout système partagé pour afficher une page 404.
+ * Client-side Studio 404 UI built on the shared system page layout.
  */
 
 import Link from "next/link";

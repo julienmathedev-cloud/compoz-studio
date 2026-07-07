@@ -1,15 +1,12 @@
 /**
  * @file packages/ui/src/site/components/molecules/SiteLegalMenu.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/molecules
  *
  * @description
- * Molecule site : menu légal (liste de liens) rendu depuis `LegalMenuSettingsShape`.
+ * Renders the public site legal menu from legal menu settings.
  *
  * @remarks
- * - Rend `null` si aucun item n’est disponible.
- * - Délègue le rendu du lien à `SiteFooterLink` (garde-fous href + a11y).
- * - Les clés de liste utilisent désormais l’identifiant métier stable `id`.
- * - Le style est fourni par le skin/template via `ui`.
+ * Returns nothing when no legal item is available; link rendering is delegated to `SiteFooterLink` for href guardrails and accessibility behavior.
  */
 
 import { cn } from "@compoz/ui/lib/utils";
@@ -18,7 +15,6 @@ import type { SiteLegalMenuUi } from "@compoz/ui/site/site-ui.types";
 import type { LegalMenuSettingsShape } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu";
 
 export type SiteLegalMenuProps = Readonly<{
-  /** Settings du menu légal (shape site). */
   legalMenu: LegalMenuSettingsShape;
 
   ui: SiteLegalMenuUi;

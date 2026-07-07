@@ -1,17 +1,9 @@
 /**
  * @file packages/core/src/domain/users/use-cases/update-user.ts
- * @layer core/domain
- *
- * @description
- * Use-case : mise à jour d’un utilisateur Studio via patch partiel.
- *
+ * @layer core/domain/users/use-cases
+ * @description Applies a partial patch to an existing Studio user.
  * @remarks
- * - No-op : si rien ne change hors password, aucune écriture User n’est effectuée.
- * - Email : si modifié, normalisé + vérifie l’unicité.
- * - RBAC : validé si présent.
- * - Status : validé si présent : active | disabled.
- * - Password : optionnel, via `users.setPassword` côté infra.
- * - Meta : met à jour `updatedAt` si un champ du profil change.
+ * Password changes are delegated to the repository because hashing belongs to infra.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -63,10 +55,6 @@ export function updateUser({
     const next = { ...existing } as Mutable<User>;
     const changed: ChangedKey[] = [];
 
-    /* ---------------------------------------------------------------------- */
-    /* Email                                                                  */
-    /* ---------------------------------------------------------------------- */
-
     if (typeof input.email === "string") {
       const email = assertUserEmail(input.email, ["email"]);
 
@@ -86,10 +74,6 @@ export function updateUser({
       }
     }
 
-    /* ---------------------------------------------------------------------- */
-    /* Name                                                                   */
-    /* ---------------------------------------------------------------------- */
-
     if (typeof input.name === "string") {
       const name = assertUserName(input.name, ["name"]);
 
@@ -99,10 +83,6 @@ export function updateUser({
       }
     }
 
-    /* ---------------------------------------------------------------------- */
-    /* Status                                                                 */
-    /* ---------------------------------------------------------------------- */
-
     if (input.status !== undefined) {
       const status = assertUserStatus(input.status, ["status"]);
 
@@ -111,10 +91,6 @@ export function updateUser({
         changed.push("status");
       }
     }
-
-    /* ---------------------------------------------------------------------- */
-    /* RBAC                                                                   */
-    /* ---------------------------------------------------------------------- */
 
     if (input.rbac !== undefined) {
       const rbac = assertUserRbac(input.rbac, ["rbac"]);
@@ -132,10 +108,6 @@ export function updateUser({
         changed.push("rbac");
       }
     }
-
-    /* ---------------------------------------------------------------------- */
-    /* Password — infra only                                                   */
-    /* ---------------------------------------------------------------------- */
 
     if (typeof input.password === "string") {
       const password = input.password.trim();

@@ -1,9 +1,9 @@
 /**
- * @file packages/ui/src/site/skins/portfolio/blocks/structured-card-cell.ui.ts
- * @layer ui/site/skins
+ * @file packages/ui/src/site/skins/portfolio/cells/structured-card-cell.ui.ts
+ * @layer ui/site/skins/portfolio/cells
  *
  * @description
- * Override UI — structured card cell (thème Portfolio).
+ * Defines the portfolio skin overrides for structured card cells.
  */
 
 import type { SiteStructuredCardUiOverride } from "@compoz/ui/site/site-ui.types";

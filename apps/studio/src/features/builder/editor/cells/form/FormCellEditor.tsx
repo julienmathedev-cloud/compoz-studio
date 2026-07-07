@@ -2,16 +2,16 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/form/FormCellEditor.tsx
- * @layer ui/studio/pages/blocks/editor/cells
+ * @layer studio/features/builder/editor/cells/form
  *
  * @description
- * Éditeur RHF-aware d’une FormCell (formulaire de contact).
+ * RHF-aware FormCell editor for contact destination, submit button, messages, and fields.
  *
  * @remarks
- * - Connecté directement à RHF via `useController` et `useFieldArray`.)
- * - Stocke la destination sous forme d’adresse email brute.
- * - S’aligne sur le standard builder :
- *   `showError || fieldState.isTouched`.
+ * - Binds scalar form settings directly through RHF `useController`.
+ * - Manages form fields through `useFieldArray` so values and errors stay consistent.
+ * - Stores the destination as a raw email address.
+ * - Shows near-field errors only after `showError` or the field has been touched.
  */
 
 import { useTranslations } from "next-intl";

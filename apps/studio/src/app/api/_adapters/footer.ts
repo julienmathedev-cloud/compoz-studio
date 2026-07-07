@@ -3,14 +3,11 @@
  * @layer studio/app/api/adapters
  *
  * @description
- * Adaptateur API Studio pour le Footer :
- * convertit le DTO d’intention en input domaine pour le use-case.
+ * Studio API adapter for footer settings update intents.
  *
- * Responsabilités :
- * - trimming défensif (strings)
- * - respect des champs optionnels
- * - aucune logique métier
- * - aucun handling de state (géré par la route)
+ * @remarks
+ * - Builds a partial domain patch while preserving optional-field semantics.
+ * - Leaves state handling to the route.
  */
 
 import { log } from "@compoz/infra/lib/log";
@@ -39,7 +36,7 @@ export function adaptUpdateFooterIntent(
   }
 
   if (typeof dto.copyright === "string") {
-    // Chaîne vide autorisée (choix UX assumé)
+    // Empty string is allowed by design for this UX.
     patch.copyright = trimOrKeep(dto.copyright);
   }
 

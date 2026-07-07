@@ -2,35 +2,25 @@
 
 /**
  * @file apps/studio/src/features/settings/identity/validate.ts
- * @layer hooks/studio/site/identity
+ * @layer studio/features/settings/identity
  *
  * @description
- * Helpers et hooks de validation UI non bloquante pour l’identité du site.
+ * Non-blocking Studio identity form warnings.
  *
  * @remarks
- * - Validation métier assurée par le domaine (Zod + use-cases serveur).
- * - Ici : UX uniquement (warnings légers, complétude visuelle).
+ * - Blocking validation stays in Zod schemas and server use cases.
  */
 
 import { useMemo } from "react";
 
 import type { IdentityFormValues } from "@compoz/validation/site/settings/identity/identity-form";
 
-/* ─────────────────────────── Warnings (non-bloquants) ───────────────────────── */
-
-/**
- * Clés stables des warnings UI pour l’identité du site.
- */
 export type IdentityWarningKey =
   | "logoMissing"
   | "faviconMissing"
   | "logoAndFaviconMissing";
 
-/* ─────────────────────────────── PURE FN ───────────────────────────── */
-
-/**
- * Calcule les warnings UI associés à un brouillon d’identité.
- */
+/** Computes non-blocking warnings from identity form values. */
 export function computeIdentityWarnings(
   s: Pick<IdentityFormValues, "logo" | "faviconUrl">,
 ): IdentityWarningKey[] {
@@ -49,11 +39,7 @@ export function computeIdentityWarnings(
   return Array.from(out);
 }
 
-/* ─────────────────────────────── HOOK ─────────────────────────────── */
-
-/**
- * Hook retournant les warnings UI de l’identité à partir des valeurs courantes.
- */
+/** Memoizes identity warnings for form consumers. */
 export function useIdentityUiWarnings(
   logo: IdentityFormValues["logo"],
   faviconUrl: IdentityFormValues["faviconUrl"],

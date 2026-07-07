@@ -1,11 +1,12 @@
 /**
  * @file apps/studio/src/i18n/navigation.ts
  * @layer studio/i18n
- * @description
- * Helpers de navigation i18n pour le Studio.
  *
- * Wrappers de `next-intl/navigation` préconfigurés avec le routing du Studio
- * afin de conserver automatiquement la locale lors de la navigation.
+ * @description
+ * Studio i18n navigation helpers.
+ *
+ * @remarks
+ * - Wraps `next-intl/navigation` with Studio routing so generated navigation helpers preserve the active locale.
  */
 
 import { routing } from "@compoz/studio/i18n/routing";

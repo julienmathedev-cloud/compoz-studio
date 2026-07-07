@@ -1,28 +1,17 @@
 /**
  * @file packages/infra/src/http/abort-error.ts
  * @layer infra/http
- * @description
- * Helpers liés à l'annulation (AbortController / AbortError) côté infra HTTP.
- *
+ * @description AbortController factory and abort-error detection helpers for HTTP infra.
  * @remarks
- * On gère plusieurs formes d'erreurs possibles :
- * 1) DOMException (browser)
- * 2) Error standard (avec support de `cause`)
- * 3) Objet "plain" (ex: erreur sérialisée côté SSR)
+ * Detection accepts browser DOMException, standard Error with cause, and serialized SSR plain objects.
  */
 
 import { isUnknownObject } from "@compoz/http/http-error";
 
-/**
- * @description Factory minimale pour centraliser la création d'un AbortController.
- */
 export function newAbort(): AbortController {
   return new AbortController();
 }
 
-/**
- * @description Noms d'erreurs fréquemment utilisés pour représenter une annulation.
- */
 const ABORT_ERROR_NAMES = new Set([
   "AbortError",
   "CanceledError",
@@ -38,11 +27,7 @@ function messageLooksLikeAbort(msg: string): boolean {
   );
 }
 
-/**
- * @description Détermine si une erreur inconnue correspond à une annulation (abort/cancel).
- */
 export function isAbortError(error: unknown): boolean {
-  // 1) Browser native
   if (
     typeof globalThis.DOMException !== "undefined" &&
     error instanceof globalThis.DOMException
@@ -50,7 +35,6 @@ export function isAbortError(error: unknown): boolean {
     return error.name === "AbortError";
   }
 
-  // 2) Standard Error
   if (error instanceof Error) {
     if (ABORT_ERROR_NAMES.has(error.name)) return true;
 
@@ -64,7 +48,6 @@ export function isAbortError(error: unknown): boolean {
     return false;
   }
 
-  // 3) Plain object (SSR serialized)
   if (isUnknownObject(error)) {
     const obj = error as Record<string, unknown>;
 

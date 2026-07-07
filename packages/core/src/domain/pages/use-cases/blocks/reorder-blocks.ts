@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/blocks/reorder-blocks.ts
  * @layer core/domain/pages/use-cases/blocks
- * @description
- * Use-case de réordonnancement des blocks d’une page (édition admin → draft).
+ * @description Use case that reorders blocks on a draft page.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";

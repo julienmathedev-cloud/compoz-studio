@@ -3,14 +3,10 @@
  * @layer ui/settings/mappers
  *
  * @description
- * Mapper "shared runtime" LegalMenu :
- * - DTO domaine -> LegalMenuSettingsShape (frontière stable)
+ * Maps legal menu settings DTOs to stable runtime legal menu settings shapes shared by site rendering and Studio preview.
  *
  * @remarks
- * - Utilisé par le renderer public (site) ET par la preview/renderer côté studio.
- * - Ici, on ne gère ni RHF, ni intents API.
- * - On ne fait pas de normalisation "draft" (toInternalDraft/toExternalDraft) :
- *   on convertit juste le DTO en shape frontière (strings).
+ * API intents and draft/form-oriented normalization stay outside this boundary mapper.
  */
 
 import type {
@@ -25,12 +21,11 @@ import type {
 
 import { trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 
-/** DTO -> Shape : item (renderer). */
 function toLegalMenuItemShapeFromDTO(it: LegalMenuItemDTO): LegalMenuItemShape {
   return {
     id: trimKeepEmpty(String(it.id ?? "")),
     label: trimKeepEmpty(it.label),
-    // DTO attendu string | null | undefined. Si jamais "dirty", on force string de façon best-effort.
+    // Defensive fallback for unexpected dirty DTO values.
     href: trimKeepEmpty(
       typeof it.href === "string" ? it.href : String(it.href ?? ""),
     ),
@@ -38,10 +33,6 @@ function toLegalMenuItemShapeFromDTO(it: LegalMenuItemDTO): LegalMenuItemShape {
   };
 }
 
-/**
- * Domaine (DTO) -> Renderer (Shape)
- * Contrat : retourne une shape stable pour le renderer (arrays mutables).
- */
 export function toLegalMenuSettingsShapeFromDTO(
   dto: LegalMenuSettingsDTO | null | undefined,
 ): LegalMenuSettingsShape {

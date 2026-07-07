@@ -1,14 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/global.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default
  *
  * @description
- * Skin UI — site (thème Default).
- *
- * @remarks
- * - Compose header/footer/systemPage.
- * - Fournit les valeurs minimales pour le renderer (container + H1 layout).
- * - Fournit uniquement des classes Tailwind (aucune logique).
+ * Composes the default public site skin from layout, cell, reveal, pager, and system UI class maps.
  */
 
 import type { SiteGlobalUi } from "@compoz/ui/site/site-ui.types";

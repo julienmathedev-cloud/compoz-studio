@@ -5,15 +5,12 @@
  * @layer studio/layouts
  *
  * @description
- * Wrapper standard pour une section de réglages (studio).
+ * Standard wrapper for Studio settings sections.
  *
  * @remarks
- * - Encapsule une structure accessible : `<section>` + ARIA (label/description/busy).
- * - Affiche un titre via `Heading` (niveau configurable, visible ou SR-only).
- * - Affiche une description optionnelle via `Text`.
- * - Peut afficher un badge de statut (clean / dirty / saving) à côté du titre.
- * - `isLoading` remplace uniquement la zone `children` par un loader.
- * - UI-only : aucune logique métier.
+ * - Encapsulates the accessible `<section>` structure with label, description, and busy state.
+ * - Supports visible or screen-reader-only headings, optional descriptions, and form status badges.
+ * - `isLoading` replaces only the `children` area with a section loader.
  */
 
 import type { ReactNode } from "react";
@@ -30,52 +27,34 @@ import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 import { useTranslations } from "next-intl";
 
-/**
- * Props du composant `SettingsSection`.
- */
 type SettingsSectionProps = Readonly<{
-  /** Identifiant logique (base des IDs aria : `${id}-title`, `${id}-desc`). */
   id: string;
 
-  /** Titre de la section (utilisé dans le Heading). */
   title: string;
 
-  /** Description optionnelle rendue via `Text` (as="p"). */
   description?: string;
 
-  /** Charge initial : remplace uniquement `children` par un loader. */
   isLoading?: boolean;
 
-  /** Libellé du loader (fallback i18n basé sur le titre). */
   loadingLabel?: string;
 
-  /** Propage `aria-busy` sur la section. */
   isBusy?: boolean;
 
-  /** Indique si la section courante contient des changements non sauvegardés. */
   isDirty?: boolean;
 
   blockingErrorsCount?: number;
 
-  /** Niveau du heading HTML (défaut: "h1"). */
   headingLevel?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 
-  /** Masque visuellement le titre (SR-only). */
   visuallyHiddenTitle?: boolean;
 
-  /** Affiche le badge de statut à côté du titre (défaut: true). */
   showStatusBadge?: boolean;
 
-  /** Contenu de la section (formulaire, liste, etc.). */
   children: ReactNode;
 
-  /** Classes additionnelles sur la `<section>`. */
   className?: string;
 }>;
 
-/**
- * Section de réglages standardisée (studio).
- */
 export function SettingsSection({
   id,
   title,
@@ -123,7 +102,7 @@ export function SettingsSection({
       aria-busy={isBusy || isLoading || undefined}
       className={cn(STACK_MD, className)}
     >
-      {/* Header section (titre + badge) */}
+      {/* Section header: title and optional status badge. */}
       <div className="flex items-center gap-6">
         <Heading
           id={titleId}

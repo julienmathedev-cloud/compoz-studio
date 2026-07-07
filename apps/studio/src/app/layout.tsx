@@ -3,12 +3,11 @@
  * @layer studio/app
  *
  * @description
- * Root layout Studio (HTML/BODY + CSS globaux + fonts) — App Router.
+ * Studio root layout that owns the HTML/BODY shell, global CSS, and fonts.
  *
  * @remarks
- * - Root app (Studio/admin) du monorepo.
- * - La localisation peut être gérée dans `app/[locale]/layout.tsx` si la structure est locale-first.
- * - `metadata` minimal (wiring SEO plus tard via settings).
+ * - Root app for the Studio/admin surface in the monorepo.
+ * - Keeps metadata minimal and non-indexable because the Studio is not public content.
  */
 
 import { Analytics } from "@vercel/analytics/next";
@@ -54,7 +53,7 @@ export default function StudioRootLayout({ children }: StudioRootLayoutProps) {
       id="app-studio"
       lang="fr"
       className={cn(
-        // Expose `--font-sans` pour la stack UI (si utilisée par Tailwind/base.css).
+        // Expose `--font-sans` for the UI stack when Tailwind/base.css uses it.
         nunitoSans.variable,
         "overscroll-none",
       )}

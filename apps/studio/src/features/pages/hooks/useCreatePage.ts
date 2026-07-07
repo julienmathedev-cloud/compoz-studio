@@ -2,15 +2,17 @@
 
 /**
  * @file apps/studio/src/features/pages/hooks/useCreatePage.ts
- * @layer hooks/studio/pages
+ * @layer studio/features/pages/hooks
  *
  * @description
- * Hook Studio React Query pour créer une page draft via l’API.
+ * React Query mutation hook for creating a draft page through the pages Studio API.
  *
  * @remarks
- * - Orchestration UI-only : mutation, logs, notifications.
- * - Le cache et les queryKeys sont scopés par Prisma Website.id.
- * - L’API résout le Website actif côté session/cookie.
+ * - Converts UI form values to a create-page intent before calling the API.
+ * - Uses save instrumentation with draft content state for logs and notifications.
+ * - Seeds the page-by-id cache and updates the SiteIndex cache from the returned payload.
+ * - Invalidates site and page status views after creation.
+ * - Studio cache keys are scoped by Prisma Website.id; the API resolves Website access from the active session/cookie.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";

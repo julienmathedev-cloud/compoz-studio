@@ -3,15 +3,10 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer site/preview : rendu d’un groupe de CTA.
+ * Renders a validated buttons cell as a group of site CTA links.
  *
  * @remarks
- * - UI-only : consomme une shape déjà validée (schema).
- * - Rend une liste de liens stylés via `SiteButton`.
- * - Ignore uniquement les items sans libellé.
- * - Le root prend toute la largeur disponible.
- * - L’alignement est appliqué sur la liste interne.
- * - Le gap est piloté par la cell.
+ * Ignores items without a visible label; alignment and gap are applied to the internal list.
  */
 
 import type { ButtonsCellShape } from "@compoz/validation/pages/blocks/cells/cell";

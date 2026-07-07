@@ -3,18 +3,12 @@
  * @layer studio/app/api
  *
  * @description
- * Route API Studio pour la lecture et la mise à jour des settings Footer
- * du Website actif.
+ * Studio API route for reading and updating the active Website footer settings.
  *
  * @remarks
- * Responsabilités :
- * - GET   : retourne les settings Footer selon le state demandé.
- * - PATCH : met à jour les settings Footer en draft via un DTO intent,
- *   adaptation en patch domaine, puis exécution du use-case
- *   `updateFooterSettings`.
- * - Le repository gère le merge avec les defaults pour assurer
- *   la cohérence du footer.
- * - Le repository et le cache de status sont scopés par Prisma Website.id.
+ * - `PATCH` adapts the update intent into a domain patch before running the use case.
+ * - The repository merges with defaults to keep the footer consistent.
+ * - The repository and status cache are scoped by Prisma Website.id.
  */
 
 import "server-only";
@@ -33,10 +27,6 @@ import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { UpdateFooterSettingsIntentSchema } from "@compoz/validation/site/settings/footer/footer-intents";
-
-/* -------------------------------------------------------------------------- */
-/* GET                                                                        */
-/* -------------------------------------------------------------------------- */
 
 export async function GET(req: Request) {
   const NS = "api.studio.site.footer.GET" as const;
@@ -60,10 +50,6 @@ export async function GET(req: Request) {
     );
   });
 }
-
-/* -------------------------------------------------------------------------- */
-/* PATCH                                                                      */
-/* -------------------------------------------------------------------------- */
 
 export async function PATCH(req: Request) {
   const NS = "api.studio.site.footer.PATCH" as const;
@@ -101,10 +87,10 @@ export async function PATCH(req: Request) {
       });
 
       /**
-       * Invalidation du cache de status du Website actif.
+       * Invalidates the active Website status cache.
        *
-       * Le cache peut encore être implémenté en KV côté infra,
-       * mais son scope métier est le Prisma Website.id.
+       * The cache may still be backed by KV in infra, but its business scope is
+       * the Prisma Website.id.
        */
       try {
         logger.debug?.("route.footer.patch.invalidate.start", {

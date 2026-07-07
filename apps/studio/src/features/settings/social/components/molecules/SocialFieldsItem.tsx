@@ -2,19 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/social/components/molecules/SocialFieldsItem.tsx
- * @layer ui/molecules
+ * @layer studio/features/settings/social/components/molecules
  *
  * @description
- * Ligne éditable d’un lien social (plateforme + href + actions) pour l’admin.
+ * Editable studio row for one social link platform, canonical href, and row actions.
  *
  * @remarks
- * - Molecule UI : compose `SelectField`, `NewSocialLinkField` et des actions (move/delete).
- * - RHF-aware : reçoit les `ControllerRenderProps` (`kindField`, `hrefField`) fournis par le parent.
- * - Le `href` est stocké sous forme canonique :
- *   - email : `mailto:...`
- *   - url : `https://...`
- * - Le parent pilote la validation (via `onHrefValidateNow`).
- * - Strictement UI-only : aucune logique métier.
+ * - Receives RHF controller fields from the parent so list state and validation stay centralized.
+ * - Stores href values in canonical form: `mailto:` for email links and `https://` for URL links.
  */
 
 import { SOCIAL_KIND_EMAIL } from "@compoz/core/constants/social/social-kinds";
@@ -41,46 +36,30 @@ type RowInvalidFlags = Partial<Record<"kind" | "href", boolean>>;
 
 type RHFField = ControllerRenderProps<FieldValues, string>;
 
-/**
- * Props du composant `SocialFieldsItem`.
- */
 type SocialFieldsItemProps = Readonly<{
-  /** Préfixe stable pour générer les IDs ARIA (fournis au `Field`). */
   idPrefix: string;
 
-  /** Champ RHF contrôlé : plateforme (kind). */
   kindField: RHFField;
-  /** Champ RHF contrôlé : href canonique (mailto:/https://). */
   hrefField: RHFField;
 
-  /** Flags d’invalidité par champ. */
   invalid?: RowInvalidFlags;
-  /** Messages d’erreur par champ. */
   error?: RowErrorMessages;
 
-  /** Déclenche une validation immédiate du champ href côté parent. */
+  /** Lets the parent trigger href validation after link-field interactions. */
   onHrefValidateNow?: (markTouched?: boolean) => void;
-  /** Override optionnel : reset href lors du switch email/url. */
+  /** Allows the parent to keep PATCH semantics when switching between email and URL modes. */
   onHrefClearBySwitch?: () => void;
 
-  /** Action : suppression de la ligne. */
   onRemove: () => void;
-  /** Action : déplacement vers le haut. */
   onMoveUp: () => void;
-  /** Action : déplacement vers le bas. */
   onMoveDown: () => void;
 
-  /** Indique si l’item est en première position. */
   isFirst?: boolean;
-  /** Indique si l’item est en dernière position. */
   isLast?: boolean;
-  /** Désactive l’édition et les actions. */
   disabled?: boolean;
 }>;
 
-/**
- * Extrait la partie affichable à partir d’un href canonique.
- */
+/** Converts a canonical social href into the editable value shown in the input. */
 function stripCanonicalPrefix(value: string, isEmail: boolean): string {
   const v = String(value ?? "").trim();
   if (!v) return "";
@@ -97,9 +76,7 @@ function stripCanonicalPrefix(value: string, isEmail: boolean): string {
   return v;
 }
 
-/**
- * Reconstruit un href canonique à partir de la valeur saisie.
- */
+/** Rebuilds the canonical social href from the editable input value. */
 function buildCanonicalHref(raw: string, isEmail: boolean): string {
   const input = String(raw ?? "").trim();
   if (!input) return "";
@@ -117,9 +94,6 @@ function buildCanonicalHref(raw: string, isEmail: boolean): string {
   return `https://${input}`;
 }
 
-/**
- * Ligne UI pour éditer un lien social (admin).
- */
 export function SocialFieldsItem({
   idPrefix,
   kindField,

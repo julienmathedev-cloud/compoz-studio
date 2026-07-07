@@ -5,13 +5,11 @@
  * @layer studio/app
  *
  * @description
- * Page « Confidentialité » (Studio) — affiche les informations de confidentialité avec un H1 SR-only.
+ * Studio privacy page with a screen-reader-only H1.
  *
  * @remarks
- * - Convention Studio : H1 SR-only porté par la page (un seul H1 global).
- * - Le contenu visible est structuré via `SettingsSection` (H2 visible par défaut).
- * - UI-only : aucun fetch, aucun cookie, aucune logique métier.
- * - Contenu i18n via `next-intl`.
+ * - Studio convention: the page owns the single global H1 as screen-reader-only text.
+ * - Visible content is structured through `SettingsSection`, which provides the visible H2.
  */
 
 import { useTranslations } from "next-intl";
@@ -25,15 +23,11 @@ import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 
 const CONTACT_EMAIL = "julien.mathe.dev@gmail.com" as const;
 
-/**
- * Page Confidentialité (Studio).
- */
 export default function ConfidentialitePage() {
   const t = useTranslations();
 
   return (
     <div className={cn(STUDIO_SECTION)}>
-      {/* ✅ H1 unique global : SR-only (SEO + accessibilité) */}
       <Heading as="h1" className="sr-only">
         {t("studio.legal.privacy.h1")}
       </Heading>
@@ -42,13 +36,10 @@ export default function ConfidentialitePage() {
         id="legal-privacy"
         title={t("studio.legal.privacy.title")}
         description={t("studio.legal.privacy.description")}
-        // pages légales : pas de badge d’état
+        // Legal pages do not expose a form status badge.
         showStatusBadge={false}
       >
         <div className="space-y-6">
-          {/* ------------------------------------------------------------------ */}
-          {/* Données collectées                                                 */}
-          {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.privacy.sections.data.title")}
@@ -60,9 +51,6 @@ export default function ConfidentialitePage() {
             </Text>
           </div>
 
-          {/* ------------------------------------------------------------------ */}
-          {/* Finalités                                                          */}
-          {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.privacy.sections.purposes.title")}
@@ -75,9 +63,6 @@ export default function ConfidentialitePage() {
             </ul>
           </div>
 
-          {/* ------------------------------------------------------------------ */}
-          {/* Conservation                                                       */}
-          {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.privacy.sections.retention.title")}
@@ -87,9 +72,6 @@ export default function ConfidentialitePage() {
             </Text>
           </div>
 
-          {/* ------------------------------------------------------------------ */}
-          {/* Vos droits                                                         */}
-          {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.privacy.sections.rights.title")}
@@ -105,9 +87,6 @@ export default function ConfidentialitePage() {
             </ul>
           </div>
 
-          {/* ------------------------------------------------------------------ */}
-          {/* Contact                                                            */}
-          {/* ------------------------------------------------------------------ */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.privacy.sections.contact.title")}

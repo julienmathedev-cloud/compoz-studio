@@ -2,10 +2,17 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/CardCollectionCellEditor.tsx
- * @layer ui/studio/pages/blocks/editor/cells
+ * @layer studio/features/builder/editor/cells
  *
  * @description
- * RHF editor for a homogeneous card collection.
+ * RHF-aware CardCollectionCell editor for card kind, layout options, reveal behavior, and item editing.
+ *
+ * @remarks
+ * - Binds card kind, columns, align, and reveal controls directly through RHF `useController`.
+ * - Manages collection items through `useFieldArray` so values, errors, and reordering stay consistent.
+ * - Replaces the items list with one empty item when switching card kind to keep the item schema homogeneous.
+ * - Reads live item values through `useWatch` and delegates item rendering to the matching card list editor.
+ * - Passes image uploads only to structured card items, which are the only card kind with image fields here.
  */
 
 import type {

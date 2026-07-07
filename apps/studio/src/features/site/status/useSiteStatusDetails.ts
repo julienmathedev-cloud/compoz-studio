@@ -2,20 +2,15 @@
 
 /**
  * @file apps/studio/src/features/site/status/useSiteStatusDetails.ts
- * @layer hooks/studio/site/status
+ * @layer studio/features/site/status
  *
  * @description
- * Hook React Query lazy : détail pages/blocs draft vs published pour l’Overview.
+ * Lazy React Query hook for reading draft vs published page and block status details.
  *
  * @remarks
- * V0.5 perf :
- * - `scope="dirty"` doit être le défaut côté UI pour éviter les full scans.
- * - On évite les refetch automatiques focus/reconnect qui peuvent relancer
- *   des scans.
- *
- * Website-scoped :
- * - La queryKey inclut Prisma Website.id pour éviter les collisions de cache
- *   après switch de Website actif.
+ * - `scope="dirty"` stays the UI default to avoid full status scans in the Overview.
+ * - Automatic focus/reconnect refetches are intentionally avoided by the query defaults used for this status flow.
+ * - The query key is scoped by Prisma Website.id to avoid cache collisions when switching the active website.
  */
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -68,9 +63,7 @@ export function useSiteStatusDetails({
 
     enabled: isEnabled,
 
-    /**
-     * Garde l’ancienne data quand la key change.
-     */
+    /** Keeps the previous result visible while status detail filters change. */
     placeholderData: keepPreviousData,
   } as const;
 

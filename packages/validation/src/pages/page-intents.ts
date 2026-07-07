@@ -1,10 +1,13 @@
 /**
  * @file packages/validation/src/pages/page-intents.ts
  * @layer schemas
+ *
  * @description
- * Définit les schémas Zod décrivant la forme frontière des intentions liées aux pages.
- * Ces schémas valident uniquement la structure des payloads (API / UI) ; les règles
- * métier et décisions de cohérence sont traitées dans le domaine.
+ * Zod schemas describing page intent payload boundaries.
+ *
+ * @remarks
+ * These schemas validate API and UI payload shapes only. Business rules and
+ * consistency decisions are handled by the domain layer.
  */
 
 import { z } from "zod";
@@ -20,10 +23,11 @@ import {
 } from "@compoz/validation/pages/page";
 
 /**
- * Patch sitemap côté API :
- * - Champs optionnels (patch partiel)
- * - `null` permet d’unset certains champs
- * - absence de clé => ne pas modifier
+ * Partial sitemap patch schema used by page intents.
+ *
+ * @remarks
+ * Missing keys leave existing values unchanged, while `null` explicitly clears
+ * nullable sitemap fields.
  */
 const PageSitemapIntentSchema = z
   .object({
@@ -38,35 +42,21 @@ const PageSitemapIntentSchema = z
   })
   .strict();
 
-/* -------------------------------------------------------------------------- */
-/*                            Intentions HTTP API                             */
-/* -------------------------------------------------------------------------- */
-
-/** Intention de création d’une page. */
 export const CreatePageIntentSchema = z
   .object({
-    /** Nom de la page (requis côté API). */
     name: PageNameSchema,
-
-    /** Titre SEO explicite ou null. */
     seoTitle: PageSeoTitleSchema,
-
-    /** Description SEO explicite ou null. */
     seoDescription: PageSeoDescriptionSchema,
-
     parentId: PageIdSchema.nullable(),
 
     /**
-     * Slug optionnel :
-     * - absence => génération / normalisation côté domaine
-     * - "/" autorisé pour la page d’accueil
+     * Slug may be omitted so the domain layer can generate or normalize it.
+     * `/` represents the home page flow.
      */
     slug: z.union([SlugSchema, z.literal("/")]).optional(),
 
     /**
-     * Sitemap :
-     * - null = pas de config sitemap explicite
-     * - objet = config fournie
+     * `null` means no explicit sitemap config was provided at creation time.
      */
     sitemap: PageSitemapIntentSchema.nullable(),
 
@@ -76,48 +66,26 @@ export const CreatePageIntentSchema = z
 
 export type CreatePageIntentDTO = z.infer<typeof CreatePageIntentSchema>;
 
-/** Intention de mise à jour d’une page existante. */
+/**
+ * Partial page update payload.
+ *
+ * @remarks
+ * Missing keys leave values unchanged. `null` is kept only where the API needs
+ * an explicit clear or root-page signal.
+ */
 export const UpdatePageIntentSchema = z
   .object({
-    /**
-     * Absence de clé => nom inchangé
-     */
     name: PageNameSchema.optional(),
-
-    /**
-     * Absence => inchangé
-     * null => vider explicitement
-     */
     seoTitle: PageSeoTitleSchema.optional(),
-
-    /**
-     * Absence => inchangé
-     * null => vider explicitement
-     */
     seoDescription: PageSeoDescriptionSchema.optional(),
-
-    /**
-     * Absence => inchangé
-     * null => page racine
-     */
     parentId: PageIdSchema.nullable().optional(),
 
     /**
-     * Absence => inchangé
-     * "" / "/" gardés pour le flow UI existant
+     * Empty and home slugs are kept to support the existing UI flow.
      */
     slug: z.union([SlugSchema, z.literal(""), z.literal("/")]).optional(),
 
-    /**
-     * Absence => inchangé
-     * null => supprimer la config sitemap
-     * objet => patch partiel
-     */
     sitemap: PageSitemapIntentSchema.nullable().optional(),
-
-    /**
-     * Absence => inchangé
-     */
     paginationEnabled: z.boolean().optional(),
   })
   .strict();

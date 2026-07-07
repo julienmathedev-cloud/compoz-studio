@@ -3,15 +3,16 @@
  * @layer studio/app/api
  *
  * @description
- * Finalise un upload image temporaire lié au Website actif du Studio :
- * relit le blob temp, optimise l’image, écrit le média final, puis supprime le temp.
+ * Finalizes a temporary image upload linked to the active Studio Website:
+ * reads the temporary blob, optimizes the image, writes the final media, then
+ * deletes the temporary blob.
  *
  * @remarks
- * - Nécessite une session Studio valide.
- * - Les blobs temporaires et finaux sont scopés par Prisma Website.id.
- * - Le `tempKey` attendu suit la convention :
+ * - Requires a valid Studio session.
+ * - Temporary and final blobs are scoped by Prisma Website.id.
+ * - The expected `tempKey` follows this convention:
  *   `websites/:websiteId/_tmp/media/...`
- * - Le média final est écrit sous :
+ * - Final media is written under:
  *   `websites/:websiteId/:year/:month/:filename`
  */
 
@@ -43,10 +44,6 @@ import {
 import { prisma } from "@compoz/infra/prisma/prisma-client";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -180,10 +177,6 @@ async function upsertMediaAsset(args: {
 
   return asset.id;
 }
-
-/* -------------------------------------------------------------------------- */
-/* POST                                                                       */
-/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
   const NS = "api.studio.media.upload.image.finalize.POST" as const;
@@ -336,10 +329,9 @@ export async function POST(req: Request) {
     const optimizedSize = optimized.buffer.length;
 
     /**
-     * Premium UX :
-     * Si aucune transformation réelle n’a eu lieu,
-     * on neutralise totalement les flags
-     * pour éviter les toasts inutiles.
+     * Premium UX:
+     * When no real transformation happened, flags are fully neutralized to
+     * avoid unnecessary toasts.
      */
     const wasResized =
       optimized.originalWidth > 0 &&

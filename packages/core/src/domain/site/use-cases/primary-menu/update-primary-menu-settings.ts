@@ -1,14 +1,9 @@
 /**
  * @file packages/core/src/domain/site/use-cases/primary-menu/update-primary-menu-settings.ts
- * @layer core/domain
- * @description
- * Use-case : mise à jour partielle (shallow patch) des réglages `settings.primaryMenu`.
- * Charge les settings (draft/published), applique un merge shallow, valide les invariants
- * métier puis persiste uniquement si au moins une clé a changé.
- *
+ * @layer core/domain/site/use-cases/primary-menu
+ * @description Applies a shallow patch to primary menu settings.
  * @remarks
- * Particularité : ce use-case exécute `assertPrimaryMenuSettings` avant persistance.
- * Une violation d’invariant lève une `DomainError`.
+ * Primary menu invariants are asserted before persistence; violations raise a `DomainError`.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -22,9 +17,6 @@ import type {
 } from "@compoz/core/domain/site/use-cases/primary-menu/update-primary-menu-settings.types";
 import { assertPrimaryMenuSettings } from "@compoz/core/domain/site/validators/primary-menu";
 
-/**
- * Fabrique du use-case `updatePrimaryMenuSettings`.
- */
 export function updatePrimaryMenuSettings({
   repo,
 }: UpdatePrimaryMenuSettingsDeps) {
@@ -47,14 +39,13 @@ export function updatePrimaryMenuSettings({
       return { settings: current };
     }
 
-    // ✅ Invariants métier bloquants avant écriture (ids, unicité, arbre, champs requis, etc.).
+    // Blocking domain invariants before persistence.
     assertPrimaryMenuSettings(menuNext);
 
     const next: SiteSettings = { ...current, primaryMenu: menuNext };
 
     await repo.putSettings(DEFAULT_CONTENT_STATE, next);
 
-    // ✅ Domaine pur : aucune invalidation cache ici.
     return { settings: next };
   };
 }

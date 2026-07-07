@@ -3,12 +3,10 @@
  * @layer ui/site/skins
  *
  * @description
- * Résout les runtime features site à partir du `websiteSlug` courant.
+ * Resolves internal public site runtime features from the current website slug.
  *
  * @remarks
- * - Socle neutre par défaut.
- * - Les features restent internes et non éditables.
- * - V0.1 : uniquement `autoHideSingleH1Block`.
+ * Runtime features are intentionally not editor-facing; the default feature set stays neutral unless a skin needs an explicit runtime behavior.
  */
 
 export type SiteRuntimeFeatures = Readonly<{

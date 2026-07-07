@@ -2,17 +2,13 @@
 
 /**
  * @file apps/studio/src/features/settings/identity/IdentitySection.tsx
- * @layer ui/studio/sections
+ * @layer studio/features/settings/identity
  *
  * @description
- * Section Studio dédiée à l’identité du site : chargement (shell), édition (form), warnings UI et preview.
+ * Studio section for editing identity settings with warnings and media uploads.
  *
  * @remarks
- * - Le chargement initial est géré par `SettingsSection` (shell).
- * - Monte `useIdentitySettings` (baseline + save) et câble `IdentityForm`.
- * - Affiche les warnings non bloquants (via `IdentityForm` + `computeIdentityWarnings` au submit).
- * - La preview `/preview/header` consomme la baseline `identity` (baseline-only).
- * - Strictement UI-only : aucune logique métier.
+ * - Saves are gated by non-blocking identity warnings before updating the draft baseline.
  */
 
 import { useTranslations } from "next-intl";
@@ -60,10 +56,7 @@ export function IdentitySection() {
     });
   }, [isLoading, isSaving, baseline]);
 
-  /**
-   * Upload logo : raster ou SVG.
-   * Le serveur renvoie désormais toujours des dimensions exploitables.
-   */
+  /** Logo uploads may be SVG or raster; both server paths return usable dimensions. */
   const onUploadLogo = useCallback(
     async (file: File): Promise<UploadedRasterImage> => {
       if (file.type === "image/svg+xml") {
@@ -98,9 +91,7 @@ export function IdentitySection() {
     [t],
   );
 
-  /**
-   * Upload favicon : raster/ico uniquement (endpoint image).
-   */
+  /** Favicon uploads use the raster image endpoint, including ICO handling. */
   const onUploadFavicon = useCallback(
     async (file: File): Promise<UploadedRasterImage> => {
       const res = await uploadImage(file, "favicon");

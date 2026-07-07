@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/cells/zoom-gallery-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default/cells
  *
  * @description
- * Skin UI — zoom gallery cell (Default).
- *
- * @remarks
- * - Neutre et cohérent avec les autres blocs.
- * - Full style vit ici (aucun fallback dans le composant).
+ * Defines the default skin classes for zoom gallery cells.
  */
 
 import type { GalleryMaxColumns } from "@compoz/core/domain/pages/entities/cell";

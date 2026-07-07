@@ -2,18 +2,16 @@
 
 /**
  * @file apps/studio/src/features/overview/components/OverviewPreviewCard.tsx
- * @layer ui/studio/overview
+ * @layer studio/features/overview/components
  *
  * @description
- * Carte de preview “overview” : affiche la page Home dans l’iframe preview.
- * Injecte les baselines settings + la baseline `page:home` via handshake `ready`.
+ * Overview preview card rendering the Home page inside the Studio preview iframe.
  *
  * @remarks
- * - Utilise `useStudioPreview` pour piloter l’iframe et le bridge preview.
- * - Injecte chaque baseline via `useStudioPreviewBaselineScope` pour éviter la duplication d’effet.
- * - La preview Home dépend du shell public (`header`, `identity`, `primaryMenu`, `social`, `footer`, `legalMenu`)
- *   ainsi que de `siteIndex` et `page:home`.
- * - Strictement UI-only : aucune logique métier.
+ * - Uses `useStudioPreview` to control the iframe bridge in manual preview mode.
+ * - Injects public shell baselines and the `page:home` baseline through the ready handshake.
+ * - Keeps each baseline injection isolated with `useStudioPreviewBaselineScope`.
+ * - The Home preview depends on public shell settings, `siteIndex`, and `page:home` content.
  */
 
 import { useTranslations } from "next-intl";
@@ -61,9 +59,7 @@ type SettingsBaselineEntry = Readonly<{
 export function OverviewPreviewCard() {
   const t = useTranslations();
 
-  /* ---------------------------------------------------------------------- */
-  /* Settings baselines (shell public)                                      */
-  /* ---------------------------------------------------------------------- */
+  // Public shell baselines.
 
   const { data: settingsBundle, isLoading: isLoadingSettingsBundle } =
     useSettingsBundle(DEFAULT_CONTENT_STATE);
@@ -119,9 +115,7 @@ export function OverviewPreviewCard() {
     ],
   );
 
-  /* ---------------------------------------------------------------------- */
-  /* Home page baseline (page:home) + siteIndex baseline                    */
-  /* ---------------------------------------------------------------------- */
+  // Home page and siteIndex baselines.
 
   const slug = "home";
   const previewScope = useMemo(() => `page:${slug}`, [slug]);
@@ -159,9 +153,7 @@ export function OverviewPreviewCard() {
     };
   }, [homeBlocks, homePageName]);
 
-  /* ---------------------------------------------------------------------- */
-  /* Preview bridge                                                         */
-  /* ---------------------------------------------------------------------- */
+  // Preview bridge baseline injection.
 
   const { ready, setBaseline, iframeRef, frame } =
     useStudioPreview<PageRenderShape>(previewScope, {

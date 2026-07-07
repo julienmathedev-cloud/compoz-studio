@@ -3,11 +3,11 @@
  * @layer site/app
  *
  * @description
- * Page 404 pour le segment site (Server Component).
+ * Site-level 404 page rendered as a Server Component.
  *
  * @remarks
- * - `not-found.tsx` doit rester server (pas de "use client").
- * - Le rendu UI dynamique (pathname/searchParams) est délégué à un composant client.
+ * - `not-found.tsx` must stay server-side, without `"use client"`.
+ * - Dynamic UI details such as pathname and search params are delegated to a client component.
  */
 
 import { SiteNotFoundClient } from "@compoz/site/components/system/SiteNotFoundClient";

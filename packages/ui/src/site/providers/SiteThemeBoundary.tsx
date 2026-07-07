@@ -3,7 +3,7 @@
  * @layer ui/site/providers
  *
  * @description
- * Boundary SSR appliquant le thème publié du site public sans contexte client.
+ * Applies the published public site theme on the server without a client context provider.
  */
 
 import type { CSSProperties, ReactNode } from "react";

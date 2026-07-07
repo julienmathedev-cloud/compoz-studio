@@ -1,29 +1,17 @@
 /**
  * @file apps/studio/src/i18n/runtime-keys.ts
  * @layer studio/i18n
+ *
  * @description
- * Registre des clés i18n **non détectables statiquement** (i18n Ally / scans)
- * car construites dynamiquement au runtime (template strings, concat, mapping).
- *
- * Objectif :
- * - Centraliser les clés “dynamiques” à vérifier via `scripts/check-i18n.ts`
- * - Éviter d’ajouter du code i18n “juste pour l’outil” dans les composants UI
- *
- * Règles :
- * - Ce fichier contient uniquement des **clés i18n** (strings).
- * - Pas de textes traduits.
- * - Pas de logique.
+ * Registry of i18n keys built dynamically at runtime and missed by static scans.
  *
  * @remarks
- * - Consommé par `scripts/check-i18n.ts` pour valider que toutes les clés existent.
+ * - Consumed by `scripts/check-i18n.ts` to validate that every listed key exists.
+ * - Contains only i18n keys, with no translated copy or runtime logic.
  */
 
 export const I18N_RUNTIME_KEYS = {
-  /**
-   * MenuBadges.tsx
-   * - t(`studio.menuBadges.kinds.${k}`)
-   * - k ∈ ("group" | "external" | "internal")
-   */
+  /** Covers `t(`studio.menuBadges.kinds.${k}`)` for every supported badge kind. */
   menuBadges: {
     kinds: [
       "studio.menuBadges.kinds.group",
@@ -32,15 +20,7 @@ export const I18N_RUNTIME_KEYS = {
     ] as const,
   },
 
-  /**
-   * Social kinds (studio)
-   * Utilisés via mapping (Select options) et parfois i18n runtime.
-   *
-   * Note :
-   * - si tu conserves `SOCIAL_KIND_LABEL_KEYS` comme SoT UI, tu peux soit :
-   *   A) laisser cette liste ici (recommandé : plus de regex dans le script)
-   *   B) supprimer cette liste et continuer à extraire via regex (moins robuste)
-   */
+  /** Mirrors social kind label keys when mappings build translation keys outside static scanner reach. */
   socialKinds: {
     labels: [
       "studio.social.kind.website",
@@ -60,13 +40,7 @@ export const I18N_RUNTIME_KEYS = {
     ] as const,
   },
 
-  /**
-   * Tabs / Onglets (si tu génères les clés via template string)
-   * Exemple :
-   * - t(`studio.dashboard.tabs.${tabId}`)
-   *
-   * 👉 Ajoute ici les clés exactes quand tu confirmes la liste.
-   */
+  /** Covers dashboard tab labels when tab ids are interpolated into translation keys. */
   dashboardTabs: {
     labels: [
       "studio.dashboard.tabs.overview",

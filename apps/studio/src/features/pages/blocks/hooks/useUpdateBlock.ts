@@ -2,16 +2,18 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/hooks/useUpdateBlock.ts
- * @layer hooks/studio/pages/blocks
+ * @layer studio/features/pages/blocks/hooks
  *
  * @description
- * Hook Studio React Query pour mettre à jour un block `Section` draft via l’API.
+ * React Query mutation hook for updating a draft section block through the pages Studio API.
  *
  * @remarks
- * - Orchestration UI-only : mutation, logs, notifications.
- * - Applique un patch minimal à partir d’un baseline + next UI.
- * - Gère explicitement le cas “no changes”.
- * - Le cache et les queryKeys sont scopés par Prisma Website.id.
+ * - Builds a minimal API patch from the shallow diff between baseline and next UI values.
+ * - Handles no-change cases before calling the API.
+ * - Tracks the targeted update through `updatingBlockId` so only the matching block is blocked.
+ * - Synchronizes page and block-list caches from the returned page payload.
+ * - Invalidates site and block status views after update.
+ * - Studio cache keys are scoped by Prisma Website.id.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";

@@ -2,9 +2,10 @@
 
 /**
  * @file apps/studio/src/components/molecules/fields/SearchInputField.tsx
- * @layer ui/studio/molecules
+ * @layer studio/molecules/fields
+ *
  * @description
- * Champ de recherche réutilisable avec InputGroup.
+ * Reusable Studio search input field built on `InputGroup`.
  */
 
 import { Search } from "lucide-react";

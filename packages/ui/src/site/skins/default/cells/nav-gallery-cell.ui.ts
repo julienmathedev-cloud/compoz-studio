@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/cells/nav-gallery-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default/cells
  *
  * @description
- * Skin UI — gallery cell (Default).
- *
- * @remarks
- * - Neutre et cohérent avec les autres blocs.
- * - Le full style vit ici (aucun fallback dans le composant).
+ * Defines the default skin classes for navigation gallery cells.
  */
 
 import type { GalleryMaxColumns } from "@compoz/core/domain/pages/entities/cell";

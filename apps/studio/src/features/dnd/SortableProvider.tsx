@@ -2,14 +2,14 @@
 
 /**
  * @file apps/studio/src/features/dnd/SortableProvider.tsx
- * @layer ui/studio/dnd
+ * @layer studio/features/dnd
  *
  * @description
- * Wrapper générique pour les listes triables via dnd-kit.
+ * Generic dnd-kit provider wrapper for Studio sortable lists.
  *
  * @remarks
- * - Gère DndContext + SortableContext.
- * - Déclenche `onReorder` avec les ids réordonnés.
+ * - Owns `DndContext` and `SortableContext` wiring for vertical list sorting.
+ * - Calls `onReorder` with the reordered ids only when both drag endpoints are valid.
  */
 
 import type { ReactNode } from "react";

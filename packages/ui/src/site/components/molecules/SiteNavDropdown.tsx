@@ -2,20 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/molecules/SiteNavDropdown.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/molecules
  *
  * @description
- * Molecule site : dropdown de navigation (trigger + panel en portal) pour le header.
+ * Renders a public site navigation dropdown with a trigger and portal-mounted menu panel.
  *
  * @remarks
- * - Trigger :
- *   - `<button>` si `href` est vide ou `"#"`.
- *   - `SiteNavLink` sinon (normalisation/sécurité du `href`).
- * - Panel : `role="menu"` + items `role="menuitem"`.
- * - Clavier : Enter/Espace/↓ ouvrent ; Esc ferme ; Tab/Shift+Tab gèrent le cycle.
- * - Desktop : hover ouvre/ferme.
- * - Tactile : 1er tap ouvre, double-tap navigue (anti navigation involontaire).
- * - Le panel est rendu via portal et positionné en `fixed` sous le trigger (via `getBoundingClientRect`).
+ * Handles menu roles, keyboard navigation, hover opening, touch double-tap behavior, href guardrails through `SiteNavLink`, and fixed panel positioning from the trigger rect.
  */
 
 import { usePathname } from "next/navigation";

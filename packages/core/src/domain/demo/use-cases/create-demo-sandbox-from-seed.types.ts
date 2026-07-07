@@ -1,14 +1,9 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/create-demo-sandbox-from-seed.types.ts
- * @layer core/domain
- *
- * @description
- * Contrat du use-case de création d’une sandbox démo à partir du Website seed.
- *
+ * @layer core/domain/demo
+ * @description Contracts for creating a demo sandbox from a seed website.
  * @remarks
- * - Ce use-case crée une sandbox entièrement nouvelle.
- * - Il ne gère pas la réutilisation d’une sandbox existante.
- * - Il ne gère pas non plus la session HTTP / cookies.
+ * This use case always creates a new sandbox. Cookie/session reuse is handled outside the core domain.
  */
 
 import type { IdGenerator } from "@compoz/core/domain/ports/id-generator";

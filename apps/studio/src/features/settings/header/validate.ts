@@ -2,32 +2,22 @@
 
 /**
  * @file apps/studio/src/features/settings/header/validate.ts
- * @layer hooks/studio/site/header
+ * @layer studio/features/settings/header
  *
  * @description
- * Helpers et hooks de validation UI non bloquante pour le header.
+ * Non-blocking Studio header form warnings.
  *
  * @remarks
- * - Validation métier assurée par le domaine (Zod + use-cases serveur).
- * - Ici : UX uniquement (warnings légers, cohérence visuelle).
+ * - Blocking validation stays in Zod schemas and server use cases.
  */
 
 import { useMemo } from "react";
 
 import type { HeaderFormValues } from "@compoz/validation/site/settings/header/header-form";
 
-/* ─────────────────────────────── Types ─────────────────────────────── */
-
-/**
- * Clés stables des warnings UI du header.
- */
 export type HeaderWarningKey = "noBranding";
 
-/* ─────────────────────────────── PURE FN ───────────────────────────── */
-
-/**
- * Calcule les warnings UI associés à un brouillon de header.
- */
+/** Computes non-blocking warnings from header form values. */
 export function computeHeaderWarnings(
   s: Pick<HeaderFormValues, "showLogo" | "showSiteName">,
 ): HeaderWarningKey[] {
@@ -36,7 +26,7 @@ export function computeHeaderWarnings(
   const showsLogo = Boolean(s.showLogo);
   const showsSiteName = Boolean(s.showSiteName);
 
-  // Aucun branding visible → header potentiellement vide / peu lisible
+  // A header with neither logo nor site name can render without visible branding.
   if (!showsLogo && !showsSiteName) {
     out.add("noBranding");
   }
@@ -44,11 +34,7 @@ export function computeHeaderWarnings(
   return Array.from(out);
 }
 
-/* ─────────────────────────────── HOOK ─────────────────────────────── */
-
-/**
- * Hook retournant les warnings UI du header à partir des valeurs courantes.
- */
+/** Memoizes header warnings for form consumers. */
 export function useHeaderUiWarnings(
   showLogo: HeaderFormValues["showLogo"],
   showSiteName: HeaderFormValues["showSiteName"],

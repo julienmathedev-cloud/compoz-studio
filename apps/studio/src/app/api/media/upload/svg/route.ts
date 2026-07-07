@@ -3,12 +3,12 @@
  * @layer studio/app/api
  *
  * @description
- * Upload SVG “safe” vers le storage média du Website actif.
+ * Safe SVG upload route for the active Website media storage.
  *
  * @remarks
- * - Nécessite une session Studio valide.
- * - Les SVG sont scopés par Prisma Website.id.
- * - Le média final est écrit sous :
+ * - Requires a valid Studio session.
+ * - SVG media is scoped by Prisma Website.id.
+ * - Final media is written under:
  *   `websites/:websiteId/:year/:month/:filename`
  */
 
@@ -30,10 +30,6 @@ import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 const MAX_IMAGE_UPLOAD_BYTES = Number(
   process.env["MAX_IMAGE_UPLOAD_BYTES"] ?? 5_000_000,
 );
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function sanitizeFilename(name: string): string {
   const base = name.normalize("NFKC").toLowerCase().replace(/\s+/g, "-");
@@ -118,10 +114,9 @@ function parseSvgLength(raw: string | null | undefined): number | null {
   if (!value) return null;
 
   /**
-   * On accepte uniquement des longueurs en unités CSS/px raisonnables
-   * ou unitless (interprétées comme px).
+   * Accept only reasonable CSS/px lengths or unitless values interpreted as px.
    *
-   * Exemples acceptés :
+   * Accepted examples:
    * - "240"
    * - "240px"
    */
@@ -183,10 +178,6 @@ function extractSvgDimensions(
     height: Math.round(viewBoxHeight),
   };
 }
-
-/* -------------------------------------------------------------------------- */
-/* POST                                                                       */
-/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
   const NS = "api.studio.media.upload.svg.POST" as const;

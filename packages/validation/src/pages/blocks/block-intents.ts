@@ -1,8 +1,9 @@
 /**
  * @file packages/validation/src/pages/blocks/block-intents.ts
  * @layer schemas
+ *
  * @description
- * Schémas Zod décrivant les intentions liées aux blocks (sections).
+ * Zod schemas describing section block intent payloads.
  */
 
 import { z } from "zod";
@@ -19,22 +20,15 @@ import {
 } from "@compoz/validation/pages/blocks/block";
 import { CellSchema } from "@compoz/validation/pages/blocks/cells/cell";
 
-/* -------------------------------------------------------------------------- */
-/*                                   helpers                                  */
-/* -------------------------------------------------------------------------- */
-
 const OrderedBlockIdsIntentSchema = z
   .array(BlockIdSchema)
   .min(1, ERROR_CODES.BLOCKS_INVALID);
 
-/* -------------------------------------------------------------------------- */
-/*                         Create helpers (draft-friendly)                    */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Colonne de création :
- * - `id` optionnel (généré côté domaine si absent)
- * - `cells` requis
+ * Draft-friendly column payload.
+ *
+ * @remarks
+ * `id` may be omitted because the domain layer generates it when needed.
  */
 const CreateBlockColumnIntentSchema = z
   .object({
@@ -44,11 +38,11 @@ const CreateBlockColumnIntentSchema = z
   .strict();
 
 /**
- * Ligne de création :
- * - `id` optionnel (généré côté domaine si absent)
- * - `columnsCount` requis
- * - `reverseOn` optionnel (normalisé côté domaine si absent)
- * - `columns` requis
+ * Draft-friendly row payload.
+ *
+ * @remarks
+ * `id` and `reverseOn` may be omitted because the domain layer fills the
+ * missing structural defaults.
  */
 const CreateBlockRowIntentSchema = z
   .object({
@@ -58,10 +52,6 @@ const CreateBlockRowIntentSchema = z
     columns: z.array(CreateBlockColumnIntentSchema),
   })
   .strict();
-
-/* -------------------------------------------------------------------------- */
-/*                               Create Block                                 */
-/* -------------------------------------------------------------------------- */
 
 export const CreateSectionBlockIntentSchema = z
   .object({
@@ -77,10 +67,6 @@ export const CreateSectionBlockIntentSchema = z
 export type CreateSectionBlockIntentDTO = z.infer<
   typeof CreateSectionBlockIntentSchema
 >;
-
-/* -------------------------------------------------------------------------- */
-/*                               Update Block                                 */
-/* -------------------------------------------------------------------------- */
 
 export const UpdateSectionBlockIntentSchema = z
   .object({
@@ -101,10 +87,6 @@ export type UpdateSectionBlockIntentDTO = z.infer<
   typeof UpdateSectionBlockIntentSchema
 >;
 
-/* -------------------------------------------------------------------------- */
-/*                               Delete Block                                 */
-/* -------------------------------------------------------------------------- */
-
 export const DeleteBlockIntentSchema = z
   .object({
     blockId: BlockIdSchema,
@@ -112,10 +94,6 @@ export const DeleteBlockIntentSchema = z
   .strict();
 
 export type DeleteBlockIntentDTO = z.infer<typeof DeleteBlockIntentSchema>;
-
-/* -------------------------------------------------------------------------- */
-/*                              Reorder Blocks                                */
-/* -------------------------------------------------------------------------- */
 
 export const ReorderBlocksIntentSchema = z
   .object({

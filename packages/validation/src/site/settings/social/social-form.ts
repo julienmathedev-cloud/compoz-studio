@@ -1,15 +1,17 @@
 /**
  * @file packages/validation/src/site/settings/social/social-form.ts
  * @layer schemas
+ *
  * @description
- * Définit les schémas Zod décrivant la forme du formulaire Social côté UI (admin / RHF).
+ * Zod schemas describing the social settings UI form shape.
  *
  * @remarks
- * - Schéma UI (RHF-friendly) : `href` est une string contrôlée.
- * - On applique uniquement les règles UX minimales (requis + "préfixe seul")
- *   afin d’avoir des messages stables pendant la saisie.
- * - Les règles métier (mailto réservé à email, URL absolue requise, etc.)
- *   restent dans `social.ts` (settings/API) + domaine.
+ * The form keeps `href` as a controlled string. It only applies minimal UX
+ * checks for empty values and incomplete URL prefixes to keep field-level RHF
+ * errors stable while editing.
+ *
+ * Canonical URL rules, such as kind-specific protocols, belong to the settings
+ * boundary and domain layer.
  */
 
 import { SOCIAL_ITEM } from "@compoz/core/constants/limits/social";
@@ -20,10 +22,6 @@ import {
   isMailtoPrefixOnly,
 } from "@compoz/core/domain/urls/ui-heuristics";
 import { z } from "zod";
-
-/* -------------------------------------------------------------------------- */
-/*                                Item (UI)                                   */
-/* -------------------------------------------------------------------------- */
 
 export const SocialItemFormSchema = z
   .object({
@@ -36,7 +34,6 @@ export const SocialItemFormSchema = z
     const href = val.href.trim();
     const isPrefixOnly = isMailtoPrefixOnly(href) || isHttpPrefixOnly(href);
 
-    // UX minimal : "" ou "préfixe seul" => requis (message stable)
     if (href.length === 0 || isPrefixOnly) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

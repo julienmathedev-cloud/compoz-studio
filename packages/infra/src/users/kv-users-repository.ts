@@ -1,13 +1,9 @@
 /**
  * @file packages/infra/src/users/kv-users-repository.ts
  * @layer infra/users
- * @description
- * Implémentation KV (Upstash Redis) du UsersRepository (Studio users).
- *
- * Stockage :
- * - user doc : compoz:studio:users:user:<userId> (JSON)
- * - index email -> userId : compoz:studio:users:userByEmail:<emailLower>
- * - password hash : compoz:studio:users:pwd:<userId>
+ * @description KV-backed UsersRepository implementation for Studio users.
+ * @remarks
+ * Stores user documents, email indexes, and password hashes under the global Studio users namespace.
  */
 
 import bcrypt from "bcryptjs";
@@ -22,25 +18,12 @@ import { getUpstashRedis, parseRedisJson } from "@compoz/infra/kv/kv-redis";
 import { kvCmd } from "@compoz/infra/kv/kv-telemetry";
 import { log } from "@compoz/infra/lib/log";
 
-// ⛳️ NOTE: idéalement ces schémas vivent dans @compoz/core (boundary validation)
 import type { UserShape } from "@compoz/validation/users/user";
 import { UserSchema } from "@compoz/validation/users/user";
 
-/**
- * Namespace standard (SoT) :
- * compoz:<surface>:<layer>:<module>
- */
 const lg = log.child({ ns: "compoz:studio:repo:users", kind: "kv" });
 
-/* -------------------------------------------------------------------------- */
-/* Types (SoT = port)                                                         */
-/* -------------------------------------------------------------------------- */
-
 type CreateUserInput = Parameters<UsersRepository["create"]>[0];
-
-/* -------------------------------------------------------------------------- */
-/* Keys                                                                       */
-/* -------------------------------------------------------------------------- */
 
 const USERS_NS = "compoz:studio:users" as const;
 
@@ -66,10 +49,6 @@ function userIdFromKey(key: string): string | null {
   return id ? id.trim() : null;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
 function normalizeEmail(email: unknown): string {
   return String(email ?? "")
     .trim()
@@ -77,7 +56,7 @@ function normalizeEmail(email: unknown): string {
 }
 
 function kvCtx(base: string): string {
-  // ctx stable, sans key ni id
+  // Stable telemetry context without keys or ids.
   return `users.${base}`;
 }
 
@@ -92,10 +71,6 @@ function toDomainUser(u: UserShape): User {
     demo: u.demo,
   };
 }
-
-/* -------------------------------------------------------------------------- */
-/* Repository                                                                 */
-/* -------------------------------------------------------------------------- */
 
 export class KvUsersRepository implements UsersRepository {
   private readonly redis = getUpstashRedis();
@@ -149,7 +124,7 @@ export class KvUsersRepository implements UsersRepository {
       throw new Error("KvUsersRepository.create: password is required.");
     }
 
-    // (défense) si index existe déjà, on refuse
+    // Defensive uniqueness check before writing user data.
     const existing = await kvCmd(kvCtx("create.checkEmail"), "get", () =>
       this.redis.get(emailIndexKey(emailLower)),
     );
@@ -158,25 +133,17 @@ export class KvUsersRepository implements UsersRepository {
       throw new Error("KvUsersRepository.create: email already exists.");
     }
 
-    // Canonicalisation email côté infra
+    // Store the canonical lower-case email in the infra layer.
     const toStore: User = { ...user, email: emailLower };
 
-    // boundary validation
     UserSchema.parse(toStore);
-
-    // 1) user doc
     await kvCmd(kvCtx("create.user.set"), "set", () =>
       this.redis.set(userKey(id), JSON.stringify(toStore)),
     );
-
-    // 2) email index
     await kvCmd(kvCtx("create.emailIndex.set"), "set", () =>
       this.redis.set(emailIndexKey(emailLower), id),
     );
-
-    // 3) password hash (infra-only)
     const hash = await bcrypt.hash(password, 10);
-
     await kvCmd(kvCtx("create.pwd.set"), "set", () =>
       this.redis.set(pwdKey(id), hash),
     );
@@ -195,13 +162,11 @@ export class KvUsersRepository implements UsersRepository {
       throw new Error("KvUsersRepository.put: user.email is required.");
     }
 
-    // Canonicalisation email côté infra
+    // Store the canonical lower-case email in the infra layer.
     const toStore: User = { ...user, email: nextEmail };
 
-    // boundary validation
     UserSchema.parse(toStore);
-
-    // Si l'email change, on doit maintenir l'index.
+    // Keep the secondary email index in sync when an email changes.
     const existing = await this.readById(id);
     const prevEmail = existing ? normalizeEmail(existing.email) : "";
 
@@ -209,12 +174,11 @@ export class KvUsersRepository implements UsersRepository {
       await kvCmd(kvCtx("put.emailIndex.delOld"), "del", () =>
         this.redis.del(emailIndexKey(prevEmail)),
       );
-
       await kvCmd(kvCtx("put.emailIndex.set"), "set", () =>
         this.redis.set(emailIndexKey(nextEmail), id),
       );
     } else if (!prevEmail) {
-      // best-effort : assure l'index si doc présent sans index (réparation)
+      // Best-effort repair for documents that exist without their email index.
       await kvCmd(kvCtx("put.emailIndex.ensure"), "set", () =>
         this.redis.set(emailIndexKey(nextEmail), id),
       );
@@ -229,10 +193,7 @@ export class KvUsersRepository implements UsersRepository {
     await this.ensureBase();
     if (users.length === 0) return;
 
-    // V0.5 pragmatique :
-    // - mset des docs user
-    // - puis (best-effort) on garantit les indexes email -> id
-    // (coûteux si énorme volume, mais OK pour usage admin/seed/tests).
+    // Pragmatic batch write: mset user docs, then best-effort email indexes.
     const docs: Record<string, string> = {};
     const indexes: Array<Promise<unknown>> = [];
 
@@ -259,7 +220,7 @@ export class KvUsersRepository implements UsersRepository {
 
     await kvCmd(kvCtx("putMany.mset"), "other", () => this.redis.mset(docs));
 
-    // best-effort : si un index échoue, on veut quand même les docs users en place
+    // Best-effort indexes must not roll back already written user documents.
     await Promise.allSettled(indexes);
   }
 
@@ -362,7 +323,7 @@ export class KvUsersRepository implements UsersRepository {
           status: parsed.status,
         });
       } catch {
-        // skip doc corrompu
+        // Skip corrupted documents.
       }
     }
 

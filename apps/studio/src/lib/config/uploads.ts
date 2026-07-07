@@ -3,23 +3,18 @@
  * @layer studio/lib/config
  *
  * @description
- * Configuration publique liée aux uploads de médias côté client.
- *
- * Source de vérité UI :
- * - Taille max des fichiers uploadés (doit matcher la config serveur).
+ * Public client-side media upload configuration.
  *
  * @remarks
- * - V0.5 : volontairement simple, sans logique métier (elle reste côté API).
- * - Pensé pour être consommé par les composants UI / hooks client.
+ * - Exposes UI validation limits derived from public environment variables.
+ * - The client-side limit must stay aligned with the server upload limit.
  */
 
 /**
- * Taille maximale autorisée pour les uploads d’images côté UI (en octets).
+ * Maximum image upload size accepted by the Studio UI, in bytes.
  *
- * - Lue depuis `NEXT_PUBLIC_MAX_IMAGE_UPLOAD_BYTES`
- * - `undefined` si absente ou invalide (désactive la validation UI)
- *
- * ⚠️ Doit matcher `MAX_IMAGE_UPLOAD_BYTES` côté serveur.
+ * @remarks
+ * - `undefined` disables UI-side size validation when the public env value is missing or invalid.
  */
 export const MAX_IMAGE_UPLOAD_BYTES: number | undefined = (() => {
   const raw = Number(process.env.NEXT_PUBLIC_MAX_IMAGE_UPLOAD_BYTES);

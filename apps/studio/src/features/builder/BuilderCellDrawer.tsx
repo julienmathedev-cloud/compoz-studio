@@ -2,17 +2,16 @@
 
 /**
  * @file apps/studio/src/features/builder/BuilderCellDrawer.tsx
- * @layer ui/studio/builder
+ * @layer studio/features/builder
  *
  * @description
- * Studio builder drawer used to edit the currently selected cell.
+ * Studio builder drawer for editing the currently selected cell.
  *
  * @remarks
- * - Does not depend on `useFormContext()`.
- * - Receives `control`, `setValue`, `clearErrors`, and `trigger` explicitly from the parent.
- * - Renders a single editor for the active cell.
- * - Reuses existing cell editors.
- * - Keeps the cell type selector available inside the drawer.
+ * - Does not depend on `useFormContext()`; form helpers are passed explicitly by the parent.
+ * - Watches the active block form state to resolve the selected cell and column.
+ * - Keeps the cell kind selector available inside the drawer and preserves the selected cell id when switching kind.
+ * - Blurs the active input before close validation so RHF receives the latest field value.
  * - Prevents closing when the active cell contains blocking validation errors.
  */
 

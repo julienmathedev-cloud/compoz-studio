@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/demo/legal-menu.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/demo
  *
  * @description
- * Skin UI — menu légal site (thème Démo).
+ * Defines the demo skin overrides for the public site legal menu.
  */
 
 import type { SiteLegalMenuUiOverride } from "@compoz/ui/site/site-ui.types";

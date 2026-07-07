@@ -1,6 +1,14 @@
 /**
  * @file apps/studio/next.config.ts
- * @description Next.js config (admin) — aliases monorepo + next-intl.
+ * @layer studio/config
+ *
+ * @description
+ * Next.js configuration for the Studio app.
+ *
+ * @remarks
+ * - Enables the Studio `next-intl` request plugin.
+ * - Transpiles shared monorepo packages used by the app.
+ * - Sets a 45-day minimum cache TTL for optimized remote images.
  */
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";

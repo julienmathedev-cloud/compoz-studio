@@ -1,9 +1,9 @@
 /**
  * @file apps/studio/src/lib/pages/blocks/cell-kind-meta.ts
- * @layer studio/lib/pages/block
+ * @layer studio/lib/pages/blocks
  *
  * @description
- * Studio UI metadata for block cells.
+ * Studio UI metadata helpers for block cell labels and icons.
  */
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";

@@ -1,7 +1,7 @@
 /**
  * @file packages/core/src/constants/limits/seo.ts
  * @layer core/constants/limits
- * @description Limites métier — SEO.
+ * @description Business limits for SEO-related metadata.
  */
 export const SEO = {
   TITLE: { MIN: 2, MAX: 80 },

@@ -2,15 +2,14 @@
 
 /**
  * @file apps/studio/src/features/shell/components/StudioShell.tsx
- * @layer ui/studio/layouts
+ * @layer studio/features/shell/components
  *
  * @description
- * Shell client-side pour l’interface Studio.
+ * Client-side shell for rendering the Studio after hydration.
  *
  * @remarks
- * - Évite le rendu SSR de composants sensibles (Radix, useId, etc.).
- * - S’appuie sur `useIsMounted` pour différer le rendu complet.
- * - Affiche un conteneur accessible pendant la phase de montage.
+ * - Defers Radix/useId-sensitive UI until the app is mounted on the client.
+ * - Shows an accessible loader during the client-mount phase.
  */
 
 import type { ReactNode } from "react";
@@ -24,22 +23,15 @@ type StudioShellProps = Readonly<{
   children: ReactNode;
 }>;
 
-/**
- * Shell principal de l’interface Studio.
- *
- * @param children Contenu Studio à rendre une fois monté côté client.
- */
 export function StudioShell({ children }: StudioShellProps) {
   const isMounted = useIsMounted();
   const t = useTranslations();
   const label = t("studio.shell.loading");
 
   if (!isMounted) {
-    // Pas encore monté côté client → on évite de rendre Tabs/Dialog/etc.
     return <SectionLoader label={label} className="h-full" />;
   }
 
-  // Une fois monté → on rend tout le Studio normalement (Dashboard, Tabs, etc.)
   return <>{children}</>;
 }
 

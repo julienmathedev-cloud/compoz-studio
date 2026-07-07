@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/lola/cells/carousel-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/lola/cells
  *
  * @description
- * Skin UI — carousel block (thème Lola).
+ * Defines the Lola skin overrides for carousel and slider cells.
  */
 
 import type { SiteCarouselUiOverride } from "@compoz/ui/site/site-ui.types";

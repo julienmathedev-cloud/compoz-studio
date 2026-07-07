@@ -1,15 +1,9 @@
 /**
  * @file packages/infra/src/site/in-memory-site-repository.ts
  * @layer infra/site
- * @description
- * Implémentation InMemory du SiteRepository pour tests unitaires et e2e.
- *
+ * @description In-memory SiteRepository implementation for tests.
  * @remarks
- * - Repository mémoire non scopé directement : l’isolation multi-website est
- *   assurée par la factory qui instancie/cache un repository par `websiteId`.
- * - Responsabilités : stockage en mémoire des SiteIndex et SiteSettings pour
- *   `draft` et `published`, clonage structuré pour éviter les mutations externes,
- *   aucune I/O.
+ * Website isolation is handled by the factory, which creates and caches one repository per `websiteId`.
  */
 
 import {
@@ -29,20 +23,13 @@ import type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 
-/**
- * Retourne un index vide selon l’espace de contenu demandé.
- * Contrat : utilisé comme fallback si l’index est absent.
- */
+/** Returns the empty fallback index for the requested content state. */
 function defaultIndex(state: ContentState): SiteIndex {
   return state === CONTENT_STATE.DRAFT
     ? { pages: [], updatedAt: new Date().toISOString() }
     : { pages: [], updatedAt: "" };
 }
 
-/**
- * Retourne les settings complets avec tous les defaults du domaine.
- * Contrat : toutes les sous-sections sont présentes.
- */
 function defaultSettings(): SiteSettings {
   return {
     header: { ...DEFAULT_HEADER_SETTINGS },
@@ -122,36 +109,20 @@ function mergeThemeSettings(
   };
 }
 
-/**
- * Repository SiteRepository basé sur la mémoire.
- * Contrat : lit/écrit des copies pour isoler l’état interne, compatible tests unitaires et e2e.
- */
 export class InMemorySiteRepository implements SiteRepository {
-  // Stores mémoire séparés par espace de contenu (draft/published)
   private indexDraft: SiteIndex | null = null;
   private indexPublished: SiteIndex | null = null;
   private settingsDraft: SiteSettings | null = null;
   private settingsPublished: SiteSettings | null = null;
 
-  /**
-   * Initialise la base (no-op pour InMemory).
-   */
-  async ensureBase(): Promise<void> {
-    // no-op
-  }
+  async ensureBase(): Promise<void> {}
 
-  // ---------------------------------------------------------------------------
-  // Helpers internes
-  // ---------------------------------------------------------------------------
-
-  /** Retourne l’index associé à un espace donné (ou `null` si absent). */
   private pickIndex(state: ContentState): SiteIndex | null {
     return state === CONTENT_STATE.PUBLISHED
       ? this.indexPublished
       : this.indexDraft;
   }
 
-  /** Positionne l’index pour un espace donné. */
   private setIndex(state: ContentState, idx: SiteIndex): void {
     if (state === CONTENT_STATE.PUBLISHED) {
       this.indexPublished = idx;
@@ -160,14 +131,12 @@ export class InMemorySiteRepository implements SiteRepository {
     }
   }
 
-  /** Retourne les settings associés à un espace donné (ou `null` si absents). */
   private pickSettings(state: ContentState): SiteSettings | null {
     return state === CONTENT_STATE.PUBLISHED
       ? this.settingsPublished
       : this.settingsDraft;
   }
 
-  /** Positionne les settings pour un espace donné. */
   private setSettings(state: ContentState, settings: SiteSettings): void {
     if (state === CONTENT_STATE.PUBLISHED) {
       this.settingsPublished = settings;
@@ -176,30 +145,15 @@ export class InMemorySiteRepository implements SiteRepository {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Méthodes du contrat `SiteRepository`
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Lit l’index pour un espace donné.
-   * Contrat : fallback sur defaultIndex(), retourne une copie.
-   */
   async readIndex(state: ContentState): Promise<SiteIndex> {
     return structuredClone(this.pickIndex(state) ?? defaultIndex(state));
   }
 
-  /**
-   * Écrit l’index pour un espace donné.
-   * Contrat : stocke une copie pour isoler l’état interne.
-   */
   async putIndex(state: ContentState, index: SiteIndex): Promise<void> {
     this.setIndex(state, structuredClone(index));
   }
 
-  /**
-   * Lit les settings pour un espace donné.
-   * Contrat : fallback sur defaultSettings(), retourne une copie.
-   */
+  /** Returns cloned settings with legacy SEO and theme defaults normalized. */
   async readSettings(state: ContentState): Promise<SiteSettings> {
     const settings = this.pickSettings(state) ?? defaultSettings();
 
@@ -212,10 +166,6 @@ export class InMemorySiteRepository implements SiteRepository {
     });
   }
 
-  /**
-   * Écrit les settings pour un espace donné.
-   * Contrat : stocke une copie pour isoler l’état interne.
-   */
   async putSettings(
     state: ContentState,
     settings: SiteSettings,

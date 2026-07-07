@@ -1,8 +1,9 @@
 /**
  * @file apps/studio/src/app/api/_adapters/pages/blocks/cells/testimonials.ts
  * @layer studio/app/api/adapters
+ *
  * @description
- * Adapteurs API Studio pour les cellules de type `TestimonialsCell`.
+ * Studio API adapter for `TestimonialsCell` values.
  */
 
 import type {
@@ -15,9 +16,7 @@ import type {
   TestimonialsCellIntentDTO,
 } from "@compoz/validation/pages/blocks/cells/cell-intents";
 
-function adaptTestimonialItem(
-  dto: TestimonialItemIntentDTO,
-): TestimonialItem {
+function adaptTestimonialItem(dto: TestimonialItemIntentDTO): TestimonialItem {
   return {
     id: trimOrKeep(dto.id),
     quote: trimOrKeep(dto.quote),

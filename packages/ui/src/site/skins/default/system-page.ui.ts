@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/system-page.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default
  *
  * @description
- * Skin UI — "system page" site (thème Default).
- *
- * @remarks
- * - Base commune utilisée pour `errorPage` et `notFoundPage`.
- * - Si besoin de différencier plus tard : faire un spread + override ciblé.
+ * Defines the default skin classes for public site system pages.
  */
 
 import type { SiteSystemPageUi } from "@compoz/ui/site/site-ui.types";

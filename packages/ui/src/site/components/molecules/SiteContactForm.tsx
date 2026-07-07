@@ -2,21 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/molecules/SiteContactForm.tsx
- * @layer ui/site/molecules
+ * @layer ui/site/components/molecules
  *
  * @description
- * Formulaire de contact public utilisé par la cellule `form`.
+ * Renders the public contact form used by form cells.
  *
  * @remarks
- * - UI-only orienté runtime site.
- * - Tous les styles sont pilotés par `ui`.
- * - Le composant supporte deux modes :
- *   1. `onSubmit` fourni par le parent
- *   2. fallback HTTP vers `/api/contact`
- * - Utilise `Card` et les primitives `Field` ShadCN.
- * - Supporte les types `text`, `email` et `textarea`.
- * - Envoie aussi les métadonnées minimales des champs (`name`, `label`)
- *   afin que l’API puisse afficher les champs dynamiques avec un libellé lisible.
+ * Supports parent-provided submission or the `/api/contact` fallback, and sends field metadata so dynamic fields keep readable labels server-side.
  */
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -253,10 +245,6 @@ export function SiteContactForm({
 }
 
 SiteContactForm.displayName = "SiteContactForm";
-
-/* -------------------------------------------------------------------------- */
-/* Internals                                                                  */
-/* -------------------------------------------------------------------------- */
 
 function buildInitialValues(
   fields: readonly FormFieldShape[],

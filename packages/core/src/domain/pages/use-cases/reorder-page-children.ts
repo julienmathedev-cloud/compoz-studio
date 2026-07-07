@@ -1,11 +1,9 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/reorder-page-children.ts
  * @layer core/domain/pages/use-cases
- * @description
- * Use-case : réordonner les enfants d’un parent dans l’index (index-only, draft).
- *
+ * @description Use case that reorders a parent's children in the draft index.
  * @remarks
- * - Lit l’index (SoT), applique le reorder, valide, écrit l’index.
+ * Index-only operation: read the index source of truth, reorder, validate, then persist it.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -54,7 +52,7 @@ export function reorderPageChildren({
 
     const next = reorderChildrenByParentId(current, parentId, childIds);
 
-    // Validation des invariants de l’index (slug unique, structure, etc.).
+    // Validate index invariants such as unique slugs and tree structure.
     assertSiteIndex(next);
 
     const index: SiteIndexDTO = {

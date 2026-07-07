@@ -2,18 +2,16 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/card/CardItemEditor.tsx
- * @layer ui/studio/pages/blocks/editor/items/card
+ * @layer studio/features/builder/editor/cells/card
  *
  * @description
- * RHF-aware editor for a single card item.
+ * RHF-aware editor for one CardCell item.
  *
  * @remarks
- * - Values are read and edited through RHF (`useController`).
- * - `sortableId` is only used for drag and drop.
- * - `watchedItem` is used as a visual fallback to keep rendering stable
- *   during RHF rebinding after reordering.
- * - `IconPicker` is mounted on demand to reduce layout cost when a list
- *   contains several opened cards at the same time.
+ * - Binds item fields directly through RHF `useController`.
+ * - Uses `sortableId` only for dnd-kit sorting.
+ * - Uses `watchedItem` as a visual fallback to keep rendering stable during RHF rebinding after reordering.
+ * - Mounts `IconPicker` on demand to reduce layout cost when several cards are open.
  */
 
 import { useSortable } from "@dnd-kit/sortable";

@@ -1,8 +1,8 @@
 /**
  * @file packages/validation/src/common/image.ts
- * @layer schemas
+ * @layer validation/common
  * @description
- * Schéma Zod partagé décrivant un objet image canonique.
+ * Defines the shared Zod schema for canonical image objects.
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";

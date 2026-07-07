@@ -2,17 +2,14 @@
 
 /**
  * @file apps/studio/src/features/preview/PreviewShell.tsx
- * @layer ui/studio/preview
+ * @layer studio/features/preview
  *
  * @description
- * Shell Preview (iframe studio) : injecte le chrome public (Header/Footer)
- * en se basant sur les baselines preview (React Query + postMessage).
+ * Preview iframe shell rendering public header, main content, and footer from preview baselines.
  *
  * @remarks
- * - Obligatoirement client : dépend de `usePreviewOverride()`.
- * - Source de vérité : baselines `header` / `identity` / `primaryMenu` / `social` / `footer` / `legalMenu`.
- * - Ne gère pas la page en elle-même : rend uniquement `{children}` dans le `<main>`.
- * - Le skin UI est reçu en props depuis la page preview.
+ * - Reads chrome baselines through `usePreviewOverride()` because preview pages receive them after iframe handshake.
+ * - Renders nothing until all required chrome baselines are available.
  */
 
 import type { ReactNode } from "react";

@@ -1,16 +1,9 @@
 /**
  * @file packages/core/src/domain/pages/entities/items/extended-card-item.ts
  * @layer core/domain/pages
- *
- * @description
- * Domain entity representing an extended card item.
- *
+ * @description Extended card item domain entity.
  * @remarks
- * An extended card item provides richer content than a simple card:
- * description, bullet points, optional footer, and optional icon.
- *
- * Layout concerns such as columns, alignment, or reveal behavior are handled
- * by higher-level cells such as `cardCollection` or `carousel`.
+ * Layout concerns are handled by higher-level cells such as `cardCollection` or `carousel`.
  */
 
 import type { ContentIconKind } from "@compoz/core/constants/icons/content-icons";

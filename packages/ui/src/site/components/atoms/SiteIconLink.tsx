@@ -1,16 +1,12 @@
 /**
  * @file packages/ui/src/site/components/atoms/SiteIconLink.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/atoms
  *
  * @description
- * Atome site : lien “icône seule” (a11y + garde-fous href) avec rendu via `<a>`.
+ * Renders an icon-only public site link with accessible naming and href guardrails.
  *
  * @remarks
- * - Icône décorative (`aria-hidden`) ; nom accessible via `aria-label` (fourni ou déduit).
- * - Normalise et qualifie le `href` (special / external / unsafe).
- * - `unsafe` : lien neutralisé (rendu non cliquable).
- * - `external` : `target/rel` optionnels + hint SR “nouvel onglet”.
- * - Le style est piloté par le skin/template (classes).
+ * Unsafe and empty links are neutralized; external links can open in a new tab with secure rel attributes and an optional screen-reader hint.
  */
 
 import type { ReactNode } from "react";
@@ -23,36 +19,25 @@ import { cn } from "@compoz/ui/lib/utils";
 export type SiteIconLinkProps = Readonly<{
   href: string;
 
-  /**
-   * Nom accessible explicite (recommandé).
-   * Si absent, un fallback lisible est dérivé depuis le `href`.
-   */
   ariaLabel?: string;
 
-  /** Icône (ReactNode) — rendue décorative. */
   icon: ReactNode;
 
-  /** Classes appliquées par le skin/template. */
   className?: string;
 
-  /** Classes appliquées au lien (`<a>`). */
   linkClassName?: string;
 
-  /** Ouvre dans un nouvel onglet (par défaut : true). */
   newTab?: boolean;
 
-  /** Ajoute un hint SR “ouvre dans un nouvel onglet” (liens externes). */
   showNewTabHint?: boolean;
 
-  /** Texte SR pour le hint “nouvel onglet”. */
   newTabHintSrLabel?: string;
 
-  /** `rel` externe (si ouverture nouvel onglet). */
   externalRel?: string;
 }>;
 
 function fallbackFromHref(href: string): string {
-  // Fallback simple : hostname si possible, sinon libellé générique.
+  // Prefer the hostname when deriving an accessible fallback label.
   try {
     const u = new URL(href);
     return u.hostname.replace(/^www\./, "");
@@ -76,20 +61,20 @@ export function SiteIconLink({
 }: SiteIconLinkProps) {
   const normalizedHref = normalizeString(href);
 
-  // Fallback a11y : nom accessible dérivé du href (icône seule).
+  // Icon-only links need an accessible label derived from href when none is provided.
   const fallbackBase = normalizedHref
     ? fallbackFromHref(normalizedHref)
     : "Lien";
 
   const computedAria = getAriaLabel(
     ariaLabel,
-    null, // icône seule → pas de texte visible
+    null, // Icon-only link: no visible text.
     fallbackBase,
   );
 
   const { special, external, unsafe } = resolveLinkFlags(normalizedHref);
 
-  // Unsafe ou href vide : lien neutralisé (non cliquable).
+  // Empty or unsafe hrefs remain visually present but non-clickable.
   if (!normalizedHref || unsafe) {
     return (
       <div className={cn(className)}>
@@ -101,7 +86,6 @@ export function SiteIconLink({
           data-disabled="true"
           tabIndex={-1}
         >
-          {/* Icône décorative */}
           <span aria-hidden="true">{icon}</span>
         </span>
       </div>
@@ -124,10 +108,9 @@ export function SiteIconLink({
         rel={rel}
         data-external={external ? "true" : undefined}
       >
-        {/* Icône décorative */}
         <span aria-hidden="true">{icon}</span>
 
-        {/* Hint SR optionnel */}
+        {/* Optional screen-reader hint for new-tab links. */}
         {shouldHintNewTab ? (
           <span className="sr-only"> {newTabHintSrLabel}</span>
         ) : null}

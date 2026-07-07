@@ -1,12 +1,9 @@
 /**
  * @file packages/infra/src/lib/sanitize-rich-text.ts
  * @layer infra/lib
- * @description
- * Fonctions utilitaires HTML (server-only) — sanitization allowlist TipTap.
- *
+ * @description Server-only HTML sanitizer for TipTap rich text content.
  * @remarks
- * - Allowlist stricte : seules les balises/attributs nécessaires passent.
- * - Liens : forçage `target="_blank"` + `rel="noopener noreferrer nofollow"`.
+ * Keeps a strict allowlist and normalizes links to open safely in a new tab.
  */
 
 import "server-only";

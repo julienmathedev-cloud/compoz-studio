@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/renaud/legal-menu.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/renaud
  *
  * @description
- * Skin UI — menu légal site (thème renaud).
+ * Defines the Renaud skin overrides for the public site legal menu.
  */
 
 import type { SiteLegalMenuUiOverride } from "@compoz/ui/site/site-ui.types";

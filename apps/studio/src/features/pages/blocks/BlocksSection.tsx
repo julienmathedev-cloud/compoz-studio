@@ -1,24 +1,20 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/pages/blocks/sections/BlocksSection.tsx
- * @layer ui/studio/pages/blocks/sections
+ * @file apps/studio/src/features/pages/blocks/BlocksSection.tsx
+ * @layer studio/features/pages/blocks
  *
  * @description
- * Section « Blocs » du studio — placeholder UI en attente de la bibliothèque de blocs.
+ * Placeholder Studio Blocks section shown until the block library is available.
  *
  * @remarks
- * - Sert de repère visuel dans le Dashboard tant que la fonctionnalité n’est pas disponible.
- * - Ne contient aucune logique métier ni orchestration.
- * - Strictement UI-only.
+ * - Keeps the Dashboard route present while the block library feature is not implemented yet.
+ * - Renders a visible section heading through `SettingsSection`.
  */
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { SettingsSection } from "@compoz/studio/components/layouts/SettingsSection";
 
-/**
- * Section placeholder pour l’onglet « Blocs » (studio).
- */
 export function BlocksSection() {
   return (
     <SettingsSection

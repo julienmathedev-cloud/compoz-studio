@@ -1,8 +1,10 @@
 /**
  * @file apps/site/postcss.config.mjs
- * @description PostCSS config file
+ * @layer site/config
+ *
+ * @description
+ * PostCSS configuration for the public Site app.
  */
-
 const config = {
   plugins: {
     "@tailwindcss/postcss": {},

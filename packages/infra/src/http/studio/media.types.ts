@@ -1,8 +1,9 @@
 /**
  * @file packages/infra/src/http/studio/media.types.ts
  * @layer infra/http/studio
- * @description
- * DTO SoT des uploads média Studio.
+ * @description DTO contracts for Studio media uploads.
+ * @remarks
+ * Temporary upload keys are server-generated and used as direct Blob upload pathnames.
  */
 
 export type UploadImageKind = "content" | "og" | "logo" | "favicon";
@@ -15,10 +16,6 @@ export type PrepareImageUploadRequest = Readonly<{
 }>;
 
 export type PrepareImageUploadResponse = Readonly<{
-  /**
-   * Clé temporaire générée côté serveur.
-   * Elle sera utilisée comme pathname Blob pour l’upload direct.
-   */
   tempKey: string;
 }>;
 

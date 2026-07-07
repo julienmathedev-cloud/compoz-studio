@@ -1,19 +1,9 @@
 /**
  * @file packages/infra/src/http/endpoints.ts
  * @layer infra/http
- *
- * @description
- * Table centralisée des endpoints HTTP pour l’API Studio.
- *
+ * @description Centralized Studio API endpoint map.
  * @remarks
- * Responsabilités :
- * - construction de chemins robustes avec normalisation des segments ;
- * - gestion d’un préfixe / d’une version via env ;
- * - source unique des URLs consommées côté client et tests.
- *
- * Variables supportées :
- * - NEXT_PUBLIC_API_PREFIX, ex: "/api"
- * - NEXT_PUBLIC_API_VERSION, ex: "v1"
+ * Endpoint paths are built from normalized segments and can include a public API prefix and optional version.
  */
 
 const TRIM_SLASHES_RE = /^\/+|\/+$/g;
@@ -31,12 +21,6 @@ const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX ?? "/api";
 const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION;
 const VERSION_SEG = API_VERSION ? [API_VERSION] : [];
 
-/**
- * Base API pour l’app Studio.
- *
- * @example
- * "/api" ou "/api/v1" si versionnée.
- */
 const STUDIO_BASE = ep(API_PREFIX, ...VERSION_SEG);
 
 const SITE_BASE = ep(STUDIO_BASE, "site");

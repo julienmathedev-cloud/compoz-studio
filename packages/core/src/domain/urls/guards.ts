@@ -1,7 +1,7 @@
 /**
  * @file packages/core/src/domain/urls/guards.ts
  * @layer core/domain/urls
- * @description Guards bas niveau (email simple, URL relative, ancre locale, URL http(s)).
+ * @description Low-level guards for simple emails, relative URLs, hash anchors, and absolute HTTP URLs.
  */
 
 const SIMPLE_EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;

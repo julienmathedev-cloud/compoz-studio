@@ -1,17 +1,9 @@
 /**
- * @file packages/core/src/domain/site/use-cases/publish-site.ts
- * @layer core/domain
- * @description
- * Use-case : publier le site d’un état vers un autre (ex. draft → published).
- * Copie l’index, les pages et les settings de `from` vers `to`.
- *
+ * @file packages/core/src/domain/site/use-cases/publish/publish-site.ts
+ * @layer core/domain/site/use-cases/publish
+ * @description Publishes a site from one content state to another.
  * @remarks
- * - Invariants bloquants avant écriture des settings : Identity + SEO.
- * - Warnings non bloquants : index vide, pages manquantes, menus vides, logo absent, etc.
- * - Garantie V0.5 : l’index publié est dérivé des pages réellement copiées
- *   (évite un published incohérent en cas d’échec partiel).
- * - Orphans (cleanOrphans) : suppression basée sur l’index cible (SoT)`
- *   pour minimiser les READ KV.
+ * Blocking invariants are checked before writing settings, and the published index is derived only from pages that were actually copied.
  */
 
 import {
@@ -79,7 +71,7 @@ export function publishSite({
 
     warnings.push(...publishPageWarnings(sourceIndex, sourcePagesById));
 
-    // ✅ runtime injecté (pas de process.env dans le domaine)
+    // Runtime is injected so the domain layer never reads process.env.
     const { isProd } = runtime;
 
     assertPublishInvariantsOrThrowValidationError({
@@ -92,7 +84,7 @@ export function publishSite({
     warnings.push(...pagesCopy.warnings);
 
     if (cleanOrphans) {
-      // ✅ Aligné avec index SoT`
+      // Cleanup is aligned with the target source-of-truth index.
       const targetIndex = await site.readIndex(to);
 
       const cleanup = await deleteOrphanPages({

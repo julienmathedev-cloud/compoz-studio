@@ -3,17 +3,12 @@
  * @layer studio/app/api/adapters
  *
  * @description
- * Adaptateurs API Studio pour les users : convertit les payloads de création et de mise à jour
- * (DTOs intents) en données utilisables par le domaine.
+ * Studio API adapters for user create and update intents.
  *
  * @remarks
- * Responsabilités :
- * - trimming défensif (ids, strings)
- * - normalisation légère (email lower-case, websiteIds trim)
- * - propagation stricte des champs optionnels (clé présente => propagée)
- * - RBAC passé tel quel après validation Zod, avec normalisation légère des strings
- *
- * Le `state` est géré par la route, pas par l’adapter.
+ * - Normalizes email casing and trims user strings before domain writes.
+ * - Preserves PATCH semantics by only propagating fields whose keys are present.
+ * - Leaves `state` handling to the route.
  */
 
 import { log } from "@compoz/infra/lib/log";
@@ -27,13 +22,9 @@ import type {
 } from "@compoz/validation/users/user-intents";
 
 /**
- * Patch d’update côté domaine, sans `userId` (fourni par la route via params).
+ * Domain update patch without `userId`, which is provided by route params.
  */
 type UpdateUserPatchInput = Omit<UpdateUserInput, "userId">;
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function toTrimmedLower(raw: unknown): string {
   return trimOrKeep(String(raw ?? "")).toLowerCase();
@@ -80,16 +71,12 @@ function normalizeRbac(
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Create                                                                     */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Transforme un DTO de création de user en input domaine.
+ * Converts a user creation DTO into domain input.
  *
- * Contrat :
- * - email/name/password : trim (email lower-case)
- * - RBAC : propagé après normalisation légère des strings
+ * Contract:
+ * - email/name/password: trim, with email lowercased.
+ * - RBAC: propagated after lightweight string normalization.
  */
 export function adaptCreateUserPayload(
   dto: CreateUserIntentDTO,
@@ -118,17 +105,13 @@ export function adaptCreateUserPayload(
   return out;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Update                                                                     */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Transforme un DTO de mise à jour user en patch domaine (sans `userId`).
+ * Converts a user update DTO into a domain patch without `userId`.
  *
- * Contrat :
- * - Un champ n’est posé que si la clé est présente dans le DTO.
- * - password : si présent, propagé (trim), le use-case déclenche `setPassword`.
- * - RBAC : si présent, validé par Zod, puis normalisé légèrement.
+ * Contract:
+ * - A field is set only when its key is present in the DTO.
+ * - password: when present, it is propagated trimmed; the use case triggers `setPassword`.
+ * - RBAC: when present, it is validated by Zod, then lightly normalized.
  */
 export function adaptUpdateUserPayload(
   dto: UpdateUserIntentDTO,
@@ -157,7 +140,7 @@ export function adaptUpdateUserPayload(
   }
 
   if ("rbac" in dto) {
-    // Clé présente => propagation explicite du patch RBAC.
+    // Present key => explicit RBAC patch propagation.
     out.rbac = normalizeRbac(dto.rbac) as UpdateUserPatchInput["rbac"];
   }
 

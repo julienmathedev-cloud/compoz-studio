@@ -1,16 +1,9 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/find-reusable-demo-sandbox.ts
- * @layer core/domain
- *
- * @description
- * Use-case : résout une sandbox démo existante et réutilisable à partir de son
- * `demoInstanceId`.
- *
+ * @layer core/domain/demo
+ * @description Use case that resolves an existing reusable demo sandbox by `demoInstanceId`.
  * @remarks
- * - Vérifie l’existence de la sandbox.
- * - Vérifie qu’elle n’est pas expirée.
- * - Vérifie la cohérence minimale avec le user démo associé.
- * - Ne gère pas les cookies HTTP ni l’ouverture de session.
+ * This use case validates sandbox expiry and its consistency with the linked demo user. HTTP cookies and session opening are handled outside the core domain.
  */
 
 import type {

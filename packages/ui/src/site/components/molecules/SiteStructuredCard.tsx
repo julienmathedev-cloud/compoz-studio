@@ -1,15 +1,12 @@
 /**
  * @file packages/ui/src/site/components/molecules/SiteStructuredCard.tsx
- * @layer ui/site/molecules
+ * @layer ui/site/components/molecules
  *
  * @description
- * Public card used to render a `structuredCard` item.
+ * Renders a public site structured card with optional image, metadata, content sections, and CTA.
  *
  * @remarks
- * - UI-only.
- * - Used by `StructuredCardItemsRenderer` and carousel/card collection renderers.
- * - Uses `SiteAppImage` to stay consistent with the site runtime.
- * - All styles are driven by `ui`.
+ * Uses `SiteAppImage` and `SiteButton` so media and link behavior stay aligned with the public site runtime.
  */
 
 import {

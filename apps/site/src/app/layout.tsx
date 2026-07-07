@@ -3,14 +3,14 @@
  * @layer site/app
  *
  * @description
- * Layout racine neutre du site public.
+ * Neutral root layout for the public site app.
  *
  * @remarks
- * - Ne résout aucun website.
- * - Ne charge aucun settings publié.
- * - Les shells website-aware vivent dans des layouts enfants :
- *   - `(hosted)` pour le mode host-based via WebsiteDomain.
- *   - `t/[websiteSlug]` pour le fallback explicite via Website.slug.
+ * - Does not resolve any Website.
+ * - Does not load published settings.
+ * - Website-aware shells live in child layouts:
+ *   - `(hosted)` for host-based routing through WebsiteDomain.
+ *   - `t/[websiteSlug]` for the explicit fallback through Website.slug.
  */
 
 import type { ReactNode } from "react";

@@ -1,25 +1,19 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/pages/blocks/editor/cells/CarouselCellEditor.tsx
- * @layer ui/studio/pages/blocks/editor/cells
+ * @file apps/studio/src/features/builder/editor/cells/CarouselCellEditor.tsx
+ * @layer studio/features/builder/editor/cells
  *
  * @description
- * RHF-aware editor for a CarouselCell with frame options and a dynamic
- * homogeneous item list.
+ * RHF-aware CarouselCell editor for frame options and homogeneous carousel items.
  *
  * @remarks
- * - Connected directly to RHF through `useController`, `useFieldArray`, and `useWatch`.
- * - The carousel only owns:
- *   - `variant`
- *   - `showDots`
- *   - `showArrows`
- *   - `itemKind`
- *   - `items`
- * - Item content is edited through dedicated ListEditors.
- * - Item reordering relies on `move()` to preserve RHF state.
- * - `replace()` is only used for intentional collection replacements
- *   such as changing `itemKind`.
+ * - Binds variant, dots, arrows, and item kind controls directly through RHF `useController`.
+ * - Manages carousel items through `useFieldArray` so values, errors, and reordering stay consistent.
+ * - Reads live item values through `useWatch` and delegates item rendering to the matching list editor.
+ * - Uses `move()` to preserve RHF state while reordering.
+ * - Uses `replace()` only for intentional collection replacement when changing `itemKind`.
+ * - Passes image uploads only to image and structured card item editors.
  */
 
 import type { CarouselItemKind } from "@compoz/core/domain/pages/entities/cell";

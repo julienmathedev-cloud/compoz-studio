@@ -1,9 +1,7 @@
 /**
  * @file packages/infra/src/site/mappers/site-index.mapper.ts
  * @layer infra/site
- *
- * @description
- * Mapper for the computed SiteIndex domain projection backed by Page rows.
+ * @description Maps Prisma page rows to the computed SiteIndex domain projection.
  */
 
 import {

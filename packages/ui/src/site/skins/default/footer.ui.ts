@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/footer.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default
  *
  * @description
- * Skin UI — footer site (thème Default).
+ * Defines the default skin classes for the public site footer.
  */
 
 import type { SiteFooterUi } from "@compoz/ui/site/site-ui.types";

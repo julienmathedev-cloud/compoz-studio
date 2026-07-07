@@ -1,6 +1,6 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/cell-intents.ts
- * @layer schemas
+ * @layer validation/pages/blocks/cells
  *
  * @description
  * Defines Zod schemas describing the boundary shape of cell-related intents.

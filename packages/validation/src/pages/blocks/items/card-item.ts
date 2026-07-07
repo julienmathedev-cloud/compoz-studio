@@ -3,14 +3,11 @@
  * @layer schemas
  *
  * @description
- * Zod schema for simple card items.
+ * Zod schema for reusable card items.
  *
  * @remarks
- * A card item is a reusable content item used by higher-level cells such as
- * `cardCollection` or `carousel`.
- *
- * Layout concerns such as columns, alignment, or reveal behavior are handled
- * by the parent cell.
+ * Card items carry content only. Layout concerns such as columns, alignment,
+ * or reveal behavior are handled by the parent cell.
  */
 
 import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";

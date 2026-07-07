@@ -2,23 +2,19 @@
 
 /**
  * @file apps/studio/src/features/settings/theme/validate.ts
- * @layer hooks/studio/site/theme
+ * @layer studio/features/settings/theme
  *
  * @description
- * Helpers et hooks de validation UI non bloquante pour le thème du site.
+ * Non-blocking studio warning helpers for public theme settings.
  *
  * @remarks
- * - Validation métier assurée par le domaine (Zod + use-cases serveur).
- * - Ici : UX uniquement (warnings légers de contraste).
- * - Le contrat reste volontairement simple pour s’aligner
- *   sur le socle commun de warnings Studio.
+ * - Domain validation remains handled by Zod and server use cases.
+ * - These warnings only support editor UX by flagging low color contrast in the active token mode.
  */
 
 import { useMemo } from "react";
 
 import type { ThemeFormValues } from "@compoz/validation/site/settings/theme/theme-form";
-
-/* ─────────────────────────── Warnings (non-bloquants) ───────────────────────── */
 
 export type ThemeWarningKey =
   | "backgroundForegroundContrastLow"
@@ -26,8 +22,6 @@ export type ThemeWarningKey =
   | "secondaryContrastLow"
   | "accentContrastLow"
   | "destructiveContrastLow";
-
-/* ─────────────────────────────── Helpers ───────────────────────────── */
 
 function normalizeHex(value: string | null | undefined): string | null {
   const v = String(value ?? "").trim();
@@ -85,6 +79,7 @@ function contrastRatio(
   return (lighter + 0.05) / (darker + 0.05);
 }
 
+// Default threshold follows WCAG AA contrast for normal text.
 function isContrastInsufficient(
   fg: string | null | undefined,
   bg: string | null | undefined,
@@ -98,8 +93,6 @@ function isContrastInsufficient(
 
   return ratio < minRatio;
 }
-
-/* ─────────────────────────────── PURE FN ───────────────────────────── */
 
 export function computeThemeWarnings(
   values: Pick<ThemeFormValues, "lightTokens" | "darkTokens">,
@@ -134,8 +127,6 @@ export function computeThemeWarnings(
 
   return Array.from(out);
 }
-
-/* ─────────────────────────────── HOOK ─────────────────────────────── */
 
 export function useThemeUiWarnings(
   values: Pick<ThemeFormValues, "lightTokens" | "darkTokens">,

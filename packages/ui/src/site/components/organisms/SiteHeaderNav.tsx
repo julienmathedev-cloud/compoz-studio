@@ -1,15 +1,12 @@
 /**
  * @file packages/ui/src/site/components/organisms/SiteHeaderNav.tsx
- * @layer ui/site/organisms
+ * @layer ui/site/components/organisms
  *
  * @description
- * Organism site : navigation du header (primary + social).
+ * Renders the public site header navigation landmark with primary and optional social menus.
  *
  * @remarks
- * - Rend un seul landmark `<nav>`.
- * - Compose `SitePrimaryMenu` et `SiteSocialMenu`.
- * - Gère l’ordre via `swapPrimaryAndSocial`.
- * - UI entièrement pilotée par le skin.
+ * Keeps a single `nav` landmark while allowing the skin settings to swap primary and social menu order.
  */
 
 import { cn } from "@compoz/ui/lib/utils";

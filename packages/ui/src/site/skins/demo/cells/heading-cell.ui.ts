@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/demo/cells/heading-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/demo/cells
  *
  * @description
- * Override UI — heading cell (thème Démo).
+ * Defines the demo skin overrides for heading cells.
  */
 
 import type { SiteHeadingUiOverride } from "@compoz/ui/site/site-ui.types";

@@ -1,20 +1,9 @@
 /**
  * @file packages/infra/src/pages/index.ts
  * @layer infra/pages
- *
- * @description
- * Factory et singleton(s) du PagesRepository.
- *
+ * @description Factory and HMR-safe cache for website-scoped PagesRepository instances.
  * @remarks
- * Permet de choisir l’implémentation KV / InMemory / Prisma via variable
- * d’environnement.
- *
- * Instanciation lazy et HMR-safe.
- *
- * Multi-website :
- * - Le repository est instancié par `websiteId` pour chaque implémentation.
- * - Aucun fallback implicite n’est appliqué : le scope Website doit être résolu
- *   en amont par la session, le resolver public ou l’appelant applicatif.
+ * Repository implementation is selected through `PAGES_REPO_IMPL`; website scope must already be resolved by the caller.
  */
 
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
@@ -24,10 +13,6 @@ import { InMemoryPagesRepository } from "@compoz/infra/pages/in-memory-pages-rep
 import { KvPagesRepository } from "@compoz/infra/pages/kv-pages-repository";
 import { PrismaPagesRepository } from "@compoz/infra/pages/prisma-pages-repository";
 
-/**
- * Namespace standard SoT :
- * compoz:<surface>:<layer>:<module>
- */
 const logger = log.child({
   ns: "compoz:studio:repo:pages",
   factory: "pagesRepo",
@@ -39,22 +24,10 @@ export type PagesRepoOptions = Readonly<{
   websiteId: string;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Repo cache HMR-safe                                                        */
-/* -------------------------------------------------------------------------- */
-
 const repoByKey = new Map<string, PagesRepository>();
 let hasLoggedReuse = false;
 
-/**
- * Résout l’implémentation de repository à utiliser.
- *
- * @remarks
- * - `memory` est utile pour les tests ou environnements locaux isolés.
- * - `kv` reste le fallback par défaut pendant la migration.
- * - `prisma` active la persistance PostgreSQL.
- * - Toute valeur inconnue retombe volontairement sur `kv`.
- */
+/** Unknown repository implementations intentionally fall back to KV during migration. */
 function resolvePagesRepoImpl(): PagesRepoImpl {
   const raw = (process.env["PAGES_REPO_IMPL"] ?? "kv").toLowerCase();
 
@@ -77,10 +50,6 @@ function resolveWebsiteId(opts: PagesRepoOptions): string {
 function cacheKey(impl: PagesRepoImpl, websiteId: string): string {
   return `${impl}:${websiteId}`;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Factory                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function createRepo(args: {
   impl: PagesRepoImpl;

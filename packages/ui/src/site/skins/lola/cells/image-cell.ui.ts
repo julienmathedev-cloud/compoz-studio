@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/lola/cells/image-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/lola/cells
  *
  * @description
- * Skin UI — image cell (site lola).
+ * Defines the Lola skin overrides for image cells.
  */
 
 import type { SiteImageUiOverride } from "@compoz/ui/site/site-ui.types";

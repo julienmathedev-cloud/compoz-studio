@@ -2,18 +2,15 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/primary-menu/components/organisms/PrimaryMenuForm.tsx
- * @layer ui/studio/organisms
+ * @layer studio/features/settings/menus/primary-menu/components/organisms
  *
  * @description
- * Formulaire d’édition du menu principal (parents + sous-liens) — RHF + Zod comme source de vérité UI.
+ * RHF and Zod-backed studio form for editing the primary menu and its child links.
  *
  * @remarks
- * - Contrôlé : le parent fournit `initialValues` et reçoit `onSubmit`.
- * - Les warnings UI (non bloquants) sont dérivés des valeurs RHF et remontés au parent.
- * - Les items (parents/enfants) sont gérés via `useFieldArray` et des rows dédiées (obligatoire pour `useController`).
- * - Les erreurs bloquantes sont affichées au plus près des champs (au niveau row).
- * - UX : focus/scroll sur le premier champ invalide au submit (IDs stables, sans ref).
- * - Option “derive external” : le mode interne/externe est dérivé depuis `href` côté UI.
+ * - Uses `useFieldArray` with dedicated parent and child rows so sortable items can own their controllers.
+ * - Reports UI warnings, blocking error count, value changes, and dirty state to the parent section.
+ * - Focuses the first row-level blocking error after a failed submit.
  */
 
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
@@ -66,9 +63,6 @@ type PrimaryMenuFormProps = Readonly<{
   onDirtyChange?: (dirty: boolean) => void;
 }>;
 
-/**
- * Formulaire de configuration du menu principal (studio).
- */
 export function PrimaryMenuForm({
   initialValues,
   isSaving,
@@ -108,11 +102,7 @@ export function PrimaryMenuForm({
   const t = useTranslations();
   const [hasSubmittedOnce, setHasSubmittedOnce] = useState(false);
 
-  /**
-   * ✅ NEW
-   * Vrai pendant un drag des items parents.
-   * Sert à replier / désactiver temporairement les sous-listes enfants.
-   */
+  /** Collapses child lists while parent items are being sorted to avoid nested DnD collisions. */
   const [isSortingParents, setIsSortingParents] = useState(false);
 
   const { fields, append, remove, move } = useFieldArray<
@@ -208,9 +198,7 @@ export function PrimaryMenuForm({
     [setValue],
   );
 
-  /**
-   * Parent avec enfants : force `newTab=false` (cohérence nav).
-   */
+  /** Parent items with children behave as groups and must not open in a new tab. */
   const enforceParentRulesIfHasChildren = useCallback(
     (pIdx: number) => {
       const parent = getValues(`items.${pIdx}`) as
@@ -300,7 +288,6 @@ export function PrimaryMenuForm({
     async (event: DragEndEvent) => {
       const { active, over } = event;
 
-      // ✅ Fin de drag parent => on restaure les enfants
       setIsSortingParents(false);
 
       if (!over || active.id === over.id) return;
@@ -313,7 +300,7 @@ export function PrimaryMenuForm({
 
       move(oldIndex, newIndex);
 
-      // ✅ Recalage des erreurs RHF après reorder
+      // Revalidate the field array after reordering so RHF errors stay aligned with row indexes.
       await trigger("items");
     },
     [fields, isBusy, move, trigger],

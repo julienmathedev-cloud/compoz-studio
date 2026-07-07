@@ -1,30 +1,22 @@
 /**
  * @file packages/validation/src/site/settings/menus/primary-menu/primary-menu-form.ts
  * @layer schemas
+ *
  * @description
- * Définit le schéma Zod décrivant la forme du formulaire d’édition du menu principal.
+ * Zod schemas describing the primary menu UI form shape.
  *
  * @remarks
- * - Schéma UI (RHF-friendly) : `href` est une string contrôlée.
- * - Les règles "requis" et "format URL" sont appliquées en `superRefine`
- *   pour accepter les valeurs draft (`""`) pendant la saisie.
- * - Un parent avec enfants :
- *   - `newTab` interdit
- *   - `href` optionnel (peut être "")
- * - Les `id` sont des identifiants métier stables :
- *   - utilisés pour les clés React
- *   - utilisés pour le drag and drop
- *   - persistés dans les settings
+ * The form keeps `href` as a controlled string. Required and URL-format checks
+ * are handled in `superRefine` to keep field-level RHF errors predictable.
+ *
+ * Parent items with children may omit `href`, but cannot use `newTab`.
+ * Item IDs must stay unique across parent and child levels.
  */
 
 import { MENU_ITEM, MENU_LABEL } from "@compoz/core/constants/limits/menu";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { AssetUrlSchema } from "@compoz/validation/common/url-fragments";
 import { z } from "zod";
-
-/* -------------------------------------------------------------------------- */
-/*                                  Child (UI)                                */
-/* -------------------------------------------------------------------------- */
 
 const isValidAssetUrl = (href: string): boolean =>
   AssetUrlSchema.safeParse(href).success;
@@ -70,10 +62,6 @@ export const PrimaryMenuChildFormSchema = z
     }
   });
 
-/* -------------------------------------------------------------------------- */
-/*                               Parent/Leaf (UI)                             */
-/* -------------------------------------------------------------------------- */
-
 export const PrimaryMenuItemFormSchema = z
   .object({
     id: z.string().trim().min(1, ERROR_CODES.PRIMARY_MENU_ID_REQUIRED),
@@ -99,7 +87,6 @@ export const PrimaryMenuItemFormSchema = z
       });
     }
 
-    // Parent (avec children)
     if (hasChildren) {
       if (val.newTab !== false) {
         ctx.addIssue({
@@ -110,7 +97,6 @@ export const PrimaryMenuItemFormSchema = z
         });
       }
 
-      // href optionnel : si présent, il doit être valide.
       if (href.length > 0 && !isValidAssetUrl(href)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -122,7 +108,6 @@ export const PrimaryMenuItemFormSchema = z
       return;
     }
 
-    // Leaf : href requis + format
     if (href.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -140,10 +125,6 @@ export const PrimaryMenuItemFormSchema = z
       });
     }
   });
-
-/* -------------------------------------------------------------------------- */
-/*                                  Settings (UI)                             */
-/* -------------------------------------------------------------------------- */
 
 export const PrimaryMenuFormSchema = z
   .object({

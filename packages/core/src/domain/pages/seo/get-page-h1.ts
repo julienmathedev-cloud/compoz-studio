@@ -1,7 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/seo/get-page-h1.ts
  * @layer core/domain/pages/seo
- * @description Extrait le premier H1 d’une page à partir des blocks domaine.
+ * @description Extracts the first H1 from a page domain block tree.
  */
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";

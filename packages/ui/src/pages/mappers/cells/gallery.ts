@@ -1,17 +1,11 @@
 /**
  * @file packages/ui/src/pages/mappers/cells/gallery.ts
  * @layer ui/pages/mappers
- *
- * @description
- * Mapper "shared runtime" pour les cellules de type `gallery`.
+ * @description Maps gallery cell DTOs to form values.
  */
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";
 import type { GalleryCellFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function optionalTrimmedString(
   value: string | null | undefined,
@@ -20,10 +14,6 @@ function optionalTrimmedString(
 
   return trimmed ? trimmed : undefined;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Mapper                                                                     */
-/* -------------------------------------------------------------------------- */
 
 export function toGalleryCellShapeFromDTO(
   cell: Extract<CellDTO, { kind: "gallery" }>,

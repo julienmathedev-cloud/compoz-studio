@@ -3,14 +3,10 @@
  * @layer site/lib/next
  *
  * @description
- * Normalise `params` (Next.js App Router) pour accepter :
- * - un objet direct
- * - une Promise retournée par certains handlers/pages.
+ * Helper for normalizing Next.js App Router `params` values.
  *
  * @remarks
- * Next peut parfois typer `params` comme `Promise<Params>` selon
- * le contexte (route handlers, generateMetadata, etc.).
- * Ce helper garantit une valeur résolue.
+ * - Accepts either direct params or Promise-wrapped params, then resolves to the same shape.
  */
 export async function unwrapParams<T>(params: T | Promise<T>): Promise<T> {
   return await params;

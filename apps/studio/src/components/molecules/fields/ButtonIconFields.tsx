@@ -2,18 +2,15 @@
 
 /**
  * @file apps/studio/src/components/molecules/fields/ButtonIconFields.tsx
- * @layer ui/studio/molecules/fields
+ * @layer studio/molecules/fields
  *
  * @description
- * Champ composé pour configurer l’icône d’un bouton.
+ * Composite field for configuring a button icon and its position.
  *
  * @remarks
- * - Regroupe le bouton d’ouverture du picker, la preview, le picker et la position.
- * - Ne connaît pas React Hook Form : les valeurs sont pilotées par props.
- * - Réutilisable pour :
- *   - ButtonsCell
- *   - FormCell submitButton
- *   - StructuredCard CTA button
+ * - Groups the picker trigger, selected icon preview, icon picker, and position select.
+ * - Stays React Hook Form agnostic: values are fully controlled by props.
+ * - Reusable for button-like controls such as ButtonsCell, FormCell submit buttons, and StructuredCard CTA buttons.
  */
 
 import { ChevronDown } from "lucide-react";

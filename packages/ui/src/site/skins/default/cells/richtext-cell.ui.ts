@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/cells/richtext-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default/cells
  *
  * @description
- * Skin UI pour le richtext site (thème Default).
+ * Defines the default skin classes for rich text cells.
  */
 
 import type { SiteRichTextUi } from "@compoz/ui/site/site-ui.types";

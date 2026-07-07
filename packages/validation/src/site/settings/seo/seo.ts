@@ -1,8 +1,13 @@
 /**
  * @file packages/validation/src/site/seo/seo.ts
  * @layer schemas
+ *
  * @description
- * Schémas Zod décrivant la forme frontière des réglages SEO du site.
+ * Zod schemas describing the site SEO settings boundary shape.
+ *
+ * @remarks
+ * Some optional SEO fields accept empty strings and `null` to support draft and
+ * explicit reset flows before final normalization.
  */
 
 import { z } from "zod";
@@ -18,10 +23,6 @@ import {
   AssetUrlSchema,
 } from "@compoz/validation/common/url-fragments";
 
-/* -------------------------------------------------------------------------- */
-/*                         Helpers draft ("" accepté)                         */
-/* -------------------------------------------------------------------------- */
-
 export const OptionalAbsoluteHttpUrlDraftSchema = z.union([
   AbsoluteHttpUrlSchema,
   z.literal(""),
@@ -33,10 +34,6 @@ export const OptionalAssetUrlDraftSchema = z.union([
   z.literal(""),
   z.null(),
 ]);
-
-/* -------------------------------------------------------------------------- */
-/*                                OpenGraph                                   */
-/* -------------------------------------------------------------------------- */
 
 export const OpenGraphSettingsSchema = z
   .object({
@@ -65,10 +62,6 @@ export const OpenGraphSettingsSchema = z
 
 export type OpenGraphSettingsShape = z.infer<typeof OpenGraphSettingsSchema>;
 
-/* -------------------------------------------------------------------------- */
-/*                                Twitter                                     */
-/* -------------------------------------------------------------------------- */
-
 export const TwitterHandleSchema = z
   .string()
   .trim()
@@ -91,10 +84,6 @@ export const TwitterSettingsSchema = z
   .strict();
 
 export type TwitterSettingsShape = z.infer<typeof TwitterSettingsSchema>;
-
-/* -------------------------------------------------------------------------- */
-/*                           Structured data                                  */
-/* -------------------------------------------------------------------------- */
 
 const OptionalStructuredDataStringSchema = z.string().trim().min(1).optional();
 
@@ -136,12 +125,12 @@ export type StructuredDataSettingsShape = z.infer<
   typeof StructuredDataSettingsSchema
 >;
 
-/* -------------------------------------------------------------------------- */
-/*                               Inline validation                            */
-/* -------------------------------------------------------------------------- */
-
 type SeoSettingsDraft = z.infer<typeof SeoSettingsObjectSchema>;
 
+/**
+ * Applies cross-field SEO rules that depend on normalized field presence or
+ * caller-provided runtime constraints.
+ */
 export function validateSeoSettingsValues(
   val: SeoSettingsDraft,
   ctx: z.RefinementCtx,
@@ -197,6 +186,7 @@ export function validateSeoSettingsValues(
         message: ERROR_CODES.SEO_TITLE_TEMPLATE_TOO_SHORT,
       });
     }
+
     if (!tpl.includes(TITLE_PLACEHOLDER)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -206,10 +196,6 @@ export function validateSeoSettingsValues(
     }
   }
 }
-
-/* -------------------------------------------------------------------------- */
-/*                           Schéma principal SEO                              */
-/* -------------------------------------------------------------------------- */
 
 export const SeoSettingsObjectSchema = z
   .object({

@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/system-loading.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default
  *
  * @description
- * Skin UI — loading site (thème Default).
+ * Defines the default skin classes for the public site loading state.
  */
 
 import type { SiteSystemLoadingUi } from "@compoz/ui/site/site-ui.types";

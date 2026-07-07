@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/lola/primary-menu.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/lola
  *
  * @description
- * Skin UI — menu principal site (thème Lola).
- *
- * @remarks
- * - Fournit uniquement des classes Tailwind (aucune logique).
- * - Consommé par `SitePrimaryMenu` via la prop `ui`.
+ * Defines the Lola skin overrides for the public site primary menu.
  */
 
 import type { SitePrimaryMenuUiOverride } from "@compoz/ui/site/site-ui.types";

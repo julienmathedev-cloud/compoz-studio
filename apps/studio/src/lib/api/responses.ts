@@ -1,14 +1,14 @@
 /**
  * @file apps/studio/src/lib/api/responses.ts
  * @layer studio/lib/api
+ *
  * @description
- * Helpers standardisés pour produire des réponses JSON dans l’App Router :
- * succès (`jsonOk`) et erreurs normalisées (`jsonHttpError`),
- * avec cache désactivé via `Cache-Control: no-store`.
+ * Standard JSON response helpers for App Router API routes.
  *
  * @remarks
- * - Ces helpers sont pensés pour être utilisés dans les routes (App Router) et dans `handleRoute()`.
- * - Le format d’erreur suit l’enveloppe `ApiErrorEnvelope` (@compoz/http).
+ * - Success and error responses are returned through `NextResponse.json` with `Cache-Control: no-store`.
+ * - Error responses follow the shared `ApiErrorEnvelope` shape from `@compoz/http`.
+ * - Used directly by routes and by `handleRoute()`.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -19,36 +19,15 @@ import {
 import type { HttpErrorBody } from "@compoz/http/http-error";
 import { NextResponse } from "next/server";
 
-/**
- * En-têtes HTTP désactivant explicitement le cache.
- *
- * @remarks
- * Exporté pour être réutilisé dans d'autres helpers API (ou routes spécifiques)
- * sans dupliquer la règle `no-store`.
- */
+/** Shared API headers that explicitly disable response caching. */
 export const NO_STORE_HEADERS: HeadersInit = { "Cache-Control": "no-store" };
 
-/**
- * Réponse JSON de succès (status par défaut : 200).
- *
- * @param data   Contenu JSON à renvoyer.
- * @param status Code HTTP facultatif (200 par défaut).
- */
+/** Builds a no-store JSON success response. */
 export function jsonOk<T>(data: T, status = 200): NextResponse<T> {
   return NextResponse.json<T>(data, { status, headers: NO_STORE_HEADERS });
 }
 
-/**
- * Génère une réponse JSON d'erreur normalisée.
- *
- * @remarks
- * Helper interne, utilisé par `jsonHttpError()`.
- *
- * @param code    Code d’erreur métier stable.
- * @param message Message lisible (obligatoire côté appelant).
- * @param status  Statut HTTP de la réponse.
- * @param extras  Champs additionnels à inclure (ex: issues de validation).
- */
+/** Builds a normalized no-store JSON error response. */
 function jsonError(
   code: ApiErrorEnvelope["error"]["code"],
   message: string,
@@ -61,13 +40,7 @@ function jsonError(
   );
 }
 
-/**
- * Conversion générique “status + HttpErrorBody” → réponse d’erreur JSON.
- *
- * @remarks
- * Utilisé principalement par `handleRoute()` pour transformer des erreurs HTTP
- * structurées (Zod, DomainError, etc.) en réponse JSON cohérente.
- */
+/** Converts a structured HTTP error body into the shared JSON error envelope. */
 export function jsonHttpError(
   status: number,
   body: HttpErrorBody,
@@ -78,7 +51,7 @@ export function jsonHttpError(
     ...rest
   } = body as HttpErrorBody & Record<string, unknown>;
 
-  // Si aucun message n'est fourni, on retombe sur un token HTTP (i18n UI).
+  // Fallback to a stable token so the UI can still map the error through i18n.
   const finalMessage = message || (code ? String(code) : `HTTP_${status}`);
 
   return jsonError(code, finalMessage, status, rest);

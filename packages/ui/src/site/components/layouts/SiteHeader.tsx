@@ -1,19 +1,12 @@
 /**
  * @file packages/ui/src/site/components/layouts/SiteHeader.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/layouts
  *
  * @description
- * Header site : logo/titre (identity) + navigation principale (primaryMenu) + menu social optionnel.
+ * Renders the public site header with identity, primary navigation, and optional social navigation.
  *
  * @remarks
- * - Le rendu est piloté par `HeaderSettingsShape` (sticky, blur, swap, flags show*).
- * - Rend un header minimal si aucun élément n’est affichable (logo, titre, menu, social),
- *   afin de conserver le noeud DOM (mesure/ref/observer/etc.).
- * - Le style est fourni par le skin/template via `ui`.
- *
- * @accessibility
- * - Le composant rend un landmark `<header>`.
- * - Inclut un skip-link (visible au focus) pour aller au contenu principal.
+ * Keeps a minimal header DOM node when no content is visible so height sync and observers can still run; includes the main-content skip link.
  */
 
 import type { HeaderSettingsShape } from "@compoz/validation/site/settings/header/header";

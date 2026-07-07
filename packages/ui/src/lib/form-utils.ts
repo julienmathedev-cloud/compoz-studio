@@ -1,29 +1,15 @@
 /**
  * @file packages/ui/src/lib/form-utils.ts
  * @layer ui/lib/forms
- * @description
- * Helpers UI partagés pour les mappers : trimming, coercition, conversion de draft/form.
- *
+ * @description Shared UI form helpers for trimming, coercion, and draft/form mapping.
  * @remarks
- * Convention PATCH :
- * - `undefined` => clé absente (pas de modification)
- * - `null`      => effacement explicite
+ * PATCH convention: `undefined` means omitted, while `null` means explicit clearing.
  */
 
-/** Trim basique conservant la chaîne vide (UI friendly). */
 export const trimKeepEmpty = (s: string | null | undefined): string =>
   typeof s === "string" ? s.trim() : "";
 
-/**
- * Coercition booléenne défensive (UI-friendly).
- *
- * @remarks
- * Gère les cas fréquents :
- * - boolean
- * - "true"/"false" (case-insensitive)
- * - 1/0
- * - sinon fallback `Boolean(v)`
- */
+/** Defensive UI boolean coercion for common form values. */
 export const asBool = (v: unknown): boolean => {
   if (typeof v === "boolean") return v;
 
@@ -43,7 +29,6 @@ export const asBool = (v: unknown): boolean => {
   return Boolean(v);
 };
 
-/** Chaîne vide -> undefined (utile pour champs optionnels côté shape). */
 export const emptyToUndef = (
   s: string | null | undefined,
 ): string | undefined => {
@@ -51,11 +36,7 @@ export const emptyToUndef = (
   return v.length > 0 ? v : undefined;
 };
 
-/**
- * UI asset (form) -> PATCH DTO
- * - "" => null (effacement explicite)
- * - undefined => clé absente
- */
+/** Maps asset form values to PATCH semantics. */
 export const assetUiToPatch = (
   s: string | null | undefined,
 ): string | null | undefined => {
@@ -64,10 +45,6 @@ export const assetUiToPatch = (
   return v.length > 0 ? v : null;
 };
 
-/**
- * UI asset (form) -> Settings shape (preview/public)
- * - "" devient null
- */
 export const assetUiToSettings = (
   s: string | null | undefined,
 ): string | null => {

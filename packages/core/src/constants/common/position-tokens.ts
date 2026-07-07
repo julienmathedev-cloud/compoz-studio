@@ -3,25 +3,17 @@
  * @layer core/constants/common
  *
  * @description
- * Tokens immuables de positionnement relatifs utilisés pour manipuler
- * des listes ordonnées (insertions, déplacements).
+ * Immutable relative positioning tokens for ordered list mutations.
  *
- * Ces tokens sont utilisés par les use-cases manipulant l’ordre
- * d’éléments (ex: pages, menus, blocks).
+ * @remarks
+ * - Used by use cases that insert or move ordered items such as pages, menus, and blocks.
  */
 
-/**
- * Position "ajouter à la fin de la liste".
- */
+/** Position token for appending an item to the end of an ordered list. */
 export const POS_APPEND = { kind: "append" } as const;
 
-/**
- * Position "ajouter au début de la liste".
- */
+/** Position token for prepending an item to the start of an ordered list. */
 export const POS_PREPEND = { kind: "prepend" } as const;
 
-/**
- * Token de positionnement supporté par les opérations d’insertion ou déplacement
- * dans une liste ordonnée.
- */
+/** Supported relative positioning token for insert or move operations. */
 export type PositionToken = typeof POS_APPEND | typeof POS_PREPEND;

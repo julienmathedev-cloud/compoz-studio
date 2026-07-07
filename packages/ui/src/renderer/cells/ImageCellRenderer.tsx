@@ -3,17 +3,10 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer site/preview : rendu d’une image zoomable via `SiteZoomableImage`.
+ * Renders a validated zoomable image cell.
  *
  * @remarks
- * - UI-only : consomme une shape déjà validée (schema).
- * - Délègue A11y + perf à `SiteZoomableImage` / `SiteAppImage`.
- * - Style piloté par le skin via `ui`.
- * - Reveal : activé par défaut (V0.5).
- * - Si une caption est présente, l’image est rendue dans un `figure`
- *   avec `figcaption`.
- * - Expose des attributs `data-*` stables pour permettre un ciblage CSS
- *   précis côté skins ou overrides Website.
+ * Delegates image accessibility, performance, and lightbox behavior to `SiteZoomableImage`; captions are rendered as a `figure` when present.
  */
 
 import type { ImageCellShape } from "@compoz/validation/pages/blocks/cells/cell";

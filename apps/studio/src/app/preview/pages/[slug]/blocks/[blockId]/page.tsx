@@ -3,7 +3,7 @@
  * @layer studio/app
  *
  * @description
- * Preview d’un block (V0.5) — reçoit baseline/override via postMessage.
+ * Server route for previewing a single page block inside the Studio preview iframe.
  */
 
 import { PageBlockPreviewClient } from "@compoz/studio/app/preview/pages/[slug]/blocks/[blockId]/PageBlockPreviewClient";

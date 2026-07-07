@@ -1,14 +1,9 @@
 /**
  * @file packages/ui/src/lib/format-bytes.ts
  * @layer ui/lib/format
- * @description
- * Formatage d'une taille de fichier (bytes) en unités lisibles (B / KB / MB / GB).
- *
+ * @description Formats byte sizes into UI-friendly B, KB, MB, or GB labels.
  * @remarks
- * - Base 1024 (IEC-like) mais avec labels "KB/MB/GB" pour l'affichage UI.
- * - Arrondis :
- *   - KB : 1 décimale
- *   - MB/GB : 2 décimales
+ * Uses a 1024 base while keeping decimal labels for display.
  */
 export function formatBytes(bytes: number): string {
   const value = Number.isFinite(bytes) && bytes > 0 ? bytes : 0;

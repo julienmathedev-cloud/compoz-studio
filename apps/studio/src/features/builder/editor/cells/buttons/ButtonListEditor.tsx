@@ -2,19 +2,15 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/buttons/ButtonListEditor.tsx
- * @layer ui/studio/pages/blocks/editor/buttons
+ * @layer studio/features/builder/editor/cells/buttons
  *
  * @description
- * Éditeur UI de liste de boutons (add/remove/reorder) pour ButtonsCell.
+ * RHF-aware list editor for ButtonsCell items, including add, remove, and reorder actions.
  *
  * @remarks
- * - S’appuie sur `useFieldArray` côté parent (`ButtonsCellEditor`).
- * - Le reorder est géré par drag and drop via dnd-kit.
- * - Les updates métier (append/remove/move) sont déléguées à RHF.
- * - Les clés React utilisent `fieldId`, alors que le DnD s’appuie
- *   sur l’`id` métier stable de chaque bouton.
- * - Aligné sur le pattern du menu légal :
- *   React = `fieldId`, DnD = `sortableId`.
+ * - Receives `useFieldArray` actions from `ButtonsCellEditor`.
+ * - Reordering is handled by dnd-kit while append/remove/move stay delegated to RHF.
+ * - React keys use RHF `fieldId`; dnd-kit uses each button's stable domain `id`.
  */
 
 import {

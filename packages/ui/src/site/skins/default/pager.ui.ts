@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/pager.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default
  *
  * @description
- * Skin UI — pager site (thème Default).
+ * Defines the default skin classes for public site detail page pagination.
  */
 
 import type { SiteDetailPagerUi } from "@compoz/ui/site/site-ui.types";

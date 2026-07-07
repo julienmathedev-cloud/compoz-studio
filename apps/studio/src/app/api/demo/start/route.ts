@@ -3,14 +3,12 @@
  * @layer studio/app/api
  *
  * @description
- * Route publique de démarrage d'une sandbox démo.
+ * Public route that starts or reuses a demo sandbox and signs the demo user in.
  *
  * @remarks
- * - Lit le cookie `compoz_demo_instance` si présent.
- * - Tente de réutiliser une sandbox existante, sinon en crée une nouvelle.
- * - Ouvre ensuite une vraie session NextAuth via le provider Credentials.
- * - Repose le cookie `compoz_demo_instance`.
- * - Redirige enfin vers le Studio.
+ * - Reuses the `compoz_demo_instance` cookie when possible.
+ * - Performs the Credentials provider flow server-side so the response can forward session cookies.
+ * - Supports JSON mode for callers that need the redirect target instead of an HTTP redirect.
  */
 
 import type { NextRequest } from "next/server";
@@ -37,9 +35,11 @@ function normalizeInternalNextPath(value: string | null): string {
 }
 
 function shouldReturnJson(value: string | null): boolean {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase() === "json";
+  return (
+    String(value ?? "")
+      .trim()
+      .toLowerCase() === "json"
+  );
 }
 
 function extractCookiePairs(setCookieHeaders: string[]): string {

@@ -2,15 +2,15 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/primary-menu/components/molecules/PrimaryMenuParentRow.tsx
- * @layer ui/studio/molecules
+ * @layer studio/features/settings/menus/primary-menu/components/molecules
+ *
  * @description
- * Composant représentant une ligne d’item dans le formulaire du menu principal.
- * Il gère les champs `label`, `href` et `newTab` en utilisant react-hook-form.
+ * RHF-connected sortable row for editing one parent item in the primary menu.
  *
  * @remarks
- * - Utilise `useController` pour connecter les champs au formulaire RHF.
- * - Gère la validation et l’affichage des erreurs pour chaque champ.
- * - Permet la validation immédiate du champ `href` lors de changements programmatiques.
+ * - Keeps `useController` inside the row so each sortable parent owns its field subscriptions.
+ * - Auto-fills an internal href from the label only for leaf parents while the href field is still an untouched draft.
+ * - Child rows are rendered by the parent form to keep nested field-array ordering controlled in one place.
  */
 
 import { useSortable } from "@dnd-kit/sortable";
@@ -36,9 +36,6 @@ import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/men
 type RowErrorMessages = Partial<Record<"label" | "href", string | undefined>>;
 type RowInvalidFlags = Partial<Record<"label" | "href", boolean>>;
 
-/**
- * Props de la row parent (un item du menu principal).
- */
 type ParentRowProps = Readonly<{
   sortableId: string;
   pIdx: number;
@@ -50,25 +47,16 @@ type ParentRowProps = Readonly<{
   internalPageOptions?: ReadonlyArray<InternalPageOptionDTO>;
   onRemove: () => void;
 
-  /** Ajoute un sous-lien au parent courant. */
   onAddChild: () => void;
 
-  /** Rendu des sous-liens (déjà construit par le parent). */
   renderChildren: ReactNode;
 
-  /** Nombre de sous-liens. */
   childrenCount: number;
 
-  /**
-   * Vrai pendant un drag de niveau parent.
-   * Sert à replier temporairement la zone enfant.
-   */
+  /** Collapses child content during parent-level sorting to avoid nested DnD collisions. */
   isSortingParents: boolean;
 }>;
 
-/**
- * Row RHF (parent) — obligatoire pour appeler `useController`.
- */
 export function PrimaryMenuParentRow({
   sortableId,
   pIdx,
@@ -143,6 +131,7 @@ export function PrimaryMenuParentRow({
         : undefined,
   };
 
+  /** Forces href validation after programmatic link-field updates. */
   const validateHrefNow = (markTouched?: boolean) => {
     if (markTouched) {
       hrefCtrl.field.onBlur();
@@ -151,10 +140,11 @@ export function PrimaryMenuParentRow({
     void trigger(`items.${pIdx}.href` as const);
   };
 
+  /** Auto-fills draft internal links from the label without overwriting user-edited hrefs. */
   const handleLabelBlur = () => {
     labelCtrl.field.onBlur();
 
-    // Pas d’auto-href si parent a des enfants
+    // Parents with children act as groups; their href must remain explicitly chosen.
     if (hasChildren) return;
 
     const hrefNow = String(hrefCtrl.field.value ?? "");
@@ -164,10 +154,10 @@ export function PrimaryMenuParentRow({
     const label = String(labelCtrl.field.value ?? "").trim();
     if (!label) return;
 
-    // Si href a déjà été touché, on ne force pas l’auto-fill
     if (hrefCtrl.fieldState.isTouched) return;
 
     const currentHref = hrefNow.trim();
+    // New parent rows start with `/`; keep it editable until the label can produce a better internal slug.
     const isEmptyInternalDraft = currentHref === "" || currentHref === "/";
 
     if (!isEmptyInternalDraft) return;

@@ -1,24 +1,12 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/helpers/apply-page-defaults.ts
  * @layer core/domain/pages/use-cases/helpers
- * @description
- * Helpers pour l’utilisation de `applyDefault` sur les pages.
+ * @description Helpers that apply default values to page-related payloads.
  */
 
 import type { PageSitemap } from "@compoz/core/domain/pages/entities/page";
 
-/**
- * Applique des valeurs par défaut pour le sitemap d’une page.
- *
- * @param p - Patch partiel éventuel (include, changefreq, priority).
- * @returns Un objet `PageSitemap` complet (aucun champ undefined).
- *
- * @remarks
- * Defaults actuels :
- * - include    : true
- * - changefreq : "weekly"
- * - priority   : 0.7
- */
+/** Returns a complete sitemap object with no undefined field. */
 export function applySitemapDefaults(p?: Partial<PageSitemap>): PageSitemap {
   return {
     include: p?.include ?? true,

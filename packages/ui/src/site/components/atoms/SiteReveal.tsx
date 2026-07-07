@@ -2,6 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/atoms/SiteReveal.tsx
+ * @layer ui/site/components/atoms
+ *
+ * @description
+ * Wraps site content with an in-view reveal animation while respecting reduced-motion preferences.
+ *
+ * @remarks
+ * The rendered motion element is selected from a fixed tag whitelist to keep the component typed and predictable.
  */
 
 import type { UseInViewOptions } from "framer-motion";

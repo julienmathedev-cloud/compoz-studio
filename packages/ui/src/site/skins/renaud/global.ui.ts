@@ -1,14 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/renaud/global.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/renaud
  *
  * @description
- * Skin UI — site (thème Renaud).
- *
- * @remarks
- * - Compose header/footer/systemPage.
- * - Fournit les valeurs minimales pour le renderer (container + H1 layout).
- * - Fournit uniquement des classes Tailwind (aucune logique).
+ * Composes the Renaud public site skin overrides from layout and cell UI class maps.
  */
 
 import type { SiteGlobalUiOverride } from "@compoz/ui/site/site-ui.types";

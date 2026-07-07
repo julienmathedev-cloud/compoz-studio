@@ -1,16 +1,9 @@
 /**
  * @file packages/infra/src/http/studio/media.client.ts
  * @layer infra/http/studio
- * @description
- * Client HTTP Studio pour l’upload de médias.
- *
+ * @description Studio HTTP client for media uploads.
  * @remarks
- * - Orchestration raster :
- *   1. prepare (tempKey serveur)
- *   2. client upload direct vers Blob
- *   3. finalize (Sharp + write final + cleanup temp)
- * - Conserve le contrat public `uploadImage(file, kind)` pour ne pas casser la UI.
- * - Le SVG utilise un endpoint dédié avec extraction serveur de `width` / `height`.
+ * Raster uploads use prepare, direct Blob upload, then finalize; SVG uploads keep their dedicated server endpoint.
  */
 
 import { upload } from "@vercel/blob/client";

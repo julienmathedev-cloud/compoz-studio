@@ -1,9 +1,13 @@
 /**
  * @file apps/studio/src/features/pages/pages/PageBlocksListPage.tsx
- * @layer ui/studio/pages
+ * @layer studio/features/pages/pages
  *
  * @description
- * Page « Blocs » (studio) — affiche la section listant les blocs d’une page.
+ * Studio page shell for listing the blocks of a single page.
+ *
+ * @remarks
+ * - Keeps a unique screen-reader-only H1 while `PageBlocksListSection` renders the visible section heading.
+ * - Passes the resolved page id and slug down to the section; data loading stays in the section/hooks layer.
  */
 
 import { useTranslations } from "next-intl";
@@ -17,10 +21,6 @@ type PageBlocksListPageProps = Readonly<{
   pageId: string;
   slug: string;
 }>;
-
-/**
- * Page listant les blocs d’une page (studio).
- */
 export function PageBlocksListPage({ pageId, slug }: PageBlocksListPageProps) {
   const t = useTranslations();
 

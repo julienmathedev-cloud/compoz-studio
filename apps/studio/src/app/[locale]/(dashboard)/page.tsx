@@ -3,12 +3,10 @@
  * @layer studio/app
  *
  * @description
- * Page principale du Dashboard Studio.
+ * Main Studio Dashboard page.
  *
  * @remarks
- * - Point d’entrée du dashboard.
- * - Le paramètre `?tab=` (si utilisé) est géré par le module `OverviewPage`
- *   (synchronisation onglet ↔ URL).
+ * - `OverviewPage` owns `?tab=` handling for tab/URL synchronization.
  */
 
 import { getServerSession } from "next-auth";

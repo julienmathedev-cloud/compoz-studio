@@ -3,20 +3,11 @@
  * @layer studio/app/api
  *
  * @description
- * Définit le Website actif dans le Studio via un cookie httpOnly.
+ * Sets the active Studio Website through an httpOnly cookie.
  *
  * @remarks
- * Payload attendu :
- * - `{ websiteId: string }`
- *
- * Sécurité :
- * - nécessite une session authentifiée,
- * - nécessite le rôle admin,
- * - le Website demandé doit être accessible par l'utilisateur.
- *
- * Cette route retourne une `NextResponse` afin de pouvoir définir un cookie httpOnly.
- * Elle n'utilise pas `handleRoute()` tant que celui-ci ne permet pas d'enrichir
- * la réponse avec des cookies ou headers.
+ * - Verifies that the requested Website is accessible to the admin user.
+ * - Returns `NextResponse` directly because the route must set an httpOnly cookie.
  */
 
 import "server-only";
@@ -36,10 +27,6 @@ type Payload = Readonly<{
   websiteId?: string;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
 function normalizeWebsiteId(value: unknown): string {
   return String(value ?? "").trim();
 }
@@ -47,10 +34,6 @@ function normalizeWebsiteId(value: unknown): string {
 function normalizeUniqueWebsiteIds(input: ReadonlyArray<unknown>): string[] {
   return [...new Set(input.map(normalizeWebsiteId).filter(Boolean))];
 }
-
-/* -------------------------------------------------------------------------- */
-/* Route                                                                      */
-/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
   const session = await requireAdminSession();

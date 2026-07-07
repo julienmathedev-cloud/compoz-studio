@@ -1,16 +1,9 @@
 /**
  * @file packages/core/src/domain/site/use-cases/identity/update-identity-settings.ts
- * @layer core/domain
- * @description
- * Use-case : mise à jour partielle (shallow patch) des réglages `settings.identity`.
- * Charge les settings (draft/published), applique un merge shallow, et persiste
- * uniquement si au moins une clé a changé.
- *
+ * @layer core/domain/site/use-cases/identity
+ * @description Applies a shallow patch to identity settings.
  * @remarks
- * - Le patch est validé/normalisé en amont (schemas/adapters).
- * - `repo.ensureBase()` prépare la persistance (pré-requis infra).
- * - Le patch sur `identity` reste shallow :
- *   si `logo` est fourni, il remplace entièrement la valeur courante.
+ * The patch is validated upstream; nested values such as `logo` are replaced as whole values.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";

@@ -1,15 +1,9 @@
 /**
  * @file apps/studio/src/features/settings/mappers/theme-form.ts
- * @layer ui-mappers/studio/site
- * @description
- * Mappers UI Theme (studio forms) :
- * - DTO -> valeurs de formulaire RHF
- * - normalisation UI
- * - PATCH intent DTO pour l’API studio
+ * @layer studio/features/settings/mappers
  *
- * @remarks
- * - Pour la shape runtime à partir d’un DTO : `toThemeSettingsShapeFromDTO` (shared).
- * - Pour la shape runtime à partir du form : `toThemeSettingsShapeFromFormValues`.
+ * @description
+ * Studio theme settings mappers for form values, preview shape, and API intents.
  */
 
 import { getThemeFontById } from "@compoz/core/constants/theme/theme-fonts";
@@ -24,8 +18,6 @@ import type { UpdateThemeSettingsIntentDTO } from "@compoz/validation/site/setti
 
 import { asBool, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 import { toThemeSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/theme-shape";
-
-/* ----------------------- Helpers ------------------------------------------ */
 
 function normalizeThemeTokens(
   tokens: ThemeFormValues["lightTokens"] | ThemeFormValues["darkTokens"],
@@ -77,8 +69,6 @@ function normalizeHeadingFont(value: string | null | undefined) {
   return getThemeFontById(normalized)?.id ?? null;
 }
 
-/* ----------------------- Domaine (DTO) -> UI (form values) ---------------- */
-
 export function toThemeFormValuesFromDTO(
   dto: ThemeSettingsDTO,
 ): ThemeFormValues {
@@ -92,8 +82,6 @@ export function toThemeFormValuesFromDTO(
     darkTokens: normalizeThemeTokens(dto.darkTokens),
   };
 }
-
-/* ------------------- Studio (RHF) -> Preview/Public (SettingsShape) ------- */
 
 export function toThemeSettingsShapeFromFormValues(
   values: ThemeFormValues,
@@ -112,20 +100,12 @@ export function toThemeSettingsShapeFromFormValues(
   return parsed.success ? parsed.data : candidate;
 }
 
-/**
- * DTO -> Shape (re-export studio convenience)
- *
- * @remarks
- * Optionnel : utile si tu veux éviter d’importer
- * `@compoz/ui/settings/mappers/theme-shape` dans certains fichiers studio.
- */
+/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
 export function toThemeSettingsShape(
   dto: ThemeSettingsDTO,
 ): ThemeSettingsShape {
   return toThemeSettingsShapeFromDTO(dto);
 }
-
-/* ---------------------------- Normalisations UI --------------------------- */
 
 export function normalizeThemeFormValues(
   values: ThemeFormValues,
@@ -141,8 +121,7 @@ export function normalizeThemeFormValues(
   };
 }
 
-/* ------------------------------ UI -> PATCH (API) ------------------------- */
-
+/** Builds a partial API intent while preserving PATCH semantics. */
 export function toUpdateThemeIntentDTOFromFormValues(
   p: Partial<ThemeFormValues>,
 ): UpdateThemeSettingsIntentDTO {

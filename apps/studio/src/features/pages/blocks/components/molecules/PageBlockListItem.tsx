@@ -2,18 +2,16 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/components/molecules/PageBlockListItem.tsx
- * @layer ui/studio/pages/blocks/molecules
+ * @layer studio/features/pages/blocks/components/molecules
  *
  * @description
- * Ligne compacte pour afficher un block (type + résumé) avec des actions rapides :
- * drag, éditer, supprimer.
+ * Compact sortable block list row with status, summary, edit, and delete actions.
  *
  * @remarks
- * - Molecule UI : compose `BlockCellsDescription`, `TooltipButton`, `DeleteButton`,
- *   `StudioButtonGroup`, `DiffStatusBadge` et `DragHandle`.
- * - Les callbacks sont fournis par le parent (orchestration via hooks / sections).
- * - Supporte un état occupé local (`isDeleting`) : ARIA + désactivation cohérente.
- * - Strictement UI-only : aucune logique métier.
+ * - Uses dnd-kit `useSortable` directly so the whole row can move while `DragHandle` owns the listeners.
+ * - Parent components provide edit/delete callbacks and own confirmation or I/O orchestration.
+ * - Keeps the deleting state reflected through ARIA attributes and disabled actions.
+ * - Splits mobile rendering into title and badge rows to keep compact block summaries readable.
  */
 
 import { useSortable } from "@dnd-kit/sortable";
@@ -31,38 +29,24 @@ import { DragHandle } from "@compoz/studio/features/dnd/DragHandle";
 import { BlockCellsDescription } from "@compoz/studio/features/pages/blocks/components/molecules/BlockCellsDescription";
 import { cn } from "@compoz/ui/lib/utils";
 
-/**
- * Props du composant `PageBlockListItem`.
- */
 type PageBlockListItemProps = Readonly<{
-  /** Block affiché (DTO). */
   block: BlockDTO;
 
   /** Status draft vs published (published / new / modified / deleted). */
   statusKind?: SiteDiffKindDTO;
 
-  /** Action : éditer le block. */
   onEdit?: () => void;
 
-  /** Action : suppression (confirmation + I/O gérées par le parent). */
   onDelete?: () => void;
 
-  /** Indique une suppression en cours (désactive les actions concernées). */
   isDeleting?: boolean;
 
-  /** Désactive toute la ligne (verrouillage global optionnel). */
   disabled?: boolean;
 
-  /** Indice du bloc dans la liste (pour le titre). */
   index?: number;
 }>;
 
-/**
- * Ligne UI d’un block dans la liste (studio).
- *
- * @remarks
- * Ne rend pas de `<li>` : le conteneur parent gère la sémantique de liste.
- */
+/** Renders a sortable block row; the parent owns list semantics. */
 export function PageBlockListItem({
   block,
   statusKind,

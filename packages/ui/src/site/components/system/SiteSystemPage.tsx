@@ -1,15 +1,12 @@
 /**
- * @file packages/ui/src/site/features/system/SiteSystemPage.tsx
- * @layer ui/site/system
+ * @file packages/ui/src/site/components/system/SiteSystemPage.tsx
+ * @layer ui/site/components/system
  *
  * @description
- * Layout UI-only réutilisable pour les "system pages" du site public (error, not-found, etc.).
+ * Renders a reusable public site system page layout for error, not-found, and similar states.
  *
  * @remarks
- * - 100% skinnable via le design system site.
- * - Ne contient aucune logique métier : uniquement structure + classes.
- * - Les actions (boutons/liens) sont injectées via `actions`.
- * - Ce composant reste server-friendly et consomme `ui` en props.
+ * Actions are injected by the caller; this component only owns structure and skin-provided classes.
  */
 
 import type { ReactNode } from "react";
@@ -22,15 +19,9 @@ export type SiteSystemPageProps = Readonly<{
   description?: ReactNode;
   actions?: ReactNode;
 
-  /**
-   * UI résolue (skin/template) + override local éventuel.
-   */
   ui: SiteSystemPageUi;
 }>;
 
-/**
- * Layout système réutilisable.
- */
 export function SiteSystemPage({
   title,
   description,

@@ -1,16 +1,9 @@
 /**
  * @file packages/core/src/domain/site/ports/site-status-cache-port.ts
- * @layer core/domain
- *
- * @description
- * Port cache “read-model” pour le statut du site (snapshots KV).
- *
- * Objectif : réduire au minimum les READ sur les endpoints status / statusDetails
- * via des snapshots lazy (read-through cache) + invalidation côté WRITE.
- *
+ * @layer core/domain/site/ports
+ * @description Cache port for site status read-model snapshots.
  * @remarks
- * - Type canonique côté core = read-model "entities" (`SiteStatus`, `SiteStatusDetails`).
- * - La sérialisation JSON (KV) est une responsabilité infra.
+ * Core owns the read-model contracts; JSON serialization and KV storage belong to infra.
  */
 
 import type { SiteStatus } from "@compoz/core/domain/site/entities/site-status";
@@ -20,16 +13,8 @@ import type {
 } from "@compoz/core/domain/site/entities/site-status-details";
 
 export interface SiteStatusCachePort {
-  /* ------------------------------------------------------------------------ */
-  /* Status snapshot (overview)                                               */
-  /* ------------------------------------------------------------------------ */
-
   readStatusSnapshot(): Promise<SiteStatus | null>;
   putStatusSnapshot(status: SiteStatus): Promise<void>;
-
-  /* ------------------------------------------------------------------------ */
-  /* StatusDetails snapshots (lazy table)                                     */
-  /* ------------------------------------------------------------------------ */
 
   readStatusDetailsSnapshot(
     query: SiteStatusDetailsQuery,
@@ -40,27 +25,17 @@ export interface SiteStatusCachePort {
     details: SiteStatusDetails,
   ): Promise<void>;
 
-  /* ------------------------------------------------------------------------ */
-  /* Invalidation                                                             */
-  /* ------------------------------------------------------------------------ */
-
-  /** Invalide le snapshot status (overview). */
+  /** Invalidates the overview status snapshot. */
   invalidateStatus(): Promise<void>;
 
-  /**
-   * Invalide tous les snapshots statusDetails connus (indexés).
-   * Stratégie premium : on maintient un index de clés.
-   */
+  /** Invalidates all indexed status details snapshots. */
   invalidateStatusDetails(): Promise<void>;
 
-  /**
-   * Invalidation ciblée (optionnelle) : permet de supprimer un snapshot précis
-   * sans SMEMBERS/scan (réduction des reads KV).
-   */
+  /** Optional targeted invalidation to avoid scanning indexed detail snapshots. */
   invalidateStatusDetailsSnapshot?: (
     query: SiteStatusDetailsQuery,
   ) => Promise<void>;
 
-  /** Invalide status + statusDetails. */
+  /** Invalidates every status cache snapshot. */
   invalidateAll(): Promise<void>;
 }

@@ -1,20 +1,14 @@
 /**
  * @file packages/http/src/envelope.ts
  * @layer transport/http
- * @description
- * Helpers purs pour produire des enveloppes d'erreur standardisées.
+ * @description Helpers for standard API error envelopes.
  */
 
 import type { ErrorCode } from "@compoz/core/domain/errors/codes";
 
-/**
- * Code d'erreur retourné par l'API :
- * - soit un code métier "canonique" (ErrorCode)
- * - soit un code libre (string) pour des cas infra/adapters ou erreurs externes
- */
+/** Allows canonical domain error codes plus adapter-specific string codes. */
 export type ApiErrorCode = ErrorCode | (string & {});
 
-/** Payload d'erreur standardisé côté API. */
 export type ApiErrorEnvelope = {
   error: {
     code: ApiErrorCode;
@@ -23,9 +17,6 @@ export type ApiErrorEnvelope = {
   };
 };
 
-/**
- * @description Construit une enveloppe d'erreur API standardisée.
- */
 export function buildErrorEnvelope(
   code: ApiErrorCode,
   message: string,

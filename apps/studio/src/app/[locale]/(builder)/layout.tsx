@@ -3,15 +3,15 @@
  * @layer studio/app
  *
  * @description
- * Layout localisé i18n du Builder Studio.
+ * Localized i18n layout for the Studio Builder.
  *
  * @remarks
- * - Initialise la locale (`setRequestLocale`).
- * - Monte les providers globaux (React Query, thème, sidebar, toasts, etc.).
- * - Résout la session Studio et le Website actif côté server.
- * - S’arrête volontairement au `StudioShell`.
- * - La composition visuelle builder (sidebar + header + main + drawer)
- *   est portée par `BuilderScreen` pour conserver un seul arbre RHF partagé.
+ * - Initializes the locale with `setRequestLocale`.
+ * - Mounts global providers: React Query, theme, sidebar, toasts, etc.
+ * - Resolves the Studio session and active Website server-side.
+ * - Intentionally stops at `StudioShell`.
+ * - Builder visual composition (sidebar + header + main + drawer) is owned by
+ *   `BuilderScreen` to keep a single shared RHF tree.
  */
 
 import type { ReactNode } from "react";
@@ -43,10 +43,6 @@ type LocaleLayoutProps = Readonly<{
   >;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
 function isLocale(value: string): value is Locale {
   return routing.locales.includes(value as Locale);
 }
@@ -65,17 +61,9 @@ function normalizeWebsiteName(value: unknown): string | undefined {
   return websiteName ? websiteName : undefined;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Static params                                                              */
-/* -------------------------------------------------------------------------- */
-
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
-
-/* -------------------------------------------------------------------------- */
-/* Layout                                                                     */
-/* -------------------------------------------------------------------------- */
 
 export default async function LocaleLayout({
   children,

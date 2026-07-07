@@ -1,24 +1,18 @@
 /**
  * @file packages/validation/src/site/settings/theme/theme.ts
  * @layer schemas
+ *
  * @description
- * Schémas Zod décrivant la forme frontière des réglages de thème public du site.
+ * Zod schemas describing the public theme settings boundary shape.
  *
  * @remarks
- * Scope V1 :
- * - activation light/dark
- * - police
- * - reveal
- * - tokens couleur light/dark
+ * Theme token validation intentionally accepts a limited set of CSS color
+ * formats without trying to be a full CSS parser.
  */
 
 import { THEME_FONTS } from "@compoz/core/constants/theme/theme-fonts";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
-
-/* -------------------------------------------------------------------------- */
-/*                                   Constantes                               */
-/* -------------------------------------------------------------------------- */
 
 export const THEME_MODES = ["light", "dark", "system"] as const;
 export const REVEAL_PRESETS = [
@@ -33,10 +27,6 @@ export const THEME_FONT_IDS = THEME_FONTS.map((font) => font.id) as [
   ...(typeof THEME_FONTS)[number]["id"][],
 ];
 
-/* -------------------------------------------------------------------------- */
-/*                              Helpers / fragments                           */
-/* -------------------------------------------------------------------------- */
-
 function requiredThemeToken(message: string) {
   return z.string().trim().min(1, message).refine(isValidThemeColorValue, {
     message,
@@ -48,27 +38,14 @@ function isValidThemeColorValue(value: string): boolean {
 
   if (!v) return false;
 
-  // Hex court ou long
   if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v)) return true;
-
-  // rgb / rgba
   if (/^rgba?\(.+\)$/.test(v)) return true;
-
-  // hsl / hsla
   if (/^hsla?\(.+\)$/.test(v)) return true;
-
-  // oklch
   if (/^oklch\(.+\)$/.test(v)) return true;
-
-  // Quelques mots-clés simples utiles en V1
   if (v === "white" || v === "black" || v === "transparent") return true;
 
   return false;
 }
-
-/* -------------------------------------------------------------------------- */
-/*                               Tokens publics                               */
-/* -------------------------------------------------------------------------- */
 
 export const PublicThemeTokensSchema = z
   .object({
@@ -122,10 +99,6 @@ export const PublicThemeTokensSchema = z
 
 export type PublicThemeTokensShape = z.infer<typeof PublicThemeTokensSchema>;
 
-/* -------------------------------------------------------------------------- */
-/*                           Inline validation                                */
-/* -------------------------------------------------------------------------- */
-
 type ThemeSettingsDraft = z.infer<typeof ThemeSettingsObjectSchema>;
 
 export function validateThemeSettingsValues(
@@ -142,10 +115,6 @@ export function validateThemeSettingsValues(
     }
   }
 }
-
-/* -------------------------------------------------------------------------- */
-/*                           Schéma principal Theme                           */
-/* -------------------------------------------------------------------------- */
 
 export const ThemeSettingsObjectSchema = z
   .object({

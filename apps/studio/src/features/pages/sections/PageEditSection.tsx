@@ -1,18 +1,15 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/pages/pages/PageEditSection.tsx
- * @layer ui/studio/pages/sections
+ * @file apps/studio/src/features/pages/sections/PageEditSection.tsx
+ * @layer studio/features/pages/sections
  *
  * @description
- * Section studio pour créer / éditer les métadonnées d’une page
- * (title + slug + sitemap).
+ * Studio section for creating or editing page metadata.
  *
  * @remarks
- * - Le chargement initial global (index, shell) est géré par le parent.
- * - En mode edit, la section lit la page complète via `useReadPage(pageId)`
- *   (nécessaire pour `sitemap`).
- * - Strictement UI-only : aucune logique métier.
+ * - In edit mode, reads the full page because the SiteIndex does not carry every editable field.
+ * - Keeps a baseline ref for minimal update patches after warning confirmation.
  */
 
 import { useTranslations } from "next-intl";
@@ -35,23 +32,15 @@ import type { PageWarningKey } from "@compoz/studio/features/pages/validation/va
 import { computePageWarnings } from "@compoz/studio/features/pages/validation/validate";
 import type { PageFormValues } from "@compoz/validation/pages/page-form";
 
-/**
- * Props du composant `PageEditSection`.
- */
 type PageEditSectionProps = Readonly<{
-  /** Index du site (ordre + refs pages). Sert au parent / listing. */
   index: SiteIndexDTO | null;
 
-  /** Indique un chargement côté parent (shell). */
   isLoading?: boolean;
 
-  /** Id en cours d’édition (`null` = création). */
   editId: string | null;
 
-  /** Annule l’édition (revient au mode création). */
   onCancelEdit: () => void;
 
-  /** Remonte l’état dirty (guard / navigation) au parent. */
   onDirtyChange?: (dirty: boolean) => void;
 }>;
 
@@ -72,19 +61,12 @@ export function PageEditSection({
 
   const mode: "create" | "edit" = editId ? "edit" : "create";
 
-  /**
-   * En mode edit, on lit la page complète (nécessaire pour `sitemap`).
-   */
+  /** SiteIndex is only a summary; edit mode needs the full page payload. */
   const { page, isLoading: isLoadingPage } = useReadPage(editId ?? "");
 
-  /**
-   * Ref utilisée uniquement pour le patch / diff.
-   */
+  /** Baseline used to build minimal update patches. */
   const baselineRef = useRef<PageFormValues | null>(null);
 
-  /**
-   * Nom de référence depuis l’index, utile avant le chargement complet de la page.
-   */
   const refName = useMemo(() => {
     if (!editId || !index) return null;
     return index.pages.find((pageItem) => pageItem.id === editId)?.name ?? null;

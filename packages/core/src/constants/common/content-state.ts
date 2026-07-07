@@ -3,30 +3,20 @@
  * @layer core/constants/common
  *
  * @description
- * Constantes & types liés aux états de contenu persistés (draft/published).
- * Invariants : valeurs stables utilisées dans la persistance et les use-cases.
- */
+ * Persisted content state constants and derived TypeScript types.
+ *
+ * @remarks
+ * - Values are persistence-stable and used by repositories, routes, and use cases.
+ * /
 
-/* -------------------------------------------------------------------------- */
-/*                            États de contenu (pages)                        */
-/* -------------------------------------------------------------------------- */
-
-/**
- * États possibles d’un contenu (valeurs persistées).
- */
+/** Persisted content state values. */
 export const CONTENT_STATE = {
   DRAFT: "draft",
   PUBLISHED: "published",
 } as const;
 
-/**
- * État par défaut pour un contenu nouvellement créé.
- * Utilisé notamment lorsqu’aucun `?state=` n’est précisé.
- */
+/** Default state for newly created content or requests without an explicit state. */
 export const DEFAULT_CONTENT_STATE = CONTENT_STATE.DRAFT;
 
-/**
- * Type TypeScript dérivé de `CONTENT_STATE`.
- * Résultat : `"draft" | "published"`
- */
+/** Type union derived from `CONTENT_STATE`: `"draft" | "published"`. */
 export type ContentState = (typeof CONTENT_STATE)[keyof typeof CONTENT_STATE];

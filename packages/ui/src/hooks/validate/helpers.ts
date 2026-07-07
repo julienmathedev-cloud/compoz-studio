@@ -1,23 +1,9 @@
 /**
  * @file packages/ui/src/hooks/validate/helpers.ts
  * @layer ui/hooks/validate
- *
- * @description
- * Helpers de validation légère et non bloquante destinés à l’UI.
- *
- * @remarks
- * - Helpers génériques non liés aux URLs.
- * - Les normalisations UI (drafts) sont centralisées dans `src/lib/normalize.ts`.
- * - Utilisés pour des contrôles UI (doublons, incohérences mineures, avertissements).
+ * @description Lightweight non-blocking validation helpers for UI checks.
  */
 
-/**
- * Détecte la présence de doublons dans une liste de clés déjà normalisées.
- *
- * @remarks
- * - Implémentation en O(n) via `Set`.
- * - Destiné aux validations non bloquantes côté UI.
- */
 export function hasDuplicates(keys: ReadonlyArray<string>): boolean {
   const seen = new Set<string>();
 

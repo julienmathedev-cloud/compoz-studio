@@ -2,19 +2,14 @@
 
 /**
  * @file apps/studio/src/features/preview/hooks/useStudioPreview.ts
- * @layer hooks/studio/preview
+ * @layer studio/features/preview/hooks
  *
  * @description
- * Hook studio encapsulant le wiring standard de la preview (iframe + bridge + draft).
+ * Studio preview coordinator for iframe readiness, baselines, and draft overrides.
  *
  * @remarks
- * - Gère le handshake `compoz.preview.ready` par scope.
- * - Sécurise l’injection des baselines via un buffer + flush fiable.
- * - Supporte explicitement 2 modes :
- *   - `liveEnabled = true`  → preview live (settings sections)
- *   - `liveEnabled = false` → preview manuelle (builder)
- * - Le hook ne mélange plus 2 systèmes implicites.
- * - Strictement UI-only : aucune logique métier.
+ * - Buffers baselines until the iframe has a contentWindow and the target scope is ready.
+ * - Supports live preview for settings screens and manual sync for the builder through `liveEnabled`.
  */
 
 import type { RefObject } from "react";
@@ -23,64 +18,30 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { log } from "@compoz/infra/lib/log";
 import { usePreviewBridge } from "@compoz/studio/features/preview/hooks/usePreviewBridge";
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
 type UseStudioPreviewParams<T> = Readonly<{
-  /**
-   * Baseline persistée du scope.
-   *
-   * @remarks
-   * - Sert de source de vérité enregistrée.
-   * - Est injectée dans la preview via `compoz.preview.baseline`.
-   */
+  /** Saved baseline injected into the preview through `compoz.preview.baseline`. */
   baseline: T | null;
 
-  /**
-   * Active ou non la synchronisation live du draft vers la preview.
-   *
-   * @remarks
-   * - `true`  : les changements de draft sont poussés automatiquement
-   *             via `compoz.preview.sync`.
-   * - `false` : aucune synchro live automatique ; l’appelant pilote
-   *             explicitement `frame.onSync()` / `frame.onReset()`.
-   */
+  /** Enables automatic draft sync; disabled callers control sync/reset manually. */
   liveEnabled?: boolean;
 }>;
 
-/**
- * Contrat de retour du hook `useStudioPreview`.
- */
 export type UseStudioPreviewResult<T> = Readonly<{
   iframeRef: RefObject<HTMLIFrameElement | null>;
 
-  /**
-   * Draft courant (valeurs UI live).
-   *
-   * @remarks
-   * - En mode live, il est poussé automatiquement dans la preview.
-   * - En mode manuel, il reste local tant qu’on n’appelle pas `onSync()`.
-   */
+  /** Current draft; live mode pushes it automatically, manual mode waits for `onSync()`. */
   draft: T | null;
   setDraft: (draft: T | null) => void;
 
-  /**
-   * Injecte une baseline dans la preview pour un scope donné.
-   *
-   * @remarks
-   * - Robuste : buffer + flush automatique quand (iframeWindow OK + scope ready).
-   * - Utilisable pour le scope principal ou des scopes secondaires.
-   */
+  /** Queues and flushes a baseline once the iframe window and target scope are ready. */
   setBaseline: <U>(scope: string, payload: U) => void;
 
-  /** Scopes ayant envoyé `compoz.preview.ready` pour CETTE iframe. */
+  /** Scopes that sent `compoz.preview.ready` for this iframe. */
   ready: Readonly<{
     isReady: (scope: string) => boolean;
     scopes: readonly string[];
   }>;
 
-  /** Helpers standard consommés par les écrans Studio. */
   frame: Readonly<{
     onLoad: () => void;
     onSync: () => void;
@@ -94,9 +55,7 @@ type PreviewReadyMessage = Readonly<{
   scope: string;
 }>;
 
-/**
- * Type guard pour les messages `compoz.preview.ready` émis par la preview.
- */
+/** Guards ready messages emitted by the preview iframe. */
 function isPreviewReadyMessage(value: unknown): value is PreviewReadyMessage {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -111,10 +70,6 @@ function isPreviewReadyMessage(value: unknown): value is PreviewReadyMessage {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                    Hook                                    */
-/* -------------------------------------------------------------------------- */
-
 export function useStudioPreview<T>(
   scope: string,
   { baseline, liveEnabled = true }: UseStudioPreviewParams<T>,
@@ -124,40 +79,28 @@ export function useStudioPreview<T>(
 
   const [draft, setDraft] = useState<T | null>(null);
 
-  /**
-   * Scopes ready pour CETTE iframe (source mutable côté logique).
-   */
+  /** Mutable ready scopes for the current iframe instance. */
   const readyScopesRef = useRef<Set<string>>(new Set());
 
-  /**
-   * Snapshot render-safe.
-   */
   const [readyScopes, setReadyScopes] = useState<readonly string[]>([]);
   const [readySet, setReadySet] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
 
-  /**
-   * Buffer des baselines à envoyer (scope -> payload).
-   */
+  /** Baseline buffer keyed by scope until the iframe and scope are ready. */
   const pendingBaselinesRef = useRef<Map<string, unknown>>(new Map());
 
   const hasContentWindow = useCallback(() => {
     return Boolean(iframeRef.current?.contentWindow);
   }, []);
 
-  /**
-   * Commit d’un snapshot render-safe (liste + set) à partir de la ref.
-   */
   const commitReadySnapshot = useCallback(() => {
     const nextScopes = Array.from(readyScopesRef.current.values());
     setReadyScopes(nextScopes);
     setReadySet(new Set(nextScopes));
   }, []);
 
-  /**
-   * Essaie d’envoyer la baseline si (iframeWindow OK + scope ready + payload pending).
-   */
+  /** Flushes a pending baseline only after both iframe window and scope readiness are available. */
   const flushBaselineIfPossible = useCallback(
     (nextScope: string) => {
       if (!hasContentWindow()) return;
@@ -177,9 +120,6 @@ export function useStudioPreview<T>(
     [hasContentWindow, preview],
   );
 
-  /**
-   * Marque un scope comme ready + flush immédiat si quelque chose attend.
-   */
   const markReady = useCallback(
     (nextScope: string) => {
       const before = readyScopesRef.current.size;
@@ -194,10 +134,6 @@ export function useStudioPreview<T>(
     [commitReadySnapshot, flushBaselineIfPossible],
   );
 
-  /* ---------------------------------------------------------------------- */
-  /*                              iframe load                               */
-  /* ---------------------------------------------------------------------- */
-
   const onLoad = useCallback(() => {
     log.debug("studio.preview.frame.load", {
       scope,
@@ -210,10 +146,6 @@ export function useStudioPreview<T>(
       flushBaselineIfPossible(readyScope);
     }
   }, [flushBaselineIfPossible, liveEnabled, scope]);
-
-  /* ---------------------------------------------------------------------- */
-  /*                           preview handshake                            */
-  /* ---------------------------------------------------------------------- */
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
@@ -231,12 +163,7 @@ export function useStudioPreview<T>(
 
       markReady(readyScope);
 
-      /**
-       * Quand le scope principal devient ready :
-       * - on pousse sa baseline si on l’a
-       * - si le mode live est actif et qu’un draft existe déjà, on pousse
-       *   aussi immédiatement l’override live
-       */
+      /** When the main scope becomes ready, immediately replay its baseline and live draft if present. */
       if (readyScope === scope) {
         if (baseline != null) {
           pendingBaselinesRef.current.set(scope, baseline);
@@ -261,17 +188,7 @@ export function useStudioPreview<T>(
     scope,
   ]);
 
-  /* ---------------------------------------------------------------------- */
-  /*                         baseline principale scope                       */
-  /* ---------------------------------------------------------------------- */
-
-  /**
-   * La baseline du scope principal est toujours poussée comme baseline persistée.
-   *
-   * @remarks
-   * - Cela garde un état "saved" cohérent côté preview.
-   * - Les overrides live éventuels viennent par-dessus via `sync`.
-   */
+  /** Keeps the main scope baseline as the saved preview state; live overrides layer on top through `sync`. */
   useEffect(() => {
     if (baseline == null) return;
 
@@ -286,19 +203,7 @@ export function useStudioPreview<T>(
     flushBaselineIfPossible(scope);
   }, [baseline, flushBaselineIfPossible, hasContentWindow, scope]);
 
-  /* ---------------------------------------------------------------------- */
-  /*                           live sync principal                          */
-  /* ---------------------------------------------------------------------- */
-
-  /**
-   * Mode live :
-   * - draft != null → push override live
-   * - draft == null → reset override pour retomber sur la baseline
-   *
-   * @remarks
-   * - Aucun push automatique si `liveEnabled = false`.
-   * - C’est précisément ce qui permet de garder le builder en manuel.
-   */
+  /** Live mode pushes drafts automatically and resets to baseline when the draft is cleared. */
   useEffect(() => {
     if (!liveEnabled) return;
     if (!readyScopesRef.current.has(scope)) return;
@@ -318,14 +223,7 @@ export function useStudioPreview<T>(
     preview.sync(scope, draft);
   }, [draft, hasContentWindow, liveEnabled, preview, scope]);
 
-  /* ---------------------------------------------------------------------- */
-  /*                                actions                                 */
-  /* ---------------------------------------------------------------------- */
-
-  /**
-   * Sync manuel :
-   * utile surtout quand `liveEnabled = false` (builder).
-   */
+  /** Manual sync path used by builder screens when live mode is disabled. */
   const onSync = useCallback(() => {
     log.debug("studio.preview.onSync", {
       scope,
@@ -337,10 +235,6 @@ export function useStudioPreview<T>(
     preview.sync(scope, draft);
   }, [draft, liveEnabled, preview, scope]);
 
-  /**
-   * Reset manuel :
-   * supprime l’override courant pour retomber sur la baseline.
-   */
   const onReset = useCallback(() => {
     log.debug("studio.preview.onReset", {
       scope,
@@ -350,9 +244,7 @@ export function useStudioPreview<T>(
     preview.reset(scope);
   }, [liveEnabled, preview, scope]);
 
-  /**
-   * API publique : `setBaseline(scope)` fiable.
-   */
+  /** Public baseline setter for primary and secondary preview scopes. */
   const setBaseline = useCallback(
     <U>(nextScope: string, payload: U) => {
       pendingBaselinesRef.current.set(nextScope, payload);

@@ -3,20 +3,20 @@
  * @layer studio/auth
  *
  * @description
- * Module augmentation NextAuth/Auth.js.
+ * NextAuth/Auth.js module augmentation for Studio authentication data.
  *
  * @remarks
- * - Ajoute les champs RBAC websites au User, Session et JWT.
- * - Ajoute aussi les champs de session liés aux sandboxes démo.
- * - Fichier .d.ts inclus par TypeScript via tsconfig.
+ * - Adds Website RBAC fields to User, Session, and JWT.
+ * - Adds session fields related to demo sandboxes.
+ * - This `.d.ts` file is included by TypeScript through tsconfig.
  */
 
 import type { DefaultSession } from "next-auth";
 
 /**
- * Rôle auth Studio.
+ * Studio auth role.
  *
- * TS-only : n’impacte pas le runtime.
+ * TS-only: does not affect runtime.
  */
 type AuthRole = "admin" | "editor";
 

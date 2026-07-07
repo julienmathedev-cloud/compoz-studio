@@ -2,16 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/organisms/SiteGalleryZoomList.tsx
- * @layer ui/site/organisms
+ * @layer ui/site/components/organisms
  *
  * @description
- * SiteGalleryZoomList : liste d’images avec zoom sur clic (lightbox).
+ * Renders a public site gallery list whose images open in a lightbox on click.
  *
  * @remarks
- * - UI-only : aucun style inline, tout vient du skin via `ui`.
- * - Défensif : ignore les images sans src.
- * - Index fiable : on filtre AVANT le render.
- * - Reveal : activable/désactivable via prop.
+ * Filters invalid images before rendering so click indexes remain aligned with the lightbox image list.
  */
 
 import { useCallback, useMemo, useState } from "react";

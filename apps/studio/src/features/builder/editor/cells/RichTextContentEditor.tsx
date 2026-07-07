@@ -2,15 +2,17 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/RichTextContentEditor.tsx
- * @layer ui/studio/pages/blocks/editor
+ * @layer studio/features/builder/editor/cells
  *
  * @description
- * Éditeur de contenu Rich Text (Tiptap) — UI pure.
+ * Controlled Tiptap editor for RichTextCell HTML content.
  *
  * @remarks
- * - Contrôlé : le parent fournit `value` (HTML) et reçoit `onChange` (HTML).
- * - Toolbar type "Simple Editor" : icônes + groupes (marks, blocks, align, history, link).
- * - Aucun couplage direct à RHF : ce composant ne gère que l’édition du contenu riche.
+ * - Receives the HTML source of truth through `value` and reports updates through `onChange`.
+ * - Keeps RHF wiring out of this component; it only owns rich text editing behavior.
+ * - Extends Tiptap links so editable links require modifier or middle-click to open.
+ * - Adds custom unordered list variants through a `data-list-variant` attribute.
+ * - Normalizes trailing empty paragraphs before sending HTML updates upstream.
  */
 
 import { Extension } from "@tiptap/core";
@@ -75,19 +77,13 @@ import { PROSE_CLASSNAME } from "@compoz/ui/styles/shared/typography";
 import { STACK_MD, STUDIO_BORDER_PANEL } from "@compoz/ui/styles/studio/layout";
 
 export type RichTextContentEditorProps = Readonly<{
-  /** HTML du contenu (source de vérité). */
+  /** HTML content source of truth. */
   value: string;
-  /** Désactive l’édition. */
   disabled?: boolean;
-  /** Remonte le HTML à chaque update. */
+  /** Called with cleaned HTML after editor updates. */
   onChange: (nextHtml: string) => void;
-
-  /** Optionnel : placeholder d’édition. */
   placeholder?: string;
-  /** Optionnel : hint sous l’éditeur. */
   hint?: string;
-
-  /** Optionnel : className container */
   className?: string;
 }>;
 
@@ -691,7 +687,7 @@ export function RichTextContentEditor({
           value={marksValue}
           spacing={1}
           onValueChange={() => {
-            // état dérivé => on déclenche via onClick
+            // Derived state; commands run from each item click handler.
           }}
         >
           <ToggleGroupItem
@@ -838,7 +834,7 @@ export function RichTextContentEditor({
           value={scriptValue}
           spacing={1}
           onValueChange={() => {
-            // état dérivé => on déclenche via onClick
+            // Derived state; commands run from each item click handler.
           }}
         >
           <ToggleGroupItem

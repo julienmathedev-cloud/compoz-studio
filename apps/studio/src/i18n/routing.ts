@@ -1,14 +1,12 @@
 /**
  * @file apps/studio/src/i18n/routing.ts
  * @layer studio/i18n
- * @description
- * Configuration du routing i18n du Studio.
  *
- * Source de vérité pour :
- * - les locales supportées
- * - la locale par défaut
- * - la navigation i18n (`createNavigation`)
- * - le chargement des messages (`getRequestConfig`)
+ * @description
+ * Studio i18n routing configuration.
+ *
+ * @remarks
+ * - Source of truth for supported locales, the default locale, navigation helpers, and request message loading.
  */
 
 import { defineRouting } from "next-intl/routing";

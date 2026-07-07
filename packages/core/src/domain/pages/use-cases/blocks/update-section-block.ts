@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/blocks/update-section-block.ts
  * @layer core/domain/pages/use-cases/blocks
- * @description
- * Use-case : mise à jour d’un block `Section` sur une page (draft par défaut).
+ * @description Use case that updates a section block on a draft page.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -97,10 +96,7 @@ export function updateSectionBlock({
 
     let nextBlocks = [...currentBlocks];
 
-    /**
-     * Une seule section LCP est autorisée.
-     * Si le patch active LCP → on désactive les autres.
-     */
+    /** Only one section can own LCP priority; enabling it on this block disables it on the others. */
     if (patch.lcpPriority === true) {
       nextBlocks = nextBlocks.map((block) =>
         block.type === "section" ? { ...block, lcpPriority: false } : block,

@@ -1,14 +1,9 @@
 /**
  * @file packages/infra/src/users/prisma-users-repository.ts
  * @layer infra/users
- *
- * @description
- * Prisma implementation of the UsersRepository.
- *
+ * @description Prisma-backed UsersRepository implementation for Studio users.
  * @remarks
- * The domain uses Website wording:
- * - User.rbac.defaultWebsiteId maps to User.defaultWebsiteId in Prisma.
- * - User.rbac.websiteIds maps to WebsiteAccess.websiteId in Prisma.
+ * Domain RBAC uses Website wording, while Prisma stores the default website on `User.defaultWebsiteId` and website memberships in `WebsiteAccess` rows.
  */
 
 import type {

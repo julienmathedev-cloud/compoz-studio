@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/lib/getScrollBehavior.ts
  * @layer ui/lib
- *
- * @description
- * Détermine la valeur de `scroll-behavior` à appliquer.
- *
+ * @description Resolves the scroll behavior while respecting reduced-motion preferences.
  * @remarks
- * - Utilise `matchMedia` pour respecter `prefers-reduced-motion`.
- * - En SSR (window absent) → retourne "auto".
+ * Returns `auto` during SSR or when media query detection fails.
  */
 export function getScrollBehavior(): "auto" | "smooth" {
   if (typeof window === "undefined") return "auto";

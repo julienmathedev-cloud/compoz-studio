@@ -1,18 +1,14 @@
 /**
  * @file apps/studio/src/features/pages/mappers/blocks-form.ts
- * @layer ui/studio/pages/mappers
+ * @layer studio/features/pages/mappers
  *
  * @description
- * Mappers de formulaires studio pour les blocks :
- * - DTO domaine -> FormValues RHF
- * - normalisations UI légères
- * - FormValues -> Intent DTO (API studio)
- * - factories UI (`createEmpty*`)
+ * Studio block form mappers for DTO-to-RHF values, UI normalization, API intents, and empty UI factories.
  *
  * @remarks
- * - Gère uniquement la forme UI et les coercitions légères.
- * - Aucune logique métier.
- * - Aucune gestion de state (draft / published).
+ * - Keeps row, column, and cell collections present for form consumers.
+ * - Normalizes ids, section options, and nested cells before validation or API intent creation.
+ * - Does not own draft/published state; callers provide the content-state context.
  */
 
 import type { BlockDTO } from "@compoz/core/domain/pages/dto";
@@ -31,20 +27,12 @@ import {
   toCellFormValuesFromDTO,
 } from "@compoz/studio/features/pages/mappers/cells-form";
 
-/* -------------------------------------------------------------------------- */
-/* Types locaux UI                                                            */
-/* -------------------------------------------------------------------------- */
-
 type SectionBlockDTO = Extract<BlockDTO, { type: "section" }>;
 type SectionRowDTO = SectionBlockDTO["rows"][number];
 type SectionColumnDTO = SectionRowDTO["columns"][number];
 type SectionRowFormValues = SectionBlockFormValues["rows"][number];
 type SectionColumnFormValues = SectionRowFormValues["columns"][number];
 type SectionRowReverseOnFormValues = SectionRowFormValues["reverseOn"];
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function createUiId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -198,17 +186,9 @@ function normalizeRowsForValidation(
   return toMutable(rows).map(normalizeRowForValidation);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Domaine (DTO) -> UI (form values)                                          */
-/* -------------------------------------------------------------------------- */
+// Domain DTO -> UI form values.
 
-/**
- * Convertit un `BlockDTO` en `SectionBlockFormValues`.
- *
- * @remarks
- * - Si le block n’est pas `section`, retourne une forme minimale safe.
- * - Les rows/columns/cells sont toujours présents côté UI.
- */
+/** Converts a `BlockDTO` to section block form values with safe nested row/column/cell collections. */
 export function toSectionBlockFormValuesFromDTO(
   block: BlockDTO,
 ): SectionBlockFormValues {
@@ -245,9 +225,7 @@ export function toSectionBlockFormValuesFromDTO(
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Normalisations UI (forms)                                                  */
-/* -------------------------------------------------------------------------- */
+// UI form normalization.
 
 export function normalizeSectionBlockFormValues(
   values: SectionBlockFormValues,
@@ -273,14 +251,9 @@ export function normalizeSectionBlockFormValuesForValidation(
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* UI -> INTENTS (API)                                                        */
-/* -------------------------------------------------------------------------- */
+// UI form values -> API intents.
 
-/**
- * Construit le DTO d’intent de création d’un `SectionBlock`
- * à partir des FormValues UI (RHF).
- */
+/** Builds a create-section-block API intent from RHF form values. */
 export function toCreateSectionBlockIntentDTOFromFormValues(args: {
   values: SectionBlockFormValues;
   insertAt?: number;
@@ -326,9 +299,7 @@ function toSectionBlockPatch(
   return output;
 }
 
-/**
- * Construit l’intent de mise à jour d’un `SectionBlock`.
- */
+/** Builds an update-section-block API intent from a normalized form patch. */
 export function toUpdateSectionBlockIntentDTOFromFormValues(args: {
   blockId: string;
   patch: Partial<SectionBlockFormValues>;
@@ -341,9 +312,7 @@ export function toUpdateSectionBlockIntentDTOFromFormValues(args: {
   };
 }
 
-/**
- * Prépare l’intent de réordonnancement des blocks.
- */
+/** Normalizes a block reorder intent before sending it to the API. */
 export function normalizeReorderBlocksIntentDTO(
   values: ReorderBlocksIntentDTO,
 ): ReorderBlocksIntentDTO {
@@ -354,9 +323,7 @@ export function normalizeReorderBlocksIntentDTO(
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Factories UI                                                               */
-/* -------------------------------------------------------------------------- */
+// Empty UI factories.
 
 export function createEmptyColumn(): SectionColumnFormValues {
   return {
@@ -381,9 +348,7 @@ export function createEmptyRow(args?: {
   };
 }
 
-/**
- * Crée un block `Section` vide côté UI form.
- */
+/** Creates an empty section block form value with safe defaults for nested rows. */
 export function createEmptySectionBlock(args?: {
   name?: string;
   cssClassName?: string;

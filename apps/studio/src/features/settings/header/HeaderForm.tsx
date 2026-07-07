@@ -2,16 +2,13 @@
 
 /**
  * @file apps/studio/src/features/settings/header/HeaderForm.tsx
- * @layer ui/studio/organisms
+ * @layer studio/features/settings/header
  *
  * @description
- * Formulaire d’édition du header (studio) — RHF + Zod comme source de vérité UI.
+ * RHF and Zod Studio form for header settings.
  *
  * @remarks
- * - Contrôlé : le parent fournit `initialValues` et reçoit `onSubmit`.
- * - Les warnings UI (non bloquants) sont dérivés des valeurs RHF et remontés au parent.
- * - Peut remonter les valeurs live (`onValuesChange`) pour alimenter une preview draft.
- * - Le reset RHF est géré localement puis notifié au parent via `onReset` (optionnel).
+ * - Reports warnings, dirty state, blocking-error count, and live values to callers for section state and preview drafts.
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -36,9 +33,6 @@ import {
   type HeaderFormValues,
 } from "@compoz/validation/site/settings/header/header-form";
 
-/**
- * Props du composant `HeaderForm`.
- */
 type HeaderFormProps = Readonly<{
   initialValues: HeaderFormValues;
   isSaving?: boolean;

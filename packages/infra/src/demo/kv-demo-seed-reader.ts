@@ -1,16 +1,9 @@
 /**
  * @file packages/infra/src/demo/kv-demo-seed-reader.ts
  * @layer infra/demo
- *
- * @description
- * Implémentation KV du lecteur de seed démo.
- *
+ * @description KV reader that validates whether a demo seed website can be cloned.
  * @remarks
- * - Vérifie qu’un Website seed est exploitable pour créer une sandbox démo.
- * - En V1, un seed est considéré valide si son index published contient
- *   au moins une page exploitable.
- * - Ne lit volontairement pas un snapshot complet du contenu :
- *   le clonage réel est délégué au sandbox cloner.
+ * The reader only checks the published index; actual content cloning is delegated to the sandbox cloner.
  */
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";

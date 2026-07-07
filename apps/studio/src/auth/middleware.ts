@@ -1,27 +1,20 @@
 /**
- * @file apps/studio/auth/middleware.ts
+ * @file apps/studio/src/auth/middleware.ts
  * @layer studio/auth
  *
  * @description
- * Middleware d’authentification Studio (NextAuth v4) :
- * - Protège toutes les routes du Studio
- * - Laisse passer :
- *   - /api/auth/*
- *   - /[locale]/signin
- *   - assets Next (_next, favicon, etc.)
+ * Studio authentication middleware for NextAuth v4.
  *
  * @remarks
- * - Pour les routes API (hors /api/auth), on renvoie 401 JSON (pas de redirect)
- *   sinon le client reçoit un HTML de redirection et ça casse les handlers.
+ * - Protects Studio routes by default.
+ * - Allows public auth, demo bootstrap, sign-in, and static asset routes.
+ * - API routes outside `/api/auth` return JSON 401 instead of redirecting,
+ *   so client handlers do not receive redirect HTML.
  */
 
 import { getToken } from "next-auth/jwt";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function getLocaleFromPathname(pathname: string): string | null {
   const match = /^\/([a-z]{2})(\/|$)/.exec(pathname);
@@ -29,18 +22,18 @@ function getLocaleFromPathname(pathname: string): string | null {
 }
 
 function isPublicPath(pathname: string): boolean {
-  // NextAuth endpoints
+  // NextAuth endpoints.
   if (pathname.startsWith("/api/auth")) return true;
 
-  // Demo bootstrap endpoint
+  // Demo bootstrap endpoints.
   if (pathname === "/api/demo/start") return true;
   if (pathname === "/demo/start") return true;
 
-  // Next static/assets
+  // Next static assets.
   if (pathname.startsWith("/_next")) return true;
   if (pathname === "/favicon.ico") return true;
 
-  // Signin localisé
+  // Localized sign-in route.
   if (/^\/[a-z]{2}\/signin(\/|$)/.test(pathname)) return true;
 
   if (pathname === "/robots.txt") return true;
@@ -50,10 +43,6 @@ function isPublicPath(pathname: string): boolean {
   return false;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Middleware                                                                 */
-/* -------------------------------------------------------------------------- */
-
 export default async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
@@ -61,24 +50,21 @@ export default async function middleware(req: NextRequest) {
 
   const token = await getToken({
     req,
-    // ✅ doit matcher la valeur utilisée dans ton authOptions.secret
+    // Must match the value used by authOptions.secret.
     secret: process.env["AUTH_SECRET"],
   });
 
-  // ✅ Pas de session
   if (!token) {
-    // API => 401 JSON (pas de redirect)
+    // API routes return JSON instead of redirect HTML.
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Pages => redirect vers signin localisé
     const url = req.nextUrl.clone();
     const locale = getLocaleFromPathname(pathname) ?? "fr";
 
     url.pathname = `/${locale}/signin`;
 
-    // ✅ conserve aussi la querystring
     url.searchParams.set("next", `${pathname}${search}`);
 
     return NextResponse.redirect(url);

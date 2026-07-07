@@ -3,14 +3,14 @@
  * @layer site/lib/seo
  *
  * @description
- * Résout une base URL “runtime” fiable pour le SEO du site.
+ * Resolves the runtime base URL used by public site SEO metadata.
  *
  * @remarks
- * Priorité :
- * 1) settings.seo.baseUrl (source de vérité du site publié)
- * 2) ENV explicite (NEXT_PUBLIC_SITE_URL)
- * 3) ENV Vercel (VERCEL_URL) => https://<vercel_url>
- * Sinon : null (pas de canonical absolu)
+ * Resolution priority:
+ * 1) `settings.seo.baseUrl`, the published site's source of truth.
+ * 2) `NEXT_PUBLIC_SITE_URL`, when configured explicitly.
+ * 3) `VERCEL_URL`, normalized to `https://<vercel_url>`.
+ * Returns `null` when no reliable absolute canonical base URL is available.
  */
 
 export function resolveSiteBaseUrl(

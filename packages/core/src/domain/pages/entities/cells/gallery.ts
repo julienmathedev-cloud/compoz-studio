@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/entities/cells/gallery.ts
  * @layer core/domain/pages
- * @description
- * Entité métier GalleryCell.
+ * @description Gallery cell domain entity.
  */
 
 import type { ImageEditor } from "@compoz/core/domain/pages/entities/cells/image-editor";

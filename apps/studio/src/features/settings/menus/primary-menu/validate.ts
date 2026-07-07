@@ -2,15 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/primary-menu/validate.ts
- * @layer hooks/studio/site/primary-menu
+ * @layer studio/features/settings/menus/primary-menu
  *
  * @description
- * Helpers et hooks de validation UI non bloquante pour le menu principal.
+ * Non-blocking studio warning helpers for the primary menu.
  *
  * @remarks
- * - Validation métier assurée par le domaine (Zod + use-cases serveur).
- * - Ici : UX uniquement (warnings légers, cohérence, doublons, liens externes).
- * - Le mode externe est dérivé depuis `href` (URL absolue).
+ * - Domain validation remains handled by Zod and server use cases.
+ * - These warnings only support editor UX: consistency checks, duplicates, and draft-friendly href hints.
  */
 
 import { useMemo } from "react";
@@ -25,11 +24,6 @@ import type {
   PrimaryMenuItemShape,
 } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 
-/* ───────────────────────── 2) Warnings UI (non-bloquants) ───────────────────────── */
-
-/**
- * Clés stables des warnings UI du menu principal.
- */
 export type PrimaryMenuWarningKey =
   | "primaryMenuEmpty"
   | "dupLabelsTop"
@@ -40,14 +34,12 @@ export type PrimaryMenuWarningKey =
   | "externalPrefixOnly"
   | "internalHrefNotFound";
 
-/**
- * Paramètres nécessaires au calcul des warnings UI du menu principal.
- */
 type WarningProps = {
   items: ReadonlyArray<PrimaryMenuItemShape>;
   hrefSet?: ReadonlySet<string>;
 };
 
+/** Checks editable internal hrefs against the current draft/published page href set. */
 function isMissingInternalHref(href: string, hrefSet?: ReadonlySet<string>) {
   if (!hrefSet) return false;
   if (!href || href === "/") return false;
@@ -57,16 +49,13 @@ function isMissingInternalHref(href: string, hrefSet?: ReadonlySet<string>) {
   return !hrefSet.has(pathname);
 }
 
-/**
- * Calcule les warnings UI associés à un brouillon de menu principal.
- */
 export function computePrimaryMenuWarnings(
   props: WarningProps,
 ): PrimaryMenuWarningKey[] {
   const { items, hrefSet } = props;
   const out = new Set<PrimaryMenuWarningKey>();
 
-  // Aucun item → menu vide
+  // An empty primary menu is allowed but should stay visible to the editor.
   if (!items || items.length === 0) {
     out.add("primaryMenuEmpty");
     return Array.from(out);
@@ -75,11 +64,9 @@ export function computePrimaryMenuWarnings(
   const topLabelKeys: string[] = [];
   const topHrefKeys: string[] = [];
 
-  // Flags globaux (un seul warning si au moins un cas)
   let hasExternalNoNewTab = false;
   let hasExternalPrefixOnly = false;
 
-  // Flags globaux enfants
   let hasDupLabelsChildren = false;
   let hasDupLinksChildren = false;
 
@@ -95,20 +82,19 @@ export function computePrimaryMenuWarnings(
     const children: ReadonlyArray<PrimaryMenuChildShape> = it.children ?? [];
     const hasChildren = children.length > 0;
 
-    // Externe sans newTab
+    // External links are safer when they do not replace the edited site preview.
     if (isExternal && !it.newTab) hasExternalNoNewTab = true;
 
-    // Préfixe http mal saisi ("http", "https", "http://")
+    // Keep prefix-only URLs editable, but surface them as likely unfinished external links.
     if (href !== "/" && isHttpPrefixOnly(href)) {
       hasExternalPrefixOnly = true;
     }
 
-    // Vérif href interne vs hrefSet
+    // Leaf parent links should match the current internal page href set when available.
     if (!hasChildren && !isExternal && isMissingInternalHref(href, hrefSet)) {
       out.add("internalHrefNotFound");
     }
 
-    // Enfants (doublons + validations individuelles)
     if (hasChildren) {
       const childLabelKeys: string[] = [];
       const childHrefKeys: string[] = [];
@@ -121,12 +107,15 @@ export function computePrimaryMenuWarnings(
         childLabelKeys.push(labelCompareKey(c.label));
         childHrefKeys.push(hrefCompareKey(cHref));
 
+        // External child links follow the same preview-safety hint as parent links.
         if (cIsExternal && !c.newTab) hasExternalNoNewTab = true;
 
+        // Keep prefix-only child URLs editable while flagging likely unfinished values.
         if (cHref !== "/" && isHttpPrefixOnly(cHref)) {
           hasExternalPrefixOnly = true;
         }
 
+        // Child internal links should also match the editable page href set.
         if (!cIsExternal && isMissingInternalHref(cHref, hrefSet)) {
           out.add("internalHrefNotFound");
         }
@@ -137,24 +126,18 @@ export function computePrimaryMenuWarnings(
     }
   }
 
-  // Doublons top-level
   if (hasDuplicates(topLabelKeys)) out.add("dupLabelsTop");
   if (hasDuplicates(topHrefKeys)) out.add("dupLinksTop");
 
-  // Doublons enfants (au moins un parent concerné)
   if (hasDupLabelsChildren) out.add("dupLabelsChildren");
   if (hasDupLinksChildren) out.add("dupLinksChildren");
 
-  // Flags globaux externes
   if (hasExternalNoNewTab) out.add("externalNoNewTab");
   if (hasExternalPrefixOnly) out.add("externalPrefixOnly");
 
   return Array.from(out);
 }
 
-/**
- * Hook retournant les warnings UI du menu principal à partir des valeurs courantes.
- */
 export function usePrimaryMenuUiWarnings(
   items: ReadonlyArray<PrimaryMenuItemShape>,
   hrefSet?: ReadonlySet<string>,

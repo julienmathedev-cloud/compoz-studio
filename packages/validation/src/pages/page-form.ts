@@ -1,9 +1,13 @@
 /**
  * @file packages/validation/src/pages/page-form.ts
  * @layer schemas
+ *
  * @description
- * Définit le schéma Zod décrivant la forme du formulaire UI de création / édition d’une page.
- * Réutilise les règles frontière existantes et reste UI-first (RHF).
+ * Zod schema describing the UI form shape used to create or edit pages.
+ *
+ * @remarks
+ * This schema is RHF-friendly and can temporarily accept draft values before
+ * they are normalized or rejected by the final page boundary schema.
  */
 
 import { z } from "zod";
@@ -18,23 +22,20 @@ import {
   SlugSchema,
 } from "@compoz/validation/pages/page";
 
-/* -------------------------------------------------------------------------- */
-/*                                   Champs                                   */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Slug UI (draft-friendly).
- * - "" autorisé pendant la saisie
- * - si non vide : doit respecter `SlugSchema` (format final + non réservé)
+ * Draft-friendly slug schema used while the user is editing the form.
+ *
+ * @remarks
+ * Empty values are allowed during input. Non-empty values must match the final
+ * page slug boundary, except `/`, which represents the home page in the UI.
  */
 const PageSlugFormSchema = z
   .string()
   .trim()
   .superRefine((val, ctx) => {
     const v = val.trim();
-    if (v.length === 0) return; // draft accepté (requis géré par l’UI si besoin)
+    if (v.length === 0) return;
 
-    // Cas spécial UI : page d’accueil
     if (v === "/") return;
 
     const parsed = SlugSchema.safeParse(v);
@@ -51,10 +52,11 @@ const PageSlugFormSchema = z
   });
 
 /**
- * Bloc sitemap UI.
- * - `include` pilote l’activation.
- * - `changefreq` peut être `null`.
- * - `priority` peut être `null` pour “reset” côté UI.
+ * Sitemap form schema.
+ *
+ * @remarks
+ * Nullable values let the UI express an explicit reset before final page
+ * normalization is applied.
  */
 const PageSitemapFormSchema = z
   .object({
@@ -67,10 +69,6 @@ const PageSitemapFormSchema = z
       .nullable(),
   })
   .strict();
-
-/* -------------------------------------------------------------------------- */
-/*                                   Schema                                   */
-/* -------------------------------------------------------------------------- */
 
 export const PageFormSchema = z
   .object({

@@ -2,16 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/seo/components/molecules/OpenGraphImageFields.tsx
- * @layer ui/studio/molecules
+ * @layer studio/features/settings/seo/components/molecules
  *
  * @description
- * Champs OpenGraph image (URL via upload + alt) avec preview, compatible RHF (studio).
+ * OpenGraph image fields for selecting or uploading a default image and editing its alt text.
  *
  * @remarks
- * - Molecule UI : compose `ImageSelector` et `InputField`.
- * - RHF-aware : reçoit directement les `field` RHF (`defaultImageUrl`, `imageAlt`).
- * - IDs ARIA via `createFieldIds` à partir d’un `idPrefix`.
- * - Strictement UI-only.
+ * - Receives RHF controller fields from the parent so SEO form state stays centralized.
+ * - Manual URL edits detach uploaded MediaAsset metadata; uploads reattach it through `mediaAssetId`.
  */
 
 import { useTranslations } from "next-intl";
@@ -112,9 +110,7 @@ export function OpenGraphImageFields({
         onFileSelect={onUploadOgImage}
         onUploaded={(uploaded) => {
           imageUrlField.onChange(uploaded.url);
-          imageMediaAssetIdField.onChange(
-            uploaded.mediaAssetId ?? undefined,
-          );
+          imageMediaAssetIdField.onChange(uploaded.mediaAssetId ?? undefined);
         }}
         preferredTypes={PREFERRED_OG}
         preferredTypeHint={t(

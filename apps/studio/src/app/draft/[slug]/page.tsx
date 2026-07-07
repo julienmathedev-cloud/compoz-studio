@@ -3,7 +3,7 @@
  * @layer studio/app
  *
  * @description
- * Route publique "/draft/[slug]" : rendu DRAFT-only (preview).
+ * Public `/draft/[slug]` route for draft-only preview rendering.
  */
 
 import type { Metadata } from "next";
@@ -28,19 +28,11 @@ type PageParams = Readonly<{
   params: Promise<Readonly<{ slug: string }>>;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
 function hrefForDraftSlug(slug: string): string {
   const s = toSlug(slug);
   if (!s || s === HOME_SLUG) return "/draft";
   return `/draft/${encodeURIComponent(s)}`;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Metadata                                                                   */
-/* -------------------------------------------------------------------------- */
 
 export async function generateMetadata({
   params,
@@ -66,10 +58,6 @@ export async function generateMetadata({
 
   return { title };
 }
-
-/* -------------------------------------------------------------------------- */
-/* Page                                                                       */
-/* -------------------------------------------------------------------------- */
 
 export default async function DraftPage({ params }: PageParams) {
   const { slug } = await unwrapParams(params);

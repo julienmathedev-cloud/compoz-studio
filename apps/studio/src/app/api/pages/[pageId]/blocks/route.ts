@@ -3,16 +3,12 @@
  * @layer studio/app/api
  *
  * @description
- * Route API Studio — collection de blocks d’une page du Website actif.
+ * Studio API route for listing and creating section blocks on a page.
  *
  * @remarks
- * Responsabilités :
- * - GET  : liste les blocks d’une page selon le state demandé.
- * - POST : ajoute un block `Section` à la page en draft.
- * - Valide le paramètre `pageId` et le payload via Zod.
- * - Appelle les use-cases côté domaine.
- * - Invalide le cache de status du Website actif après mutation.
- * - Les repositories sont scopés par Prisma Website.id.
+ * - `GET` lists blocks for the requested content state.
+ * - `POST` adds a section block to the draft page and invalidates the active Website status cache.
+ * - Repositories are scoped by Prisma Website.id.
  */
 
 import "server-only";
@@ -41,10 +37,6 @@ import {
   type CreateSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
 import { PageIdParamSchema } from "@compoz/validation/pages/page";
-
-/* -------------------------------------------------------------------------- */
-/* GET /api/pages/:pageId/blocks                                              */
-/* -------------------------------------------------------------------------- */
 
 export async function GET(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.blocks.GET" as const;
@@ -82,10 +74,6 @@ export async function GET(req: Request, ctx: { params: unknown }) {
     );
   });
 }
-
-/* -------------------------------------------------------------------------- */
-/* POST /api/pages/:pageId/blocks                                             */
-/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.blocks.POST" as const;
@@ -134,10 +122,10 @@ export async function POST(req: Request, ctx: { params: unknown }) {
         });
 
         /**
-         * Invalidation du cache de status du Website actif.
+         * Invalidates the active Website status cache.
          *
-         * Le cache peut encore être implémenté en KV côté infra,
-         * mais son scope métier est le Prisma Website.id.
+         * The cache may still be backed by KV in infra, but its business scope is
+         * the Prisma Website.id.
          */
         try {
           logger.debug?.("route.statusCache.invalidate.start", {

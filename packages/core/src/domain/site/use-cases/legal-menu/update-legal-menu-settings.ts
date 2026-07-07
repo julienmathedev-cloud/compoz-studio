@@ -1,14 +1,9 @@
 /**
- * @file src/core/domain/site/use-cases/legal-menu/update-legal-menu-settings.ts
- * @layer core/domain
- * @description
- * Use-case : mise à jour partielle (shallow patch) des réglages `settings.legalMenu`.
- * Charge les settings (draft/published), applique un merge shallow, valide les invariants
- * métier puis persiste uniquement si au moins une clé a changé.
- *
+ * @file packages/core/src/domain/site/use-cases/legal-menu/update-legal-menu-settings.ts
+ * @layer core/domain/site/use-cases/legal-menu
+ * @description Applies a shallow patch to legal menu settings.
  * @remarks
- * Particularité : ce use-case exécute `assertLegalMenuSettings` avant persistance.
- * Une violation d’invariant lève une `DomainError`.
+ * Legal menu invariants are asserted before persistence; violations raise a `DomainError`.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -39,14 +34,13 @@ export function updateLegalMenuSettings({ repo }: UpdateLegalMenuSettingsDeps) {
       return { settings: current };
     }
 
-    // ✅ Invariants métier bloquants avant écriture (ids, unicité, champs requis, etc.).
+    // Blocking domain invariants before persistence.
     assertLegalMenuSettings(legalMenuNext);
 
     const next: SiteSettings = { ...current, legalMenu: legalMenuNext };
 
     await repo.putSettings(DEFAULT_CONTENT_STATE, next);
 
-    // ✅ Domaine pur : aucune invalidation cache ici.
     return { settings: next };
   };
 }

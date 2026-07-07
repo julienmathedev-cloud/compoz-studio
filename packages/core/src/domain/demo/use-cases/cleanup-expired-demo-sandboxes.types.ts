@@ -1,14 +1,7 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/cleanup-expired-demo-sandboxes.types.ts
- * @layer core/domain
- *
- * @description
- * Contrat du use-case de cleanup des sandboxes démo expirées.
- *
- * @remarks
- * - Supprime les records sandbox expirés.
- * - Supprime les users démo associés.
- * - Déclenche le nettoyage des données associées à la sandbox.
+ * @layer core/domain/demo
+ * @description Contracts for the expired demo sandbox cleanup use case.
  */
 
 import type { DemoSandboxRepository } from "@compoz/core/domain/demo/ports/demo-sandbox-repository";
@@ -30,7 +23,7 @@ export interface CleanupExpiredDemoSandboxesDeps {
 
 export type CleanupExpiredDemoSandboxesInput = Readonly<{
   /**
-   * Si true, le cleanup continue même si une sandbox donnée échoue.
+   * When true, cleanup keeps processing remaining sandboxes after an item failure.
    *
    * @default true
    */

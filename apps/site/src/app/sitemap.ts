@@ -3,14 +3,14 @@
  * @layer site/app/metadata
  *
  * @description
- * Route metadata `sitemap` du site public — génère le sitemap à partir de l’index publié.
+ * Host-based sitemap metadata route for public sites.
  *
  * @remarks
- * Multi-website :
- * - Host-based : résolution via WebsiteDomain en Prisma.
- * - Si le host ne correspond à aucun domaine connu, on retourne
- *   un sitemap vide valide.
- * - Les routes fallback explicites `/t/:websiteSlug` ont leur propre sitemap dédié.
+ * - Resolves the active Website from the request host through Prisma WebsiteDomain.
+ * - Returns a valid empty sitemap when no Website matches the host.
+ * - Uses the published SiteIndex and each published page sitemap settings.
+ * - Uses the SEO base URL first, then `NEXT_PUBLIC_SITE_URL`, and falls back to relative paths.
+ * - Explicit `/t/:websiteSlug` fallback routes have their own dedicated sitemap route.
  */
 
 import "server-only";
@@ -32,10 +32,7 @@ import {
   stripTrailingSlashes,
 } from "@compoz/ui/lib/urls/formats";
 
-/* -------------------------------------------------------------------------- */
-/* Internals                                                                  */
-/* -------------------------------------------------------------------------- */
-
+/** Converts a stored timestamp into a sitemap `lastModified` date when valid. */
 function toLastModified(value: string | null | undefined): Date | undefined {
   if (!value || Number.isNaN(Date.parse(value))) {
     return undefined;
@@ -43,10 +40,6 @@ function toLastModified(value: string | null | undefined): Date | undefined {
 
   return new Date(value);
 }
-
-/* -------------------------------------------------------------------------- */
-/* Route                                                                      */
-/* -------------------------------------------------------------------------- */
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const headersList = await headers();

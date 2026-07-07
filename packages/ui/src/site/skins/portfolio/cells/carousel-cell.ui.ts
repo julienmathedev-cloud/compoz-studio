@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/portfolio/cells/carousel-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/portfolio/cells
  *
  * @description
- * Override UI — carousel block (thème Portfolio).
+ * Defines the portfolio skin overrides for carousel and slider cells.
  */
 
 import type { SiteCarouselUiOverride } from "@compoz/ui/site/site-ui.types";

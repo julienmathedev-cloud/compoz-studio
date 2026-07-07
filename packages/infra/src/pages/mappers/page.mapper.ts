@@ -1,9 +1,9 @@
 /**
  * @file packages/infra/src/pages/mappers/page.mapper.ts
  * @layer infra/pages
- *
- * @description
- * Mapper between Prisma Page rows and the domain Page entity.
+ * @description Maps Prisma page rows to domain pages and domain pages back to Prisma write data.
+ * @remarks
+ * Legacy block normalization is applied before schema parsing so old stored pages remain readable.
  */
 
 import { Prisma } from "@compoz/infra/prisma/generated";

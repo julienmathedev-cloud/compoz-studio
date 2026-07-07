@@ -1,6 +1,4 @@
-/* ---------------------------------------------------------------------------
- * Radix Themes (tokens : colors/typo/spacing/radius/shadows)
- * ------------------------------------------------------------------------- */
+/* Radix theme token sources. */
 @import "@radix-ui/colors/slate.css";
 @import "@radix-ui/colors/slate-dark.css";
 @import "@radix-ui/colors/indigo.css";
@@ -11,14 +9,10 @@
 @import "@radix-ui/colors/orange-dark.css";
 @import "@radix-ui/colors/mauve.css";
 @import "@radix-ui/colors/mauve-dark.css";
-/* ✅ Tailwind v4 custom variants */
+/* Tailwind v4 custom variants. */
 @custom-variant dark (&:is(.dark *));
 
-/* ---------------------------------------------------------------------------
- * Theme tokens (shadcn style tokens → Tailwind inline theme mapping)
- * ⚠️ Ne met PAS de mapping :root/.dark/.theme-site ici.
- * Ici on déclare uniquement les "aliases" attendus par Tailwind/shadcn.
- * ------------------------------------------------------------------------- */
+/* Tailwind/shadcn token aliases only; theme values are defined by runtime scopes. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -64,7 +58,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
-  /* Studio semantic colors (OK de laisser exposés même si le site n’en a pas besoin) */
+  /* Studio semantic colors are also exposed to keep shared UI tokens available. */
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
@@ -95,7 +89,7 @@
     @apply bg-background text-foreground;
   }
 
-  /* RichText — alignement des puces/numéros quand un <li> est aligné via style inline (tiptap) */
+  /* Keep TipTap aligned list markers visually consistent with inline text alignment. */
   .prose li[style*="text-align: center"],
   .prose li[style*="text-align:center"],
   .prose li[style*="text-align:right"],
@@ -114,13 +108,7 @@
 }
 
 @layer utilities {
-  /* -------------------------------------------------------------------------
-   * SEO-only / visually hidden
-   *
-   * Masque visuellement un élément tout en le conservant dans le DOM et dans
-   * l’arbre d’accessibilité. À utiliser uniquement pour du contenu structurel
-   * cohérent avec la page, typiquement un H1 technique.
-   * ----------------------------------------------------------------------- */
+  /* Visually hidden structural content that remains available to accessibility and SEO tools. */
   .seo-only {
     position: absolute !important;
     width: 1px !important;
@@ -152,7 +140,7 @@
     }
   }
 
-  /* Ouverture (zoom-in) */
+  /* Lightbox enter animation. */
   @keyframes lb-zoom-in {
     0% {
       opacity: 0;
@@ -169,7 +157,7 @@
     transform-origin: center;
   }
 
-  /* Fermeture (zoom-out) */
+  /* Lightbox exit animation. */
   @keyframes lb-zoom-out {
     0% {
       opacity: 1;
@@ -186,7 +174,7 @@
     transform-origin: center;
   }
 
-  /* Respect du réglage "réduire les animations" */
+  /* Respect reduced-motion preferences across public motion utilities. */
   @media (prefers-reduced-motion: reduce) {
     .lb-zoom-in,
     .lb-zoom-out {
@@ -222,7 +210,7 @@
   }
 }
 
-/* shadcn variants (permet data-open:, data-closed:, data-checked:, etc.) */
+/* shadcn data-state variants. */
 @custom-variant data-open (&[data-state="open"], &[data-open]);
 @custom-variant data-closed (&[data-state="closed"], &[data-closed]);
 

@@ -2,16 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/theme/ThemeFontSelectField.tsx
- * @layer studio/molecules
+ * @layer studio/features/settings/theme
  *
  * @description
- * Champ Select dédié au choix de la police du thème public.
+ * Theme font select field backed by the shared theme font registry.
  *
  * @remarks
- * - S’appuie sur `SelectField`.
- * - Consomme les options UI construites depuis la source de vérité `theme-fonts`.
- * - Retourne la valeur canonique côté thème : `ThemeFontId | null`.
- * - `null` représente l’option “même police que le texte”.
+ * - Stores canonical `ThemeFontId | null` values in the form state.
+ * - `null` means the heading font should inherit the body font, so the select uses a sentinel option internally.
  */
 
 import type { ThemeFontId } from "@compoz/core/constants/theme/theme-fonts";
@@ -34,6 +32,7 @@ type ThemeFontSelectFieldProps = Readonly<{
 }>;
 
 const FONT_ITEMS = buildThemeFontSelectItems();
+// SelectField needs a string value, while the theme form stores this option as `null`.
 const SAME_AS_BODY_VALUE = "__same-as-body__";
 
 export function ThemeFontSelectField({

@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/demo/cells/card-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/demo/cells
  *
  * @description
- * Skin UI — cards cell (thème Demo).
+ * Defines the demo skin overrides for card cells.
  */
 
 import type { SiteCardUiOverride } from "@compoz/ui/site/site-ui.types";

@@ -5,12 +5,12 @@
  * @layer site/app
  *
  * @description
- * Error boundary UI du site.
- * Affiche un fallback stable + actions (réessayer + retour accueil).
+ * Site-level error boundary UI.
+ * Shows a stable fallback with retry and home navigation actions.
  *
  * @remarks
- * - Composant client obligatoire (Next.js error boundary).
- * - UI skinnable via `SiteUiProvider` : `ui.systemPage`.
+ * - Must be a client component because it implements the Next.js error boundary contract.
+ * - Uses `SiteUiProvider` so the system fallback can follow the active site skin.
  */
 
 import Link from "next/link";

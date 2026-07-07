@@ -1,14 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/mobile-menu.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default
  *
  * @description
- * Skin UI par défaut pour le menu mobile du site (thème Default).
- *
- * @remarks
- * - Aligné visuellement avec le header desktop default.
- * - Surface sobre basée sur les tokens Tailwind/ShadCN.
- * - Interactions discrètes pour rester dans un socle générique.
+ * Defines the default skin classes for the public site mobile menu.
  */
 
 import type { SiteMobileMenuUi } from "@compoz/ui/site/site-ui.types";

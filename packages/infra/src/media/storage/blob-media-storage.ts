@@ -1,8 +1,7 @@
 /**
  * @file packages/infra/src/media/storage/blob-media-storage.ts
  * @layer infra/media/storage
- * @description
- * Implémentation Vercel Blob du stockage média.
+ * @description Vercel Blob implementation of media storage.
  */
 
 import { del, head, put } from "@vercel/blob";

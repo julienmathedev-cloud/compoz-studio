@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/legal-menu.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default
  *
  * @description
- * Skin UI — menu légal site (thème Default).
+ * Defines the default skin classes for the public site legal menu.
  */
 
 import type { SiteLegalMenuUi } from "@compoz/ui/site/site-ui.types";

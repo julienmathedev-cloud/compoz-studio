@@ -1,17 +1,9 @@
 /**
  * @file packages/infra/src/demo/kv-demo-sandbox-cloner.ts
  * @layer infra/demo
- *
- * @description
- * Implémentation KV du clonage d’une sandbox démo à partir d’un Website seed.
- *
+ * @description KV implementation for cloning a published demo seed into a draft sandbox website.
  * @remarks
- * - V1 volontairement limitée au contenu publié de la source vers le draft cible.
- * - Copie :
- *   - site settings published → draft
- *   - site index published → draft
- *   - pages référencées par l’index published → draft
- * - Ne copie pas l’état published vers le target.
+ * The target published state is intentionally not copied.
  */
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";

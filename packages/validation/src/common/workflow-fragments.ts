@@ -1,16 +1,14 @@
 /**
  * @file packages/validation/src/common/workflow-fragments.ts
- * @layer schemas
+ * @layer validation/common
  * @description
- * Définit les schémas Zod décrivant la forme frontière des états de workflow de contenu.
- * Ces schémas valident uniquement la structure des valeurs ; les règles métier
- * (transitions, defaults, autorisations) sont traitées dans le domaine.
+ * Defines shared Zod schemas for content workflow boundary values.
+ *
+ * @remarks
+ * These schemas validate value shape only; transitions, defaults, and permissions stay in core.
  */
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { z } from "zod";
 
-/**
- * État logique de contenu (forme frontière).
- */
 export const ContentStateSchema = z.enum(CONTENT_STATE);

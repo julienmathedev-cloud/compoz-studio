@@ -5,14 +5,13 @@
  * @layer studio/molecules
  *
  * @description
- * Liste de messages d’aide (info, warning, success, error) basée sur les primitives UI (Card) et des icônes.
+ * Studio hint list for info, warning, success, and error messages.
  *
  * @remarks
- * - Molecule UI : compose des primitives UI (`Card`) et des atoms (`StudioIcon`, `Text`).
- * - Le variant `warning` est stylé localement (ShadCN ne le fournit pas).
- * - Accessibilité : `role` / `aria-live` adaptés selon la variante (override possible).
- * - Ne rend rien si `hints` est vide.
- * - Strictement UI-only : aucune logique métier.
+ * - Composes the shared `Card` primitive with `StudioIcon` and `Text` atoms.
+ * - Styles the `warning` variant locally because ShadCN does not provide one.
+ * - Adapts `role` and `aria-live` defaults to the selected variant, with explicit overrides.
+ * - Renders `null` when `hints` is empty.
  */
 
 import type { LucideIcon } from "lucide-react";
@@ -27,30 +26,18 @@ import { Card, CardContent, CardHeader } from "@compoz/ui/components/ui/card";
 import { toReactListKey } from "@compoz/ui/lib/keys/toReactListKey";
 import { cn } from "@compoz/ui/lib/utils";
 
-/**
- * Variantes disponibles pour les messages.
- */
 type Variant = "info" | "warning" | "success" | "error";
 
-/**
- * Props du composant `HintList`.
- */
 export type HintListProps = Readonly<{
-  /** Messages à afficher (chaque item peut être un string ou du JSX). */
   hints?: ReadonlyArray<ReactNode>;
-  /** Titre optionnel affiché dans l’en-tête. */
   title?: ReactNode;
-  /** Variante visuelle et sémantique (défaut: `"warning"`). */
   variant?: Variant;
-  /** Classes additionnelles appliquées au conteneur. */
   className?: string;
-  /** Rôle ARIA (override). */
   role?: "status" | "alert";
-  /** Politique d’annonce ARIA (override). */
   ariaLive?: "polite" | "assertive";
 }>;
 
-/** Mapping `Variant` → icône Lucide. */
+/** Maps each hint variant to its Lucide icon. */
 const ICON_BY_VARIANT: Record<Variant, LucideIcon> = {
   info: Info,
   warning: AlertTriangle,
@@ -76,9 +63,6 @@ function alertToneClasses(variant: Variant) {
   }
 }
 
-/**
- * Affiche une liste de hints standardisée (Studio).
- */
 export function HintList({
   hints = [],
   title,

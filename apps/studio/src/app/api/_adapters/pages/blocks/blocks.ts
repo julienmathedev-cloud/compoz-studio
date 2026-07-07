@@ -1,6 +1,9 @@
 /**
  * @file apps/studio/src/app/api/_adapters/pages/blocks/blocks.ts
  * @layer studio/app/api/adapters
+ *
+ * @description
+ * Studio API adapter for creating, updating, deleting, and reordering section blocks.
  */
 
 import { log } from "@compoz/infra/lib/log";
@@ -23,10 +26,6 @@ import type {
 
 import { adaptCells } from "@compoz/studio/app/api/_adapters/pages/blocks/cells";
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
 function trimOptionalId(value: string | undefined): string | undefined {
   const trimmed = trimOrKeep(value ?? "");
   return trimmed.length > 0 ? trimmed : undefined;
@@ -47,10 +46,6 @@ function adaptReverseOn(
     desktop: Boolean(value?.desktop),
   };
 }
-
-/* -------------------------------------------------------------------------- */
-/* Create                                                                     */
-/* -------------------------------------------------------------------------- */
 
 export function adaptCreateSectionBlockIntent(
   dto: CreateSectionBlockIntentDTO,
@@ -93,10 +88,6 @@ export function adaptCreateSectionBlockIntent(
 
   return out;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Update                                                                     */
-/* -------------------------------------------------------------------------- */
 
 export function adaptUpdateSectionBlockIntent(
   dto: UpdateSectionBlockIntentDTO,
@@ -145,10 +136,6 @@ export function adaptUpdateSectionBlockIntent(
   return out;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Delete                                                                     */
-/* -------------------------------------------------------------------------- */
-
 export function adaptDeleteBlockIntent(
   dto: DeleteBlockIntentDTO,
 ): DeleteBlockPatchInput {
@@ -156,10 +143,6 @@ export function adaptDeleteBlockIntent(
     blockId: trimOrKeep(dto.blockId),
   };
 }
-
-/* -------------------------------------------------------------------------- */
-/* Reorder                                                                    */
-/* -------------------------------------------------------------------------- */
 
 export function adaptReorderBlocksIntent(
   dto: ReorderBlocksIntentDTO,

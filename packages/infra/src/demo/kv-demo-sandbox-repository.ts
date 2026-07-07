@@ -1,18 +1,9 @@
 /**
  * @file packages/infra/src/demo/kv-demo-sandbox-repository.ts
  * @layer infra/demo
- *
- * @description
- * Implémentation KV du repository des sandboxes démo.
- *
+ * @description KV repository for demo sandbox metadata.
  * @remarks
- * - Stockage par `demoInstanceId`.
- * - V1 volontairement minimale :
- *   - lecture directe
- *   - écriture/remplacement
- *   - suppression
- *   - test d’existence
- *   - listing pour le cleanup
+ * Sandboxes are stored by `demoInstanceId` and listed for expiration cleanup.
  */
 
 import type { DemoSandbox } from "@compoz/core/domain/demo/entities/demo-sandbox";
@@ -24,10 +15,6 @@ import {
   type DemoSandboxShape,
 } from "@compoz/validation/demo/demo-sandbox";
 
-/* -------------------------------------------------------------------------- */
-/* Keys                                                                       */
-/* -------------------------------------------------------------------------- */
-
 const DEMO_NS = "compoz:studio:demo" as const;
 
 function sandboxKey(demoInstanceId: string): string {
@@ -37,10 +24,6 @@ function sandboxKey(demoInstanceId: string): string {
 function sandboxKeyPattern(): string {
   return `${DEMO_NS}:sandbox:*`;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function normalizeDemoInstanceId(value: unknown): string {
   return String(value ?? "").trim();
@@ -60,15 +43,11 @@ function toDomainSandbox(input: DemoSandboxShape): DemoSandbox {
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Repository                                                                 */
-/* -------------------------------------------------------------------------- */
-
 export class KvDemoSandboxRepository implements DemoSandboxRepository {
   private readonly redis = getUpstashRedis();
 
   async ensureBase(): Promise<void> {
-    // no-op KV
+    // no-op for KV-backed storage
   }
 
   async list(): Promise<ReadonlyArray<DemoSandbox>> {
@@ -101,7 +80,7 @@ export class KvDemoSandboxRepository implements DemoSandboxRepository {
         const parsed = DemoSandboxSchema.parse(json);
         out.push(toDomainSandbox(parsed));
       } catch {
-        // Skip document corrompu.
+        // Skip corrupted documents during cleanup listing.
       }
     }
 

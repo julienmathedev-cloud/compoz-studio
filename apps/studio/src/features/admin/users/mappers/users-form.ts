@@ -1,17 +1,15 @@
 /**
  * @file apps/studio/src/features/admin/users/mappers/users-form.ts
- * @layer ui-mappers/studio/users
+ * @layer studio/features/admin/users/mappers
  *
  * @description
- * Mappers formulaire Studio pour les users.
+ * Studio user form mappers for UI values, domain DTOs, and API intent DTOs.
  *
  * @remarks
- * Responsabilités :
- * - Normalisations UI simples : trim, lowercase email, coercitions.
- * - Construction des Intent DTO pour l’API Studio.
- * - Users = Studio-only, pas de mapper shared runtime.
- * - Le password n'est jamais renvoyé depuis l’API.
- * - Les droits RBAC sont exprimés en Prisma Website.id.
+ * - Applies simple UI normalization such as trimming, lowercasing email values, and coercions.
+ * - Users are Studio-only data, so no shared runtime mapper is involved.
+ * - Passwords are never returned by the API and are only sent when explicitly provided.
+ * - RBAC access is expressed with Prisma Website.id values.
  */
 
 import type { UserDTO } from "@compoz/core/domain/users/dto";
@@ -21,9 +19,7 @@ import type {
   UpdateUserIntentDTO,
 } from "@compoz/validation/users/user-intents";
 
-/* -------------------------------------------------------------------------- */
-/* Defaults UI                                                                */
-/* -------------------------------------------------------------------------- */
+// UI defaults.
 
 const DEFAULT_RBAC: UserFormValues["rbac"] = {
   role: "editor",
@@ -31,9 +27,7 @@ const DEFAULT_RBAC: UserFormValues["rbac"] = {
   defaultWebsiteId: "default",
 };
 
-/* -------------------------------------------------------------------------- */
-/* Normalizers                                                                */
-/* -------------------------------------------------------------------------- */
+// (normalizers section removed decorative comment)
 
 function normalizeWebsiteId(input: unknown): string {
   return String(input ?? "")
@@ -41,7 +35,6 @@ function normalizeWebsiteId(input: unknown): string {
     .toLowerCase();
 }
 
-/** Normalise une liste de Website.id. */
 function normalizeWebsiteIds(input: unknown): string[] {
   const raw = Array.isArray(input) ? input : [];
 
@@ -52,21 +45,17 @@ function normalizeWebsiteIds(input: unknown): string[] {
   return websiteIds.length > 0 ? websiteIds : DEFAULT_RBAC.websiteIds;
 }
 
-/** Normalise un email. */
 function normalizeEmail(input: unknown): string {
   return String(input ?? "")
     .trim()
     .toLowerCase();
 }
 
-/** Normalise un nom. */
 function normalizeName(input: unknown): string {
   return String(input ?? "").trim();
 }
 
-/* -------------------------------------------------------------------------- */
-/* Domain DTO -> UI form values                                               */
-/* -------------------------------------------------------------------------- */
+// Domain DTO to UI form values.
 
 export function toUserFormValuesFromDTO(
   user: UserDTO | null | undefined,
@@ -95,9 +84,7 @@ export function toUserFormValuesFromDTO(
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* UI form values normalization                                               */
-/* -------------------------------------------------------------------------- */
+// UI form values normalization.
 
 export function normalizeUserFormValues(
   values: UserFormValues,
@@ -107,8 +94,7 @@ export function normalizeUserFormValues(
     email: normalizeEmail(values.email),
     name: normalizeName(values.name),
     /**
-     * On ne trim pas ici pour éviter de surprendre l’UI.
-     * Le trim du password est fait au submit.
+     * Keep the password draft untouched while editing; trimming happens on submit.
      */
     password: String(values.password ?? ""),
     rbac: {
@@ -121,9 +107,7 @@ export function normalizeUserFormValues(
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* UI -> intents API Studio                                                   */
-/* -------------------------------------------------------------------------- */
+// UI form values to Studio API intents.
 
 export function toCreateUserIntentDTOFromFormValues(
   values: UserFormValues,
@@ -152,9 +136,7 @@ export function toUpdateUserIntentDTOFromFormValues(
   }
 
   /**
-   * Password optionnel :
-   * - chaîne vide = no change.
-   * - chaîne non vide = update password.
+   * Empty password means no change; non-empty password updates the password.
    */
   if ("password" in values && typeof values.password === "string") {
     const password = values.password.trim();

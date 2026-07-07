@@ -3,13 +3,11 @@
  * @layer studio/app/api/adapters
  *
  * @description
- * Studio API adapter for structured card items.
+ * Studio API adapter for reusable structured card item shapes.
  *
  * @remarks
- * This adapter only handles the reusable structured card item shape.
- * Cell-level concerns such as `kind`, `columns`, `reveal`, `cssClassName`,
- * and `items` are handled by parent cell adapters such as `cardCollection`
- * or `carousel`.
+ * - Cell-level fields such as `kind`, `columns`, `reveal`, and `cssClassName`
+ *   are handled by parent cell adapters.
  */
 
 import type {

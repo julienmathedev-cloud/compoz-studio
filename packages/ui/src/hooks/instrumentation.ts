@@ -1,16 +1,9 @@
 /**
  * @file packages/ui/src/hooks/instrumentation.ts
  * @layer ui/hooks
- *
- * @description
- * Helpers utilitaires partagés pour les hooks (logs homogènes load/save,
- * adaptation d’erreurs et compatibilité AbortSignal).
- *
+ * @description Shared hook instrumentation helpers for load/save logs, abort handling, and error messages.
  * @remarks
- * - Centralise l’instrumentation des opérations `load` et `save`.
- * - Fournit des wrappers compatibles avec des fonctions acceptant ou non un `AbortSignal`.
- * - S’appuie sur le nano-logger partagé pour respecter le niveau de logs
- *   configuré via `NEXT_PUBLIC_LOG_LEVEL`.
+ * Supports async functions with or without an `AbortSignal` while keeping hook logs consistent.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
@@ -44,9 +37,7 @@ function writeLog(
     }
 
     lg.error(event, meta);
-  } catch {
-    // noop
-  }
+  } catch {}
 }
 
 async function logSpan<T>(
@@ -94,17 +85,11 @@ function isAbortError(e: unknown, signal?: AbortSignal): boolean {
   return false;
 }
 
-/**
- * Convertit une erreur inconnue en message lisible et sûr.
- */
 export function errorMessage(e: unknown): string {
   if (e instanceof Error) return e.message;
   return typeof e === "string" ? e : String(e);
 }
 
-/**
- * Exécute une fonction asynchrone pouvant accepter optionnellement un `AbortSignal`.
- */
 async function runMaybeSignalFn<T>(fn: MaybeSignalFn<T>, opts: FnOpts) {
   if (fn.length >= 1) {
     return await (fn as (o: FnOpts) => Promise<T>)(opts);
@@ -113,15 +98,7 @@ async function runMaybeSignalFn<T>(fn: MaybeSignalFn<T>, opts: FnOpts) {
   return await (fn as () => Promise<T>)();
 }
 
-/**
- * Wrapper de chargement instrumenté avec logs homogènes et gestion de l’abort.
- *
- * @param scope - Namespace logique du hook (ex. `"useReadPage"`).
- * @param state - Espace de contenu (draft/published).
- * @param fn - Fonction de chargement (peut accepter `{ signal }`).
- * @param meta - Métadonnées pour enrichir les logs.
- * @param opts - Options d’exécution (ex. `{ signal }` React Query).
- */
+/** Instruments a load operation with standard hook logs and abort handling. */
 export async function withLoadLogs<T>(
   scope: string,
   state: ContentState,
@@ -138,15 +115,7 @@ export async function withLoadLogs<T>(
   );
 }
 
-/**
- * Wrapper de sauvegarde instrumenté avec logs homogènes et gestion de l’abort.
- *
- * @param scope - Namespace logique du hook (ex. `"useUpdatePage"`).
- * @param state - Espace de contenu (draft/published).
- * @param fn - Fonction de sauvegarde (peut accepter `{ signal }`).
- * @param meta - Métadonnées pour enrichir les logs.
- * @param opts - Options d’exécution (ex. `{ signal }` React Query).
- */
+/** Instruments a save operation with standard hook logs and abort handling. */
 export async function withSaveLogs<T>(
   scope: string,
   state: ContentState,

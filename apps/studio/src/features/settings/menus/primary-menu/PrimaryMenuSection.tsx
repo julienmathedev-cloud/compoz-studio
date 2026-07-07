@@ -2,17 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/primary-menu/PrimaryMenuSection.tsx
- * @layer ui/studio/sections
+ * @layer studio/features/settings/menus/primary-menu
  *
  * @description
- * Section Studio dédiée au menu principal : chargement (shell), édition (form), warnings UI et preview.
+ * Studio settings section for loading, editing, saving, and previewing the primary menu.
  *
  * @remarks
- * - Le chargement initial est géré par `SettingsSection` (shell).
- * - Monte `usePrimaryMenuSettings` (baseline + save) et câble `PrimaryMenuForm`.
- * - Affiche les warnings non bloquants (via `PrimaryMenuForm` + `computePrimaryMenuWarnings` au submit).
- * - La preview `/preview/primary-menu` consomme le scope `primaryMenu` en mise à jour live.
- * - Strictement UI-only : aucune logique métier.
+ * - Keeps the persisted baseline and live preview draft separate so reset/save can restore the preview deterministically.
+ * - Non-blocking warnings are computed from both form values and the current internal page href set.
  */
 
 import { useTranslations } from "next-intl";
@@ -33,7 +30,6 @@ import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/
 import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-form";
 
 type PrimaryMenuSectionProps = Readonly<{
-  /** Remonte l’état dirty (guard / navigation) au parent (Tab/Dashboard). */
   onDirtyChange?: (dirty: boolean) => void;
 }>;
 
@@ -47,22 +43,13 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
   const [previewDraft, setPreviewDraft] =
     useState<PrimaryMenuSettingsShape | null>(null);
 
-  // Hook settings : modèle UI (RHF).
   const { baseline, isLoading, isSaving, save } = usePrimaryMenuSettings();
 
-  /**
-   * Baseline preview :
-   * - conversion directe de la baseline RHF en shape runtime
-   */
+  /** Runtime preview shape derived from the persisted RHF baseline. */
   const baselinePreview = useMemo<PrimaryMenuSettingsShape>(() => {
     return toPrimaryMenuSettingsShapeFromFormValues(baseline);
   }, [baseline]);
 
-  /**
-   * Valeur affichée dans la preview :
-   * - draft live si le form change
-   * - sinon baseline persistée
-   */
   const previewValue = previewDraft ?? baselinePreview;
 
   const { ready, frame, iframeRef } =
@@ -71,15 +58,10 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
       liveEnabled: true,
     });
 
-  /**
-   * internalPageOptions : via hook SoT (plus de mapping local depuis useReadSiteIndex)
-   */
+  /** Internal page options are the source of truth for editable internal menu targets. */
   const { options: internalPageOptions } = useInternalPageOptions();
 
-  /**
-   * hrefSet : inchangé, mais basé sur les options (déjà normalisées)
-   * Important : on garde exactement la même intention fonctionnelle : set de href internes connus.
-   */
+  /** Known internal hrefs used by warning checks for draft and published pages. */
   const hrefSet = useMemo(() => {
     const set = new Set<string>();
     set.add("/");
@@ -92,7 +74,6 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
     return set;
   }, [internalPageOptions]);
 
-  // Preview empty/loader
   const dataReady = !isLoading;
   const isEmpty = dataReady && (baseline?.items?.length ?? 0) === 0;
 
@@ -101,7 +82,6 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
   const isPreviewLoading =
     !isEmpty && (isLoading || !ready.isReady("primaryMenu"));
 
-  // Submit : confirmation si warnings + save.
   const handleSubmit = useCallback(
     async (values: PrimaryMenuFormValues) => {
       if (isLoading || isSaving) return;

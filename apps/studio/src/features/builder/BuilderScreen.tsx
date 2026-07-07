@@ -2,23 +2,18 @@
 
 /**
  * @file apps/studio/src/features/builder/BuilderScreen.tsx
- * @layer ui/studio/builder
+ * @layer studio/features/builder
  *
  * @description
- * Écran client principal du builder Studio.
+ * Main client screen for the Studio block builder.
  *
  * @remarks
- * - Orchestrateur principal du builder.
- * - Gère la baseline dérivée des props, la preview et la sélection de cell.
- * - Réplique la logique métier de l’ancienne édition :
- *   dirty guard, baseline ref, vrai save via hook.
- * - Le builder reste en preview manuelle (`liveEnabled: false`) pour éviter
- *   de pousser des syncs permanentes pendant l’édition dans le drawer.
- * - La sync preview est déclenchée explicitement à la fermeture du drawer
- *   et après save.
- * - Passe explicitement les objets RHF utiles aux sous-composants.
- * - Évite la duplication props -> state pour la baseline afin de rester
- *   aligné avec l’ancien fonctionnement et éviter les cascades de rendu.
+ * - Orchestrates RHF state, derived baseline values, preview state, and selected cell state.
+ * - Keeps the builder in manual preview mode (`liveEnabled: false`) to avoid continuous iframe syncs while editing in the drawer.
+ * - Triggers preview sync explicitly after drawer close and after save.
+ * - Stores the validation-ready baseline in a ref so save mutations can build patches against the latest persisted value.
+ * - Passes RHF helpers explicitly to child components instead of relying on nested form context.
+ * - Avoids duplicating props into state for the baseline to stay aligned with the previous editor behavior and prevent render cascades.
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -370,10 +365,8 @@ export function BuilderScreen({
   ]);
 
   /**
-   * En mode builder :
-   * - on garde le draft à jour localement
-   * - mais `liveEnabled: false` empêche la synchro automatique dans l’iframe
-   * - la sync sera déclenchée explicitement (fermeture drawer / save)
+   * In builder mode, keep the draft cached locally while `liveEnabled: false`
+   * prevents automatic iframe sync. Explicit sync happens on drawer close or save.
    */
   useEffect(() => {
     if (lastDraftPreviewSigRef.current === draftPreviewSig) return;
@@ -399,12 +392,12 @@ export function BuilderScreen({
   ]);
 
   /**
-   * Synchronise le hover de cell dans l'iframe de preview.
+   * Synchronizes the selected sidebar cell hover into the preview iframe.
    *
    * @remarks
-   * - Repose sur un wrapper DOM côté preview avec `data-cell-id="<id>"`.
-   * - Ajoute / retire un attribut `data-builder-hovered` utilisé par le CSS preview.
-   * - Même origine requise (ok ici : route `/preview/...` de la même app).
+   * - Relies on preview DOM wrappers exposing `data-cell-id="<id>"`.
+   * - Adds or removes `data-builder-hovered`, which preview CSS can target.
+   * - Requires same-origin access, satisfied by the Studio `/preview/...` route.
    */
   useEffect(() => {
     const iframe = iframeRef.current;
@@ -515,10 +508,8 @@ export function BuilderScreen({
         setDraft(nextBaselinePreview);
 
         /**
-         * Après save :
-         * - on remet la baseline à jour
-         * - on pousse explicitement l’override courant pour refléter immédiatement
-         *   le contenu sauvegardé
+         * After save, update the preview baseline and explicitly push the current
+         * override so the iframe reflects persisted content immediately.
          */
         frame.onSync();
       } catch (error) {
@@ -573,10 +564,10 @@ export function BuilderScreen({
 
     const fallbackBaseline =
       normalizeSectionBlockFormValuesForValidation(baseline);
-    const nextBaselineForValidation =
-      baselineRef.current ?? fallbackBaseline;
-    const nextBaselineForm =
-      normalizeSectionBlockFormValues(nextBaselineForValidation);
+    const nextBaselineForValidation = baselineRef.current ?? fallbackBaseline;
+    const nextBaselineForm = normalizeSectionBlockFormValues(
+      nextBaselineForValidation,
+    );
 
     reset(nextBaselineForm, {
       keepDirty: false,
@@ -600,10 +591,7 @@ export function BuilderScreen({
       setBaseline(previewScope, nextBaselinePreview);
     }
 
-    /**
-     * En mode manuel :
-     * on supprime l’override courant pour revenir à la baseline.
-     */
+    /** Manual preview reset removes the current override and returns to baseline. */
     frame.onReset();
   }, [
     baseline,
@@ -636,10 +624,8 @@ export function BuilderScreen({
       setSelectedCellId(undefined);
 
       /**
-       * Builder :
-       * on déclenche la sync explicite à la fermeture du drawer.
-       * Cela donne un ressenti "quasi-live" sans pousser des updates
-       * permanentes pendant l’édition.
+       * Explicit drawer-close sync keeps the preview feeling near-live without
+       * pushing continuous updates while the user edits fields.
        */
       frame.onSync();
     },

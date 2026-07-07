@@ -2,17 +2,16 @@
 
 /**
  * @file apps/studio/src/features/admin/users/components/forms/AdminUsersFormRbacFields.tsx
- * @layer ui/organisms
+ * @layer studio/features/admin/users/components/forms
  *
  * @description
- * Section RBAC avancée du formulaire Users :
- * role / websiteIds / defaultWebsiteId.
+ * Advanced RBAC section for the Studio user form.
  *
  * @remarks
- * - Strictement UI-only : aucun fetch, aucune logique métier.
- * - Encapsule l’`ExpandableLayout` et le bouton “reset RBAC”.
- * - Le contenu summary est fourni via `children`.
- * - Les accès RBAC sont exprimés en Prisma Website.id.
+ * - Owns the role, accessible Website ids, and default Website id fields.
+ * - Wraps fields in `ExpandableLayout` and provides the RBAC reset action.
+ * - Receives the summary content through `children`.
+ * - RBAC access is expressed with Prisma Website.id values.
  */
 
 import { RotateCcw } from "lucide-react";

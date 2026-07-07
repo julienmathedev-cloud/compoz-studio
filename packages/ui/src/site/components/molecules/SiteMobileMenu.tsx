@@ -2,18 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/molecules/SiteMobileMenu.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/molecules
  *
  * @description
- * Menu mobile site (drawer) aligné sur la SoT UI :
- * - liens via `SiteNavLink`
- * - sous-menus via `<details>/<summary>` + `SiteNavLink` children
- * - sociaux via `SiteIconLink` + `renderSocialKindIcon`
+ * Renders the public site mobile menu drawer with primary navigation and optional social links.
  *
  * @remarks
- * - UI-only
- * - A11y : dialog + aria-modal, focus trap, Esc, overlay clickable, scroll lock html
- * - ferme sur changement de route
+ * Handles dialog accessibility, focus trapping, Escape and overlay closing, route-change closing, and document scroll locking.
  */
 
 import { usePathname } from "next/navigation";
@@ -269,7 +264,10 @@ export function SiteMobileMenu({
                                   child.label?.trim() ?? childHref;
 
                                 return (
-                                  <li key={childId} className={cn(ui.childItem)}>
+                                  <li
+                                    key={childId}
+                                    className={cn(ui.childItem)}
+                                  >
                                     <SiteNavLink
                                       href={childHref}
                                       label={childLabel}

@@ -1,16 +1,12 @@
 /**
  * @file packages/ui/src/site/components/molecules/SiteSocialMenu.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/molecules
  *
  * @description
- * Molecule site : menu social (liste de liens icônes) rendu depuis des items normalisés.
+ * Renders the public site social menu as a list of icon links.
  *
  * @remarks
- * - Rend `null` si la liste est vide.
- * - Délègue le rendu du lien à `SiteIconLink` (a11y + garde-fous href).
- * - L’icône est rendue via `renderSocialKindIcon`.
- * - Les clés de liste utilisent désormais l’identifiant métier stable `id`.
- * - Le style est fourni par le skin/template via `ui`.
+ * Returns nothing when no item is available; link rendering is delegated to `SiteIconLink` for accessible labels and href guardrails.
  */
 
 import { renderSocialKindIcon } from "@compoz/ui/lib/social/social-kind-icons";

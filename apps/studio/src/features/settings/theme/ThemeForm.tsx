@@ -2,6 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/theme/ThemeForm.tsx
+ * @layer studio/features/settings/theme
+ *
+ * @description
+ * RHF and Zod-backed studio form for editing public theme settings.
+ *
+ * @remarks
+ * - Reports UI warnings, blocking error count, value changes, dirty state, and the active warning mode to the parent section.
+ * - Theme token warnings are scoped to the currently selected light or dark token tab.
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -232,9 +240,7 @@ export function ThemeForm({
                     label={t("studio.themeForm.headingFont.label")}
                     value={field.value}
                     onChange={(value) => field.onChange(value)}
-                    fallbackLabel={t(
-                      "studio.themeForm.headingFont.sameAsBody",
-                    )}
+                    fallbackLabel={t("studio.themeForm.headingFont.sameAsBody")}
                     help={t("studio.themeForm.headingFont.help")}
                     disabled={disabledControls}
                     invalid={Boolean(errors.headingFont?.message)}
@@ -251,13 +257,12 @@ export function ThemeForm({
                 name="enableDarkMode"
                 control={control}
                 render={({ field }) => (
+                  // Dark mode editing is prepared in the schema but disabled until the public theme supports it.
                   <SwitchField
                     ids={enableDarkModeIds}
                     name={field.name}
                     label={t("studio.themeForm.enableDarkMode.label")}
-                    //help={t("studio.themeForm.enableDarkMode.help")}
                     help={t("common.availableInNextVersion")}
-                    //checked={Boolean(field.value)}
                     checked={false}
                     onCheckedChange={(v) => field.onChange(toBool(v))}
                     disabled={disabledControls}
@@ -308,6 +313,7 @@ export function ThemeForm({
 
                     <div className="flex flex-wrap items-center gap-0.5">
                       {MODE_ITEMS.map((item) => (
+                        // Theme mode selection is reserved until dark/system rendering is enabled publicly.
                         <Button
                           key={item}
                           type="button"
@@ -315,7 +321,6 @@ export function ThemeForm({
                           variant={field.value === item ? "default" : "ghost"}
                           visualMode="studio"
                           onClick={() => field.onChange(item)}
-                          //disabled={disabledControls}
                           disabled={true}
                         >
                           {t(`studio.themeForm.mode.items.${item}`)}
@@ -324,7 +329,6 @@ export function ThemeForm({
                     </div>
 
                     <p className="text-muted-foreground text-xs">
-                      {/* {t("studio.themeForm.mode.help")} */}
                       {t("common.availableInNextVersion")}
                     </p>
                   </div>

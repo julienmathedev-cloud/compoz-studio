@@ -2,16 +2,17 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/hooks/useCreateBlock.ts
- * @layer hooks/studio/pages/blocks
+ * @layer studio/features/pages/blocks/hooks
  *
  * @description
- * Hook Studio React Query pour ajouter un block draft à une page via l’API.
+ * React Query mutation hook for creating a draft section block through the pages Studio API.
  *
  * @remarks
- * - Orchestration UI-only : mutation, logs, notifications.
- * - Le formulaire fournit des FormValues UI.
- * - Aucune logique métier ni validation domaine.
- * - Le cache et les queryKeys sont scopés par Prisma Website.id.
+ * - Converts UI form values to a section block create intent before calling the API.
+ * - Uses save instrumentation with draft content state for logs and notifications.
+ * - Synchronizes page and block-list caches from the returned page payload.
+ * - Invalidates site and block status views after creation.
+ * - Studio cache keys are scoped by Prisma Website.id.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";

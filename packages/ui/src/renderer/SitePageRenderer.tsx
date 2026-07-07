@@ -3,11 +3,10 @@
  * @layer ui/renderer
  *
  * @description
- * Shell site public : surface + H1 layout + blocks + pager.
+ * Renders the public site page shell with either block content or direct children.
  *
  * @remarks
- * - Le UI est résolu au niveau du shell (layout site / preview shell).
- * - Ici, il est reçu via props pour garder ce renderer SSR-compatible.
+ * Receives resolved UI props to stay SSR-compatible; the pager is kept inside the flex shell so detail pages can stick it near the footer.
  */
 
 import type { ReactNode } from "react";

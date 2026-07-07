@@ -1,47 +1,28 @@
 /**
  * @file packages/core/src/domain/errors/codes.ts
  * @layer core/domain/errors
- * @description
- * Source de vérité des codes d’erreur métier (stables) utilisés par le domaine.
- * Ces codes peuvent être mappés vers HTTP, Zod et l’UI (messages conditionnels).
- *
- * Contrainte : codes en `MAJUSCULES_SNAKE_CASE`, stables dans le temps.
+ * @description Stable source of truth for domain error codes.
+ * @remarks
+ * Codes are intentionally stable `UPPER_SNAKE_CASE` values that can be mapped to HTTP responses, Zod issues, and conditional UI messages.
  */
 
 export const ERROR_CODES = {
-  /* ------------------------------------------------------------------------ */
-  /*                                Généraux                                  */
-  /* ------------------------------------------------------------------------ */
-
-  UNKNOWN: "UNKNOWN", // fallback global si l’erreur n’est pas catégorisée
-  INTERNAL: "INTERNAL", // erreur technique interne (mapped → HTTP 500)
+  UNKNOWN: "UNKNOWN", // Global fallback when the error is not categorized.
+  INTERNAL: "INTERNAL", // Internal technical error, usually mapped to HTTP 500.
   NOT_FOUND: "NOT_FOUND",
   CONFLICT: "CONFLICT",
-  VALIDATION_ERROR: "VALIDATION_ERROR", // après parsing / validation complexe
-
-  /* ------------------------------------------------------------------------ */
-  /*                           AuthN / AuthZ                                  */
-  /* ------------------------------------------------------------------------ */
+  VALIDATION_ERROR: "VALIDATION_ERROR", // Returned after parsing or complex validation.
 
   UNAUTHORIZED: "UNAUTHORIZED",
   FORBIDDEN: "FORBIDDEN",
 
-  /* ------------------------------------------------------------------------ */
-  /*                         Arguments / Contrats                             */
-  /* ------------------------------------------------------------------------ */
-
-  INVALID_ARGUMENT: "INVALID_ARGUMENT", // mauvais input métier
+  INVALID_ARGUMENT: "INVALID_ARGUMENT", // Invalid domain input.
   CONTENT_STATE_INVALID: "CONTENT_STATE_INVALID",
   JSON_INVALID: "JSON_INVALID",
   JSON_OBJECT_EXPECTED: "JSON_OBJECT_EXPECTED",
 
-  /* ------------------------------------------------------------------------ */
-  /*                              HTTP / Adapters                             */
-  /* ------------------------------------------------------------------------ */
-
   UNSUPPORTED_MEDIA_TYPE: "UNSUPPORTED_MEDIA_TYPE",
   PAYLOAD_TOO_LARGE: "PAYLOAD_TOO_LARGE",
-  // Upload (messages précis)
   UPLOAD_FILE_MISSING: "UPLOAD_FILE_MISSING",
   UPLOAD_IMAGE_REQUIRED: "UPLOAD_IMAGE_REQUIRED",
   UPLOAD_MIME_NOT_ALLOWED: "UPLOAD_MIME_NOT_ALLOWED",
@@ -49,14 +30,10 @@ export const ERROR_CODES = {
   UPLOAD_IMAGE_DIMENSIONS_INVALID: "UPLOAD_IMAGE_DIMENSIONS_INVALID",
   UPLOAD_FILE_TOO_LARGE: "UPLOAD_FILE_TOO_LARGE",
   UPLOAD_SVG_NOT_SAFE: "UPLOAD_SVG_NOT_SAFE",
-  // ⚠️ Messages techniques internes (assertions DEV, non exposables UI)
+  // Internal technical assertions: do not expose directly to the UI.
   HREF_RELATIVE_INVALID: "HREF_RELATIVE_INVALID",
   HREF_ABSOLUTE_HTTP_INVALID: "HREF_ABSOLUTE_HTTP_INVALID",
   HREF_MAILTO_INVALID: "HREF_MAILTO_INVALID",
-
-  /* ------------------------------------------------------------------------ */
-  /*                         Identité du site (Identity)                      */
-  /* ------------------------------------------------------------------------ */
 
   IDENTITY_SITENAME_REQUIRED: "IDENTITY_SITENAME_REQUIRED",
   IDENTITY_LOGO_ALT_REQUIRED: "IDENTITY_LOGO_ALT_REQUIRED",
@@ -64,15 +41,7 @@ export const ERROR_CODES = {
   IDENTITY_TAGLINE_TOO_LONG: "IDENTITY_TAGLINE_TOO_LONG",
   IDENTITY_LOGO_ALT_TOO_LONG: "IDENTITY_LOGO_ALT_TOO_LONG",
 
-  /* ------------------------------------------------------------------------ */
-  /*                                  Footer                                  */
-  /* ------------------------------------------------------------------------ */
-
   FOOTER_COPYRIGHT_TOO_LONG: "FOOTER_COPYRIGHT_TOO_LONG",
-
-  /* ------------------------------------------------------------------------ */
-  /*                                    SEO                                   */
-  /* ------------------------------------------------------------------------ */
 
   SEO_TITLE_REQUIRED: "SEO_TITLE_REQUIRED",
   SEO_TITLE_TEMPLATE_MISSING_PLACEHOLDER:
@@ -93,10 +62,6 @@ export const ERROR_CODES = {
   SEO_DESCRIPTION_TOO_LONG: "SEO_DESCRIPTION_TOO_LONG",
   SEO_TITLE_TEMPLATE_TOO_LONG: "SEO_TITLE_TEMPLATE_TOO_LONG",
 
-  /* ------------------------------------------------------------------------ */
-  /*                                   Social                                 */
-  /* ------------------------------------------------------------------------ */
-
   SOCIAL_DUPLICATE_KIND: "SOCIAL_DUPLICATE_KIND",
   SOCIAL_ID_REQUIRED: "SOCIAL_ID_REQUIRED",
   SOCIAL_DUPLICATE_ID: "SOCIAL_DUPLICATE_ID",
@@ -108,10 +73,6 @@ export const ERROR_CODES = {
   SOCIAL_EMAIL_REQUIRES_MAILTO: "SOCIAL_EMAIL_REQUIRES_MAILTO",
   SOCIAL_MAILTO_RESERVED_FOR_EMAIL: "SOCIAL_MAILTO_RESERVED_FOR_EMAIL",
 
-  /* ------------------------------------------------------------------------ */
-  /*                                Primary menu                              */
-  /* ------------------------------------------------------------------------ */
-
   PRIMARY_MENU_LABEL_TOO_LONG: "PRIMARY_MENU_LABEL_TOO_LONG",
   PRIMARY_MENU_LABEL_REQUIRED: "PRIMARY_MENU_LABEL_REQUIRED",
   PRIMARY_MENU_HREF_REQUIRED: "PRIMARY_MENU_HREF_REQUIRED",
@@ -122,10 +83,6 @@ export const ERROR_CODES = {
   PRIMARY_MENU_ID_REQUIRED: "PRIMARY_MENU_ID_REQUIRED",
   PRIMARY_MENU_DUPLICATE_ID: "PRIMARY_MENU_DUPLICATE_ID",
 
-  /* ------------------------------------------------------------------------ */
-  /*                                  Legal menu                              */
-  /* ------------------------------------------------------------------------ */
-
   LEGAL_MENU_LABEL_TOO_LONG: "LEGAL_MENU_LABEL_TOO_LONG",
   LEGAL_MENU_LABEL_REQUIRED: "LEGAL_MENU_LABEL_REQUIRED",
   LEGAL_MENU_HREF_REQUIRED: "LEGAL_MENU_HREF_REQUIRED",
@@ -133,10 +90,6 @@ export const ERROR_CODES = {
   LEGAL_MENU_TOO_MANY_ITEMS: "LEGAL_MENU_TOO_MANY_ITEMS",
   LEGAL_MENU_ID_REQUIRED: "LEGAL_MENU_ID_REQUIRED",
   LEGAL_MENU_DUPLICATE_ID: "LEGAL_MENU_DUPLICATE_ID",
-
-  /* ------------------------------------------------------------------------ */
-  /*                                    Slug                                  */
-  /* ------------------------------------------------------------------------ */
 
   SLUG_REQUIRED: "SLUG_REQUIRED",
   SLUG_INVALID_FORMAT: "SLUG_INVALID_FORMAT",
@@ -188,9 +141,6 @@ export const ERROR_CODES = {
 
   THEME_FONT_UNSUPPORTED: "THEME_FONT_UNSUPPORTED",
   THEME_DARK_MODE_DISABLED: "THEME_DARK_MODE_DISABLED",
-  /* ------------------------------------------------------------------------ */
-  /*                                Publication                               */
-  /* ------------------------------------------------------------------------ */
 
   PUBLISH_IDENTICAL_STATES: "PUBLISH_IDENTICAL_STATES",
   PUBLISH_EMPTY_INDEX: "PUBLISH_EMPTY_INDEX",
@@ -199,7 +149,7 @@ export const ERROR_CODES = {
   PUBLISH_PAGE_DELETE_FAILED: "PUBLISH_PAGE_DELETE_FAILED",
   PUBLISH_PAGE_H1_MISSING: "PUBLISH_PAGE_H1_MISSING",
 
-  // Warnings “site live” (V0.5)
+  // Published-site warnings kept stable for V0.5 checks.
   PUBLISH_HOME_MISSING: "PUBLISH_HOME_MISSING",
   PUBLISH_PRIMARY_MENU_EMPTY: "PUBLISH_PRIMARY_MENU_EMPTY",
   PUBLISH_LEGAL_MENU_EMPTY: "PUBLISH_LEGAL_MENU_EMPTY",
@@ -210,16 +160,8 @@ export const ERROR_CODES = {
   PUBLISH_SEO_ROBOTS_NOINDEX: "PUBLISH_SEO_ROBOTS_NOINDEX",
   PUBLISH_SEO_BASEURL_MISSING: "PUBLISH_SEO_BASEURL_MISSING",
 
-  /* ------------------------------------------------------------------------ */
-  /*                              SiteIndex                                   */
-  /* ------------------------------------------------------------------------ */
-
   SITE_INDEX_DUPLICATE_SLUGS: "SITE_INDEX_DUPLICATE_SLUGS",
   SITE_INDEX_NOT_FOUND: "SITE_INDEX_NOT_FOUND",
-
-  /* ------------------------------------------------------------------------ */
-  /*                                  Pages                                   */
-  /* ------------------------------------------------------------------------ */
 
   PAGE_TITLE_REQUIRED: "PAGE_TITLE_REQUIRED",
   PAGE_SLUG_REQUIRED: "PAGE_SLUG_REQUIRED",
@@ -231,10 +173,6 @@ export const ERROR_CODES = {
   PAGE_TITLE_TOO_LONG: "PAGE_TITLE_TOO_LONG",
   PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE: "PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE",
   PAGE_ID_REQUIRED: "PAGE_ID_REQUIRED",
-
-  /* ------------------------------------------------------------------------ */
-  /*                                  Blocks                                  */
-  /* ------------------------------------------------------------------------ */
 
   BLOCKS_INVALID: "BLOCKS_INVALID",
   BLOCK_ID_REQUIRED: "BLOCK_ID_REQUIRED",
@@ -442,9 +380,6 @@ export const ERROR_CODES = {
   CELL_IMAGE_HEIGHT_INVALID: "CELL_IMAGE_HEIGHT_INVALID",
 
   RICH_TEXT_REVEAL_INVALID: "RICH_TEXT_REVEAL_INVALID",
-  /* ------------------------------------------------------------------------ */
-  /*                                   URLs                                   */
-  /* ------------------------------------------------------------------------ */
 
   URL_REQUIRED: "URL_REQUIRED",
   URL_NO_SPACES: "URL_NO_SPACES",
@@ -452,10 +387,6 @@ export const ERROR_CODES = {
   URL_TOO_LONG: "URL_TOO_LONG",
   URL_ABSOLUTE_HTTP_REQUIRED: "URL_ABSOLUTE_HTTP_REQUIRED",
   URL_RELATIVE_REQUIRED: "URL_RELATIVE_REQUIRED",
-
-  /* ------------------------------------------------------------------------ */
-  /*                                   Users                                  */
-  /* ------------------------------------------------------------------------ */
 
   USER_ID_REQUIRED: "USER_ID_REQUIRED",
   USER_EMAIL_REQUIRED: "USER_EMAIL_REQUIRED",
@@ -477,22 +408,15 @@ export const ERROR_CODES = {
 } as const;
 
 /**
- * Union littérale de tous les codes possibles.
- * Exemple : "NOT_FOUND" | "SEO_TITLE_REQUIRED" | ...
+ * Literal union of all supported error codes.
  */
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
 
-/** Valeurs autorisées (dérivées de la source de vérité) pour des checks robustes. */
+/** Allowed values derived from the source of truth for robust runtime checks. */
 const ERROR_CODE_VALUES = Object.values(ERROR_CODES) as ErrorCode[];
 
 /**
- * Garde de type permettant de vérifier si une valeur inconnue
- * correspond à un code d’erreur métier valide.
- *
- * Utile dans :
- * - les adapters HTTP,
- * - les parseurs JSON,
- * - les helpers UI (affichage conditionnel d’erreurs).
+ * Type guard for validating unknown values against stable domain error codes.
  */
 export function isErrorCode(v: unknown): v is ErrorCode {
   return typeof v === "string" && ERROR_CODE_VALUES.includes(v as ErrorCode);

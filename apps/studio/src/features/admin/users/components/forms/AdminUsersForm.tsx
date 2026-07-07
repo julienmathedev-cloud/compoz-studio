@@ -2,20 +2,16 @@
 
 /**
  * @file apps/studio/src/features/admin/users/components/forms/AdminUsersForm.tsx
- * @layer ui/organisms
+ * @layer studio/features/admin/users/components/forms
  *
  * @description
- * Formulaire d’édition / création d’un user Studio — Shell RHF + Zod.
+ * React Hook Form and Zod shell for creating or editing Studio users.
  *
  * @remarks
- * - Ce fichier est le shell : init RHF, submit/reset, Card layout,
- *   orchestration.
- * - Les sections UI sont extraites :
- *   - `AdminUsersFormSummaryFields` pour email/name/password.
- *   - `AdminUsersFormRbacFields` pour le RBAC websites.
- *   - `AdminUsersFormFooter` pour delete + actions.
- * - Focus/scroll du premier champ invalide au submit via `focusByFieldId`.
- * - Users = Studio-only : pas de draft/published, pas de state.
+ * - Owns form initialization, submit/reset orchestration, and the Card layout.
+ * - Delegates summary, RBAC, and footer UI to dedicated form sections.
+ * - Focuses the first invalid field on submit through `focusByFieldId`.
+ * - Users are Studio-only data: no draft/published state is involved.
  */
 
 import { useEffect, useMemo } from "react";
@@ -51,27 +47,15 @@ type SelectOption = Readonly<{
 type AdminUsersFormProps = Readonly<{
   initialValues: UserFormValues;
   isSaving?: boolean;
-
-  /** Mode UI, impacte les labels et les actions. */
   mode?: "create" | "edit";
-
-  /** Active/désactive l’auto-focus des champs du formulaire, sauf erreurs. */
   bFocusFields?: boolean;
-
-  /** Permet d’annuler le comportement bouton “annuler” toujours actif en mode edit. */
   bCancelAlwaysEnabledInEdit?: boolean;
-
-  /** Options de Website.id accessibles pour le RBAC du user Studio. */
   websiteOptions?: ReadonlyArray<SelectOption>;
-
-  /** Delete, edit only. */
   onDelete?: () => void | Promise<void>;
   isDeleting?: boolean;
   canDelete?: boolean;
-
   onSubmit: (values: UserFormValues) => void | Promise<void>;
   onReset?: () => void;
-
   onDirtyChange?: (dirty: boolean) => void;
   onBlockingErrorsCountChange?: (count: number) => void;
 }>;
@@ -82,11 +66,7 @@ type FieldErrorState = Readonly<{
 }>;
 
 /**
- * Calcule l’état d’erreur d’un champ.
- *
- * @remarks
- * - Ne change pas les règles métier du formulaire.
- * - `showError` = submitted || submitCount > 0.
+ * Resolves the visible error state for a field without changing form validation rules.
  */
 function getFieldErrorState(opts: {
   showError: boolean;
@@ -150,11 +130,7 @@ export function AdminUsersForm({
 
   const isBusy = Boolean(isSaving || isSubmitting || isDeleting);
 
-  /**
-   * Dirty signal vers le parent.
-   *
-   * Exemple : guard de navigation.
-   */
+  /** Sends the dirty state to parent guards, such as navigation protection. */
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
@@ -168,9 +144,7 @@ export function AdminUsersForm({
   const websiteIdsIds = createFieldIds(formIdPrefix, "websiteIds");
   const defaultWebsiteIdIds = createFieldIds(formIdPrefix, "defaultWebsiteId");
 
-  /**
-   * Resynchronisation RHF lorsque `initialValues` change.
-   */
+  /** Resynchronizes RHF when `initialValues` changes. */
   useEffect(() => {
     rhfReset(initialValues, {
       keepDirty: false,
@@ -179,9 +153,7 @@ export function AdminUsersForm({
     });
   }, [initialValues, rhfReset]);
 
-  /**
-   * Focus auto du champ email en mode edit lors du changement de user.
-   */
+  /** Focuses the email field when switching edited users. */
   useEffect(() => {
     if (mode !== "edit" || !bFocusFields) return;
     if (isBusy) return;

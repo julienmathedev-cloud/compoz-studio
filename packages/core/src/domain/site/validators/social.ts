@@ -1,16 +1,9 @@
 /**
  * @file packages/core/src/domain/site/validators/social.ts
- * @layer core/domain
- * @description
- * Validateur métier — invariants Social bloquants :
- * - `id` requis et unique
- * - email ⇒ `mailto:` obligatoire
- * - autres ⇒ URL http(s) absolue (non mailto)
- * - unicité des plateformes (`kind`) dans la liste
- *
+ * @layer core/domain/site/validators
+ * @description Blocking domain invariants for social settings.
  * @remarks
- * Suppose que la shape de base (items, types) est validée en amont (schemas/adapters).
- * Ce module se concentre uniquement sur les invariants stricts du domaine.
+ * Shape and base item validation are handled upstream by schemas and adapters.
  */
 
 import { SOCIAL_KIND_EMAIL } from "@compoz/core/constants/social/social-kinds";
@@ -23,17 +16,6 @@ import type {
 import { isAbsoluteHttpUrlStrict } from "@compoz/core/domain/urls/guards";
 import { isMailtoHref } from "@compoz/core/domain/urls/mailto";
 
-/**
- * Vérifie les invariants d’un item social isolé.
- *
- * @param it    Élément social à valider.
- * @param index Index de l’élément dans le tableau `items`.
- *
- * @throws DomainError
- * - `EC.SOCIAL_ID_REQUIRED`
- * - `EC.SOCIAL_INVALID_FOR_PLATFORM`
- * - `EC.SOCIAL_ABSOLUTE_REQUIRED`
- */
 function assertSocialItem(it: SocialItem, index: number): void {
   const id = String(it.id ?? "").trim();
   const kind = it.kind;
@@ -49,7 +31,6 @@ function assertSocialItem(it: SocialItem, index: number): void {
 
   const pathBase = ["social", "items", index, "href"] as const;
 
-  // Invariant : plateforme "email" ⇒ mailto: obligatoire
   if (kind === SOCIAL_KIND_EMAIL) {
     if (!isMailtoHref(href)) {
       throw new DomainError({
@@ -61,7 +42,6 @@ function assertSocialItem(it: SocialItem, index: number): void {
     return;
   }
 
-  // Invariant : hors email ⇒ mailto: interdit
   if (isMailtoHref(href)) {
     throw new DomainError({
       code: EC.SOCIAL_INVALID_FOR_PLATFORM,
@@ -70,7 +50,6 @@ function assertSocialItem(it: SocialItem, index: number): void {
     });
   }
 
-  // Invariant : hors email ⇒ http(s) absolu requis
   if (!isAbsoluteHttpUrlStrict(href)) {
     throw new DomainError({
       code: EC.SOCIAL_ABSOLUTE_REQUIRED,
@@ -80,14 +59,6 @@ function assertSocialItem(it: SocialItem, index: number): void {
   }
 }
 
-/**
- * Invariants globaux : unicité des ids, unicité des plateformes + items valides.
- *
- * @throws DomainError
- * - `EC.SOCIAL_DUPLICATE_ID`
- * - `EC.SOCIAL_DUPLICATE_KIND`
- * - (peut lever les erreurs de `assertSocialItem`)
- */
 export function assertSocialSettings(s: SocialSettings): void {
   const seenIds = new Set<SocialItem["id"]>();
   const seenKinds = new Set<SocialItem["kind"]>();

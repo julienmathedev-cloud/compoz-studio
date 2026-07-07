@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/portfolio/cells/steps-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/portfolio/cells
  *
  * @description
- * Override UI — steps cell (thème Portfolio).
+ * Defines the portfolio skin overrides for steps cells.
  */
 
 import type { SiteStepsUiOverride } from "@compoz/ui/site/site-ui.types";

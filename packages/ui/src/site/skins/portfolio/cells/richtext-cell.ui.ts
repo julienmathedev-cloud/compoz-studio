@@ -1,18 +1,15 @@
 /**
  * @file packages/ui/src/site/skins/portfolio/cells/richtext-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/portfolio/cells
  *
- * @description Override UI — richtext cell (thème Portfolio).
- * @remarks
- * Définit uniquement les styles Tailwind.
- * Aucune logique ici : le renderer gère align / level / variant.
+ * @description
+ * Defines the portfolio skin overrides for rich text cells.
  */
 
 import type { SiteRichTextUiOverride } from "@compoz/ui/site/site-ui.types";
 
 export const portfolioRichTextUi: SiteRichTextUiOverride = {
   root: [
-    // Mise en avant des marqueurs de listes personnalisées.
     "[&_ul[data-list-variant=check]>li]:before:text-primary",
     "[&_ul[data-list-variant=arrow]>li]:before:text-primary",
     "[&_ul[data-list-variant=check]>li]:pl-8",

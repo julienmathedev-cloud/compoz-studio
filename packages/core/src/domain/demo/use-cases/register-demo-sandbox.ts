@@ -1,13 +1,9 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/register-demo-sandbox.ts
- * @layer core/domain
- *
- * @description
- * Use-case : enregistre le record de résolution d’une sandbox démo.
- *
+ * @layer core/domain/demo
+ * @description Use case that stores the resolution record for a demo sandbox.
  * @remarks
- * - Utilisé après la création réussie d’une sandbox démo.
- * - Ne gère ni cookies HTTP, ni session, ni clonage.
+ * This use case runs after sandbox creation and intentionally leaves cloning, HTTP cookies, and session handling outside the core domain.
  */
 
 import type {

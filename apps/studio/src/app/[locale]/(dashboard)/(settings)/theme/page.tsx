@@ -3,7 +3,7 @@
  * @layer studio/app
  *
  * @description
- * Page « Theme » (Studio) — route du dashboard.
+ * Studio Dashboard route that delegates theme settings to `ThemePage`.
  */
 
 import { ThemePage } from "@compoz/studio/features/settings/theme/ThemePage";

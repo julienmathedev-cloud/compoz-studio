@@ -3,19 +3,13 @@
  * @layer studio/auth
  *
  * @description
- * Helpers d'auth pour les routes API et pages server Studio.
+ * Auth helpers for Studio API routes and server pages.
  *
  * @remarks
- * Responsabilités :
- * - Centralise `auth()`.
- * - Résout le Website actif.
- * - Expose un sous-objet user minimal pour les pages server.
- * - Expose les métadonnées utiles des sessions sandbox démo.
- * - Lève des erreurs HTTP standardisées via `throwHttp`.
- *
- * Notes de scope :
- * - Les sessions Studio sont scopées par Prisma Website.id.
- * - Les routes publiques `/t/:websiteSlug` utilisent Website.slug ailleurs.
+ * - Resolves the active Website and minimal user context from the NextAuth session.
+ * - Includes demo sandbox metadata used by Studio guards and UI.
+ * - Throws standardized HTTP errors through `throwHttp`.
+ * - Studio sessions are scoped by Prisma Website.id; public `/t/:websiteSlug` routes use Website.slug elsewhere.
  */
 
 import "server-only";
@@ -63,16 +57,16 @@ type SessionUserLite = Readonly<{
 
 export type SessionWebsiteResult = Readonly<{
   /**
-   * Prisma Website.id du Website actif.
+   * Prisma Website.id of the active Website.
    *
-   * Les sessions démo suivent le même flow que les sessions Studio classiques :
-   * elles pointent vers un vrai Website Prisma de type sandbox.
+   * Demo sessions follow the same flow as regular Studio sessions:
+   * they point to a real Prisma Website of type sandbox.
    */
   websiteId: string;
 
   /**
-   * Website.slug utilisé pour les URLs publiques fallback `/t/:websiteSlug`
-   * et pour certaines résolutions UI/skin.
+   * Website.slug used for fallback public URLs `/t/:websiteSlug`
+   * and some UI/skin resolution.
    */
   websiteSlug: string;
 
@@ -84,16 +78,12 @@ export type SessionWebsiteResult = Readonly<{
   defaultWebsiteId: string;
 
   /**
-   * Sous-ensemble minimal pour UI server.
+   * Minimal subset for server UI.
    *
-   * Exemple : bloquer un self-delete côté admin.
+   * Example: prevent admin self-deletion.
    */
   user: SessionUserLite;
 }>;
-
-/* -------------------------------------------------------------------------- */
-/* Normalizers                                                                */
-/* -------------------------------------------------------------------------- */
 
 function normalizeId(value: unknown): string {
   return String(value ?? "").trim();
@@ -152,18 +142,14 @@ export function isStaleWebsiteSessionError(error: unknown): boolean {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Session resolution                                                         */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Résout la session Studio + Website actif.
+ * Resolves the Studio session and active Website.
  *
  * @remarks
- * - Retourne `null` si aucune session n'est présente.
- * - Lance une erreur si la session existe mais est invalide/incomplète.
- * - Utile pour les pages server qui veulent rediriger vers signin
- *   au lieu de lever directement une 401 HTTP.
+ * - Returns `null` when no session is present.
+ * - Throws when a session exists but is invalid or incomplete.
+ * - Useful for server pages that redirect to sign-in instead of throwing an
+ *   HTTP 401 directly.
  */
 export async function getSessionWithWebsiteOrNull(): Promise<SessionWebsiteResult | null> {
   const session = await getServerSession(authOptions);
@@ -256,9 +242,6 @@ export async function requireSessionWithWebsite(): Promise<SessionWebsiteResult>
   return session;
 }
 
-/**
- * Exige une session active qui n'est pas une session démo.
- */
 export async function requireNonDemoSession(): Promise<SessionWebsiteResult> {
   const session = await requireSessionWithWebsite();
 
@@ -276,9 +259,6 @@ export async function requireNonDemoSession(): Promise<SessionWebsiteResult> {
   return session;
 }
 
-/**
- * Exige une session active avec rôle admin.
- */
 export async function requireAdminSession(): Promise<SessionWebsiteResult> {
   const session = await requireSessionWithWebsite();
 

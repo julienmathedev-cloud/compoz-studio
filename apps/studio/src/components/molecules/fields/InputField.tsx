@@ -2,17 +2,16 @@
 
 /**
  * @file apps/studio/src/components/molecules/fields/InputField.tsx
- * @layer studio/molecules
+ * @layer studio/molecules/fields
  *
  * @description
- * Champ texte contrôlé (label, aide, erreur, compteur) basé sur le composant `Field`.
+ * Controlled Studio text field with label, help text, error display, and optional counter.
  *
  * @remarks
- * - Molecule UI : compose `Field`, `Input`, `FieldMetaBar` et `ErrorText`.
- * - Contrôle via `value` / `onChange` fournis par le parent.
- * - Gère l’état d’invalidité via `error` et/ou `invalid` (ARIA + styles).
- * - Le compteur est non bloquant et utilise `maxLength` si fourni.
- * - Strictement UI-only : aucune logique métier.
+ * - Composes `Field`, `Input`, `FieldMetaBar`, and `ErrorText`.
+ * - The value is fully controlled through `value` and `onChange`.
+ * - Maps `error` and `invalid` to ARIA invalid state and visual styles.
+ * - The optional counter is non-blocking and uses `maxLength` when provided.
  */
 
 import type {
@@ -35,12 +34,11 @@ import { Input } from "@compoz/ui/components/ui/input";
 import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 
 /**
- * Props du composant `InputField`.
+ * Hides native props that would bypass the controlled field contract.
  *
  * @remarks
- * Certaines props natives sont masquées pour imposer une API contrôlée :
- * - `id` est fourni via `ids.fieldId`.
- * - `value` / `onChange` sont contrôlés par le parent.
+ * - `id` comes from `ids.fieldId`.
+ * - `value` and `onChange` are controlled by the parent.
  */
 export type InputFieldProps = Readonly<
   Omit<

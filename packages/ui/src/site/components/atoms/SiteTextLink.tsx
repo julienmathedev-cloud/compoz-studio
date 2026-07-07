@@ -2,18 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/atoms/SiteTextLink.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/atoms
  *
  * @description
- * Atome site : lien texte générique (interne/externe/spécial) avec garde-fous A11y.
+ * Renders a generic public site text link across internal, external, special, and unsafe hrefs.
  *
  * @remarks
- * - Interne : rendu via `next/link`.
- * - Externe : rendu via `<a>`.
- * - Supporte `mailto:` / `tel:`.
- * - Sécurise les liens externes (`target`/`rel`) et neutralise les `href` non sûrs.
- * - Gère le style via `className` (wrapper) et `linkClassName` (lien) fournis par le skin/template.
- * - Convention V0.5 : plus de querystring `state` (draft/published via routes dédiées).
+ * External links can receive secure target/rel attributes, unsafe links are neutralized, and Studio preview disables navigation.
  */
 
 import Link from "next/link";

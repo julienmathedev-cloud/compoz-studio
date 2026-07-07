@@ -1,15 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/header.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default
  *
  * @description
- * Skin UI par défaut pour styler l'en-tête du site (thème Default).
- *
- * @remarks
- * - Header sobre, basé sur `bg-chrome`.
- * - Peut appliquer un léger blur si activé côté settings.
- * - Aucun token custom hors thème public.
- * - La hauteur est pilotée par le container (padding), pas par le header.
+ * Defines the default skin classes for the public site header.
  */
 
 import type { SiteHeaderUi } from "@compoz/ui/site/site-ui.types";
@@ -20,58 +14,21 @@ import { defaultSocialMenuUi } from "@compoz/ui/site/skins/default/social-menu.u
 
 export const defaultHeaderUi: SiteHeaderUi = {
   header: {
-    /**
-     * Structure de base du header.
-     *
-     * - `bg-chrome` : surface structurelle header/footer
-     * - `border-b` : séparation légère avec le contenu
-     * - transition douce pour les changements de thème
-     */
     base: "border-b border-border bg-chrome motion-safe:transition-colors motion-safe:duration-200",
-
-    /**
-     * Mode sticky.
-     */
     sticky: "sticky top-0 z-50",
-
-    /**
-     * Effet blur léger (si activé côté settings).
-     *
-     * - légère translucidité pour conserver une surface stable
-     * - blur discret pour améliorer la lisibilité sans rendu trop expressif
-     */
     blur: "supports-[backdrop-filter]:bg-chrome/90 supports-[backdrop-filter]:backdrop-blur-sm",
   },
 
-  /**
-   * Container interne du header.
-   *
-   * - largeur limitée
-   * - padding horizontal responsive
-   * - padding vertical pour gérer la hauteur réelle
-   */
   headerContainer:
     "mx-auto flex max-w-screen-xl items-center justify-between px-2 py-1 md:px-4 md:py-2",
 
-  /**
-   * Skip link accessibilité.
-   */
   skipLink:
     "sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[9999] rounded-md bg-chrome px-3 py-2 text-foreground shadow focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background",
 
-  /**
-   * Slot logo + nom.
-   */
   logoSlot: "flex items-center gap-2 md:gap-3 lg:gap-4",
 
-  /**
-   * Texte du nom du site.
-   */
   siteNameText: "text-lg md:text-2xl font-bold tracking-tight text-foreground",
 
-  /**
-   * Navigation desktop.
-   */
   nav: "inline-flex items-center gap-2 md:gap-3 lg:gap-4",
 
   logo: defaultLogoUi,

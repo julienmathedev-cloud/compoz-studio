@@ -1,15 +1,9 @@
 /**
  * @file packages/ui/src/pages/mappers/cells/carousel.ts
  * @layer ui/pages/mappers
- *
- * @description
- * Shared runtime mapper for CarouselCell.
- *
+ * @description Maps carousel cell DTOs to form values.
  * @remarks
- * The carousel mapper owns cell-level concerns such as `variant`,
- * `showDots`, `showArrows`, `itemKind`, and `cssClassName`.
- *
- * Reusable item shapes are delegated to item mappers.
+ * Cell-level options stay here, while reusable item shapes are delegated to item mappers.
  */
 
 import type {

@@ -1,11 +1,9 @@
 /**
  * @file packages/infra/src/http/studio/pages.client.ts
  * @layer infra/http/studio
- * @description
- * Client HTTP Studio pour la gestion des pages : index, CRUD et blocks.
- *
- * Responsabilités : construction des requêtes HTTP, encodage des segments,
- * gestion optionnelle de `state`, typage des réponses via DTOs domaine.
+ * @description Studio HTTP client for pages, page index, and page blocks.
+ * @remarks
+ * Request paths are encoded at the HTTP boundary, and optional content state is forwarded as a query parameter.
  */
 
 import {
@@ -45,10 +43,6 @@ import type {
   UpdateSectionBlockResponse,
   UpdatePageResponse,
 } from "@compoz/infra/http/studio/pages.types";
-
-/* -------------------------------------------------------------------------- */
-/*                               Client HTTP Studio                           */
-/* -------------------------------------------------------------------------- */
 
 export const pagesStudioApi = {
   async getIndex(
@@ -97,10 +91,6 @@ export const pagesStudioApi = {
       },
     );
   },
-
-  /* ---------------------------------------------------------------------- */
-  /* Blocks — by pageId                                                     */
-  /* ---------------------------------------------------------------------- */
 
   async getPageBlocks(
     pageId: string,
@@ -251,10 +241,6 @@ export const pagesStudioApi = {
       },
     );
   },
-
-  /* ---------------------------------------------------------------------- */
-  /* Pages CRUD                                                              */
-  /* ---------------------------------------------------------------------- */
 
   async create(
     payload: CreatePageIntentDTO,

@@ -1,8 +1,12 @@
 /**
  * @file apps/studio/src/app/api/_adapters/pages/blocks/cells/timeline.ts
  * @layer studio/app/api/adapters
+ *
  * @description
- * Adapteurs API Studio pour les cellules de type `TimelineCell`.
+ * Studio API adapter for `TimelineCell` values.
+ *
+ * @remarks
+ * - Defaults `collapsible` to `true` when the intent does not provide it.
  */
 
 import { trimClearableOrUndef, trimOrKeep } from "@compoz/studio/lib/strings";

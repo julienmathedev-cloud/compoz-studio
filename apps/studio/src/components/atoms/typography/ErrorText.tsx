@@ -5,13 +5,13 @@
  * @layer studio/atoms
  *
  * @description
- * Texte d’erreur standardisé (UI) avec résolution i18n :
- * - `uiErrors.<token>` pour les erreurs UI (camelCase)
- * - `errors.<CODE>` pour les erreurs domaine (MAJUSCULE_SNAKE_CASE)
+ * Standardized UI error text with i18n message resolution.
  *
  * @remarks
- * - Rend `null` si le message est vide après normalisation.
- * - Peut activer `role="alert"` pour l’accessibilité.
+ * - Resolves `uiErrors.<token>` for camelCase UI errors.
+ * - Resolves `errors.<CODE>` for UPPER_SNAKE_CASE domain errors.
+ * - Returns `null` when the normalized message is empty.
+ * - Can enable `role="alert"` for accessibility.
  */
 
 import { useTranslations } from "next-intl";
@@ -28,9 +28,6 @@ export type ErrorTextProps = Readonly<{
 }> &
   ComponentPropsWithoutRef<"p">;
 
-/**
- * Affiche un message d’erreur résolu (token → i18n) ou brut (message humain).
- */
 export function ErrorText({
   as = "p",
   withRoleAlert = false,

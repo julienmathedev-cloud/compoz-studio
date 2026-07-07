@@ -3,14 +3,10 @@
  * @layer ui/renderer/items
  *
  * @description
- * Site/preview renderer for simple card items.
+ * Renders validated simple card items as a site card grid.
  *
  * @remarks
- * - UI-only: consumes already validated item shapes.
- * - Renders a grid of `SiteCard`.
- * - Ignores items without a title.
- * - Columns, alignment, and reveal behavior are owned by the parent cell.
- * - Exposes stable `data-*` attributes for skins and Website overrides.
+ * Items without a title are ignored; columns, alignment, and reveal behavior are owned by the parent cell.
  */
 
 import type { CardItemShape } from "@compoz/validation/pages/blocks/cells/cell";

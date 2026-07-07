@@ -1,69 +1,28 @@
 /**
  * @file packages/core/src/domain/errors/issue.types.ts
  * @layer core/domain/errors
- * @description
- * Types légers pour représenter des avertissements métier **non bloquants**
- * destinés à l’UI (qualité, conseils, alertes douces).
- *
- * Ces issues :
- * - ne sont pas des erreurs métier,
- * - ne sont pas mappées vers HTTP,
- * - n’empêchent ni sauvegarde ni publication,
- * - servent principalement au feedback UX.
+ * @description Lightweight types for non-blocking domain warnings exposed to the UI.
+ * @remarks
+ * Issues are not domain errors, are not mapped to HTTP responses, and never block save or publish flows.
  */
 
-/* -------------------------------------------------------------------------- */
-/*                                IssuePath                                   */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Chemin vers le champ concerné par le warning.
- *
- * Exemple :
- *   ["seo", "description"]
- *   ["menu", 2, "label"]
- *
- * Permet à l’UI de :
- * - scroller vers le champ,
- * - afficher un badge,
- * - appliquer un highlight ciblé,
- * - grouper les warnings par section.
+ * Path to the model field targeted by a warning, used by the UI for focused feedback.
  */
 export type IssuePath = ReadonlyArray<string | number>;
 
-/* -------------------------------------------------------------------------- */
-/*                                 UiWarning                                  */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Représentation minimale d’un avertissement destiné à l’UI.
+ * Minimal UI-facing warning shape.
  *
- * @typeParam C - Code stable du warning (string littérale).
- *
- * Exemple :
- *   { code: "PUBLISH_HOME_MISSING", path: ["pages"] }
- *
- * Les warnings sont :
- * - **non bloquants**
- * - **transport léger**
- * - **mappables vers i18n côté UI**
+ * @typeParam C - Stable warning code.
  */
 export type UiWarning<C extends string = string> = Readonly<{
-  /**
-   * Code stable du warning.
-   * Doit rester déterministe et versionnable.
-   */
+  /** Stable deterministic warning code. */
   code: C;
 
-  /**
-   * Chemin ciblé dans le modèle.
-   * Optionnel si warning global.
-   */
+  /** Optional model path when the warning targets a specific field. */
   path?: IssuePath;
 
-  /**
-   * Données contextuelles pour l’UI ou l’i18n.
-   * Exemple : { max: 120, actual: 145 }
-   */
+  /** Optional context for UI rendering or i18n interpolation. */
   meta?: Readonly<Record<string, unknown>>;
 }>;

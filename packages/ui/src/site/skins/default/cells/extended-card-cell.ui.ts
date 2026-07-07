@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/cells/extended-card-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default/cells
  *
  * @description
- * Skin UI — cards extended cell (thème Default).
+ * Defines the default skin classes for extended card cells.
  */
 
 import type { SiteExtendedCardUi } from "@compoz/ui/site/site-ui.types";

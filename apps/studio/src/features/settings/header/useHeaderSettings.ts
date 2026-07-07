@@ -2,22 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/header/useHeaderSettings.ts
- * @layer hooks/studio/site/header
+ * @layer studio/features/settings/header
  *
  * @description
- * Hook Studio spécialisé pour gérer les réglages du header via l’API.
+ * Settings resource hook for loading and saving header settings.
  *
  * @remarks
- * - Basé sur le pattern Settings RHF-first (`useSettingsResource`).
- * - Travaille exclusivement sur le modèle UI (`HeaderFormValues`).
- * - Orchestration UI-only : defaults, load, diff minimal, save, notifications.
- * - Aucune logique métier ni validation domaine.
- * - Le cache settings/status est scopé par Prisma Website.id.
- *
- * Option B, bundle read :
- * - READ : provient du bundle global React Query.
- * - WRITE : reste slice-by-slice via PATCH header.
- * - Après un save : patch du cache bundle header + invalidate status.
+ * - Reads from the settings bundle cache but saves through the header slice PATCH endpoint.
+ * - Patches the settings bundle cache after save, then invalidates status and bundle queries.
  */
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -60,16 +52,10 @@ export function useHeaderSettings(): UseHeaderSettingsResult {
   const resource = useSettingsResource<HeaderFormValues>({
     entityLabel,
 
-    /**
-     * Valeurs par défaut domaine → UI → normalisation.
-     */
     defaults: normalizeHeaderFormValues(
       toHeaderFormValuesFromDTO(DEFAULT_HEADER_SETTINGS),
     ),
 
-    /**
-     * READ bundle : cache-first + fetchQuery fallback.
-     */
     load: async (state: ContentState) => {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
@@ -78,9 +64,7 @@ export function useHeaderSettings(): UseHeaderSettingsResult {
       );
     },
 
-    /**
-     * WRITE slice PATCH + patch bundle cache.
-     */
+    // Saves through the slice endpoint while keeping the bundle cache aligned.
     save: async (next, opts) => {
       const patch = toUpdateHeaderIntentDTOFromFormValues(next);
       const dto = await settingsStudioApi.header.patch(patch, opts);
@@ -98,28 +82,18 @@ export function useHeaderSettings(): UseHeaderSettingsResult {
       return normalizeHeaderFormValues(toHeaderFormValuesFromDTO(dto.settings));
     },
 
-    /**
-     * Diff minimal : ne renvoie que les champs réellement modifiés.
-     */
+    // Only send fields that changed after normalization.
     buildPatch: (baseline, next) =>
       buildShallowDiff(
         normalizeHeaderFormValues(baseline),
         normalizeHeaderFormValues(next),
       ) ?? null,
 
-    /**
-     * Baseline stable et cohérente à l’entrée/sortie réseau.
-     */
     onLoaded: normalizeHeaderFormValues,
 
-    /**
-     * Normalisation safe avant diff/save.
-     */
     beforeSave: normalizeHeaderFormValues,
 
-    /**
-     * Après save : invalide le read-model status et le bundle settings.
-     */
+    // Keep client-side status and bundle reads aligned after the server-side save.
     onSaved: () => {
       void invalidateSiteStatus(queryClient, websiteId);
 

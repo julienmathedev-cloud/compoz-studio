@@ -1,19 +1,9 @@
 /**
  * @file packages/ui/src/pages/mappers/block-shape.ts
  * @layer ui/pages/mappers
- *
- * @description
- * Mappers "shared runtime" pour les blocks :
- * - DTO domaine -> Shape (consommée par preview + renderer public)
- * - FormValues (admin) -> Shape (pour pousser le draft au preview)
- *
- * Responsabilités :
- * - coercition/trim UI simple
- * - aucune logique métier
- * - aucune gestion du state (draft/published)
- *
+ * @description Maps block DTOs and admin form values to runtime block shapes.
  * @remarks
- * Ce fichier vit dans @compoz/ui car il est consommé par apps/site ET apps/studio.
+ * Shared by site rendering and Studio preview; normalization stays UI-only and contains no business state handling.
  */
 
 import type { BlockDTO } from "@compoz/core/domain/pages/dto";
@@ -25,16 +15,8 @@ import type {
 } from "@compoz/validation/pages/blocks/block";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 
-/* -------------------------------------------------------------------------- */
-/* Types locaux                                                               */
-/* -------------------------------------------------------------------------- */
-
 type SectionRowFormValues = SectionBlockFormValues["rows"][number];
 type SectionColumnFormValues = SectionRowFormValues["columns"][number];
-
-/* -------------------------------------------------------------------------- */
-/* Normalisations shared                                                      */
-/* -------------------------------------------------------------------------- */
 
 type ContainerMode = "contained" | "fullBleed";
 
@@ -105,9 +87,6 @@ function normalizeRows(
   return rows.map(normalizeRow);
 }
 
-/**
- * Normalise des FormValues UI d'un SectionBlock.
- */
 export function normalizeSectionBlockFormValuesShallow(
   values: SectionBlockFormValues,
 ): SectionBlockFormValues {
@@ -121,14 +100,6 @@ export function normalizeSectionBlockFormValuesShallow(
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* FormValues -> Shape (preview/runtime)                                      */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Convertit des valeurs de formulaire (RHF) en `SectionBlockShape`
- * consommé par la preview admin et le renderer public.
- */
 export function toSectionBlockShapeFromFormValues(args: {
   blockId: string;
   values: SectionBlockFormValues;
@@ -147,10 +118,6 @@ export function toSectionBlockShapeFromFormValues(args: {
     rows: normalized.rows as SectionBlockShape["rows"],
   };
 }
-
-/* -------------------------------------------------------------------------- */
-/* DTO -> Shape (public/runtime)                                              */
-/* -------------------------------------------------------------------------- */
 
 export function toSectionBlockShapeFromDTO(
   block: BlockDTO,

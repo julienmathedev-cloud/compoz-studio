@@ -5,12 +5,11 @@
  * @layer studio/lib/react-query
  *
  * @description
- * Provider React Query pour le Studio (admin).
- * - Fournit `QueryClientProvider`
- * - Active les Devtools uniquement en développement
+ * React Query provider for the Studio app.
  *
  * @remarks
- * - Les Devtools sont chargés dynamiquement en dev pour éviter d'alourdir le bundle prod.
+ * - Provides the shared Studio `QueryClientProvider` instance.
+ * - Loads React Query Devtools dynamically in development to keep the production bundle lean.
  */
 
 import { queryClient } from "@compoz/studio/lib/react-query/queryClient";

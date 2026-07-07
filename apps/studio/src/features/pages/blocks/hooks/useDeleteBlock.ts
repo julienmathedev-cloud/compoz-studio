@@ -2,17 +2,17 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/hooks/useDeleteBlock.ts
- * @layer hooks/studio/pages/blocks
+ * @layer studio/features/pages/blocks/hooks
  *
  * @description
- * Hook Studio React Query pour supprimer un block draft via l’API.
+ * React Query mutation hook for deleting a draft block through the pages Studio API.
  *
  * @remarks
- * - Orchestration UI-only : mutation, logs, notifications.
- * - Gère l’état de suppression ciblé via `deletingBlockId`.
- * - Option B : ne bloque que si c’est le même `blockId`.
- * - Aucune logique métier ni validation domaine.
- * - Le cache et les queryKeys sont scopés par Prisma Website.id.
+ * - Uses save instrumentation with draft content state for logs and notifications.
+ * - Tracks the targeted deletion through `deletingBlockId` so only the matching block is blocked.
+ * - Synchronizes page and block-list caches from the returned page payload.
+ * - Invalidates site and block status views after deletion.
+ * - Studio cache keys are scoped by Prisma Website.id.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";

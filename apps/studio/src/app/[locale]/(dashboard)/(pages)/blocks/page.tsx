@@ -3,7 +3,7 @@
  * @layer studio/app
  *
  * @description
- * Page « Blocs » (Studio) — route segment qui rend la section Blocs.
+ * Studio "Blocks" route segment that renders the Blocks section.
  */
 
 import { BlocksPage } from "@compoz/studio/features/pages/blocks/BlocksPage";

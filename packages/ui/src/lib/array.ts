@@ -1,20 +1,9 @@
 /**
  * @file packages/ui/src/lib/array.ts
  * @layer ui/lib/array
- *
- * @description
- * Helpers immuables pour manipuler des tableaux (UI-friendly).
- * - Aucun effet de bord.
- * - Retourne toujours une nouvelle instance.
- *
+ * @description Immutable array helpers for UI state updates.
  * @remarks
- * Comportement strict (Option B) :
- * - `setAt` : si l'index est hors bornes => copie inchangée
- * - `removeAt` : si l'index est hors bornes => copie inchangée
- * - `insertAt` : si l'index est hors bornes => copie inchangée
- * - `moveItem` :
- *    - si `from` est hors bornes => copie inchangée
- *    - `to` est clampé dans [0..length-1] après retrait pour un comportement prévisible
+ * Out-of-bounds operations return a shallow copy unchanged; `moveItem` clamps the target insertion index after removal.
  */
 
 function isValidIndex(length: number, index: number): boolean {
@@ -46,8 +35,7 @@ export function insertAt<T>(
   index: number,
   value: T,
 ): T[] {
-  // Option B : strict => on n'autorise que [0..length]
-  // (insertion en fin possible avec index === length)
+  // `index === length` is allowed to append; other out-of-bounds indexes are ignored.
   if (index < 0 || index > arr.length) return Array.from(arr);
 
   const next = Array.from(arr);
@@ -69,8 +57,7 @@ export function moveItem<T>(
 
   next.splice(from, 1);
 
-  // Après suppression, la longueur a diminué d'1.
-  // On clamp `to` sur la nouvelle plage d'indices d'insertion [0..next.length].
+  // Clamp after removal because insertion indexes now range from 0 to `next.length`.
   const safeTo = clampIndex(to, 0, next.length);
 
   next.splice(safeTo, 0, item);

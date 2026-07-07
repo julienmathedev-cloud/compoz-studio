@@ -1,13 +1,9 @@
 /**
  * @file packages/core/src/domain/site/use-cases/status/get-site-status-details.types.ts
- * @layer core/domain
- * @description
- * Types du use-case `getSiteStatusDetails` : entrée, sortie, dépendances.
- * Définit le contrat **sans logique** (implémentation dans `get-site-status-details.ts`).
- *
+ * @layer core/domain/site/use-cases/status
+ * @description Types for the site status details read use-case.
  * @remarks
- * - Ce use-case retourne un **read-model** (snapshot KV).
- * - Type canonique côté core = `SiteStatusDetails` (entities).
+ * This file is a type-only contract and must contain no runtime logic.
  */
 
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";

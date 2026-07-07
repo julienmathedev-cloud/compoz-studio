@@ -1,10 +1,16 @@
 /**
  * @file packages/validation/src/site/settings/menus/primary-menu/primary-menu.ts
  * @layer schemas
+ *
  * @description
- * Définit le schéma Zod décrivant la forme frontière des réglages du menu principal.
- * Ce schéma valide uniquement la structure canonique des settings (côté domaine/DTO).
- * Les règles UX draft-friendly appartiennent au schéma de formulaire.
+ * Zod schemas describing the primary menu settings boundary shape.
+ *
+ * @remarks
+ * This schema validates canonical settings payloads. Draft-friendly UI rules
+ * belong to the form schema.
+ *
+ * Parent items with children may omit `href`, but cannot use `newTab`.
+ * Leaf items must provide a valid `href`.
  */
 
 import { MENU_ITEM, MENU_LABEL } from "@compoz/core/constants/limits/menu";
@@ -12,37 +18,24 @@ import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { AssetUrlSchema } from "@compoz/validation/common/url-fragments";
 import { z } from "zod";
 
-/* -------------------------------------------------------------------------- */
-/*                                  Child                                     */
-/* -------------------------------------------------------------------------- */
-
 export const PrimaryMenuChildSchema = z
   .object({
-    /** Identifiant stable du child. */
     id: z.string().trim().min(1, ERROR_CODES.PRIMARY_MENU_ID_REQUIRED),
 
-    /** Libellé canonique : requis (min/max). */
     label: z
       .string()
       .trim()
       .min(MENU_LABEL.MIN, ERROR_CODES.PRIMARY_MENU_LABEL_REQUIRED)
       .max(MENU_LABEL.MAX, ERROR_CODES.PRIMARY_MENU_LABEL_TOO_LONG),
 
-    /** Href canonique : asset URL (abs/rel) requise. */
     href: AssetUrlSchema,
 
-    /** Ouverture dans un nouvel onglet. */
     newTab: z.boolean(),
   })
   .strict();
 
-/* -------------------------------------------------------------------------- */
-/*                                  Parent/Leaf                               */
-/* -------------------------------------------------------------------------- */
-
 export const PrimaryMenuItemSchema = z
   .object({
-    /** Identifiant stable du parent/leaf. */
     id: z.string().trim().min(1, ERROR_CODES.PRIMARY_MENU_ID_REQUIRED),
 
     label: z
@@ -59,7 +52,6 @@ export const PrimaryMenuItemSchema = z
   .superRefine((val, ctx) => {
     const hasChildren = Array.isArray(val.children) && val.children.length > 0;
 
-    // Parent : newTab interdit (cohérence nav)
     if (hasChildren && val.newTab !== false) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -68,7 +60,6 @@ export const PrimaryMenuItemSchema = z
       });
     }
 
-    // Leaf : href requis
     if (!hasChildren && typeof val.href !== "string") {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -78,10 +69,6 @@ export const PrimaryMenuItemSchema = z
     }
   });
 
-/* -------------------------------------------------------------------------- */
-/*                                  Settings                                  */
-/* -------------------------------------------------------------------------- */
-
 export const PrimaryMenuSettingsSchema = z
   .object({
     items: z.array(PrimaryMenuItemSchema).max(MENU_ITEM.MAX, {
@@ -89,10 +76,6 @@ export const PrimaryMenuSettingsSchema = z
     }),
   })
   .strict();
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
 
 export type PrimaryMenuChildShape = z.infer<typeof PrimaryMenuChildSchema>;
 export type PrimaryMenuItemShape = z.infer<typeof PrimaryMenuItemSchema>;

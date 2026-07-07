@@ -1,14 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/portfolio/global.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/portfolio
  *
  * @description
- * Skin UI — site (thème Portfolio).
- *
- * @remarks
- * - Compose header/footer/systemPage.
- * - Fournit les valeurs minimales pour le renderer (container + H1 layout).
- * - Fournit uniquement des classes Tailwind (aucune logique).
+ * Composes the portfolio public site skin overrides from layout and cell UI class maps.
  */
 
 import type { SiteGlobalUiOverride } from "@compoz/ui/site/site-ui.types";

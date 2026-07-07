@@ -1,21 +1,15 @@
 /**
  * @file packages/ui/src/styles/studio/layout.ts
- * @layer styles/studio
- * @description
- * Constantes utilitaires pour la mise en page du Studio : containers, panels,
- * stacks (rythmes verticaux), rows, grilles et utilitaires communs.
+ * @layer ui/styles/studio
  *
- * Objectif :
- * - imposer un rythme visuel cohérent
- * - éviter les espacements “au feeling”
- * - servir de socle à toutes les pages Studio (V0.5)
+ * @description
+ * Defines shared Studio layout class tokens for containers, panels, stacks, rows, grids, and common empty states.
  */
 
 /* ---------------------------------------------------------------------------
- * CONTAINERS & PAGE LAYOUT
+ * PANELS / CARDS (SURFACES)
  * ------------------------------------------------------------------------- */
 
-/** Container principal des pages Studio */
 export const STUDIO_CONTAINER = [
   "mx-auto",
   "w-full",
@@ -25,7 +19,6 @@ export const STUDIO_CONTAINER = [
   "lg:px-6",
 ] as const;
 
-/** Wrapper de page Studio (rythme vertical global) */
 export const STUDIO_PAGE = [
   "flex",
   "flex-col",
@@ -34,12 +27,7 @@ export const STUDIO_PAGE = [
   "lg:py-10",
 ] as const;
 
-/** Section logique dans une page (groupement de panels) */
 export const STUDIO_SECTION = ["flex", "flex-col", "space-y-6"] as const;
-
-/* ---------------------------------------------------------------------------
- * PANELS / CARDS (SURFACES)
- * ------------------------------------------------------------------------- */
 
 export const STUDIO_SHADOW_PANEL = ["shadow-sm"] as const;
 
@@ -54,22 +42,10 @@ export const STUDIO_BORDER_PANEL = [
  * STACKS (RYTHMES VERTICAUX)
  * ------------------------------------------------------------------------- */
 
-/*
- * Rythme large :
- * - section (contenu principal)
- */
 export const STACK_LG = ["space-y-6"] as const;
 
-/**
- * Rythme interne de section (contenu principal)
- */
 export const STACK_MD = ["space-y-4"] as const;
 
-/**
- * Rythme serré :
- * - header de section (title/description)
- * - groupes de champs liés (form)
- */
 export const STACK_SM = ["space-y-2"] as const;
 
 /* ---------------------------------------------------------------------------
@@ -98,13 +74,10 @@ export const ROW_CENTER = [
  * GRILLES & GROUPES DE CHAMPS
  * ------------------------------------------------------------------------- */
 
-/** Grille standard de champs (2 colonnes) */
 export const GRID_SM_2 = ["grid", "gap-4", "sm:grid-cols-2"] as const;
 
-/** Grille standard de champs (3 colonnes) */
 export const GRID_SM_3 = ["grid", "gap-4", "sm:grid-cols-3"] as const;
 
-/** État vide de liste */
 export const EMPTY_CARD = [
   "rounded-xl",
   "border",

@@ -3,13 +3,10 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer site/preview : rendu d’un formulaire de contact structuré.
+ * Renders a validated contact form cell.
  *
  * @remarks
- * - UI-only : consomme une shape déjà validée (schema).
- * - Ignore la cellule si les contenus essentiels sont absents.
- * - Filtre les champs invalides ou incomplets.
- * - Utilise `SiteContactForm` pour le rendu visuel.
+ * Returns nothing when required form content is missing; valid fields are normalized before rendering through `SiteContactForm`.
  */
 
 import { normalizeString } from "@compoz/ui/lib/normalize";
@@ -67,10 +64,6 @@ export function FormCellRenderer({ cell, ui }: FormCellRendererProps) {
 }
 
 FormCellRenderer.displayName = "FormCellRenderer";
-
-/* -------------------------------------------------------------------------- */
-/* Internals                                                                  */
-/* -------------------------------------------------------------------------- */
 
 function normalizeFields(
   fields: readonly FormFieldShape[] | null,

@@ -1,16 +1,15 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/settings/legal-menu/components/molecules/LegalMenuItemRow.tsx
- * @layer ui/studio/molecules
+ * @file apps/studio/src/features/settings/menus/legal-menu/components/molecules/LegalMenuItemRow.tsx
+ * @layer studio/features/settings/menus/legal-menu/components/molecules
+ *
  * @description
- * Composant représentant une ligne d’item dans le formulaire du menu légal.
- * Il gère les champs `label`, `href` et `newTab` en utilisant react-hook-form.
+ * RHF-connected sortable row for editing one legal menu item.
  *
  * @remarks
- * - Utilise `useController` pour connecter les champs au formulaire RHF.
- * - Gère la validation et l’affichage des erreurs pour chaque champ.
- * - Permet la validation immédiate du champ `href` lors de changements programmatiques.
+ * - Keeps `useController` inside the row so each sortable item owns its field subscriptions.
+ * - Auto-fills an internal href from the label only while the href field is still an untouched draft.
  */
 
 import { useSortable } from "@dnd-kit/sortable";
@@ -26,13 +25,9 @@ import { resolveLinkFlags, slugifyPath } from "@compoz/ui/lib/links/helpers";
 import { cn } from "@compoz/ui/lib/utils";
 import type { LegalMenuFormValues } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-form";
 
-// Types UI locaux (erreurs / invalid par champ).
 type RowErrorMessages = Partial<Record<"label" | "href", string | undefined>>;
 type RowInvalidFlags = Partial<Record<"label" | "href", boolean>>;
 
-/**
- * Props de la row RHF (un item du menu).
- */
 type LegalMenuItemRowProps = Readonly<{
   sortableId: string;
   index: number;
@@ -45,13 +40,6 @@ type LegalMenuItemRowProps = Readonly<{
   onRemove: () => void;
 }>;
 
-/**
- * Row RHF (un item) — obligatoire pour appeler `useController`.
- *
- * @remarks
- * - Construit `invalid` / `error` depuis `fieldState`.
- * - Déclenche une validation immédiate du `href` lors des changements programmatiques.
- */
 export function LegalMenuItemRow({
   sortableId,
   index,
@@ -90,7 +78,6 @@ export function LegalMenuItemRow({
     control,
   });
 
-  // Identity-style invalid + messages (via fieldState).
   const invalid: RowInvalidFlags = {
     label:
       (showError || labelCtrl.fieldState.isTouched) &&
@@ -113,10 +100,7 @@ export function LegalMenuItemRow({
         : undefined,
   };
 
-  /**
-   * Pour `href` : permet de forcer la validation immédiatement
-   * après un changement programmatique (select interne).
-   */
+  /** Forces href validation after programmatic link-field updates. */
   const validateHrefNow = (markTouched?: boolean) => {
     if (disabled) return;
 
@@ -174,7 +158,7 @@ export function LegalMenuItemRow({
 }
 
 /**
- * Gère le blur du label pour l’auto-fill interne.
+ * Auto-fills draft internal links from the label without overwriting user-edited hrefs.
  */
 function handleLabelBlur(
   index: number,
@@ -191,12 +175,10 @@ function handleLabelBlur(
   hrefTouched: boolean,
   trigger: UseFormTrigger<LegalMenuFormValues>,
 ) {
-  // 1) RHF normal : touched + validation "onBlur" du label
   labelField.onBlur();
 
   if (hrefTouched) return;
 
-  // 2) Conditions d’auto-fill (interne uniquement)
   const hrefNow = String(hrefField.value ?? "");
   const flags = resolveLinkFlags(hrefNow);
 
@@ -207,7 +189,7 @@ function handleLabelBlur(
 
   const currentHref = hrefNow.trim();
 
-  // item ajouté avec "/" par défaut
+  // New rows start with `/`; keep it editable until the label can produce a better internal slug.
   const isEmptyInternalDraft = currentHref === "" || currentHref === "/";
   if (!isEmptyInternalDraft) return;
 
@@ -219,6 +201,5 @@ function handleLabelBlur(
 
   hrefField.onChange(nextHref);
 
-  // 3) recommandé : déclenche la validation du href tout de suite
   void trigger(`items.${index}.href` as const);
 }

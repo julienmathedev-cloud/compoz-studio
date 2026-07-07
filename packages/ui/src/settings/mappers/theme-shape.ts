@@ -3,12 +3,10 @@
  * @layer ui/settings/mappers
  *
  * @description
- * Mapper "shared runtime" Theme :
- * - DTO domaine -> shape frontière stable (utilisée par site + studio preview)
+ * Maps theme settings DTOs to stable runtime theme settings shapes shared by site rendering and Studio preview.
  *
  * @remarks
- * - Ici : uniquement ce qui est utile au runtime (renderer/public/preview).
- * - Pas d’intents API ni de normalisation orientée formulaire.
+ * API intents and form-oriented normalization stay outside this boundary mapper; this mapper only applies stable runtime defaults.
  */
 
 import { getThemeFontById } from "@compoz/core/constants/theme/theme-fonts";

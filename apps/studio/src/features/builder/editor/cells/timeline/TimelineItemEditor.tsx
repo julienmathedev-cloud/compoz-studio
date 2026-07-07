@@ -2,21 +2,17 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/timeline/TimelineItemEditor.tsx
- * @layer ui/studio/pages/blocks/editor/timeline
+ * @layer studio/features/builder/editor/cells/timeline
  *
  * @description
- * Éditeur RHF-aware d’un item individuel pour TimelineCell.
+ * RHF-aware editor for one TimelineCell item.
  *
  * @remarks
- * - Connecté directement à RHF via `useController`.
- * - Reprend le pattern card utilisé par les éditeurs de listes.
- * - Le reorder est géré par drag and drop via dnd-kit.
- * - L’affichage des erreurs repose sur une règle unique :
- *   `showError || fieldState.isTouched`.
- * - La lecture/édition des valeurs passe par RHF (`useController`).
- * - `sortableId` sert uniquement au drag and drop.
- * - `watchedItem` sert de fallback visuel pour stabiliser le rendu
- *   pendant le rebinding RHF après reorder.
+ * - Binds timeline item fields directly through RHF `useController`.
+ * - Uses `sortableId` only for dnd-kit sorting.
+ * - Shows period and title errors only after `showError` or the field has been touched.
+ * - Uses `watchedItem` as a visual fallback to keep rendering stable during RHF rebinding after reordering.
+ * - Normalizes keywords on blur by trimming empty lines.
  */
 
 import { useSortable } from "@dnd-kit/sortable";

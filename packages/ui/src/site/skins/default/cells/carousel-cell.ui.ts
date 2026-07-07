@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/cells/carousel-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default/cells
  *
  * @description
- * Skin UI — carousel block (Default).
+ * Defines the default skin classes for carousel and slider cells.
  */
 
 import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";

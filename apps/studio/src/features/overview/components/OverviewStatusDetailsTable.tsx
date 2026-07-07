@@ -2,15 +2,16 @@
 
 /**
  * @file apps/studio/src/features/overview/components/OverviewStatusDetailsTable.tsx
- * @layer ui/studio/overview
+ * @layer studio/features/overview/components
  *
  * @description
- * Table lazy des détails pages / blocs.
+ * Lazy Overview details table for page and block publication status.
  *
  * @remarks
- * - UI-only.
- * - Lit les détails de status via `useSiteStatusDetails()`.
- * - Charge les blocs d’une page à l’ouverture de sa ligne.
+ * - Reads page-level status details through `useSiteStatusDetails()`.
+ * - Fetches blocks lazily through `useListPageBlocks()` only when a page row is opened.
+ * - Sorts pages by localized name with a stable id fallback.
+ * - Keeps row expansion accessible through click, Enter, and Space interactions.
  */
 
 import { useLocale, useTranslations } from "next-intl";
@@ -222,15 +223,7 @@ function PageRow({ page, isOpen, canToggle, onToggle }: PageRowProps) {
   );
 }
 
-/**
- * Sous-lignes de table pour les blocs.
- *
- * @remarks
- * - Col 1 : status du bloc.
- * - Col 2 : titre / description courte.
- * - Col 3 : badges descriptifs.
- * - Col 4 : vide (alignement).
- */
+/** Renders lazily loaded block detail rows for an opened page row. */
 function BlocksDetailsRows({
   page,
 }: Readonly<{ page: SiteStatusPageDetailsDTO }>) {

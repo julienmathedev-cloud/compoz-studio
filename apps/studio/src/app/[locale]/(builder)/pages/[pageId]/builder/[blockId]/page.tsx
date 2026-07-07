@@ -3,14 +3,14 @@
  * @layer studio/app
  *
  * @description
- * Page builder d’un bloc d’une page dans le Builder Studio.
+ * Builder page for editing one block of one page in the Studio Builder.
  *
  * @remarks
- * - Résout la session Studio et le Website actif côté server.
- * - Charge la page depuis le scope du Prisma Website.id actif.
- * - Retrouve le block ciblé puis rend l’écran builder.
- * - Retourne une 404 si `pageId` / `blockId` sont manquants,
- *   si la page est introuvable ou si le block est introuvable / incompatible.
+ * - Resolves the Studio session and active Website server-side.
+ * - Loads the page within the active Prisma Website.id scope.
+ * - Finds the targeted block before rendering the builder screen.
+ * - Returns 404 when `pageId` / `blockId` are missing, the page is not found,
+ *   or the block is missing or incompatible.
  */
 
 import { notFound } from "next/navigation";

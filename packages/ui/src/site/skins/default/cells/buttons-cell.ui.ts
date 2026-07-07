@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/cells/buttons-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default/cells
  *
  * @description
- * Skin UI — buttons cell (thème Default).
+ * Defines the default skin classes for buttons cells.
  */
 
 import type { SiteButtonsUi } from "@compoz/ui/site/site-ui.types";

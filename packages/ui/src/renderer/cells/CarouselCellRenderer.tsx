@@ -3,13 +3,10 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Site/preview renderer for a homogeneous carousel or slider based on
- * `variant` and `itemKind`.
+ * Renders a validated homogeneous carousel or slider cell.
  *
  * @remarks
- * - UI-only: consumes an already validated cell shape.
- * - Normalizes image/card-like items into `NormalizedCarouselItem`.
- * - Delegates the visual rendering to `SiteCarousel` or `SiteSlider`.
+ * Normalizes image and card-like items before delegating visual rendering to `SiteCarousel` or `SiteSlider`.
  */
 
 import type {
@@ -71,10 +68,6 @@ export function CarouselCellRenderer({
 }
 
 CarouselCellRenderer.displayName = "CarouselCellRenderer";
-
-/* -------------------------------------------------------------------------- */
-/* Internals                                                                  */
-/* -------------------------------------------------------------------------- */
 
 function normalizeCarouselItems(
   cell: CarouselCellShape,

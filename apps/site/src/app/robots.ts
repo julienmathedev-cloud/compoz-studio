@@ -3,14 +3,13 @@
  * @layer site/app/metadata
  *
  * @description
- * Route metadata `robots` du site public — directives d’indexation + lien sitemap.
+ * Host-based robots metadata route for public sites.
  *
  * @remarks
- * Multi-website :
- * - Host-based : résolution via WebsiteDomain en Prisma.
- * - Si le host ne correspond à aucun domaine connu, on retourne
- *   des directives robots safe sans sitemap.
- * - Les routes fallback explicites `/t/:websiteSlug` ont leur propre robots dédié.
+ * - Resolves the active Website from the request host through Prisma WebsiteDomain.
+ * - Returns safe blocking robots directives without a sitemap when no Website matches the host.
+ * - Uses published SEO settings to derive indexation directives, host, and sitemap URL.
+ * - Explicit `/t/:websiteSlug` fallback routes have their own dedicated robots route.
  */
 
 import "server-only";
@@ -26,10 +25,7 @@ import {
   stripTrailingSlashes,
 } from "@compoz/ui/lib/urls/formats";
 
-/* -------------------------------------------------------------------------- */
-/* Internals                                                                  */
-/* -------------------------------------------------------------------------- */
-
+/** Parses the published robots directive string into normalized tokens. */
 function parseRobotsTokens(input: string | null | undefined): Set<string> {
   const raw = typeof input === "string" ? input : "";
 
@@ -42,6 +38,7 @@ function parseRobotsTokens(input: string | null | undefined): Set<string> {
   return new Set(tokens);
 }
 
+/** Extracts the robots `host` value from a configured canonical base URL. */
 function hostFromBaseUrl(baseUrl: string): string | undefined {
   const normalizedBaseUrl = stripTrailingSlashes(baseUrl);
 
@@ -56,6 +53,7 @@ function hostFromBaseUrl(baseUrl: string): string | undefined {
   }
 }
 
+/** Reconstructs the public request base URL when no SEO or environment base URL is configured. */
 function resolveRequestBaseUrl(
   headersList: Awaited<ReturnType<typeof headers>>,
 ): string {
@@ -76,10 +74,6 @@ function resolveRequestBaseUrl(
 
   return stripTrailingSlashes(`${protoRaw}://${host}`);
 }
-
-/* -------------------------------------------------------------------------- */
-/* Route                                                                      */
-/* -------------------------------------------------------------------------- */
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const headersList = await headers();

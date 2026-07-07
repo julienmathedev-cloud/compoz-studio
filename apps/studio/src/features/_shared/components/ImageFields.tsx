@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/features/_shared/components/ImageFields.tsx
- * @layer studio/features/_shared/ui
+ * @layer studio/features/_shared/components
  *
  * @description
- * Champs image génériques (src + alt + caption + link optionnel) avec preview et upload optionnel.
+ * Shared image field group for source, alt text, optional caption, optional link, preview, and upload.
  */
 
 import { useTranslations } from "next-intl";
@@ -27,9 +27,7 @@ type UploadedRasterImage = Readonly<{
   mediaAssetId?: string;
 }>;
 
-/**
- * Champ minimal compatible avec RHF et avec un modèle contrôlé.
- */
+/** Minimal field contract compatible with RHF and controlled field models. */
 type FieldLike<T> = Readonly<{
   value: T;
   onChange: (next: T) => void;

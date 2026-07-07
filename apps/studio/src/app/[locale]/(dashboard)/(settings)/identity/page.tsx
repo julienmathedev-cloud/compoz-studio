@@ -3,7 +3,7 @@
  * @layer studio/app
  *
  * @description
- * Page « Identity » (Studio) — route du dashboard.
+ * Studio Dashboard route that delegates identity settings to `IdentityPage`.
  */
 
 import { IdentityPage } from "@compoz/studio/features/settings/identity/IdentityPage";

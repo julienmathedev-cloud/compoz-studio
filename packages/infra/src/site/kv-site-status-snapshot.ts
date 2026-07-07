@@ -1,20 +1,9 @@
 /**
  * @file packages/infra/src/site/kv-site-status-snapshot.ts
  * @layer infra/site
- *
- * @description
- * Implémentation KV du port SiteStatusCachePort.
- *
+ * @description KV-backed SiteStatusCachePort implementation.
  * @remarks
- * Stratégie versionnée :
- * - status snapshot : 1 clé fixe ;
- * - statusDetails snapshots : clés paramétrées + version, cache busting ;
- * - invalidation statusDetails : 1 op INCR version, donc plus de SCAN/SET/pipeline.
- *
- * Notes V0.5 :
- * - TTL sur les snapshots "details" pour éviter l’accumulation de clés après bump de version.
- * - Ce cache/read-model reste KV-only pour cette phase de migration, même lorsque
- *   les repositories principaux sont en Prisma.
+ * Status details snapshots are versioned: invalidation only increments a version key, while old detail snapshots expire through TTL.
  */
 
 import type { SiteStatus } from "@compoz/core/domain/site/entities/site-status";
@@ -27,42 +16,18 @@ import { getUpstashRedis, parseRedisJson } from "@compoz/infra/kv/kv-redis";
 import { kvCmd } from "@compoz/infra/kv/kv-telemetry";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 
-/* -------------------------------------------------------------------------- */
-/* Options                                                                    */
-/* -------------------------------------------------------------------------- */
-
 type KvSiteStatusSnapshotOptions = Readonly<{
   websiteId: string;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Config                                                                     */
-/* -------------------------------------------------------------------------- */
-
-/**
- * TTL pour les snapshots "details".
- *
- * @remarks
- * Objectif : éviter l’accumulation de clés après invalidations, bump version.
- *
- * 15 minutes est un bon compromis V0.5 :
- * - assez long pour amortir les refresh UI ;
- * - assez court pour que les anciennes versions expirent vite.
- */
+/** Detail snapshot TTL limits stale version accumulation after invalidation. */
 const STATUS_DETAILS_TTL_SECONDS = 15 * 60;
-
-/* -------------------------------------------------------------------------- */
-/* Keys                                                                       */
-/* -------------------------------------------------------------------------- */
 
 function statusSnapshotKey(websiteId: string): string {
   return `compoz:${websiteId}:status:snapshot`;
 }
 
-/**
- * Version token pour les snapshots "details".
- * Invalidation = INCR cette clé, 1 write.
- */
+/** Version token used to invalidate all detail snapshots with a single INCR. */
 function statusDetailsVersionKey(websiteId: string): string {
   return `compoz:${websiteId}:statusDetails:version`;
 }
@@ -85,18 +50,11 @@ function kvCtx(base: string): string {
   return `siteStatusSnapshot.${base}`;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Impl                                                                       */
-/* -------------------------------------------------------------------------- */
-
 export class KvSiteStatusSnapshot implements SiteStatusCachePort {
   private readonly redis = getUpstashRedis();
   private readonly websiteId: string;
 
-  /**
-   * Micro-cache process-local pour éviter de GET la version plusieurs fois
-   * dans une même requête serveur.
-   */
+  /** Request-local memo to avoid repeated version reads in one server flow. */
   private detailsVersionMemo: number | null = null;
 
   constructor(opts: KvSiteStatusSnapshotOptions) {
@@ -185,13 +143,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
     );
   }
 
-  /**
-   * Invalidation "details" : 1 op, INCR version.
-   *
-   * @remarks
-   * - Les anciennes clés deviennent obsolètes automatiquement.
-   * - TTL sur les snapshots pour éviter l’accumulation après bump version.
-   */
+  /** Invalidates all detail snapshots by bumping the shared version key. */
   async invalidateStatusDetails(): Promise<void> {
     const key = statusDetailsVersionKey(this.websiteId);
 
@@ -207,10 +159,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
     );
   }
 
-  /**
-   * Invalidation ciblée : dans la stratégie versionnée, on n’a plus besoin de
-   * supprimer une clé précise. On bump la version.
-   */
+  /** Targeted invalidation intentionally falls back to the version bump strategy. */
   async invalidateStatusDetailsSnapshot(
     _query: SiteStatusDetailsQuery,
   ): Promise<void> {

@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/site/use-cases/publish/helpers.ts
- * @layer core/domain
- * @description
- * Helpers pour l’utilisation de `publishSite`.
+ * @layer core/domain/site/use-cases/publish
+ * @description Shared helpers for the publish site use-case.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
@@ -16,19 +15,15 @@ import type { PublishSiteDeps } from "@compoz/core/domain/site/use-cases/publish
 import type { PublishWarning } from "@compoz/core/domain/site/validators/publish";
 
 /**
- * Supprime les pages orphelines dans l’espace cible `to`, **en se basant uniquement
- * sur l’index SoT** (pas de scan / list).
- *
+ * Deletes target pages that are no longer present in the source index.
  * @remarks
- * - `fromRefs` = refs effectivement copiées (SoT publish).
- * - `existingRefs` = refs existantes côté `to` **issues de l’index** (SoT target)
+ * Deletion is based only on indexed target refs; no storage scan is performed.
  */
 export async function deleteOrphanPages(args: {
   pages: PublishSiteDeps["pages"];
   fromRefs: ReadonlyArray<PageSummary>;
   to: ContentState;
-
-  /** ✅ Obligatoire : refs existantes côté `to`, issues de `site.readIndex(to)` */
+  /** Existing target refs read from `site.readIndex(to)`. */
   existingRefs: ReadonlyArray<PageSummary>;
 }) {
   const { pages, fromRefs, to, existingRefs } = args;
@@ -40,7 +35,7 @@ export async function deleteOrphanPages(args: {
 
   let deleted = 0;
 
-  // On ne supprime que ce qui est "connu" dans l’index cible (SoT).
+  // Only delete pages known by the target source-of-truth index.
   for (const id of existingIds) {
     if (!expectedIds.has(id)) {
       const ref = existingRefs.find((r) => r.id === id);
@@ -84,11 +79,9 @@ export async function copySettingsBestEffort(
 }
 
 /**
- * Copie les pages (batch read), en collectant les warnings pour pages manquantes.
- *
+ * Copies indexed pages from one content state to another.
  * @remarks
- * - Optimisation KV : 1 MGET (readManyById) au lieu de N GET (readById)
- * - Optimisation KV : 1 MSET (putMany) au lieu de N SET (put)
+ * Uses batch reads and writes to avoid one storage call per page.
  */
 export async function copyPages(
   pages: PublishSiteDeps["pages"],

@@ -2,21 +2,16 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/steps/StepItemEditor.tsx
- * @layer ui/studio/pages/blocks/editor/steps
+ * @layer studio/features/builder/editor/cells/steps
  *
  * @description
- * Éditeur RHF-aware d’une étape individuelle pour StepsCell.
+ * RHF-aware editor for one StepsCell item.
  *
  * @remarks
- * - Connecté directement à RHF via `useController`.
- * - Reprend le pattern card utilisé par les éditeurs de listes.
- * - Le reorder est géré par drag and drop via dnd-kit.
- * - L’affichage des erreurs repose sur une règle unique :
- *   `showError || fieldState.isTouched`.
- * - La lecture/édition des valeurs passe par RHF (`useController`).
- * - `sortableId` sert uniquement au drag and drop.
- * - `watchedItem` sert de fallback visuel pour stabiliser le rendu
- *   pendant le rebinding RHF après reorder.
+ * - Binds step fields directly through RHF `useController`.
+ * - Uses `sortableId` only for dnd-kit sorting.
+ * - Shows title and description errors only after `showError` or the field has been touched.
+ * - Uses `watchedItem` as a visual fallback to keep rendering stable during RHF rebinding after reordering.
  */
 
 import { useSortable } from "@dnd-kit/sortable";

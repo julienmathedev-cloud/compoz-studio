@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/blocks/delete-block.ts
  * @layer core/domain/pages/use-cases/blocks
- * @description
- * Use-case : suppression d’un block sur une page (écriture dans l’état par défaut).
+ * @description Use case that deletes a block from a draft page.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";

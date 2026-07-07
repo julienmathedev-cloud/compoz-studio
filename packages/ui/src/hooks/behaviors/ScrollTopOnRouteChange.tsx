@@ -3,17 +3,9 @@
 /**
  * @file packages/ui/src/hooks/behaviors/ScrollTopOnRouteChange.tsx
  * @layer ui/hooks/behaviors
- * @description
- * Force le scroll en haut à chaque changement de route (Next App Router).
- *
+ * @description Forces immediate top scroll on Next App Router navigation.
  * @remarks
- * - UI-only (DOM).
- * - Désactive la restauration automatique du scroll du navigateur via `history.scrollRestoration`.
- * - Prévu pour être utilisé avec des `Link` internes configurés avec `scroll={false}`.
- * - Le scroll top inter-page doit rester immédiat, même si le site utilise
- *   un `scroll-behavior: smooth` pour les ancres intra-page.
- * - Si un conteneur `[data-scroll-root]` existe, il est utilisé comme racine de scroll.
- * - Sinon, fallback sur `window` / `document.documentElement`.
+ * Disables browser scroll restoration and supports a custom `[data-scroll-root]`; hash targets still use smooth anchor scrolling when available.
  */
 
 import { usePathname, useSearchParams } from "next/navigation";
@@ -23,13 +15,6 @@ import { scrollToElement } from "@compoz/ui/lib/scrollToElement";
 
 type ScrollRoot = Window | HTMLElement;
 
-/**
- * Résout la racine de scroll principale de la page.
- *
- * @returns
- * - le conteneur `[data-scroll-root]` s’il existe ;
- * - sinon `window`.
- */
 function getScrollRoot(): ScrollRoot {
   if (typeof document === "undefined") {
     return window;
@@ -39,21 +24,11 @@ function getScrollRoot(): ScrollRoot {
   return root ?? window;
 }
 
-/**
- * Indique si la racine de scroll est `window`.
- */
 function isWindowScrollRoot(root: ScrollRoot): root is Window {
   return typeof Window !== "undefined" && root instanceof Window;
 }
 
-/**
- * Retourne l’élément DOM portant réellement le `scroll-behavior`
- * pour la racine de scroll courante.
- *
- * @remarks
- * - Pour `window`, le comportement est porté par `document.documentElement`.
- * - Pour un conteneur custom, c’est l’élément lui-même.
- */
+/** Returns the element that actually owns `scroll-behavior` for the active scroll root. */
 function getScrollBehaviorTarget(root: ScrollRoot): HTMLElement | null {
   if (typeof document === "undefined") return null;
 
@@ -64,14 +39,7 @@ function getScrollBehaviorTarget(root: ScrollRoot): HTMLElement | null {
   return root;
 }
 
-/**
- * Scrolle immédiatement la racine résolue en haut de page.
- *
- * @remarks
- * - Désactive temporairement `scroll-behavior: smooth` sur la vraie racine
- *   afin de garantir un scroll inter-page sec.
- * - Les ancres intra-page continuent, elles, à bénéficier du smooth global.
- */
+/** Temporarily disables smooth scrolling to keep inter-page navigation immediate. */
 function scrollRootToTopImmediate(): void {
   if (typeof window === "undefined") return;
 
@@ -103,13 +71,7 @@ function scrollRootToTopImmediate(): void {
     root.scrollTop = 0;
   }
 
-  /**
-   * Restaure le comportement après le scroll courant.
-   *
-   * @remarks
-   * On utilise un RAF pour laisser le navigateur appliquer le repositionnement
-   * avant de réactiver le smooth pour les futures ancres.
-   */
+  /** Restore smooth scrolling after the browser has applied the immediate scroll. */
   window.requestAnimationFrame(() => {
     if (!behaviorTarget) return;
 
@@ -173,16 +135,8 @@ export function ScrollTopOnRouteChange() {
   const pathname = usePathname() || "/";
   const searchParams = useSearchParams();
 
-  /**
-   * Signature de navigation :
-   * inclut le pathname et la querystring pour couvrir aussi
-   * les navigations qui changent seulement les search params.
-   */
   const routeKey = `${pathname}?${searchParams?.toString() ?? ""}`;
 
-  /**
-   * Empêche le navigateur de restaurer automatiquement le scroll.
-   */
   useEffect(() => {
     if (typeof history === "undefined") return;
 
@@ -205,13 +159,6 @@ export function ScrollTopOnRouteChange() {
     };
   }, []);
 
-  /**
-   * Force le scroll top après navigation.
-   *
-   * @remarks
-   * - Utilise un double `requestAnimationFrame` pour laisser le layout se stabiliser.
-   * - Le scroll inter-page reste volontairement immédiat.
-   */
   useEffect(() => {
     if (typeof window === "undefined") return;
 

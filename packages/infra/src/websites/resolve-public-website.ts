@@ -1,7 +1,9 @@
 /**
  * @file packages/infra/src/websites/resolve-public-website.ts
  * @layer infra/websites
- * @description Prisma-backed public website resolution.
+ * @description Prisma-backed public website resolution from hosts and explicit route slugs.
+ * @remarks
+ * Public resolution is strict for SEO: unknown hosts or slugs return `null` instead of falling back to demo.
  */
 
 import { prisma } from "@compoz/infra/prisma/prisma-client";
@@ -35,10 +37,7 @@ export function normalizeWebsiteHost(raw: unknown): string {
     return "";
   }
 
-  /**
-   * Keep bracketed IPv6 hosts intact instead of splitting on ":".
-   * Example: "[::1]:3000" -> "[::1]"
-   */
+  /** Keep bracketed IPv6 hosts intact instead of splitting on `:`. */
   if (host.startsWith("[")) {
     const end = host.indexOf("]");
 
@@ -67,12 +66,6 @@ function toResolution(args: {
   };
 }
 
-/**
- * Resolves a public website from a request host.
- *
- * Unknown hosts return null so the Next route can call notFound().
- * Public host resolution is strict for SEO: no silent fallback to demo.
- */
 export async function resolvePublicWebsiteFromHost(args: {
   hostRaw?: string | null;
 }): Promise<PublicWebsiteResolution | null> {
@@ -109,12 +102,6 @@ export async function resolvePublicWebsiteFromHost(args: {
   });
 }
 
-/**
- * Resolves a public website from an explicit /t/[slug] route.
- *
- * Unknown explicit slugs return null so the Next route can call notFound().
- * This is better for SEO than silently rendering another website.
- */
 export async function resolvePublicWebsiteFromRouteSlug(args: {
   slug?: string | null;
 }): Promise<PublicWebsiteResolution | null> {

@@ -1,19 +1,17 @@
 "use client";
 
 /**
- * @file apps/studio/src/components/molecules/media/ImageSelector.tsx
- * @layer studio/molecules
+ * @file apps/studio/src/components/molecules/fields/ImageSelector.tsx
+ * @layer studio/molecules/fields
  *
  * @description
- * Sélecteur d’image contrôlé (input file + preview locale + upload optionnel).
+ * Controlled image selector with file input, local preview, and optional upload pipeline.
  *
  * @remarks
- * - Molecule UI : compose des atoms et des primitives UI (Field).
- * - La valeur finale est contrôlée via `url` / `onUrlChange`.
- * - `onFileSelect` (optionnel) gère l’upload et retourne une URL publique.
- * - Gère une preview via `URL.createObjectURL` avec cleanup à l’unmount.
- * - Les IDs ARIA (champ / hint / error) sont fournis par le parent (`ids`).
- * - Strictement UI-only : aucune logique métier.
+ * - The final value is controlled through `url` and `onUrlChange`.
+ * - `onFileSelect` can run an async upload pipeline and return the finalized public image.
+ * - Uses `URL.createObjectURL` for local previews and revokes blob URLs on cleanup.
+ * - ARIA ids for field, hint, and error are provided by the parent through `ids`.
  */
 
 import { useTranslations } from "next-intl";
@@ -48,65 +46,30 @@ type UploadedRasterImage = Readonly<{
 
 type ImageSelectorPreviewMode = "fill" | "icon";
 
-/**
- * Props du composant `ImageSelector`.
- */
 type ImageSelectorProps = Readonly<{
-  /** Ensemble des IDs ARIA pour ce champ (fournis par le parent). */
   ids: FieldIds;
   name?: string;
-  /** Libellé du champ. */
   label: string;
-  /** URL actuelle de l’image (contrôlée par le parent). */
   url: string;
-  /** Callback de mise à jour de l’URL (image finale, souvent publique). */
   onUrlChange: (next: string) => void;
-  /** Désactive l’input et les actions. */
   disabled?: boolean;
-  /** Types MIME acceptés par l’input file (défaut: "image/*"). */
   accept?: string;
-  /** Texte alternatif pour la preview. */
   previewAlt: string;
-  /** Texte d’aide optionnel affiché sous le champ. */
   help?: string;
-  /**
-   * Upload optionnel :
-   * reçoit le fichier sélectionné, orchestre éventuellement un pipeline async
-   * (prepare/direct upload/finalize), puis retourne le média finalisé.
-   */
+  /** Optional upload pipeline returning the finalized image metadata. */
   onFileSelect?: (file: File) => Promise<UploadedRasterImage>;
   onUploaded?: (meta: UploadedRasterImage) => void;
-  /** Types MIME recommandés (hint non bloquant si différent). */
   preferredTypes?: ReadonlyArray<string>;
-  /** Message affiché si le type choisi n’est pas recommandé. */
   preferredTypeHint?: string;
-
-  /**
-   * Taille maximale autorisée côté UI (en octets).
-   * @example 5_000_000 pour 5 MB (doit matcher le serveur).
-   */
+  /** UI-side maximum file size in bytes; must match the server limit. */
   maxBytes?: number;
-
-  /** Handler appelé lors d’un reset complet (URL + preview). */
   onClear?: () => void;
-
-  /**
-   * Erreur externe (ex: Zod/RHF : src requis).
-   */
+  /** External validation error, for example from RHF/Zod. */
   invalid?: boolean;
   errorMessage?: string;
-
-  /**
-   * Mode de rendu de la preview.
-   * - "fill" : (défaut) Image en `fill` + object-contain (comportement actuel)
-   * - "icon" : image centrée, taille fixe (utile pour favicons)
-   */
+  /** Preview rendering mode: `fill` for normal images, `icon` for centered fixed-size assets. */
   previewMode?: ImageSelectorPreviewMode;
-
-  /**
-   * Taille (px) utilisée en mode "icon".
-   * @default 128
-   */
+  /** Pixel size used by `icon` preview mode. */
   previewSize?: number;
 }>;
 
@@ -144,7 +107,7 @@ export function ImageSelector({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const blobRef = useRef<string | undefined>(undefined);
 
-  // Nettoyage de l’URL blob locale à l’unmount
+  // Revoke the local blob URL on unmount.
   useEffect(() => {
     return () => {
       if (blobRef.current) {
@@ -153,13 +116,12 @@ export function ImageSelector({
     };
   }, []);
 
-  // Erreur effective : locale > externe (RHF/Zod)
+  // Local errors take priority over external RHF/Zod errors.
   const effectiveError =
     fileError ?? (invalid ? (errorMessage ?? undefined) : undefined);
 
   const isInvalid = Boolean(effectiveError);
 
-  // Construction de l’attribut aria-describedby à partir des IDs fournis
   const describedByIds: string[] = [];
   const hasHintContent = Boolean(typeHint) || Boolean(help);
 
@@ -167,7 +129,7 @@ export function ImageSelector({
     describedByIds.push(hintId);
   }
 
-  // ✅ Important : on référence l’errorId si une erreur (locale OU externe) existe
+  // Reference the error id when either local or external validation fails.
   if (errorId && isInvalid) {
     describedByIds.push(errorId);
   }
@@ -175,18 +137,16 @@ export function ImageSelector({
   const describedBy =
     describedByIds.length > 0 ? describedByIds.join(" ") : undefined;
 
-  // Nom affiché : nom choisi localement ou dernier segment de l’URL distante
+  // Display the picked file name, falling back to the remote URL filename.
   const showName = pickedName || (url ? url.split("/").pop() : "");
 
-  // Busy UI : désactivation globale + upload en cours
   const isBusy = Boolean(uploading);
   const isSavingLocked = Boolean(disabled);
   const isLocked = Boolean(isSavingLocked || uploading);
 
-  // Taille plus compacte (évite les gros pavés vides)
+  // Keep empty previews compact.
   const PREVIEW_MIN_HEIGHT = 180;
 
-  // Désactivation du bouton de suppression : rien à supprimer (URL + preview + nom vides)
   const isDeleteDisabled = isLocked || (!url && !localPreview && !pickedName);
 
   function formatBytes(bytes: number): string {
@@ -209,13 +169,10 @@ export function ImageSelector({
       setUploading(true);
       const uploaded = await onFileSelect(file);
 
-      // ✅ url contrôlée (string)
+      // Public URL becomes the controlled value.
       onUrlChange(uploaded.url);
 
-      // ✅ preview = URL publique (plus stable que blob)
-      //setLocalPreview(uploaded.url);
-
-      // ✅ remonte width/height au parent
+      // Forward finalized image metadata such as width and height.
       onUploaded?.(uploaded);
 
       setFileError(undefined);
@@ -230,13 +187,13 @@ export function ImageSelector({
 
   async function handleFileChange(file: File) {
     try {
-      // 1) Validation basique : enforce MIME image/*
+      // Enforce image MIME types before preview/upload.
       if (!file.type.startsWith("image/")) {
         setFileError(t("uiErrors.notImage"));
         return;
       }
 
-      // 1bis) Validation taille max côté UI (si fournie)
+      // Mirror the server-side max file size when provided.
       if (typeof maxBytes === "number" && Number.isFinite(maxBytes)) {
         if (file.size > maxBytes) {
           setFileError(
@@ -250,7 +207,7 @@ export function ImageSelector({
 
       setFileError(undefined);
 
-      // 2) Hint non bloquant sur les types recommandés
+      // Show a non-blocking hint when the MIME type is not recommended.
       if (Array.isArray(preferredTypes) && preferredTypes.length > 0) {
         if (!preferredTypes.includes(file.type)) {
           setTypeHint(
@@ -264,7 +221,7 @@ export function ImageSelector({
         setTypeHint(undefined);
       }
 
-      // 3) Preview locale via object URL (avec cleanup)
+      // Create a local preview URL and revoke the previous one.
       if (blobRef.current) {
         URL.revokeObjectURL(blobRef.current);
       }
@@ -273,12 +230,12 @@ export function ImageSelector({
       setLocalPreview(objectUrl);
       setPickedName(file.name);
 
-      // 4) Upload (si callback fourni) → met à jour l’URL publique
+      // Optional upload updates the controlled public URL.
       if (onFileSelect) {
         await doUpload(file);
       }
     } finally {
-      // ✅ IMPORTANT : permet de re-sélectionner le même fichier
+      // Allow selecting the same file again.
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -315,7 +272,7 @@ export function ImageSelector({
 
   return (
     <Field
-      // ✅ on se base sur l’erreur effective (locale OU externe)
+      // Use the effective local-or-external error state.
       data-invalid={isInvalid ? true : undefined}
       aria-busy={isBusy || undefined}
     >
@@ -323,7 +280,7 @@ export function ImageSelector({
         {label}
       </FieldLabel>
 
-      {/* Statut a11y uniquement (pas de layout shift) */}
+      {/* Screen-reader-only upload status without layout shift. */}
       {uploading && (
         <LoadingStatus
           label={t("studio.imageSelector.uploadingSr")}
@@ -332,7 +289,7 @@ export function ImageSelector({
         />
       )}
 
-      {/* Input file masqué (piloté via la zone cliquable) */}
+      {/* Hidden file input controlled by the clickable preview area. */}
       <input
         ref={fileInputRef}
         id={fieldId}
@@ -351,7 +308,7 @@ export function ImageSelector({
         className="sr-only"
       />
 
-      {/* Zone interactive : placeholder (empty) → preview (filled) */}
+      {/* Interactive area: empty placeholder or selected preview. */}
       <div className="relative w-full">
         <TooltipButton
           type="button"
@@ -429,7 +386,7 @@ export function ImageSelector({
           />
         ) : null}
 
-        {/* Action secondaire : supprimer, discrète, sans voler la vedette */}
+        {/* Secondary delete action. */}
         <div className="absolute right-2 top-2 flex items-center gap-2">
           <DeleteButton
             disabled={isDeleteDisabled}
@@ -447,7 +404,7 @@ export function ImageSelector({
         </div>
       </div>
 
-      {/* Description / hints (types recommandés) */}
+      {/* Help text or non-blocking recommended-type hint. */}
       {(typeHint || help) && (
         <FieldDescription visualMode="studio" id={hintId}>
           {typeHint ? (
@@ -460,7 +417,7 @@ export function ImageSelector({
         </FieldDescription>
       )}
 
-      {/* ✅ Erreur bloquante : locale OU externe */}
+      {/* Blocking local or external validation error. */}
       {effectiveError && (
         <FieldError id={errorId}>
           <ErrorText error={effectiveError} />

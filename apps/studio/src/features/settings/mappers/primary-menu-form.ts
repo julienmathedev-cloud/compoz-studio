@@ -1,17 +1,13 @@
 /**
  * @file apps/studio/src/features/settings/mappers/primary-menu-form.ts
- * @layer ui-mappers/studio/site
+ * @layer studio/features/settings/mappers
+ *
  * @description
- * Mappers UI PrimaryMenu (studio forms) :
- * - DTO -> valeurs de formulaire RHF
- * - normalisation UI (draft-friendly)
- * - Shape depuis FormValues (preview draft)
- * - INTENTS DTO pour l’API
+ * Studio primary menu settings mappers for form values, preview shape, and API intents.
  *
  * @remarks
- * - DTO -> Shape runtime (shared, renderer) : `toPrimaryMenuSettingsShapeFromDTO` (package ui).
- * - Ici, la normalisation `href` est "draft-friendly" (internal/external) pour le studio.
- * - Les `id` sont des identifiants métier stables, persistés côté domaine / API.
+ * - Hrefs stay draft-friendly so internal and external links can be edited before validation.
+ * - Menu item ids are stable domain identifiers persisted by the API.
  */
 
 import type { PrimaryMenuSettingsDTO } from "@compoz/core/domain/site/dto";
@@ -31,59 +27,29 @@ import { toExternalDraft, toInternalDraft } from "@compoz/ui/lib/normalize";
 
 import { toPrimaryMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/primary-menu-shape";
 
-/* --------------------------------- helpers --------------------------------- */
-
-/**
- * Génère un identifiant stable.
- *
- * @remarks
- * - Utilisé comme fallback défensif pendant la migration si un ancien DTO
- *   ne contient pas encore d’id.
- * - La source de vérité reste ensuite le champ `id` persisté.
- */
+/** Defensive fallback for legacy DTOs missing a persisted menu item id. */
 function createId(): string {
   return crypto.randomUUID();
 }
 
-/**
- * Normalise un href en draft interne/externe.
- * - URL absolue => toExternalDraft
- * - sinon => toInternalDraft
- *
- * ⚠️ Cette fonction suppose une string NON vide. Pour préserver la sémantique
- * UI ("" = draft/empty), utiliser `normalizeHrefDraftKeepEmpty`.
- */
+/** Normalizes a non-empty href to the internal/external draft format. */
 function normalizeHrefDraft(href: string): string {
   const raw = String(href ?? "").trim();
   const flags = resolveLinkFlags(raw);
   return flags.rawExternal ? toExternalDraft(raw) : toInternalDraft(raw);
 }
 
-/**
- * Variante UI-safe :
- * - "" reste ""
- * - sinon normalisation draft interne/externe
- */
+/** Preserves empty href drafts while normalizing non-empty values. */
 function normalizeHrefDraftKeepEmpty(href: string): string {
   const v = trimKeepEmpty(href);
   if (v.length === 0) return "";
   return normalizeHrefDraft(v);
 }
 
-/* -------------------------------------------------------------------------- */
-/*                         DTO item types (source de vérité)                  */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Types dérivés du DTO pour éviter toute divergence
- * et respecter `readonly` sur `children`.
- */
+// DTO-derived item types avoid drift with the domain contract.
 type PrimaryMenuDTOItem = NonNullable<PrimaryMenuSettingsDTO["items"]>[number];
 type PrimaryMenuDTOChild = NonNullable<PrimaryMenuDTOItem["children"]>[number];
 
-/* ------------------------------ DTO -> UI ---------------------------------- */
-
-/** DTO -> UI : child (leaf). */
 function toChildFormValuesFromDTO(
   it: PrimaryMenuDTOChild,
 ): PrimaryMenuChildFormValues {
@@ -95,7 +61,6 @@ function toChildFormValuesFromDTO(
   };
 }
 
-/** DTO -> UI : item top-level (parent ou leaf). */
 function toTopItemFormValuesFromDTO(
   it: PrimaryMenuDTOItem,
 ): PrimaryMenuItemFormValues {
@@ -116,8 +81,6 @@ function toTopItemFormValuesFromDTO(
     children: children.map(toChildFormValuesFromDTO),
   };
 }
-
-/* ---------------------------- Normalisation UI ---------------------------- */
 
 function normalizeChildFormValues(
   i: PrimaryMenuChildFormValues,
@@ -140,13 +103,11 @@ function normalizeTopItemFormValues(
     id: trimKeepEmpty(i.id) || createId(),
     label: trimKeepEmpty(i.label),
     href: normalizeHrefDraftKeepEmpty(i.href),
-    // UX: parent + enfants => jamais newTab
+    // Parent items with children are never opened in a new tab.
     newTab: hasChildren ? false : asBool(i.newTab),
     children: hasChildren ? children.map(normalizeChildFormValues) : [],
   };
 }
-
-/* ----------------------- Domaine (DTO) -> UI (form values) ------------------ */
 
 export function toPrimaryMenuFormValuesFromDTO(
   dto: PrimaryMenuSettingsDTO,
@@ -164,10 +125,6 @@ export function normalizePrimaryMenuFormValues(
   };
 }
 
-/**
- * Transforme les valeurs de formulaire PrimaryMenu en shape Settings canonique (draft).
- * Contrat : valeurs alignées avec la shape attendue côté domaine.
- */
 export function toPrimaryMenuSettingsShapeFromFormValues(
   values: PrimaryMenuFormValues,
 ): PrimaryMenuSettingsShape {
@@ -192,21 +149,14 @@ export function toPrimaryMenuSettingsShapeFromFormValues(
   };
 }
 
-/**
- * DTO -> Shape (re-export studio convenience)
- *
- * @remarks
- * Optionnel : garde un point d’entrée unique côté studio si tu veux,
- * sinon importe directement depuis `@compoz/ui/site/mappers/primary-menu-shape`.
- */
+/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
 export function toPrimaryMenuSettingsShape(
   dto: PrimaryMenuSettingsDTO,
 ): PrimaryMenuSettingsShape {
   return toPrimaryMenuSettingsShapeFromDTO(dto);
 }
 
-/* ------------------------------ UI -> INTENT (API) -------------------------- */
-
+/** Intent item aliases intentionally mirror the API DTO shape. */
 type PrimaryMenuIntentDTOItem = NonNullable<
   UpdatePrimaryMenuSettingsIntentDTO["items"]
 >[number];
@@ -215,11 +165,7 @@ type PrimaryMenuIntentDTOChild = NonNullable<
   NonNullable<PrimaryMenuIntentDTOItem["children"]>[number]
 >;
 
-/**
- * Transforme un INTENT UI partiel en DTO d’intent (draft-only) :
- * - Ne renvoie que les clés présentes dans `p`.
- * - Applique trim/coercition comme pour les form values complètes.
- */
+/** Builds a partial API intent while preserving PATCH semantics. */
 export function toUpdatePrimaryMenuIntentDTOFromFormValues(
   p: Partial<PrimaryMenuFormValues>,
 ): UpdatePrimaryMenuSettingsIntentDTO {

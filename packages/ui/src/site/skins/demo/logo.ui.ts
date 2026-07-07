@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/demo/logo.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/demo
  *
  * @description
- * Skin UI — logo site (thème Démo).
+ * Defines the demo skin overrides for the public site logo.
  */
 
 import type { SiteLogoUiOverride } from "@compoz/ui/site/site-ui.types";

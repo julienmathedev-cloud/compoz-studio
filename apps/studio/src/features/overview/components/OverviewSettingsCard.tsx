@@ -2,14 +2,14 @@
 
 /**
  * @file apps/studio/src/features/overview/components/OverviewSettingsCard.tsx
- * @layer ui/studio/overview
+ * @layer studio/features/overview/components
  *
  * @description
- * Carte “Réglages” : liste des sections settings avec badge (à jour / modifié).
+ * Overview settings card showing each settings section with its current status badge.
  *
  * @remarks
- * - UI-only : lit `SiteStatusDTO`.
- * - Le calcul “changed per setting” est fait côté serveur dans la route status.
+ * - Reads `SiteStatusDTO` and displays changed settings computed by the status route.
+ * - Shows the theme settings status only for admin users.
  */
 
 import { useTranslations } from "next-intl";

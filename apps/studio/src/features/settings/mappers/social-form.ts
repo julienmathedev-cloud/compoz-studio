@@ -1,15 +1,9 @@
 /**
  * @file apps/studio/src/features/settings/mappers/social-form.ts
- * @layer ui-mapper/studio
- * @description
- * Mappers UI Social (studio forms) :
- * - DTO -> valeurs de formulaire RHF (draft-friendly)
- * - normalisation UI
- * - INTENTS DTO pour l’API (draft-only)
+ * @layer studio/features/settings/mappers
  *
- * @remarks
- * - DTO -> Shape runtime (shared, renderer) : `toSocialSettingsShapeFromDTO`
- *   dans `@compoz/ui/site/mappers/social-shape`.
+ * @description
+ * Studio social settings mappers for form values, preview shape, and API intents.
  */
 
 import type { SocialSettingsDTO } from "@compoz/core/domain/site/dto";
@@ -19,8 +13,6 @@ import type { UpdateSocialSettingsIntentDTO } from "@compoz/validation/site/sett
 
 import { trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 import { toSocialSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/social-shape";
-
-/* ----------------------- Domaine (DTO) -> UI (form values) ------------------ */
 
 export function toSocialFormValuesFromDTO(
   dto: SocialSettingsDTO,
@@ -38,10 +30,6 @@ export function toSocialFormValuesFromDTO(
   };
 }
 
-/**
- * Transforme les valeurs de formulaire Social en forme SettingsShape.
- * Contrat : les valeurs sont alignées avec la shape attendue côté domaine.
- */
 export function toSocialSettingsShapeFromFormValues(values: SocialFormValues) {
   return {
     items:
@@ -52,8 +40,6 @@ export function toSocialSettingsShapeFromFormValues(values: SocialFormValues) {
       })) ?? [],
   };
 }
-
-/* ---------------------------- Normalisations UI ---------------------------- */
 
 export function normalizeSocialFormValues(
   i: SocialFormValues,
@@ -69,26 +55,12 @@ export function normalizeSocialFormValues(
   };
 }
 
-/* ------------------------------ DTO -> Shape (optional re-export) ---------- */
-
-/**
- * DTO -> Shape runtime (renderer) : convenience export côté studio.
- *
- * @remarks
- * Optionnel : tu peux supprimer cette fonction et importer directement
- * `toSocialSettingsShapeFromDTO` depuis `@compoz/ui/site/mappers/social-shape`.
- */
+/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
 export function toSocialSettingsShape(dto: SocialSettingsDTO) {
   return toSocialSettingsShapeFromDTO(dto);
 }
 
-/* ------------------------------ UI -> INTENT (API) -------------------------- */
-
-/**
- * Transforme un INTENT UI partiel en DTO d’intent (draft-only) :
- * - Ne renvoie que les clés présentes dans `p`.
- * - Applique trim comme pour les form values complètes.
- */
+/** Builds a partial API intent while preserving PATCH semantics. */
 export function toUpdateSocialIntentDTOFromFormValues(
   p: Partial<SocialFormValues>,
 ): UpdateSocialSettingsIntentDTO {

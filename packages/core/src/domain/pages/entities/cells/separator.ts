@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/entities/cells/separator.ts
  * @layer core/domain/pages
- * @description
- * Entité métier SeparatorCell.
+ * @description Separator cell domain entity.
  */
 
 export type SeparatorAlign = "left" | "center" | "right" | "full";

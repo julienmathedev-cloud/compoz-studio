@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/components/atoms/SiteLogo.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/atoms
  *
  * @description
- * Atome site : logo cliquable ou désactivé selon le contexte parent.
+ * Renders the public site logo as a link or disabled visual element depending on its parent context.
  */
 
 import Link from "next/link";

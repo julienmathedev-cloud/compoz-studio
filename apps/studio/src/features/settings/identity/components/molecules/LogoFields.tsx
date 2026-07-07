@@ -2,17 +2,13 @@
 
 /**
  * @file apps/studio/src/features/settings/identity/components/molecules/LogoFields.tsx
- * @layer ui/studio/settings/identity/molecules
+ * @layer studio/features/settings/identity/components/molecules
  *
  * @description
- * Champs logo (image + alt) avec preview, compatibles RHF (studio).
+ * RHF-aware logo selector with alt text editing and preview support.
  *
  * @remarks
- * - Molecule UI : compose `ImageSelector` et `InputField`.
- * - RHF-aware : reçoit directement le `field` RHF du logo complet (`logo`).
- * - Génère les IDs ARIA via `createFieldIds` à partir d’un `idPrefix`.
- * - Centralise les contraintes UI (formats recommandés, aide de longueur).
- * - Strictement UI-only : aucune logique métier.
+ * - Keeps the whole logo object in one RHF field so URL, dimensions, alt text, and media asset id stay in sync.
  */
 
 import { useTranslations } from "next-intl";
@@ -35,24 +31,14 @@ type UploadedRasterImage = Readonly<{
   mediaAssetId?: string;
 }>;
 
-/**
- * Types MIME acceptés pour les logos.
- */
+/** Logo uploads are intentionally limited to SVG, PNG, and WEBP. */
+
 const LOGO_ACCEPT = "image/svg+xml,image/png,image/webp";
 
-/**
- * Types MIME préférés pour les logos.
- */
 const PREFERRED_LOGO = ["image/svg+xml"] as const;
 
-/**
- * Seuil à partir duquel on affiche l’aide “proche de la limite”.
- */
 const ALT_NEAR_LIMIT_THRESHOLD = 10;
 
-/**
- * Props du composant `LogoFields`.
- */
 type LogoFieldsProps = Readonly<{
   idPrefix: string;
   siteName: string;
@@ -61,13 +47,7 @@ type LogoFieldsProps = Readonly<{
   invalidAlt?: boolean;
   altErrorMessage?: string;
 
-  /**
-   * Upload optionnel du logo.
-   *
-   * @remarks
-   * - Peut renvoyer un SVG (logo) ou un raster (png/webp).
-   * - Le composant `ImageSelector` attend une shape `{ url, width, height }`.
-   */
+  /** Uploads a logo and returns the shape expected by `ImageSelector`. */
   onUploadLogo?: (file: File) => Promise<UploadedRasterImage>;
 }>;
 
@@ -83,35 +63,20 @@ export function LogoFields({
   const t = useTranslations();
   const isBusy = !!disabled;
 
-  /**
-   * IDs ARIA dérivés du préfixe de champ.
-   */
   const logoAltIds = createFieldIds(idPrefix, "logo.alt");
   const logoImageIds = createFieldIds(idPrefix, "logo.src", { hint: true });
 
-  /**
-   * Valeur actuelle du logo (depuis RHF).
-   */
   const currentLogo = logoField.value;
   const currentUrl = currentLogo?.src ?? "";
   const currentAlt = currentLogo?.alt ?? "";
 
-  /**
-   * Alt effectif : valeur saisie → titre → fallback i18n.
-   */
   const previewAlt = useMemo(
     () => currentAlt || siteName || t("studio.logoFields.altFallback"),
     [currentAlt, siteName, t],
   );
 
-  /**
-   * Recommandation : SVG prioritaire, fallback PNG/WEBP.
-   */
   const preferredLogoHint = t("studio.logoFields.preferredTypeHint");
 
-  /**
-   * Aide dynamique pour l’alt en fonction de la longueur.
-   */
   const altLength = currentAlt.length;
   const altRemaining = Math.max(0, LOGO_ALT.MAX - altLength);
 
@@ -120,9 +85,7 @@ export function LogoFields({
       ? t("studio.logoFields.alt.helpNearLimit", { remaining: altRemaining })
       : t("studio.logoFields.alt.help");
 
-  /**
-   * Adapter `onUploadLogo` → shape attendue par `ImageSelector`.
-   */
+  /** Keeps upload adaptation local because logos may be SVG or raster assets. */
   const handleUploadLogo = useCallback(
     async (file: File): Promise<UploadedRasterImage> => {
       if (!onUploadLogo) {
@@ -153,14 +116,12 @@ export function LogoFields({
         onUrlChange={(value) => {
           const nextUrl = String(value ?? "").trim();
 
-          // Suppression du logo
+          // Clearing the URL removes the whole logo object from RHF.
           if (!nextUrl) {
             logoField.onChange(null);
             return;
           }
 
-          // Mise à jour manuelle URL (cas saisie/édition textuelle)
-          // On conserve les dimensions si elles existent déjà, sinon fallback neutre.
           if (!currentLogo?.width || !currentLogo?.height) {
             return;
           }

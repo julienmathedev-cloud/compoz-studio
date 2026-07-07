@@ -5,12 +5,11 @@
  * @layer studio/features/admin/website
  *
  * @description
- * Hook admin pour définir le Website actif via mutation.
+ * React Query mutation hook for setting the active Studio Website.
  *
  * @remarks
- * - Orchestration UI-only : mutation + logs + notifications.
- * - La route API valide la session, le rôle et l’accès au Website demandé.
- * - Le Website actif est persisté côté serveur via cookie httpOnly.
+ * - The API route validates the session, role, and access to the requested Website.
+ * - The active Website is persisted server-side through an httpOnly cookie.
  */
 
 import { useMutation } from "@tanstack/react-query";

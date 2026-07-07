@@ -2,18 +2,15 @@
 
 /**
  * @file apps/studio/src/features/admin/users/sections/AdminUsersSection.tsx
- * @layer ui/sections
+ * @layer studio/features/admin/users/sections
  *
  * @description
- * Section Users Studio.
+ * Studio admin users section for Website selection and user create/edit flows.
  *
  * @remarks
- * Responsabilités :
- * - Affiche le header : Website actif + user sélectionné.
- * - Affiche le formulaire create/edit.
- * - Orchestre le state UI, les hooks users, le submit et la suppression.
- * - UI-only : aucune logique métier.
- * - Les valeurs de Website manipulées ici sont des Prisma Website.id.
+ * - Orchestrates local UI state, user hooks, submit, delete, and form reset behavior.
+ * - Renders the active Website and selected user header before the create/edit form.
+ * - Website values handled here are Prisma Website.id values.
  */
 
 import { useTranslations } from "next-intl";
@@ -55,7 +52,7 @@ type AdminUsersSectionProps = Readonly<{
   onWebsiteChange: (websiteId: string) => void | Promise<void>;
   isFormSaving?: boolean;
 
-  /** Utilisé pour bloquer la suppression de soi-même. */
+  /** Used to prevent deleting the current signed-in user. */
   currentUser: CurrentUser;
 }>;
 
@@ -100,8 +97,7 @@ function canDeleteUser(args: {
   if (currentUserId && targetId === currentUserId) return false;
 
   /**
-   * Fallback : comparaison email si jamais l’id session est absent
-   * ou différent.
+   * Fallback to email comparison when the session user id is missing or differs.
    */
   const target = String(targetEmail ?? "")
     .trim()
@@ -125,9 +121,7 @@ export function AdminUsersSection({
 }: AdminUsersSectionProps) {
   const t = useTranslations();
 
-  /* ------------------------------------------------------------------------ */
-  /* Users list                                                               */
-  /* ------------------------------------------------------------------------ */
+  // Users list
 
   const { users, isLoading: isLoadingUsers } = useListUsers();
 
@@ -135,9 +129,7 @@ export function AdminUsersSection({
     return toUserSelectOptions(users);
   }, [users]);
 
-  /* ------------------------------------------------------------------------ */
-  /* UI state                                                                 */
-  /* ------------------------------------------------------------------------ */
+  // UI state
 
   const [selectedWebsiteId, setSelectedWebsiteId] = useState<string>(() =>
     normalizeWebsiteId(currentWebsiteId),
@@ -147,17 +139,12 @@ export function AdminUsersSection({
 
   const mode: "create" | "edit" = selectedUserId ? "edit" : "create";
 
-  /**
-   * Si le Website actif change côté parent après refresh, on resynchronise
-   * le state local du select.
-   */
+  /** Resynchronizes the local select state when the active Website changes after refresh. */
   useEffect(() => {
     setSelectedWebsiteId(normalizeWebsiteId(currentWebsiteId));
   }, [currentWebsiteId]);
 
-  /* ------------------------------------------------------------------------ */
-  /* Form reset helpers                                                       */
-  /* ------------------------------------------------------------------------ */
+  // Form reset helpers
 
   const [formKey, setFormKey] = useState(0);
   const [isDirtyLocal, setIsDirtyLocal] = useState(false);
@@ -169,9 +156,7 @@ export function AdminUsersSection({
     setFormKey((key) => key + 1);
   }, []);
 
-  /* ------------------------------------------------------------------------ */
-  /* Header handlers                                                          */
-  /* ------------------------------------------------------------------------ */
+  // Header handlers
 
   const handleWebsiteChange = useCallback(
     async (websiteId: string) => {
@@ -196,15 +181,11 @@ export function AdminUsersSection({
     [resetFormUi],
   );
 
-  /* ------------------------------------------------------------------------ */
-  /* Read selected user                                                       */
-  /* ------------------------------------------------------------------------ */
+  // Read selected user
 
   const { user, isLoading: isLoadingUser } = useReadUser(selectedUserId ?? "");
 
-  /* ------------------------------------------------------------------------ */
-  /* Baseline for update                                                      */
-  /* ------------------------------------------------------------------------ */
+  // Baseline used to build update patches.
 
   const baselineRef = useRef<UserFormValues | null>(null);
 
@@ -218,9 +199,7 @@ export function AdminUsersSection({
     baselineRef.current = initialValues;
   }, [initialValues]);
 
-  /* ------------------------------------------------------------------------ */
-  /* Mutations                                                                */
-  /* ------------------------------------------------------------------------ */
+  // Mutations
 
   const { create, isCreating } = useCreateUser();
 
@@ -234,9 +213,7 @@ export function AdminUsersSection({
   const isSaving = isCreating || isUpdating || Boolean(isFormSaving);
   const isBusy = Boolean(isSaving || isDeleting);
 
-  /* ------------------------------------------------------------------------ */
-  /* Delete guard                                                             */
-  /* ------------------------------------------------------------------------ */
+  // Delete guard prevents deleting the current signed-in user.
 
   const canDelete = useMemo(() => {
     return canDeleteUser({
@@ -262,9 +239,7 @@ export function AdminUsersSection({
     setSelectedUserId(null);
   }, [canDelete, deleteUser, resetFormUi, selectedUserId, user?.email]);
 
-  /* ------------------------------------------------------------------------ */
-  /* Submit                                                                   */
-  /* ------------------------------------------------------------------------ */
+  // Submit
 
   const handleSubmit = useCallback(
     async (values: UserFormValues) => {
@@ -296,9 +271,7 @@ export function AdminUsersSection({
     ],
   );
 
-  /* ------------------------------------------------------------------------ */
-  /* Titles / loading                                                         */
-  /* ------------------------------------------------------------------------ */
+  // Titles / loading
 
   const title =
     mode === "edit"

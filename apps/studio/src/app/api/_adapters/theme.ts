@@ -3,14 +3,12 @@
  * @layer studio/app/api/adapters
  *
  * @description
- * Adaptateur API Studio pour Theme :
- * convertit le DTO d’intention en input domaine pour le use-case.
+ * Studio API adapter for theme settings update intents.
  *
- * Responsabilités :
- * - trimming défensif des tokens couleur
- * - respect des champs optionnels
- * - aucune logique métier
- * - aucun handling de state (géré par la route)
+ * @remarks
+ * - Builds a partial domain patch from the fields present in the intent.
+ * - Trims theme token values before domain writes.
+ * - Leaves state handling to the route.
  */
 
 import { log } from "@compoz/infra/lib/log";

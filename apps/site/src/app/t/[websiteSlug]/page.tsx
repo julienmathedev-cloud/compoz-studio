@@ -3,13 +3,13 @@
  * @layer site/app
  *
  * @description
- * Fallback public explicite : `/t/:websiteSlug` rend la home publiée du Website.
+ * Explicit public fallback root route for the published home page by Website slug.
  *
  * @remarks
- * - Le segment de route `websiteSlug` correspond au Prisma `Website.slug`.
- * - Le Website est résolu via Prisma avant le chargement du contenu.
- * - Les loaders de contenu utilisent le Prisma `Website.id`.
- * - L’UI/skin et les URLs fallback utilisent le Prisma `Website.slug`.
+ * - The `websiteSlug` route segment is Prisma `Website.slug`.
+ * - The Website is resolved through Prisma before loading content.
+ * - Content loaders use Prisma `Website.id`, while UI, skin, and fallback URLs use Prisma `Website.slug`.
+ * - Renders published content only so the initial HTML head and metadata stay stable.
  */
 
 import type { Metadata } from "next";
@@ -41,10 +41,7 @@ type PageParams = Readonly<{
   params: Promise<Readonly<{ websiteSlug: string }>>;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
+/** Applies the SEO title template used for social metadata previews. */
 function applyTitleTemplate(
   title: string | undefined,
   template: string,
@@ -69,10 +66,6 @@ async function resolveWebsiteFromParams(params: PageParams["params"]) {
 
   return website;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Metadata                                                                   */
-/* -------------------------------------------------------------------------- */
 
 export async function generateMetadata({
   params,
@@ -127,10 +120,6 @@ export async function generateMetadata({
     brandTitle,
   });
 }
-
-/* -------------------------------------------------------------------------- */
-/* Page                                                                       */
-/* -------------------------------------------------------------------------- */
 
 export default async function WebsiteFallbackRootPage({ params }: PageParams) {
   const website = await resolveWebsiteFromParams(params);

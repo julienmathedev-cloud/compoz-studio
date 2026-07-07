@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/portfolio/cells/image-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/portfolio/cells
  *
  * @description
- * Skin UI pour l’image site (thème Portfolio).
+ * Defines the portfolio skin overrides for image cells.
  */
 
 import type { SiteImageUiOverride } from "@compoz/ui/site/site-ui.types";

@@ -1,9 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/create-page.types.ts
  * @layer core/domain/pages/use-cases
- * @description
- * Types du use-case de création de page : entrées, sorties et dépendances.
- * Définit le contrat **sans logique** (implémentation dans `create-page.ts`).
+ * @description Contracts for creating a page.
  */
 
 import type {
@@ -13,31 +11,15 @@ import type {
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
 import type { IdGenerator } from "@compoz/core/domain/ports/id-generator";
 
-/**
- * Dépendances nécessaires à l’exécution du use-case.
- * - `pages` : accès CRUD aux pages (draft/published).
- * - `idGenerator` : générateur d’ID stable (injectable, testable).
- * - `nowIso` : horloge injectable (tests, déterminisme).
- */
 export interface CreatePageDeps {
   pages: PagesRepository;
   idGenerator: IdGenerator;
 
-  /** Horloge ISO optionnelle (défaut : new Date().toISOString()). */
+  /** Optional ISO clock override. */
   nowIso?: () => string;
 }
 
-/**
- * Données d’entrée pour la création d’une page.
- * - `name` (obligatoire) : doit être non vide (validé dans le use-case).
- * - `slug` (optionnel) : si absent, dérivé du titre.
- * - `seoTitle` : valeur explicite ou `null`.
- * - `seoDescription` : valeur explicite ou `null`.
- * - `sitemap` : patch partiel ou `null` ; s’il est fourni, il est complété dans le use-case.
- *
- * @remarks
- * La création se fait toujours en **draft** ; la publication est gérée par un use-case dédié.
- */
+/** Pages are always created in draft; publication is handled by a dedicated use case. */
 export type CreatePageInput = {
   name: string;
   slug?: string;
@@ -49,10 +31,6 @@ export type CreatePageInput = {
   paginationEnabled: boolean;
 };
 
-/**
- * Résultat de la création.
- * - Retourne toujours la page complète persistée.
- */
 export interface CreatePageResult {
   page: Page;
 }

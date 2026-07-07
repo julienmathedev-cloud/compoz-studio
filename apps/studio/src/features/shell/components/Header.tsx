@@ -2,16 +2,15 @@
 
 /**
  * @file apps/studio/src/features/shell/components/Header.tsx
- * @layer ui/studio/layouts
+ * @layer studio/features/shell/components
  *
  * @description
- * En-tête persistant de l’interface Studio.
+ * Persistent Studio header with account, locale, theme, and optional left-side controls.
  *
  * @remarks
- * - UI-only : aucune logique métier.
- * - Positionné en sticky pour rester visible au scroll.
- * - Inclut un skip link pour l’accessibilité clavier.
- * - La zone gauche est injectée via `leftSlot` (sidebar trigger, badge, etc.).
+ * - Stays sticky so global actions remain reachable while scrolling.
+ * - Includes a keyboard skip link for direct access to the main content.
+ * - `leftSlot` lets shell layouts inject contextual controls such as sidebar triggers or badges.
  */
 
 import { useTranslations } from "next-intl";
@@ -27,9 +26,6 @@ type HeaderProps = Readonly<{
   leftSlot?: ReactNode;
 }>;
 
-/**
- * Header principal de l’interface Studio.
- */
 export function Header({ leftSlot }: HeaderProps) {
   const t = useTranslations();
 

@@ -2,20 +2,16 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/buttons/ButtonItemEditor.tsx
- * @layer ui/studio/pages/blocks/editor/buttons
+ * @layer studio/features/builder/editor/cells/buttons
  *
  * @description
- * Éditeur RHF-aware d’un bouton individuel pour ButtonsCell.
+ * RHF-aware editor for one ButtonsCell item.
  *
  * @remarks
- * - Connecté directement à RHF via `useController`.
- * - Reprend le pattern card utilisé par les éditeurs de listes.
- * - Réutilise `LinkFieldsItem` pour la gestion du href.
- * - Le reorder est géré par drag and drop via dnd-kit.
- * - L’affichage des erreurs repose sur une règle unique :
- *   `showError || fieldState.isTouched`.
- * - Aligné sur le pattern du menu légal :
- *   l’ID sortable est passé explicitement via `sortableId`.
+ * - Binds each item field directly through RHF `useController`.
+ * - Reuses `LinkFieldsItem` for href handling and `ButtonIconFields` for icon settings.
+ * - Reordering is handled by dnd-kit with an explicit `sortableId`.
+ * - Label errors are shown only after `showError` or the field has been touched.
  */
 
 import { useSortable } from "@dnd-kit/sortable";

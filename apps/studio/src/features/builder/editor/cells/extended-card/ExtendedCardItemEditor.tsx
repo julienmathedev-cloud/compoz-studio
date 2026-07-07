@@ -2,23 +2,17 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/extended-card/ExtendedCardItemEditor.tsx
- * @layer ui/studio/pages/blocks/editor/items/extended-card
+ * @layer studio/features/builder/editor/cells/extended-card
  *
  * @description
- * RHF-aware editor for a single extended card item.
+ * RHF-aware editor for one ExtendedCardCell item.
  *
  * @remarks
- * - Connected directly to RHF through `useController`.
- * - Reuses the card editor pattern used by item list editors.
- * - Reordering is handled by drag and drop through dnd-kit.
- * - Error display relies on a single rule:
- *   `showError || fieldState.isTouched`.
- * - Values are read and edited through RHF (`useController`).
- * - `sortableId` is only used for drag and drop.
- * - `watchedItem` is used as a visual fallback to keep rendering stable
- *   during RHF rebinding after reordering.
- * - `IconPicker` is mounted on demand to reduce layout cost when a list
- *   contains several opened cards at the same time.
+ * - Binds item fields directly through RHF `useController`.
+ * - Uses `sortableId` only for dnd-kit sorting.
+ * - Shows title and description errors only after `showError` or the field has been touched.
+ * - Uses `watchedItem` as a visual fallback to keep rendering stable during RHF rebinding after reordering.
+ * - Mounts `IconPicker` on demand to reduce layout cost when several cards are open.
  */
 
 import { useSortable } from "@dnd-kit/sortable";

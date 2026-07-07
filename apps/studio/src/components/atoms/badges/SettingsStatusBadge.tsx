@@ -3,10 +3,10 @@
  * @layer studio/atoms
  *
  * @description
- * Badge de statut pour une section de réglages (upToDate/modified/error).
+ * Status badge for a settings section in up-to-date, modified, or error states.
  *
  * @remarks
- * Les réglages ne peuvent pas être "new" ni "deleted".
+ * Settings cannot be new or deleted.
  */
 
 import { useTranslations } from "next-intl";

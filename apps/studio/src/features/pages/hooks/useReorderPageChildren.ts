@@ -2,21 +2,16 @@
 
 /**
  * @file apps/studio/src/features/pages/hooks/useReorderPageChildren.ts
- * @layer hooks/studio/pages
+ * @layer studio/features/pages/hooks
  *
  * @description
- * Hook Studio React Query : réordonnancement des enfants d’un parent.
+ * React Query mutation hook for reordering draft child pages through the pages Studio API.
  *
  * @remarks
- * - Draft-only par défaut (`DEFAULT_CONTENT_STATE`).
- * - Orchestration UI-only : mutation + cache update + logs + notifications.
- * - Aucune logique métier : la défense du set / order est côté route.
- * - Le cache est scopé par Prisma Website.id.
- *
- * @why cache update
- * Pour que l’UI et la preview qui consomme `useReadSiteIndex` reflètent
- * immédiatement le nouvel ordre après un reorder, on pousse `index` dans le
- * cache React Query via `setQueryData`.
+ * - Uses draft content state by default through `DEFAULT_CONTENT_STATE`.
+ * - The API route owns set/order validation for the requested parent children.
+ * - Updates the SiteIndex cache from the returned payload so UI and preview order reflect the reorder immediately.
+ * - Studio cache keys are scoped by Prisma Website.id and content state.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";

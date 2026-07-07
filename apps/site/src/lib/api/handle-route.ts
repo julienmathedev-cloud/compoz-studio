@@ -1,14 +1,14 @@
 /**
  * @file apps/site/src/lib/api/handle-route.ts
  * @layer site/lib/api
+ *
  * @description
- * Enveloppe standard pour les handlers HTTP (Next.js App Router) côté Site :
- * - instrumentation (span)
- * - normalisation des erreurs (throwHttp + Zod + DomainError) en réponses JSON
+ * Standard wrapper for Site App Router HTTP handlers.
  *
  * @remarks
- * - Pas de ContentState ici : le site public ne gère pas ?state=draft|published.
- * - Pas d’audit KV ici : inutile et ça évite du bruit.
+ * - Wraps handlers in a log span and normalizes Domain/HTTP errors to JSON responses.
+ * - The public site does not accept `?state=draft|published`; content state is resolved by public loaders.
+ * - KV audit telemetry is intentionally not used here to keep public routes quiet.
  */
 
 import type { NextResponse } from "next/server";
@@ -18,15 +18,7 @@ import { toHttpError } from "@compoz/infra/http/error-adapter";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { jsonHttpError, jsonOk } from "@compoz/site/lib/api/responses";
 
-/* -------------------------------------------------------------------------- */
-/* Types                                                                      */
-/* -------------------------------------------------------------------------- */
-
 type ApiHandler<T> = (req: Request) => Promise<T>;
-
-/* -------------------------------------------------------------------------- */
-/* Main wrapper                                                                */
-/* -------------------------------------------------------------------------- */
 
 export async function handleRoute<T>(
   ns: string,

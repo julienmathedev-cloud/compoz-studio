@@ -2,18 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/atoms/SiteButton.tsx
- * @layer ui/site/atoms
+ * @layer ui/site/components/atoms
  *
  * @description
- * Bouton/lien public du site basé sur le composant Button shared.
+ * Renders a public site button or link through the shared Button component.
  *
  * @remarks
- * - Utilise `Button` ShadCN via `asChild` quand il s’agit d’un vrai lien.
- * - Reflète la shape métier d’un item de bouton : `label`, `href`, `variant`.
- * - Réutilise la même logique de résolution que les autres liens publics.
- * - Neutralise les liens unsafe.
- * - En preview iframe : désactive les navigations non-ancre sans casser le rendu visuel.
- * - Si `href` est vide : rend un bouton visuel non cliquable, sans style disabled.
+ * Unsafe and empty links are rendered as non-clickable visual buttons; Studio preview blocks non-anchor navigation while keeping normal hover styles.
  */
 
 import Link from "next/link";
@@ -70,14 +65,7 @@ export function SiteButton({
     ui,
   });
 
-  /**
-   * Bouton visuellement non cliquable uniquement pour les cas réellement invalides :
-   * - pas de href
-   * - href unsafe
-   *
-   * @remarks
-   * On ne l’utilise PAS pour la preview, afin de conserver les hover styles.
-   */
+  /** Keep invalid links visually consistent without enabling navigation. */
   const disabledButton = (
     <Button
       type="button"
@@ -109,12 +97,7 @@ export function SiteButton({
     return disabledButton;
   }
 
-  /**
-   * Preview Studio :
-   * - on autorise les ancres (#...) car elles restent dans la même page
-   * - on bloque toute autre navigation
-   * - MAIS on garde l’apparence normale du bouton (hover inclus)
-   */
+  /** Studio preview blocks page navigation but keeps anchor links usable. */
   if (disableAllLinks && !isHashAnchor) {
     return (
       <Button asChild variant={variant} className={cn(className)}>
@@ -160,10 +143,6 @@ export function SiteButton({
 }
 
 SiteButton.displayName = "SiteButton";
-
-/* -------------------------------------------------------------------------- */
-/* Internals                                                                  */
-/* -------------------------------------------------------------------------- */
 
 function renderButtonContent({
   label,

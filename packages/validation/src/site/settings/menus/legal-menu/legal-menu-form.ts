@@ -1,23 +1,19 @@
 /**
  * @file packages/validation/src/site/settings/menus/legal-menu/legal-menu-form.ts
  * @layer schemas
+ *
  * @description
- * Définit le schéma Zod décrivant la forme du formulaire d’édition du menu légal.
+ * Zod schemas describing the legal menu UI form shape.
  *
  * @remarks
- * - Schéma UI (RHF-friendly) : `href` est une string contrôlée.
- * - Les règles "requis" et "format URL" sont appliquées en `superRefine`
- *   pour accepter les valeurs draft (`""`) pendant la saisie.
+ * The form keeps `href` as a controlled string. Required and URL-format checks
+ * are handled in `superRefine` to keep field-level RHF errors predictable.
  */
 
 import { MENU_ITEM, MENU_LABEL } from "@compoz/core/constants/limits/menu";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { AssetUrlSchema } from "@compoz/validation/common/url-fragments";
 import { z } from "zod";
-
-/* -------------------------------------------------------------------------- */
-/*                                Item (UI)                                   */
-/* -------------------------------------------------------------------------- */
 
 export const LegalMenuItemFormSchema = z
   .object({
@@ -34,7 +30,6 @@ export const LegalMenuItemFormSchema = z
     const label = val.label.trim();
     const href = val.href.trim();
 
-    // label requis
     if (label.length < MENU_LABEL.MIN) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -43,7 +38,6 @@ export const LegalMenuItemFormSchema = z
       });
     }
 
-    // href requis + format
     if (href.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -61,10 +55,6 @@ export const LegalMenuItemFormSchema = z
       });
     }
   });
-
-/* -------------------------------------------------------------------------- */
-/*                             Settings (UI)                                  */
-/* -------------------------------------------------------------------------- */
 
 export const LegalMenuFormSchema = z
   .object({

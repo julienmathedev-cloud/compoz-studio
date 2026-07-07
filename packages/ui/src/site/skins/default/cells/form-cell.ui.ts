@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/cells/form-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default/cells
  *
  * @description
- * Skin UI — form cell (thème Default).
- *
- * @remarks
- * Définit uniquement les styles Tailwind.
- * Aucune logique ici : le renderer gère les champs et l’envoi.
+ * Defines the default skin classes for form cells.
  */
 
 import type { SiteFormUi } from "@compoz/ui/site/site-ui.types";

@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/lola/block-section.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/lola
  *
  * @description
- * Skin UI — block sections (thème lola).
- *
- * @remarks
- * - Définit le container (contained/fullBleed) et la grille.
- * - Fournit uniquement des classes Tailwind (aucune logique).
+ * Defines the Lola skin overrides for public site block sections.
  */
 
 import type { SiteBlockSectionUiOverride } from "@compoz/ui/site/site-ui.types";

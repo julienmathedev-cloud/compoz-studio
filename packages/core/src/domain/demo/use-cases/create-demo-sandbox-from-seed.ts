@@ -1,15 +1,9 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/create-demo-sandbox-from-seed.ts
- * @layer core/domain
- *
- * @description
- * Use-case : crée une nouvelle sandbox démo isolée à partir d’un Website seed.
- *
+ * @layer core/domain/demo
+ * @description Use case that creates an isolated demo sandbox from a seed website.
  * @remarks
- * - Crée une sandbox entièrement nouvelle.
- * - Ne gère pas la réutilisation d’une sandbox existante.
- * - Ne gère pas les cookies ni la session HTTP.
- * - Le Website sandbox reste un scope technique isolé identifié par `websiteId`.
+ * This use case always creates a new sandbox. Cookie/session reuse is handled outside the core domain.
  */
 
 import type {

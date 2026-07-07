@@ -2,30 +2,19 @@
 
 /**
  * @file apps/studio/src/features/preview/hooks/usePreviewBridge.ts
- * @layer hooks/studio/preview
+ * @layer studio/features/preview/hooks
  *
  * @description
- * Hook studio fournissant un bridge de communication entre le studio et la preview
- * via `postMessage` (iframe).
+ * Studio-to-preview iframe bridge built on scoped `postMessage` events.
  *
  * @remarks
- * - Centralise les messages `sync`, `reset` et `baseline` par scope.
- * - Le handshake `compoz.preview.ready` est géré par un hook de plus haut niveau.
- * - La sécurité repose sur le contrat de message (`type` + `scope`)
- *   et le filtrage côté receiver.
- * - Strictement UI-only : aucune logique métier.
+ * - Sends `sync`, `reset`, and `baseline` messages; preview readiness is handled by the caller.
+ * - Uses `targetOrigin="*"` by default because preview iframes may be sandboxed.
  */
 
 import { log } from "@compoz/infra/lib/log";
 import { useCallback, useMemo, type RefObject } from "react";
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Identifiant logique du périmètre de preview.
- */
 export type PreviewScope =
   | "social"
   | "header"
@@ -34,9 +23,7 @@ export type PreviewScope =
   | "full"
   | (string & {});
 
-/**
- * Message émis par la preview pour signaler sa disponibilité.
- */
+/** Preview-to-Studio ready signal consumed by higher-level preview hooks. */
 export type PreviewReadyMessage = Readonly<{
   type: "compoz.preview.ready";
   scope: PreviewScope;
@@ -65,17 +52,11 @@ export type PreviewMessage<T> =
   | PreviewSyncMessage<T>
   | PreviewResetMessage;
 
-/* -------------------------------------------------------------------------- */
-/*                               Type guards                                  */
-/* -------------------------------------------------------------------------- */
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-/**
- * Guard minimal utilisé uniquement pour le logging/debug.
- */
+/** Minimal guard used only to extract debug metadata from unknown messages. */
 function isPreviewMessageLike(
   value: unknown,
 ): value is { type?: unknown; scope?: unknown } {
@@ -95,24 +76,11 @@ function getMessageMeta(message: unknown): {
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                    Hook                                    */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Options de configuration du bridge de preview.
- */
 type Options = Readonly<{
-  /**
-   * Origin cible pour postMessage.
-   * Par défaut : "*" (iframe potentiellement sandboxée).
-   */
+  /** Target origin for postMessage; defaults to "*" for sandboxed preview iframes. */
   targetOrigin?: string;
 }>;
 
-/**
- * API exposée par le hook `usePreviewBridge`.
- */
 type Bridge = Readonly<{
   sync: <T>(scope: PreviewScope, payload: T) => void;
   reset: (scope: PreviewScope) => void;

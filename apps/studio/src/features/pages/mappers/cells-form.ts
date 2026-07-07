@@ -1,9 +1,14 @@
 /**
  * @file apps/studio/src/features/pages/mappers/cells-form.ts
- * @layer ui/studio/pages/mappers
+ * @layer studio/features/pages/mappers
  *
  * @description
- * Studio form mappers and factories for page cells.
+ * Studio cell form mappers, UI-safe normalizers, validation normalizers, and empty form factories.
+ *
+ * @remarks
+ * - Keeps nested cell item collections safe for RHF field arrays.
+ * - Separates UI-safe normalization from stricter validation normalization for optional structured-card media and CTA fields.
+ * - Does not own draft/published state; callers provide the content-state context.
  */
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";
@@ -418,9 +423,7 @@ export function ensureCellsLength(
   return output;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Structured card item - UI-safe normalization                               */
-/* -------------------------------------------------------------------------- */
+// Structured card item UI-safe normalization.
 
 export function normalizeStructuredCardButton(
   button: StructuredCardItemFormValues["button"],
@@ -465,9 +468,7 @@ export function normalizeStructuredCardItem(
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Structured card item - validation normalization                            */
-/* -------------------------------------------------------------------------- */
+// Structured card item validation normalization.
 
 export function toStructuredCardButtonForValidation(
   button: StructuredCardItemFormValues["button"],
@@ -537,9 +538,7 @@ export function toStructuredCardItemForValidation(
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Carousel helpers                                                           */
-/* -------------------------------------------------------------------------- */
+// Carousel and card collection item normalization helpers.
 
 function normalizeCarouselItem(
   itemKind: CarouselItemKind,

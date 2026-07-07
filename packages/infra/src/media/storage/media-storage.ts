@@ -1,8 +1,7 @@
 /**
  * @file packages/infra/src/media/storage/media-storage.ts
  * @layer infra/media/storage
- * @description
- * Contrat commun de stockage des médias uploadés.
+ * @description Shared contract for uploaded media storage backends.
  */
 
 export type PutMediaInput = Readonly<{

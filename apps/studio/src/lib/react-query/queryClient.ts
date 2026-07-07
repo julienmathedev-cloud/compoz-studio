@@ -3,15 +3,11 @@
  * @layer studio/lib/react-query
  *
  * @description
- * Instance unique du QueryClient (TanStack Query) pour le Studio (admin).
- * Config orientée UX admin :
- * - pas de refetch agressif
- * - retries limités
- * - cache contrôlé
+ * Singleton TanStack Query client for the Studio app.
  *
  * @remarks
- * - À importer depuis un Provider client (ex: `QueryClientProvider`).
- * - Ce module expose une instance singleton au niveau du bundle.
+ * - Configured for editor UX: no aggressive refetching, limited retries, and controlled cache lifetime.
+ * - Imported by the client-side `QueryClientProvider` so the Studio shares one bundle-level instance.
  */
 
 import { QueryClient } from "@tanstack/react-query";

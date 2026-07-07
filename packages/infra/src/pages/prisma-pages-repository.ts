@@ -1,9 +1,7 @@
 /**
  * @file packages/infra/src/pages/prisma-pages-repository.ts
  * @layer infra/pages
- *
- * @description
- * Prisma implementation of the PagesRepository.
+ * @description Prisma-backed PagesRepository implementation.
  */
 
 import {

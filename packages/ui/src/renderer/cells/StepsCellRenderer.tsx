@@ -3,16 +3,10 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer site/preview : rendu d’une liste d’étapes.
+ * Renders a validated steps cell as an ordered visual sequence.
  *
  * @remarks
- * - UI-only : consomme une shape déjà validée.
- * - Rend une liste de `SiteStepCard` selon le variant de layout.
- * - Ignore les items sans titre.
- * - La numérotation est calculée automatiquement à partir de l’ordre.
- * - Le responsive est piloté par la skin, pas par le renderer.
- * - Expose une densité UI via `data-density` pour permettre à la skin
- *   d’adapter le breakpoint horizontal selon le nombre d’items.
+ * Items without a title are ignored; numbering follows the rendered order, and density is exposed through `data-density` for skin breakpoints.
  */
 
 import type { StepsCellShape } from "@compoz/validation/pages/blocks/cells/cell";

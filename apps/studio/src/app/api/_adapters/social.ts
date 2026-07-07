@@ -3,12 +3,11 @@
  * @layer studio/app/api/adapters
  *
  * @description
- * Adaptateur API Studio pour les Social settings : transforme un intent DTO en patch partiel domaine.
+ * Studio API adapter for social settings update intents.
  *
- * Responsabilités :
- * - adaptation des items SocialItem
- * - application uniquement des clés présentes
- * - branding des URL via `asBrandedHref`
+ * @remarks
+ * - Adapts social items only when `items` is present in the intent.
+ * - Brands social URLs through `asBrandedHref` before domain writes.
  */
 
 import type {
@@ -23,12 +22,10 @@ import { trimOrKeep } from "@compoz/studio/lib/strings";
 import type { UpdateSocialSettingsIntentDTO } from "@compoz/validation/site/settings/social/social-intents";
 
 /**
- * Transforme un SocialItem DTO en SocialItem domaine.
+ * Converts a social item DTO into a domain item.
  *
- * Contrat :
- * - `id` est propagé tel quel après trimming défensif
- * - `href` est brandé via `asBrandedHref`
- * - trimming défensif (au cas où la source ne serait pas RHF)
+ * @remarks
+ * Defensive trimming covers sources that do not come from RHF.
  */
 function adaptSocialItem(dto: {
   id: string;
@@ -43,11 +40,10 @@ function adaptSocialItem(dto: {
 }
 
 /**
- * Transforme un intent DTO Social en patch partiel domaine `SocialSettings`.
+ * Converts a social settings intent into a partial domain patch.
  *
- * Contrat :
- * - `items` est adapté uniquement s’il est présent dans le DTO.
- * - Aucun reset implicite des autres champs.
+ * @remarks
+ * Missing `items` does not reset the existing social links.
  */
 export function adaptUpdateSocialIntent(
   dto: UpdateSocialSettingsIntentDTO,

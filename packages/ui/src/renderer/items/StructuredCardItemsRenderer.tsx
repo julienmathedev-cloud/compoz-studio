@@ -3,15 +3,10 @@
  * @layer ui/renderer/items
  *
  * @description
- * Site/preview renderer for structured card items.
+ * Renders validated structured card items as a site card grid.
  *
  * @remarks
- * - UI-only: consumes already validated item shapes.
- * - Ignores the renderer if no usable item is present.
- * - Columns and reveal behavior are owned by the parent cell.
- * - Items own the content.
- * - Uses `SiteStructuredCard` for visual rendering.
- * - Exposes stable `data-*` attributes for skins and Website overrides.
+ * Items without a title and usable section are ignored; columns and reveal behavior are owned by the parent cell.
  */
 
 import type { StructuredCardItemShape } from "@compoz/validation/pages/blocks/cells/cell";
@@ -66,12 +61,7 @@ export function StructuredCardItemsRenderer({
 
   const requestedColumns = clampColumns(columns);
 
-  /**
-   * Limit the layout to the real item count:
-   * - 1 item  -> layout 1
-   * - 2 items -> layout 2
-   * - 3+      -> layout 3, within the requested layout limit
-   */
+  /** Clamp the rendered column count to the available item count. */
   const effectiveColumns = Math.min(
     requestedColumns,
     items.length,

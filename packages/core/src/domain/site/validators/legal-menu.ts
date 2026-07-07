@@ -1,16 +1,9 @@
 /**
  * @file packages/core/src/domain/site/validators/legal-menu.ts
- * @layer core/domain
- * @description
- * Validateur métier — invariants LegalMenu bloquants :
- * - `id` requis et unique
- * - `label` requis
- * - `href` requis
- *
+ * @layer core/domain/site/validators
+ * @description Blocking domain invariants for legal menu settings.
  * @remarks
- * Suppose que la shape de base (types, formats d’URL) est validée en amont
- * par les schemas/adapters. Ce module se concentre uniquement sur les
- * invariants stricts du domaine.
+ * Shape and URL format validation are handled upstream by schemas and adapters.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -20,17 +13,6 @@ import type {
   LegalMenuSettings,
 } from "@compoz/core/domain/site/entities/legal-menu";
 
-/**
- * Vérifie les invariants d’un item légal isolé.
- *
- * @param it    Élément du menu légal à valider.
- * @param index Index de l’élément dans le tableau `items`.
- *
- * @throws DomainError
- * - `EC.LEGAL_MENU_ID_REQUIRED`
- * - `EC.LEGAL_MENU_LABEL_REQUIRED`
- * - `EC.LEGAL_MENU_HREF_REQUIRED`
- */
 function assertLegalMenuItem(it: LegalMenuItem, index: number): void {
   const id = String(it.id ?? "").trim();
   const label = String(it.label ?? "").trim();
@@ -61,13 +43,6 @@ function assertLegalMenuItem(it: LegalMenuItem, index: number): void {
   }
 }
 
-/**
- * Invariants globaux : unicité des ids + items valides.
- *
- * @throws DomainError
- * - `EC.LEGAL_MENU_DUPLICATE_ID`
- * - (peut lever les erreurs de `assertLegalMenuItem`)
- */
 export function assertLegalMenuSettings(s: LegalMenuSettings): void {
   const seenIds = new Set<LegalMenuItem["id"]>();
 

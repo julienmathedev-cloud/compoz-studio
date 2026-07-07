@@ -1,14 +1,9 @@
 /**
  * @file packages/infra/src/site/kv-site-repository.ts
  * @layer infra/site
- *
- * @description
- * Implémentation du SiteRepository basé sur une base KV, Upstash/Vercel KV.
- *
+ * @description KV-backed SiteRepository implementation using Upstash or Vercel KV.
  * @remarks
- * - Stocke le SiteIndex et les SiteSettings par état de contenu.
- * - Le repository est strictement scopé par `websiteId`.
- * - Aucun fallback implicite n’est appliqué.
+ * Stores SiteIndex and SiteSettings per content state; all keys are scoped by `websiteId`.
  */
 
 import {
@@ -31,17 +26,9 @@ import { getUpstashRedis, parseRedisJson } from "@compoz/infra/kv/kv-redis";
 import { kvCmd } from "@compoz/infra/kv/kv-telemetry";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 
-/* -------------------------------------------------------------------------- */
-/* Options                                                                    */
-/* -------------------------------------------------------------------------- */
-
 type KvSiteRepositoryOptions = Readonly<{
   websiteId: string;
 }>;
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function indexKey(websiteId: string, state: ContentState): string {
   return `compoz:${websiteId}:${state}:site:index`;
@@ -139,10 +126,6 @@ function mergeThemeSettings(
 function kvCtx(base: string, state: ContentState): string {
   return `site.${base}.${state}`;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Repository                                                                 */
-/* -------------------------------------------------------------------------- */
 
 export class KvSiteRepository implements SiteRepository {
   private readonly redis = getUpstashRedis();

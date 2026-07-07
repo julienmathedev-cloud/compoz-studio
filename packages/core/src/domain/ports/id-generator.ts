@@ -1,15 +1,10 @@
 /**
  * @file packages/core/src/domain/ports/id-generator.ts
  * @layer core/domain
- *
- * @description
- * Port domaine pour générer des IDs stables (persistés).
- *
+ * @description Domain port for generating stable persisted ids.
  * @remarks
- * - Les IDs sont opaques et immuables (créés une seule fois).
- * - Implémentation fournie par l’infrastructure (uuidv7 aujourd’hui, DB demain).
+ * IDs are opaque and immutable once created. The implementation is provided by infrastructure.
  */
 export interface IdGenerator {
-  /** Génère un identifiant unique (string). */
   nextId(): string;
 }

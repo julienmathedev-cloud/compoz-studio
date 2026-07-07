@@ -1,15 +1,9 @@
 /**
  * @file packages/ui/src/pages/mappers/cells/card-collection.ts
  * @layer ui/pages/mappers
- *
- * @description
- * Shared runtime mapper for CardCollectionCell.
- *
+ * @description Maps card collection cell DTOs to form values.
  * @remarks
- * The card collection mapper owns cell-level concerns such as `cardKind`,
- * `columns`, `align`, `reveal`, and `cssClassName`.
- *
- * Reusable item shapes are delegated to item mappers.
+ * Cell-level options stay here, while reusable card item shapes are delegated to item mappers.
  */
 
 import type {

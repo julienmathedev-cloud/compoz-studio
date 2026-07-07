@@ -5,13 +5,11 @@
  * @layer studio/atoms
  *
  * @description
- * Bouton de bascule du thème (clair / sombre) pour l’interface Studio.
+ * Studio theme toggle button for light and dark modes.
  *
  * @remarks
- * - Atome UI : aucune logique métier.
- * - Délègue la gestion du thème au `StudioThemeProvider`.
- * - Utilise exclusivement `StudioIcon` pour l’affichage des icônes.
- * - Accessibilité assurée via `aria-label` et tooltip.
+ * - Delegates theme state management to `StudioThemeProvider`.
+ * - Accessibility is handled through `aria-label` and tooltip text.
  */
 
 import { Moon, Sun } from "lucide-react";
@@ -20,10 +18,6 @@ import { useTranslations } from "next-intl";
 import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
 import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
 import { useStudioTheme } from "@compoz/studio/features/theme/StudioThemeProvider";
-
-/**
- * Bascule le thème de l’interface Studio (light / dark).
- */
 export function ThemeToggle() {
   const { theme, toggle } = useStudioTheme();
   const isDark = theme === "dark";
@@ -39,7 +33,6 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={isDark ? t("studio.theme.toLight") : t("studio.theme.toDark")}
       tooltip={t("common.availableInNextVersion")}
-      //tooltip={isDark ? t("studio.theme.toLight") : t("studio.theme.toDark")}
     >
       <StudioIcon icon={isDark ? Sun : Moon} />
     </TooltipButton>

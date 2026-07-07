@@ -5,12 +5,12 @@
  * @layer studio/atoms
  *
  * @description
- * Bouton de suppression réutilisable (Studio) avec confirmation globale.
+ * Reusable Studio delete button with global confirmation.
  *
  * @remarks
- * - Atome UI : aucune logique métier.
- * - Déclenche `onConfirmDelete` uniquement après confirmation.
- * - Peut afficher un état "en cours" via `isDeleting`.
+ * - UI atom with no business logic.
+ * - Calls `onConfirmDelete` only after confirmation.
+ * - Can display an in-progress state through `isDeleting`.
  */
 
 import { Trash2 } from "lucide-react";
@@ -24,38 +24,18 @@ import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipBu
 import type { ConfirmOptions } from "@compoz/studio/features/confirm/ConfirmDialogProvider";
 import { useConfirm } from "@compoz/studio/features/confirm/useConfirm";
 
-/**
- * Props du composant `DeleteButton`.
- */
 type DeleteButtonProps = Readonly<{
-  /** Action exécutée uniquement si l’utilisateur confirme. */
   onConfirmDelete: () => void | Promise<void>;
-
-  /** Désactive le bouton (ex: busy, disabled parent). */
   disabled?: boolean;
-
-  /** Tooltip affiché quand l’action est désactivée (ex: “Impossible car …”). */
   disabledTooltip?: ReactNode;
-
-  /** Affiche un état de suppression en cours (spinner + bouton disabled). */
   isDeleting?: boolean;
-
-  /** Libellés a11y/UX du bouton. */
   ariaLabel?: string;
   title?: string;
-
-  /** Options de confirmation (defaults adaptés aux suppressions). */
   confirm?: Omit<ConfirmOptions, "tone"> & { tone?: ConfirmOptions["tone"] };
-
-  /** Taille du bouton (shadcn). */
   size?: "default" | "sm" | "lg" | "icon";
-
   className?: string;
 }>;
 
-/**
- * Bouton de suppression (destructive) avec confirmation.
- */
 export function DeleteButton({
   onConfirmDelete,
   disabled = false,

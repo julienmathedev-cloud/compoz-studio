@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/assets/entities/image.ts
  * @layer core/domain/assets
- * @description
- * Entités métier Image
+ * @description Image domain entity shared by core features.
  */
 
 export type Image = {

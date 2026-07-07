@@ -3,17 +3,12 @@
  * @layer studio/app/api
  *
  * @description
- * Route API Studio pour la lecture, la suppression et la mise à jour
- * d’une page par ID dans le Website actif.
+ * Studio API route for reading, deleting, and updating a page within the active Website.
  *
  * @remarks
- * Responsabilités :
- * - GET    : retourne une page selon le state demandé (draft/published).
- * - DELETE : supprime une page en draft + détache ses enfants directs.
- * - PATCH  : met à jour une page en draft.
- * - Index (SiteIndexDTO) : source of truth maintenue par patch,
- *   sans rebuild/list post-mutation.
- * - Les repositories sont scopés par Prisma Website.id.
+ * - Delete mutations detach direct child pages before removing the draft page.
+ * - Mutations patch the `SiteIndexDTO` source of truth without a global rebuild/list pass.
+ * - Repositories are scoped by Prisma Website.id.
  */
 
 import "server-only";
@@ -50,10 +45,6 @@ import {
   type UpdatePageIntentDTO,
 } from "@compoz/validation/pages/page-intents";
 
-/* -------------------------------------------------------------------------- */
-/* GET /api/pages/:pageId                                                     */
-/* -------------------------------------------------------------------------- */
-
 export async function GET(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.GET" as const;
 
@@ -89,10 +80,6 @@ export async function GET(req: Request, ctx: { params: unknown }) {
   });
 }
 
-/* -------------------------------------------------------------------------- */
-/* DELETE /api/pages/:pageId                                                  */
-/* -------------------------------------------------------------------------- */
-
 export async function DELETE(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.DELETE" as const;
 
@@ -122,11 +109,11 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
         const nowIso = new Date().toISOString();
 
         /**
-         * 1) Détacher les enfants directs avant suppression.
+         * Detach direct children before deleting the page.
          *
-         * - On lit l’index source of truth.
-         * - On détache côté pages via readManyById + putMany.
-         * - On garde uniquement le détachement direct à 1 niveau.
+         * - Reads the source-of-truth index.
+         * - Detaches pages through `readManyById` + `putMany`.
+         * - Only performs one-level direct child detachment.
          */
         const currentIndex = await siteRepo.readIndex(DEFAULT_CONTENT_STATE);
 
@@ -168,17 +155,14 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
           });
         }
 
-        /**
-         * 2) Supprimer la page via le use-case domaine.
-         */
         const runDelete = deletePage({ pages: pagesRepo });
         await runDelete({ pageId });
 
         /**
-         * 3) Patch de l’index source of truth, sans rebuild global.
+         * Patch the source-of-truth index without a global rebuild.
          *
-         * - detachChildrenByParentId : parentId -> null dans l’index.
-         * - removePageById : retire la page supprimée.
+         * - `detachChildrenByParentId` sets `parentId` to `null` in the index.
+         * - `removePageById` removes the deleted page reference.
          */
         const baseIndex =
           currentIndex ??
@@ -211,10 +195,10 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
         });
 
         /**
-         * Invalidation du cache de status du Website actif.
+         * Invalidate the active Website status cache.
          *
-         * Le cache peut encore être implémenté en KV côté infra,
-         * mais son scope métier est le Prisma Website.id.
+         * The cache may still be implemented with KV in infra,
+         * but its business scope is the Prisma Website.id.
          */
         try {
           logger.debug?.("route.statusCache.invalidate.start", {
@@ -249,10 +233,6 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
     );
   });
 }
-
-/* -------------------------------------------------------------------------- */
-/* PATCH /api/pages/:pageId                                                   */
-/* -------------------------------------------------------------------------- */
 
 export async function PATCH(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.PATCH" as const;
@@ -298,7 +278,7 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
         const { page } = await runUpdate({ pageId, ...payload });
 
         /**
-         * Patch de l’index source of truth, sans rebuild global.
+         * Patch the source-of-truth index without a global rebuild.
          */
         await siteRepo.ensureBase();
 
@@ -338,10 +318,10 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
         });
 
         /**
-         * Invalidation du cache de status du Website actif.
+         * Invalidate the active Website status cache.
          *
-         * Le cache peut encore être implémenté en KV côté infra,
-         * mais son scope métier est le Prisma Website.id.
+         * The cache may still be implemented with KV in infra,
+         * but its business scope is the Prisma Website.id.
          */
         try {
           logger.debug?.("route.statusCache.invalidate.start", {

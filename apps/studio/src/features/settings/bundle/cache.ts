@@ -1,13 +1,13 @@
 /**
  * @file apps/studio/src/features/settings/bundle/cache.ts
- * @layer hooks/studio/site/settings-bundle
+ * @layer studio/features/settings/bundle
  *
  * @description
- * Helpers de cache React Query pour le bundle de settings.
+ * React Query cache helper for patching the Studio settings bundle.
  *
  * @remarks
- * - Permet d’updater le bundle après un PATCH slice, sans invalidation globale.
- * - Le cache Studio est scopé par Prisma Website.id.
+ * - Updates the cached bundle after a slice PATCH without forcing a global invalidation.
+ * - Studio cache keys are scoped by Prisma Website.id and content state.
  */
 
 import type { QueryClient } from "@tanstack/react-query";

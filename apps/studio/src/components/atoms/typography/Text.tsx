@@ -3,13 +3,11 @@
  * @layer studio/atoms
  *
  * @description
- * Texte générique (paragraphe / inline) avec variantes typographiques pour le Studio.
+ * Generic paragraph/inline text component with Studio typography variants.
  *
  * @remarks
- * - Atome UI : aucune logique métier.
- * - Unifie les styles typographiques via les tokens Studio.
- * - Supporte l’accessibilité (texte masqué visuellement).
- * - Supporte la troncature sur une ligne.
+ * - Unifies typography styles through Studio tokens.
+ * - Supports accessible visually hidden text and single-line truncation.
  */
 
 import type { HTMLAttributes, ReactNode } from "react";
@@ -20,14 +18,8 @@ import {
   type TextVariant,
 } from "@compoz/ui/styles/studio/typography";
 
-/**
- * Balises HTML supportées pour le composant `Text`.
- */
 export type TextTag = "p" | "span" | "li" | "label" | "small";
 
-/**
- * Props du composant `Text`.
- */
 export type TextProps = Omit<HTMLAttributes<HTMLElement>, "className"> &
   Readonly<{
     as?: TextTag;
@@ -38,9 +30,6 @@ export type TextProps = Omit<HTMLAttributes<HTMLElement>, "className"> &
     children: ReactNode;
   }>;
 
-/**
- * Texte typographique standardisé pour l’interface Studio.
- */
 export function Text({
   as = "p",
   variant = "base",
@@ -55,9 +44,7 @@ export function Text({
   return (
     <Tag
       className={cn(
-        // Style typographique de base (taille, poids, couleur par défaut)
         TEXT_VARIANT_STYLES[variant],
-        // Utilitaires d’accessibilité / mise en forme
         visuallyHidden && "sr-only",
         truncate && "truncate",
         className,

@@ -2,14 +2,14 @@
 
 /**
  * @file apps/studio/src/features/overview/components/OverviewStatsRow.tsx
- * @layer ui/studio/overview
+ * @layer studio/features/overview/components
  *
  * @description
- * Ligne de statistiques : 2 cartes (Pages / Blocks) basées sur `SiteStatusDTO`.
+ * Overview statistics row showing page and block count cards from `SiteStatusDTO`.
  *
  * @remarks
- * - UI-only.
- * - Les données sont calculées côté serveur dans la route `site/status`.
+ * - Displays counts computed server-side by the `site/status` route.
+ * - Keeps loading and error handling delegated to child stat cards and the parent section.
  */
 
 import { useTranslations } from "next-intl";
@@ -29,26 +29,16 @@ type OverviewStatsRowProps = Readonly<{
 export function OverviewStatsRow({ data, isError }: OverviewStatsRowProps) {
   const t = useTranslations();
 
-  /* -------------------------------------------------------------------------- */
-  /* Counts extraction                                                          */
-  /* -------------------------------------------------------------------------- */
+  // Counts from the status payload.
 
   const pagesCounts = data?.counts?.pages;
   const blocksCounts = data?.counts?.blocks;
-
-  /* -------------------------------------------------------------------------- */
-  /* Pages                                                                      */
-  /* -------------------------------------------------------------------------- */
 
   const pagesDraft = pagesCounts?.draft ?? 0;
   const pagesPublished = pagesCounts?.published ?? 0;
   const pagesNew = pagesCounts?.new ?? 0;
   const pagesModified = pagesCounts?.modified ?? 0;
   const pagesDeleted = pagesCounts?.deleted ?? 0;
-
-  /* -------------------------------------------------------------------------- */
-  /* Blocks                                                                     */
-  /* -------------------------------------------------------------------------- */
 
   const blocksDraft = blocksCounts?.draft ?? 0;
   const blocksPublished = blocksCounts?.published ?? 0;

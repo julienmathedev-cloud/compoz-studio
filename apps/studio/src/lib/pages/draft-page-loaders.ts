@@ -3,16 +3,13 @@
  * @layer studio/lib/pages
  *
  * @description
- * Loaders server Next/React pour le rendu Draft `/draft` dans le Studio :
- * - request-dedupe via `cache()`
- * - résolution slug -> pageId via helpers core
+ * Server loaders for rendering Studio draft pages.
  *
  * @remarks
- * - Le Website actif est résolu via la session Studio.
- * - Les vrais sites utilisent un Prisma Website.id.
- * - Les sessions demo sandbox peuvent encore transporter un scope KV temporaire
- *   explicite via `sandboxTenantId`, mais ce fichier n’expose pas de vocabulaire
- *   tenant générique.
+ * - Uses React `cache()` to dedupe repository and read calls during the same server render.
+ * - Resolves slugs to page ids through the core SiteIndex helpers.
+ * - The active website is resolved from the Studio session and uses Prisma Website.id.
+ * - Demo sandbox sessions may still carry an explicit temporary KV scope through `sandboxTenantId`, but this module should not expose generic tenant wording.
  */
 
 import "server-only";
@@ -33,10 +30,6 @@ type DraftWebsite = Readonly<{
   name: string;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Website resolution                                                         */
-/* -------------------------------------------------------------------------- */
-
 export const getWebsite = cache(async (): Promise<DraftWebsite> => {
   const session = await requireSessionWithWebsite();
 
@@ -52,10 +45,6 @@ export const getWebsiteId = cache(async (): Promise<string> => {
 
   return website.websiteId;
 });
-
-/* -------------------------------------------------------------------------- */
-/* Internal cached loaders                                                    */
-/* -------------------------------------------------------------------------- */
 
 const getSiteRepoCached = cache(async (websiteId: string) => {
   return getSiteRepository({ websiteId });
@@ -85,10 +74,6 @@ const readDraftPageByIdCached = cache(
   },
 );
 
-/* -------------------------------------------------------------------------- */
-/* Core helpers — explicit Website.id                                         */
-/* -------------------------------------------------------------------------- */
-
 async function getDraftPageByResolvedSlugForWebsite(
   websiteId: string,
   slug: string,
@@ -107,10 +92,6 @@ async function getDraftPageByResolvedSlugForWebsite(
 
   return readDraftPageByIdCached(websiteId, pageId);
 }
-
-/* -------------------------------------------------------------------------- */
-/* Public API — explicit Website.id                                           */
-/* -------------------------------------------------------------------------- */
 
 export async function getDraftSettingsByWebsiteId(websiteId: string) {
   return readDraftSettingsCached(websiteId);

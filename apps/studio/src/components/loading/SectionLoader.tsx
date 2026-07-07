@@ -5,14 +5,10 @@
  * @layer studio/components
  *
  * @description
- * Loader de section : affiche un état de chargement uniforme
- * (spinner + label optionnel) avec une hauteur minimale
- * pour limiter le layout shift.
+ * Section-level loading state with a spinner, label, and minimum height to limit layout shift.
  *
  * @remarks
- * - Composant UI uniquement : aucun fetch, aucune logique métier.
- * - À utiliser au niveau des sections / containers
- *   (ex. `if (isLoading) return <SectionLoader />`).
+ * - Use at section/container level, for example before rendering form content.
  */
 
 import type { CSSProperties } from "react";
@@ -22,17 +18,11 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@compoz/ui/lib/utils";
 
 export type SectionLoaderProps = Readonly<{
-  /** Message affiché sous le spinner. */
   label?: string;
 
-  /**
-   * Hauteur minimale pour stabiliser le layout.
-   * - string : valeur CSS (ex. `"16rem"`)
-   * - number : pixels
-   */
+  /** Minimum height used to stabilize section layout while loading. */
   minHeight?: string | number;
 
-  /** Classes additionnelles (optionnel). */
   className?: string;
 }>;
 

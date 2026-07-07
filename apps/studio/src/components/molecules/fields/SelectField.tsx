@@ -2,18 +2,17 @@
 
 /**
  * @file apps/studio/src/components/molecules/fields/SelectField.tsx
- * @layer studio/molecules
+ * @layer studio/molecules/fields
  *
  * @description
- * Champ Select contrôlé (label, aide, erreur, placeholder) basé sur le Select ShadCN.
+ * Controlled Studio select field with label, help text, error display, and placeholder support.
  *
  * @remarks
- * - Molecule UI : compose `Field`, `Select` et des atoms (`FieldMetaBar`, `ErrorText`).
- * - Contrôle via `value` / `onChange` fournis par le parent.
- * - L’invalidité est pilotée via `error` et/ou `invalid` (ARIA + styles).
- * - Le chargement est géré au niveau Form / Section (ce composant ne gère que `disabled`).
- * - Supporte un rendu custom du trigger via `renderValue`.
- * - Strictement UI-only : aucune logique métier.
+ * - Composes `Field`, `Select`, `FieldMetaBar`, and `ErrorText`.
+ * - The value is fully controlled through `value` and `onChange`.
+ * - Maps `error` and `invalid` to ARIA invalid state and visual styles.
+ * - Loading state is handled by parent forms or sections; this component only handles `disabled`.
+ * - Supports custom trigger rendering through `renderValue`.
  */
 
 import { useTranslations } from "next-intl";
@@ -37,50 +36,32 @@ import {
 } from "@compoz/ui/components/ui/select";
 import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 
-/**
- * Option d’un `SelectField`.
- */
+/** Select option accepted by `SelectField`. */
 type SelectOption = Readonly<{
-  /** Label affiché dans la liste (string ou JSX). */
   label: ReactNode;
-  /** Label texte optionnel (fallback stable : aria, recherche, analytics). */
+  /** Optional plain-text label for stable ARIA, search, or analytics usage. */
   textLabel?: string;
   value: string;
 }>;
 
 /**
- * Props du composant `SelectField`.
+ * Hides native select details behind Radix while keeping the field fully controlled.
  */
 type SelectFieldProps = Readonly<{
-  /** Ensemble des IDs ARIA du champ (fournis par le parent). */
   ids: FieldIds;
-  /** Nom du champ pour le select natif caché généré par Radix. */
   name?: string;
-  /** Libellé visible associé au Select. */
   label: string;
-  /** Valeur actuelle sélectionnée (contrôlée). */
   value: string;
-  /** Callback appelé avec la prochaine valeur sélectionnée. */
   onChange: (v: string) => void;
-  /** Liste des options disponibles. */
   items: ReadonlyArray<SelectOption>;
-  /** Placeholder optionnel (fallback i18n si absent). */
   placeholder?: string;
-  /** Texte d’aide optionnel affiché sous le champ. */
   help?: string;
-  /** Message d’erreur bloquant affiché sous le champ. */
   error?: string;
-  /** Indicateur visuel/ARIA d’invalidité (complète `error`). */
   invalid?: boolean;
-  /** Désactive toute interaction. */
   disabled?: boolean;
-  /** Rendu custom dans le trigger (valeur sélectionnée). */
   renderValue?: (item: SelectOption) => ReactNode;
 }>;
 
-/**
- * Champ Select contrôlé standardisé pour le Studio.
- */
 export function SelectField({
   ids,
   name,

@@ -2,19 +2,13 @@
 
 /**
  * @file apps/studio/src/features/settings/footer/FooterSection.tsx
- * @layer ui/studio/sections
+ * @layer studio/features/settings/footer
  *
  * @description
- * Section Studio dédiée au footer : chargement (shell), édition (form), warnings UI et preview.
+ * Studio section for editing footer settings with warnings and live preview.
  *
  * @remarks
- * - Le chargement initial est géré par `SettingsSection` (shell).
- * - Monte `useFooterSettings` (baseline + save) et câble `FooterForm`.
- * - Affiche les warnings non bloquants (via `FooterForm` + `computeFooterWarnings` au submit).
- * - La preview `/preview/footer` consomme deux scopes :
- *   - `footer` en live
- *   - `legalMenu` en baseline-only
- * - Strictement UI-only : aucune logique métier.
+ * - Preview uses `footer` in live mode and injects `legalMenu` as a baseline-only scope.
  */
 
 import { useTranslations } from "next-intl";
@@ -70,24 +64,14 @@ export function FooterSection() {
     });
   }, [isLoading, isSaving, baseline, settingsBundle, isLoadingSettingsBundle]);
 
-  /**
-   * Baseline footer pour la preview.
-   * On garde toujours une shape runtime dérivée de la baseline RHF.
-   */
+  /** Preview baseline uses the runtime shape derived from the RHF baseline. */
   const baselinePreview = useMemo<FooterSettingsShape>(() => {
     return toFooterSettingsShapeFromFormValues(baseline);
   }, [baseline]);
 
-  /**
-   * Valeur réellement injectée dans la preview pour le scope `footer` :
-   * - draft live si le form bouge
-   * - sinon baseline persistée
-   */
   const previewValue = previewDraft ?? baselinePreview;
 
-  /**
-   * legalMenu reste en baseline-only pour la preview footer.
-   */
+  /** Footer preview needs the legal menu chrome, but does not edit it live. */
   const legalMenuBaselinePreview =
     useMemo<LegalMenuSettingsShape | null>(() => {
       if (!settingsBundle) return null;
@@ -100,9 +84,6 @@ export function FooterSection() {
       liveEnabled: true,
     });
 
-  /**
-   * Scope baseline-only : legalMenu
-   */
   useStudioPreviewBaselineScope<LegalMenuSettingsShape>({
     scope: "legalMenu",
     baseline: legalMenuBaselinePreview,
@@ -115,11 +96,7 @@ export function FooterSection() {
     },
   });
 
-  /**
-   * Empty state :
-   * - on attend que les données dépendantes soient chargées
-   * - si une baseline nécessaire manque, on passe en empty
-   */
+  /** Avoids showing the empty preview before dependent settings have finished loading. */
   const dataReady = !isLoading && !isLoadingSettingsBundle;
 
   const isEmpty = dataReady && legalMenuBaselinePreview == null;

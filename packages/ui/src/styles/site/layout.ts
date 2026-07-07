@@ -1,11 +1,10 @@
 /**
  * @file packages/ui/src/styles/site/layout.ts
- * @layer styles/site
+ * @layer ui/styles/site
  *
  * @description
- * Styles du layout du site (site + preview studio).
+ * Defines shared public site layout class tokens for the app shell, column, surface, and main content area.
  */
-
 export const SITE_APP_SHELL =
   "h-dvh min-h-0 min-w-0 overflow-y-auto theme-site";
 export const SITE_APP_COLUMN = "flex min-h-dvh flex-col";

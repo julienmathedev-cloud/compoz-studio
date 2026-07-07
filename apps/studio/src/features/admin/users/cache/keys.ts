@@ -3,28 +3,22 @@
  * @layer studio/features/admin/users/cache
  *
  * @description
- * Helpers pour construire les query keys React Query liées aux users (Studio).
+ * React Query key helpers for Studio admin users.
  *
  * @remarks
- * - Ne pas changer la shape des keys : elles sont utilisées pour l’invalidation/seed de cache.
- * - Les segments incluent "admin" car ces queries appartiennent à l’espace admin du Studio.
+ * - Do not change key shapes because mutations rely on them for cache invalidation and seeding.
  */
 
-/**
- * Source de vérité : queryKey "users list".
- * Permet d’invalider la liste après create/update/delete.
- */
+/** Source of truth for invalidating the users list after create, update, or delete mutations. */
 export function usersListKey() {
   return ["studio", "users", "list"] as const;
 }
 
 /**
- * Source de vérité : queryKey "user by id".
- * Permet de seed/patch le cache depuis les mutations.
+ * Source of truth for seeding or patching a single user cache entry from mutations.
  *
  * @remarks
- * - `userId` est normalisé en `trim()` uniquement (pas de lowercase) pour éviter
- *   de masquer des IDs case-sensitive éventuels.
+ * - `userId` is only trimmed, not lowercased, to avoid hiding potentially case-sensitive IDs.
  */
 export function userByIdKey(userId: string) {
   const id = String(userId ?? "").trim();

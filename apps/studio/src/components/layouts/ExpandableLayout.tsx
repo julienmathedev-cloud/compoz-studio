@@ -5,14 +5,12 @@
  * @layer studio/layouts
  *
  * @description
- * Layout repliable (summary + details) basé sur l’Accordion (ShadCN).
+ * Collapsible summary/details layout built on the ShadCN Accordion.
  *
  * @remarks
- * - UI-only : ne connaît ni RHF ni le métier.
- * - Réduit la charge visuelle en regroupant des options avancées.
- * - `forceClosed` force une fermeture temporaire one-way (ex: pendant un drag parent).
- * - `open` permet un mode contrôlé optionnel.
- * - `onOpenChange` permet une instrumentation optionnelle (debug/analytics).
+ * - Reduces visual load by grouping advanced options.
+ * - Supports uncontrolled and controlled open state.
+ * - `forceClosed` temporarily enforces a one-way closed state, for example during a parent drag.
  */
 
 import { useTranslations } from "next-intl";
@@ -28,50 +26,30 @@ import {
 import { useIdPrefix } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
 
-/**
- * Props du composant `ExpandableLayout`.
- */
 export type ExpandableLayoutProps = Readonly<{
-  /** Entête toujours visible (compact). */
   summary?: ReactNode;
 
-  /** Zone repliable (options). */
   children: ReactNode;
 
-  /** Libellé du toggle. */
   label?: string;
 
-  /** Ouvert par défaut (si non contrôlé). */
   defaultOpen?: boolean;
 
-  /** Désactive le toggle (et donc l’ouverture/fermeture). */
   disabled?: boolean;
 
-  /** État contrôlé (optionnel). Si fourni, le composant devient contrôlé. */
   open?: boolean;
 
-  /**
-   * Force une fermeture temporaire sans perdre l’état local.
-   *
-   * @remarks
-   * Typiquement utile pendant un drag parent pour éviter que des zones
-   * droppables enfants restent actives/visibles.
-   */
+  /** Temporarily forces the layout closed without losing local state. */
   forceClosed?: boolean;
 
-  /** Callback optionnel (instrumentation / debug / analytics). */
   onOpenChange?: (open: boolean) => void;
 
-  /** Identifiant stable (si tu veux une valeur d’accordéon déterministe). */
   id?: string;
 
   className?: string;
   triggerClassName?: string;
 }>;
 
-/**
- * Affiche une zone compacte (`summary`) et une zone repliable (`children`).
- */
 export function ExpandableLayout({
   summary,
   children,
@@ -88,16 +66,16 @@ export function ExpandableLayout({
   const fallbackId = useIdPrefix("expandable");
   const itemValue = useMemo(() => id ?? fallbackId, [id, fallbackId]);
 
-  // État local (non contrôlé) : `defaultOpen` initialise.
+  // Uncontrolled state is preserved while `forceClosed` temporarily hides the content.
   const [openState, setOpenState] = useState(Boolean(defaultOpen));
 
   const isControlled = typeof open === "boolean";
 
   /**
-   * Priorité d’ouverture :
-   * 1. forceClosed => toujours fermé
-   * 2. mode contrôlé => `open`
-   * 3. mode non contrôlé => état local
+   * Opening priority:
+   * 1. `forceClosed` always closes the layout.
+   * 2. Controlled mode uses `open`.
+   * 3. Uncontrolled mode uses local state.
    */
   const effectiveOpen = forceClosed
     ? false
@@ -119,7 +97,7 @@ export function ExpandableLayout({
         onValueChange={(v) => {
           const nextOpen = v === itemValue;
 
-          // Si fermeture forcée, on ignore les interactions utilisateur.
+          // Ignore user interactions while forced closed.
           if (forceClosed) {
             onOpenChange?.(false);
             return;

@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/reveal.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default
  *
  * @description
- * Skin UI — reveal (thème Default).
+ * Defines the default skin animation presets for public site reveal effects.
  */
 
 export const defaultRevealUi = {

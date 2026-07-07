@@ -2,14 +2,14 @@
 
 /**
  * @file apps/studio/src/features/overview/pages/OverviewPage.tsx
- * @layer ui/pages
+ * @layer studio/features/overview/pages
  *
  * @description
- * Page « Aperçu » (admin) — affiche la section Overview avec un H1 SR-only.
+ * Studio Overview page wrapping the Overview section with a single screen-reader H1.
  *
  * @remarks
- * - Le H1 est porté par la page (SR-only) pour garantir un seul H1 global.
- * - `OverviewSection` rend un H2 visible via `SettingsSection` (headingLevel="h2" par défaut).
+ * - The page owns the SR-only H1 so the document keeps one global H1.
+ * - `OverviewSection` renders the visible H2 through `SettingsSection`.
  */
 
 import { useTranslations } from "next-intl";
@@ -20,18 +20,15 @@ import { OverviewSection } from "@compoz/studio/features/overview/sections/Overv
 import { cn } from "@compoz/ui/lib/utils";
 import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 
-/**
- * Props de la page Overview.
- */
 type OverviewPageProps = Readonly<{
   isDemo?: boolean;
   isAdmin?: boolean;
 }>;
 
-/**
- * Page Overview (admin).
- */
-export function OverviewPage({ isDemo = false, isAdmin = false }: OverviewPageProps) {
+export function OverviewPage({
+  isDemo = false,
+  isAdmin = false,
+}: OverviewPageProps) {
   const t = useTranslations();
 
   return (

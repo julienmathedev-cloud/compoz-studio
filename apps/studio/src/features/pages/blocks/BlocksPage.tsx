@@ -2,15 +2,14 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/BlocksPage.tsx
- * @layer ui/studio/pages/blocks
+ * @layer studio/features/pages/blocks
  *
  * @description
- * Page « Blocs » (studio).
+ * Studio Blocks page wrapping the blocks section with a single screen-reader H1.
  *
  * @remarks
- * - Définit le H1 unique (sr-only) pour l’accessibilité.
- * - Délègue l’affichage et la structure à `BlocksSection`.
- * - Conforme au pattern global des pages studio.
+ * - The page owns the SR-only H1 so the document keeps one global H1.
+ * - `BlocksSection` renders the visible section heading.
  */
 
 import { useTranslations } from "next-intl";
@@ -26,12 +25,10 @@ export function BlocksPage() {
 
   return (
     <div className={cn(STUDIO_SECTION)}>
-      {/* H1 unique — accessibilité uniquement */}
       <Heading as="h1" className="sr-only">
         {t("studio.shared.entities.blocks")}
       </Heading>
 
-      {/* Section principale (H2 visible par défaut) */}
       <BlocksSection />
     </div>
   );

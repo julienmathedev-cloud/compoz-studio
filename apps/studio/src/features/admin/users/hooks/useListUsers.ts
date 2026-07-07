@@ -2,15 +2,14 @@
 
 /**
  * @file apps/studio/src/features/admin/users/hooks/useListUsers.ts
- * @layer hooks/admin/users
+ * @layer studio/features/admin/users/hooks
  *
  * @description
- * Hook Studio React Query pour charger la liste des users (Studio).
+ * React Query hook for loading Studio users through the admin API.
  *
  * @remarks
- * - Orchestration UI-only (query + logs + notifications).
- * - Aucune notion de draft/published.
- * - Aucune logique métier.
+ * - Users are global Studio data, so no draft/published state is involved.
+ * - Keeps previous list data during refetches to avoid UI flicker.
  */
 
 import { useEffect } from "react";
@@ -42,7 +41,7 @@ export function useListUsers(): UseListUsersResult {
     queryFn: async ({ signal }): Promise<ReadonlyArray<UserSummaryDTO>> => {
       const res = await adminUsersStudioApi.list({ signal });
 
-      // ✅ flatten route response
+      // Flatten the route response for query consumers.
       const users = res.users;
 
       lg.debug("list.ok", { count: users.length });

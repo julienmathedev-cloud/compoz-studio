@@ -3,7 +3,10 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer site/preview : rendu d’un spacer vertical.
+ * Renders a validated vertical spacer cell.
+ *
+ * @remarks
+ * Visibility classes are derived per breakpoint while the spacing size comes from the active skin.
  */
 
 import type { SpacerCellShape } from "@compoz/validation/pages/blocks/cells/cell";
@@ -26,13 +29,8 @@ function getVisibilityClasses(
   };
 
   return cn(
-    // base = mobile
     v.mobile ? "block" : "hidden",
-
-    // tablet
     v.tablet ? "md:block" : "md:hidden",
-
-    // desktop
     v.desktop ? "lg:block" : "lg:hidden",
   );
 }

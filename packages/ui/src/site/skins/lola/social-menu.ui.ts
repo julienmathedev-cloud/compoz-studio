@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/lola/social-menu.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/lola
  *
  * @description
- * Skin UI — menu social site (thème Lola).
- *
- * @remarks
- * - Fournit uniquement des classes Tailwind (aucune logique).
- * - Consommé par `SiteSocialMenu` via la prop `ui`.
+ * Defines the Lola skin overrides for the public site social menu.
  */
 
 import type { SiteSocialMenuUiOverride } from "@compoz/ui/site/site-ui.types";

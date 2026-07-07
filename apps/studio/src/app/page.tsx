@@ -1,9 +1,9 @@
 /**
- * @file apps/studio/app/page.tsx
+ * @file apps/studio/src/app/page.tsx
  * @layer studio/app
  *
  * @description
- * Root Studio : redirige vers la locale par défaut définie dans le routing i18n.
+ * Studio root page that redirects to the default locale defined by i18n routing.
  */
 
 import { routing } from "@compoz/studio/i18n/routing";

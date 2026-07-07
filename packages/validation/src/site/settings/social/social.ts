@@ -1,10 +1,16 @@
 /**
  * @file packages/validation/src/site/settings/social/social.ts
  * @layer schemas
+ *
  * @description
- * Définit les schémas Zod décrivant la forme frontière des réglages et items sociaux.
- * Ces schémas valident uniquement la structure canonique des données exposées ;
- * les valeurs draft-friendly ("" pendant la saisie) sont gérées côté form schema.
+ * Zod schemas describing the social settings boundary shape.
+ *
+ * @remarks
+ * These schemas validate canonical settings payloads. Draft-friendly values,
+ * such as empty strings while editing, belong to the form schema.
+ *
+ * Email items must use `mailto:` links. Other social items must use absolute
+ * HTTP URLs.
  */
 
 import { SOCIAL_ITEM } from "@compoz/core/constants/limits/social";
@@ -17,21 +23,12 @@ import { isMailtoHref } from "@compoz/core/domain/urls/mailto";
 import { AbsoluteHttpUrlSchema } from "@compoz/validation/common/url-fragments";
 import { z } from "zod";
 
-/** Kind (strict enum). */
 const SocialKindSchema = z.enum(SOCIAL_KINDS);
 
-/** Mailto valide (policy partagée). */
 const MailtoHrefSchema = z.string().trim().refine(isMailtoHref, {
   message: ERROR_CODES.SOCIAL_MAILTO_INVALID,
 });
 
-/**
- * Item social — canonique (non draft).
- * - id requis
- * - href doit être valide (pas "", pas de préfixe seul).
- * - email => mailto obligatoire
- * - autres => URL http(s) absolue obligatoire (mailto interdit)
- */
 export const SocialItemSchema = z
   .object({
     id: z.string().trim().min(1, ERROR_CODES.SOCIAL_ID_REQUIRED),
@@ -44,7 +41,6 @@ export const SocialItemSchema = z
 
     const isMailto = MailtoHrefSchema.safeParse(href).success;
 
-    // email → mailto obligatoire
     if (val.kind === SOCIAL_KIND_EMAIL) {
       if (!isMailto) {
         ctx.addIssue({
@@ -56,7 +52,6 @@ export const SocialItemSchema = z
       return;
     }
 
-    // autres → mailto interdit
     if (isMailto) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -66,7 +61,6 @@ export const SocialItemSchema = z
       return;
     }
 
-    // autres → http(s) absolu requis
     const isAbs = AbsoluteHttpUrlSchema.safeParse(href).success;
     if (!isAbs) {
       ctx.addIssue({
@@ -77,7 +71,6 @@ export const SocialItemSchema = z
     }
   });
 
-/** Settings social (liste ordonnée). */
 export const SocialSettingsSchema = z
   .object({
     items: z

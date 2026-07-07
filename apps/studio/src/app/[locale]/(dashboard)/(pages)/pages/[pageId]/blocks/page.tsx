@@ -3,14 +3,11 @@
  * @layer studio/app
  *
  * @description
- * Page “Blocks” d’une page dans le Dashboard Studio.
+ * Studio Dashboard page for editing the blocks of a draft page.
  *
  * @remarks
- * - Route : `/[locale]/pages/[pageId]/blocks`.
- * - Server Component : charge la page par id en draft.
- * - Résout la session Studio et le Website actif côté server.
- * - Le repository est instancié avec le Prisma Website.id actif.
- * - Délègue la logique client (query/mutations + action bar) au container.
+ * - Loads the draft page by ID from the active Prisma Website scope.
+ * - Delegates client logic such as queries, mutations, and the action bar to the container.
  */
 
 import { notFound } from "next/navigation";

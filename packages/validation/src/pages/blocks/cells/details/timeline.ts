@@ -1,8 +1,8 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/details/timeline.ts
- * @layer schemas
+ * @layer validation/pages/blocks/cells/details
  * @description
- * Schéma Zod de TimelineCell.
+ * Defines Zod schemas for timeline cell data.
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";

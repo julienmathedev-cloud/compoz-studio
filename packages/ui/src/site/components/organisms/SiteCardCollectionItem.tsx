@@ -1,7 +1,12 @@
 /**
  * @file packages/ui/src/site/components/organisms/SiteCardCollectionItem.tsx
- * @layer ui/site/components
- * @description Rendu d’un item homogène de CardCollectionCell.
+ * @layer ui/site/components/organisms
+ *
+ * @description
+ * Renders one normalized card collection item using the selected card kind.
+ *
+ * @remarks
+ * Normalizes simple, extended, and structured card item fields before delegating to the matching site card component.
  */
 
 import type {

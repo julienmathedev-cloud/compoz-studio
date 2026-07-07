@@ -1,10 +1,11 @@
 "use client";
 
 /**
- * @file apps/studio/src/components/molecules/IconPicker.tsx
- * @layer ui/studio/molecules
+ * @file apps/studio/src/components/molecules/fields/IconPicker.tsx
+ * @layer studio/molecules/fields
+ *
  * @description
- * Picker d’icônes de contenu basé sur une whitelist + recherche.
+ * Content icon picker backed by the shared icon whitelist and search filtering.
  */
 
 import { useTranslations } from "next-intl";
@@ -93,9 +94,7 @@ export function IconPicker({
 
 IconPicker.displayName = "IconPicker";
 
-/* -------------------------------------------------------------------------- */
-/* Internals                                                                  */
-/* -------------------------------------------------------------------------- */
+// Internal memoized option button.
 
 type IconOptionButtonProps = Readonly<{
   value: string;

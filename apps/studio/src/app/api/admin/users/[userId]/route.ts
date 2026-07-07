@@ -3,16 +3,11 @@
  * @layer studio/app/api
  *
  * @description
- * Route API Studio (admin) pour la lecture, la suppression et la mise à jour d’un user par ID.
- *
- * Responsabilités :
- * - GET    : retourne un user complet par ID.
- * - DELETE : supprime un user (idempotent).
- * - PATCH  : met à jour un user via patch partiel (email/name/rbac + password optionnel).
+ * Studio admin API route for reading, deleting, and updating a user by ID.
  *
  * @remarks
- * - Admin-only (contrôlé via session).
- * - Pas de notion draft/published : users = données Studio globales.
+ * - `PATCH` updates users through a partial patch, including optional password changes.
+ * - No draft/published state is involved because users are global Studio data.
  */
 
 import "server-only";
@@ -40,10 +35,6 @@ import {
   UpdateUserIntentSchema,
   type UpdateUserIntentDTO,
 } from "@compoz/validation/users/user-intents";
-
-// -------------------------------------------------
-// GET /api/admin/users/:userId → read user
-// -------------------------------------------------
 
 export async function GET(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.admin.users.id.GET" as const;
@@ -74,10 +65,6 @@ export async function GET(req: Request, ctx: { params: unknown }) {
   });
 }
 
-// -------------------------------------------------
-// DELETE /api/admin/users/:userId → delete user (idempotent)
-// -------------------------------------------------
-
 export async function DELETE(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.admin.users.id.DELETE" as const;
 
@@ -107,10 +94,6 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
     });
   });
 }
-
-// -------------------------------------------------
-// PATCH /api/admin/users/:userId → update user
-// -------------------------------------------------
 
 export async function PATCH(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.admin.users.id.PATCH" as const;

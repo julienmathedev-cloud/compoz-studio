@@ -2,16 +2,18 @@
 
 /**
  * @file apps/studio/src/features/pages/hooks/useUpdatePage.ts
- * @layer hooks/studio/pages
+ * @layer studio/features/pages/hooks
  *
  * @description
- * Hook Studio React Query pour mettre à jour une page draft via l’API.
+ * React Query mutation hook for updating a draft page through the pages Studio API.
  *
  * @remarks
- * - Website-scoped cache : toutes les query keys incluent `websiteId`.
- * - Orchestration UI-only : mutation, cache update, notifications, logs.
- * - Aucune logique métier ni validation domaine.
- * - Le scope utilisé ici est Prisma Website.id.
+ * - Builds a minimal API patch from the shallow diff between baseline and next UI values.
+ * - Handles no-change cases before calling the API.
+ * - Tracks the targeted update through `updatingPageId` so only the matching page is blocked.
+ * - Seeds the page-by-id cache and updates the SiteIndex cache from the returned payload.
+ * - Invalidates site and page status views after update.
+ * - Studio cache keys are scoped by Prisma Website.id.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";

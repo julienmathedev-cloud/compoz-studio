@@ -1,19 +1,14 @@
 /**
  * @file packages/core/src/domain/site/defaults/footer.ts
- * @layer core/domain
- * @description
- * Valeurs par défaut **métier** pour la configuration du footer (`FooterSettings`).
- * Utilisées lors de l’initialisation d’un site ou en absence de configuration persistée.
- *
- * Invariant : objet statique uniquement (aucune logique).
+ * @layer core/domain/site
+ * @description Business defaults for footer settings.
+ * @remarks
+ * Static defaults only; no runtime logic belongs in this file.
  */
 
 import type { FooterSettings } from "@compoz/core/domain/site/entities/footer";
 
-/**
- * Valeurs par défaut d’un footer minimal.
- */
 export const DEFAULT_FOOTER_SETTINGS: FooterSettings = {
   copyright: "Compoz",
-  showYear: true, // affichage automatique de l'année courante
+  showYear: true,
 };

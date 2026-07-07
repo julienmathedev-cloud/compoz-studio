@@ -1,13 +1,9 @@
 /**
  * @file packages/core/src/domain/site/index/utils.ts
- * @layer core/domain
- * @description
- * Helpers purs (immutables) pour manipuler l’index des pages (clé = id).
- *
+ * @layer core/domain/site/index
+ * @description Pure immutable helpers for updating the site page index.
  * @remarks
- * - No-op : retourne la même référence si rien ne change.
- * - Clone uniquement en cas de modification.
- * - Utilisé par `updateSiteIndex` et les use-cases de publication.
+ * Helpers preserve references on no-op updates and clone only when the index actually changes.
  */
 
 import {
@@ -17,35 +13,24 @@ import {
 import type { PageSummary } from "@compoz/core/domain/pages/entities/page";
 import type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
 
-/**
- * Positionnement optionnel lors d’un ajout.
- * - `POS_APPEND` / `POS_PREPEND`
- * - `{ beforeId: string }` / `{ afterId: string }`
- */
+/** Supported insertion positions for a page reference. */
 export type PositionSpecifier =
   | typeof POS_APPEND
   | typeof POS_PREPEND
   | { beforeId: string }
   | { afterId: string };
 
-/* ─────────────── Internes ─────────────── */
-
-/** Indique si un id est déjà présent dans la liste. */
 function hasId(pages: SiteIndex["pages"], id: string): boolean {
   return pages.some((p) => p.id === id);
 }
 
-/**
- * Insère une page avec une position donnée.
- * - Si l’id existe déjà → no-op (même référence).
- * - Sinon → retourne un nouveau tableau avec l’élément inséré.
- */
+/** Inserts a page reference while preserving the original array on duplicate ids. */
 function insertWithPosition(
   pages: SiteIndex["pages"],
   ref: Readonly<PageSummary>,
   position: Readonly<PositionSpecifier> = POS_APPEND,
 ): SiteIndex["pages"] {
-  if (hasId(pages, ref.id)) return pages; // no-op: même ref
+  if (hasId(pages, ref.id)) return pages; // no-op: preserve the original array reference
 
   const next = [...pages];
 
@@ -66,13 +51,7 @@ function insertWithPosition(
   return next;
 }
 
-/* ─────────────── Exposés ─────────────── */
-
-/**
- * Upsert par id :
- * - s’il existe → met à jour `slug` / `title` si besoin (no-op si identique).
- * - sinon      → insère à la position demandée.
- */
+/** Upserts a page reference while preserving the original index on no-op updates. */
 export function upsertPageRef(
   index: SiteIndex,
   ref: Readonly<PageSummary>,
@@ -80,11 +59,10 @@ export function upsertPageRef(
 ): SiteIndex {
   const i = index.pages.findIndex((p) => p.id === ref.id);
 
-  // Cas 1 : la page existe déjà
   if (i >= 0) {
     const prev = index.pages[i];
 
-    // Rien ne change → no-op
+    // no-op: preserve the original index reference
     if (
       prev.slug === ref.slug &&
       prev.name === ref.name &&
@@ -92,7 +70,6 @@ export function upsertPageRef(
     )
       return index;
 
-    // Sinon, on met à jour uniquement cette entrée
     const pages = index.pages.slice();
     pages[i] = {
       ...prev,
@@ -103,15 +80,10 @@ export function upsertPageRef(
     return { ...index, pages };
   }
 
-  // Cas 2 : nouvelle page → insertion à la position demandée
   return { ...index, pages: insertWithPosition(index.pages, ref, position) };
 }
 
-/**
- * Supprime une page par id.
- * - Si aucune entrée ne correspond → no-op (même référence, removed = false).
- * - Sinon → retourne un nouvel index et `removed = true`.
- */
+/** Removes a page reference while preserving the original index when no page matches. */
 export function removePageById(
   index: SiteIndex,
   pageId: string,
@@ -127,12 +99,9 @@ export function removePageById(
 }
 
 /**
- * Réordonne uniquement les enfants d’un parent en conservant l’ordre global
- * des autres pages (stable).
- *
+ * Reorders only the children of a parent while keeping all other pages stable.
  * @remarks
- * - Exige que `childIds` corresponde exactement aux enfants actuels (même set).
- * - No-op si l’ordre est déjà identique.
+ * Returns the original index unless `childIds` exactly matches the current child id set.
  */
 export function reorderChildrenByParentId(
   index: SiteIndex,
@@ -145,7 +114,7 @@ export function reorderChildrenByParentId(
   const currentChildren = index.pages.filter((p) => p.parentId === pid);
   if (currentChildren.length === 0) return index;
 
-  // Défense : liste complète et mêmes ids
+  // Defensive no-op unless the caller provides the complete child id set.
   if (childIds.length !== currentChildren.length) return index;
 
   const currentIds = currentChildren.map((c) => c.id);
@@ -154,14 +123,14 @@ export function reorderChildrenByParentId(
     currentIds.every((id) => childIds.includes(id));
   if (!sameSet) return index;
 
-  // No-op si déjà dans le bon ordre
+  // no-op: preserve the original index when the order is already correct
   const already = currentIds.every((id, i) => id === childIds[i]);
   if (already) return index;
 
   const byId = new Map(currentChildren.map((c) => [c.id, c]));
   const orderedChildren = childIds.map((id) => byId.get(id)!);
 
-  // Position de réinjection = index du 1er enfant rencontré
+  // Reinsert at the first existing child position to keep surrounding page order stable.
   const firstChildIndex = index.pages.findIndex((p) => p.parentId === pid);
 
   const without = index.pages.filter((p) => p.parentId !== pid);
@@ -178,10 +147,7 @@ export function reorderChildrenByParentId(
   return { ...index, pages: nextPages };
 }
 
-/**
- * Détache tous les enfants d’un parent (parentId -> null).
- * No-op si aucun enfant.
- */
+/** Detaches all children from a parent while preserving the original index on no-op updates. */
 export function detachChildrenByParentId(
   index: SiteIndex,
   parentId: string,

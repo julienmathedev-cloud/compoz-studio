@@ -3,12 +3,10 @@
  * @layer ui/settings/mappers
  *
  * @description
- * Mapper "shared runtime" Header :
- * - DTO domaine -> shape frontière stable (utilisée par site + studio preview)
+ * Maps header settings DTOs to stable runtime header settings shapes shared by site rendering and Studio preview.
  *
  * @remarks
- * - Ici : uniquement ce qui est utile au runtime (renderer/public/preview).
- * - Pas d’intents API ni de normalisation orientée formulaire.
+ * API intents and form-oriented normalization stay outside this boundary mapper.
  */
 
 import type { HeaderSettingsDTO } from "@compoz/core/domain/site/dto";

@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/renaud/header.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/renaud
  *
  * @description
- * Override UI du header pour le thème renaud.
- *
- * @remarks
- * - Renforce l'effet de translucidité/blur du header.
- * - Repose sur les mêmes tokens du thème public.
+ * Defines the Renaud skin overrides for the public site header.
  */
 
 import type { SiteHeaderUiOverride } from "@compoz/ui/site/site-ui.types";

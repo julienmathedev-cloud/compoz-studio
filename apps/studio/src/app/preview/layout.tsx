@@ -3,12 +3,12 @@
  * @layer studio/app/preview
  *
  * @description
- * Layout de la preview Studio pour le Website actif.
+ * Studio preview layout for the active Website.
  *
  * @remarks
- * - Les données draft sont chargées via Prisma Website.id.
- * - La skin UI est résolue via Website.slug.
- * - Le provider preview reçoit le Website.slug actif.
+ * - Draft data is loaded through Prisma Website.id.
+ * - The UI skin is resolved through Website.slug.
+ * - The preview provider receives the active Website.slug.
  */
 
 import type { ReactNode } from "react";

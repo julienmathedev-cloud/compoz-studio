@@ -1,16 +1,9 @@
 /**
  * @file packages/core/src/domain/assets/validators/image.ts
  * @layer core/domain/assets
- * @description
- * Validateur métier partagé des objets image.
- *
+ * @description Shared domain validator for canonical image objects.
  * @remarks
- * - Sert de base commune pour tous les usages d'image dans le domaine.
- * - Valide la structure canonique `Image` :
- *   `src`, `alt`, `width`, `height`.
- * - `mediaAssetId` est optionnel, mais doit être une chaîne non vide
- *   lorsqu’il est fourni.
- * - Les validateurs plus spécialisés (ex: ImageEditor) peuvent s'appuyer dessus.
+ * `mediaAssetId` is optional, but must be a non-empty string when provided.
  */
 
 import type { Image } from "@compoz/core/domain/assets/entities/image";
@@ -20,14 +13,9 @@ import { DomainError } from "@compoz/core/domain/errors/domain-error";
 type Path = ReadonlyArray<string | number>;
 
 /**
- * Vérifie qu'une valeur correspond à une image métier valide.
+ * Asserts that a value matches the canonical image domain shape.
  *
- * @throws DomainError
- * - `EC.CELL_IMAGE_INVALID`
- * - `EC.CELL_IMAGE_SRC_REQUIRED`
- * - `EC.CELL_IMAGE_ALT_INVALID`
- * - `EC.CELL_IMAGE_WIDTH_INVALID`
- * - `EC.CELL_IMAGE_HEIGHT_INVALID`
+ * @throws DomainError when the image payload or one of its required fields is invalid.
  */
 export function assertImage(
   image: unknown,

@@ -2,15 +2,16 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/cache/getPageBlocks.ts
- * @layer hooks/studio/pages/blocks
+ * @layer studio/features/pages/blocks/cache
  *
  * @description
- * Helper React Query pour récupérer les blocks d’une page par `pageId`.
+ * React Query helper for reading a page block list by page id.
  *
  * @remarks
- * - Le cache Studio est scopé par Prisma Website.id.
- * - L’API pages utilise le Website actif côté session.
- * - `websiteId` sert ici uniquement à isoler les queryKeys côté client.
+ * - Returns cached blocks when the derived block-list cache is already populated.
+ * - Fetches through the pages Studio API when the cache is empty.
+ * - Studio query keys are scoped by Prisma Website.id and content state.
+ * - The pages API resolves Website access from the active session; `websiteId` only isolates client-side query keys here.
  */
 
 import type { QueryClient } from "@tanstack/react-query";

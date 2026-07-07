@@ -2,17 +2,15 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/SeparatorCellEditor.tsx
- * @layer ui/studio/pages/blocks/editor/cells
+ * @layer studio/features/builder/editor/cells
  *
  * @description
- * Éditeur UI d’une SeparatorCell avec gestion directe de l’alignement
- * et de la taille via boutons.
+ * Controlled SeparatorCell editor for align and size options.
  *
  * @remarks
- * - UI-only : aucune logique métier.
- * - Modèle contrôlé (value/onChange).
- * - Utilise des boutons plutôt que des selects pour une édition
- *   plus directe et cohérente avec les autres editors Studio.
+ * - Receives the separator value through `value` and reports updates through `onChange`.
+ * - Normalizes align and size values with safe fallbacks before rendering controls.
+ * - Uses button groups instead of selects for direct Studio editing.
  */
 
 import { useTranslations } from "next-intl";

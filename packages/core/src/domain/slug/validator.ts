@@ -1,12 +1,9 @@
 /**
  * @file packages/core/src/domain/slug/validator.ts
- * @layer core/domain
- * @description
- * Frontière Domain :
- * - `assertSlug` applique une validation bloquante (DomainError) après normalisation,
- * - `getSlugUiWarnings` produit des hints non bloquants pour guider l’UI.
- *
- * Invariant : toute entrée est normalisée (`normalizeSlug`) avant contrôle.
+ * @layer core/domain/slug
+ * @description Blocking slug validation and non-blocking UI warnings.
+ * @remarks
+ * Inputs are normalized before validation or warning generation.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -18,10 +15,6 @@ import { isReservedSlug, normalizeSlug } from "@compoz/core/domain/slug/utils";
 export type SlugWarning = UiWarning<
   typeof EC.SLUG_NORMALIZED_DIFFERENT | typeof EC.SLUG_RESERVED_HINT
 >;
-
-/* -------------------------------------------------------------------------- */
-/*                            Validation bloquante                             */
-/* -------------------------------------------------------------------------- */
 
 export function assertSlug(
   raw: string | undefined,
@@ -55,10 +48,6 @@ export function assertSlug(
 
   return normalized;
 }
-
-/* -------------------------------------------------------------------------- */
-/*                             Warnings UI non-bloquants                      */
-/* -------------------------------------------------------------------------- */
 
 export function getSlugUiWarnings(
   raw: string | undefined,

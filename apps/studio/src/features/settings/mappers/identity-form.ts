@@ -1,15 +1,9 @@
 /**
  * @file apps/studio/src/features/settings/mappers/identity-form.ts
- * @layer ui-mappers/studio/site
- * @description
- * Mappers UI Identity (studio forms) :
- * - DTO -> valeurs de formulaire RHF
- * - normalisation UI
- * - PATCH intent DTO pour l’API studio
+ * @layer studio/features/settings/mappers
  *
- * @remarks
- * - Pour la shape runtime à partir d’un DTO : `toIdentitySettingsShapeFromDTO` (shared).
- * - Pour la shape runtime à partir du form : `toIdentitySettingsShapeFromFormValues`.
+ * @description
+ * Studio identity settings mappers for form values, preview shape, and API intents.
  */
 
 import type { IdentitySettingsDTO } from "@compoz/core/domain/site/dto";
@@ -23,10 +17,6 @@ import type { UpdateIdentitySettingsIntentDTO } from "@compoz/validation/site/se
 import { assetUiToPatch, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 import { toIdentitySettingsShapeFromDTO } from "@compoz/ui/settings/mappers/identity-shape";
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
 function optionalTrimmedString(
   value: string | null | undefined,
 ): string | undefined {
@@ -34,9 +24,6 @@ function optionalTrimmedString(
 
   return trimmed ? trimmed : undefined;
 }
-
-/* ----------------------- Domaine (DTO) -> UI (form values) ------------------ */
-
 export function toIdentityFormValuesFromDTO(
   dto: IdentitySettingsDTO,
 ): IdentityFormValues {
@@ -62,8 +49,6 @@ export function toIdentityFormValuesFromDTO(
       : undefined,
   };
 }
-
-/* ------------------- Studio (RHF) -> Preview/Public (SettingsShape) ----------- */
 
 export function toIdentitySettingsShapeFromFormValues(
   values: IdentityFormValues,
@@ -96,20 +81,12 @@ export function toIdentitySettingsShapeFromFormValues(
   return parsed.success ? parsed.data : candidate;
 }
 
-/**
- * DTO -> Shape (re-export studio convenience)
- *
- * @remarks
- * Optionnel : si tu veux éviter d’importer `@compoz/ui/site/mappers/identity-shape`
- * dans certains fichiers studio. Sinon, tu peux supprimer ce wrapper.
- */
+/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
 export function toIdentitySettingsShape(
   dto: IdentitySettingsDTO,
 ): IdentitySettingsShape {
   return toIdentitySettingsShapeFromDTO(dto);
 }
-
-/* ---------------------------- Normalisations UI ---------------------------- */
 
 export function normalizeIdentityFormValues(
   values: IdentityFormValues,
@@ -138,8 +115,7 @@ export function normalizeIdentityFormValues(
   };
 }
 
-/* ------------------------------ UI -> PATCH (API) --------------------------- */
-
+/** Builds a partial API intent while preserving PATCH semantics. */
 export function toUpdateIdentityIntentDTOFromFormValues(
   p: Partial<IdentityFormValues>,
 ): UpdateIdentitySettingsIntentDTO {

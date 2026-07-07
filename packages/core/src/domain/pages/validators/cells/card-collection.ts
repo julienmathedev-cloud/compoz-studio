@@ -1,7 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/validators/cells/card-collection.ts
  * @layer core/domain/pages/validators
- * @description Validateur métier de CardCollectionCell.
+ * @description Domain validator for card collection cells.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";

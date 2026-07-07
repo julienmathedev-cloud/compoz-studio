@@ -3,12 +3,10 @@
  * @layer ui/renderer
  *
  * @description
- * Renderer site/preview : dispatcher de blocks (V0.5).
+ * Dispatches validated page blocks to their registered renderer components.
  *
  * @remarks
- * - Consomme des Shapes (frontière Zod) : `BlockShape`.
- * - Point d’entrée unique : évite de disperser des `switch` partout.
- * - Défensif : si block inconnu/incomplet → ignore (pas de crash).
+ * Unknown or incomplete blocks are ignored to keep public rendering resilient.
  */
 
 import type { ReactNode } from "react";
@@ -22,38 +20,15 @@ import type {
 import type { SiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRuntimeFeatures";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
-/* -------------------------------------------------------------------------- */
-/* Types                                                                      */
-/* -------------------------------------------------------------------------- */
-
 export type BlocksRendererProps = Readonly<{
-  /** Blocks (ordre = ordre d’affichage). */
   blocks?: ReadonlyArray<BlockShape> | null;
-
-  /** UI fine. */
   cellsUi: SiteCellsUi;
-
   blockUi: SiteBlockSectionUi;
-
   revealUi: SiteRevealPresetUi;
-
   runtimeFeatures?: SiteRuntimeFeatures;
-
-  /**
-   * Variante de rendu (micro-différences éventuelles plus tard).
-   *
-   * @remarks
-   * V0.5 : pas utilisé, mais prévu.
-   */
   variant?: "site" | "preview";
-
-  /** Classes additionnelles sur la `<div>`. */
   className?: string;
 }>;
-
-/* -------------------------------------------------------------------------- */
-/* Component                                                                  */
-/* -------------------------------------------------------------------------- */
 
 export function BlocksRenderer({
   blocks,
@@ -94,13 +69,7 @@ export function BlocksRenderer({
 
 BlocksRenderer.displayName = "BlocksRenderer";
 
-/* -------------------------------------------------------------------------- */
-/* Internals                                                                  */
-/* -------------------------------------------------------------------------- */
-
 function _renderUnknownBlock(block: BlockShape, index: number): ReactNode {
-  // V0.5 : safe fallback minimal → ignore.
-  // Si tu veux debugger : retourne un placeholder (attention prod).
   void block;
   void index;
   return null;

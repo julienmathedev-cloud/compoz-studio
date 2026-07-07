@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/entities/cells/spacer.ts
  * @layer core/domain/pages
- * @description
- * Entité métier SpacerCell.
+ * @description Spacer cell domain entity.
  */
 
 export type SpacerSize = "sm" | "md" | "lg" | "xl";

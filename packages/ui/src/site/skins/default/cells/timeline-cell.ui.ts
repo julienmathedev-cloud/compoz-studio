@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/cells/timeline-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default/cells
  *
  * @description
- * Skin UI — timeline cell (thème Default).
+ * Defines the default skin classes for timeline cells.
  */
 
 import type { SiteTimelineUi } from "@compoz/ui/site/site-ui.types";

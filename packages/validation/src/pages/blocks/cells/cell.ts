@@ -1,6 +1,6 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/cell.ts
- * @layer schemas
+ * @layer validation/pages/blocks/cells
  *
  * @description
  * Zod schemas describing the boundary shape of cells used by API and infra layers.

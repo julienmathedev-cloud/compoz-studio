@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/components/molecules/SiteStepCard.tsx
- * @layer ui/site/molecules
+ * @layer ui/site/components/molecules
  *
  * @description
- * Carte de step utilisée par la cellule `steps`.
+ * Renders a public site step card with a numbered badge, title, optional description, and alignment variant.
  */
 
 import {

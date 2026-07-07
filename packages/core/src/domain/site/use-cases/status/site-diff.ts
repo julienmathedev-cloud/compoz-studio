@@ -1,13 +1,9 @@
 /**
  * @file packages/core/src/domain/site/use-cases/status/site-diff.ts
- * @layer core/domain
- *
- * @description
- * Helpers de diff draft vs published (pages / blocks) utilisés par les use-cases status.
- *
+ * @layer core/domain/site/use-cases/status
+ * @description Pure draft versus published diff helpers for pages and blocks.
  * @remarks
- * - Pages : diff basé sur `meta.updatedAt` (V0.5).
- * - Blocks : diff basé sur une comparaison JSON (V0.5).
+ * Page diffs use `meta.updatedAt`; block diffs intentionally use JSON comparison in V0.5.
  */
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";
@@ -17,10 +13,6 @@ import type {
   SiteStatusBlockDetails,
   SiteStatusPageDetails,
 } from "@compoz/core/domain/site/entities/site-status-details";
-
-/* -------------------------------------------------------------------------------------------------
- * Helpers génériques
- * ------------------------------------------------------------------------------------------------- */
 
 export function safeStringify(value: unknown): string {
   try {
@@ -35,10 +27,6 @@ export function asNonEmptyString(input: unknown): string | undefined {
   return s ? s : undefined;
 }
 
-/* -------------------------------------------------------------------------------------------------
- * Page diff
- * ------------------------------------------------------------------------------------------------- */
-
 export function pageDiffKind(
   draft?: Page | null,
   published?: Page | null,
@@ -50,15 +38,11 @@ export function pageDiffKind(
   const du = String(draft.meta?.updatedAt ?? "");
   const pu = String(published.meta?.updatedAt ?? "");
 
-  // Si un des deux manque, on considère "published" (pas de preuve de modif).
+  // Missing timestamps are treated as no proven modification.
   if (!du || !pu) return "published";
 
   return du !== pu ? "modified" : "published";
 }
-
-/* -------------------------------------------------------------------------------------------------
- * Block diff
- * ------------------------------------------------------------------------------------------------- */
 
 type BlockMap = Map<string, Block>;
 
@@ -96,7 +80,7 @@ export function buildBlockDetails(
   let blocksModified = 0;
   let blocksDeleted = 0;
 
-  // ✅ Ordre stable (utile pour snapshots KV + UI)
+  // Stable order keeps KV snapshots and admin output deterministic.
   const allIds = Array.from(
     new Set<string>([...draftMap.keys(), ...pubMap.keys()]),
   ).sort();
@@ -107,7 +91,7 @@ export function buildBlockDetails(
     const d = draftMap.get(id);
     const p = pubMap.get(id);
 
-    // ✅ micro-opt: stringify 1 fois si les deux existent
+    // Compare once when both block versions exist.
     const diff =
       d && p
         ? safeStringify(d) !== safeStringify(p)

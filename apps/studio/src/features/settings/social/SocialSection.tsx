@@ -2,17 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/social/SocialSection.tsx
- * @layer ui/studio/sections
+ * @layer studio/features/settings/social
  *
  * @description
- * Section Studio dédiée aux liens sociaux : chargement (shell), édition (form), warnings UI et preview.
+ * Studio settings section for loading, editing, saving, and previewing social links.
  *
  * @remarks
- * - Le chargement initial est géré par `SettingsSection` (shell).
- * - Monte `useSocialSettings` (baseline + save) et câble `SocialForm`.
- * - Affiche les warnings non bloquants (via `SocialForm` + `computeSocialWarnings` au submit).
- * - La preview `/preview/social` consomme le scope `social` en mise à jour live.
- * - Strictement UI-only : aucune logique métier.
+ * - Keeps the persisted baseline and live preview draft separate so reset/save can restore the preview deterministically.
+ * - Form warnings are kept live for editor feedback, then recomputed on submit before the confirmation flow.
  */
 
 import { useTranslations } from "next-intl";
@@ -45,24 +42,14 @@ export function SocialSection() {
     null,
   );
 
-  // Hook settings : modèle UI (RHF).
   const { baseline, isLoading, isSaving, save } = useSocialSettings();
 
-  /**
-   * Baseline preview :
-   * - toujours dérivée de la baseline courante du hook
-   * - plus de gating sur `hasLoadedOnce`
-   */
+  /** Runtime preview shape derived from the persisted RHF baseline. */
   const baselinePreview = useMemo<SocialSettingsShape>(
     () => toSocialSettingsShapeFromFormValues(baseline),
     [baseline],
   );
 
-  /**
-   * Valeur effectivement affichée dans la preview :
-   * - draft live si l’utilisateur modifie le form
-   * - sinon baseline persistée
-   */
   const previewValue = previewDraft ?? baselinePreview;
 
   const { ready, iframeRef, frame } = useStudioPreview<SocialSettingsShape>(
@@ -73,20 +60,17 @@ export function SocialSection() {
     },
   );
 
-  // Empty state : on considère "empty" une fois la data prête et sans items.
   const dataReady = !isLoading;
   const isEmpty = dataReady && (baseline?.items?.length ?? 0) === 0;
 
   const emptyLabel = t("studio.emptyPreview.social");
 
-  // Preview loading : on attend la baseline social + le handshake du scope principal.
   const isPreviewLoading = !isEmpty && (isLoading || !ready.isReady("social"));
 
-  // Submit : confirmation si warnings + save.
   const handleSubmit = useCallback(
     async (values: SocialFormValues) => {
       if (isLoading || isSaving) return;
-
+      // Recompute warnings at submit time so confirmation uses the latest validated values.
       const warningKeysNow = computeSocialWarnings({
         items: values.items ?? [],
       });
@@ -100,11 +84,7 @@ export function SocialSection() {
       await save(values);
       dirtyGuard.setDirty(false);
 
-      /**
-       * Après save :
-       * - on efface le draft live
-       * - la preview retombe naturellement sur la nouvelle baseline persistée
-       */
+      /** Clear the live draft so preview falls back to the saved baseline returned by the hook. */
       setPreviewDraft(null);
     },
     [confirmSaveDespiteWarnings, isLoading, isSaving, dirtyGuard, save],

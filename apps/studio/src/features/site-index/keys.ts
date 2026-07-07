@@ -1,16 +1,13 @@
 /**
  * @file apps/studio/src/features/site-index/keys.ts
- * @layer hooks/studio/site-index
+ * @layer studio/features/site-index
  *
  * @description
- * Helpers pour construire les query keys React Query du SiteIndex.
+ * React Query key helpers for the Studio SiteIndex.
  *
  * @remarks
- * - Website-scoped : la key inclut Prisma Website.id pour éviter le cache
- *   cross-website lors d’un switch de Website actif.
- * - Utilisé par `getSiteIndex`, `setSiteIndexCache`, `patchSiteIndexCache`
- *   et `invalidateSiteIndex`.
- * - `SiteIndex` désigne ici un read-model UI des pages du Website actif.
+ * - Keys are scoped by Prisma Website.id to avoid cross-website cache collisions when switching the active website.
+ * - `SiteIndex` is the UI read model for pages of the active website.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
@@ -25,9 +22,6 @@ function requireWebsiteId(value: unknown, field = "websiteId"): string {
   return websiteId;
 }
 
-/**
- * Query key React Query du SiteIndex.
- */
 export function siteIndexKey(websiteId: unknown, state: ContentState) {
   const websiteIdKey = requireWebsiteId(websiteId, "siteIndexKey.websiteId");
 

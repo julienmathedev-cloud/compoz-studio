@@ -2,25 +2,18 @@
 
 /**
  * @file apps/studio/src/features/preview/hooks/usePreviewOverride.ts
- * @layer hooks/studio/preview
+ * @layer studio/features/preview/hooks
  *
  * @description
- * Hook preview (iframe) recevant et appliquant des overrides temporaires via `postMessage`.
+ * Preview iframe receiver for scoped temporary overrides sent through `postMessage`.
  *
  * @remarks
- * - Centralise la logique “receiver” côté preview.
- * - Filtre les messages par `origin` et `scope`.
- * - Gère les messages `baseline`, `sync` et `reset`.
- * - Émet le handshake `compoz.preview.ready` à l’attache.
- * - Strictement UI-only : aucune logique métier.
+ * - Filters incoming messages by origin and scope before applying baseline, sync, or reset payloads.
+ * - Sends `compoz.preview.ready` on attach so Studio can push baselines after the iframe handshake.
  */
 
 import { log } from "@compoz/infra/lib/log";
 import { useCallback, useEffect, useMemo, useState } from "react";
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
 
 export type PreviewScope =
   | "social"
@@ -58,10 +51,6 @@ type PreviewMessage<T> =
   | PreviewSyncMessage<T>
   | PreviewResetMessage;
 
-/* -------------------------------------------------------------------------- */
-/*                               Type guards                                  */
-/* -------------------------------------------------------------------------- */
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -96,27 +85,13 @@ function getMessageMeta(message: unknown): { type?: unknown; scope?: unknown } {
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                    Hook                                    */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Options de configuration du receiver de preview.
- */
 type Options = Readonly<{
   enabled?: boolean;
 
-  /**
-   * Origin autorisé pour les messages entrants.
-   * - Si fourni : source de vérité.
-   * - Sinon : déduit depuis `document.referrer`.
-   */
+  /** Allowed incoming origin; falls back to `document.referrer` when omitted. */
   origin?: string;
 }>;
 
-/**
- * Contrat de retour du hook `usePreviewOverride`.
- */
 type Result<T> = Readonly<{
   baseline: T | null;
   override: T | null;

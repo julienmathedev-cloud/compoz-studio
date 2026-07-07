@@ -3,7 +3,8 @@
  * @layer studio/atoms
  *
  * @description
- * Badge de statut de publication (published/never/publishing/changesPending/upToDate/error).
+ * Publication status badge for published, never, publishing, changes pending,
+ * up-to-date, and error states.
  */
 
 import { useTranslations } from "next-intl";

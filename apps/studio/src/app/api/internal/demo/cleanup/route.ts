@@ -3,13 +3,13 @@
  * @layer studio/app/api
  *
  * @description
- * Route interne de cleanup des sandboxes démo expirées.
+ * Internal route that cleans up expired demo sandboxes.
  *
  * @remarks
- * - Destinée à être appelée manuellement ou par un cron Vercel.
- * - Protégée par un secret HTTP dédié.
- * - Déclenche le cleanup des records sandbox, users démo et données KV
- *   associées aux sandboxes expirées.
+ * - Designed to be called manually or by a Vercel cron job.
+ * - Protected by a dedicated HTTP secret.
+ * - Cleans up sandbox records, demo users, and KV data associated with
+ *   expired sandboxes.
  */
 
 import "server-only";
@@ -21,10 +21,6 @@ import { runCleanupExpiredDemoSandboxes } from "@compoz/studio/lib/demo/cleanup-
 export const runtime = "nodejs";
 
 const CRON_SECRET_HEADER = "x-cron-secret" as const;
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function getCronSecret(): string {
   const secret = String(process.env["COMPOZ_CRON_SECRET"] ?? "").trim();
@@ -44,10 +40,6 @@ function isAuthorized(req: Request): boolean {
 
   return Boolean(receivedSecret) && receivedSecret === expectedSecret;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Route                                                                      */
-/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
   if (!isAuthorized(req)) {

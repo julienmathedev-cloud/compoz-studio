@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/social-menu.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default
  *
  * @description
- * Skin UI — menu social site (thème Default).
+ * Defines the default skin classes for the public site social menu.
  */
 
 import type { SiteSocialMenuUi } from "@compoz/ui/site/site-ui.types";

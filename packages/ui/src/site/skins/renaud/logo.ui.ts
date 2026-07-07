@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/renaud/logo.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/renaud
  *
  * @description
- * Skin UI — logo site (thème Renaud).
+ * Defines the Renaud skin overrides for the public site logo.
  */
 
 import type { SiteLogoUiOverride } from "@compoz/ui/site/site-ui.types";

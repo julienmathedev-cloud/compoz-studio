@@ -1,14 +1,12 @@
 /**
  * @file apps/studio/src/app/[locale]/(dashboard)/not-found.tsx
- * @layer app/not-found
+ * @layer studio/app
  *
  * @description
- * Page 404 du scope localisé.
+ * 404 page for unknown localized dashboard routes.
  *
  * @remarks
- * - S’affiche quand une route `/{locale}/...` n’existe pas.
- * - V0.5 : la locale sert surtout de porte d’entrée (gate) + admin.
- * - Propose une action de retour vers la gate `/{locale}`.
+ * - Provides an action back to the localized Studio gate.
  */
 
 import { StudioNotFound } from "@compoz/studio/components/not-found/StudioNotFound";

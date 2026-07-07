@@ -3,9 +3,14 @@
  * @layer schemas
  *
  * @description
- * Définit les schémas Zod décrivant la forme frontière d’un utilisateur Studio.
- * Ces schémas valident uniquement la structure des données exposées API / infra ;
- * les invariants métier et règles globales sont traités dans le domaine.
+ * Zod schemas describing the Studio user boundary shape.
+ *
+ * @remarks
+ * These schemas validate API and infrastructure payload shapes only. Business
+ * invariants and global consistency rules are handled by the domain layer.
+ *
+ * Technical IDs intentionally remain non-empty strings so storage
+ * implementations can evolve without changing the validation boundary.
  */
 
 import { z } from "zod";
@@ -13,31 +18,13 @@ import { z } from "zod";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { IsoDateStringSchema } from "@compoz/validation/common/date";
 
-/* -------------------------------------------------------------------------- */
-/*                               Schémas atomiques                            */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Id technique d'un User.
- *
- * Contrat :
- * - trim
- * - non vide
- *
- * @remarks
- * À ce stade on ne contraint pas le format, uuid, prefix, etc.,
- * car l’infra peut évoluer : KV, DB, migration.
- */
 export const UserIdSchema = z
   .string()
   .trim()
   .min(1, ERROR_CODES.USER_ID_REQUIRED);
 
 /**
- * Email :
- * - trim
- * - lower-case, boundary normalization
- * - format email, validation Zod
+ * Email is normalized at the boundary to avoid case-sensitive user identities.
  */
 export const UserEmailSchema = z
   .string()
@@ -46,41 +33,21 @@ export const UserEmailSchema = z
   .email(ERROR_CODES.USER_EMAIL_INVALID_FORMAT)
   .transform((value) => value.toLowerCase());
 
-/**
- * Nom affiché :
- * - trim
- * - optionnel au niveau storage DTO
- *
- * @remarks
- * Les use-cases peuvent imposer required selon le flow, ex: create user.
- */
 export const UserNameSchema = z
   .string()
   .trim()
   .min(1, ERROR_CODES.USER_NAME_REQUIRED);
 
-/**
- * Role RBAC minimal, V0.5.
- */
 export const UserRoleSchema = z.enum(["admin", "editor"], {
   message: ERROR_CODES.USER_ROLE_INVALID,
 });
 
-/**
- * Status utilisateur.
- */
 export const UserStatusSchema = z.enum(["active", "disabled"], {
   message: ERROR_CODES.USER_STATUS_INVALID,
 });
 
 /**
- * Website id normalisé.
- *
- * Contrat :
- * - trim
- * - lower-case
- * - non vide
- * - pas de wildcard "*"
+ * Website IDs are normalized at the boundary and cannot use the wildcard value.
  */
 export const WebsiteIdSchema = z
   .string()
@@ -89,12 +56,6 @@ export const WebsiteIdSchema = z
   .transform((value) => value.toLowerCase())
   .refine((value) => value !== "*", ERROR_CODES.USER_WEBSITE_IDS_INVALID);
 
-/**
- * Liste de Websites :
- * - array non vide
- * - strings normalisées
- * - unique, best-effort
- */
 export const WebsiteIdsSchema = z
   .array(WebsiteIdSchema)
   .min(1, ERROR_CODES.USER_WEBSITE_IDS_REQUIRED)
@@ -117,21 +78,7 @@ export const WebsiteIdsSchema = z
     }
   });
 
-/**
- * Id technique d'une sandbox démo.
- *
- * Contrat :
- * - trim
- * - non vide
- *
- * @remarks
- * À ce stade on ne contraint pas le format exact.
- */
 export const DemoInstanceIdSchema = z.string().trim().min(1);
-
-/* -------------------------------------------------------------------------- */
-/*                                   RBAC                                     */
-/* -------------------------------------------------------------------------- */
 
 export const UserRbacSchema = z
   .object({
@@ -150,10 +97,6 @@ export const UserRbacSchema = z
     }
   });
 
-/* -------------------------------------------------------------------------- */
-/*                                   Meta                                     */
-/* -------------------------------------------------------------------------- */
-
 export const UserMetaSchema = z
   .object({
     createdAt: IsoDateStringSchema,
@@ -162,9 +105,6 @@ export const UserMetaSchema = z
   })
   .strict();
 
-/**
- * Métadonnées de sandbox démo associées à un utilisateur temporaire.
- */
 export const UserDemoMetaSchema = z
   .object({
     isDemo: z.boolean(),
@@ -173,15 +113,7 @@ export const UserDemoMetaSchema = z
   })
   .strict();
 
-/* -------------------------------------------------------------------------- */
-/*                                  Params                                    */
-/* -------------------------------------------------------------------------- */
-
 export const UserIdParamSchema = z.object({ userId: UserIdSchema }).strict();
-
-/* -------------------------------------------------------------------------- */
-/*                                   User                                     */
-/* -------------------------------------------------------------------------- */
 
 export const UserSchema = z
   .object({
@@ -195,12 +127,6 @@ export const UserSchema = z
   })
   .strict();
 
-/**
- * Résumé minimal, list/admin.
- *
- * @remarks
- * `name` reste aligné domaine.
- */
 export const UserSummarySchema = z
   .object({
     id: UserIdSchema,
@@ -209,10 +135,6 @@ export const UserSummarySchema = z
     status: UserStatusSchema,
   })
   .strict();
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
 
 export type UserShape = z.infer<typeof UserSchema>;
 export type UserSummaryShape = z.infer<typeof UserSummarySchema>;

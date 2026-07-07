@@ -3,7 +3,7 @@
  * @layer studio/app
  *
  * @description
- * Preview d’une page complète (V0.5) — reçoit baseline/override via postMessage.
+ * Server route for previewing a full page inside the Studio preview iframe.
  */
 
 import { PagePreviewClient } from "@compoz/studio/app/preview/pages/[slug]/PagePreviewClient";

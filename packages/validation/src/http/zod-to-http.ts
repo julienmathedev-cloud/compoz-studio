@@ -1,8 +1,8 @@
 /**
  * @file packages/validation/src/http/zod-to-http.ts
- * @layer schemas
+ * @layer validation/http
  * @description
- * Helpers de conversion de Zod → HTTP (erreurs).
+ * Converts Zod and validation errors into standardized HTTP payloads.
  */
 
 import { ERROR_CODES, type ErrorCode } from "@compoz/core/domain/errors/codes";
@@ -16,10 +16,7 @@ import { ZodError, type ZodIssue, type ZodType } from "zod";
 
 type ParseDTOOrHttpOptions = {
   status?: number;
-  /**
-   * Code d'erreur "token" (stable) renvoyé au client.
-   * Peut être un `ErrorCode` (recommandé) ou une string custom.
-   */
+  /** Stable client-facing error token; prefer shared `ErrorCode` values. */
   code?: ErrorCode | string;
   message?: string;
   extras?: Record<string, unknown>;
@@ -71,12 +68,10 @@ export function parseDTOOrHttp<TSchema extends ZodType<unknown>>(
 }
 
 /**
- * Garde de type pour détecter une erreur lancée via `throwHttp`.
+ * Detects errors thrown by `throwHttp` using only the minimal expected shape.
  *
  * @remarks
- * On vérifie une forme minimale pour éviter les faux positifs :
- * - err.__http__.status number
- * - err.__http__.body object avec `code`
+ * The structural check avoids trusting arbitrary thrown objects as HTTP errors.
  */
 function isWrappedHttpError(err: unknown): err is WrappedHttpError {
   if (!isUnknownObject(err)) return false;
@@ -96,37 +91,29 @@ function isWrappedHttpError(err: unknown): err is WrappedHttpError {
 }
 
 /**
- * Transforme une erreur inconnue en représentation HTTP standardisée,
- * lorsque c'est possible.
+ * Converts known validation errors to HTTP payloads and lets unknown errors fall through.
  *
- * Cas gérés :
- * 1) Erreurs "maison" lancées via `throwHttp` :
- *    - on renvoie directement { status, body }.
- * 2) `ZodError` :
- *    - renvoie 400 + code VALIDATION_ERROR + liste d'issues (path/message).
- *
- * Si l'erreur ne correspond à aucun de ces cas, retourne `null`.
- * Dans ce cas, `handleRoute` utilisera un fallback 500.
+ * @remarks
+ * Returning `null` intentionally delegates the final 500 fallback to the route layer.
  */
 export function zodToHttp(err: unknown): HttpErrorPayload | null {
-  // 1) Erreurs "maison" (ex. readJsonOr400, validations custom)
+  // Custom HTTP errors already carry the final status and body.
   if (isWrappedHttpError(err)) {
     return err.__http__;
   }
 
-  // 2) Erreurs Zod standardisées
+  // Raw Zod errors are normalized before crossing the HTTP boundary.
   if (err instanceof ZodError) {
     return {
       status: 400,
       body: {
         code: ERROR_CODES.VALIDATION_ERROR,
-        // Message i18n-friendly : token stable (les détails sont dans `issues`).
         message: ERROR_CODES.VALIDATION_ERROR,
         issues: zodIssuesToHttp(err.issues),
       },
     };
   }
 
-  // 3) Non géré ici → fallback 500 plus haut dans la stack (handleRoute)
+  // Unknown errors are handled by the route-level fallback.
   return null;
 }

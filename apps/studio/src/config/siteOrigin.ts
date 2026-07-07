@@ -3,13 +3,12 @@
  * @layer studio/config
  *
  * @description
- * Helpers de résolution des URLs publiques depuis le Studio.
+ * Helpers for resolving public site URLs from the Studio.
  *
  * @remarks
- * - `NEXT_PUBLIC_SITE_ORIGIN` pointe vers l’app publique.
- * - Les URLs fallback publiques utilisent Website.slug :
- *   `/t/:websiteSlug`.
- * - `publishedBaseUrl`, quand il existe, est prioritaire.
+ * - `NEXT_PUBLIC_SITE_ORIGIN` points to the public site app.
+ * - Public fallback URLs use Website.slug through `/t/:websiteSlug`.
+ * - `publishedBaseUrl` takes precedence when available.
  */
 
 function trimTrailingSlashes(input: string): string {

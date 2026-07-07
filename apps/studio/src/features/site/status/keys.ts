@@ -1,26 +1,23 @@
 /**
  * @file apps/studio/src/features/site/status/keys.ts
- * @layer hooks/studio/site/status
+ * @layer studio/features/site/status
  *
  * @description
- * Query keys Website-scoped pour le statut du site.
+ * React Query keys for Website-scoped site status data.
  *
  * @remarks
- * - Le scope utilisé ici est Prisma Website.id.
- * - On préfixe par `["w", websiteId, ...]` pour éviter les collisions
- *   lors d’un switch de Website actif.
+ * - The `websiteId` segment is Prisma Website.id.
+ * - Keys start with `["w", websiteId, ...]` to prevent cache collisions when switching the active website.
  */
 
 import type { SiteStatusDetailsScopeDTO } from "@compoz/core/domain/site/dto";
 
-/** Key SoT Website-scoped. */
 export function siteStatusKey(websiteId: string) {
   const websiteIdKey = String(websiteId ?? "").trim();
 
   return ["w", websiteIdKey, "studio", "site", "status"] as const;
 }
 
-/** Key prefix SoT Website-scoped. */
 export function siteStatusDetailsPrefix(websiteId: string) {
   const websiteIdKey = String(websiteId ?? "").trim();
 

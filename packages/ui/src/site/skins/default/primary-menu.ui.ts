@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/primary-menu.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default
  *
  * @description
- * Skin UI — menu principal site (thème Default).
+ * Defines the default skin classes for the public site primary menu.
  */
 
 import type { SitePrimaryMenuUi } from "@compoz/ui/site/site-ui.types";

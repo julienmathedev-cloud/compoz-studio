@@ -2,15 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/hooks/useSettingsResource.ts
- * @layer hooks/studio/settings
+ * @layer studio/features/settings/hooks
+ *
  * @description
- * Hook générique RHF-first pour la gestion des Settings (GET/PATCH avec baseline).
+ * Generic settings resource hook for baseline loading and draft saves.
  *
  * @remarks
- * - La source de vérité est RHF.
- * - Gère uniquement l’I/O, la baseline et le calcul de patch minimal.
- * - Les messages UI (toasts) doivent être gérés par l’appelant.
- * - Écriture : toujours sur "draft" (draft-only). La lecture peut cibler "draft" ou "published".
+ * - Deduplicates identical loads and aborts stale loads when the requested content state changes.
+ * - Saves always target draft state; reads may target draft or published state.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -29,45 +28,25 @@ import {
 } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 
-/**
- * Contrat minimal pour une fonction de traduction.
- *
- * @remarks
- * - Compatible next-intl : `const t = useTranslations("studio")`
- * - Doit accepter `(key, values?)` et retourner une string.
- */
+/** Minimal translation function contract compatible with next-intl. */
 export type TFunc = (
   key: string,
   values?: Record<string, string | number | Date>,
 ) => string;
 
-/**
- * Résultat de `save()` :
- * - `noChanges` : patch minimal vide → aucun appel réseau
- * - `saved` : sauvegarde effectuée, retourne la valeur persistée
- */
+/** Save result distinguishing skipped no-op saves from persisted values. */
 export type SettingsSaveResult<T> =
   | Readonly<{ status: "noChanges"; fields: ReadonlyArray<string> }>
   | Readonly<{ status: "saved"; value: T; fields: ReadonlyArray<string> }>;
 
-/**
- * Contrat de retour exposé par `useSettingsResource`.
- */
 export type SettingsHookResult<T> = Readonly<{
-  /** Baseline actuelle (valeur chargée / dernier save). */
   baseline: T;
   isLoading: boolean;
   isSaving: boolean;
 
-  /** Recharge la baseline depuis l’API. */
   load: (state?: ContentState) => Promise<T>;
 
-  /**
-   * Sauvegarde depuis des valeurs RHF.
-   * - Calcule un patch minimal depuis baseline → nextValues (si `buildPatch` fourni)
-   * - Ne fait aucun appel réseau si patch vide (`status = "noChanges"`)
-   * - Met à jour la baseline avec la réponse API (`status = "saved"`)
-   */
+  /** Saves next values, optionally skipping the network call when the computed patch is empty. */
   save: (nextValues: T) => Promise<SettingsSaveResult<T>>;
 }>;
 
@@ -83,19 +62,7 @@ type UseSettingsResourceParams<T> = Readonly<{
   autoLoad?: boolean;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/*                               Toast wrapper                                 */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Wrappe un `save()` de Settings pour afficher les toasts standard.
- *
- * @remarks
- * - Pas de hook ici (aucun `useTranslations` inside) : `t` est injecté par l’appelant.
- * - Clés utilisées (scan i18n-friendly) :
- *   - `notifications.noChanges.title` / `notifications.noChanges.description`
- *   - `notifications.updated.title` / `notifications.updated.description`
- */
+/** Adds standard settings save toasts without calling hooks inside the wrapper.*/
 export function wrapSettingsSaveWithToasts<T extends object>(
   params: Readonly<{
     t: TFunc;
@@ -146,11 +113,7 @@ export function useSettingsResource<T extends object>({
   const ctrlRef = useRef<AbortController | null>(null);
   const pendingLoadsRef = useRef<number>(0);
 
-  /**
-   * Dédoublonnage :
-   * - si un `load(state)` identique est déjà en vol, on réutilise sa promise
-   * - sinon, on annule l’ancien load et on démarre un nouveau cycle
-   */
+  /** Reuses identical in-flight loads and aborts stale loads for different states. */
   const inFlightLoadRef = useRef<{
     state: ContentState;
     promise: Promise<T>;
@@ -161,10 +124,6 @@ export function useSettingsResource<T extends object>({
     ctrlRef.current?.abort();
     ctrlRef.current = null;
   }, []);
-
-  /* ------------------------------------------------------------------------ */
-  /* Refs stables pour éviter de recréer les handlers                         */
-  /* ------------------------------------------------------------------------ */
 
   const loaderRef = useRef(loader);
   const saverRef = useRef(saver);
@@ -206,13 +165,13 @@ export function useSettingsResource<T extends object>({
     async (nextState?: ContentState) => {
       const state: ContentState = nextState ?? DEFAULT_CONTENT_STATE;
 
-      // 1) Si un load identique est déjà en cours → on réutilise.
+      // Reuse an identical in-flight load instead of starting a duplicate request.
       const inFlight = inFlightLoadRef.current;
       if (inFlight && inFlight.state === state) {
         return inFlight.promise;
       }
 
-      // 2) Sinon, on abort l'ancien load (si différent) et on en démarre un nouveau.
+      // Different state: abort the previous load and start a fresh cycle.
       abortCurrent();
 
       const abortController = newAbort();
@@ -293,7 +252,7 @@ export function useSettingsResource<T extends object>({
           ? Object.keys(payload as Record<string, unknown>)
           : Object.keys(candidate as Record<string, unknown>);
 
-        // Si patch minimal vide → pas d’appel réseau.
+        // Empty computed patch: skip the network call.
         if (buildPatchFn && fields.length === 0) {
           return { status: "noChanges", fields: [] } as const;
         }

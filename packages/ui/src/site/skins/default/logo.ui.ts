@@ -1,20 +1,17 @@
 /**
  * @file packages/ui/src/site/skins/default/logo.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default
  *
  * @description
- * Skin UI — logo site (thème Default).
+ * Defines the default skin classes for the public site logo.
  */
 
 import type { SiteLogoUi } from "@compoz/ui/site/site-ui.types";
 
 export const defaultLogoUi: SiteLogoUi = {
-  // Focus ring cohérent + target propre.
   link: "inline-flex cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
 
-  // Neutre, responsive, anti-accident (sélection).
   image: "h-10 w-auto md:h-12 lg:h-14 select-none",
 
-  // Largeur rendue approximative pour aider next/image.
   sizes: "(max-width: 768px) 120px, 160px",
 } as const;

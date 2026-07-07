@@ -5,13 +5,13 @@
  * @layer studio/app
  *
  * @description
- * Page de preview pour le menu principal site.
+ * Preview page for the site primary menu.
  *
  * @remarks
- * - Lit les données via `usePreviewOverride` pour baseline et override.
- * - Rend uniquement si baseline ou override est disponible.
- * - Le skin UI est fourni par `SiteUiProvider` monté dans `PreviewProviders`.
- * - Le thème CSS est fourni par `ThemeProvider` monté dans `PreviewProviders`.
+ * - Reads baseline and override data through `usePreviewOverride`.
+ * - Renders only when a baseline or override is available.
+ * - The UI skin is provided by `SiteUiProvider` mounted in `PreviewProviders`.
+ * - The CSS theme is provided by `ThemeProvider` mounted in `PreviewProviders`.
  */
 
 import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePreviewOverride";

@@ -1,22 +1,12 @@
 /**
  * @file packages/ui/src/lib/links/helpers.ts
  * @layer ui/lib/links
- *
- * @description
- * Helpers **purs** de gestion des liens (href, sécurité, active link), sans UI ni dépendance Next.
- * Utilisés par les composants publics, le Studio (preview) et le rendu du site publié.
- *
- * Invariants sécurité :
- * - Refuse les schémas dangereux (`javascript:`, `vbscript:`, `data:`, `file:`, `about:`, `chrome:`)
- *   y compris sous forme obfusquée/encodée (ex. `javascript%3A`).
- * - `mailto:` et `tel:` sont externes mais “spéciaux” (traitement dédié).
+ * @description Pure link helpers for href safety, active link checks, and mount-aware internal URLs.
+ * @remarks
+ * Rejects dangerous schemes even when trivially obfuscated or encoded; no UI or Next.js dependency belongs here.
  */
 
 import { SITE_PATH, STUDIO_PATH } from "@compoz/core/constants/web/paths";
-
-/* -------------------------------------------------------------------------- */
-/*                                    Types                                   */
-/* -------------------------------------------------------------------------- */
 
 export type UnsafeReason =
   | "javascript"
@@ -28,33 +18,21 @@ export type UnsafeReason =
   | "encoded";
 
 export type LinkFlags = Readonly<{
-  /** Externe “brut” (override possible). */
   rawExternal: boolean;
-  /** Protocole spécial (mailto/tel). */
   special: boolean;
-  /** Externe “classique” http(s), donc rawExternal && !special. */
   external: boolean;
-  /** Href interdit, schéma dangereux. */
   unsafe: boolean;
-  /** Raison de blocage, si unsafe. */
   unsafeReason?: UnsafeReason;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/*                          External / Special detection                      */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Vrai si `href` est une URL http(s) absolue, avec protocole ou protocole relatif `//`.
- */
 function isAbsoluteUrl(href: string): boolean {
   return /^(https?:)?\/\//i.test(href);
 }
 
-/** @internal Protocoles “spéciaux”, non http, considérés comme externes. */
+/** Non-http protocols that are still treated as external links. */
 const SPECIAL_PROTOCOLS = ["mailto:", "tel:"] as const;
 
-/** @internal Schémas explicitement interdits dans un `href`. */
+/** Schemes forbidden in rendered href attributes. */
 const UNSAFE_PROTOCOLS = [
   "javascript",
   "vbscript",
@@ -69,9 +47,6 @@ type UnsafeHrefResult = Readonly<{
   reason?: UnsafeReason;
 }>;
 
-/**
- * Vrai si `href` commence par un protocole spécial, ex. `mailto:` ou `tel:`.
- */
 function isSpecialProtocol(
   href?: string | null,
   list: readonly string[] = SPECIAL_PROTOCOLS,
@@ -85,17 +60,6 @@ function isSpecialProtocol(
   return list.some((protocol) => lower.startsWith(protocol));
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                Path / Active                               */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Fabrique un slug simple à partir d’un libellé, usage UI.
- *
- * @remarks
- * - retire les accents, NFD ;
- * - convertit en kebab-case.
- */
 export function slugifyPath(input: string): string {
   return input
     .trim()
@@ -106,13 +70,7 @@ export function slugifyPath(input: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-/**
- * Normalise un chemin d’URL pour comparaison fiable.
- *
- * @remarks
- * - Extrait `pathname` si URL absolue.
- * - Retire le slash final, sauf racine "/".
- */
+/** Normalizes URL paths for reliable active-link comparisons. */
 export function normalizePath(path: string): string {
   try {
     const url = new URL(path, "http://dummy");
@@ -138,9 +96,6 @@ export function normalizePath(path: string): string {
   }
 }
 
-/**
- * Détermine si un lien est actif selon le chemin courant.
- */
 export function isActiveLink(
   currentPath: string,
   targetPath: string,
@@ -154,17 +109,7 @@ export function isActiveLink(
     : current === target || current.startsWith(target + "/");
 }
 
-/* -------------------------------------------------------------------------- */
-/*                              Unsafe href detection                         */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Normalise un href pour la détection de schémas dangereux.
- *
- * @remarks
- * Objectif : neutraliser les préfixes invisibles et obfuscations triviales
- * espaces/contrôles, sans essayer de réparer l’URL.
- */
+/** Removes leading controls and trivial whitespace obfuscation before unsafe-scheme checks. */
 function normalizeUnsafeCandidate(href: string): string {
   const leadingStripped = href.replace(/^[\s\u0000-\u001F]+/, "");
   const lower = leadingStripped.toLowerCase();
@@ -172,9 +117,6 @@ function normalizeUnsafeCandidate(href: string): string {
   return lower.replace(/[\s\u0000-\u001F]+/g, "");
 }
 
-/**
- * Détecte les protocoles non sûrs pour `<a href=...>`.
- */
 function isUnsafeHref(href?: string | null): UnsafeHrefResult {
   if (typeof href !== "string") {
     return { unsafe: false };
@@ -199,15 +141,6 @@ function isUnsafeHref(href?: string | null): UnsafeHrefResult {
   return { unsafe: false };
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                 Main resolver                              */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Résout les flags de lien : externe, spécial, non sûr…
- *
- * @param href Href à analyser, idéalement déjà normalisé via un normalize string UI.
- */
 export function resolveLinkFlags(href: string): LinkFlags {
   const raw = String(href ?? "").trim();
   const { unsafe, reason } = isUnsafeHref(raw);
@@ -224,10 +157,6 @@ export function resolveLinkFlags(href: string): LinkFlags {
     unsafeReason: reason,
   };
 }
-
-/* -------------------------------------------------------------------------- */
-/*                          Mount / preview helpers                           */
-/* -------------------------------------------------------------------------- */
 
 function isMountPath(path: string, mount: string): boolean {
   return path === mount || path.startsWith(mount + "/");
@@ -254,15 +183,7 @@ export function shouldDisableLinksInPreview(currentPath: string): boolean {
   return isPreviewPath(currentPath);
 }
 
-/**
- * Résout la base de mount site selon le chemin courant.
- *
- * @remarks
- * - /preview/*          → /preview
- * - /draft/*            → /draft
- * - /t/:websiteSlug/*   → /t/:websiteSlug
- * - sinon               → /
- */
+/** Resolves the active site mount base for preview, draft, hosted, and `/t/:websiteSlug` routes. */
 export function resolveSiteMountBase(currentPath: string): string {
   const path = normalizePath(currentPath || "/");
 
@@ -283,19 +204,7 @@ export function resolveSiteMountBase(currentPath: string): string {
   return SITE_PATH.home;
 }
 
-/**
- * Préfixe un href interne, commençant par "/", avec la base de mount.
- *
- * @example
- * current="/draft/contact", href="/contact" → "/draft/contact"
- * current="/t/demo/contact", href="/contact" → "/t/demo/contact"
- * current="/", href="/contact" → "/contact"
- *
- * @remarks
- * Invariants :
- * - ne modifie pas les href externes / specials / unsafe ;
- * - évite le double préfixe.
- */
+/** Prefixes safe root-relative internal hrefs with the active site mount base without double-prefixing. */
 export function resolveInternalHref(currentPath: string, href: string): string {
   const raw = String(href ?? "").trim();
 

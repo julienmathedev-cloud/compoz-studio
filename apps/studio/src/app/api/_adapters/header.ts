@@ -3,14 +3,11 @@
  * @layer studio/app/api/adapters
  *
  * @description
- * Adaptateur API Studio pour le Header :
- * convertit le DTO d’intention en input domaine pour le use-case.
+ * Studio API adapter for header settings update intents.
  *
- * Responsabilités :
- * - copie défensive
- * - prise en compte uniquement des champs présents
- * - aucun traitement métier
- * - aucun handling de state (géré par la route)
+ * @remarks
+ * - Builds a partial domain patch from the fields present in the intent.
+ * - Leaves state handling to the route.
  */
 
 import { log } from "@compoz/infra/lib/log";

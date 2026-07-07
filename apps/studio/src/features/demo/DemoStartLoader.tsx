@@ -5,7 +5,12 @@
  * @layer studio/features/demo
  *
  * @description
- * Loader client affiché pendant le provisioning de la sandbox démo.
+ * Client loader shown while provisioning a demo sandbox.
+ *
+ * @remarks
+ * - Starts demo provisioning through `/api/demo/start?mode=json` and redirects only to safe same-origin paths.
+ * - Uses simulated progress capped below completion until the API confirms the sandbox is ready.
+ * - Supports retry by changing `attempt`, which restarts the provisioning request and progress animation.
  */
 
 import { Check, Loader2, RotateCcw } from "lucide-react";
@@ -28,7 +33,11 @@ const STEPS = [
 function normalizeRedirectTo(value: unknown): string {
   const redirectTo = String(value ?? "").trim();
 
-  if (!redirectTo || !redirectTo.startsWith("/") || redirectTo.startsWith("//")) {
+  if (
+    !redirectTo ||
+    !redirectTo.startsWith("/") ||
+    redirectTo.startsWith("//")
+  ) {
     return "/";
   }
 
@@ -58,7 +67,10 @@ export function DemoStartLoader() {
           return current;
         }
 
-        return Math.min(92, current + Math.max(1, Math.round((92 - current) / 9)));
+        return Math.min(
+          92,
+          current + Math.max(1, Math.round((92 - current) / 9)),
+        );
       });
     }, 420);
 
@@ -104,6 +116,8 @@ export function DemoStartLoader() {
           return;
         }
 
+        console.error("Failed to start demo sandbox.", err);
+
         setIsStarting(false);
         setError("Impossible de préparer la démo pour le moment.");
       }
@@ -134,7 +148,8 @@ export function DemoStartLoader() {
             </h1>
 
             <p className="text-sm leading-6 text-muted-foreground">
-              Nous copions le site de démonstration et configurons votre session.
+              Nous copions le site de démonstration et configurons votre
+              session.
             </p>
           </div>
         </div>

@@ -3,18 +3,13 @@
  * @layer studio/app/api
  *
  * @description
- * Route API Studio : réordonne les enfants d’un parent dans l’index draft
- * du Website actif.
+ * Studio API route for reordering child pages in the draft page index.
  *
  * @remarks
- * POST: body = { childIds: string[] }
- *
- * - Réordonne uniquement les pages dont parentId === pageId.
- * - Écrit l’index draft, source of truth côté Studio.
- * - Mutation index-only : ne modifie ni le contenu des pages, ni les blocks,
- *   ni les settings.
- * - N’invalide pas les caches `status` / `statusDetails`.
- * - Le repository est scopé par Prisma Website.id.
+ * - Reorders only pages whose `parentId` matches the route `pageId`.
+ * - Writes the draft index, which is the Studio source of truth for page hierarchy.
+ * - Index-only mutation: does not modify page content, blocks, settings, or status caches.
+ * - The repository is scoped by Prisma Website.id.
  */
 
 import "server-only";
@@ -35,10 +30,6 @@ import {
   ReorderChildrenIntentSchema,
   type ReorderChildrenIntentDTO,
 } from "@compoz/validation/pages/page-intents";
-
-/* -------------------------------------------------------------------------- */
-/* POST /api/pages/:pageId/children/reorder                                   */
-/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.children.reorder.POST" as const;

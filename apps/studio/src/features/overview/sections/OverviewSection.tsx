@@ -2,10 +2,16 @@
 
 /**
  * @file apps/studio/src/features/overview/sections/OverviewSection.tsx
- * @layer ui/sections
+ * @layer studio/features/overview/sections
  *
  * @description
- * Section d’accueil de l’admin : état global, actions, stats, preview.
+ * Studio Overview section showing publication state, metrics, settings status, details, and preview.
+ *
+ * @remarks
+ * - Loads site status and draft settings bundle for overview cards.
+ * - Resolves the published base URL from draft SEO settings before passing it to publish actions.
+ * - Shows the demo sandbox notice only for demo sessions.
+ * - Shows theme settings status only for admin users through `OverviewSettingsCard`.
  */
 
 import { useTranslations } from "next-intl";
@@ -26,7 +32,10 @@ type OverviewSectionProps = Readonly<{
   isAdmin?: boolean;
 }>;
 
-export function OverviewSection({ isDemo = false, isAdmin = false }: OverviewSectionProps) {
+export function OverviewSection({
+  isDemo = false,
+  isAdmin = false,
+}: OverviewSectionProps) {
   const t = useTranslations();
 
   const { data, isError, isLoading, isFetching } = useSiteStatus();
@@ -58,7 +67,11 @@ export function OverviewSection({ isDemo = false, isAdmin = false }: OverviewSec
         </div>
 
         <div className="md:col-span-2 lg:col-span-2">
-          <OverviewSettingsCard data={data} isError={isError} isAdmin={isAdmin} />
+          <OverviewSettingsCard
+            data={data}
+            isError={isError}
+            isAdmin={isAdmin}
+          />
         </div>
       </div>
 

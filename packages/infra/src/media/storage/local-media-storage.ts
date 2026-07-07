@@ -1,13 +1,9 @@
 /**
  * @file packages/infra/src/media/storage/local-media-storage.ts
  * @layer infra/media/storage
- * @description
- * Implémentation locale du stockage média via le filesystem.
- *
+ * @description Local filesystem implementation of media storage.
  * @remarks
- * - Utilisée en développement local.
- * - Écrit dans `public/uploads/...`.
- * - Retourne une URL publique relative (`/uploads/...`).
+ * Used for local development; files are written under `public/uploads` and exposed through relative `/uploads/...` URLs.
  */
 
 import { promises as fs } from "node:fs";

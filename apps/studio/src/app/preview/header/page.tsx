@@ -5,15 +5,15 @@
  * @layer studio/app
  *
  * @description
- * Page de preview (iframe) pour le Header du site.
+ * Iframe preview page for the site header.
  *
  * @remarks
- * - Lit les données via `usePreviewOverride` pour header, identity, primaryMenu et social.
- * - Gating strict : ne rend rien tant que toutes les baselines nécessaires ne sont pas disponibles
- *   (l’empty state est géré par le wrapper preview).
- * - `header` : override possible (sync), les autres : baseline only.
- * - Le skin UI est fourni par `SiteUiProvider` monté dans `PreviewProviders`.
- * - Le thème CSS est fourni par `ThemeProvider` monté dans `PreviewProviders`.
+ * - Reads header, identity, primary menu, and social data through `usePreviewOverride`.
+ * - Uses strict gating: renders nothing until all required baselines are available
+ *   because the empty state is handled by the preview wrapper.
+ * - `header` can be overridden through sync; other values are baseline-only.
+ * - The UI skin is provided by `SiteUiProvider` mounted in `PreviewProviders`.
+ * - The CSS theme is provided by `ThemeProvider` mounted in `PreviewProviders`.
  */
 
 import { useEffect } from "react";
@@ -26,10 +26,6 @@ import type { HeaderSettingsShape } from "@compoz/validation/site/settings/heade
 import type { IdentitySettingsShape } from "@compoz/validation/site/settings/identity/identity";
 import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 import type { SocialSettingsShape } from "@compoz/validation/site/settings/social/social";
-
-/* -------------------------------------------------------------------------- */
-/* Logger                                                                     */
-/* -------------------------------------------------------------------------- */
 
 const lg = log.child({
   ns: "preview",
@@ -52,13 +48,13 @@ export default function HeaderPreviewPage() {
     }
   }, [header, identity, primaryMenu, social]);
 
-  // Règles de résolution : header override > baseline, autres baselines only.
+  // Resolution rules: header override > baseline; other values are baseline-only.
   const visibleHeader = header.override ?? header.baseline;
   const visibleIdentity = identity.baseline;
   const visiblePrimaryMenu = primaryMenu.baseline;
   const visibleSocial = social.baseline;
 
-  // Empty state géré par le wrapper preview
+  // Empty state is handled by the preview wrapper.
   if (
     !visibleHeader ||
     !visibleIdentity ||

@@ -3,14 +3,11 @@
  * @layer schemas
  *
  * @description
- * Zod schemas for extended card items.
+ * Zod schemas for reusable extended card items.
  *
  * @remarks
- * An extended card item is a reusable content item used by higher-level cells
- * such as `cardCollection` or `carousel`.
- *
- * Layout concerns such as columns, alignment, or reveal behavior are handled
- * by the parent cell.
+ * Extended card items carry content only. Layout concerns such as columns,
+ * alignment, or reveal behavior are handled by the parent cell.
  */
 
 import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";

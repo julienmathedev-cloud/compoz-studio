@@ -2,16 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/_shared/MenuBadges.tsx
- * @layer ui/studio/molecules
+ * @layer studio/features/settings/menus/shared
  *
  * @description
- * Badges (type + icône) décrivant un item de menu (groupe, externe, interne).
+ * Shared studio badges describing a menu item as grouped, external, or internal.
  *
  * @remarks
- * - Molecule UI : ne dépend que d’un modèle minimal (`href`, `children`).
- * - Détecte le type à partir de `href` + présence de `children`.
- * - Utilisable pour différents menus (menu principal, menu légal).
- * - Strictement UI-only : aucune logique métier.
+ * - Uses only a minimal menu item shape so it can be reused by multiple menu settings forms.
+ * - Link semantics are delegated to `resolveLinkFlags` to keep badge detection aligned with runtime link handling.
  */
 
 import { ExternalLink, FolderTree, Link } from "lucide-react";
@@ -23,27 +21,21 @@ import { Badge } from "@compoz/ui/components/ui/badge";
 import { resolveLinkFlags } from "@compoz/ui/lib/links/helpers";
 import { cn } from "@compoz/ui/lib/utils";
 
-/**
- * Modèle minimal attendu pour déterminer les badges.
- */
+/** Minimal menu item shape required by badge detection. */
 type MenuItemForBadges = Readonly<{
   href: string;
   children?: ReadonlyArray<unknown>;
   hasChildren?: boolean;
 }>;
 
-/**
- * Types de badges supportés.
- */
 type Kind = "group" | "external" | "internal";
 
 /**
- * Détermine les badges à afficher à partir du `href` et de la présence d’enfants.
+ * Resolves all badges that should be shown for a menu item.
  *
  * @remarks
- * - `group` : l’item possède des `children`.
- * - `external` : `href` est détecté comme externe (http(s), //, mailto:, tel:, etc.).
- * - `internal` : tout le reste ("/", "/slug", "#anchor", etc.).
+ * - A grouped item still receives a link-type badge because groups can also point to a target.
+ * - `resolveLinkFlags` is the source of truth for external link detection.
  */
 function detectKind(href: string, hasChildren: boolean): Kind[] {
   const kinds: Kind[] = [];
@@ -63,26 +55,18 @@ function detectKind(href: string, hasChildren: boolean): Kind[] {
   return kinds;
 }
 
-/** Mapping `Kind` → icône (Lucide) rendue via `StudioIcon`. */
+/** Icons used by each badge kind. */
 const ICONS: Record<Kind, ComponentType<SVGProps<SVGSVGElement>>> = {
   group: FolderTree,
   external: ExternalLink,
   internal: Link,
 };
 
-/**
- * Props du composant `MenuBadges`.
- */
 type MenuBadgesProps = Readonly<{
-  /** Item minimal utilisé pour déterminer les badges. */
   item: MenuItemForBadges;
-  /** Classes additionnelles appliquées au conteneur. */
   className?: string;
 }>;
 
-/**
- * Affiche des badges décrivant la nature d’un item de menu (studio).
- */
 export function MenuBadges({ item, className }: MenuBadgesProps) {
   const t = useTranslations();
   const hrefStr = String(item.href ?? "");

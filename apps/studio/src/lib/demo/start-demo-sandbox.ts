@@ -3,48 +3,45 @@
  * @layer studio/lib/demo
  *
  * @description
- * Composition serveur du démarrage de sandbox démo.
+ * Server composition for starting a demo sandbox.
  *
  * @remarks
- * - Branche les dépendances infra + auth nécessaires au use-case
- *   `startDemoSandbox`.
- * - Point d’entrée serveur réutilisable par la future route `/demo/start`.
- * - Ne gère pas encore les cookies HTTP, la session NextAuth
- *   ni la redirection finale.
- * - La sandbox démo est créée depuis un Website seed explicite.
+ * - Wires the infrastructure, auth, seed reader, and cloner dependencies required by `startDemoSandbox`.
+ * - Provides the reusable server entry point for the future `/demo/start` route.
+ * - Does not handle HTTP cookies, the NextAuth session, or the final redirect yet.
+ * - The demo sandbox is cloned from an explicit Website seed.
  */
 
 import "server-only";
 
+import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import {
   DEMO_SANDBOX_TTL_MS,
   DEMO_SEED_WEBSITE_ID,
 } from "@compoz/core/constants/demo/demo";
-import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import type { DemoSandbox } from "@compoz/core/domain/demo/entities/demo-sandbox";
 import type { DemoSandboxRepository } from "@compoz/core/domain/demo/ports/demo-sandbox-repository";
+import { createDemoSandboxFromSeed } from "@compoz/core/domain/demo/use-cases/create-demo-sandbox-from-seed";
 import type {
   DemoSandboxCloneResult,
   DemoSandboxCloner,
   DemoSandboxSeedReader,
 } from "@compoz/core/domain/demo/use-cases/create-demo-sandbox-from-seed.types";
-import { createDemoSandboxFromSeed } from "@compoz/core/domain/demo/use-cases/create-demo-sandbox-from-seed";
 import { findReusableDemoSandbox } from "@compoz/core/domain/demo/use-cases/find-reusable-demo-sandbox";
 import { registerDemoSandbox } from "@compoz/core/domain/demo/use-cases/register-demo-sandbox";
 import { startDemoSandbox } from "@compoz/core/domain/demo/use-cases/start-demo-sandbox";
 import type { Page } from "@compoz/core/domain/pages/entities/page";
 
-import { getPagesRepository } from "@compoz/infra/pages";
 import { createUuidV7IdGenerator } from "@compoz/infra/id/uuidv7";
+import { getPagesRepository } from "@compoz/infra/pages";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
 import { getSiteRepository } from "@compoz/infra/site";
 import { getUsersRepository } from "@compoz/infra/users";
 import { buildDemoUserPassword } from "@compoz/studio/auth/demo-auth";
 
-type RunStartDemoSandboxInput = Readonly<{
-  demoInstanceId?: string;
-}>;
+type RunStartDemoSandboxInput = Readonly<{ demoInstanceId?: string }>;
 
+/** Ensures the demo flow runs only with Prisma-backed repositories. */
 function requirePrismaRepoImpl(name: string): void {
   const value = String(process.env[name] ?? "")
     .trim()
@@ -270,6 +267,7 @@ class PrismaDemoSandboxCloner implements DemoSandboxCloner {
 
       await targetSite.putIndex(CONTENT_STATE.DRAFT, index);
     } catch (error) {
+      // Roll back the sandbox website when cloning fails, without masking the original error.
       await this.deleteSandboxWebsite(targetWebsiteId).catch(() => undefined);
 
       throw error;
@@ -287,6 +285,7 @@ class PrismaDemoSandboxCloner implements DemoSandboxCloner {
       return;
     }
 
+    // Avoid deleting a sandbox website when media cleanup is not guaranteed yet.
     const mediaAssets = await prisma.mediaAsset.count({
       where: {
         websiteId: targetWebsiteId,
@@ -345,7 +344,9 @@ class PrismaDemoSandboxRepository implements DemoSandboxRepository {
     const createdAt = new Date(sandbox.createdAt);
 
     if (!demoInstanceId || !userId || !websiteId) {
-      throw new Error("PrismaDemoSandboxRepository.put: sandbox is incomplete.");
+      throw new Error(
+        "PrismaDemoSandboxRepository.put: sandbox is incomplete.",
+      );
     }
 
     if (

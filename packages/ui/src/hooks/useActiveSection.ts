@@ -3,14 +3,9 @@
 /**
  * @file packages/ui/src/hooks/useActiveSection.ts
  * @layer ui/hooks
- *
- * @description
- * Hook détectant la section active parmi une liste d’identifiants.
- *
+ * @description Tracks the active section from internal hash navigation targets.
  * @remarks
- * - Supporte le conteneur de scroll du draft via `[data-scroll-root]`.
- * - Utilise `window` comme fallback pour les sites publiés.
- * - Observe les mutations du DOM pour prendre en charge le rendu différé.
+ * Supports the draft scroll root via `[data-scroll-root]`, falls back to `window`, and observes DOM mutations for deferred rendering.
  */
 
 import { useEffect, useState } from "react";
@@ -37,7 +32,8 @@ export function useActiveSection(sectionIds: readonly string[]): string | null {
 
     const updateActiveSection = () => {
       const activationLine = scrollRoot
-        ? scrollRoot.getBoundingClientRect().top + scrollRoot.clientHeight * 0.35
+        ? scrollRoot.getBoundingClientRect().top +
+          scrollRoot.clientHeight * 0.35
         : window.innerHeight * 0.35;
 
       let nextActiveId: string | null = null;
@@ -60,14 +56,11 @@ export function useActiveSection(sectionIds: readonly string[]): string | null {
       setActiveSectionId(nextActiveId);
     };
 
-    const intersectionObserver = new IntersectionObserver(
-      updateActiveSection,
-      {
-        root: scrollRoot,
-        rootMargin: "-35% 0px -45% 0px",
-        threshold: 0,
-      },
-    );
+    const intersectionObserver = new IntersectionObserver(updateActiveSection, {
+      root: scrollRoot,
+      rootMargin: "-35% 0px -45% 0px",
+      threshold: 0,
+    });
 
     const observeTargets = () => {
       for (const sectionId of sectionIds) {
@@ -132,9 +125,7 @@ export function collectSectionIds(
 
     try {
       sectionIds.add(decodeURIComponent(fragment));
-    } catch {
-      // noop
-    }
+    } catch {}
   };
 
   for (const item of items) {

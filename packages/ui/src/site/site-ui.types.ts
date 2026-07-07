@@ -3,24 +3,16 @@
  * @layer ui/site
  *
  * @description
- * Types définis pour le runtime UI du site (skins).
- * Ces types sont utilisés pour le runtime (merge) et le debug (inspect).
+ * Defines public site UI skin contracts and their deep partial override variants.
  *
- * Contrat : tous les champs sont optionnels (par défaut).
+ * @remarks
+ * Skin contracts are runtime-facing class maps shared by public rendering, draft rendering, Studio preview, and skin merge helpers.
  */
 import type { GalleryMaxColumns } from "@compoz/core/domain/pages/entities/cell";
-
-/* -------------------------------------------------------------------------- */
-/* Utilities                                                                  */
-/* -------------------------------------------------------------------------- */
 
 export type DeepPartial<T> = {
   [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
 };
-
-/* -------------------------------------------------------------------------- */
-/* Global UI                                                                  */
-/* -------------------------------------------------------------------------- */
 
 export type SiteGlobalUi = Readonly<{
   header: SiteHeaderUi;
@@ -35,10 +27,6 @@ export type SiteGlobalUi = Readonly<{
 }>;
 
 export type SiteGlobalUiOverride = DeepPartial<SiteGlobalUi>;
-
-/* -------------------------------------------------------------------------- */
-/* Cells                                                                      */
-/* -------------------------------------------------------------------------- */
 
 export type SiteCellsUi = Readonly<{
   richText: SiteRichTextUi;
@@ -62,10 +50,6 @@ export type SiteCellsUi = Readonly<{
 
 export type SiteCellsUiOverride = DeepPartial<SiteCellsUi>;
 
-/* -------------------------------------------------------------------------- */
-/* Block section                                                              */
-/* -------------------------------------------------------------------------- */
-
 export type SiteBlockSectionUi = Readonly<{
   surface: string;
   containerContained: string;
@@ -84,10 +68,6 @@ export type SiteBlockSectionUi = Readonly<{
 
 export type SiteBlockSectionUiOverride = DeepPartial<SiteBlockSectionUi>;
 
-/* -------------------------------------------------------------------------- */
-/* Shared atoms                                                               */
-/* -------------------------------------------------------------------------- */
-
 export type SiteButtonUi = Readonly<{
   content: string;
   label: string;
@@ -95,10 +75,6 @@ export type SiteButtonUi = Readonly<{
 }>;
 
 export type SiteButtonUiOverride = DeepPartial<SiteButtonUi>;
-
-/* -------------------------------------------------------------------------- */
-/* Cells                                                                      */
-/* -------------------------------------------------------------------------- */
 
 export type SiteFormUi = Readonly<{
   card: string;
@@ -210,9 +186,6 @@ export type SiteStepCardUi = Readonly<{
     center: string;
   }>;
 
-  /**
-   * Layout balanced (optionnel)
-   */
   headerBalanced?: string;
   headerBadgeSlot?: string;
   headerSpacerSlot?: string;
@@ -621,10 +594,6 @@ export type SiteLogoUi = Readonly<{
 
 export type SiteLogoUiOverride = DeepPartial<SiteLogoUi>;
 
-/* -------------------------------------------------------------------------- */
-/* Pager                                                                      */
-/* -------------------------------------------------------------------------- */
-
 export type SiteDetailPagerUi = Readonly<{
   nav: string;
   link: string;
@@ -634,10 +603,6 @@ export type SiteDetailPagerUi = Readonly<{
 }>;
 
 export type SiteDetailPagerUiOverride = DeepPartial<SiteDetailPagerUi>;
-
-/* -------------------------------------------------------------------------- */
-/* System                                                                     */
-/* -------------------------------------------------------------------------- */
 
 export type SiteSystemLoadingUi = Readonly<{
   container: string;

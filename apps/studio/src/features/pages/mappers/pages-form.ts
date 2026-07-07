@@ -1,14 +1,14 @@
 /**
  * @file apps/studio/src/features/pages/mappers/pages-form.ts
- * @layer ui/studio/pages/mappers
+ * @layer studio/features/pages/mappers
  *
  * @description
- * Mappers de formulaires studio pour les pages :
- * - normalisations UI (trim / coercitions simples)
- * - construction des Intent DTO pour l’API studio
+ * Studio page form mappers for DTO-to-RHF values, UI normalization, and API intents.
  *
  * @remarks
- * - Pour DTO -> valeurs UI, on s’appuie sur le mapper shared `toPageShapeFromDTO`.
+ * - Delegates DTO-to-form shaping to the shared `toPageShapeFromDTO` mapper.
+ * - Normalizes nullable SEO and sitemap fields before API intent creation.
+ * - Does not own draft/published state; callers provide the content-state context.
  */
 
 import type { PageDTO } from "@compoz/core/domain/pages/dto";
@@ -20,26 +20,13 @@ import type {
   UpdatePageIntentDTO,
 } from "@compoz/validation/pages/page-intents";
 
-/* -------------------------------------------------------------------------- */
-/* Defaults UI                                                                */
-/* -------------------------------------------------------------------------- */
-
 const DEFAULT_SITEMAP: NonNullable<PageFormValues["sitemap"]> = {
   include: true,
   priority: null,
   changefreq: null,
 };
 
-/* -------------------------------------------------------------------------- */
-/* Domain (DTO) -> UI (form values)                                           */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Convertit un DTO page en `PageFormValues` studio.
- *
- * @remarks
- * Délègue au mapper shared ; le caller peut ensuite re-normaliser si besoin.
- */
+/** Converts a page DTO to Studio page form values through the shared page-shape mapper. */
 export function toPageFormValuesFromDTO(
   page: PageDTO | null | undefined,
   slugFallback?: string,
@@ -47,10 +34,7 @@ export function toPageFormValuesFromDTO(
   return toPageShapeFromDTO(page, slugFallback);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Normalisations UI (forms)                                                  */
-/* -------------------------------------------------------------------------- */
-
+// UI form normalization.
 export function normalizePageFormValues(
   values: PageFormValues,
 ): PageFormValues {
@@ -75,10 +59,7 @@ export function normalizePageFormValues(
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Helpers internes (intents)                                                 */
-/* -------------------------------------------------------------------------- */
-
+// API intent helpers.
 function toPageSitemapIntentDTOFromFormValues(
   values: PageFormValues["sitemap"],
 ): CreatePageIntentDTO["sitemap"] {
@@ -91,10 +72,7 @@ function toPageSitemapIntentDTOFromFormValues(
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* UI -> INTENTS (API studio)                                                 */
-/* -------------------------------------------------------------------------- */
-
+// UI form values -> API intents.
 export function toCreatePageIntentDTOFromFormValues(
   values: PageFormValues,
 ): CreatePageIntentDTO {

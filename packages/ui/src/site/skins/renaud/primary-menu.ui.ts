@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/renaud/primary-menu.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/renaud
  *
  * @description
- * Skin UI — menu principal site (thème renaud).
+ * Defines the Renaud skin overrides for the public site primary menu.
  */
 
 import type { SitePrimaryMenuUiOverride } from "@compoz/ui/site/site-ui.types";

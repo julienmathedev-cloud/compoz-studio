@@ -2,16 +2,16 @@
 
 /**
  * @file apps/studio/src/features/confirm/ConfirmDialogProvider.tsx
- * @layer ui/providers
+ * @layer studio/features/confirm
  *
  * @description
- * Dialogue de confirmation global (contexte + provider) accessible via `useConfirm()`.
+ * Global confirmation dialog context and provider exposed through `useConfirm()`.
  *
  * @remarks
- * - Expose `confirm(opts)` qui ouvre le dialogue et résout une promesse `boolean`.
- * - Monte un unique `<Dialog>` au plus haut niveau de l’arbre.
- * - Supporte une option d’acknowledge (case à cocher) pour bloquer la confirmation.
- * - Strictement UI-only.
+ * - Exposes `confirm(opts)`, which opens the dialog and resolves to a boolean.
+ * - Mounts a single Studio `<Dialog>` near the top of the client tree.
+ * - Supports an optional acknowledge checkbox that blocks confirmation until checked.
+ * - Guards promise resolution so Radix close paths cannot resolve the same confirmation twice.
  */
 
 import type { ReactNode } from "react";
@@ -30,30 +30,22 @@ import { useIdPrefix } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
 import { ROW_CENTER } from "@compoz/ui/styles/studio/layout";
 
-/** Tonalité visuelle/UX du dialogue. */
 type ConfirmTone = "default" | "danger";
 
-/**
- * Options passées à `confirm(...)`.
- * Tous les champs sont optionnels, des valeurs par défaut sont fournies
- * par le provider.
- */
+/** Options passed to `confirm(...)`; provider defaults fill omitted fields. */
 export type ConfirmOptions = Readonly<{
   title?: ReactNode;
-  /** Description textuelle ou contenu riche (liste, paragraphes, etc.). */
   description?: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   tone?: ConfirmTone;
-  /** Optionnel : demande à l’utilisateur de cocher une case avant de confirmer. */
   requireAcknowledge?: { label: string };
 }>;
 
-/** State interne géré par le provider (UI + callback de résolution). */
 type InternalState = ConfirmOptions &
   Readonly<{
     open: boolean;
-    /** Résolution de la promesse pour le dernier `confirm()` appelé. */
+    /** Resolver for the latest `confirm()` promise. */
     resolve?: (v: boolean) => void;
   }>;
 
@@ -61,35 +53,21 @@ type ConfirmContextValue = Readonly<{
   confirm: (opts?: ConfirmOptions) => Promise<boolean>;
 }>;
 
-/**
- * Contexte exposant une fonction `confirm` qui ouvre le dialogue
- * et renvoie une promesse résolue à `true` (confirmé) ou `false` (annulé).
- */
 export const ConfirmContext = createContext<ConfirmContextValue | null>(null);
 
-/**
- * Provider global du dialogue de confirmation.
- *
- * @remarks
- * - Doit encapsuler l’arbre qui consomme `useConfirm()`.
- * - Rend les enfants + un unique `<Dialog>` monté au plus haut niveau.
- */
 export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<InternalState>({ open: false });
   const [ack, setAck] = useState(false);
 
-  // ✅ Anti double-resolve (Radix peut déclencher plusieurs chemins de fermeture).
+  // Prevent double resolution because Radix can trigger multiple close paths.
   const hasResolvedRef = useRef(false);
 
-  // Préfixe d’ID stable (a11y + anti-collision).
+  // Stable id prefix for a11y and collision avoidance.
   const providerId = useIdPrefix("confirm-dialog");
   const acknowledgeId = `${providerId}-acknowledge`;
 
   const hasDescription = Boolean(state.description);
 
-  /**
-   * Ferme le dialogue et nettoie l’état sensible (resolve + ack).
-   */
   const closeAndReset = useCallback(() => {
     setState((s) => ({
       ...s,
@@ -101,28 +79,23 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /**
-   * Résout la promesse une seule fois (sécurité).
+   * Resolves the active confirmation promise at most once.
    *
    * @remarks
-   * On lit `resolve` depuis l’état courant au moment de l’action,
-   * puis on nettoie immédiatement.
+   * Reads `resolve` from the current state at action time, then clears state immediately.
    */
   const resolveOnce = useCallback(
     (value: boolean) => {
       if (hasResolvedRef.current) return;
       hasResolvedRef.current = true;
 
-      // Lecture "instantanée" : si pas de resolve (cas edge), on ferme quand même.
+      // If no resolver exists in an edge case, still close the dialog.
       state.resolve?.(value);
       closeAndReset();
     },
     [closeAndReset, state],
   );
 
-  /**
-   * Ouvre le dialogue et renvoie une promesse boolean.
-   * Réinitialise l’acknowledge et stocke la fonction `resolve` dans l’état interne.
-   */
   const confirm = useCallback((opts?: ConfirmOptions) => {
     return new Promise<boolean>((resolve) => {
       hasResolvedRef.current = false;
@@ -141,36 +114,25 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  /**
-   * Annule la confirmation en cours :
-   * - Résout la promesse à `false`.
-   */
   const onCancel = useCallback(() => {
     resolveOnce(false);
   }, [resolveOnce]);
 
-  /**
-   * Confirme :
-   * - Si `requireAcknowledge` est actif, bloque tant que la case n’est pas cochée.
-   * - Résout la promesse à `true`.
-   */
   const onConfirm = useCallback(() => {
     if (state.requireAcknowledge && !ack) return;
     resolveOnce(true);
   }, [state.requireAcknowledge, ack, resolveOnce]);
 
-  /** Valeur de contexte mémoïsée (évite des rerenders inutiles). */
   const value = useMemo<ConfirmContextValue>(() => ({ confirm }), [confirm]);
 
   return (
     <ConfirmContext.Provider value={value}>
       {children}
 
-      {/* Dialogue de confirmation global (monté une seule fois). */}
       <Dialog
         open={state.open}
         onOpenChange={(o) => {
-          // Si l’utilisateur ferme via overlay/escape, on annule.
+          // Overlay or Escape close paths cancel the active confirmation.
           if (!o) onCancel();
         }}
       >

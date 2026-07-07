@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/validators/cells/spacer.ts
  * @layer core/domain/pages/validators
- * @description
- * Validateur métier de SpacerCell.
+ * @description Domain validator for spacer cells.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -25,9 +24,6 @@ export function assertSpacerCell(
     });
   }
 
-  /**
-   * Validation visibility responsive
-   */
   const visibility = cell.visibility;
 
   if (!visibility || typeof visibility !== "object") {

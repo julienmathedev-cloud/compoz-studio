@@ -1,12 +1,9 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/delete-page.ts
  * @layer core/domain/pages/use-cases
- * @description
- * Use-case : suppression idempotente d’une page par son ID (pageId).
- *
+ * @description Use case that idempotently deletes a page by id.
  * @remarks
- * - Idempotent : supprimer plusieurs fois le même `pageId` doit laisser le même état.
- * - Ne modifie pas l’index (choix volontaire : suppression du contenu uniquement).
+ * Deleting the same `pageId` multiple times must leave the same state. This use case intentionally deletes content only and does not update the index.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";

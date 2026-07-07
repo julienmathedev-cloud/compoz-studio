@@ -2,20 +2,18 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/timeline/TimelineListEditor.tsx
- * @layer ui/studio/pages/blocks/editor/timeline
+ * @layer studio/features/builder/editor/cells/timeline
  *
  * @description
- * Éditeur UI de liste d’items timeline (add/remove/reorder) pour TimelineCell.
+ * RHF-aware list editor for TimelineCell items, including add, remove, and reorder actions.
  *
  * @remarks
- * - S’appuie sur `useFieldArray` côté parent (`TimelineCellEditor`).
- * - Le reorder est géré par drag and drop via dnd-kit.
- * - Les updates métier (append/remove/move) sont déléguées à RHF.
- * - Les clés React utilisent `fieldId`, alors que le DnD s’appuie
- *   sur l’`id` métier stable de chaque item timeline.
- * - Le reorder s’appuie sur `move()` pour conserver l’état RHF.
- * - Les valeurs live restent lues via `watchedItems` et transmises
- *   au sous-éditeur pour stabiliser le rendu pendant le rebinding.
+ * - Receives `useFieldArray` actions from `TimelineCellEditor`.
+ * - Reordering is handled by dnd-kit while append/remove/move stay delegated to RHF.
+ * - React keys use RHF `fieldId`; dnd-kit uses each timeline item's stable domain `id`.
+ * - Uses `move()` to preserve RHF state while reordering.
+ * - Guards reordering when watched item values are temporarily out of sync with fields.
+ * - Passes `watchedItems` to nested editors to keep rendering stable during RHF rebinding.
  */
 
 import {

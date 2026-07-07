@@ -1,8 +1,13 @@
 /**
+
  * @file packages/validation/src/pages/blocks/cells/details/testimonials.ts
- * @layer schemas
+
+ * @layer validation/pages/blocks/cells/details
+
  * @description
- * Schémas Zod de TestimonialsCell.
+
+ * Defines Zod schemas for testimonials cell data.
+
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";

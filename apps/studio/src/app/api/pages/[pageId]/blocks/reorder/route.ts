@@ -3,15 +3,12 @@
  * @layer studio/app/api
  *
  * @description
- * Route API Studio — réordonne les blocks d’une page du Website actif.
+ * Studio API route for reordering section blocks on a draft page.
  *
  * @remarks
- * Responsabilités :
- * - POST : réordonne les blocks d’une page en draft.
- * - Valide le paramètre `pageId` et le payload via Zod.
- * - Appelle le use-case côté domaine.
- * - Invalide le cache de status du Website actif après mutation.
- * - Les repositories sont scopés par Prisma Website.id.
+ * - Validates the `pageId` route param and payload before running the domain use case.
+ * - Invalidates the active Website status cache after mutations.
+ * - Repositories are scoped by Prisma Website.id.
  */
 
 import "server-only";
@@ -35,10 +32,6 @@ import {
   type ReorderBlocksIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
 import { PageIdParamSchema } from "@compoz/validation/pages/page";
-
-/* -------------------------------------------------------------------------- */
-/* POST /api/pages/:pageId/blocks/reorder                                     */
-/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.blocks.reorder.POST" as const;
@@ -89,10 +82,10 @@ export async function POST(req: Request, ctx: { params: unknown }) {
         });
 
         /**
-         * Invalidation du cache de status du Website actif.
+         * Invalidates the active Website status cache.
          *
-         * Le cache peut encore être implémenté en KV côté infra,
-         * mais son scope métier est le Prisma Website.id.
+         * The cache may still be backed by KV in infra, but its business scope is
+         * the Prisma Website.id.
          */
         try {
           logger.debug?.("route.statusCache.invalidate.start", {

@@ -2,15 +2,13 @@
 
 /**
  * @file apps/studio/src/features/settings/identity/IdentityPage.tsx
- * @layer ui/studio/settings/identity/pages
+ * @layer studio/features/settings/identity
  *
  * @description
- * Page « Identité » (studio) — affiche la section Identity avec un H1 SR-only.
+ * Studio page shell for identity settings.
  *
  * @remarks
- * - Le H1 est porté par la page (SR-only) pour garantir un seul H1 global.
- * - `IdentitySection` rend un H2 visible via `SettingsSection` (headingLevel="h2" par défaut).
- * - La logique dirty / warnings / upload est encapsulée dans `IdentitySection`.
+ * - Keeps a unique screen-reader-only H1 while `IdentitySection` renders the visible section heading.
  */
 
 import { useTranslations } from "next-intl";
@@ -20,9 +18,6 @@ import { IdentitySection } from "@compoz/studio/features/settings/identity/Ident
 import { cn } from "@compoz/ui/lib/utils";
 import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 
-/**
- * Page Identity (studio).
- */
 export function IdentityPage() {
   const t = useTranslations();
 

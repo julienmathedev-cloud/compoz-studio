@@ -1,6 +1,9 @@
 /**
  * @file apps/studio/tailwind.config.ts
- * @description Tailwind config file
+ * @layer studio/config
+ *
+ * @description
+ * Tailwind CSS configuration for the Studio app.
  */
 
 import type { Config } from "tailwindcss";

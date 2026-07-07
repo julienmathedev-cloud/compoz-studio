@@ -1,3 +1,11 @@
+/**
+ * @file packages/validation/src/routes/params.ts
+ * @layer schemas
+ *
+ * @description
+ * Zod schemas for route params involving both page and block identifiers.
+ */
+
 import { BlockIdSchema } from "@compoz/validation/pages/blocks/block";
 import { PageIdSchema } from "@compoz/validation/pages/page";
 import { z } from "zod";

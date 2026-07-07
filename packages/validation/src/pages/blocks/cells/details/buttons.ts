@@ -1,8 +1,8 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/details/buttons.ts
- * @layer schemas
+ * @layer validation/pages/blocks/cells/details
  * @description
- * Schémas Zod de ButtonsCell.
+ * Defines Zod schemas for buttons cell data.
  */
 
 import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";

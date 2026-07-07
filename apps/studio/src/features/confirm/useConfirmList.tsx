@@ -2,16 +2,14 @@
 
 /**
  * @file apps/studio/src/features/confirm/useConfirmList.tsx
- * @layer hooks/confirm
+ * @layer studio/features/confirm
  *
  * @description
- * Hook utilitaire exposant une variante de confirmation incluant une liste
- * d’éléments explicatifs (warnings, informations, points d’attention).
+ * Hook exposing a confirmation variant with intro text and explanatory list items.
  *
  * @remarks
- * - Les contenus (`title`, `intro`, `items`) sont supposés déjà traduits.
- * - Repose sur `useConfirm()` et sur un rendu dédié de description.
- * - UI-only.
+ * - Assumes `title`, `intro`, and `items` are already translated by the caller.
+ * - Builds on `useConfirm()` and `ConfirmationDialogDescription` to keep list rendering consistent.
  */
 
 import type { ReactNode } from "react";
@@ -26,27 +24,19 @@ import { TITLE_H3 } from "@compoz/ui/styles/studio/typography";
 type ConfirmTone = "default" | "danger";
 
 export type ConfirmListParams = Readonly<{
-  /** Titre affiché dans la boîte de dialogue (déjà traduit). */
   title: ReactNode;
-  /** Texte introductif optionnel (déjà traduit). */
   intro?: ReactNode;
-  /** Liste d’éléments à afficher (warnings, détails, conséquences). */
   items: ReadonlyArray<ReactNode>;
-  /** Libellé du bouton de confirmation. */
   confirmLabel: string;
-  /** Libellé du bouton d’annulation. */
   cancelLabel: string;
-  /** Si présent : exige une acknowledgment checkbox. */
+  /** Requires an acknowledge checkbox when provided. */
   requireAckLabel?: string;
-  /** Tonalité visuelle : défaut ou danger. */
   tone?: ConfirmTone;
 }>;
 
 export type UseConfirmList = (params: ConfirmListParams) => Promise<boolean>;
 
-/**
- * Expose une fonction `confirmList(params)` retournant `Promise<boolean>`.
- */
+/** Returns a `confirmList(params)` helper backed by the global confirmation provider. */
 export function useConfirmList(): UseConfirmList {
   const confirm = useConfirm();
 

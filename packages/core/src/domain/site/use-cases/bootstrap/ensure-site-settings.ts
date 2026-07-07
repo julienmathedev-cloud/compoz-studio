@@ -1,6 +1,9 @@
 /**
  * @file packages/core/src/domain/site/use-cases/bootstrap/ensure-site-settings.ts
- * @description Use-cases “ensure” pour les différents sous-ensembles de SiteSettings.
+ * @layer core/domain/site/use-cases/bootstrap
+ * @description Ensures missing site settings sections are initialized with defaults.
+ * @remarks
+ * Existing persisted sections are preserved; only missing sections are written back.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
@@ -14,10 +17,6 @@ import type {
   SocialSettings,
 } from "@compoz/core/domain/site/entities";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
-
-/* -------------------------------------------------------------------------- */
-/* Generic helper                                                             */
-/* -------------------------------------------------------------------------- */
 
 async function ensureSubSettings<
   T extends keyof Awaited<ReturnType<SiteRepository["readSettings"]>>,
@@ -44,10 +43,6 @@ async function ensureSubSettings<
 
   return defaults;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Ensure wrappers                                                            */
-/* -------------------------------------------------------------------------- */
 
 export async function ensureIdentitySettings(
   repo: SiteRepository,

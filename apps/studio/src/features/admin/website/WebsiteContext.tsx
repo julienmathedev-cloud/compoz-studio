@@ -2,16 +2,16 @@
 
 /**
  * @file apps/studio/src/features/admin/website/WebsiteContext.tsx
- * @layer studio/features/admin/context
+ * @layer studio/features/admin/website
  *
  * @description
- * Context + hooks client pour accéder au Website actif.
+ * Client context and hooks for accessing the active Studio Website.
  *
  * @remarks
- * - Le Website actif est résolu côté server via `requireSessionWithWebsite()`.
- * - Injecté dans les providers client du Studio.
- * - `websiteId` sert au scope interne Studio : queryKeys, mutations, RBAC.
- * - `websiteSlug` sert aux URLs publiques fallback `/t/:websiteSlug`.
+ * - The active Website is resolved server-side through `requireSessionWithWebsite()`.
+ * - Injected into the Studio client providers.
+ * - `websiteId` scopes internal Studio data such as query keys, mutations, and RBAC.
+ * - `websiteSlug` is used for public fallback URLs under `/t/:websiteSlug`.
  */
 
 import { createContext, useContext } from "react";

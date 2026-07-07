@@ -1,6 +1,6 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/cell-form.ts
- * @layer schemas
+ * @layer validation/pages/blocks/cells
  *
  * @description
  * Zod schemas describing the UI form shape used to edit cells with RHF.

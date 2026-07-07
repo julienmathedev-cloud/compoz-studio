@@ -2,16 +2,15 @@
 
 /**
  * @file apps/studio/src/features/_shared/hooks/useStudioSaveDespiteWarningsConfirm.ts
- * @layer hooks/studio/shared
+ * @layer studio/features/_shared/hooks
  *
  * @description
- * Hook partagé pour confirmer une sauvegarde Studio malgré des warnings non bloquants.
+ * Shared hook for confirming a Studio save when non-blocking warnings are present.
  *
  * @remarks
- * - Strictement UI-only.
- * - Traduit les warnings via un préfixe i18n métier fourni par l’appelant.
- * - Réutilise la confirmation partagée `studio.shared.confirm.saveDespiteWarnings.*`.
- * - Retourne `true` si la sauvegarde peut continuer, sinon `false`.
+ * - Translates warning keys through the business i18n prefix provided by the caller.
+ * - Reuses the shared `studio.shared.confirm.saveDespiteWarnings.*` confirmation copy.
+ * - Returns `true` when saving may continue, otherwise `false`.
  */
 
 import { useCallback } from "react";

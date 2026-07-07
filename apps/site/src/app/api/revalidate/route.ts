@@ -3,24 +3,15 @@
  * @layer site/app/api
  *
  * @description
- * Webhook de revalidation appelé par le Studio après publication.
+ * Revalidation webhook called by the Studio after publishing.
  *
  * @remarks
- * Sécurité :
- * - Vérifie `x-revalidate-secret` si `COMPOZ_REVALIDATE_SECRET` est défini.
- *
- * Payload attendu :
- * - `{ websiteSlug: string; slugs: string[] }`
- *
- * Revalidation :
- * - Routes host-based : `/`, `/:pageSlug`, `/sitemap.xml`, `/robots.txt`.
- * - Routes fallback explicites : `/t/:websiteSlug`, `/t/:websiteSlug/:pageSlug`,
- *   `/t/:websiteSlug/sitemap.xml`, `/t/:websiteSlug/robots.txt`.
- *
- * Notes :
- * - `websiteSlug` correspond au `Website.slug` public.
- * - `slugs` correspond aux slugs des pages publiées.
- * - Best-effort : les slugs invalides sont normalisés/filtrés avant revalidation.
+ * - Checks `x-revalidate-secret` when `COMPOZ_REVALIDATE_SECRET` is configured.
+ * - Expects `{ websiteSlug: string; slugs: string[] }` from the Studio publish flow.
+ * - Revalidates host-based routes: `/`, `/:pageSlug`, `/sitemap.xml`, and `/robots.txt`.
+ * - Revalidates explicit fallback routes under `/t/:websiteSlug`.
+ * - `websiteSlug` is the public `Website.slug`; `slugs` are published page slugs.
+ * - Best-effort: invalid slugs are normalized or filtered before revalidation.
  */
 
 import "server-only";
@@ -32,10 +23,6 @@ import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { throwHttp } from "@compoz/http/http-error";
 import { handleRoute } from "@compoz/site/lib/api/handle-route";
 import { toSlug, toSlugsList } from "@compoz/ui/lib/routing/slug";
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function hostedPathForPageSlug(pageSlug: string): string {
   return pageSlug === HOME_SLUG ? "/" : `/${pageSlug}`;
@@ -58,9 +45,7 @@ function revalidatePublishedForWebsite(params: {
 }) {
   const { websiteSlug, slugs } = params;
 
-  // -----------------------------------------------------------------------
-  // A) Host-based public routes: "/", "/:pageSlug"
-  // -----------------------------------------------------------------------
+  // Host-based public routes are shared by the resolved production domain.
   revalidatePath("/");
 
   for (const pageSlug of slugs) {
@@ -70,9 +55,7 @@ function revalidatePublishedForWebsite(params: {
   revalidatePath("/sitemap.xml");
   revalidatePath("/robots.txt");
 
-  // -----------------------------------------------------------------------
-  // B) Explicit fallback routes: "/t/:websiteSlug"
-  // -----------------------------------------------------------------------
+  // Explicit fallback routes remain available for previewing or direct access by Website slug.
   revalidatePath(`/t/${websiteSlug}`);
 
   for (const pageSlug of slugs) {
@@ -82,10 +65,6 @@ function revalidatePublishedForWebsite(params: {
   revalidatePath(`/t/${websiteSlug}/sitemap.xml`);
   revalidatePath(`/t/${websiteSlug}/robots.txt`);
 }
-
-/* -------------------------------------------------------------------------- */
-/* POST                                                                       */
-/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
   const NS = "api.site.revalidate.POST" as const;

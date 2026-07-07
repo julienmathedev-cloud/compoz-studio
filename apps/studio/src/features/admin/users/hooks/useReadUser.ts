@@ -2,15 +2,15 @@
 
 /**
  * @file apps/studio/src/features/admin/users/hooks/useReadUser.ts
- * @layer hooks/admin/users
+ * @layer studio/features/admin/users/hooks
  *
  * @description
- * Hook Studio React Query pour lire un user via l’API.
+ * React Query hook for reading a Studio user through the admin API.
  *
  * @remarks
- * - Orchestration UI-only (query, logs, notifications).
- * - Retourne `UserDTO | null`.
- * - Aucune notion de state (users = données Studio globales).
+ * - Returns `UserDTO | null` depending on the selected user id.
+ * - Users are global Studio data, so no draft/published state is involved.
+ * - Keeps previous user data during refetches to avoid UI flicker.
  */
 
 import { useEffect } from "react";
@@ -42,7 +42,7 @@ export function useReadUser(userId: string): UseReadUserResult {
     queryFn: async ({ signal }: { signal: AbortSignal }): Promise<UserDTO> => {
       const res = await adminUsersStudioApi.getById(userIdKey, { signal });
 
-      // ✅ flatten route response
+      // Flatten the route response for query consumers.
       return res.user;
     },
 

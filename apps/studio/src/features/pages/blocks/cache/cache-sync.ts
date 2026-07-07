@@ -1,13 +1,14 @@
 /**
  * @file apps/studio/src/features/pages/blocks/cache/cache-sync.ts
- * @layer hooks/studio/pages/blocks
+ * @layer studio/features/pages/blocks/cache
  *
  * @description
- * Synchronise le cache React Query après une mutation block renvoyant `{ page }`.
+ * Synchronizes React Query caches after a block mutation returns an updated page.
  *
  * @remarks
- * - Le cache Studio est scopé par Website.id.
- * - Aucune URL publique n’est construite ici, donc pas de Website.slug.
+ * - Updates both the page-by-id cache and the derived page blocks cache.
+ * - Studio caches are scoped by Prisma Website.id and content state.
+ * - Does not build public URLs, so Website.slug is not involved here.
  */
 
 import type { QueryClient } from "@tanstack/react-query";

@@ -1,13 +1,14 @@
 /**
  * @file apps/studio/src/features/pages/blocks/cache/invalidate.ts
- * @layer hooks/studio/pages/blocks
+ * @layer studio/features/pages/blocks/cache
  *
  * @description
- * Helpers React Query pour invalider le cache des blocks d’une page.
+ * React Query helper for invalidating the draft block list cache of a page.
  *
  * @remarks
- * - Le cache Studio est scopé par Prisma Website.id.
- * - Aucune route publique n’est construite ici, donc pas de Website.slug.
+ * - Studio cache keys are scoped by Prisma Website.id and content state.
+ * - Invalidates only the draft block-list query for the given page.
+ * - Does not build public URLs, so Website.slug is not involved here.
  */
 
 import type { QueryClient } from "@tanstack/react-query";

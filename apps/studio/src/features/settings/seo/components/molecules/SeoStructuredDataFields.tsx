@@ -1,14 +1,13 @@
 /**
  * @file apps/studio/src/features/settings/seo/components/molecules/SeoStructuredDataFields.tsx
- * @layer ui/studio/molecules
+ * @layer studio/features/settings/seo/components/molecules
  *
  * @description
- * Champs de données structurées JSON-LD / Schema.org pour le formulaire SEO.
+ * Structured data fields for configuring JSON-LD / Schema.org SEO output.
  *
  * @remarks
- * - Séparé de l’indexation pour permettre un layout pleine largeur.
- * - Gère le toggle JSON-LD, le type Schema.org et les champs associés.
- * - Les champs locaux sont affichés uniquement pour les entités locales.
+ * - Kept separate from indexation fields so the parent form can render it full-width.
+ * - Local business fields are shown only for entity types that support local structured data.
  */
 
 import type { Control } from "react-hook-form";

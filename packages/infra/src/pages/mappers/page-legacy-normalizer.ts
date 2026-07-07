@@ -1,9 +1,9 @@
 /**
  * @file packages/infra/src/pages/mappers/page-legacy-normalizer.ts
  * @layer infra/pages
- *
- * @description
- * Legacy page payload normalization shared by page repositories.
+ * @description Normalizes legacy page payload shapes shared by page repositories.
+ * @remarks
+ * Keeps old stored pages readable while newer schemas and repositories own validation.
  */
 
 import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";

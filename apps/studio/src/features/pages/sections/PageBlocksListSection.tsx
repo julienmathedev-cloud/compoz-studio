@@ -2,11 +2,14 @@
 
 /**
  * @file apps/studio/src/features/pages/sections/PageBlocksListSection.tsx
- * @layer ui/studio/pages/sections
+ * @layer studio/features/pages/sections
  *
  * @description
- * Section “Blocks” (listing) : affiche les blocks draft d’une page et expose
- * les actions UI (ajouter, réordonner, supprimer, éditer) + preview de la page complète.
+ * Studio section for editing a page's blocks, child order, metadata, and preview.
+ *
+ * @remarks
+ * - Keeps optimistic block and child-page order to avoid flashes before refetch.
+ * - Bridges `PageForm` dirtiness into the Studio dirty guard and preview baselines into the iframe after handshake.
  */
 
 import { ArrowLeft } from "lucide-react";
@@ -101,10 +104,6 @@ export function PageBlocksListSection({
   const { reorderChildren, isReordering: isReorderingChildren } =
     useReorderPageChildren();
 
-  /* ---------------------------------------------------------------------- */
-  /* Page props (edit)                                                      */
-  /* ---------------------------------------------------------------------- */
-
   const { page, isLoading: isLoadingPage } = useReadPage(pageId);
   const { update, isUpdating } = useUpdatePage();
 
@@ -137,10 +136,6 @@ export function PageBlocksListSection({
         }`,
       }));
   }, [siteIndex, pageId]);
-
-  /* ---------------------------------------------------------------------- */
-  /* Status pages (badges diff)                                             */
-  /* ---------------------------------------------------------------------- */
 
   const pageStatuses = useSiteStatusDetails({
     enabled: true,
@@ -220,10 +215,6 @@ export function PageBlocksListSection({
     [confirmList, initialValues, pageId, t, update],
   );
 
-  /* ---------------------------------------------------------------------- */
-  /* Blocks                                                                  */
-  /* ---------------------------------------------------------------------- */
-
   const children = useMemo(() => {
     const pages = siteIndex?.pages ?? [];
     return pages.filter((pageItem) => pageItem.parentId === pageId);
@@ -242,11 +233,7 @@ export function PageBlocksListSection({
 
   const list = useMemo(() => blocks ?? [], [blocks]);
 
-  /**
-   * ✅ NEW
-   * État local optimiste pour les blocks afin d’éviter le flash visuel
-   * entre le drop et le refetch réseau.
-   */
+  /** Optimistic block order prevents a visual flash between drop and network refetch. */
   const [orderedBlocks, setOrderedBlocks] =
     useState<ReadonlyArray<BlockDTO>>(list);
 
@@ -324,10 +311,6 @@ export function PageBlocksListSection({
     title: slug,
   });
   const description = t("studio.pageBlocksListSection.section.description");
-
-  /* ---------------------------------------------------------------------- */
-  /* Preview page (read-only)                                               */
-  /* ---------------------------------------------------------------------- */
 
   const { data: settingsBundle, isLoading: isLoadingSettingsBundle } =
     useSettingsBundle(DEFAULT_CONTENT_STATE);
@@ -458,10 +441,6 @@ export function PageBlocksListSection({
     setBaseline,
   ]);
 
-  /* ---------------------------------------------------------------------- */
-  /* Actions                                                                */
-  /* ---------------------------------------------------------------------- */
-
   const handleAdd = useCallback(async () => {
     if (!pageId.trim()) return;
     if (isBusy || busyId) return;
@@ -574,10 +553,6 @@ export function PageBlocksListSection({
     },
     [moveChild, orderedChildren],
   );
-
-  /* ---------------------------------------------------------------------- */
-  /* Render                                                                 */
-  /* ---------------------------------------------------------------------- */
 
   const sectionIsLoading = Boolean(sectionLoading || isLoadingPage);
   const dataReady =

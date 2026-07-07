@@ -1,13 +1,9 @@
 /**
  * @file packages/core/src/domain/site/validators/primary-menu.ts
- * @layer core/domain
- * @description
- * Validateur métier — invariants PrimaryMenu bloquants :
- * - `id` requis et unique sur tout l’arbre
- * - `label` requis
- * - `href` requis uniquement pour les leafs
- * - `href` optionnel pour les parents avec enfants
- * - validation récursive des enfants
+ * @layer core/domain/site/validators
+ * @description Blocking domain invariants for primary menu settings.
+ * @remarks
+ * Shape and URL format validation are handled upstream by schemas and adapters.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";

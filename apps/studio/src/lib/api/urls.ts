@@ -1,13 +1,13 @@
 /**
  * @file apps/studio/src/lib/api/urls.ts
  * @layer studio/lib/api
+ *
  * @description
- * Helpers de parsing d’URL pour les routes API (App Router).
- * Interprétation stricte et read-only des query params.
+ * URL parsing helpers for App Router API routes.
  *
  * @remarks
- * - Convention stricte : seul `?state=published` est accepté explicitement.
- * - Toute autre valeur (absente, invalide, différente) retombe sur le `fallback`.
+ * - Strict convention: only `?state=published` is explicitly accepted.
+ * - Missing, invalid, or unsupported values fall back to the provided default state.
  */
 
 import {
@@ -15,12 +15,7 @@ import {
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
 
-/**
- * Extrait le `ContentState` depuis les query params d’une requête HTTP.
- *
- * @param req Requête HTTP brute (App Router).
- * @param fallback Valeur par défaut si aucun état valide n’est fourni.
- */
+/** Extracts the requested `ContentState` from an API request query string. */
 export function parseContentStateFromRequest(
   req: Request,
   fallback: ContentState = CONTENT_STATE.DRAFT,

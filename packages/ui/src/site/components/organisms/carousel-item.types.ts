@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/components/organisms/carousel-item.types.ts
- * @layer ui/site/components
+ * @layer ui/site/components/organisms
  *
  * @description
- * Types sérialisables partagés pour le rendu des items de carousel / slider.
+ * Defines serializable normalized item types shared by carousel and slider renderers.
  */
 
 export type NormalizedImageItem = Readonly<{

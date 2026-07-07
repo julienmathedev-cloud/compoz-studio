@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/demo/primary-menu.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/demo
  *
  * @description
- * Skin UI — menu principal site (thème Démo).
+ * Defines the demo skin overrides for the public site primary menu.
  */
 
 import type { SitePrimaryMenuUiOverride } from "@compoz/ui/site/site-ui.types";

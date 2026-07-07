@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/entities/cells/buttons.ts
  * @layer core/domain/pages
- * @description
- * Entité métier ButtonsCell.
+ * @description Buttons cell domain entity.
  */
 
 import type { ContentIconKind } from "@compoz/core/constants/icons/content-icons";

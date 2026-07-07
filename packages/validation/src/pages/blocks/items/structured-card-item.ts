@@ -3,14 +3,11 @@
  * @layer schemas
  *
  * @description
- * Zod schemas for structured card items.
+ * Zod schemas for reusable structured card items.
  *
  * @remarks
- * A structured card item is a reusable content item used by higher-level cells
- * such as `cardCollection` or `carousel`.
- *
- * Layout concerns such as columns or reveal behavior are handled by the
- * parent cell.
+ * Structured card items carry content only. Layout concerns such as columns,
+ * alignment, or reveal behavior are handled by the parent cell.
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
@@ -37,21 +34,9 @@ export const StructuredCardSectionSchema = z
   .strict();
 
 /**
- * Structured card image schema.
- *
- * @remarks
- * This schema is intentionally strict. Empty image normalization must happen
- * upstream, in the UI mapper or normalizer, not here.
+ * Empty image and button values must be normalized upstream before validation.
  */
 const StructuredCardImageSchema = ImageEditorSchema.nullable();
-
-/**
- * Structured card button schema.
- *
- * @remarks
- * This schema is intentionally strict. Empty button normalization must happen
- * upstream, in the UI mapper or normalizer, not here.
- */
 const StructuredCardButtonSchema = ButtonItemSchema.nullable();
 
 export const StructuredCardItemSchema = z

@@ -1,9 +1,9 @@
 /**
  * @file packages/infra/src/site/mappers/site-settings.mapper.ts
  * @layer infra/site
- *
- * @description
- * JSON boundary mapper between Prisma SiteSettings rows and the domain entity.
+ * @description Maps Prisma SiteSettings JSON rows to domain settings and back to Prisma write data.
+ * @remarks
+ * Invalid persisted JSON object shapes fall back to domain defaults; legacy SEO structured data shapes are normalized here.
  */
 
 import { DEFAULT_FOOTER_SETTINGS } from "@compoz/core/domain/site/defaults/footer";
@@ -77,28 +77,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/**
- * Reads a persisted JSON object setting.
- *
- * @remarks
- * Prisma JSON fields can technically contain arrays, strings, booleans or null.
- * Site settings are expected to be objects, so invalid shapes are ignored and
- * replaced with the domain default.
- */
+/** Reads object-shaped JSON settings and ignores invalid persisted shapes. */
 function readObjectSetting<T extends object>(value: unknown, fallback: T): T {
   if (!isRecord(value)) return fallback;
 
   return value as T;
 }
 
-/**
- * Converts an application-owned domain object to a Prisma JSON input value.
- *
- * @remarks
- * The domain settings are plain serializable objects controlled by the app.
- * This helper centralizes the JSON boundary cast instead of spreading Prisma
- * casts through repositories.
- */
+/** Centralizes the domain-to-Prisma JSON boundary cast. */
 function toJsonValue(value: unknown): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
 }

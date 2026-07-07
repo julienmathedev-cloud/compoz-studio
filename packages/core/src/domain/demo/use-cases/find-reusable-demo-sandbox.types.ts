@@ -1,14 +1,9 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/find-reusable-demo-sandbox.types.ts
- * @layer core/domain
- *
- * @description
- * Contrat du use-case de résolution d’une sandbox démo réutilisable.
- *
+ * @layer core/domain/demo
+ * @description Contracts for resolving a reusable demo sandbox.
  * @remarks
- * - Ce use-case lit une sandbox existante à partir d’un `demoInstanceId`.
- * - Il vérifie ensuite la cohérence minimale avec le user associé.
- * - Il ne gère pas les cookies HTTP ni l’ouverture de session.
+ * This use case resolves an existing sandbox by `demoInstanceId`, checks consistency with the linked user, and leaves HTTP cookie/session handling outside the core domain.
  */
 
 import type { DemoSandbox } from "@compoz/core/domain/demo/entities/demo-sandbox";

@@ -2,16 +2,15 @@
 
 /**
  * @file apps/studio/src/features/admin/users/hooks/useUpdateUser.ts
- * @layer hooks/admin/users
+ * @layer studio/features/admin/users/hooks
  *
  * @description
- * Hook Studio React Query pour mettre à jour un user (Studio) via l’API.
+ * React Query mutation hook for updating Studio users through the admin API.
  *
  * @remarks
- * - Orchestration UI-only (mutation + logs + notifications).
- * - Users = données Studio globales (pas de draft/published).
- * - `password: ""` = "no change" => on n’envoie pas.
- * - Patch construit via shallow diff (baseline -> next).
+ * - Users are global Studio data, so no draft/published state is involved.
+ * - Empty passwords mean no password change and are omitted from the API patch.
+ * - Builds the API patch from a shallow diff between baseline and next values.
  */
 
 import { useCallback, useMemo, useState } from "react";
@@ -63,15 +62,13 @@ type UpdateUserMutationResult = Readonly<{
 
 const lg = log.child({ ns: "hook", name: "useUpdateUser" });
 
-/* -------------------------------------------------------------------------- */
-/* UI patch -> Intent DTO                                                     */
-/* -------------------------------------------------------------------------- */
+// UI patch to API intent DTO.
 
 /**
- * Construit un patch API à partir d’un patch UI (shallow diff).
+ * Builds the API patch from a shallow UI diff.
  *
  * @remarks
- * - `password: ""` => pas envoyé.
+ * - Empty passwords are omitted so they do not trigger a password change.
  */
 function toUpdateUserIntentDTOFromFormPatch(
   p: Partial<UserFormValues>,
@@ -110,7 +107,7 @@ export function useUpdateUser(onSuccess?: () => void): UseUpdateUserResult {
 
       const res = await adminUsersStudioApi.update(userId, payload);
 
-      // ✅ flatten route response
+      // Flatten the route response for mutation consumers.
       const user = res.user;
 
       return { userId, fields, user } as const;
@@ -122,10 +119,10 @@ export function useUpdateUser(onSuccess?: () => void): UseUpdateUserResult {
         t("notifications.updated.description", { fields: fields.join(", ") }),
       );
 
-      // ✅ seed/patch cache user-by-id
+      // Seed the updated user cache entry.
       qc.setQueryData(userByIdKey(userId), user);
 
-      // ✅ refresh list users (SoT)
+      // Refresh the users list source of truth.
       await qc.invalidateQueries({ queryKey: usersListKey() });
 
       lg.debug("update.ok", { userId, fields });

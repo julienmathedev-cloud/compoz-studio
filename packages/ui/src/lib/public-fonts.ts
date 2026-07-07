@@ -1,18 +1,9 @@
 /**
  * @file packages/ui/src/lib/public-fonts.ts
  * @layer ui/lib
- *
- * @description
- * Fonts publiques dynamiques pour les sites générés.
- *
+ * @description Runtime public font registry for generated websites.
  * @remarks
- * - Contrairement à `next/font`, ce fichier ne bundle aucune police.
- * - Il charge uniquement la police réellement utilisée par le Website courant.
- * - Les polices sont self-hosted via `/public/fonts/...`
- * - Compatible avec le runtime actuel basé sur `var(--font-*)`.
- * - IMPORTANT :
- *   cette whitelist doit rester alignée avec `THEME_FONTS`
- *   (packages/core/src/constants/theme/theme-fonts.ts)
+ * Fonts are self-hosted under `/public/fonts`; the whitelist must stay aligned with `THEME_FONTS`.
  */
 
 export type PublicFontKey =
@@ -46,13 +37,6 @@ type PublicFontConfig = Readonly<{
   fontFamily: string;
 }>;
 
-/**
- * Source de vérité runtime public :
- * - clé métier
- * - CSS local self-hosted
- * - variable CSS runtime
- * - stack CSS réelle
- */
 const PUBLIC_FONTS: Readonly<Record<PublicFontKey, PublicFontConfig>> = {
   inter: {
     key: "inter",
@@ -239,14 +223,7 @@ export function resolveFontPreloadHref(
   return isPublicFontKey(key) ? PUBLIC_FONTS[key].preloadHref : null;
 }
 
-/**
- * Résout la config runtime d’une police publique.
- *
- * @remarks
- * Fallback sécurisé :
- * si une police inconnue arrive, ancienne donnée ou donnée corrompue,
- * on force Inter.
- */
+/** Resolves a public font config, falling back to Inter for unknown persisted values. */
 export function resolvePublicFontConfig(
   fontKey: string | null | undefined,
 ): PublicFontConfig {
@@ -259,10 +236,6 @@ export function resolvePublicFontConfig(
   return PUBLIC_FONTS.inter;
 }
 
-/**
- * Résout les fonts nécessaires au rendu d’un thème, dans l’ordre body puis
- * heading, sans charger deux fois la même font.
- */
 export function resolvePublicThemeFonts(
   bodyFont: string | null | undefined,
   headingFont: string | null | undefined,

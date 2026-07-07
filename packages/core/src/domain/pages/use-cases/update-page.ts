@@ -1,20 +1,9 @@
 /**
- * @file src/core/domain/pages/use-cases/update-page.ts
- * @layer core/domain
- * @description
- * Use-case : mise à jour d’une page (title / slug / sitemap) via patch partiel.
- *
+ * @file packages/core/src/domain/pages/use-cases/update-page.ts
+ * @layer core/domain/pages/use-cases
+ * @description Use case that updates a draft page through a controlled patch.
  * @remarks
- * - No-op : si rien ne change, aucune écriture n’est effectuée.
- * - Slug : si modifié, vérifie l’unicité.
- * - Sitemap : merge contrôlé + invariants (priority).
- *
- * ⚠️ Note (C1) :
- * - On accepte des slugs “UI” (`/`, `/home`, `/contact`) et on les canonicalise côté domaine :
- *   - "/" ou "/home" => "home"
- *   - "/slug" => "slug"
- * - La mise à jour des menus (href) lors d’un rename de slug est gérée **ici**
- *   si `site` est disponible dans les deps (voir `applySlugPatch`).
+ * No-op updates are not persisted. Slug changes validate uniqueness, accept UI-style slugs, and can update menu hrefs when the optional `site` dependency is provided.
  */
 
 import {
@@ -45,9 +34,8 @@ import { toInternalPathFromSlug } from "@compoz/core/domain/slug/utils";
 
 export function updatePage({
   pages,
-  // ✅ optionnel : permet d’auto-mettre à jour les href des menus (B2/C1)
+  // Optional dependency used to update menu hrefs after a slug rename.
   site,
-  // statusCache, // ❌ domain pur : invalidation déplacée en route API
   nowIso = () => new Date().toISOString(),
 }: UpdatePageDeps) {
   return async function run(input: UpdatePageInput): Promise<UpdatePageResult> {
@@ -99,14 +87,10 @@ export function updatePage({
       });
     }
 
-    // ✅ domain pur : plus d’invalidation KV ici
+    // Cache invalidation stays outside the core domain.
     return { page: next };
   };
 }
-
-/* -------------------------------------------------------------------------- */
-/* Inline helpers                                                             */
-/* -------------------------------------------------------------------------- */
 
 async function readExistingPageById({
   pages,
@@ -129,10 +113,6 @@ async function readExistingPageById({
 
   return existing;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Menu auto-update (slug rename)                                             */
-/* -------------------------------------------------------------------------- */
 
 async function tryUpdateMenusForSlugRename(args: {
   site: NonNullable<UpdatePageDeps["site"]>;

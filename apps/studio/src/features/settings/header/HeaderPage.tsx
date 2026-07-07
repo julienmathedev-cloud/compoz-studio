@@ -2,15 +2,13 @@
 
 /**
  * @file apps/studio/src/features/settings/header/HeaderPage.tsx
- * @layer ui/studio/pages
+ * @layer studio/features/settings/header
  *
  * @description
- * Page « Header » (studio) — affiche la section Header avec un H1 SR-only.
+ * Studio page shell for header settings.
  *
  * @remarks
- * - Le H1 est porté par la page (SR-only) pour garantir un seul H1 global.
- * - `HeaderSection` rend un H2 visible via `SettingsSection` (headingLevel="h2" par défaut).
- * - La logique dirty/preview/warnings est encapsulée dans `HeaderSection`.
+ * - Keeps a unique screen-reader-only H1 while `HeaderSection` renders the visible section heading.
  */
 
 import { useTranslations } from "next-intl";
@@ -20,9 +18,6 @@ import { HeaderSection } from "@compoz/studio/features/settings/header/HeaderSec
 import { cn } from "@compoz/ui/lib/utils";
 import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 
-/**
- * Page Header (studio).
- */
 export function HeaderPage() {
   const t = useTranslations();
 

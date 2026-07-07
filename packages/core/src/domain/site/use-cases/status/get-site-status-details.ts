@@ -1,16 +1,9 @@
 /**
  * @file packages/core/src/domain/site/use-cases/status/get-site-status-details.ts
- * @layer core/domain
- *
- * @description
- * Use-case (read) : retourne le détail pages/blocks (draft vs published).
- *
- * Optimisation KV :
- * - 1 read en régime via snapshot (SiteStatusCachePort)
- * - recompute lazy si absent
- *
+ * @layer core/domain/site/use-cases/status
+ * @description Returns lazy-loaded draft versus published page and block status details.
  * @remarks
- * - Source-of-truth pages = SiteIndex (draft/published) maintenu côté write.
+ * Uses a read-through status details cache and recomputes from source-of-truth indexes on cache miss.
  */
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -44,9 +37,7 @@ export function getSiteStatusDetails({
     const includeBlocks = Boolean(input.includeBlocks);
     const pageId = (input.pageId ?? "").trim() || null;
 
-    // -------------------------------------------------------------------
-    // 1) Snapshot (1 read) — read-through cache
-    // -------------------------------------------------------------------
+    // Read-through cache: hot path is a single status details snapshot read.
     const cached = await cache.readStatusDetailsSnapshot({
       scope,
       includeBlocks,
@@ -57,14 +48,12 @@ export function getSiteStatusDetails({
       return { details: cached };
     }
 
-    // -------------------------------------------------------------------
-    // 2) Compute (cold path)
-    // -------------------------------------------------------------------
+    // Cold path: recompute from persisted pages and site indexes.
     await Promise.all([pages.ensureBase(), site.ensureBase()]);
 
     const pagesDetails: SiteStatusPageDetails[] = [];
 
-    // ✅ Mode ciblé : une seule page
+    // Targeted mode: compute a single page.
     if (pageId) {
       const [d, p] = await Promise.all([
         pages.readById(CONTENT_STATE.DRAFT, pageId),
@@ -128,7 +117,7 @@ export function getSiteStatusDetails({
       return { details };
     }
 
-    // ✅ Mode global : pages = union(draftIndex, publishedIndex) (SoT)
+    // Global mode: page ids come from the union of draft and published source-of-truth indexes.
     const [draftIndex, publishedIndex] = await Promise.all([
       site.readIndex(CONTENT_STATE.DRAFT),
       site.readIndex(CONTENT_STATE.PUBLISHED),
@@ -151,8 +140,7 @@ export function getSiteStatusDetails({
       const d = draftById.get(id) ?? null;
       const p = publishedById.get(id) ?? null;
 
-      // Si une page est dans l’index mais absente des deux côtés, on l’ignore.
-      // (Ça évite de polluer les détails si l’index est temporairement incohérent.)
+      // Ignore refs that exist in an index but no longer resolve to a page on either side.
       if (!d && !p) continue;
 
       const diff = pageDiffKind(d, p);
@@ -184,7 +172,7 @@ export function getSiteStatusDetails({
       });
     }
 
-    // Conserve ton comportement actuel : tri alpha par slug
+    // Keep the existing alpha-by-slug ordering for stable admin output.
     pagesDetails.sort((a, b) => a.slug.localeCompare(b.slug));
 
     const details: SiteStatusDetailsDTO = {
@@ -201,10 +189,6 @@ export function getSiteStatusDetails({
     return { details };
   };
 }
-
-/* -------------------------------------------------------------------------- */
-/* Inline helpers                                                             */
-/* -------------------------------------------------------------------------- */
 
 function unionPageIdsFromIndexes(
   draftRefs: ReadonlyArray<{ id: string }>,

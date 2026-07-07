@@ -1,12 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/blocks/update-section-block.types.ts
  * @layer core/domain/pages/use-cases/blocks
- * @description
- * Types du use-case de mise à jour d’un block `Section`.
- *
- * @remarks
- * - Définit uniquement le contrat.
- * - Aucune logique métier ici.
+ * @description Contracts for updating a section block on a draft page.
  */
 
 import type {
@@ -22,16 +17,11 @@ import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repo
 export interface UpdateSectionBlockDeps {
   pages: PagesRepository;
 
-  /** Horloge ISO optionnelle (défaut : new Date().toISOString()). */
+  /** Optional ISO clock override. */
   nowIso?: () => string;
 }
 
-/**
- * Patch contrôlé d’un block `Section`.
- *
- * - champ absent : inchangé
- * - champ présent : remplacé
- */
+/** Missing patch fields preserve current values; provided fields replace them. */
 export type SectionBlockPatch = {
   name?: string;
   containerMode?: SectionBlockContainerMode;
@@ -52,12 +42,9 @@ export type UpdateSectionBlockPatchInput = Omit<
 >;
 
 export interface UpdateSectionBlockResult {
-  /** Page mise à jour. */
   page: Page;
 
-  /** Block mis à jour. */
   block: SectionBlock;
 
-  /** Liste complète des blocks après mise à jour. */
   blocks: ReadonlyArray<Block>;
 }

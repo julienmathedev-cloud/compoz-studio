@@ -3,28 +3,18 @@
 /**
  * @file packages/ui/src/hooks/useIsMounted.tsx
  * @layer ui/hooks
- *
- * @description
- * Hook React indiquant si le composant est monté côté client.
- *
+ * @description React hook that reports whether the component has mounted on the client.
  * @remarks
- * - Retourne `false` pendant le SSR et la première hydratation.
- * - Passe à `true` après le premier tick côté client.
- * - Strictement UI-only.
+ * Returns `false` during SSR and initial hydration, then `true` after the first client tick.
  */
 
 import { useEffect, useState } from "react";
 
-/**
- * Indique si le composant est monté côté client.
- *
- * @returns `true` une fois le composant monté côté client, sinon `false`.
- */
 export function useIsMounted(): boolean {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // On décale la mise à jour dans une tâche asynchrone
+    // Defer until after the first client tick to avoid hydration-sensitive reads.
     const id = setTimeout(() => {
       setMounted(true);
     }, 0);

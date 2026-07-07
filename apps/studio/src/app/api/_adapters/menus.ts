@@ -3,16 +3,12 @@
  * @layer studio/app/api/adapters
  *
  * @description
- * Adaptateurs API Studio pour les menus (Primary et Legal) : convertit les DTO reçus
- * en patchs partiels domaine avec trimming et normalisation.
- *
- * Responsabilités :
- * - adaptation des items
- * - normalisation des href via le domaine
- * - application uniquement des champs présents dans le patch
+ * Studio API adapters for primary and legal menu update intents.
  *
  * @remarks
- * - `isExternal` n’est pas stocké : il est dérivé au render/preview à partir de `href`.
+ * - Normalizes menu item href values through the domain URL helpers.
+ * - Builds partial domain patches from the fields present in the intent.
+ * - Does not store `isExternal`; it is derived at render/preview time from `href`.
  */
 
 import { SITE_PATH } from "@compoz/core/constants/web/paths";
@@ -32,12 +28,12 @@ import { trimOrKeep } from "@compoz/studio/lib/strings";
 import type { UpdateLegalMenuSettingsIntentDTO } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-intents";
 import type { UpdatePrimaryMenuSettingsIntentDTO } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-intents";
 
-/* ─────────── LEGAL ─────────── */
+// Legal menu adapters.
 
 /**
- * Assure un href string non vide avant normalisation domaine.
+ * Ensures a non-empty href string before domain normalization.
  * - undefined / "" => "/"
- * - sinon => trimming défensif
+ * - otherwise => defensive trimming
  */
 function coerceHrefOrRoot(input: unknown): string {
   const v = typeof input === "string" ? trimOrKeep(input) : "";
@@ -45,11 +41,11 @@ function coerceHrefOrRoot(input: unknown): string {
 }
 
 /**
- * Transforme un item LegalMenu intent DTO en item domaine.
- * Contrat :
- * - propagation de `id`
- * - trim du label
- * - normalisation de l’URL via `asAssetUrl`
+ * Converts a LegalMenu intent DTO item into a domain item.
+ * Contract:
+ * - propagate `id`
+ * - trim the label
+ * - normalize the URL through `asAssetUrl`
  */
 function adaptLegalItem(dto: {
   id: string;
@@ -68,8 +64,8 @@ function adaptLegalItem(dto: {
 }
 
 /**
- * Transforme un intent DTO LegalMenu en patch partiel domaine.
- * Contrat : `items` est traité uniquement s’il s’agit d’un tableau. Chaque item est adapté.
+ * Converts a LegalMenu intent DTO into a partial domain patch.
+ * Contract: `items` is processed only when it is an array. Each item is adapted.
  */
 export function adaptUpdateLegalMenuIntent(
   dto: UpdateLegalMenuSettingsIntentDTO,
@@ -95,14 +91,14 @@ export function adaptUpdateLegalMenuIntent(
   return { patch };
 }
 
-/* ─────────── PRIMARY (2 niveaux max) ─────────── */
+// Primary menu adapters. Primary menus support two levels at most.
 
 /**
- * Transforme un enfant de menu principal DTO en PrimaryMenuItem domaine.
- * Contrat :
- * - propagation de `id`
- * - `children = []` par défaut
- * - trim et normalisation de l’URL
+ * Converts a primary menu child DTO into a domain item.
+ *
+ * @remarks
+ * Child items always receive an empty `children` array because only two menu
+ * levels are supported.
  */
 function adaptPrimaryChild(dto: {
   id: string;
@@ -122,12 +118,12 @@ function adaptPrimaryChild(dto: {
 }
 
 /**
- * Transforme un item parent/leaf de menu principal intent DTO en PrimaryMenuItem domaine.
- * Contrat :
- * - propagation de `id`
- * - href peut être optionnel côté intent (parent avec children)
- * - fallback "/" si href absent/vide
- * - children max 2 niveaux
+ * Converts a primary menu parent/leaf intent DTO into a domain PrimaryMenuItem.
+ * Contract:
+ * - propagate `id`
+ * - href may be optional in the intent (parent with children)
+ * - fallback to "/" when href is missing or empty
+ * - children are limited to two levels
  */
 function adaptPrimaryItem(dto: {
   id: string;
@@ -160,8 +156,8 @@ function adaptPrimaryItem(dto: {
 }
 
 /**
- * Transforme un intent DTO PrimaryMenu en patch partiel domaine.
- * Contrat : `items` est traité uniquement s’il s’agit d’un tableau.
+ * Converts a PrimaryMenu intent DTO into a partial domain patch.
+ * Contract: `items` is processed only when it is an array.
  */
 export function adaptUpdatePrimaryMenuIntent(
   dto: UpdatePrimaryMenuSettingsIntentDTO,

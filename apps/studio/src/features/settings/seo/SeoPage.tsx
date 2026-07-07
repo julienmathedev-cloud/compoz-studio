@@ -2,14 +2,13 @@
 
 /**
  * @file apps/studio/src/features/settings/seo/SeoPage.tsx
- * @layer ui/studio/pages
+ * @layer studio/features/settings/seo
  *
  * @description
- * Page « SEO » (studio) — affiche la section SEO avec un H1 SR-only.
+ * Studio SEO settings page.
  *
  * @remarks
- * - Le H1 est porté par la page (SR-only) pour garantir un seul H1 global.
- * - `SeoSection` rend un H2 visible via `SettingsSection` (headingLevel="h2" par défaut).
+ * - Keeps the page-level H1 screen-reader-only so `SeoSection` can render the visible H2 through `SettingsSection`.
  */
 
 import { Heading } from "@compoz/studio/components/atoms/typography/Heading";
@@ -18,9 +17,6 @@ import { cn } from "@compoz/ui/lib/utils";
 import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 import { useTranslations } from "next-intl";
 
-/**
- * Page SEO (studio).
- */
 export function SeoPage() {
   const t = useTranslations();
 

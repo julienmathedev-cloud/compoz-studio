@@ -1,13 +1,9 @@
 /**
  * @file packages/core/src/domain/pages/validators/items/structured-card-item.ts
  * @layer core/domain/pages/validators
- *
- * @description
- * Validateurs métier d’un item de carte structurée.
- *
+ * @description Domain validator for structured card items.
  * @remarks
- * Cet item est utilisé par des cellules de plus haut niveau comme
- * `cardCollection` ou `carousel`.
+ * Structured card items are reused by higher-level cells such as `cardCollection` or `carousel`.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";

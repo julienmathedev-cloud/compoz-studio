@@ -3,12 +3,11 @@
  * @layer studio/app
  *
  * @description
- * Catch-all du dashboard localisé.
+ * Catch-all route for unknown localized dashboard paths.
  *
  * @remarks
- * - Force l’utilisation de `src/app/[locale]/not-found.tsx`
- *   pour toute route inconnue sous `/{locale}/...`.
- * - UI-only : aucune logique métier.
+ * - Forces `src/app/[locale]/not-found.tsx` for every unknown route under
+ *   `/{locale}/...`.
  */
 
 import { notFound } from "next/navigation";

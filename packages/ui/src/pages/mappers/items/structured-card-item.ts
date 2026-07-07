@@ -1,15 +1,9 @@
 /**
  * @file packages/ui/src/pages/mappers/items/structured-card-item.ts
  * @layer ui/pages/mappers
- *
- * @description
- * Shared runtime mapper for structured card items.
- *
+ * @description Maps reusable structured card item DTOs to form values.
  * @remarks
- * This mapper only handles the reusable structured card item shape.
- * Cell-level concerns such as `kind`, `columns`, `reveal`, `cssClassName`,
- * and `items` are handled by parent cell mappers such as `cardCollection`
- * or `carousel`.
+ * Cell-level options remain in parent mappers such as card collections and carousels.
  */
 
 import type { StructuredCardItemDTO } from "@compoz/core/domain/pages/dto";

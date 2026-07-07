@@ -2,23 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/identity/useIdentitySettings.ts
- * @layer hooks/studio/site/identity
+ * @layer studio/features/settings/identity
  *
  * @description
- * Hook Studio spécialisé pour gérer les réglages d’identité du site via l’API.
+ * Settings resource hook for loading and saving identity settings.
  *
  * @remarks
- * - Basé sur le pattern Settings RHF-first (`useSettingsResource`).
- * - Travaille exclusivement sur le modèle UI (`IdentityFormValues`).
- * - Orchestration UI-only : defaults, load, diff minimal, save, notifications.
- * - Mapping domaine ↔ UI assuré par des mappers dédiés.
- * - Aucune logique métier ni validation domaine.
- * - Le cache settings/status est scopé par Prisma Website.id.
- *
- * Option B, bundle read :
- * - READ : provient du bundle global React Query.
- * - WRITE : reste slice-by-slice via PATCH identity.
- * - Après un save : patch du cache bundle identity + invalidate status.
+ * - Reads from the settings bundle cache but saves through the identity slice PATCH endpoint.
+ * - Patches the settings bundle cache after save, then invalidates status and bundle queries.
  */
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -63,9 +54,7 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
       toIdentityFormValuesFromDTO(DEFAULT_IDENTITY_SETTINGS),
     ),
 
-    /**
-     * READ bundle : cache-first + fetchQuery fallback.
-     */
+    // READ bundle : cache-first + fetchQuery fallback.
     load: async (state: ContentState) => {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
@@ -74,9 +63,7 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
       );
     },
 
-    /**
-     * WRITE slice PATCH + patch bundle cache.
-     */
+    // Saves through the slice endpoint while keeping the bundle cache aligned.
     save: async (next, opts) => {
       const patch = toUpdateIdentityIntentDTOFromFormValues(next);
       const dto = await settingsStudioApi.identity.patch(patch, opts);
@@ -96,9 +83,7 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
       );
     },
 
-    /**
-     * Diff minimal : ne renvoie que les champs réellement modifiés.
-     */
+    // Only send fields that changed after normalization.
     buildPatch: (baseline, next) =>
       buildShallowDiff(
         normalizeIdentityFormValues(baseline),
@@ -108,9 +93,7 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
     onLoaded: normalizeIdentityFormValues,
     beforeSave: normalizeIdentityFormValues,
 
-    /**
-     * Après save : invalide le read-model status et le bundle settings.
-     */
+    // Keep client-side status and bundle reads aligned after the server-side save.
     onSaved: () => {
       void invalidateSiteStatus(queryClient, websiteId);
 

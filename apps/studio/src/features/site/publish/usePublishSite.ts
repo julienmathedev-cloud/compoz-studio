@@ -2,16 +2,15 @@
 
 /**
  * @file apps/studio/src/features/site/publish/usePublishSite.ts
- * @layer hooks/studio/site
+ * @layer studio/features/site/publish
  *
  * @description
- * Hook Studio React Query pour publier le site draft vers published.
+ * React Query hook for publishing the draft site state to published.
  *
  * @remarks
- * - Orchestration UI-only : mutation, logs, notifications.
- * - Invalide les queries liées à l’état du site : status + details.
- * - Aucune logique métier : la route + use-case sont la source de vérité.
- * - Website-scoped : les query keys incluent Prisma Website.id.
+ * - UI orchestration only: mutation, notifications, logs, and cache invalidation.
+ * - The publish route and server use case remain the source of truth for business rules.
+ * - Query keys and cache invalidations are scoped by Prisma Website.id.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";

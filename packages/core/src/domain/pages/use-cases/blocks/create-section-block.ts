@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/blocks/create-section-block.ts
  * @layer core/domain/pages/use-cases/blocks
- * @description
- * Use-case : création d’un block `Section` sur une page (draft par défaut).
+ * @description Use case that creates a section block on a draft page.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -98,10 +97,7 @@ export function createSectionBlock({
 
     let nextBlocks = [...currentBlocks];
 
-    /**
-     * Une seule section LCP est autorisée.
-     * Si le block créé demande la priorité LCP, on désactive les autres.
-     */
+    /** Only one section can own LCP priority; creating a new priority block disables it on the others. */
     if (nextBlock.lcpPriority === true) {
       nextBlocks = nextBlocks.map((existingBlock) =>
         existingBlock.type === "section"

@@ -1,14 +1,13 @@
 /**
  * @file apps/studio/src/app/[locale]/signin/page.tsx
  * @layer studio/app
+ *
  * @description
- * Page de connexion Studio (Server) :
- * - Résout la locale (segment `[locale]`)
- * - Sanitize `next` depuis l’URL
- * - Rend le formulaire client
+ * Server-side Studio sign-in page.
  *
  * @remarks
- * - Les messages i18n sont chargés via `next-intl` côté server.
+ * - Sanitizes the `next` URL parameter before passing it to the client form.
+ * - Loads i18n messages server-side through `next-intl`.
  */
 
 import { NextIntlClientProvider } from "next-intl";
@@ -45,7 +44,7 @@ function sanitizeNextPath(nextRaw: unknown): string {
   const n = raw.trim();
   if (!n) return "/";
   if (!n.startsWith("/")) return "/";
-  // Défense simple contre //evil.com
+  // Basic defense against //evil.com.
   if (n.startsWith("//")) return "/";
   return n;
 }

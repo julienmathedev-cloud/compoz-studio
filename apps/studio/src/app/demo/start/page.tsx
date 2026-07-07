@@ -3,7 +3,7 @@
  * @layer studio/app
  *
  * @description
- * Page publique intermédiaire de démarrage de la sandbox démo.
+ * Public intermediary page that starts the demo sandbox flow.
  */
 
 import { DemoStartLoader } from "@compoz/studio/features/demo/DemoStartLoader";

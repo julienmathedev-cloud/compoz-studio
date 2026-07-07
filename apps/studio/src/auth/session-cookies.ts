@@ -1,7 +1,9 @@
 /**
  * @file apps/studio/src/auth/session-cookies.ts
  * @layer studio/auth
- * @description Cookie constants for Studio session context.
+ *
+ * @description
+ * Cookie constants for the Studio session context.
  */
 
 export const ACTIVE_WEBSITE_COOKIE = "compoz_active_website" as const;
@@ -12,7 +14,8 @@ export const STUDIO_SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
 /**
  * Best-effort cleanup list for Auth.js/NextAuth cookies.
  *
- * The exact cookie set depends on environment, security prefix and provider flow.
+ * The exact cookie set depends on the environment, security prefix,
+ * and provider flow.
  */
 export const NEXTAUTH_STUDIO_COOKIES = [
   "next-auth.session-token",

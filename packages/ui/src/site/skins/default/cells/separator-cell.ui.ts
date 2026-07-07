@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/cells/separator-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default/cells
  *
  * @description
- * Skin UI — separator cell (thème Default).
+ * Defines the default skin classes for separator cells.
  */
 
 import type { SiteSeparatorUi } from "@compoz/ui/site/site-ui.types";

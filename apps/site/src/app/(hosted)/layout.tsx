@@ -3,15 +3,13 @@
  * @layer site/app
  *
  * @description
- * Layout public host-based du site.
+ * Host-based public layout for published site routes.
  *
  * @remarks
- * - Utilisé pour les routes publiques standards résolues par host
- *   (ex: "/", "/[slug]").
- * - Résout le Website via WebsiteDomain en Prisma.
- * - Charge les settings publiés avec le Prisma Website.id.
- * - Résout l’UI/skin avec le Website.slug.
- * - Le fallback explicite `/t/[websiteSlug]` possède son propre layout dédié.
+ * - Used by standard public routes resolved from the request host, such as `/` and `/[slug]`.
+ * - Resolves the active Website through Prisma WebsiteDomain.
+ * - Loads published settings with Prisma Website.id, while UI and skin resolution use Website.slug.
+ * - The explicit `/t/[websiteSlug]` fallback route has its own dedicated layout.
  */
 
 import type { Metadata } from "next";
@@ -58,10 +56,7 @@ const GOOGLE_SITE_VERIFICATION_BY_WEBSITE_SLUG: Record<string, string> = {
   demo: process.env.GOOGLE_SITE_VERIFICATION_DEMO ?? "",
 };
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
+/** Builds a complete favicon metadata set when the stored icon follows the generated size naming convention. */
 function buildFaviconIcons(favicon: string): Icons {
   if (favicon.includes("-32.png")) {
     return {
@@ -109,10 +104,6 @@ function buildFaviconIcons(favicon: string): Icons {
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Metadata                                                                   */
-/* -------------------------------------------------------------------------- */
-
 export async function generateMetadata(): Promise<Metadata> {
   const website = await getWebsite();
   const websiteId = website.websiteId;
@@ -145,6 +136,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const robotsContent = (settings.seo?.robots ?? "").trim() || undefined;
 
+  // Avoid indexing production sites until a canonical base URL or explicit robots directive is configured.
   const isProd = process.env.NODE_ENV === "production";
   const shouldForceNoindex = isProd && !metadataBase && !robotsContent;
   const robots =
@@ -192,10 +184,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Layout                                                                     */
-/* -------------------------------------------------------------------------- */
-
 export default async function HostedSiteLayout({ children }: LayoutProps) {
   const website = await getWebsite();
   const websiteId = website.websiteId;
@@ -209,12 +197,14 @@ export default async function HostedSiteLayout({ children }: LayoutProps) {
     settings?.theme?.headingFont,
   );
 
+  // Skin CSS is resolved from the Website slug, not from the Prisma Website id.
   const skinCssHref = resolveSiteSkinCssHref(websiteSlug);
 
   const fontStyle = Object.fromEntries(
     publicFonts.map((font) => [font.variableName, font.fontFamily]),
   ) as CSSProperties;
 
+  // Preload only the fonts selected by the published theme.
   for (const font of publicFonts) {
     preload(font.preloadHref, {
       as: "font",

@@ -1,9 +1,14 @@
 /**
  * @file apps/studio/src/i18n/request.ts
  * @layer studio/i18n
+ *
  * @description
- * Configuration `next-intl` côté serveur : sélection de la locale,
- * exécution des guards (dev/test) et chargement des messages JSON par locale.
+ * Server-side next-intl request configuration for the Studio app.
+ *
+ * @remarks
+ * - Resolves the active locale from the request and loads the matching JSON message bundle.
+ * - Falls back to the configured default locale when `requestLocale` is unavailable.
+ * - Unknown locales are rejected before loading messages.
  */
 
 import { routing } from "@compoz/studio/i18n/routing";
@@ -13,12 +18,11 @@ import { notFound } from "next/navigation";
 type Locale = (typeof routing.locales)[number];
 
 export default getRequestConfig(async ({ requestLocale }) => {
-  // `requestLocale` peut être `undefined` selon la version de next-intl.
-  // On applique un fallback robuste sur la locale par défaut.
+  // `requestLocale` can be undefined depending on the next-intl version.
   const maybeLocale = await requestLocale;
   const locale = (maybeLocale ?? routing.defaultLocale) as Locale;
 
-  // Sécurité: locale invalide → 404 (et on évite de charger des messages inconnus)
+  // Reject unknown locales before attempting to load their message bundle.
   if (!routing.locales.includes(locale)) {
     notFound();
   }

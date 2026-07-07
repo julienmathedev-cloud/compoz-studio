@@ -2,18 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/organisms/SiteTimeline.tsx
- * @layer ui/site/organisms
+ * @layer ui/site/components/organisms
  *
  * @description
- * Timeline publique utilisée pour afficher une suite d’étapes chronologiques.
+ * Renders a public site timeline with optional collapse behavior and measured desktop item offsets.
  *
  * @remarks
- * - UI-only.
- * - Tous les styles sont pilotés par `ui`.
- * - Réutilise `SiteTimelineItem` pour le rendu d’un item individuel.
- * - Peut gérer localement l’ouverture / fermeture lorsque la timeline est repliable.
- * - Mesure la hauteur réelle des items pour appliquer un léger compactage desktop.
- * - Le scroll d’ouverture tient compte de la hauteur du header sticky via `--header-h`.
+ * Keeps closing content mounted until the collapse animation finishes, and scrolls reopening with the sticky header offset handled by `scrollToElement`.
  */
 
 import { motion } from "framer-motion";
@@ -244,27 +239,13 @@ function CollapsibleTimeline({
 }: Pick<SiteTimelineProps, "items" | "ui">) {
   const [isOpen, setIsOpen] = useState(false);
 
-  /**
-   * shouldRender :
-   * garde le contenu monté pendant la fermeture
-   * pour éviter une disparition brutale.
-   */
+  /** Keep content mounted during close animations to avoid abrupt removal. */
   const [shouldRender, setShouldRender] = useState(false);
 
-  /**
-   * canAnimate :
-   * pilote l’animation visuelle du wrapper.
-   * Permet de reproduire le léger décalage
-   * entre montage du contenu et animation.
-   */
   const [canAnimate, setCanAnimate] = useState(false);
 
   const anchorRef = useRef<HTMLDivElement>(null);
 
-  /**
-   * Scrolle vers l’ancre d’ouverture de la timeline
-   * en tenant compte du header sticky.
-   */
   const scrollToAnchor = () => {
     if (!anchorRef.current) return;
 
@@ -287,11 +268,7 @@ function CollapsibleTimeline({
     setIsOpen(false);
   };
 
-  /**
-   * Reproduit la logique de useLazyCollapse :
-   * - ouverture : montage immédiat, animation au frame suivant
-   * - fermeture : arrêt de l’animation, démontage différé
-   */
+  /** Delay unmounting to mirror the visual collapse duration. */
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);

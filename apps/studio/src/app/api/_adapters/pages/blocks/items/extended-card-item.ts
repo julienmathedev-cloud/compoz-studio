@@ -3,13 +3,11 @@
  * @layer studio/app/api/adapters
  *
  * @description
- * Studio API adapter for extended card items.
+ * Studio API adapter for reusable extended card item shapes.
  *
  * @remarks
- * This adapter only handles the reusable extended card item shape.
- * Cell-level concerns such as `kind`, `columns`, `align`, `reveal`,
- * `cssClassName`, and `items` are handled by parent cell adapters such as
- * `cardCollection` or `carousel`.
+ * - Cell-level fields such as `kind`, `columns`, `align`, `reveal`, and
+ *   `cssClassName` are handled by parent cell adapters.
  */
 
 import type { ExtendedCardItem } from "@compoz/core/domain/pages/entities/cell";

@@ -1,14 +1,9 @@
 /**
  * @file packages/infra/src/http/studio/users.client.ts
  * @layer infra/http/studio
- * @description
- * Client HTTP Studio pour la gestion des users : listing, CRUD.
- *
- * Responsabilités : construction des requêtes HTTP, encodage des segments,
- * typage des réponses via DTOs domaine.
- *
+ * @description Studio HTTP client for admin user listing and CRUD operations.
  * @remarks
- * Les routes users sont actuellement sous le segment `admin` côté Studio (legacy).
+ * User routes currently live under the Studio `admin` segment for legacy compatibility.
  */
 
 import { ENDPOINTS } from "@compoz/infra/http/endpoints";
@@ -32,10 +27,6 @@ import type {
   CreateUserIntentDTO,
   UpdateUserIntentDTO,
 } from "@compoz/validation/users/user-intents";
-
-/* -------------------------------------------------------------------------- */
-/*                               Client HTTP Studio                           */
-/* -------------------------------------------------------------------------- */
 
 export const adminUsersStudioApi = {
   async list(opts?: HttpOpts): Promise<GetUsersResponse> {

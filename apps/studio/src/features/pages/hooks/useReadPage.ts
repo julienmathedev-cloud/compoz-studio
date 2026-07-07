@@ -2,17 +2,17 @@
 
 /**
  * @file apps/studio/src/features/pages/hooks/useReadPage.ts
- * @layer hooks/studio/pages
+ * @layer studio/features/pages/hooks
  *
  * @description
- * Hook Studio React Query pour lire une page via l’API.
+ * React Query hook for reading a page through the pages Studio API.
  *
  * @remarks
- * - Website-scoped cache : toutes les query keys incluent `websiteId`.
- * - Orchestration UI-only : query, logs, notifications.
- * - Retourne `PageDTO | null` pour rester compatible avec l’UI.
- * - Aucune logique métier ni validation domaine.
- * - Le scope utilisé ici est Prisma Website.id.
+ * - Reads draft pages by default through `DEFAULT_CONTENT_STATE`.
+ * - Uses load instrumentation with the requested content state for logs and notifications.
+ * - Keeps previous page data during refetches to avoid UI flicker.
+ * - Returns `PageDTO | null` so disabled queries remain easy for UI consumers to handle.
+ * - Studio query keys are scoped by Prisma Website.id and content state.
  */
 
 import { useQuery } from "@tanstack/react-query";

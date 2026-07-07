@@ -1,14 +1,12 @@
 /**
  * @file apps/studio/src/features/settings/seo/components/molecules/SeoIndexationFields.tsx
- * @layer ui/studio/molecules
+ * @layer studio/features/settings/seo/components/molecules
  *
  * @description
- * Composant de champs d’indexation SEO pour le formulaire du studio.
+ * SEO indexation fields for base URL, canonical URL, and robots directives.
  *
  * @remarks
- * - Gère uniquement les champs liés à l’indexation globale.
- * - Les champs Schema.org / JSON-LD sont isolés dans `SeoStructuredDataFields`
- *   afin de pouvoir être rendus en pleine largeur dans le formulaire parent.
+ * - Schema.org / JSON-LD fields stay isolated in `SeoStructuredDataFields` so the parent form can render them full-width.
  */
 
 import type { Control } from "react-hook-form";
@@ -41,12 +39,7 @@ type SeoIndexationFieldsProps = Readonly<{
   robotsError?: string;
 }>;
 
-/**
- * Toggle un token dans une liste CSV :
- * - si présent (case-insensitive) -> retire
- * - si absent -> ajoute
- * - normalise en "a,b,c" (trim + suppression vides)
- */
+/** Toggles a robots directive while keeping mutually exclusive tokens consistent. */
 function toggleCsvToken(prev: string, token: string) {
   const t = token.trim();
   if (!t) return prev;
@@ -68,7 +61,6 @@ function toggleCsvToken(prev: string, token: string) {
 
   const opposite = EXCLUSIVE_MAP[tLower];
 
-  // Si déjà présent → on retire (toggle off)
   const alreadyIndex = lower.findIndex((p) => p === tLower);
   if (alreadyIndex >= 0) {
     const next = parts
@@ -78,13 +70,11 @@ function toggleCsvToken(prev: string, token: string) {
     return next.join(",");
   }
 
-  // Supprime l'opposé si présent
   let nextParts = parts;
   if (opposite) {
     nextParts = parts.filter((p) => p.toLowerCase() !== opposite);
   }
 
-  // Ajoute le token
   return [...nextParts, t].join(",");
 }
 

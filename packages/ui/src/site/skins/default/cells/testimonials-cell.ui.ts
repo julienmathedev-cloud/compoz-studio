@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/cells/testimonials-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default/cells
  *
  * @description
- * Skin UI — testimonials cell (thème Default).
+ * Defines the default skin classes for testimonials cells.
  */
 
 import type { SiteTestimonialsUi } from "@compoz/ui/site/site-ui.types";

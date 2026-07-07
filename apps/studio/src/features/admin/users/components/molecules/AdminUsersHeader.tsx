@@ -5,13 +5,12 @@
  * @layer studio/features/admin/users/components/molecules
  *
  * @description
- * Header Users pour l’admin Studio.
+ * Header controls for the Studio admin users page.
  *
  * @remarks
- * - Strictement UI-only : aucun fetch, aucune logique métier.
- * - Les options et handlers sont fournis par le parent.
- * - Le Website actif doit toujours être une valeur valide.
- * - User : valeur vide = aucun user sélectionné, donc formulaire en mode create.
+ * - Options and handlers are provided by the parent.
+ * - The active Website must always resolve to a valid Prisma Website.id.
+ * - Empty user selection means no user is selected, so the form stays in create mode.
  */
 
 import { useTranslations } from "next-intl";
@@ -32,10 +31,9 @@ type Option = Readonly<{
 }>;
 
 export type AdminUsersHeaderProps = Readonly<{
-  /** Website actif, doit être un Prisma Website.id valide. */
   websiteId: string;
 
-  /** User sélectionné, null = aucun user, donc formulaire en create. */
+  /** Selected user; `null` keeps the form in create mode. */
   userId: string | null;
 
   websiteOptions: ReadonlyArray<Option>;

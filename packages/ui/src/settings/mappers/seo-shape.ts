@@ -1,15 +1,12 @@
 /**
- * @file packages/ui/src/site/mappers/seo-shape.ts
- * @layer ui/site/mappers
+ * @file packages/ui/src/settings/mappers/seo-shape.ts
+ * @layer ui/settings/mappers
  *
  * @description
- * Mapper "shared runtime" SEO :
- * - DTO domaine -> SeoSettingsShape (frontière stable)
+ * Maps SEO settings DTOs to stable runtime SEO settings shapes shared by site rendering and Studio preview.
  *
  * @remarks
- * - Utilisé par site (public) ET par studio (preview / renderer).
- * - Ici, pas de RHF, pas d'intents API, pas de normalisation "draft".
- * - On fait uniquement : DTO -> shape "frontière" (strings, bools, defaults stables).
+ * API intents and draft/form-oriented normalization stay outside this boundary mapper; this mapper only applies stable runtime defaults.
  */
 
 import { TWITTER_CARD_TYPES } from "@compoz/core/constants/seo/seo";
@@ -42,10 +39,6 @@ function trimArrayUndef(
   return trimmedValues.length > 0 ? trimmedValues : undefined;
 }
 
-/**
- * Domaine (DTO) -> Renderer (Shape)
- * Contrat : retourne une shape stable pour le renderer (objets/arrays "mutables").
- */
 export function toSeoSettingsShapeFromDTO(
   dto: SeoSettingsDTO | null | undefined,
 ): SeoSettingsShape {

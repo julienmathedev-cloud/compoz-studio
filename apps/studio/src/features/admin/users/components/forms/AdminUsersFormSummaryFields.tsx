@@ -2,15 +2,14 @@
 
 /**
  * @file apps/studio/src/features/admin/users/components/forms/AdminUsersFormSummaryFields.tsx
- * @layer ui/organisms
+ * @layer studio/features/admin/users/components/forms
  *
  * @description
- * Section “summary” du formulaire Users : email / name / password.
+ * Summary fields section for the Studio user form: email, name, and password.
  *
  * @remarks
- * - Strictement UI-only : aucun fetch, aucune logique métier.
- * - RHF contrôlé via `Controller`.
- * - Les états d’erreur (invalid/message) sont fournis par le shell.
+ * - Uses RHF `Controller` for controlled field binding.
+ * - Error states are provided by the parent form shell.
  */
 
 import { useTranslations } from "next-intl";

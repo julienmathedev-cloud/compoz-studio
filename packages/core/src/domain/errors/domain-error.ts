@@ -1,69 +1,48 @@
 /**
- * @file src/core/domain/errors/domain-error.ts
+ * @file packages/core/src/domain/errors/domain-error.ts
  * @layer core/domain/errors
- * @description
- * Erreur métier standard du domaine : typée (`ErrorCode`), stable, sérialisable
- * et indépendante de toute représentation technique (HTTP, UI).
- *
- * Sert de base aux use-cases et peut être mappée dans les adapters (HTTP, UI).
+ * @description Stable, serializable domain error independent from transport or UI concerns.
+ * @remarks
+ * Used by use cases and mapped by adapters such as HTTP or UI layers.
  */
 
 import { isErrorCode, type ErrorCode } from "@compoz/core/domain/errors/codes";
 
-/* -------------------------------------------------------------------------- */
-/*                                 Construction                                */
-/* -------------------------------------------------------------------------- */
-
 type DomainErrorInit = {
-  /** Code métier strict (issu de ERROR_CODES). */
+  /** Strict domain code from `ERROR_CODES`. */
   code: ErrorCode;
 
-  /** Message optionnel (sinon le code est utilisé comme message défaut). */
   message?: string;
 
-  /** Détails métier facultatifs (ex: valeur refusée, contrainte violée…). */
   details?: unknown;
 
-  /**
-   * Cause technique ou métier d'origine (optionnel).
-   * Compatible avec la propriété standard `Error.cause`.
-   */
+  /** Original technical or domain cause, compatible with standard `Error.cause`. */
   cause?: unknown;
 };
 
 /**
- * Erreur métier minimale, sérialisable, stable et compatible avec l’adapter HTTP.
- *
- * Notes :
- * - Le `name` est toujours "DomainError".
- * - Le prototype est réinitialisé pour conserver `instanceof` dans TS/JS.
- * - `toJSON()` exporte un format propre (nom, code, message).
+ * Minimal stable domain error compatible with adapter-level serialization.
  */
 export class DomainError extends Error {
   readonly code: ErrorCode;
   readonly details?: unknown;
 
   constructor({ code, message, details, cause }: DomainErrorInit) {
-    // Support natif du champ `cause` si runtime compatible
+    // Native `cause` support when available in the runtime.
     super(message ?? code, cause !== undefined ? { cause } : undefined);
 
     this.name = "DomainError";
     this.code = code;
     this.details = details;
 
-    // Réparation du prototype pour compatibilité héritage JS/TS.
+    // Keep `instanceof DomainError` reliable across JS/TS inheritance targets.
     Object.setPrototypeOf(this, new.target.prototype);
 
-    // Capture propre du stack (si disponible dans l’environnement)
+    // Capture a clean stack trace when the runtime supports it.
     Error.captureStackTrace?.(this, DomainError);
   }
 
-  /**
-   * Représentation sérialisable utile pour :
-   * - logs structurés,
-   * - tests unitaires,
-   * - diagnostic côté serverless.
-   */
+  /** Serializable shape for logs, tests, and serverless diagnostics. */
   toJSON() {
     return {
       name: this.name,
@@ -74,15 +53,7 @@ export class DomainError extends Error {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/*                               Type Guards                                   */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Vérifie si un objet inconnu contient une propriété `code: string`.
- *
- * Utilisé par `isDomainError` et `isStrictDomainError`.
- */
+/** Checks whether an unknown value exposes a string `code` property. */
 function hasStringCode(value: unknown): value is { code: string } {
   if (value === null || typeof value !== "object") return false;
 
@@ -91,24 +62,15 @@ function hasStringCode(value: unknown): value is { code: string } {
 }
 
 /**
- * Guard souple :
- * - vérifie la présence d’une propriété `.code` string,
- * - n’impose pas que le code appartienne à `ERROR_CODES`,
- * - n’impose pas que `name` === "DomainError".
+ * Loose guard for distinguishing domain-like errors from technical errors.
  *
- * Utile dans des zones où l’on veut juste distinguer :
- * → “erreur métier-like” vs “erreur technique”.
+ * It only requires a string `code`; it does not enforce `ERROR_CODES` membership or `name === "DomainError"`.
  */
 export function isDomainErrorLike(e: unknown): e is { code: string } {
   return hasStringCode(e);
 }
 
-/**
- * Guard stricte :
- * - vérifie `.code ∈ ErrorCode`,
- * - accepte les sous-classes de DomainError,
- * - utilisé principalement dans les adapters HTTP.
- */
+/** Strict guard for adapter code that requires a known stable `ErrorCode`. */
 export function isStrictDomainError(e: unknown): e is DomainError {
   return hasStringCode(e) && isErrorCode(e.code);
 }

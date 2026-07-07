@@ -3,15 +3,13 @@
  * @layer studio/app/api/adapters
  *
  * @description
- * Adaptateurs API Studio pour les pages : convertit les payloads de création et de mise à jour
- * (DTOs) en données partielles ou complètes utilisables par le domaine.
+ * Studio API adapters for page create and update intents.
  *
- * Responsabilités :
- * - trimming défensif (ids, strings)
- * - propagation des champs optionnels (sémantique PATCH = présence de clé)
- * - normalisation sitemap alignée sur le domaine (`null` conservé)
- * - normalisation slug via SoT UI (`toSlugIntentInput`)
- * - le `state` est géré par la route, pas par l’adapter
+ * @remarks
+ * - Preserves PATCH semantics by only propagating fields whose keys are present.
+ * - Keeps sitemap normalization aligned with the domain contract, including `null` values.
+ * - Normalizes slugs through the UI source of truth, `toSlugIntentInput`.
+ * - Leaves `state` handling to the route.
  */
 
 import { log } from "@compoz/infra/lib/log";
@@ -27,18 +25,18 @@ import type { CreatePageInput } from "@compoz/core/domain/pages/use-cases/create
 import type { UpdatePageInput } from "@compoz/core/domain/pages/use-cases/update-page.types";
 
 /**
- * Patch d’update côté domaine, sans `pageId` (fourni par la route via params).
+ * Domain update patch without `pageId`, which is provided by route params.
  */
 type UpdatePagePatchInput = Omit<UpdatePageInput, "pageId">;
 
 /**
- * Normalise le bloc sitemap venant des intents API.
+ * Normalizes the sitemap block coming from API intents.
  *
- * Contrat domaine actuel :
- * - `sitemap` peut être `null`
- * - `changefreq` peut être `null`
- * - `priority` peut être `null`
- * - en patch, l’absence de clé doit rester `undefined`
+ * Current domain contract:
+ * - `sitemap` may be `null`
+ * - `changefreq` may be `null`
+ * - `priority` may be `null`
+ * - in patches, a missing key must remain `undefined`
  */
 function normalizeSitemap(
   sitemap:
@@ -57,14 +55,14 @@ function normalizeSitemap(
 }
 
 /**
- * Transforme un DTO de création de page en input domaine.
+ * Converts a page creation DTO into domain input.
  *
- * Contrat :
- * - `name` toujours trimé et obligatoire.
- * - `seoTitle` trimé si fourni, sinon `null`.
- * - `seoDescription` trimée si fournie et non vide, sinon `null`.
- * - `slug` optionnel : normalisé s’il est fourni, sinon logique fallback côté domaine.
- * - `sitemap` toujours propagé (`null` ou objet normalisé).
+ * Contract:
+ * - `name` is always trimmed and required.
+ * - `seoTitle` is trimmed when provided, otherwise `null`.
+ * - `seoDescription` is trimmed when provided and non-empty, otherwise `null`.
+ * - `slug` is optional: normalized when provided, otherwise the domain fallback applies.
+ * - `sitemap` is always propagated (`null` or normalized object).
  */
 export function adaptCreatePagePayload(
   dto: CreatePageIntentDTO,
@@ -94,7 +92,7 @@ export function adaptCreatePagePayload(
   if ("slug" in dto && typeof dto.slug === "string") {
     const s = toSlugIntentInput(dto.slug);
 
-    // create : si vide, on laisse le domaine appliquer son fallback.
+    // Create: when empty, let the domain apply its fallback.
     if (s.length > 0) out.slug = s;
   }
 
@@ -107,13 +105,13 @@ export function adaptCreatePagePayload(
 }
 
 /**
- * Transforme un DTO de mise à jour de page en patch partiel domaine (sans `pageId`).
+ * Converts a page update DTO into a partial domain patch without `pageId`.
  *
- * Contrat :
- * - Un champ n’est posé que si la clé est présente dans le DTO.
- * - `state` est géré par la route.
- * - `sitemap` propagé si la clé est présente (y compris `null`).
- * - `slug` : on garde "" comme signal explicite de reset.
+ * Contract:
+ * - A field is set only when its key is present in the DTO.
+ * - `state` is handled by the route.
+ * - `sitemap` is propagated when the key is present, including `null`.
+ * - `slug`: keep "" as an explicit reset signal.
  */
 export function adaptUpdatePagePayload(
   dto: UpdatePageIntentDTO,
@@ -152,7 +150,7 @@ export function adaptUpdatePagePayload(
   if ("slug" in dto && typeof dto.slug === "string") {
     const s = toSlugIntentInput(dto.slug);
 
-    // en update, "" est un reset explicite
+    // Update: "" is an explicit reset signal.
     out.slug = s;
   }
 

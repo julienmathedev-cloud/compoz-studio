@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/atoms/site-button.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default/atoms
  *
  * @description
- * Skin UI — bouton public partagé (thème Default).
+ * Defines the default skin classes for shared public site buttons.
  */
 
 import type { SiteButtonUi } from "@compoz/ui/site/site-ui.types";

@@ -1,14 +1,9 @@
 /**
  * @file packages/core/src/domain/demo/use-cases/start-demo-sandbox.types.ts
- * @layer core/domain
- *
- * @description
- * Contrat du use-case d’orchestration de démarrage d’une sandbox démo.
- *
+ * @layer core/domain/demo
+ * @description Contracts for starting a demo sandbox.
  * @remarks
- * - Tente de réutiliser une sandbox existante si un `demoInstanceId` est fourni.
- * - Sinon crée une nouvelle sandbox à partir du Website seed.
- * - Ne gère ni cookies HTTP ni ouverture de session.
+ * This use case reuses an existing sandbox when `demoInstanceId` is provided, otherwise creates one from the seed website. HTTP cookies and session opening are handled outside the core domain.
  */
 
 import type { DemoSandbox } from "@compoz/core/domain/demo/entities/demo-sandbox";

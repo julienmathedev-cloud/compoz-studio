@@ -1,15 +1,14 @@
 /**
  * @file apps/studio/src/features/pages/blocks/cache/cache.ts
- * @layer hooks/studio/pages/blocks
+ * @layer studio/features/pages/blocks/cache
  *
  * @description
- * Helpers cache React Query pour les blocks d’une page.
+ * React Query cache helpers for blocks stored inside a page.
  *
  * @remarks
- * - Les blocks vivent dans `PageDTO`.
- * - Après mutation, la sync est faite via `syncBlocksFromPageCache`,
- *   qui met à jour la page + la liste des blocks.
- * - Le cache Studio est scopé par Prisma Website.id.
+ * - Blocks live inside `PageDTO`; this cache exposes the derived block list.
+ * - Block mutations are synchronized through `syncBlocksFromPageCache`, which updates both page and block-list caches.
+ * - Studio caches are scoped by Prisma Website.id and content state.
  */
 
 import type { QueryClient } from "@tanstack/react-query";

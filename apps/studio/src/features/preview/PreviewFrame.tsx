@@ -2,18 +2,14 @@
 
 /**
  * @file apps/studio/src/features/preview/PreviewFrame.tsx
- * @layer ui/studio/preview
+ * @layer studio/features/preview
  *
  * @description
- * Iframe de preview réutilisable (studio) avec toolbar device-only.
+ * Reusable Studio preview iframe with device controls.
  *
  * @remarks
- * - Gère un mode “empty preview” en pointant vers une route dédiée.
- * - Supporte deux stratégies d’ajustement : `responsive` et `scale`.
- * - Le rechargement de l’iframe est forcé quand `resolvedSrc` change.
- * - La preview est désormais pensée pour fonctionner en live :
- *   pas de boutons sync / reset dans cette toolbar.
- * - Strictement UI-only : aucune logique métier.
+ * - Forces iframe reloads when `resolvedSrc` changes through the iframe key.
+ * - Supports `responsive` and `scale` fitting for constrained preview containers.
  */
 
 import {
@@ -62,9 +58,8 @@ type PreviewFrameProps = Readonly<{
   sandbox?: string;
   iframeRef?: RefObject<HTMLIFrameElement | null>;
   onLoad?: () => void;
-  /** Si true, l'iframe pointe vers une route empty générique. */
+  /** Routes the iframe to a generic empty preview page when enabled. */
   isEmpty?: boolean;
-  /** Label affiché dans l'empty preview. */
   emptyLabel?: string;
   deviceMode?: "compact" | "full";
   className?: string;

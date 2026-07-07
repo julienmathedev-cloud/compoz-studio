@@ -2,20 +2,17 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/extended-card/ExtendedCardListEditor.tsx
- * @layer ui/studio/pages/blocks/editor/items/extended-card
+ * @layer studio/features/builder/editor/cells/extended-card
  *
  * @description
- * UI list editor for extended card items with add, remove, and reorder support.
+ * RHF-aware list editor for ExtendedCardCell items, including add, remove, and reorder actions.
  *
  * @remarks
- * - Relies on `useFieldArray` from the parent editor.
- * - Reordering is handled by drag and drop through dnd-kit.
- * - Business updates (`append`, `remove`, `move`) are delegated to RHF.
- * - React keys use `fieldId`, while DnD relies on the stable business `id`
- *   of each extended card item.
- * - Reordering relies on `move()` to preserve RHF state.
- * - Live values are read through `watchedItems` and passed to the nested
- *   editor to keep rendering stable during rebinding.
+ * - Receives `useFieldArray` actions from the parent editor.
+ * - Reordering is handled by dnd-kit while append/remove/move stay delegated to RHF.
+ * - React keys use RHF `fieldId`; dnd-kit uses each extended card item's stable domain `id`.
+ * - Uses `move()` to preserve RHF state while reordering.
+ * - Passes `watchedItems` to nested editors to keep rendering stable during RHF rebinding.
  */
 
 import {

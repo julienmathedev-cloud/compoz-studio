@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/lola/cells/zoom-gallery-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/lola/cells
  *
  * @description
- * Skin UI — preview overview site (thème Lola).
+ * Defines the Lola skin overrides for zoom gallery cells.
  */
 
 import type { SiteZoomGalleryUiOverride } from "@compoz/ui/site/site-ui.types";

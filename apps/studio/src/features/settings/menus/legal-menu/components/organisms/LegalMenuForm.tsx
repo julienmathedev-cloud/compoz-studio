@@ -1,17 +1,16 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/settings/legal-menu/components/organisms/LegalMenuForm.tsx
- * @layer ui/studio/organisms
+ * @file apps/studio/src/features/settings/menus/legal-menu/components/organisms/LegalMenuForm.tsx
+ * @layer studio/features/settings/menus/legal-menu/components/organisms
+ *
  * @description
- * Formulaire d’édition du menu légal (studio) — RHF + Zod comme source de vérité UI.
+ * RHF and Zod-backed studio form for editing the legal menu.
  *
  * @remarks
- * - Contrôlé : le parent fournit `initialValues` et reçoit `onSubmit`.
- * - Les warnings UI (non bloquants) sont dérivés des valeurs RHF et remontés au parent.
- * - Les items sont gérés via `useFieldArray` et une row dédiée (obligatoire pour `useController`).
- * - Les erreurs bloquantes sont affichées au plus près des champs (au niveau row).
- * - Le focus/scroll sur la première erreur au submit est géré localement.
+ * - Uses `useFieldArray` with a dedicated row so each sortable item can own its controllers.
+ * - Reports UI warnings, blocking error count, value changes, and dirty state to the parent section.
+ * - Focuses the first row-level blocking error after a failed submit.
  */
 
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
@@ -49,14 +48,7 @@ import type {
 } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-form";
 import { LegalMenuFormSchema } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-form";
 
-/**
- * Compte le nombre d’erreurs “leaf” dans un objet `errors` RHF.
- *
- * @remarks
- * - Une leaf est un objet contenant une propriété `message` (erreur RHF).
- * - Les arrays / objets sont parcourus récursivement.
- * - Couvre naturellement : structures imbriquées + field arrays.
- */
+/** Counts RHF leaf errors recursively, including nested field-array errors. */
 function countBlockingErrors(value: unknown): number {
   if (!value) return 0;
 
@@ -83,9 +75,6 @@ function countBlockingErrors(value: unknown): number {
   return 0;
 }
 
-/**
- * Props du composant `LegalMenuForm`.
- */
 type LegalMenuFormProps = Readonly<{
   initialValues: LegalMenuFormValues;
   isSaving?: boolean;
@@ -99,9 +88,6 @@ type LegalMenuFormProps = Readonly<{
   onDirtyChange?: (dirty: boolean) => void;
 }>;
 
-/**
- * Formulaire de configuration du menu légal (studio).
- */
 export function LegalMenuForm({
   initialValues,
   isSaving,

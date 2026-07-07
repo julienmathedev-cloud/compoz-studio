@@ -1,14 +1,9 @@
 /**
  * @file packages/core/src/domain/site/use-cases/theme/update-theme-settings.ts
- * @layer core/domain
- * @description
- * Use-case : mise à jour partielle (shallow patch) des réglages `settings.theme`.
- * Charge les settings (draft/published), applique un merge shallow, valide
- * le résultat métier, et persiste uniquement si au moins une clé a changé.
- *
+ * @layer core/domain/site/use-cases/theme
+ * @description Applies a shallow patch to theme settings.
  * @remarks
- * - Le patch est validé/normalisé en amont (schemas/adapters).
- * - `repo.ensureBase()` prépare la persistance (pré-requis infra).
+ * The patch is validated upstream; theme invariants are asserted before persistence.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";

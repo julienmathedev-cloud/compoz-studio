@@ -3,17 +3,12 @@
  * @layer studio/app/api
  *
  * @description
- * Route API Studio pour la lecture et la mise à jour des réglages SEO
- * du Website actif.
+ * Studio API route for reading and updating the active Website SEO settings.
  *
  * @remarks
- * Responsabilités :
- * - GET   : retourne les settings SEO selon le state demandé.
- * - PATCH : met à jour les settings SEO en draft via un DTO intent,
- *   adaptation en patch domaine, puis exécution du use-case
- *   `updateSeoSettings`.
- * - Le repository merge avec les defaults pour assurer la cohérence.
- * - Le repository et le cache de status sont scopés par Prisma Website.id.
+ * - `PATCH` adapts the update intent into a domain patch before running the use case.
+ * - The repository merges with defaults to keep SEO settings consistent.
+ * - The repository and status cache are scoped by Prisma Website.id.
  */
 
 import "server-only";
@@ -32,10 +27,6 @@ import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import { createUpdateSeoSettingsIntentSchema } from "@compoz/validation/site/settings/seo/seo-intents";
-
-/* -------------------------------------------------------------------------- */
-/* GET                                                                        */
-/* -------------------------------------------------------------------------- */
 
 export async function GET(req: Request) {
   const NS = "api.studio.site.seo.GET" as const;
@@ -59,10 +50,6 @@ export async function GET(req: Request) {
     );
   });
 }
-
-/* -------------------------------------------------------------------------- */
-/* PATCH                                                                      */
-/* -------------------------------------------------------------------------- */
 
 export async function PATCH(req: Request) {
   const NS = "api.studio.site.seo.PATCH" as const;
@@ -106,10 +93,10 @@ export async function PATCH(req: Request) {
       });
 
       /**
-       * Invalidation du cache de status du Website actif.
+       * Invalidates the active Website status cache.
        *
-       * Le cache peut encore être implémenté en KV côté infra,
-       * mais son scope métier est le Prisma Website.id.
+       * The cache may still be backed by KV in infra, but its business scope is
+       * the Prisma Website.id.
        */
       try {
         logger.debug?.("route.seo.patch.invalidate.start", {

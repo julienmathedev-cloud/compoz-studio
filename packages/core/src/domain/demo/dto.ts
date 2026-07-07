@@ -1,16 +1,11 @@
 /**
  * @file packages/core/src/domain/demo/dto.ts
- * @layer core/domain
- * @description
- * DTOs de lecture pour le module Demo, alignés sur les entités du domaine.
- * Ces types représentent la forme stable exposée aux adapters (API/infra)
- * et restent immuables (`Readonly<>`).
+ * @layer core/domain/demo
+ * @description Read DTOs for the Demo module, aligned with domain entities.
+ * @remarks
+ * DTOs expose a stable immutable shape to adapters.
  */
 
 import type { DemoSandbox } from "@compoz/core/domain/demo/entities/demo-sandbox";
 
-/**
- * DTO complet représentant une sandbox démo.
- * Aligné strictement sur l’entité métier `DemoSandbox`.
- */
 export type DemoSandboxDTO = Readonly<DemoSandbox>;

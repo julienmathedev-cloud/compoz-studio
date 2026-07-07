@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/portfolio/cells/buttons-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/portfolio/cells
  *
  * @description
- * Skin UI — buttons cell (thème Portfolio).
+ * Defines the portfolio skin overrides for buttons cells.
  */
 
 import type { SiteButtonsUiOverride } from "@compoz/ui/site/site-ui.types";

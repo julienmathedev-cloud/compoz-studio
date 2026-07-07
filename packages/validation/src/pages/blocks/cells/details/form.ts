@@ -1,8 +1,8 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/details/form.ts
- * @layer schemas
+ * @layer validation/pages/blocks/cells/details
  * @description
- * Schéma Zod de FormCell.
+ * Defines Zod schemas for form cell data.
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";

@@ -1,6 +1,15 @@
 /**
  * @file apps/site/src/app/t/[websiteSlug]/sitemap.xml/route.ts
  * @layer site/app/metadata
+ *
+ * @description
+ * Explicit fallback sitemap.xml route for a public Website slug.
+ *
+ * @remarks
+ * - Resolves the Website from Prisma `Website.slug` before reading published content.
+ * - Uses Prisma `Website.id` for repository reads and `Website.slug` for fallback URLs.
+ * - Builds sitemap entries from the published SiteIndex and each published page sitemap settings.
+ * - Uses the SEO base URL first, then `NEXT_PUBLIC_SITE_URL`, and falls back to relative `/t/:websiteSlug` URLs.
  */
 
 import "server-only";
@@ -47,6 +56,7 @@ function toLastModified(value: string | null | undefined): Date | undefined {
   return new Date(value);
 }
 
+/** Builds canonical fallback paths under `/t/:websiteSlug`. */
 function fallbackPathForPageSlug(params: {
   websiteSlug: string;
   pageSlug: string;
@@ -59,6 +69,7 @@ function fallbackPathForPageSlug(params: {
     : `${websitePrefix}/${encodeURIComponent(pageSlug)}`;
 }
 
+/** Renders sitemap XML manually so this route can return an explicit XML response. */
 function renderSitemap(entries: MetadataRoute.Sitemap): string {
   const urls = entries
     .map((entry) => {

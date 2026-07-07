@@ -1,8 +1,9 @@
-// packages/core/src/domain/users/use-cases/create-user.ts
-
 /**
  * @file packages/core/src/domain/users/use-cases/create-user.ts
- * @layer core/domain
+ * @layer core/domain/users/use-cases
+ * @description Creates an active Studio user after validating identity, RBAC, and password input.
+ * @remarks
+ * The domain generates the user id; password hashing and storage remain repository responsibilities.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";

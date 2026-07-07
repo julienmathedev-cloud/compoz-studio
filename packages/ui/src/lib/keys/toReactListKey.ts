@@ -1,11 +1,9 @@
 /**
  * @file packages/ui/src/lib/keys/toReactListKey.ts
  * @layer ui/lib/keys
- * @description
- * Helper canonique pour générer des clés React stables et prévisibles à partir
- * d’objets UI (menus, liens, options, etc.).
- *
- * ⚠️ Usage strictement UI : ne jamais utiliser pour la persistance ou la logique métier.
+ * @description Builds stable and predictable React list keys from UI objects.
+ * @remarks
+ * UI-only helper: keys produced here must not be used for persistence or business logic.
  */
 
 type KeyCandidate = {
@@ -22,17 +20,10 @@ function normalizeKeyPart(value: string | number | null | undefined): string {
 }
 
 /**
- * Construit une clé React sûre pour une liste UI.
- *
- * Priorité :
- * 1. identifiant métier / technique stable (`id`, `keyId`)
- * 2. fallback lisible basé sur le contenu
- * 3. suffixe index pour garantir l’unicité
+ * Prefers stable ids, then readable content, then an index-only fallback.
  *
  * @remarks
- * - Si `id` ou `keyId` existe, la clé reste stable même en cas de reorder.
- * - Si aucun identifiant n’existe, on utilise `index` en suffixe :
- *   cela garantit l’unicité, mais pas une stabilité parfaite au reorder.
+ * Index suffixes guarantee uniqueness, but fallback keys are not perfectly stable when items are reordered.
  */
 export function toReactListKey(item: KeyCandidate, index: number): string {
   const id = normalizeKeyPart(item.id);

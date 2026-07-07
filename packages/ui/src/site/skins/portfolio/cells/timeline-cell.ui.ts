@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/portfolio/cells/timeline-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/portfolio/cells
  *
  * @description
- * Skin UI — timeline cell (thème Portfolio).
+ * Defines the portfolio skin overrides for timeline cells.
  */
 
 import type { SiteTimelineUiOverride } from "@compoz/ui/site/site-ui.types";

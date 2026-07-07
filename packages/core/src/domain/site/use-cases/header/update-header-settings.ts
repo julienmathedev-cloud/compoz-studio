@@ -1,14 +1,9 @@
 /**
  * @file packages/core/src/domain/site/use-cases/header/update-header-settings.ts
- * @layer core/domain
- * @description
- * Use-case : mise à jour partielle (shallow patch) des réglages `settings.header`.
- * Charge les settings (draft/published), applique un merge shallow, et persiste
- * uniquement si au moins une clé a changé.
- *
+ * @layer core/domain/site/use-cases/header
+ * @description Applies a shallow patch to header settings.
  * @remarks
- * - Le patch est validé en amont (schemas/adapters).
- * - `repo.ensureBase()` prépare la persistance (pré-requis infra).
+ * The patch is validated upstream; the use-case persists only when at least one key changes.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -42,7 +37,6 @@ export function updateHeaderSettings({ repo }: UpdateHeaderSettingsDeps) {
 
     await repo.putSettings(DEFAULT_CONTENT_STATE, next);
 
-    // ✅ Domaine pur : aucune invalidation cache ici.
     return { settings: next };
   };
 }

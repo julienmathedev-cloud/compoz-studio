@@ -2,15 +2,13 @@
 
 /**
  * @file apps/studio/src/features/settings/_shared/useStableWarningKeys.ts
- * @layer hooks/studio/site/settings/shared
+ * @layer studio/features/settings/shared
  *
  * @description
- * Hook utilitaire pour remonter une liste de warning keys uniquement si elle change réellement.
+ * Reports warning keys only when their stable signature changes.
  *
  * @remarks
- * - Évite les notifications/redessins inutiles côté parent.
- * - La comparaison repose sur une signature stable `join("|")`.
- * - Hook purement UI, sans logique métier.
+ * - Prevents repeated parent notifications when warning arrays are re-created with the same content.
  */
 
 import { useEffect, useRef } from "react";

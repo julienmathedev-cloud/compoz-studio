@@ -1,16 +1,9 @@
 /**
  * @file packages/ui/src/lib/app-helpers/site-pager.ts
  * @layer ui/site/app-helpers
- *
- * @description
- * Helper partagé de construction du pager (prev/next) pour `SitePageRenderer`.
- *
+ * @description Shared prev/next pager helper for `SitePageRenderer`.
  * @remarks
- * - Shared UI/runtime : utilisé par le site public, les routes draft
- *   et la preview studio.
- * - Défensif : si slug/name manquants → lien ignoré (null).
- * - Ne trie pas : respecte strictement l'ordre fourni par `index.pages`.
- * - Le pager est calculé sur les siblings (même `parentId`).
+ * Preserves the order from `index.pages`, scopes navigation to sibling pages, and ignores incomplete links defensively.
  */
 
 import type { Page } from "@compoz/core/domain/pages/entities/page";
@@ -34,10 +27,6 @@ export type SitePagerPage = Pick<
 
 export type SlugHrefBuilder = (slug: string) => string;
 
-/**
- * Calcule le pager (prev/next) pour une page, en se basant sur ses siblings
- * (même `parentId`) dans `index.pages`.
- */
 export function computeSitePager(args: {
   page: SitePagerPage;
   index: SiteIndex;

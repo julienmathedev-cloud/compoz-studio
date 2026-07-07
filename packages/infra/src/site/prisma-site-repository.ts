@@ -1,19 +1,9 @@
 /**
  * @file packages/infra/src/site/prisma-site-repository.ts
  * @layer infra/site
- *
- * @description
- * Prisma implementation of the SiteRepository.
- *
+ * @description Prisma-backed SiteRepository implementation.
  * @remarks
- * This repository stores persistent site settings in PostgreSQL and computes
- * the site index from the Page table.
- *
- * Important:
- * - There is no SiteIndex table.
- * - The functional page order is persisted through Page.position.
- * - The SiteIndex entity remains a domain projection used by the app/use-cases.
- * - The repository is strictly scoped by `websiteId`.
+ * Persistent settings are stored in PostgreSQL; SiteIndex is computed from Page rows ordered by `Page.position`.
  */
 
 import {
@@ -33,25 +23,13 @@ import {
   type PrismaContentState,
 } from "@compoz/infra/site/mappers/site-settings.mapper";
 
-/* -------------------------------------------------------------------------- */
-/* Options                                                                    */
-/* -------------------------------------------------------------------------- */
-
 type PrismaSiteRepositoryOptions = Readonly<{
   websiteId: string;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
 function toPrismaContentState(state: ContentState): PrismaContentState {
   return state === CONTENT_STATE.PUBLISHED ? "published" : "draft";
 }
-
-/* -------------------------------------------------------------------------- */
-/* Repository                                                                 */
-/* -------------------------------------------------------------------------- */
 
 export class PrismaSiteRepository implements SiteRepository {
   private readonly websiteId: string;

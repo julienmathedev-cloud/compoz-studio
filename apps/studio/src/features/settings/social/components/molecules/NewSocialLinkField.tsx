@@ -2,17 +2,15 @@
 
 /**
  * @file apps/studio/src/features/settings/social/components/molecules/NewSocialLinkField.tsx
- * @layer ui/studio/molecules
+ * @layer studio/features/settings/social/components/molecules
  *
  * @description
- * Champ texte contrôlé pour lien social (email / URL) avec préfixe figé via `InputGroup`.
+ * Controlled social link input with a fixed email or URL prefix.
  *
  * @remarks
- * - La valeur contrôlée (`value`) correspond uniquement à la partie variable (sans préfixe).
- * - Le préfixe est dérivé de `isEmail` : `mailto:` ou `https://`.
- * - Le parent reconstruit la valeur canonique (préfixe + valeur) et pilote la validation (RHF, trigger, etc.).
- * - Sur Enter, le composant évite le submit et déclenche `onBlur` (point de validation).
- * - UI-only : aucune logique métier.
+ * - The controlled value contains only the editable part, without `mailto:` or `https://`.
+ * - The parent rebuilds the canonical value and owns validation through RHF/trigger.
+ * - Enter is treated like a blur so the parent can validate without submitting the form.
  */
 
 import { useTranslations } from "next-intl";
@@ -40,54 +38,23 @@ import {
 
 import type { FieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 
-/**
- * Props du composant `NewSocialLinkField`.
- */
 type NewSocialLinkFieldProps = Readonly<{
-  /** Ensemble des IDs ARIA du champ (fournis par le parent). */
   ids: FieldIds;
   name?: string;
-
-  /** Mode email (`mailto:`) si `true`, sinon URL (`https://`). */
   isEmail: boolean;
-
-  /** Valeur affichée (partie variable, sans préfixe). */
   value: string;
-
-  /** Callback de mise à jour de la valeur affichée (sans préfixe). */
   onChange: (value: string) => void;
-
-  /** Callback optionnel au blur (point de validation côté parent). */
   onBlur?: () => void;
-
-  /** Hook optionnel pour compléter le `keyDown` (après la gestion interne). */
   onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
-
-  /** Indicateur visuel/ARIA d’invalidité (complète `error`). */
   invalid?: boolean;
-
-  /** Message d’erreur bloquant affiché sous le champ. */
   error?: string;
-
-  /** Désactive le champ et l’interaction. */
   disabled?: boolean;
-
-  /** Placeholder spécifique pour le mode email. */
   placeholderEmail?: string;
-
-  /** Placeholder spécifique pour le mode URL. */
   placeholderUrl?: string;
-
-  /** Texte d’aide pour le mode email. */
   helpEmail?: string;
-
-  /** Texte d’aide pour le mode URL. */
   helpUrl?: string;
 }>;
 
-/**
- * Champ de saisie d’un lien social avec préfixe figé (studio).
- */
 export function NewSocialLinkField({
   ids,
   name,

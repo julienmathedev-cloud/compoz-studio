@@ -3,22 +3,14 @@
  * @layer studio/app/api
  *
  * @description
- * Route API Studio pour publier le Website actif.
+ * Studio API route for publishing the active Website.
  *
  * @remarks
- * Responsabilités :
- * - POST : déclenche la publication du Website actif.
- * - Body optionnel : { from?, to?, cleanOrphans? }.
- * - Query optionnelle : ?from=…&to=… ; le body a priorité.
- * - Résolution des states : body > query > défaut.
- * - Appel du use-case `publishSite` pour la logique métier :
- *   copie index, settings, pages et warnings.
- * - Invalidation best-effort du cache status/statusDetails.
- * - Déclenche une revalidation ISR des routes publiques après publication.
- *
- * Notes de scope :
- * - Les repositories Studio sont scopés par Prisma Website.id.
- * - La revalidation publique utilise Website.slug pour les routes `/t/:websiteSlug`.
+ * - Resolves publish states from body, query, then defaults.
+ * - Runs `publishSite` to copy index, settings, pages, and warnings.
+ * - Invalidates status caches and triggers public revalidation on a best-effort basis.
+ * - Studio repositories are scoped by Prisma Website.id.
+ * - Public revalidation uses Website.slug for `/t/:websiteSlug` routes.
  */
 
 import "server-only";
@@ -43,10 +35,6 @@ import {
   type PublishSiteIntentDTO,
 } from "@compoz/validation/site/publish/publish-intents";
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
 function parseStatesFromQuery(req: Request): {
   from?: ContentState;
   to?: ContentState;
@@ -65,11 +53,10 @@ function parseStatesFromQuery(req: Request): {
 }
 
 /**
- * Résout un ContentState à partir des sources :
- * body > query > fallback.
+ * Resolves a `ContentState` from body, query, or fallback values.
  *
- * - `undefined` => fallback.
- * - valeur invalide => 422 validation_error.
+ * - `undefined` falls back to the provided default.
+ * - Invalid values produce a 422 validation error.
  */
 function resolveStateOr422(args: {
   value: unknown;
@@ -103,8 +90,8 @@ async function revalidatePublicAfterPublish(params: {
   ).trim();
 
   /**
-   * Si l’origine publique n’est pas configurée, la publication reste valide.
-   * La revalidation publique est best-effort.
+   * Publishing remains valid when the public origin is not configured.
+   * Public revalidation is best-effort.
    */
   if (!baseUrl) return;
 
@@ -134,10 +121,6 @@ async function revalidatePublicAfterPublish(params: {
     });
   }
 }
-
-/* -------------------------------------------------------------------------- */
-/* POST                                                                       */
-/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
   const NS = "api.studio.site.publish.POST" as const;
@@ -214,10 +197,10 @@ export async function POST(req: Request) {
         });
 
         /**
-         * Invalidation du cache de status du Website actif.
+         * Invalidates the active Website status cache.
          *
-         * Le cache peut encore être implémenté en KV côté infra,
-         * mais son scope métier est le Prisma Website.id.
+         * The cache may still be backed by KV in infra, but its business scope is
+         * the Prisma Website.id.
          */
         const statusCache = getSiteStatusCache({ websiteId });
 

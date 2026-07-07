@@ -1,12 +1,9 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/reorder-page-children.types.ts
  * @layer core/domain/pages/use-cases
- * @description
- * Types du use-case : réordonner les enfants d’un parent dans l’index (index-only, draft).
- *
+ * @description Contracts for reordering a parent's children in the draft index.
  * @remarks
- * - Le write est fait sur `SiteRepository.writeIndex()` (SoT index).
- * - Toute invalidation/cache est gérée hors domaine (routes / adapters).
+ * Writes go through `SiteRepository.writeIndex()` as the index source of truth. Cache invalidation is handled outside the domain.
  */
 
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";

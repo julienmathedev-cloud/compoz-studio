@@ -1,15 +1,15 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/admin/users/forms/components/AdminUsersFormFooter.tsx
- * @layer ui/organisms
+ * @file apps/studio/src/features/admin/users/components/forms/AdminUsersFormFooter.tsx
+ * @layer studio/features/admin/users/components/forms
  *
  * @description
- * Footer du formulaire Users : Delete (edit only) + ActionsBar (reset/submit).
+ * Footer for the Studio user form, with optional delete and reset/submit actions.
  *
  * @remarks
- * - Strictement UI-only : aucune logique métier.
- * - Le parent fournit les callbacks (reset/delete) et les états.
+ * - The parent provides callbacks and busy states.
+ * - Delete is available only in edit mode when `onDelete` is provided.
  */
 
 import { useTranslations } from "next-intl";

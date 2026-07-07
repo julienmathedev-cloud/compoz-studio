@@ -3,7 +3,7 @@
  * @layer studio/app
  *
  * @description
- * Page « Footer » (Studio) — route du dashboard.
+ * Studio "Footer" dashboard route.
  */
 
 import { FooterPage } from "@compoz/studio/features/settings/footer/FooterPage";

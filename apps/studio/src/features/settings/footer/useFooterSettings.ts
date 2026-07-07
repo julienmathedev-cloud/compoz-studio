@@ -2,17 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/footer/useFooterSettings.ts
- * @layer hooks/studio/site/footer
+ * @layer studio/features/settings/footer
  *
  * @description
- * Hook Studio spécialisé pour gérer les réglages du footer via l’API.
+ * Settings resource hook for loading and saving footer settings.
  *
  * @remarks
- * - Basé sur le pattern Settings RHF-first (`useSettingsResource`).
- * - Travaille exclusivement sur le modèle UI (`FooterFormValues`).
- * - Orchestration UI-only : defaults, load, diff minimal, save, notifications.
- * - Aucune logique métier ni validation domaine.
- * - Le cache settings/status est scopé par Prisma Website.id.
+ * - Builds minimal patches from normalized `FooterFormValues`.
+ * - Patches the settings bundle cache after save, then invalidates status and bundle queries.
  */
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -55,16 +52,10 @@ export function useFooterSettings(): UseFooterSettingsResult {
   const resource = useSettingsResource<FooterFormValues>({
     entityLabel,
 
-    /**
-     * Valeurs par défaut domaine → UI → normalisation.
-     */
     defaults: normalizeFooterFormValues(
       toFooterFormValuesFromDTO(DEFAULT_FOOTER_SETTINGS),
     ),
 
-    /**
-     * GET bundle → DTO domaine → UI normalisée.
-     */
     load: async (state: ContentState) => {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
@@ -90,31 +81,18 @@ export function useFooterSettings(): UseFooterSettingsResult {
       return normalizeFooterFormValues(toFooterFormValuesFromDTO(dto.settings));
     },
 
-    /**
-     * Diff minimal : ne renvoie que les champs réellement modifiés.
-     */
+    // Only send fields that changed after normalization.
     buildPatch: (baseline, next) =>
       buildShallowDiff(
         normalizeFooterFormValues(baseline),
         normalizeFooterFormValues(next),
       ) ?? null,
 
-    /**
-     * Baseline stable et cohérente à l’entrée/sortie réseau.
-     */
     onLoaded: normalizeFooterFormValues,
 
-    /**
-     * Normalisation safe avant diff/save.
-     */
     beforeSave: normalizeFooterFormValues,
 
-    /**
-     * Après un save :
-     * - côté serveur, le use-case a invalidé le snapshot status ;
-     * - côté client, on force React Query à refetch `useSiteStatus()`
-     *   et le bundle settings courant.
-     */
+    // Keep client-side status and bundle reads aligned after the server-side save.
     onSaved: () => {
       void invalidateSiteStatus(queryClient, websiteId);
 

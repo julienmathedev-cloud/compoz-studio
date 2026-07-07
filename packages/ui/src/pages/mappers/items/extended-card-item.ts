@@ -1,15 +1,9 @@
 /**
  * @file packages/ui/src/pages/mappers/items/extended-card-item.ts
  * @layer ui/pages/mappers
- *
- * @description
- * Shared runtime mapper for extended card items.
- *
+ * @description Maps reusable extended card item DTOs to form values.
  * @remarks
- * This mapper only handles the reusable extended card item shape.
- * Cell-level concerns such as `kind`, `columns`, `align`, `reveal`,
- * `cssClassName`, and `items` are handled by parent cell mappers such as
- * `cardCollection` or `carousel`.
+ * Cell-level options remain in parent mappers such as card collections and carousels.
  */
 
 import type { ExtendedCardItemDTO } from "@compoz/core/domain/pages/dto";

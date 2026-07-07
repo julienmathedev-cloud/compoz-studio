@@ -2,11 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/organisms/SiteSlider.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/organisms
  *
  * @description
- * Slider générique basé sur Keen Slider avec voisins visibles,
- * flèches et pagination optionnelles.
+ * Renders a public site Keen Slider with visible neighboring slides, optional arrows, dots, and full-bleed item mode.
+ *
+ * @remarks
+ * Re-bases Keen Slider loop indexes after wraparound to keep navigation stable across repeated prev/next interactions.
  */
 
 import "keen-slider/keen-slider.min.css";

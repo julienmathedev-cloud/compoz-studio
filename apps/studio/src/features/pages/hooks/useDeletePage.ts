@@ -2,16 +2,18 @@
 
 /**
  * @file apps/studio/src/features/pages/hooks/useDeletePage.ts
- * @layer hooks/studio/pages
+ * @layer studio/features/pages/hooks
  *
  * @description
- * Hook Studio React Query pour supprimer une page draft via l’API.
+ * React Query mutation hook for deleting a draft page through the pages Studio API.
  *
  * @remarks
- * - Website-scoped cache : toutes les query keys incluent `websiteId`.
- * - Pousse immédiatement le nouvel index dans le cache après suppression.
- * - Purge les caches `pageById` et `pageBlocks` pour éviter une UI fantôme.
- * - Le scope utilisé ici est Prisma Website.id.
+ * - Uses save instrumentation with draft content state for logs and notifications.
+ * - Tracks the targeted deletion through `deletingPageId` so only the matching page is blocked.
+ * - Updates the SiteIndex cache immediately from the returned payload after deletion.
+ * - Removes page-by-id and page-block caches to avoid stale deleted-page UI.
+ * - Invalidates site and page status views after deletion.
+ * - Studio cache keys are scoped by Prisma Website.id.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";

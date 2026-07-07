@@ -3,14 +3,14 @@
  * @layer studio/auth
  *
  * @description
- * Helpers serveur pour l'authentification automatique des sandboxes démo.
+ * Server helpers for automatic demo sandbox authentication.
  *
  * @remarks
- * - Génère un password démo déterministe à partir du `demoInstanceId`
- *   et d'un secret serveur dédié.
- * - Permet de rejouer un vrai login Credentials sans stocker le mot de passe
- *   brut en base.
- * - Ces helpers sont destinés à être utilisés côté serveur uniquement.
+ * - Generates a deterministic demo password from `demoInstanceId` and a
+ *   dedicated server secret.
+ * - Allows replaying a real Credentials login without storing the raw password
+ *   in the database.
+ * - These helpers are intended for server-side use only.
  */
 
 import "server-only";
@@ -32,13 +32,13 @@ function normalizeDemoInstanceId(value: unknown): string {
 }
 
 /**
- * Construit le mot de passe brut déterministe d'un user démo.
+ * Builds the deterministic raw password for a demo user.
  *
  * @remarks
- * - Le résultat est stable pour un `demoInstanceId` donné tant que
- *   `DEMO_AUTH_SECRET` ne change pas.
- * - Le mot de passe retourné est destiné à être hashé/vérifié par le flow
- *   Credentials existant via le repository users.
+ * - The result is stable for a given `demoInstanceId` as long as
+ *   `DEMO_AUTH_SECRET` does not change.
+ * - The returned password is intended to be hashed/verified by the existing
+ *   Credentials flow through the users repository.
  */
 export function buildDemoUserPassword(demoInstanceId: string): string {
   const id = normalizeDemoInstanceId(demoInstanceId);

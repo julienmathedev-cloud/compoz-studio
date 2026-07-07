@@ -1,12 +1,9 @@
 /**
  * @file packages/core/src/domain/site/validators/site-index.ts
- * @layer core/domain
- * @description
- * Validateur métier — invariant bloquant de `SiteIndex` : unicité des slugs dans `pages[]`.
- *
+ * @layer core/domain/site/validators
+ * @description Blocking domain invariant for site index slug uniqueness.
  * @remarks
- * - Ne gère ni l’ordre (helpers `site/index/*`), ni la présence de pages (warnings publish).
- * - Ne vérifie pas la cohérence slug ↔ page (responsabilité du module Pages).
+ * Page ordering and missing-page warnings are handled outside this validator.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -15,17 +12,9 @@ import type { PageSummary } from "@compoz/core/domain/pages/entities/page";
 import type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
 
 type DupPositions = Readonly<{ value: string; positions: number[] }>;
-
-/**
- * Détecte les doublons de slug dans une liste de `PageSummary` et
- * retourne, pour chaque slug dupliqué :
- * - sa valeur (`value`),
- * - la liste triée des positions où il apparaît.
- */
 function findDuplicateSlugs(arr: ReadonlyArray<PageSummary>): DupPositions[] {
   const map = new Map<string, number[]>();
 
-  // On agrège les positions de chaque slug dans la map.
   for (let i = 0; i < arr.length; i++) {
     const slug = String(arr[i]?.slug ?? "").trim();
     const bucket = map.get(slug);
@@ -46,12 +35,6 @@ function findDuplicateSlugs(arr: ReadonlyArray<PageSummary>): DupPositions[] {
   return out;
 }
 
-/**
- * Invariant global : chaque slug doit être unique dans `pages[]`.
- *
- * @throws DomainError
- * - `EC.SITE_INDEX_DUPLICATE_SLUGS`
- */
 export function assertSiteIndex(index: SiteIndex): void {
   const duplicateSlugs = findDuplicateSlugs(index.pages);
 

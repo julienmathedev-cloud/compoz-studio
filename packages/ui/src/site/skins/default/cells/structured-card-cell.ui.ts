@@ -1,9 +1,9 @@
 /**
- * @file packages/ui/src/site/skins/default/blocks/structured-card-cell.ui.ts
- * @layer ui/site/skins
+ * @file packages/ui/src/site/skins/default/cells/structured-card-cell.ui.ts
+ * @layer ui/site/skins/default/cells
  *
  * @description
- * Skin UI — structured card cell (thème Default).
+ * Defines the default skin classes for structured card cells.
  */
 
 import type { SiteStructuredCardUi } from "@compoz/ui/site/site-ui.types";

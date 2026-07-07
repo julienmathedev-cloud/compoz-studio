@@ -1,17 +1,12 @@
 /**
  * @file packages/http/src/http-error.ts
  * @layer transport/http
- * @description
- * Types + helpers génériques d'erreurs HTTP (sans dépendance Zod).
+ * @description Generic HTTP error types and helpers without Zod dependency.
  */
 
 import type { ErrorCode } from "@compoz/core/domain/errors/codes";
 
-/**
- * Code d'erreur retourné par l'API :
- * - soit un code métier (ErrorCode)
- * - soit un code libre (string) pour des cas infra/adapters ou erreurs externes
- */
+/** Allows canonical domain error codes plus adapter-specific string codes. */
 export type HttpErrorCode = ErrorCode | (string & {});
 
 export type HttpErrorBody = {

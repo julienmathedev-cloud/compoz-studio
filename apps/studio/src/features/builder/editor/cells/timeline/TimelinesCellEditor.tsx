@@ -2,20 +2,16 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/timeline/TimelinesCellEditor.tsx
- * @layer ui/studio/pages/blocks/editor/cells
+ * @layer studio/features/builder/editor/cells/timeline
  *
  * @description
- * Éditeur RHF-aware d’une TimelineCell avec ajout, suppression,
- * réordonnancement et édition des étapes.
+ * RHF-aware TimelineCell editor for collapsible behavior and timeline item editing.
  *
  * @remarks
- * - Connecté directement à RHF via `useFieldArray`.
- * - Réutilise `TimelineListEditor`.
- * - Les items sont gérés par RHF via `useFieldArray` pour garantir
- *   une gestion propre des valeurs, erreurs et reorder.
- * - Les erreurs near-field sont gérées au niveau des items.
- * - Le reorder s’appuie sur `move()` pour conserver l’état RHF.
- * - Les valeurs live restent lues via `useWatch`.
+ * - Binds the collapsible control directly through RHF `useController`.
+ * - Manages items through `useFieldArray` so values, errors, and reordering stay consistent.
+ * - Uses `move()` to preserve RHF state while reordering.
+ * - Reads live item values through `useWatch` and delegates item rendering to `TimelineListEditor`.
  */
 
 import { useTranslations } from "next-intl";
@@ -74,10 +70,10 @@ export function TimelineCellEditor({
   });
 
   /**
-   * `useFieldArray` est la source de vérité RHF pour la liste des étapes.
+   * `useFieldArray` is the RHF source of truth for timeline items.
    *
-   * `keyName: "fieldId"` évite d’entrer en collision avec notre `id` métier
-   * déjà présent dans `TimelineItemFormValues`.
+   * `keyName: "fieldId"` avoids colliding with the domain `id` already present
+   * in `TimelineItemFormValues`.
    */
   const { fields, append, remove, move } = useFieldArray<
     SectionBlockFormValues,

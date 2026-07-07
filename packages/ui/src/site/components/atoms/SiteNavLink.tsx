@@ -2,18 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/atoms/SiteNavLink.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/atoms
  *
  * @description
- * Atome site : lien de navigation robuste (interne/externe/spécial/unsafe) avec a11y et garde-fous.
+ * Renders a robust public site navigation link across internal, external, special, and unsafe hrefs.
  *
  * @remarks
- * - Interne : rendu via `next/link` + état actif (`aria-current`).
- * - Externe : rendu via `<a>` (option `newTab` + `target/rel`).
- * - Spécial (`mailto:`/`tel:`) : rendu via `<a>` sans `target/rel` externes.
- * - Unsafe : lien neutralisé (rendu non cliquable).
- * - Preview : neutralise toute navigation.
- * - Convention V0.5 : draft/published via routes dédiées (/draft, /site).
+ * Handles active state, accessible labels, preview navigation blocking, secure external links, and neutralized unsafe links.
  */
 
 import Link from "next/link";

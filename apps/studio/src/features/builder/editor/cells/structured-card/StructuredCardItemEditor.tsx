@@ -2,25 +2,18 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/structured-card/StructuredCardItemEditor.tsx
- * @layer ui/studio/pages/blocks/editor/items/structured-card
+ * @layer studio/features/builder/editor/cells/structured-card
  *
  * @description
- * RHF-aware editor for a single structured card item.
+ * RHF-aware editor for one StructuredCardCell item.
  *
  * @remarks
- * - Connected directly to RHF through `useController`.
- * - Reuses the card editor pattern used by item list editors.
- * - Reordering is handled by drag and drop through dnd-kit.
- * - Error display relies on a single rule:
- *   `showError || fieldState.isTouched`.
- * - Each item edits its own content:
- *   image, title, meta, CTA button, and section list.
- * - The layout is designed for more readable editing:
- *   image on the left / image text fields on the right, then 2-column blocks.
- * - Values are read and edited through RHF (`useController`).
- * - `sortableId` is only used for drag and drop.
- * - `watchedItem` is used as a visual fallback to keep rendering stable
- *   during RHF rebinding after reordering.
+ * - Binds item fields and nested sections directly through RHF `useController` and `useFieldArray`.
+ * - Uses `sortableId` only for dnd-kit sorting.
+ * - Edits image, title, meta, CTA button, and nested section list content.
+ * - Shows near-field errors only after `showError` or the field has been touched.
+ * - Uses `watchedItem` as a visual fallback to keep rendering stable during RHF rebinding after reordering.
+ * - Clears image metadata when the source is emptied.
  */
 
 import { useSortable } from "@dnd-kit/sortable";

@@ -1,15 +1,12 @@
 /**
  * @file apps/studio/src/features/settings/bundle/keys.ts
- * @layer hooks/studio/site/settings-bundle
+ * @layer studio/features/settings/bundle
  *
  * @description
- * Query keys pour le bundle de settings.
+ * React Query key factory for the Studio settings bundle.
  *
  * @remarks
- * - Website-scoped : inclut Prisma Website.id pour éviter les collisions
- *   lors d’un switch Website.
- * - Le bundle est la source de vérité READ côté Studio.
- * - Les saves restent slice-by-slice via PATCH, puis patch du cache bundle.
+ * - Keys are scoped by Prisma Website.id and content state to avoid cache collisions when switching Website.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";

@@ -1,19 +1,12 @@
 /**
  * @file packages/ui/src/site/components/atoms/SiteTimelineItemDescription.tsx
- * @layer ui/site/atoms
+ * @layer ui/site/components/atoms
  *
  * @description
- * Description textuelle d’un item de timeline.
+ * Renders the textual content for a public site timeline item.
  *
  * @remarks
- * - UI-only.
- * - Tous les styles sont pilotés par `ui`.
- * - Affiche la période, le titre, le sous-titre, la description
- *   et les mots-clés éventuels.
- * - N’impose pas de balise heading pour éviter une hiérarchie HTML
- *   incohérente selon l’emplacement de la cellule dans la page.
- * - Expose des attributs `data-*` stables pour permettre un ciblage CSS
- *   précis côté skins ou overrides Website.
+ * Does not impose a heading tag so timeline placement cannot break the surrounding HTML heading hierarchy.
  */
 
 import { cn } from "@compoz/ui/lib/utils";

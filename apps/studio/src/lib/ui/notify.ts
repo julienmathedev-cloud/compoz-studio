@@ -3,13 +3,14 @@
 /**
  * @file apps/studio/src/lib/ui/notify.ts
  * @layer studio/lib/ui
- * @description
- * Façade de notifications (Sonner) pour le Studio.
  *
- * Contrat i18n :
- * - Les erreurs UI utilisent `uiErrors.<token>` (camelCase).
- * - Les erreurs domaine utilisent `errors.<CODE>` (MAJUSCULE_SNAKE_CASE).
- * - Un resolver global peut être configuré via `notify.configure`.
+ * @description
+ * Sonner notification facade for the Studio UI.
+ *
+ * @remarks
+ * - UI error tokens resolve through `uiErrors.<token>`.
+ * - Domain error codes resolve through `errors.<CODE>`.
+ * - A global resolver can be configured once through `notify.configure`.
  */
 
 import { isAbortError } from "@compoz/infra/http/abort-error";
@@ -23,25 +24,14 @@ import type { UiErrorToken } from "@compoz/studio/lib/ui/uiError";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 import { toast as sonner, type ExternalToast } from "sonner";
 
-/* -------------------------------------------------------------------------- */
-/*                                Configuration                               */
-/* -------------------------------------------------------------------------- */
-
 const DEFAULTS = { duration: 3500 } as const;
 
-/**
- * Resolver global (optionnel) configuré par un Provider.
- * Permet de traduire les tokens sans modifier tous les appels.
- */
+/** Global optional i18n resolver configured by the Studio provider. */
 let globalResolve: ResolveKey | undefined;
 
 function withDefaults(opts?: ExternalToast): ExternalToast {
   return { ...DEFAULTS, ...(opts ?? {}) };
 }
-
-/* -------------------------------------------------------------------------- */
-/*                              Message resolving                              */
-/* -------------------------------------------------------------------------- */
 
 function resolveUiMessage(input: string, resolve?: ResolveKey): string {
   const r = resolve ?? globalResolve;
@@ -49,16 +39,16 @@ function resolveUiMessage(input: string, resolve?: ResolveKey): string {
 
   if (isTokenLike(input)) {
     const out = resolveMessage(input, r);
-    // Si le resolver ne sait pas traduire, `resolveMessage` retourne `input`.
+    // `resolveMessage` returns the original input when the key cannot be translated.
     if (out !== input) return out;
 
-    // Fallback stable UI
+    // Keep a stable UI fallback when a token cannot be resolved.
     const fallbackKey = "uiErrors." + UiError.errorGeneric;
     const g = r(fallbackKey);
     return g && g !== fallbackKey ? g : input;
   }
 
-  // Déjà un message humain
+  // Plain human-readable messages are returned as-is.
   return input;
 }
 
@@ -77,29 +67,25 @@ function pickMessage(error: unknown, fallback: string): string {
 function statusToTitleToken(status: number): UiErrorToken {
   switch (status) {
     case 400:
-      return UiError.http400Title; // "Requête invalide"
+      return UiError.http400Title;
     case 401:
-      return UiError.http401Title; // "Non authentifié"
+      return UiError.http401Title;
     case 403:
-      return UiError.http403Title; // "Accès refusé"
+      return UiError.http403Title;
     case 404:
-      return UiError.http404Title; // "Introuvable"
+      return UiError.http404Title;
     case 405:
-      return UiError.http405Title; // "Action non autorisée"
+      return UiError.http405Title;
     case 409:
-      return UiError.http409Title; // "Conflit"
+      return UiError.http409Title;
     case 422:
-      return UiError.http422Title; // "Erreur de validation"
+      return UiError.http422Title;
     default:
       return status >= 500 ? UiError.serverError : UiError.errorGeneric;
   }
 }
 
-/**
- * Token description par défaut pour les erreurs HTTP,
- * afin de conserver un message UI stable (ex: http404) même si l'infra renvoie
- * un fallback générique (UNKNOWN/INTERNAL).
- */
+/** Maps HTTP status codes to stable description tokens when the API message is missing or generic. */
 function statusToDescToken(status: number): UiErrorToken {
   switch (status) {
     case 400:
@@ -121,25 +107,14 @@ function statusToDescToken(status: number): UiErrorToken {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
 type NotifyFromErrorLabels = Readonly<{
   abortTitle?: string;
   abortDescription?: string;
   errorTitle?: string;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/*                                   Exports                                  */
-/* -------------------------------------------------------------------------- */
-
 export const notify = {
-  /**
-   * Configure le resolver global (i18n).
-   * À appeler une seule fois côté client (via un Provider).
-   */
+  /** Configures the global i18n resolver once on the client. */
   configure: (opts: { resolve?: ResolveKey }) => {
     globalResolve = opts.resolve;
   },
@@ -157,12 +132,12 @@ export const notify = {
     sonner.error(title, { description, ...withDefaults(opts) }),
 
   /**
-   * Affiche une notification à partir d’une erreur inconnue.
+   * Shows a notification from an unknown error value.
    *
-   * Règles :
-   * - Abort → info
-   * - HTTP autres → title basé sur status + desc résolue (domaine/UI) avec fallback status-based
-   * - Error / string → message résolu
+   * @remarks
+   * - Abort errors are displayed as informational cancellations.
+   * - HTTP errors use a status-based title and a resolved domain/UI description fallback.
+   * - Plain `Error` and string values are resolved directly when they look like tokens.
    */
   fromError(
     error: unknown,
@@ -200,7 +175,7 @@ export const notify = {
       const raw = pickMessage(error, String(fallback)).trim();
       const hasRaw = raw.length > 0;
 
-      // Si le message est générique, on préfère une desc stable par status (http404, etc.)
+      // Prefer a status-based description token when the API does not provide a useful message.
       const descToken = hasRaw ? raw : statusToDescToken(error.status);
       const desc = resolveUiMessage(descToken, resolve);
 

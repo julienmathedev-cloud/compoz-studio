@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/helpers/apply-page-patch.ts
  * @layer core/domain/pages/use-cases/helpers
- * @description
- * Helpers pour l’utilisation de `applyPatch` sur les pages.
+ * @description Helpers that apply controlled patch fields to page entities.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";

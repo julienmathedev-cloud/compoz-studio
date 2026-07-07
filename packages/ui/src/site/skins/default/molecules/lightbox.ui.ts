@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/default/molecules/lightbox.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/default/molecules
  *
  * @description
- * Skin UI — lightbox site (thème Default).
+ * Defines the default skin classes for the site lightbox.
  */
 
 import type { SiteLightboxUi } from "@compoz/ui/site/site-ui.types";

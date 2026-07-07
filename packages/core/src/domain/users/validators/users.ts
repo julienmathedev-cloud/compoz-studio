@@ -1,12 +1,9 @@
 /**
  * @file packages/core/src/domain/users/validators/users.ts
- * @layer core/domain
- *
- * @description
- * Invariants métier des users Studio : validation email/name/rbac.
- *
+ * @layer core/domain/users/validators
+ * @description Blocking domain validators for Studio user identity, RBAC, and status.
  * @remarks
- * Domaine-only : pas de Zod / HTTP / UI.
+ * Domain-only validation: no Zod, HTTP, or UI dependency belongs here.
  */
 
 import {
@@ -20,10 +17,6 @@ import type {
   UserRole,
   UserStatus,
 } from "@compoz/core/domain/users/entities/user";
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function normalizeString(value: unknown): string {
   return String(value ?? "").trim();
@@ -51,9 +44,6 @@ function assertNonEmptyString(args: {
   return value;
 }
 
-/**
- * Validation email de base domaine-only, pas RFC complète.
- */
 function assertEmailFormat(emailLower: string, path: (string | number)[]) {
   const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLower);
 
@@ -66,13 +56,6 @@ function assertEmailFormat(emailLower: string, path: (string | number)[]) {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Public validators                                                          */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Email requis + normalisation lower-case + contrôle format.
- */
 export function assertUserEmail(
   raw: unknown,
   path: (string | number)[] = ["email"],
@@ -90,9 +73,6 @@ export function assertUserEmail(
   return emailLower;
 }
 
-/**
- * Name requis, trim.
- */
 export function assertUserName(
   raw: unknown,
   path: (string | number)[] = ["name"],
@@ -104,9 +84,6 @@ export function assertUserName(
   });
 }
 
-/**
- * Rôle : admin | editor.
- */
 export function assertUserRole(
   raw: unknown,
   path: (string | number)[] = ["rbac", "role"],
@@ -132,9 +109,6 @@ export function assertUserRole(
   return value as UserRole;
 }
 
-/**
- * websiteIds : array non vide, strings trim/lower, unique.
- */
 export function assertWebsiteIds(
   raw: unknown,
   path: (string | number)[] = ["rbac", "websiteIds"],
@@ -175,9 +149,6 @@ export function assertWebsiteIds(
   return websiteIds;
 }
 
-/**
- * defaultWebsiteId requis + normalisé + doit être dans websiteIds.
- */
 export function assertDefaultWebsiteId(args: {
   defaultWebsiteId: unknown;
   websiteIds: ReadonlyArray<string>;
@@ -212,9 +183,6 @@ export function assertDefaultWebsiteId(args: {
   return value;
 }
 
-/**
- * RBAC complet.
- */
 export function assertUserRbac(
   raw: unknown,
   path: (string | number)[] = ["rbac"],
@@ -243,9 +211,6 @@ export function assertUserRbac(
   return { role, websiteIds, defaultWebsiteId };
 }
 
-/**
- * Entité User complète.
- */
 export function assertUser(user: User): void {
   assertNonEmptyString({
     value: user.id,

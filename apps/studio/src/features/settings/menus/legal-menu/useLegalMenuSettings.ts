@@ -2,23 +2,15 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/legal-menu/useLegalMenuSettings.ts
- * @layer hooks/studio/site/legal-menu
+ * @layer studio/features/settings/menus/legal-menu
  *
  * @description
- * Hook Studio spécialisé pour gérer les réglages du menu légal via l’API.
+ * Studio hook for loading, diffing, saving, and caching legal menu settings.
  *
  * @remarks
- * - Basé sur le pattern Settings RHF-first (`useSettingsResource`).
- * - Travaille exclusivement sur le modèle UI (`LegalMenuFormValues`).
- * - Draft-only, comme Footer.
- * - Orchestration UI-only : defaults, load, diff minimal, save, notifications.
- * - Aucune logique métier ni validation domaine.
- * - Le cache settings/status est scopé par Prisma Website.id.
- *
- * Option B, bundle read :
- * - READ : provient du bundle global React Query.
- * - WRITE : reste slice-by-slice via PATCH legalMenu.
- * - Après un save : patch du cache bundle legalMenu + invalidate status.
+ * - Reads from the shared settings bundle cache, then writes only the `legalMenu` slice through PATCH.
+ * - Keeps RHF form values as the local editing shape and normalizes values at load/save boundaries.
+ * - After save, patches the bundle cache and invalidates the site status read model.
  */
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -59,16 +51,11 @@ export function useLegalMenuSettings(): UseLegalMenuSettingsResult {
   const resource = useSettingsResource<LegalMenuFormValues>({
     entityLabel,
 
-    /**
-     * Valeurs par défaut domaine → UI → normalisation.
-     */
     defaults: normalizeLegalMenuFormValues(
       toLegalMenuFormValuesFromDTO(DEFAULT_LEGAL_MENU_SETTINGS),
     ),
 
-    /**
-     * READ bundle : cache-first + fetchQuery fallback.
-     */
+    /** Shared bundle read with cache-first behavior handled by `getSettingsBundle`. */
     load: async (state: ContentState) => {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
@@ -77,11 +64,7 @@ export function useLegalMenuSettings(): UseLegalMenuSettingsResult {
       );
     },
 
-    /**
-     * WRITE slice PATCH + patch bundle cache.
-     *
-     * `next` est un patch minimal construit par `useSettingsResource`.
-     */
+    /** Writes the legal menu slice, then mirrors the response into the settings bundle cache. */
     save: async (next, opts) => {
       const patch = toUpdateLegalMenuIntentDTOFromFormValues(next);
       const dto = await settingsStudioApi.legalMenu.patch(patch, opts);
@@ -101,28 +84,18 @@ export function useLegalMenuSettings(): UseLegalMenuSettingsResult {
       );
     },
 
-    /**
-     * Diff minimal : ne renvoie que les champs réellement modifiés.
-     */
+    /** PATCH semantics: only changed form fields are sent to the API. */
     buildPatch: (baseline, next) =>
       buildShallowDiff(
         normalizeLegalMenuFormValues(baseline),
         normalizeLegalMenuFormValues(next),
       ) ?? null,
 
-    /**
-     * Baseline stable et cohérente à l’entrée/sortie réseau.
-     */
     onLoaded: normalizeLegalMenuFormValues,
 
-    /**
-     * Normalisation safe avant diff/save.
-     */
     beforeSave: normalizeLegalMenuFormValues,
 
-    /**
-     * Après save : invalide le read-model status et le bundle settings.
-     */
+    /** Keeps derived status and shared bundle queries aligned after a successful save. */
     onSaved: () => {
       void invalidateSiteStatus(queryClient, websiteId);
 

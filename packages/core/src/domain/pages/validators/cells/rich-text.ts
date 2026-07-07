@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/validators/cells/rich-text.ts
  * @layer core/domain/pages/validators
- * @description
- * Validateur métier de RichTextCell.
+ * @description Domain validator for rich text cells.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";

@@ -1,19 +1,12 @@
 /**
  * @file packages/infra/src/http/studio/users.types.ts
  * @layer infra/http/studio
- * @description
- * DTO SoT des réponses users (Studio).
- *
+ * @description DTO contracts for Studio user endpoints.
  * @remarks
- * - Aligné sur les routes Next côté Studio (préfixées via ENDPOINTS).
- * - Aucun import depuis `app/api/...`
+ * These DTOs stay aligned with Studio HTTP routes without importing from `app/api`.
  */
 
 import type { UserDTO, UserSummaryDTO } from "@compoz/core/domain/users/dto";
-
-/* -------------------------------------------------------------------------- */
-/* Users                                                                      */
-/* -------------------------------------------------------------------------- */
 
 export type GetUsersResponse = Readonly<{
   users: ReadonlyArray<UserSummaryDTO>;

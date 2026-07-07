@@ -2,14 +2,14 @@
 
 /**
  * @file apps/studio/src/features/admin/users/hooks/useCreateUser.ts
- * @layer hooks/admin/users
+ * @layer studio/features/admin/users/hooks
  *
  * @description
- * Hook admin React Query pour créer un user (Studio) via l’API.
+ * React Query mutation hook for creating Studio users through the admin API.
  *
  * @remarks
- * - Pas de state draft/published pour les users (données Studio globales).
- * - Donc pas de `withSaveLogs(state, ...)` ici.
+ * - Users are global Studio data, so no draft/published state is involved.
+ * - Invalidates the admin users list after a successful creation.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -48,10 +48,9 @@ export function useCreateUser(onSuccess?: () => void): UseCreateUserResult {
 
       const fields = Object.keys(payload ?? {});
 
-      // ✅ no state for users
       const res = await adminUsersStudioApi.create(payload);
 
-      // ✅ flatten route response
+      // Flatten the route response for mutation consumers.
       const user = res.user;
 
       return { payload, fields, user } as const;
@@ -73,7 +72,7 @@ export function useCreateUser(onSuccess?: () => void): UseCreateUserResult {
         fields,
       });
 
-      // ✅ refresh list users
+      // Refresh the users list cache after creation.
       await qc.invalidateQueries({ queryKey: usersListKey() });
 
       onSuccess?.();

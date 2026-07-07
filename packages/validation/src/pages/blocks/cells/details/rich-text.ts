@@ -1,8 +1,8 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/details/rich-text.ts
- * @layer schemas
+ * @layer validation/pages/blocks/cells/details
  * @description
- * Schéma Zod de RichTextCell.
+ * Defines Zod schemas for rich text cell data.
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";

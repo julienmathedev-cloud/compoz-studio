@@ -2,16 +2,16 @@
 
 /**
  * @file apps/studio/src/components/molecules/fields/LinkFieldsItem.tsx
- * @layer ui/studio/molecules
+ * @layer studio/molecules/fields
  *
  * @description
- * Éditeur de lien (href contrôlé) avec options internes et bascule interne/externe.
+ * Controlled link editor with internal page options and internal/external mode switching.
  *
  * @remarks
- * - Controlled (sans RHF).
- * - UI-only : normalisation d’édition via `toExternalDraft` / `toInternalDraft`.
- * - S’appuie sur `resolveLinkFlags` pour dériver le mode externe depuis la valeur affichée.
- * - Peut être utilisé par Menu, GalleryMenu (href sur image), etc.
+ * - Stays React Hook Form agnostic: values are fully controlled by props.
+ * - Normalizes editable href drafts through `toExternalDraft` and `toInternalDraft`.
+ * - Uses `resolveLinkFlags` to derive external mode from the displayed value.
+ * - Reusable for menus, gallery image links, and similar link-editing UIs.
  */
 
 import { useTranslations } from "next-intl";
@@ -33,42 +33,19 @@ import { cn } from "@compoz/ui/lib/utils";
 import { ROW_CENTER, STACK_MD } from "@compoz/ui/styles/studio/layout";
 
 type LinkFieldsItemProps = Readonly<{
-  /** Préfixe stable pour générer les IDs ARIA. */
   idPrefix: string;
-
-  /** Source de vérité (controlled). */
   href: string;
   onHrefChange: (next: string) => void;
-
-  /**
-   * Optionnel : newTab (utile pour menu, probablement inutile pour gallery menu V0.5).
-   * Si absent => on n'affiche pas le switch.
-   */
+  /** Optional `newTab` support; when omitted, the switch is hidden. */
   newTab?: boolean;
   onNewTabChange?: (next: boolean) => void;
-
-  /** Désactive l’édition et les actions. */
   disabled?: boolean;
-
-  /**
-   * Si l’item parent a des enfants (groupe) :
-   * - on force interne
-   * - on désactive certains contrôles
-   */
+  /** Parent groups force internal links and disable conflicting controls. */
   parentHasChildren?: boolean;
-
-  /** Indicateur visuel/ARIA d’invalidité (complète `error`). */
   invalid?: boolean;
-  /** Message d’erreur bloquant affiché sous le champ href. */
   error?: string;
-
-  /** Options de pages internes disponibles (picker). */
   internalPageOptions?: ReadonlyArray<InternalPageOptionDTO>;
-
-  /** Autorise la saisie directe de href spéciaux (`tel:` / `mailto:`). */
   allowTelAndMailto?: boolean;
-
-  /** Déclenche une validation immédiate côté parent (optionnel). */
   onValidateNow?: (markTouched?: boolean) => void;
 }>;
 
@@ -95,16 +72,16 @@ export function LinkFieldsItem({
     ? createFieldIds(idPrefix, "internalPicker")
     : undefined;
 
-  // Valeur source (vue) : si parentHasChildren, on force interne en draft.
+  // Parent groups always use internal draft hrefs.
   const hrefRaw = !parentHasChildren
     ? String(href ?? "")
     : toInternalDraft(String(href ?? ""));
 
-  // Mode externe dérivé.
+  // External mode is derived from the displayed href value.
   const flags = resolveLinkFlags(hrefRaw);
   const isExternal = flags.rawExternal;
 
-  // Valeur affichée (draft) cohérente avec le mode.
+  // Displayed draft value stays consistent with the current link mode.
   const specialHrefDraft = allowTelAndMailto
     ? normalizeTelAndMailtoHrefDraft(hrefRaw)
     : null;
@@ -139,7 +116,7 @@ export function LinkFieldsItem({
           label={t("studio.menuLink.href.label")}
           value={hrefDraft}
           onChange={(value) => {
-            // On garde le mode courant (interne/externe), on ne le “devine” pas au milieu d’une saisie.
+            // Preserve the current internal/external mode while the user is typing.
             const specialDraft = allowTelAndMailto
               ? normalizeTelAndMailtoHrefDraft(value)
               : null;
@@ -188,7 +165,7 @@ export function LinkFieldsItem({
 
               onHrefChange(String(value));
 
-              // UX : sur un lien interne, on coupe newTab si dispo.
+              // Internal links should not open in a new tab by default.
               if (canShowNewTab) onNewTabChange(false);
 
               onValidateNow?.(false);
@@ -211,13 +188,12 @@ export function LinkFieldsItem({
             onCheckedChange={(checked) => {
               if (parentHasChildren) return;
 
-              // Convertit le href courant selon le mode souhaité.
-              // On part de la valeur visible (hrefDraft) pour éviter les incohérences.
+              // Convert from the visible draft value to avoid mode inconsistencies.
               const normalized = checked
                 ? toExternalDraft(hrefDraft)
                 : toInternalDraft(hrefDraft);
 
-              // UX : externe => newTab true par défaut (si dispo).
+              // External links open in a new tab by default when supported.
               if (canShowNewTab) onNewTabChange(checked === true);
 
               onHrefChange(normalized);

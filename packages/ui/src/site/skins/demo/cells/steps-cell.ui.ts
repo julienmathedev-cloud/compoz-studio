@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/demo/cells/steps-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/demo/cells
  *
  * @description
- * Override UI — steps cell (thème Démo).
+ * Defines the demo skin overrides for steps cells.
  */
 
 import type { SiteStepsUiOverride } from "@compoz/ui/site/site-ui.types";

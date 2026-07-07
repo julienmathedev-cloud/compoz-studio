@@ -1,15 +1,9 @@
 /**
  * @file apps/studio/src/features/settings/mappers/seo-form.ts
- * @layer ui-mapper/studio
- * @description
- * Mappers UI SEO (studio forms) :
- * - DTO -> valeurs de formulaire RHF (draft-friendly)
- * - normalisation UI
- * - INTENTS DTO pour l’API (draft-only)
+ * @layer studio/features/settings/mappers
  *
- * @remarks
- * - DTO -> Shape runtime (shared, renderer) : `toSeoSettingsShapeFromDTO`
- *   dans `@compoz/ui/site/mappers/seo-shape`.
+ * @description
+ * Studio SEO settings mappers for form values, runtime shape, and API intents.
  */
 
 import { TWITTER_CARD_TYPES } from "@compoz/core/constants/seo/seo";
@@ -20,8 +14,6 @@ import type { UpdateSeoSettingsIntentDTO } from "@compoz/validation/site/setting
 
 import { asBool, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 import { toSeoSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/seo-shape";
-
-/* --------------------------------- helpers --------------------------------- */
 
 const DEFAULT_TWITTER_CARD = TWITTER_CARD_TYPES[1] ?? TWITTER_CARD_TYPES[0];
 
@@ -55,8 +47,6 @@ function normalizeStructuredDataFormValues(
     openingHours: (value.openingHours ?? []).map(trimKeepEmpty).filter(Boolean),
   };
 }
-
-/* ----------------------- Domaine (DTO) -> UI (form values) ------------------ */
 
 export function toSeoFormValuesFromDTO(dto: SeoSettingsDTO): SeoFormValues {
   return {
@@ -112,8 +102,6 @@ export function toSeoFormValuesFromDTO(dto: SeoSettingsDTO): SeoFormValues {
   };
 }
 
-/* ---------------------------- Normalisations UI ---------------------------- */
-
 export function normalizeSeoFormValues(values: SeoFormValues): SeoFormValues {
   return {
     baseUrl: trimKeepEmpty(values.baseUrl),
@@ -143,26 +131,12 @@ export function normalizeSeoFormValues(values: SeoFormValues): SeoFormValues {
   };
 }
 
-/* ------------------------------ DTO -> Shape (optional re-export) ---------- */
-
-/**
- * DTO -> Shape runtime (renderer) : convenience export côté studio.
- *
- * @remarks
- * Optionnel : tu peux supprimer cette fonction et importer directement
- * `toSeoSettingsShapeFromDTO` depuis `@compoz/ui/site/mappers/seo-shape`.
- */
+/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
 export function toSeoSettingsShape(dto: SeoSettingsDTO) {
   return toSeoSettingsShapeFromDTO(dto);
 }
 
-/* ------------------------------ UI -> INTENT (API) -------------------------- */
-
-/**
- * Transforme un INTENT UI partiel en DTO d’intent (draft-only) :
- * - Ne renvoie que les clés présentes dans `p`.
- * - Applique trim/coercition comme pour les form values complètes.
- */
+/** Builds a partial API intent while preserving PATCH semantics. */
 export function toUpdateSeoIntentDTOFromFormValues(
   p: Partial<SeoFormValues>,
 ): UpdateSeoSettingsIntentDTO {

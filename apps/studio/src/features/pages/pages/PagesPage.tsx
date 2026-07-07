@@ -2,16 +2,16 @@
 
 /**
  * @file apps/studio/src/features/pages/pages/PagesPage.tsx
- * @layer ui/studio/pages
+ * @layer studio/features/pages/pages
  *
  * @description
- * Page “Pages” (studio) — coordination liste + édition (métadonnées + contenu).
+ * Studio page shell coordinating the page list and metadata create/edit form.
  *
  * @remarks
- * - Coordonne `PagesListSection` (listing) et `PageEditSection` (création / édition meta).
- * - L’édition du contenu se fait via navigation (`/pages/[pageId]/blocks`).
- * - Dirty guard : bloque la navigation route-based si la page courante est dirty.
- * - UX : un clic “éditer les métadonnées” déclenche un scroll vers le formulaire.
+ * - Renders `PageEditSection` for create/edit metadata and `PagesListSection` for the index list.
+ * - Opens content editing through route navigation to `/pages/[pageId]/blocks`.
+ * - Registers metadata form dirtiness with the Studio dirty guard before route-based navigation.
+ * - Scrolls to the metadata form when a page enters metadata edit mode.
  */
 
 import { useLocale, useTranslations } from "next-intl";
@@ -29,9 +29,7 @@ import { getScrollBehavior } from "@compoz/ui/lib/getScrollBehavior";
 import { cn } from "@compoz/ui/lib/utils";
 import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 
-/**
- * Page Pages : coordination listing + édition (studio).
- */
+/** Coordinates page metadata editing, page listing, and guarded content navigation. */
 export function PagesPage() {
   const t = useTranslations();
   const locale = useLocale();
@@ -42,10 +40,7 @@ export function PagesPage() {
   const [editPageId, setEditPageId] = useState<string | null>(null);
   const [metaDirty, setMetaDirty] = useState(false);
 
-  /**
-   * V0.5 perf : on évite `scope=all` automatique (full scan).
-   * On ne récupère que les pages "dirty", et on met un fallback UI pour le reste.
-   */
+  /** Avoids the expensive `scope=all` scan; clean pages fall back to the SiteIndex status. */
   const pageStatuses = useSiteStatusDetails({
     enabled: true,
     scope: "dirty",

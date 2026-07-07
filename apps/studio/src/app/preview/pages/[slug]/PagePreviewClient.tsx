@@ -5,15 +5,15 @@
  * @layer studio/app
  *
  * @description
- * Client preview d’une page complète (V0.5) — baseline/override via postMessage.
+ * Client-side full-page preview that receives baseline/override data through postMessage.
  *
  * @remarks
- * - Gating strict : ne rend rien tant que l’index et la page courante ne sont pas disponibles.
- * - Le rendu final est délégué à `SitePageRenderer`.
- * - Le skin UI est récupéré ici puis transmis au renderer en props.
- * - Le thème CSS est fourni par `ThemeProvider` monté dans `PreviewProviders`.
- * - Le pager est calculé via le helper partagé pour rester aligné
- *   avec le site public et les routes draft.
+ * - Uses strict gating: renders nothing until the index and current page are available.
+ * - Delegates final rendering to `SitePageRenderer`.
+ * - Resolves the UI skin here and passes it to the renderer through props.
+ * - The CSS theme is provided by `ThemeProvider` mounted in `PreviewProviders`.
+ * - The pager is computed through the shared helper to stay aligned with
+ *   the public site and draft routes.
  */
 
 import { useEffect, useMemo } from "react";
@@ -32,19 +32,11 @@ import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
 import type { SiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRuntimeFeatures";
 import type { PageRenderShape } from "@compoz/validation/pages/page";
 
-/* -------------------------------------------------------------------------- */
-/* Logger                                                                     */
-/* -------------------------------------------------------------------------- */
-
 const lg = log.child({
   ns: "preview",
   area: "page",
   name: "PagePreviewClient",
 });
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function hrefForDraftSlug(slug: string): string {
   const s = toSlug(slug);
@@ -55,10 +47,6 @@ function hrefForDraftSlug(slug: string): string {
 
   return `/draft/${encodeURIComponent(s)}`;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Component                                                                  */
-/* -------------------------------------------------------------------------- */
 
 type PagePreviewClientProps = Readonly<{
   slug: string;

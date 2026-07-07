@@ -1,31 +1,18 @@
 /**
  * @file packages/ui/src/site/components/atoms/SiteAppImage.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/atoms
  *
  * @description
- * Atome site : enveloppe de `next/image` avec conventions A11y & perf (côté site/draft).
+ * Wraps `next/image` with site rendering accessibility and performance conventions.
  *
  * @remarks
- * Invariants :
- * - `image.alt === ""` ⇒ image décorative (ignorée des lecteurs d’écran).
- * - `fill=true` ⇒ ne pas fournir `width/height`.
- * - `priority=true` ⇒ Next gère le preload ; `loading` est ignoré.
- * - `placeholder="blur"` :
- *   - OK avec `StaticImageData` (Next peut porter le blur automatiquement),
- *   - Pour une URL string, prévoir `blurDataURL` (LQIP base64) si tu veux un blur réel.
- *
- * Style :
- * - Le composant n’impose aucun style : `className` est fourni par le skin/template.
+ * Empty alt text marks decorative images; `fill` must not receive explicit dimensions, and `priority` lets Next handle preload semantics.
  */
 
 import Image, { type StaticImageData } from "next/image";
 
 import { normalizeString } from "@compoz/ui/lib/normalize";
 import type { CSSProperties } from "react";
-
-/* -------------------------------------------------------------------------- */
-/* Types                                                                      */
-/* -------------------------------------------------------------------------- */
 
 export type SiteImageSource = string | StaticImageData;
 

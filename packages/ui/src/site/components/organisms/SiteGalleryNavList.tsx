@@ -2,20 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/organisms/SiteGalleryNavList.tsx
- * @branch main
- * @layer ui/site/components
+ * @layer ui/site/components/organisms
  *
  * @description
- * SiteGalleryNavList : liste d’images avec navigation (si href).
+ * Renders a public site gallery list whose images can optionally navigate to links.
  *
  * @remarks
- * - Style 100% piloté par `ui` (skin).
- * - Le composant conserve uniquement la logique + a11y.
- * - Reveal : activable/désactivable via prop.
- * - Les tailles responsive des images sont pilotées par `ui.sizesByColumns`.
- * - Les liens internes sont résolus relativement au pathname courant.
- * - Les liens externes / spéciaux conservent leur comportement natif.
- * - Les liens unsafe sont neutralisés.
+ * Resolves internal hrefs relative to the current pathname, preserves external and special link behavior, and neutralizes unsafe links.
  */
 
 import Link from "next/link";

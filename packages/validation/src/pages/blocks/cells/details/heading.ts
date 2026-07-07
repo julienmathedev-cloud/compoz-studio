@@ -1,8 +1,8 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/details/heading.ts
- * @layer schemas
+ * @layer validation/pages/blocks/cells/details
  * @description
- * Schéma Zod de HeadingCell.
+ * Defines Zod schemas for heading cell data.
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
@@ -25,14 +25,7 @@ export const HeadingVariantSchema = z.enum(["default", "hero"], {
   message: ERROR_CODES.CELL_HEADING_VARIANT_INVALID,
 });
 
-/**
- * ID d’ancre pour un heading.
- *
- * @remarks
- * - null = pas d’ancre
- * - "" est autorisé côté UI pour permettre une suppression simple dans le form
- * - si la valeur est non vide, elle doit respecter le format attendu
- */
+/** Empty strings are allowed so the form can clear an existing anchor before persisting `null`. */
 export const HeadingAnchorIdSchema = z
   .string()
   .trim()

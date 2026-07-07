@@ -2,15 +2,13 @@
 
 /**
  * @file apps/studio/src/features/shell/components/LocaleSwitch.tsx
- * @layer ui/studio/atoms
+ * @layer studio/features/shell/components
  *
  * @description
- * Sélecteur de langue pour l’interface Studio.
+ * Studio locale switcher backed by the configured i18n routes.
  *
  * @remarks
- * - Atome UI : aucune logique métier.
- * - Dérive la locale courante via `next-intl`.
- * - Met à jour l’URL en remplaçant le segment `[locale]`.
+ * - Uses the current pathname and replaces only the locale segment so the user stays on the same page.
  */
 
 import { useLocale, useTranslations } from "next-intl";
@@ -27,9 +25,6 @@ import { cn } from "@compoz/ui/lib/utils";
 
 import { routing } from "@compoz/studio/i18n/routing";
 
-/**
- * Affiche un sélecteur de langue (studio) basé sur ShadCN `DropdownMenu`.
- */
 export function LocaleSwitch() {
   const locale = useLocale();
   const t = useTranslations();
@@ -40,7 +35,7 @@ export function LocaleSwitch() {
     if (nextLocale === locale) return;
 
     const segments = pathname.split("/");
-    segments[1] = nextLocale; // remplace [locale]
+    segments[1] = nextLocale; // Replace the `[locale]` route segment.
 
     router.push(segments.join("/"));
   }

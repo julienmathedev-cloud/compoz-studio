@@ -2,21 +2,18 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/images/ImageItemEditor.tsx
- * @layer ui/studio/pages/blocks/editor/images
+ * @layer studio/features/builder/editor/cells/images
  *
  * @description
- * Éditeur RHF-aware d’un item image individuel pour les cellules à liste d’images.
+ * RHF-aware editor for one image-list item.
  *
  * @remarks
- * - Connecté directement à RHF via `useController`.
- * - Reprend le pattern card utilisé par les autres éditeurs de listes.
- * - Le reorder est géré par drag and drop via dnd-kit.
- * - L’affichage des erreurs repose sur une règle unique :
- *   `showError || fieldState.isTouched`.
- * - La lecture/édition des valeurs passe par RHF (`useController`).
- * - `sortableId` sert uniquement au drag and drop.
- * - `watchedItem` sert de fallback visuel pour stabiliser le rendu
- *   pendant le rebinding RHF après reorder.
+ * - Binds image item fields directly through RHF `useController`.
+ * - Uses `sortableId` only for dnd-kit sorting.
+ * - Shows source and alt errors only after `showError` or the field has been touched.
+ * - Uses `watchedItem` as a visual fallback to keep rendering stable during RHF rebinding after reordering.
+ * - Clears image metadata when the source is emptied.
+ * - Exposes href editing only when image links are enabled.
  */
 
 import { useSortable } from "@dnd-kit/sortable";

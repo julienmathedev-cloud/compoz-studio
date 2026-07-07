@@ -2,16 +2,15 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/form/FormFieldItemEditor.tsx
- * @layer ui/studio/pages/blocks/editor/form
+ * @layer studio/features/builder/editor/cells/form
  *
  * @description
- * Éditeur RHF-aware d’un champ individuel pour FormCell.
+ * RHF-aware editor for one FormCell field item.
  *
  * @remarks
- * - Connecté directement à RHF via `useController`.
- * - Gère les champs : name, label, type, placeholder, required.
- * - Suit la règle standard builder :
- *   `showError || fieldState.isTouched`.
+ * - Binds field settings directly through RHF `useController`.
+ * - Edits name, label, type, placeholder, and required state.
+ * - Shows name and label errors only after `showError` or the field has been touched.
  */
 
 import { useTranslations } from "next-intl";

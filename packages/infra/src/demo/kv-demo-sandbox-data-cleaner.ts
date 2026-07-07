@@ -1,14 +1,9 @@
 /**
  * @file packages/infra/src/demo/kv-demo-sandbox-data-cleaner.ts
  * @layer infra/demo
- *
- * @description
- * Implémentation KV du nettoyage des données d’un Website sandbox démo.
- *
+ * @description KV implementation for deleting expired demo sandbox data.
  * @remarks
- * - Supprime toutes les clés préfixées par `compoz:<websiteId>:*`.
- * - Utilisé par le cleanup des sandboxes démo expirées.
- * - V1 : suppression globale simple via pattern.
+ * Cleanup is limited to `compoz:<websiteId>:*` keys and guarded to demo-generated website ids.
  */
 
 import type { DemoSandboxDataCleaner } from "@compoz/core/domain/demo/use-cases/cleanup-expired-demo-sandboxes.types";
@@ -29,7 +24,7 @@ export class KvDemoSandboxDataCleaner implements DemoSandboxDataCleaner {
       "KvDemoSandboxDataCleaner.deleteSandboxData",
     ).toLowerCase();
 
-    // Guard défensif V1 : on ne supprime que les sandboxes démo générées.
+    // Defensive guard: only generated demo sandboxes may be deleted.
     if (!normalizedWebsiteId.startsWith("demo-")) {
       throw new Error(
         "KvDemoSandboxDataCleaner.deleteSandboxData: only demo websites can be deleted.",

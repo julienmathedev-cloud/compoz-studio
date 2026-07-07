@@ -2,17 +2,15 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/SpacerCellEditor.tsx
- * @layer ui/studio/pages/blocks/editor/cells
+ * @layer studio/features/builder/editor/cells
  *
  * @description
- * Éditeur UI d’une SpacerCell avec sélection directe de la taille
- * et contrôle de visibilité responsive par device.
+ * Controlled SpacerCell editor for size and responsive visibility options.
  *
  * @remarks
- * - UI-only : aucune logique métier.
- * - Modèle contrôlé (value/onChange).
- * - Utilise des boutons pour la taille et la visibilité responsive
- *   afin de rester cohérent avec les autres editors Studio.
+ * - Receives the spacer value through `value` and reports updates through `onChange`.
+ * - Normalizes device visibility with visible-by-default fallbacks before rendering controls.
+ * - Uses button groups for size and responsive visibility to keep Studio editing direct.
  */
 
 import { useTranslations } from "next-intl";

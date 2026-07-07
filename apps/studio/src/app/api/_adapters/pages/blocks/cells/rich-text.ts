@@ -1,5 +1,12 @@
 /**
  * @file apps/studio/src/app/api/_adapters/pages/blocks/cells/rich-text.ts
+ * @layer studio/app/api/adapters
+ *
+ * @description
+ * Studio API adapter for `RichTextCell` values.
+ *
+ * @remarks
+ * - Sanitizes rich text HTML before writing it to the domain shape.
  */
 
 import { sanitizeRichTextHtml } from "@compoz/infra/lib/sanitize-rich-text";

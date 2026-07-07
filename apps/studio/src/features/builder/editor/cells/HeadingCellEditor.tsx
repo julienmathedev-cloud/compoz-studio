@@ -2,6 +2,16 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/HeadingCellEditor.tsx
+ * @layer studio/features/builder/editor/cells
+ *
+ * @description
+ * RHF-aware HeadingCell editor for title content, heading level, display options, anchors, and highlights.
+ *
+ * @remarks
+ * - Binds heading fields directly through RHF `useController`.
+ * - Normalizes heading level, align, and variant values with safe fallbacks.
+ * - Keeps highlight editing as a comma-separated draft string, then stores a trimmed string array on blur.
+ * - Shows title and anchor errors only after `showError` or the field has been touched.
  */
 
 import { useTranslations } from "next-intl";

@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/portfolio/block-section.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/portfolio
  *
  * @description
- * Skin UI — block sections (thème Portfolio).
- *
- * @remarks
- * - Définit le container (contained/fullBleed) et la grille.
- * - Fournit uniquement des classes Tailwind (aucune logique).
+ * Defines the portfolio skin overrides for public site block sections.
  */
 
 import type { SiteBlockSectionUiOverride } from "@compoz/ui/site/site-ui.types";

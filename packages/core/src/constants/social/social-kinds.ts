@@ -1,7 +1,7 @@
 /**
  * @file packages/core/src/constants/social/social-kinds.ts
  * @layer core/constants/social
- * @description Réseaux sociaux supportés + guard.
+ * @description Supported social link kinds and related defaults.
  */
 
 export const SOCIAL_KINDS = [

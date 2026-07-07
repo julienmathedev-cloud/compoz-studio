@@ -1,17 +1,12 @@
 /**
  * @file packages/ui/src/settings/theme/theme-css-vars.ts
- * @layer ui/runtime/theme
+ * @layer ui/settings/theme
  *
  * @description
- * Helpers runtime pour transformer les `ThemeSettingsShape`
- * en variables CSS utilisables par le renderer du site.
+ * Converts runtime theme settings into CSS custom properties for site rendering.
  *
  * @remarks
- * - Utilisé par :
- *   - preview studio
- *   - site draft
- *   - site public
- * - Strictement runtime UI : aucune logique métier.
+ * Shared by Studio preview, draft rendering, and public rendering; no domain logic belongs here.
  */
 
 import type { CSSProperties } from "react";
@@ -22,22 +17,10 @@ import type {
   ThemeSettingsShape,
 } from "@compoz/validation/site/settings/theme/theme";
 
-/**
- * Objet contenant des CSS custom properties.
- */
 export type ThemeCssVars = Record<string, string>;
 
-/* -------------------------------------------------------------------------- */
-/* Token resolution                                                           */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Résout les tokens actifs, light / dark.
- *
- * @remarks
- * - `mode = light` → lightTokens
- * - `mode = dark` → darkTokens, si dark mode activé
- * - `mode = system` → fallback light, support system plus tard
+ * Resolves the active token set; `system` currently falls back to light tokens.
  */
 export function resolveThemeTokens(
   theme: ThemeSettingsShape,
@@ -48,10 +31,6 @@ export function resolveThemeTokens(
 
   return theme.lightTokens;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Tokens → CSS variables                                                     */
-/* -------------------------------------------------------------------------- */
 
 export function themeTokensToCssVars(
   tokens: PublicThemeTokensShape,
@@ -89,13 +68,7 @@ export function themeTokensToCssVars(
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Theme → CSS variables                                                      */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Transforme un `ThemeSettingsShape` en CSS variables.
- */
+/** Converts theme settings to CSS variables, including resolved body and heading fonts. */
 export function themeSettingsToCssVars(
   theme: ThemeSettingsShape,
 ): ThemeCssVars {
@@ -112,9 +85,7 @@ export function themeSettingsToCssVars(
   };
 }
 
-/**
- * Version directement utilisable dans `style={}` React.
- */
+/** Returns theme CSS variables in the shape expected by React `style`. */
 export function themeSettingsToCssStyle(
   theme: ThemeSettingsShape,
 ): CSSProperties {

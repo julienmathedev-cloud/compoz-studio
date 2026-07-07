@@ -3,10 +3,11 @@
  * @layer site/app
  *
  * @description
- * Route "/" : rend la page publiée "home" (SEO stable).
+ * Host-based public root route for the published home page.
  *
  * @remarks
- * - PUBLISHED-only pour garder un head/metadata stable.
+ * - Renders published content only so the initial HTML head and metadata stay stable.
+ * - Resolves content with Prisma Website.id, while UI and skin resolution use Website.slug.
  */
 
 import type { Metadata } from "next";
@@ -34,10 +35,7 @@ import { resolveSiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRun
 import { resolveSiteUi } from "@compoz/ui/site/skins/resolveSiteUi";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
+/** Applies the SEO title template used for social metadata previews. */
 function applyTitleTemplate(
   title: string | undefined,
   template: string,
@@ -46,10 +44,6 @@ function applyTitleTemplate(
 
   return template.replace("%s", title);
 }
-
-/* -------------------------------------------------------------------------- */
-/* Metadata                                                                   */
-/* -------------------------------------------------------------------------- */
 
 export async function generateMetadata(): Promise<Metadata> {
   const website = await getWebsite();
@@ -99,10 +93,6 @@ export async function generateMetadata(): Promise<Metadata> {
     brandTitle,
   });
 }
-
-/* -------------------------------------------------------------------------- */
-/* Page                                                                       */
-/* -------------------------------------------------------------------------- */
 
 export default async function SiteRootPage() {
   const website = await getWebsite();

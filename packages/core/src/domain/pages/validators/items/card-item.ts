@@ -1,13 +1,9 @@
 /**
  * @file packages/core/src/domain/pages/validators/items/card-item.ts
  * @layer core/domain/pages/validators
- *
- * @description
- * Validateur métier d’un item de carte simple.
- *
+ * @description Domain validator for simple card items.
  * @remarks
- * Cet item est utilisé par des cellules de plus haut niveau comme
- * `cardCollection` ou `carousel`.
+ * Card items are reused by higher-level cells such as `cardCollection` or `carousel`.
  */
 
 import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";

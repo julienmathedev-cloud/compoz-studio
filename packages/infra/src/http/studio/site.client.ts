@@ -1,13 +1,9 @@
 /**
  * @file packages/infra/src/http/studio/site.client.ts
  * @layer infra/http/studio
- * @description
- * Client HTTP Studio pour la publication (draft → published) + status.
- *
+ * @description Studio HTTP client for publication and site status endpoints.
  * @remarks
- * - Client HTTP pur (infra-only)
- * - Typage via DTO SoT infra (site.types.ts)
- * - Aucune dépendance vers app/api/... ni vers UI
+ * Status details query parameters are serialized at the HTTP boundary.
  */
 
 import { ENDPOINTS } from "@compoz/infra/http/endpoints";
@@ -25,6 +21,7 @@ import type {
 import type { SiteStatusDetailsQueryDTO } from "@compoz/core/domain/site/dto";
 
 function buildQueryString(query?: SiteStatusDetailsQueryDTO): string {
+  // Serializes SiteStatusDetailsQueryDTO into a query string for status details endpoint.
   const scope = query?.scope ?? "dirty";
   const includeBlocks = query?.includeBlocks ? "1" : "0";
   const pageId = (query?.pageId ?? "").trim();
@@ -40,10 +37,6 @@ function buildQueryString(query?: SiteStatusDetailsQueryDTO): string {
   const qs = sp.toString();
   return qs ? `?${qs}` : "";
 }
-
-/* -------------------------------------------------------------------------- */
-/*                                   API                                      */
-/* -------------------------------------------------------------------------- */
 
 export const siteStudioApi = {
   async publish(params?: PublishParams): Promise<PublishSiteResponse> {

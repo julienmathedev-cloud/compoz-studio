@@ -1,19 +1,15 @@
 /**
  * @file apps/studio/src/lib/ui/pages.ts
  * @layer studio/lib/ui
+ *
  * @description
- * Utilitaires pour l’affichage des pages (formatage de slug → chemin affichable).
+ * UI helpers for formatting page paths.
  */
 
 import { SITE_PATH } from "@compoz/core/constants/web/paths";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 
-/**
- * Formate un slug pour affichage dans l’UI.
- * - "home" → "/"
- * - "/"    → "/"
- * - "abc"  → "/abc"
- */
+/** Formats a page slug as the public path shown in the Studio UI. */
 export function formatPagePath(slug: string): string {
   const s = String(slug ?? "").trim();
 

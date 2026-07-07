@@ -1,14 +1,7 @@
 /**
  * @file packages/ui/src/lib/seo/get-page-h1.ts
- *
- * @description
- * Extrait le premier H1 d’une page à partir de ses blocks.
- *
- * @remarks
- * Utilisé pour :
- * - fallback SEO title
- * - warnings SEO
- * - preview admin
+ * @layer ui/lib/seo
+ * @description Extracts the first H1 from page blocks for SEO fallbacks, warnings, and admin preview.
  */
 
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";

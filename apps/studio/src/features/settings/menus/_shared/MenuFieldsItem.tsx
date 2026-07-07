@@ -1,17 +1,15 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/settings/menus/_shared/MenuItem.tsx
- * @layer ui/studio/molecules
+ * @file apps/studio/src/features/settings/menus/_shared/MenuFieldsItem.tsx
+ * @layer studio/features/settings/menus/shared
  *
  * @description
- * Ligne éditable d’un item de menu (label + lien) pour le studio.
+ * Editable studio row for a menu item label, link fields, drag handle, and delete action.
  *
  * @remarks
- * - Molecule UI : compose `InputField`, `LinkFieldsItem` et des actions.
- * - RHF-aware : reçoit les `ControllerRenderProps` (fields) fournis par le parent.
- * - Le type est dérivé depuis `href` (ex. menu légal).
- * - Strictement UI-only : aucune logique métier.
+ * - Receives RHF controller fields from the parent so the sortable row stays presentation-focused.
+ * - Link behavior and validation are delegated to `LinkFieldsItem` and the parent form.
  */
 
 import { useTranslations } from "next-intl";
@@ -37,39 +35,23 @@ type DragHandleProps = Omit<
   "type" | "children"
 >;
 
-/**
- * Props du composant `MenuFieldsItem`.
- */
 type MenuFieldsItemProps = Readonly<{
   idPrefix: string;
 
-  /** Champ RHF contrôlé : label. */
   labelField: RHFField;
-  /** Champ RHF contrôlé : href. */
   hrefField: RHFField;
-  /** Champ RHF contrôlé : newTab. */
   newTabField: RHFField;
-  /** Options de pages internes disponibles (Select). */
   internalPageOptions?: ReadonlyArray<InternalPageOptionDTO>;
-  /** Flags d’invalidité par champ. */
   invalid?: RowInvalidFlags;
-  /** Messages d’erreur par champ. */
   error?: RowErrorMessages;
-  /** Déclenche une validation immédiate du champ href côté parent. */
+  /** Lets the parent trigger href validation after link-field interactions. */
   onHrefValidateNow?: (markTouched?: boolean) => void;
-  /** Props du handle de drag injectées par `useSortable`. */
   dragHandleProps?: DragHandleProps;
-  /** Action : suppression de la ligne. */
   onRemove: () => void;
-  /** Indique si l’item a des enfants (groupe). */
   hasChildren?: boolean;
-  /** Désactive l’édition et les actions. */
   disabled?: boolean;
 }>;
 
-/**
- * Ligne de formulaire pour éditer un item de menu (studio).
- */
 export function MenuFieldsItem({
   idPrefix,
   labelField,

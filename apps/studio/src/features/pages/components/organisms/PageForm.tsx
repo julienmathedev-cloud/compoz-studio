@@ -1,19 +1,19 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/pages/forms/PageForm.tsx
- * @layer ui/studio/pages/organisms
+ * @file apps/studio/src/features/pages/components/organisms/PageForm.tsx
+ * @layer studio/features/pages/components/organisms
  *
  * @description
- * Formulaire d’édition d’une page (nom + slug + SEO) — RHF + Zod comme source de vérité UI.
+ * RHF and Zod page form for page title, slug, parent, sitemap, pagination, and SEO settings.
  *
  * @remarks
- * - Contrôlé : le parent fournit `initialValues` et reçoit `onSubmit`.
- * - Les warnings UI (non bloquants) sont dérivés des valeurs RHF et remontés au parent.
- * - Les erreurs bloquantes sont affichées au plus près des champs (near-field).
- * - UX : auto-sync du slug depuis le nom tant que l’utilisateur n’a pas “lock” le slug.
- * - UX : focus/scroll du premier champ invalide au submit.
- * - UX : focus impératif du champ nom via IDs stables.
+ * - Receives `initialValues` from the parent and submits Zod-validated `PageFormValues`.
+ * - Derives non-blocking UI warnings from RHF values and reports them to the parent.
+ * - Shows blocking errors near the affected fields.
+ * - Auto-syncs the slug from the page name until the user manually edits the slug.
+ * - Focuses the first invalid field on submit through stable field ids.
+ * - Forces root pages to keep pagination disabled.
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -66,36 +66,16 @@ type ParentOption = Readonly<{
  * Props du composant `PageForm`.
  */
 type PageFormProps = Readonly<{
-  /** Valeurs initiales (baseline) fournies par la section. */
   initialValues: PageFormValues;
-
-  /** Indique qu’une sauvegarde côté parent est en cours. */
   isSaving?: boolean;
-
   parentOptions?: ReadonlyArray<ParentOption>;
-
-  /** Mode UI (impacte labels et actions). */
   mode?: "create" | "edit";
-
-  /** Active / désactive l’auto-focus des champs du formulaire (sauf celui des erreurs). */
   bFocusFields?: boolean;
-
-  /** Permet d’annuler le comportement bouton “annuler” toujours actif en mode edit. */
   bCancelAlwaysEnabledInEdit?: boolean;
-
-  /** Callback appelé avec des valeurs validées par Zod (`PageFormSchema`). */
   onSubmit: (values: PageFormValues) => void | Promise<void>;
-
-  /** Handler optionnel : permet au parent de réagir à un reset UI. */
   onReset?: () => void;
-
-  /** Handler optionnel : remonte les warnings UI (non bloquants). */
   onWarningKeysChange?: (keys: PageWarningKey[]) => void;
-
-  /** Handler optionnel : remonte l’état dirty (guard / navigation). */
   onDirtyChange?: (dirty: boolean) => void;
-
-  /** Handler optionnel : remonte le nombre d’erreurs bloquantes (badges section). */
   onBlockingErrorsCountChange?: (count: number) => void;
 }>;
 
@@ -110,9 +90,7 @@ const CHANGEFREQ_VALUES = [
   "never",
 ] as const;
 
-/**
- * Formulaire de configuration d’une page (studio).
- */
+/** Renders the Studio page form and reports dirty, warning, and blocking-error state to the parent. */
 export function PageForm({
   initialValues,
   isSaving,
@@ -777,9 +755,7 @@ function resetSlugAutoSync(
     initialSlug === "/" ? "/" : normalizeSlug(initialSlug);
 }
 
-/**
- * Extraction de la logique `onBlur` du champ name.
- */
+/** Auto-updates the slug from the name on blur until the user manually locks the slug. */
 function handleNameBlur(
   field: { onBlur: () => void },
   getValues: (name: "name" | "slug") => string | undefined,

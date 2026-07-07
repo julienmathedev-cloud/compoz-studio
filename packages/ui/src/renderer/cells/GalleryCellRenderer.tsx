@@ -3,12 +3,10 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer site/preview : rendu d’une galerie d’images (V0.5).
+ * Renders a validated image gallery cell.
  *
  * @remarks
- * - Le style est 100% piloté par `ui` (skin).
- * - `maxColumns` est data-driven (cell) : on sélectionne une variante fournie par le skin.
- * - `reveal` est piloté par la cell et propagé aux listes gallery.
+ * Selects the skin column variant from `maxColumns` and delegates rendering to either the navigation or zoom gallery list.
  */
 
 import type { GalleryMaxColumns } from "@compoz/core/domain/pages/entities/cell";

@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/validators/cells/separator.ts
  * @layer core/domain/pages/validators
- * @description
- * Validateur métier de SeparatorCell.
+ * @description Domain validator for separator cells.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";

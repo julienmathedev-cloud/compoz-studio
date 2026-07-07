@@ -5,13 +5,13 @@
  * @layer studio/app
  *
  * @description
- * Client de preview d’un block (V0.5).
+ * Client-side preview for a single page block.
  *
  * @remarks
- * - Couche client : utilise `usePreviewOverride` pour récupérer le block.
- * - Affiche le block si visible, sinon rien (empty géré par le wrapper preview).
- * - Le skin UI est fourni par `SiteUiProvider` monté dans `PreviewProviders`.
- * - Le thème CSS est fourni par `ThemeProvider` monté dans `PreviewProviders`.
+ * - Uses `usePreviewOverride` to resolve the block.
+ * - Renders the block when visible, otherwise returns nothing because the empty state is handled by the preview wrapper.
+ * - The UI skin is provided by `SiteUiProvider` mounted in `PreviewProviders`.
+ * - The CSS theme is provided by `ThemeProvider` mounted in `PreviewProviders`.
  */
 
 import { useMemo } from "react";

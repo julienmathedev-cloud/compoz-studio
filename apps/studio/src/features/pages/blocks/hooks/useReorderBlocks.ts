@@ -2,15 +2,17 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/hooks/useReorderBlocks.ts
- * @layer hooks/studio/pages/blocks
+ * @layer studio/features/pages/blocks/hooks
  *
  * @description
- * Hook Studio React Query pour réordonner les blocks d’une page draft via l’API.
+ * React Query mutation hook for reordering draft page blocks through the pages Studio API.
  *
  * @remarks
- * - Optimistic update pour drag-and-drop fluide.
- * - Rollback automatique si erreur API.
- * - Le cache et les queryKeys sont scopés par Prisma Website.id.
+ * - Applies an optimistic block-list reorder for smooth drag-and-drop feedback.
+ * - Rolls back to the previous block order when the API call fails.
+ * - Synchronizes page and block-list caches from the returned page payload after success.
+ * - Invalidates site and block status views after reordering.
+ * - Studio cache keys are scoped by Prisma Website.id and content state.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -68,9 +70,7 @@ export function useReorderBlocks(
       "reorder",
     ] as const,
 
-    /* ------------------------------------------------------------------ */
-    /* Optimistic update                                                   */
-    /* ------------------------------------------------------------------ */
+    // Optimistic block-list reorder.
 
     onMutate: async ({ pageId, values }: ReorderBlocksArgs) => {
       const pageIdKey = String(pageId ?? "").trim();
@@ -104,10 +104,6 @@ export function useReorderBlocks(
       return { previous, pageIdKey };
     },
 
-    /* ------------------------------------------------------------------ */
-    /* API call                                                            */
-    /* ------------------------------------------------------------------ */
-
     mutationFn: async ({ pageId, values }: ReorderBlocksArgs) => {
       const pageIdKey = String(pageId ?? "").trim();
 
@@ -132,10 +128,6 @@ export function useReorderBlocks(
         page: response.page,
       } as const;
     },
-
-    /* ------------------------------------------------------------------ */
-    /* Success                                                             */
-    /* ------------------------------------------------------------------ */
 
     onSuccess: async ({ pageId, payload, page }) => {
       if (pageId && page) {
@@ -162,9 +154,7 @@ export function useReorderBlocks(
       onSuccess?.();
     },
 
-    /* ------------------------------------------------------------------ */
-    /* Rollback                                                            */
-    /* ------------------------------------------------------------------ */
+    // Roll back the optimistic order on API failure.
 
     onError: (error: unknown, _variables, context) => {
       notify.fromError(error, UiError.unexpectedSave);

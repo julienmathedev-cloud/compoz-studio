@@ -2,18 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/molecules/SiteLightbox.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/molecules
  *
  * @description
- * SiteLightbox : lightbox plein écran pour zoomer une image (site + preview).
+ * Renders a full-screen public site lightbox for zoomable images.
  *
  * @remarks
- * - UI-only : pas de logique métier.
- * - A11y : role="dialog", aria-modal="true", fermeture Esc, overlay click.
- * - UX : lock scroll sans saut de page via body fixed.
- * - Animations : classes (enter/from/active/exit) + motion-reduce.
- * - Focus : trap clavier (Tab/Shift+Tab) à l’intérieur de la lightbox.
- * - Skinnable : toutes les classes viennent du contrat `ui`.
+ * Handles dialog accessibility, Escape and overlay closing, scroll lock restoration, reduced-motion animation, and keyboard focus trapping.
  */
 
 import { X } from "lucide-react";

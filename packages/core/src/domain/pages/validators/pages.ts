@@ -1,9 +1,9 @@
 /**
  * @file packages/core/src/domain/pages/validators/pages.ts
  * @layer core/domain/pages/validators
- * @description
- * Invariants métier des pages : validation name/slug, sitemap et contrôle de priority.
- * Ce module reste purement domaine (pas de Zod/HTTP/UI).
+ * @description Pure domain invariants for pages.
+ * @remarks
+ * Validates page name, slug, sitemap priority, parent relationship, and pagination rules without Zod, HTTP, or UI dependencies.
  */
 
 import {
@@ -17,14 +17,6 @@ import {
 import type { Page } from "@compoz/core/domain/pages/entities/page";
 import { assertSlug } from "@compoz/core/domain/slug/validator";
 
-/**
- * Valide qu’un nom de page est non vide une fois trimé.
- *
- * @param name - Nom brut.
- * @param path - Chemin logique de l’erreur.
- * @throws DomainError(EC.PAGE_TITLE_REQUIRED) si le nom est vide après trim.
- * @returns Le nom normalisé (trimé).
- */
 export function assertNameRequired(
   name: string,
   path: (string | number)[] = ["name"],
@@ -42,14 +34,7 @@ export function assertNameRequired(
   return t;
 }
 
-/**
- * Valide et normalise le slug d’une page.
- *
- * @param raw  - Slug brut.
- * @param path - Chemin logique pour `details.path` (par défaut `"slug"`).
- *
- * @returns Le slug normalisé (kebab-case) si tout est valide.
- */
+/** Validates and normalizes a page slug while mapping generic slug errors to page-specific codes. */
 export function assertPageSlug(
   raw: string,
   path: (string | number)[] = ["slug"],
@@ -86,13 +71,7 @@ export function assertPageSlug(
   }
 }
 
-/**
- * Valide `paginationEnabled` au regard de `parentId`.
- *
- * Règle métier :
- * - parentId === null => paginationEnabled doit être false
- * - parentId !== null => paginationEnabled peut être true/false
- */
+/** Root pages cannot enable pagination. */
 export function assertPaginationEnabled(args: {
   parentId: string | null;
   paginationEnabled: unknown;
@@ -119,12 +98,6 @@ export function assertPaginationEnabled(args: {
   return paginationEnabled;
 }
 
-/**
- * Valide que la priorité du sitemap, si fournie, est dans [0, 1].
- *
- * @param p    - Valeur de priorité éventuelle.
- * @param path - Chemin logique de l’erreur.
- */
 export function assertPriority(
   p: number | null,
   path: (string | number)[] = ["sitemap", "priority"],
@@ -140,11 +113,7 @@ export function assertPriority(
   }
 }
 
-/**
- * Valide `parentId` :
- * - `null` => page racine
- * - `string` non vide => id d’une page parente
- */
+/** `null` identifies a root page; non-null parent ids must be non-empty strings. */
 export function assertParentId(
   parentId: unknown,
   path: (string | number)[] = ["parentId"],

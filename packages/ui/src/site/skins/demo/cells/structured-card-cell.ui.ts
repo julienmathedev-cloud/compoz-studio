@@ -1,9 +1,9 @@
 /**
- * @file packages/ui/src/site/skins/demo/blocks/structured-card-cell.ui.ts
- * @layer ui/site/skins
+ * @file packages/ui/src/site/skins/demo/cells/structured-card-cell.ui.ts
+ * @layer ui/site/skins/demo/cells
  *
  * @description
- * Override UI — structured card cell (thème Démo).
+ * Defines the demo skin overrides for structured card cells.
  */
 
 import type { SiteStructuredCardUiOverride } from "@compoz/ui/site/site-ui.types";

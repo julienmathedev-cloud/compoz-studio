@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/renderer/cells/cellRegistry.tsx
- * @layer ui/renderer
+ * @layer ui/renderer/cells
  *
  * @description
- * Cell renderer registry.
+ * Registry mapping validated cell kinds to their renderer components.
  */
 
 import type { ReactNode } from "react";

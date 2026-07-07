@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/demo/cells/carousel-cell.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/demo/cells
  *
  * @description
- * Override UI — carousel block (thème Démo).
+ * Defines the demo skin overrides for carousel and slider cells.
  */
 
 import type { SiteCarouselUiOverride } from "@compoz/ui/site/site-ui.types";

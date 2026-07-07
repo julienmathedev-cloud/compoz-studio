@@ -1,12 +1,12 @@
 /**
- * @file apps/site/src/app/loading.tsx
+ * @file apps/site/src/loading.tsx
  * @layer site/app
  *
  * @description
- * Loading UI pour le segment site.
+ * Loading UI for the public site segment.
  *
  * @remarks
- * - Rendu skinnable via `ui.systemLoading`.
+ * - Uses the resolved site UI skin through `ui.systemLoading`.
  */
 
 import { SiteSystemLoading } from "@compoz/ui/site/components/system/SiteSystemLoading";

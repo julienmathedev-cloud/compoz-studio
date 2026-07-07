@@ -1,6 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/factories/create-block-row.ts
  * @layer core/domain/pages
+ * @description Factory for creating a block row with empty columns.
  */
 
 import { randomUUID } from "crypto";

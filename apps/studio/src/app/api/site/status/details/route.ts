@@ -3,19 +3,12 @@
  * @layer studio/app/api
  *
  * @description
- * Route API Studio — détails du statut du Website actif
- * entre draft et published.
+ * Studio API route for detailed active Website status between draft and published.
  *
  * @remarks
- * Query :
- * - scope=dirty|all (default: dirty)
- * - includeBlocks=0|1|true|false (default: false)
- * - pageId=<id> (optional)
- *
- * Responsabilités :
- * - Retourne les différences pages/blocks entre draft et published.
- * - Utilise le cache de snapshot pour limiter les lectures repository.
- * - Les repositories et le cache sont scopés par Prisma Website.id.
+ * - Returns page/block differences between draft and published.
+ * - Uses the snapshot cache to reduce repository reads.
+ * - Repositories and cache are scoped by Prisma Website.id.
  */
 
 import "server-only";
@@ -34,10 +27,6 @@ type ParsedQuery = Readonly<{
   includeBlocks: boolean;
   pageId: string | null;
 }>;
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function parseQueryFromUrl(url: string): ParsedQuery {
   try {
@@ -71,10 +60,6 @@ function parseQueryFromUrl(url: string): ParsedQuery {
     };
   }
 }
-
-/* -------------------------------------------------------------------------- */
-/* GET                                                                        */
-/* -------------------------------------------------------------------------- */
 
 export async function GET(req: Request) {
   const NS = "api.studio.site.status.details.GET" as const;

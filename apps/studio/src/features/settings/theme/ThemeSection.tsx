@@ -2,18 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/theme/ThemeSection.tsx
- * @layer ui/studio/sections
+ * @layer studio/features/settings/theme
  *
  * @description
- * Section Studio dédiée au thème public :
- * chargement (shell), édition (form), warnings UI et preview.
+ * Studio settings section for loading, editing, saving, and previewing public theme settings.
  *
  * @remarks
- * - Le chargement initial est géré par `SettingsSection` (shell).
- * - Monte `useThemeSettings` (baseline + save) et câble `ThemeForm`.
- * - Affiche les warnings non bloquants (via `ThemeForm` + `computeThemeWarnings` au submit).
- * - La preview est déléguée à `ThemePreviewCard`.
- * - Strictement UI-only : aucune logique métier.
+ * - Keeps the persisted baseline and live preview draft separate so reset/save can restore the preview deterministically.
+ * - Form warnings are kept live for editor feedback, then recomputed on submit for the active token mode before confirmation.
  */
 
 import { useTranslations } from "next-intl";
@@ -51,6 +47,7 @@ export function ThemeSection() {
     "light",
   );
 
+  /** Runtime preview shape derived from the persisted RHF baseline. */
   const baselinePreview = useMemo<ThemeSettingsShape>(
     () => toThemeSettingsShapeFromFormValues(baseline),
     [baseline],
@@ -62,6 +59,7 @@ export function ThemeSection() {
     async (values: ThemeFormValues) => {
       if (isLoading || isSaving) return;
 
+      // Recompute warnings at submit time so confirmation uses the latest validated values and active token mode.
       const warningKeysNow = computeThemeWarnings(
         {
           lightTokens: values.lightTokens,
@@ -79,6 +77,7 @@ export function ThemeSection() {
 
       await save(values);
       dirtyGuard.setDirty(false);
+      // Clear the live draft so preview falls back to the saved baseline returned by the hook.
       setPreviewDraft(null);
     },
     [

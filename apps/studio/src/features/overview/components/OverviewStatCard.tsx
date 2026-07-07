@@ -2,14 +2,14 @@
 
 /**
  * @file apps/studio/src/features/overview/components/OverviewStatCard.tsx
- * @layer ui/studio/overview
+ * @layer studio/features/overview/components
  *
  * @description
- * Carte statistique (overview) : titre + valeur principale + breakdown.
+ * Overview statistic card showing a main value and an optional breakdown.
  *
  * @remarks
- * - UI-only.
- * - Les états loading sont gérés par la section parente.
+ * - Loading state is owned by the parent section.
+ * - Error state replaces the value with an em dash and shows the shared error badge.
  */
 
 import type { ReactNode } from "react";

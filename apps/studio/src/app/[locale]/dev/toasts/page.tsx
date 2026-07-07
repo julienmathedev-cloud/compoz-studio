@@ -2,10 +2,10 @@
 
 /**
  * @file apps/studio/src/app/[locale]/dev/toasts/page.tsx
- * @layer app/studio/dev
+ * @layer studio/app/dev
+ *
  * @description
- * Dev-only — matrice de boutons pour tester rapidement les toasts
- * (UI tokens + domain error codes + scénarios HTTP).
+ * Dev-only toast matrix for UI tokens, domain error codes, and HTTP scenarios.
  */
 
 import { useMemo } from "react";
@@ -21,7 +21,7 @@ import { Button } from "@compoz/ui/components/ui/button";
 
 const DEV_ONLY = process.env.NODE_ENV !== "production";
 
-/** UI tokens qui représentent des statuts HTTP (donc à tester via HttpError). */
+/** UI tokens that represent HTTP statuses and should be tested through HttpError. */
 const UI_HTTP_TOKENS = [
   UiError.http400,
   UiError.http401,
@@ -33,7 +33,7 @@ const UI_HTTP_TOKENS = [
   UiError.http500,
 ] as const satisfies readonly UiErrorToken[];
 
-/** Mapping token HTTP -> status (pour matcher le runtime). */
+/** HTTP token -> status mapping that mirrors runtime behavior. */
 const UI_HTTP_STATUS: Record<(typeof UI_HTTP_TOKENS)[number], number> = {
   [UiError.http400]: 400,
   [UiError.http401]: 401,
@@ -187,9 +187,9 @@ export default function ToastMatrixPage() {
   ];
 
   /**
-   * UI tokens :
-   * - tokens HTTP => test via HttpError(status) (comme en prod)
-   * - le reste => test via Error(token)
+   * UI tokens:
+   * - HTTP tokens are tested through HttpError(status), like production.
+   * - Other tokens are tested through Error(token).
    */
   const uiButtons: MatrixButton[] = uiTokens.map((token) => {
     const isHttp = isUiHttpToken(token);
@@ -210,7 +210,7 @@ export default function ToastMatrixPage() {
   });
 
   /**
-   * Domain codes : status résolu comme côté API (adapter).
+   * Domain codes: status is resolved like the API adapter does.
    */
   const domainButtons: MatrixButton[] = domainCodes.map((code) => ({
     key: `domain.${code}`,
@@ -226,13 +226,13 @@ export default function ToastMatrixPage() {
       <header className="space-y-1">
         <h1 className="text-lg font-semibold">Toast Matrix (dev-only)</h1>
         <p className="text-sm text-muted-foreground">
-          UI tokens (réaliste via HttpError pour HTTP), Domain codes (status
-          réel via adapter), et scénarios fromError.
+          UI tokens (realistic through HttpError for HTTP), domain codes (real
+          status through the adapter), and fromError scenarios.
         </p>
       </header>
 
       <Section title="Base" buttons={baseButtons} />
-      <Section title="Scénarios (notify.fromError)" buttons={scenarioButtons} />
+      <Section title="Scenarios (notify.fromError)" buttons={scenarioButtons} />
       <Section title="UI tokens (UiError.*)" buttons={uiButtons} />
       <Section title="Domain codes (ERROR_CODES.*)" buttons={domainButtons} />
     </div>

@@ -3,12 +3,10 @@
  * @layer ui/renderer/cells
  *
  * @description
- * Static renderer for a homogeneous card collection.
+ * Renders a validated homogeneous card collection cell.
  *
  * @remarks
- * - UI-only: consumes an already validated cell shape.
- * - The cell owns the outer wrapper, alignment, custom class, and selected card kind.
- * - Item renderers own item filtering, grid rendering, and reveal behavior.
+ * The cell owns the outer wrapper and selected card kind; item renderers own filtering, grid rendering, and reveal behavior.
  */
 
 import type {

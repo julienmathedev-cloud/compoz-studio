@@ -1,9 +1,7 @@
 /**
  * @file packages/ui/src/pages/mappers/cells/spacer.ts
  * @layer ui/pages/mappers
- *
- * @description
- * Mapper "shared runtime" pour les cellules de type `spacer`.
+ * @description Maps spacer cell DTOs to form values.
  */
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";

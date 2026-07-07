@@ -1,9 +1,7 @@
 /**
  * @file packages/ui/src/pages/mappers/cells/steps.ts
  * @layer ui/pages/mappers
- *
- * @description
- * Mapper "shared runtime" pour les cellules de type `steps`.
+ * @description Maps steps cell DTOs to form values.
  */
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";

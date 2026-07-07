@@ -1,19 +1,24 @@
-/**
- * @file apps/studio/src/features/draft/DraftPageRenderer.tsx
- * @layer ui/studio/draft
- *
- * @description
- * Page de rendu pour le DRAFT (V0.5).
- */
-
 "use client";
 
+/**
+ * @file apps/studio/src/features/draft/DraftPageRenderer.tsx
+ * @layer studio/features/draft
+ *
+ * @description
+ * Client draft page renderer used by Studio preview routes.
+ *
+ * @remarks
+ * - Reuses the public `SitePageRenderer` with the active Studio site UI skin.
+ * - Resolves reveal UI from the current theme preset before rendering blocks.
+ * - Converts a nullable draft pager to the optional pager expected by the shared renderer.
+ */
+
+import type { SitePager } from "@compoz/ui/lib/app-helpers/site-pager";
 import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
+import { useTheme } from "@compoz/ui/settings/theme/ThemeProvider";
 import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
 import type { SiteRuntimeFeatures } from "@compoz/ui/site/skins/resolveSiteRuntimeFeatures";
 import type { BlockShape } from "@compoz/validation/pages/blocks/block";
-import type { SitePager } from "@compoz/ui/lib/app-helpers/site-pager";
-import { useTheme } from "@compoz/ui/settings/theme/ThemeProvider";
 
 type DraftPageRendererProps = Readonly<{
   blocks: ReadonlyArray<BlockShape>;

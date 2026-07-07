@@ -3,15 +3,12 @@
  * @layer studio/lib/demo
  *
  * @description
- * Composition serveur du cleanup des sandboxes démo expirées.
+ * Server composition for cleaning up expired demo sandboxes.
  *
  * @remarks
- * - Branche les dépendances infra nécessaires au use-case
- *   `cleanupExpiredDemoSandboxes`.
- * - Point d’entrée serveur réutilisable par une future route API
- *   ou une tâche cron Vercel.
- * - La démo peut encore nettoyer des données KV associées aux sandboxes,
- *   mais l’orchestration ne doit plus exposer de vocabulaire tenant générique.
+ * - Wires the infrastructure dependencies required by the `cleanupExpiredDemoSandboxes` use case.
+ * - Provides a reusable server entry point for a future API route or Vercel cron job.
+ * - Demo cleanup may still remove KV data linked to sandboxes, but this orchestration should no longer expose generic tenant wording.
  */
 
 import "server-only";

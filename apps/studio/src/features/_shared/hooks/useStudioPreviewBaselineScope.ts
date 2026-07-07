@@ -2,20 +2,14 @@
 
 /**
  * @file apps/studio/src/features/_shared/hooks/useStudioPreviewBaselineScope.ts
- * @layer hooks/studio/shared
+ * @layer studio/features/_shared/hooks
  *
  * @description
- * Hook partagé pour injecter une baseline preview sur un scope donné
- * dès que le handshake du scope est prêt.
+ * Shared hook for injecting a preview baseline once its scope handshake is ready.
  *
  * @remarks
- * - Strictement UI-only.
- * - Évite de dupliquer le pattern :
- *   `if (baseline == null) return`
- *   `if (!ready.isReady(scope)) return`
- *   `setBaseline(scope, baseline)`
- * - Préserve la logique existante des sections : un scope = un effet dédié.
- * - Le logging reste optionnel via `debugLabel`.
+ * - Avoids duplicating the guarded baseline injection pattern across preview sections.
+ * - Preserves the section model where each preview scope owns a dedicated effect.
  */
 
 import { useEffect } from "react";

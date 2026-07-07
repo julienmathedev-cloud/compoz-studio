@@ -1,17 +1,9 @@
 /**
  * @file packages/infra/src/pages/kv-pages-repository.ts
  * @layer infra/pages
- *
- * @description
- * Implémentation du PagesRepository basé sur une base KV, Upstash Redis.
- *
+ * @description KV-backed PagesRepository implementation using Upstash Redis.
  * @remarks
- * - Stocke les documents pages par `pageId`.
- * - Maintient un index secondaire `slug -> pageId` pour éviter les scans KV
- *   dans `readBySlug()` / `existsBySlug()`.
- * - Maintient aussi un index secondaire `pageId -> slug` pour éviter
- *   de relire le document complet juste pour retrouver l’ancien slug.
- * - Le repository est strictement scopé par `websiteId`.
+ * Maintains slug and page-id secondary indexes to avoid KV scans; all keys are scoped by `websiteId`.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
@@ -24,37 +16,16 @@ import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import { normalizePageLegacyBlocks } from "@compoz/infra/pages/mappers/page-legacy-normalizer";
 import { PageSchema, type PageShape } from "@compoz/validation/pages/page";
 
-/* -------------------------------------------------------------------------- */
-/* Logs / telemetry                                                           */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Namespace standard SoT :
- * compoz:<surface>:<layer>:<module>
- *
- * Ici : dépôt pages en KV, consommé côté Studio.
- */
 const LOG_NS = "compoz:studio:repo:pages" as const;
 
-/**
- * Construit un context stable pour la télémétrie KV.
- * Contrat : pas de clé complète, pas de PII / pas d’id dans le context.
- */
+/** Stable telemetry context without full KV keys, ids, or PII. */
 function kvCtx(op: string, state: ContentState): string {
   return `${LOG_NS}.${op}.${state}`;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Options                                                                    */
-/* -------------------------------------------------------------------------- */
-
 type KvPagesRepositoryOptions = Readonly<{
   websiteId: string;
 }>;
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function normalizeSlug(slug: unknown): string {
   return String(slug ?? "").trim();
@@ -106,10 +77,6 @@ function pageSlugRefKey(
   return `compoz:${websiteId}:${state}:pageSlugById:${pageId}`;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Repository                                                                 */
-/* -------------------------------------------------------------------------- */
-
 export class KvPagesRepository implements PagesRepository {
   private readonly redis = getUpstashRedis();
   private readonly websiteId: string;
@@ -123,7 +90,7 @@ export class KvPagesRepository implements PagesRepository {
   }
 
   async ensureBase(): Promise<void> {
-    // no-op KV
+    // no-op
   }
 
   private async readSlugOwnerId(

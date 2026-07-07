@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/entities/cells/steps.ts
  * @layer core/domain/pages
- * @description
- * Entité métier StepsCell.
+ * @description Steps cell domain entity.
  */
 
 export type StepsVariant = "vertical" | "horizontal";

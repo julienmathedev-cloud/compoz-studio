@@ -1,14 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/lola/header.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/lola
  *
  * @description
- * Skin UI — header site (thème Lola).
- *
- * @remarks
- * - Fournit uniquement des classes Tailwind (aucune logique).
- * - Compose les skins des sous-composants (logo, menu, social).
- * - Consommé par `SiteHeader` via la prop `ui`.
+ * Defines the Lola skin overrides for the public site header.
  */
 
 import type { SiteHeaderUiOverride } from "@compoz/ui/site/site-ui.types";

@@ -3,14 +3,12 @@
  * @layer studio/app/api
  *
  * @description
- * Route API Studio pour récupérer le statut global du Website actif.
+ * Studio API route for retrieving the active Website global status.
  *
  * @remarks
- * Responsabilités :
- * - GET : retourne l’état du Website actif entre draft et published.
- * - Agrège les informations via le use-case `getSiteStatus`.
- * - Utilise le cache de snapshot pour limiter les lectures repository.
- * - Les repositories et le cache sont scopés par Prisma Website.id.
+ * - Aggregates data through the `getSiteStatus` use case.
+ * - Uses the snapshot cache to reduce repository reads.
+ * - Repositories and cache are scoped by Prisma Website.id.
  */
 
 import "server-only";
@@ -22,10 +20,6 @@ import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
-
-/* -------------------------------------------------------------------------- */
-/* GET                                                                        */
-/* -------------------------------------------------------------------------- */
 
 export async function GET(req: Request) {
   const NS = "api.studio.site.status.GET" as const;

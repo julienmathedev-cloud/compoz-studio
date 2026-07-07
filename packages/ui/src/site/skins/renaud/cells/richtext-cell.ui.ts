@@ -1,24 +1,16 @@
 /**
-
  * @file packages/ui/src/site/skins/renaud/cells/richtext-cell.ui.ts
-
- * @layer ui/site/skins
-
+ * @layer ui/site/skins/renaud/cells
  *
-
  * @description
-
- * Override UI — richtext cell (site Meca A Dom 34).
-
+ * Defines the Renaud skin overrides for rich text cells.
  */
-
 import type { SiteRichTextUiOverride } from "@compoz/ui/site/site-ui.types";
 
 export const renaudRichTextUi: SiteRichTextUiOverride = {
   root: [
     "text-base",
 
-    // Mise en avant des marqueurs de listes personnalisées.
     "[&_ul[data-list-variant=check]>li]:before:text-primary",
     "[&_ul[data-list-variant=arrow]>li]:before:text-primary",
     "[&_ul[data-list-variant=check]>li]:pl-8",

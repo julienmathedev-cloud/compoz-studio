@@ -5,12 +5,11 @@
  * @layer studio/app
  *
  * @description
- * Page « Mentions légales » (Studio) — informations légales relatives à l’outil Compoz Studio.
+ * Studio legal notice page with a screen-reader-only H1.
  *
  * @remarks
- * - H1 SR-only (convention Studio : un seul H1 global).
- * - Structure via `SettingsSection`.
- * - Contenu statique i18n.
+ * - Studio convention: the page owns the single global H1 as screen-reader-only text.
+ * - Visible content is structured through `SettingsSection`, which provides the visible H2.
  */
 
 import { useTranslations } from "next-intl";
@@ -27,7 +26,7 @@ const SIRET_PLACEHOLDER = "000 000 000 00000" as const;
 export default function MentionsLegalesPage() {
   const t = useTranslations();
 
-  // ⚠️ À remplacer dès que tu as ton SIRET
+  // Replace once the real SIRET is available.
   const siret = SIRET_PLACEHOLDER;
 
   return (
@@ -43,7 +42,6 @@ export default function MentionsLegalesPage() {
         showStatusBadge={false}
       >
         <div className="space-y-6">
-          {/* Éditeur */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.mentions.sections.editor.title")}
@@ -54,7 +52,6 @@ export default function MentionsLegalesPage() {
             </Text>
           </div>
 
-          {/* Statut juridique */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.mentions.sections.legalStatus.title")}
@@ -70,7 +67,6 @@ export default function MentionsLegalesPage() {
             </Text>
           </div>
 
-          {/* Responsable publication */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.mentions.sections.publication.title")}
@@ -80,7 +76,6 @@ export default function MentionsLegalesPage() {
             </Text>
           </div>
 
-          {/* Hébergement */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.mentions.sections.hosting.title")}
@@ -88,7 +83,6 @@ export default function MentionsLegalesPage() {
             <Text as="p">{t("studio.legal.mentions.sections.hosting.p1")}</Text>
           </div>
 
-          {/* Activité */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.mentions.sections.activity.title")}
@@ -101,7 +95,6 @@ export default function MentionsLegalesPage() {
             </Text>
           </div>
 
-          {/* Propriété intellectuelle */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.mentions.sections.intellectual.title")}
@@ -114,7 +107,6 @@ export default function MentionsLegalesPage() {
             </Text>
           </div>
 
-          {/* Responsabilité */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.mentions.sections.liability.title")}
@@ -124,7 +116,6 @@ export default function MentionsLegalesPage() {
             </Text>
           </div>
 
-          {/* Données personnelles */}
           <div className="space-y-2">
             <Heading as="h3">
               {t("studio.legal.mentions.sections.data.title")}

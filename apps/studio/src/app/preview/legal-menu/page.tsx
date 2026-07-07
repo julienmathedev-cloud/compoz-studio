@@ -5,13 +5,13 @@
  * @layer studio/app
  *
  * @description
- * Page de preview (iframe) pour le menu légal du site.
+ * Iframe preview page for the site legal menu.
  *
  * @remarks
- * - Lit les données via `usePreviewOverride` pour baseline et override.
- * - Rend uniquement si baseline ou override est disponible (empty géré par le wrapper preview).
- * - Le skin UI est fourni par `SiteUiProvider` monté dans `PreviewProviders`.
- * - Le thème CSS est fourni par `ThemeProvider` monté dans `PreviewProviders`.
+ * - Reads baseline and override data through `usePreviewOverride`.
+ * - Renders only when a baseline or override is available; the empty state is handled by the preview wrapper.
+ * - The UI skin is provided by `SiteUiProvider` mounted in `PreviewProviders`.
+ * - The CSS theme is provided by `ThemeProvider` mounted in `PreviewProviders`.
  */
 
 import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePreviewOverride";

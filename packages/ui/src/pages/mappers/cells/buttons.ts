@@ -1,9 +1,7 @@
 /**
  * @file packages/ui/src/pages/mappers/cells/buttons.ts
  * @layer ui/pages/mappers
- *
- * @description
- * Mapper "shared runtime" pour les cellules de type `buttons`.
+ * @description Maps buttons cell DTOs to form values.
  */
 
 import type { CellDTO } from "@compoz/core/domain/pages/dto";

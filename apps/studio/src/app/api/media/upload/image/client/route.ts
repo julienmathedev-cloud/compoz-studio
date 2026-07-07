@@ -3,13 +3,13 @@
  * @layer studio/app/api
  *
  * @description
- * Route Vercel Blob de génération de client token pour l’upload direct
- * d’un blob image temporaire lié au Website actif du Studio.
+ * Vercel Blob route that generates a client token for direct upload of a
+ * temporary image blob linked to the active Studio Website.
  *
  * @remarks
- * - Nécessite une session Studio valide.
- * - Les uploads temporaires sont scopés par Prisma Website.id.
- * - Le `tempKey` attendu suit la convention :
+ * - Requires a valid Studio session.
+ * - Temporary uploads are scoped by Prisma Website.id.
+ * - The expected `tempKey` follows this convention:
  *   `websites/:websiteId/_tmp/media/...`
  */
 
@@ -48,10 +48,6 @@ const UploadImageClientPayloadSchema = z.object({
   originalContentType: z.string().trim().min(1),
   originalSize: z.number().positive(),
 });
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function isUploadKind(input: string): input is UploadImageKind {
   return (
@@ -128,10 +124,6 @@ function assertWebsiteTempKey(tempKey: string, websiteId: string): void {
     });
   }
 }
-
-/* -------------------------------------------------------------------------- */
-/* POST                                                                       */
-/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
   const NS = "api.studio.media.upload.image.client.POST" as const;

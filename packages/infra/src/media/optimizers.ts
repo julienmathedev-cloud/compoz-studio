@@ -1,13 +1,9 @@
 /**
  * @file packages/infra/src/media/optimizers.ts
  * @layer infra/media
- * @description
- * Optimisation server-side des assets média via Sharp.
- *
- * Responsabilités :
- * - Compression intelligente uniquement si nécessaire
- * - Préserve les assets déjà optimisés (PNG / WEBP / JPEG légers)
- * - Évite la dégradation des screenshots / logos / UI
+ * @description Server-side media asset optimization with Sharp.
+ * @remarks
+ * Keeps already reasonable uploads untouched to avoid quality loss on screenshots, logos, and UI assets.
  */
 
 import "server-only";
@@ -23,10 +19,6 @@ export type OptimizedAsset = Readonly<{
   finalWidth: number;
   finalHeight: number;
 }>;
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function assertRaster(mime: string): void {
   if (!mime.startsWith("image/")) throw new Error("NOT_AN_IMAGE");
@@ -109,10 +101,6 @@ function isReasonableUpload(args: {
   return args.input.length <= args.maxBytes && args.meta.width <= args.maxWidth;
 }
 
-/* -------------------------------------------------------------------------- */
-/* 1) Content images                                                          */
-/* -------------------------------------------------------------------------- */
-
 export async function optimizeContentImage(
   input: Buffer,
   inputMime: string,
@@ -156,10 +144,6 @@ export async function optimizeContentImage(
   });
 }
 
-/* -------------------------------------------------------------------------- */
-/* 2) OpenGraph image                                                         */
-/* -------------------------------------------------------------------------- */
-
 export async function optimizeOgImage(
   input: Buffer,
   inputMime: string,
@@ -174,7 +158,6 @@ export async function optimizeOgImage(
     original,
   });
 
-  // Déjà propre → on garde
   if (
     passthrough &&
     isReasonableUpload({
@@ -187,7 +170,6 @@ export async function optimizeOgImage(
     return passthrough;
   }
 
-  // Resize sans ré-encodage agressif si source PNG/WebP
   if (
     (inputMime === "image/png" || inputMime === "image/webp") &&
     input.length <= 1_500_000
@@ -212,7 +194,6 @@ export async function optimizeOgImage(
     });
   }
 
-  // Fallback lourd
   const buffer = await sharp(input, { failOn: "none" })
     .rotate()
     .resize(1200, 630, { fit: "cover", position: "center" })
@@ -229,10 +210,6 @@ export async function optimizeOgImage(
     final,
   });
 }
-
-/* -------------------------------------------------------------------------- */
-/* 3) Logo                                                                    */
-/* -------------------------------------------------------------------------- */
 
 export async function optimizeLogo(
   input: Buffer,
@@ -310,10 +287,6 @@ export async function optimizeLogo(
   });
 }
 
-/* -------------------------------------------------------------------------- */
-/* 4) Favicon                                                                 */
-/* -------------------------------------------------------------------------- */
-
 export async function optimizeFavicon(
   input: Buffer,
   inputMime: string,
@@ -379,10 +352,6 @@ export async function optimizeFavicon(
     final,
   });
 }
-
-/* -------------------------------------------------------------------------- */
-/* 5) Favicon Set                                                             */
-/* -------------------------------------------------------------------------- */
 
 export const FAVICON_SIZES = [16, 32, 48, 180, 192, 512] as const;
 

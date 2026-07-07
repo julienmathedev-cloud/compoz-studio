@@ -1,14 +1,7 @@
 /**
  * @file packages/ui/src/lib/utils.ts
  * @layer ui/lib/utils
- *
- * @description
- * Helper utilitaire pour combiner des classes CSS (clsx + tailwind-merge).
- *
- * @remarks
- * `cn()` combine :
- * - `clsx` : conditions, arrays, objets booléens
- * - `tailwind-merge` : résolution des conflits Tailwind
+ * @description Combines conditional class values and resolves Tailwind conflicts.
  */
 
 import { clsx, type ClassValue } from "clsx";

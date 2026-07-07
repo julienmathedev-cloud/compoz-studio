@@ -1,12 +1,9 @@
 /**
  * @file packages/infra/src/http/error-adapter.ts
  * @layer infra/http
- * @description
- * Adaptateur DomainError → HTTP : conversion des erreurs métier en status et body JSON.
- *
- * Responsabilités : mapping explicite des codes “spéciaux”, fallback 400 pour
- * les erreurs métier (validation), et restriction de l’exposition des messages
- * côté production.
+ * @description Converts domain and validation errors into HTTP responses.
+ * @remarks
+ * Production responses hide technical messages while preserving stable error codes.
  */
 
 import {
@@ -19,10 +16,6 @@ import type { HttpErrorBody } from "@compoz/http/http-error";
 import { zodToHttp } from "@compoz/validation/http/zod-to-http";
 
 type HttpErrorResponse = Readonly<{ status: number; body: HttpErrorBody }>;
-
-/**
- * Mapping explicite ErrorCode → status HTTP.
- */
 const EXPLICIT_STATUS: Partial<Record<ErrorCode, number>> = {
   [ERROR_CODES.UNAUTHORIZED]: 401,
   [ERROR_CODES.FORBIDDEN]: 403,
@@ -32,7 +25,7 @@ const EXPLICIT_STATUS: Partial<Record<ErrorCode, number>> = {
   [ERROR_CODES.VALIDATION_ERROR]: 422,
   [ERROR_CODES.INVALID_ARGUMENT]: 400,
 
-  // Erreurs génériques
+  // Generic fallbacks.
   [ERROR_CODES.INTERNAL]: 500,
   [ERROR_CODES.UNKNOWN]: 500,
 };
@@ -44,26 +37,10 @@ const INFRA_CODE_PREFIXES_500 = [
   /^STORAGE_/,
 ] as const;
 
-/**
- * Détermine si le message d’erreur métier peut être exposé au client.
- *
- * Contrat :
- * - en dev : true
- * - en prod : false (on n'expose pas les messages techniques)
- */
 function shouldExposeMessage(): boolean {
   return process.env.NODE_ENV !== "production";
 }
 
-/**
- * Résout le status HTTP à partir d’un ErrorCode (ou d’un code inconnu).
- *
- * Contrat :
- * - codes “spéciaux” → EXPLICIT_STATUS
- * - préfixes infra → 500
- * - tout le reste (métier/validation) → 400
- * - code inconnu → 500 (safe fallback)
- */
 export function statusFromCode(code: string): number {
   if (!isErrorCode(code)) return 500;
 
@@ -75,10 +52,6 @@ export function statusFromCode(code: string): number {
   return 400;
 }
 
-/**
- * Transforme une erreur inconnue ou DomainError en HttpErrorBody.
- * Contrat : expose le message uniquement si autorisé par shouldExposeMessage.
- */
 function toHttpErrorBody(err: unknown): HttpErrorBody {
   if (!isStrictDomainError(err)) {
     return { code: ERROR_CODES.UNKNOWN };
@@ -93,16 +66,10 @@ function toHttpErrorBody(err: unknown): HttpErrorBody {
   return base;
 }
 
-/**
- * Transforme une erreur en réponse HTTP typée.
- * Contrat : retourne { status, body } utilisable directement dans les route handlers.
- */
 export function toHttpError(err: unknown): HttpErrorResponse {
-  // ✅ 1️⃣ Validation & throwHttp (validation package)
   const z = zodToHttp(err);
   if (z) return z;
 
-  // ✅ 2️⃣ DomainError
   const body = toHttpErrorBody(err);
   const status = statusFromCode(String(body.code));
   return { status, body };

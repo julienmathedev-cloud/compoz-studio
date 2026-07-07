@@ -3,12 +3,13 @@
 /**
  * @file apps/studio/src/lib/ui/NotifyProvider.tsx
  * @layer studio/lib/ui
+ *
  * @description
- * Branche le resolver i18n global pour `notify.fromError()`.
+ * Connects the global i18n resolver used by Studio notifications.
  *
  * @remarks
- * - À monter une seule fois dans le Studio (admin).
- * - Ne rend pas d'UI : il se contente de configurer `notify` et rend `children`.
+ * - Must be mounted once in the Studio app so `notify.fromError()` can resolve i18n tokens.
+ * - Renders no UI of its own and only returns `children`.
  */
 
 import { notify } from "@compoz/studio/lib/ui/notify";
@@ -25,7 +26,7 @@ export function NotifyProvider({ children }: NotifyProviderProps) {
 
   const resolve = useCallback(
     (key: string) => {
-      // next-intl accepte des clés dynamiques en string
+      // next-intl accepts runtime-built keys as strings.
       return t(key);
     },
     [t],
@@ -35,7 +36,7 @@ export function NotifyProvider({ children }: NotifyProviderProps) {
     notify.configure({ resolve });
 
     return () => {
-      // évite de garder un resolver obsolète si le Provider est démonté
+      // Clear the resolver on unmount so later notifications do not use a stale translator.
       notify.configure({ resolve: undefined });
     };
   }, [resolve]);

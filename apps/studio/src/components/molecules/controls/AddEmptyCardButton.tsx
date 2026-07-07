@@ -5,12 +5,11 @@
  * @layer studio/molecules
  *
  * @description
- * Bouton “Empty card” générique pour déclencher une action d’ajout (Plus) avec tooltip.
+ * Generic empty-card add button with tooltip support.
  *
  * @remarks
- * - Factorise le pattern TooltipButton + EmptyState + styles “empty card”.
- * - Le parent gère la logique (onClick/disabled/tooltip).
- * - UI-only.
+ * - Factorizes the TooltipButton + EmptyState + empty-card styling pattern.
+ * - Leaves action, disabled state, and tooltip copy to the parent.
  */
 
 import type { LucideIcon } from "lucide-react";
@@ -23,28 +22,13 @@ import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipBu
 import { EmptyState } from "@compoz/studio/components/molecules/feedback/EmptyState";
 
 export type AddEmptyCardButtonProps = Readonly<{
-  /** Callback d’action (ex: ajouter un bloc / ajouter un sous-lien). */
   onClick: () => void;
-
-  /** Désactive l’action (busy, permissions…). */
   disabled?: boolean;
-
-  /** Libellé a11y obligatoire. */
   ariaLabel: string;
-
-  /** Tooltip quand le bouton est utilisable. */
   tooltip: string;
-
-  /** Tooltip quand le bouton est désactivé (optionnel). */
   disabledTooltip?: string;
-
-  /** Icône (défaut: Plus). */
   icon?: LucideIcon;
-
-  /** Ajustements UI optionnels. */
   className?: string;
-
-  /** Si tu veux un rendu plus compact (ex: text-xs dans une liste). */
   compact?: boolean;
 }>;
 

@@ -1,15 +1,9 @@
 /**
  * @file packages/core/src/domain/site/use-cases/seo/update-seo-settings.ts
- * @layer core/domain
- * @description
- * Use-case : mise à jour partielle (shallow patch) des réglages `settings.seo`.
- * Charge les settings (draft/published), applique un merge shallow, et persiste
- * uniquement si au moins une clé a changé.
- *
+ * @layer core/domain/site/use-cases/seo
+ * @description Applies a shallow patch to SEO settings.
  * @remarks
- * - Le patch est validé/normalisé en amont (schemas/adapters).
- * - La validation métier avancée est effectuée lors de la publication (`publishSite`).
- * - `repo.ensureBase()` prépare la persistance (pré-requis infra).
+ * The patch is validated upstream; blocking SEO invariants are asserted during publication.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -22,10 +16,6 @@ import type {
   UpdateSeoSettingsResult,
 } from "@compoz/core/domain/site/use-cases/seo/update-seo-settings.types";
 
-/**
- * Fabrique du use-case `updateSeoSettings`.
- * Le repository est injecté pour faciliter les tests et l’inversion de dépendances.
- */
 export function updateSeoSettings({ repo }: UpdateSeoSettingsDeps) {
   return async function run(
     input: UpdateSeoSettingsInput,
@@ -47,7 +37,6 @@ export function updateSeoSettings({ repo }: UpdateSeoSettingsDeps) {
 
     await repo.putSettings(DEFAULT_CONTENT_STATE, next);
 
-    // ✅ Domaine pur : aucune invalidation cache ici.
     return { settings: next };
   };
 }

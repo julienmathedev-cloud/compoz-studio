@@ -5,7 +5,7 @@
  * @layer studio/features/settings/theme
  *
  * @description
- * Helpers UI pour construire les options du select de police du thème.
+ * UI helpers for building theme font select options.
  */
 
 import type { ReactNode } from "react";

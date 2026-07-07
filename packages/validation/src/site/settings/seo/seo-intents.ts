@@ -1,10 +1,16 @@
 /**
  * @file packages/validation/src/site/settings/seo/seo-intents.ts
  * @layer schemas
+ *
  * @description
- * Définit les schémas Zod décrivant la forme frontière des intentions liées aux réglages SEO.
- * Ces schémas valident uniquement la structure des payloads ; les invariants métier
- * et règles de cohérence sont traités dans le domaine.
+ * Zod schemas describing SEO settings update intent payload boundaries.
+ *
+ * @remarks
+ * These schemas validate API payload shapes only. Business invariants and
+ * consistency rules are handled by the domain layer.
+ *
+ * Patch schemas accept explicit clear values such as empty strings and `null`
+ * because UI flows may need to reset SEO fields incrementally.
  */
 
 import { SEO } from "@compoz/core/constants/limits/seo";
@@ -22,10 +28,6 @@ import {
   StructuredDataEntityTypeSchema,
 } from "@compoz/validation/site/settings/seo/seo";
 import { z } from "zod";
-
-/* -------------------------------------------------------------------------- */
-/*                           Helpers clearables                               */
-/* -------------------------------------------------------------------------- */
 
 const ClearableStringSchema = z.union([z.string(), z.literal(""), z.null()]);
 
@@ -51,10 +53,6 @@ const TwitterHandleClearableSchema = z.union([
   z.literal(""),
   z.null(),
 ]);
-
-/* -------------------------------------------------------------------------- */
-/*                        Patch schemas (exportés)                            */
-/* -------------------------------------------------------------------------- */
 
 export const TwitterPatchSchema = z
   .object({
@@ -126,14 +124,9 @@ const UpdateSeoSettingsIntentObjectSchema = SeoSettingsObjectSchema.partial()
   })
   .strict();
 
-/* -------------------------------------------------------------------------- */
-/*                                    Zod                                     */
-/* -------------------------------------------------------------------------- */
-
 export type SeoIntentValidationOptions = {
   /**
-   * Si `true`, baseUrl (si fournie dans le patch) doit être en https.
-   * Cette règle est runtime-dependent et doit être injectée depuis l'appelant (ex: route).
+   * Enforces HTTPS for `baseUrl` when the caller runs in a production-sensitive context.
    */
   requireBaseUrlHttps?: boolean;
 };
@@ -141,11 +134,7 @@ export type SeoIntentValidationOptions = {
 type UpdateSeoIntentShape = z.infer<typeof UpdateSeoSettingsIntentObjectSchema>;
 
 /**
- * Validation "patch-aware" :
- * - n'applique les règles que si les champs concernés sont présents dans le payload.
- *
- * @remarks
- * On reconstruit un objet "complet" minimal, puis on y injecte le patch.
+ * Applies cross-field rules only to keys explicitly present in the patch.
  */
 export function validateSeoSettingsPatchValues(
   patch: UpdateSeoIntentShape,
@@ -251,7 +240,7 @@ export function validateSeoSettingsPatchValues(
 }
 
 /**
- * Factory : schéma d’intention SEO configurable via options runtime.
+ * Creates a SEO update intent schema with caller-provided runtime validation options.
  */
 export function createUpdateSeoSettingsIntentSchema(
   opts?: SeoIntentValidationOptions,
@@ -261,17 +250,9 @@ export function createUpdateSeoSettingsIntentSchema(
   );
 }
 
-/**
- * Intention de mise à jour des réglages SEO (neutre, sans dépendance runtime).
- */
 export const UpdateSeoSettingsIntentSchema =
   createUpdateSeoSettingsIntentSchema();
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-/** DTO d’intention : résultat typé du parsing du payload SEO. */
 export type UpdateSeoSettingsIntentDTO = z.infer<
   typeof UpdateSeoSettingsIntentSchema
 >;

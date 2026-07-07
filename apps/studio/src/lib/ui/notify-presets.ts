@@ -5,59 +5,36 @@
  * @layer studio/lib/ui
  *
  * @description
- * Presets de notifications pour le Studio (admin).
- * Les messages (title/description) doivent être fournis **déjà traduits** par l’appelant.
+ * Semantic notification presets for common Studio actions.
  *
  * @remarks
- * - Fournit des helpers sémantiques pour éviter de répéter le type de notification.
- * - Wrap les appels vers `notify`.
+ * - Titles and descriptions must already be translated by the caller.
+ * - Keeps notification variants centralized so callers do not repeat `notify.success/info/error` directly.
  */
 
 import { notify } from "@compoz/studio/lib/ui/notify";
 
-/* -------------------------------------------------------------------------- */
-/*                              Actions élémentaires                           */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Notification lors de la création d’un nouvel élément.
- */
 export function notifyCreated(title: string, description: string): void {
   notify.success(title, description);
 }
 
-/**
- * Notification de suppression d’un élément.
- */
 export function notifyDeleted(title: string, description: string): void {
   notify.success(title, description);
 }
 
-/**
- * Notification de mise à jour d’un élément.
- */
 export function notifyUpdated(title: string, description: string): void {
   notify.success(title, description);
 }
 
-/**
- * Notification utilisée lorsque l'utilisateur tente d'enregistrer
- * un formulaire sans aucune modification.
- */
 export function notifyNoChanges(title: string, description: string): void {
   notify.info(title, description);
 }
 
-/* -------------------------------------------------------------------------- */
-/*                             Notifications d’erreurs                         */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Notification d’erreur “métier/UI” (ex: action impossible, validation, publish…).
- */
+/** Used when a save action is requested without any dirty form changes. */
 export function notifyValidationError(
   title: string,
   description: string,
 ): void {
+  /** Used for business or UI errors that should be shown as blocking feedback. */
   notify.error(title, description);
 }

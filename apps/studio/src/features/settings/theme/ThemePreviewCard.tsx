@@ -2,21 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/theme/ThemePreviewCard.tsx
- * @layer ui/studio/settings/theme
+ * @layer studio/features/settings/theme
  *
  * @description
- * Carte de preview du thème public.
- * Affiche la page Home dans l’iframe preview et injecte :
- * - la baseline `theme`
- * - les baselines shell public (header, identity, primaryMenu, footer, legalMenu, social)
- * - la baseline `siteIndex`
- * - la baseline `page:home`
+ * Live preview card for theme changes rendered against the public home page.
  *
  * @remarks
- * - Utilise `useStudioPreview` pour piloter l’iframe et le bridge preview.
- * - Injecte chaque baseline via `useStudioPreviewBaselineScope`.
- * - La preview fonctionne en live : plus de mode baseline/override ni de boutons sync/reset.
- * - Strictement UI-only : aucune logique métier.
+ * - Injects the theme draft together with public shell baselines so the preview matches the real site chrome.
+ * - Also injects `siteIndex` and `page:home` baselines because the theme preview renders a full page, not an isolated theme sample.
  */
 
 import { useTranslations } from "next-intl";
@@ -76,10 +69,7 @@ export function ThemePreviewCard({
 }: ThemePreviewCardProps) {
   const t = useTranslations();
 
-  /* ---------------------------------------------------------------------- */
-  /* Settings baselines (shell public)                                      */
-  /* ---------------------------------------------------------------------- */
-
+  // The theme preview needs public shell settings to render the same chrome as the live site.
   const { data: settingsBundle, isLoading: isLoadingSettingsBundle } =
     useSettingsBundle(DEFAULT_CONTENT_STATE);
 
@@ -136,10 +126,7 @@ export function ThemePreviewCard({
     ],
   );
 
-  /* ---------------------------------------------------------------------- */
-  /* Home page baseline (page:home) + siteIndex baseline                    */
-  /* ---------------------------------------------------------------------- */
-
+  // The preview renders the home page so theme changes are shown in realistic content.
   const slug = "home";
   const previewScope = useMemo(() => `page:${slug}`, [slug]);
 
@@ -176,10 +163,7 @@ export function ThemePreviewCard({
     };
   }, [homeBlocks, homePageName]);
 
-  /* ---------------------------------------------------------------------- */
-  /* Preview bridge                                                         */
-  /* ---------------------------------------------------------------------- */
-
+  // Every scope must be ready before the iframe can display a complete themed page.
   const { ready, setBaseline, iframeRef, frame } =
     useStudioPreview<PageRenderShape>(previewScope, {
       baseline: pageBaselinePreview,

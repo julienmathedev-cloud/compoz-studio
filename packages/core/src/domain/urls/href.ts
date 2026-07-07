@@ -1,14 +1,9 @@
 /**
- * @file src/core/domain/urls/href.ts
- * @layer core/domain
- * @description
- * Définit les types d’URLs brandées du domaine et les fonctions de dérivation associées.
- * Ce module se limite au typage et au branding Domain ; toute validation de format
- * ou de sécurité est supposée traitée en amont.
- *
+ * @file packages/core/src/domain/urls/href.ts
+ * @layer core/domain/urls
+ * @description Branded URL types and derivation helpers for domain boundaries.
  * @remarks
- * - Runtime injecté : aucune dépendance à `process.env` dans ce module.
- * - En prod, on évite les assertions coûteuses (on suppose les entrées déjà validées en amont).
+ * Format and security validation are expected upstream; dev assertions can still catch invalid branding inputs.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -20,32 +15,15 @@ import {
 } from "@compoz/core/domain/urls/guards";
 import { isMailtoHref } from "@compoz/core/domain/urls/mailto";
 
-/* -------------------------------------------------------------------------- */
-/* Runtime                                                                     */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Options runtime pour contrôler les assertions "dev".
- *
- * @remarks
- * - `isProd=true` => pas d'assertions (supposé validé par schemas/validators).
- * - `isProd=false` => assertions strictes pour détecter les erreurs tôt.
- */
 export type UrlRuntime = Readonly<{
   isProd: boolean;
 }>;
 
-/** Runtime par défaut (dev-friendly). À overrider via `setUrlRuntime`. */
 let _runtime: UrlRuntime = { isProd: false };
 
-/** Lecture interne du runtime (encapsulé pour centraliser la règle). */
 function isProd(): boolean {
   return _runtime.isProd;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Branding                                                                    */
-/* -------------------------------------------------------------------------- */
 
 type Brand<K extends string> = { readonly __brand: K };
 
@@ -62,10 +40,6 @@ export type BrandedHref =
   | HashAnchorUrl
   | MailtoUrl;
 
-/* -------------------------------------------------------------------------- */
-/* URL relatives                                                               */
-/* -------------------------------------------------------------------------- */
-
 export function rel(s: string): RelativeUrl {
   if (!isProd()) {
     if (!isRelativeUrl(s)) {
@@ -80,10 +54,6 @@ export function rel(s: string): RelativeUrl {
   return s as RelativeUrl;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Hash anchors                                                                */
-/* -------------------------------------------------------------------------- */
-
 export function anchor(s: string): HashAnchorUrl {
   if (!isProd()) {
     if (!isHashAnchor(s)) {
@@ -97,10 +67,6 @@ export function anchor(s: string): HashAnchorUrl {
 
   return s as HashAnchorUrl;
 }
-
-/* -------------------------------------------------------------------------- */
-/* URL absolues                                                                */
-/* -------------------------------------------------------------------------- */
 
 export function abs(s: string): AbsoluteHttpUrl {
   if (!isProd()) {
@@ -127,10 +93,6 @@ export function abs(s: string): AbsoluteHttpUrl {
   return s as AbsoluteHttpUrl;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Mailto                                                                      */
-/* -------------------------------------------------------------------------- */
-
 function mail(s: string): MailtoUrl {
   if (!isProd()) {
     if (!isMailtoHref(s)) {
@@ -144,10 +106,6 @@ function mail(s: string): MailtoUrl {
 
   return s as MailtoUrl;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Branding automatique (strict)                                               */
-/* -------------------------------------------------------------------------- */
 
 export function asBrandedHref(s: string): BrandedHref {
   const trimmed = s.trim();
@@ -164,10 +122,6 @@ export function asBrandedHref(s: string): BrandedHref {
 
   return rel(trimmed);
 }
-
-/* -------------------------------------------------------------------------- */
-/* Branding "safe" (tolérant, pour UI)                                         */
-/* -------------------------------------------------------------------------- */
 
 function brandHrefSafe(
   input: unknown,
@@ -197,9 +151,7 @@ function brandHrefSafe(
         if (isAbsoluteHttpProtocol(u.protocol) && u.hostname) {
           return abs(s);
         }
-      } catch {
-        // invalide -> fallback prev
-      }
+      } catch {}
       return prev;
     }
   }
@@ -207,9 +159,6 @@ function brandHrefSafe(
   return isRelativeUrl(s) ? rel(s) : prev;
 }
 
-/**
- * Version "safe" spécialisée pour les AssetUrl (interdit mailto).
- */
 export function brandAssetUrlSafe(
   input: unknown,
   prev?: AssetUrl,
@@ -217,13 +166,8 @@ export function brandAssetUrlSafe(
   const v = brandHrefSafe(input, prev);
   if (!v) return prev;
 
-  // Si mailto -> on refuse pour AssetUrl
   return isMailHref(v) ? prev : v;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Helpers de discrimination                                                   */
-/* -------------------------------------------------------------------------- */
 
 function isMailHref(href: BrandedHref): href is MailtoUrl {
   return href.startsWith("mailto:");
@@ -238,12 +182,6 @@ function isHttpAbsoluteUrl(s: string): boolean {
   return v.startsWith("http://") || v.startsWith("https://");
 }
 
-/**
- * Convertit une string **déjà validée** en `AssetUrl`.
- * - http(s) => abs()
- * - #anchor => anchor()
- * - sinon   => rel()
- */
 export function asAssetUrl(input: string): AssetUrl {
   const s = input.trim();
 
@@ -253,11 +191,6 @@ export function asAssetUrl(input: string): AssetUrl {
   return rel(s);
 }
 
-/**
- * Variante tolérante (optionnels) :
- * - null/undefined/"" => null
- * - sinon => asAssetUrl
- */
 export function asAssetUrlOrNull(
   input: string | null | undefined,
 ): AssetUrlOrNull {

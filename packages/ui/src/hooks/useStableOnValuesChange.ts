@@ -3,14 +3,9 @@
 /**
  * @file packages/ui/src/hooks/useStableOnValuesChange.ts
  * @layer ui/hooks
- *
- * @description
- * Hook utilitaire limitant les appels à `onChange` en détectant
- * les changements réels de valeurs via une signature stable.
- *
+ * @description Calls `onChange` only when watched values produce a new stable signature.
  * @remarks
- * - Conçu pour être utilisé avec `useWatch()` (RHF).
- * - La sérialisation par défaut est défensive et tolère les valeurs non sérialisables.
+ * Designed for React Hook Form `useWatch()` values; the default serializer is defensive against non-serializable values.
  */
 
 import { useEffect, useRef } from "react";
@@ -18,8 +13,7 @@ import { useEffect, useRef } from "react";
 type Serialize<T> = (values: T) => string;
 
 function fallbackObjectSignature(values: object): string {
-  // Fallback minimal : évite de throw si valeurs circulaires.
-  // Signature stable “best-effort” : clés triées + type des valeurs (shallow).
+  // Best-effort shallow signature for circular or otherwise unserializable objects.
   const entries = Object.entries(values as Record<string, unknown>)
     .map(([k, v]) => `${k}:${typeof v}`)
     .sort();

@@ -3,20 +3,14 @@
  * @layer ui/pages/mappers
  *
  * @description
- * Mapper "shared runtime" pour les pages :
- * - DTO domaine -> valeurs frontières stables (utilisées par le renderer public + preview)
+ * Maps page DTOs to stable runtime page shapes shared by site rendering and Studio preview.
  *
  * @remarks
- * Ici on ne garde que ce qui peut servir à site + studio (preview),
- * sans rien d’orienté "form admin" (intent DTO, normalisations d’inputs, etc.).
+ * Admin form intents and input normalization stay outside this boundary mapper.
  */
 
 import type { PageDTO } from "@compoz/core/domain/pages/dto";
 import type { PageFormValues } from "@compoz/validation/pages/page-form";
-
-/* -------------------------------------------------------------------------- */
-/* Defaults (frontière)                                                       */
-/* -------------------------------------------------------------------------- */
 
 const DEFAULT_SITEMAP: NonNullable<PageFormValues["sitemap"]> = {
   include: true,
@@ -29,18 +23,7 @@ function normalizePageSlug(input: string): string {
   return slug === "home" ? "/" : slug;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Domain (DTO) -> Shape frontière (safe)                                     */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Convertit une `PageDTO` en shape frontière stable (basée sur tes types Zod).
- *
- * @remarks
- * - Utilisable côté site + preview (studio).
- * - Pas d’intents API ici.
- * - Le cas `slug === "home"` est normalisé en "/" (convention runtime).
- */
+/** Converts the domain `home` slug convention to the runtime root path shape. */
 export function toPageShapeFromDTO(
   page: PageDTO | null | undefined,
   slugFallback?: string,

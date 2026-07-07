@@ -2,14 +2,15 @@
 
 /**
  * @file apps/studio/src/features/pages/hooks/useInternalPageOptions.ts
- * @layer hooks/studio/pages
+ * @layer studio/features/pages/hooks
  *
  * @description
- * Construit des options de pages internes (picker) à partir du SiteIndex.
+ * Builds internal page picker options from the SiteIndex.
  *
  * @remarks
- * - Source de vérité : `useReadSiteIndex(state)`.
- * - Centralise les règles de filtrage/label pour éviter la duplication.
+ * - Reads the SiteIndex through `useReadSiteIndex(state)` as the source of truth.
+ * - Centralizes filtering and label rules so internal page pickers stay consistent.
+ * - Supports href or page id option values depending on the caller use case.
  */
 
 import { useMemo } from "react";
@@ -20,16 +21,13 @@ import { useReadSiteIndex } from "@compoz/studio/features/site-index/useReadSite
 import { formatPagePath } from "@compoz/studio/lib/ui/pages";
 
 type UseInternalPageOptionsArgs = Readonly<{
-  /** Content state à lire (draft/published). */
   state?: ContentState;
 
-  /** Page à exclure (évite l'auto-link). */
   excludePageId?: string | null;
 
-  /** V0.5 : n'autoriser que les pages racines. */
+  /** Restricts options to root pages when enabled. */
   rootsOnly?: boolean;
 
-  /** Valeur stockée dans l’option : href (défaut) ou id. */
   valueMode?: "href" | "id";
 }>;
 

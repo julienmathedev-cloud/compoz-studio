@@ -1,12 +1,13 @@
 /**
  * @file packages/core/src/constants/icons/content-icons.ts
- * @layer core/constants
+ * @layer core/constants/icons
+ *
  * @description
- * Source de vérité métier pour les icônes de contenu.
+ * Domain source of truth for supported content icon kinds.
  *
  * @remarks
- * - Utilisé par domain, validation, UI.
- * - Aucune dépendance React ici.
+ * - Shared by domain, validation, and UI layers.
+ * - Keeps icon identifiers React-free so core remains framework-agnostic.
  */
 
 export const CONTENT_ICON_KINDS = [

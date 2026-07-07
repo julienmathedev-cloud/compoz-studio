@@ -1,6 +1,14 @@
 /**
  * @file apps/site/src/app/t/[websiteSlug]/robots.txt/route.ts
  * @layer site/app/metadata
+ *
+ * @description
+ * Explicit fallback robots.txt route for a public Website slug.
+ *
+ * @remarks
+ * - Resolves the Website from Prisma `Website.slug` before returning metadata.
+ * - Disallows indexing for `/t/:websiteSlug` fallback routes so canonical host-based routes remain preferred.
+ * - Builds the fallback sitemap URL from `NEXT_PUBLIC_SITE_URL` or the current request host.
  */
 
 import "server-only";
@@ -22,6 +30,7 @@ type RouteContext = Readonly<{
     | Readonly<{ websiteSlug: string }>;
 }>;
 
+/** Reconstructs the public request base URL when no configured site URL is available. */
 function resolveRequestBaseUrl(
   headersList: Awaited<ReturnType<typeof headers>>,
 ): string {

@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/validators/cells/button.ts
  * @layer core/domain/pages/validators
- * @description
- * Validateur métier de ButtonsCell.
+ * @description Domain validator for buttons cells.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -106,14 +105,14 @@ export function assertButtonPresentation(
     throw new DomainError({
       code: EC.CELL_BUTTON_ITEM_VARIANT_INVALID,
       message: EC.CELL_BUTTON_ITEM_VARIANT_INVALID,
-      details: { path: [...path, "variant"], meta: { variant: button.variant } },
+      details: {
+        path: [...path, "variant"],
+        meta: { variant: button.variant },
+      },
     });
   }
 
-  if (
-    button.icon !== null &&
-    !CONTENT_ICON_KINDS.includes(button.icon)
-  ) {
+  if (button.icon !== null && !CONTENT_ICON_KINDS.includes(button.icon)) {
     throw new DomainError({
       code: EC.CELL_BUTTON_ICON_INVALID,
       message: EC.CELL_BUTTON_ICON_INVALID,

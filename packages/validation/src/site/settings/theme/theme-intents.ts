@@ -1,10 +1,13 @@
 /**
  * @file packages/validation/src/site/settings/theme/theme-intents.ts
  * @layer schemas
+ *
  * @description
- * Définit les schémas Zod décrivant la forme frontière des intentions liées aux réglages du thème public.
- * Ces schémas valident uniquement la structure des payloads (API) ; les invariants métier
- * et règles de cohérence sont traités dans le domaine.
+ * Zod schema describing the public theme settings update intent payload boundary.
+ *
+ * @remarks
+ * This schema validates API payload shape only. Business invariants and
+ * consistency rules are handled by the domain layer.
  */
 
 import type { z } from "zod";
@@ -15,13 +18,11 @@ import {
 } from "@compoz/validation/site/settings/theme/theme";
 
 /**
- * Intention de mise à jour des réglages du thème public.
+ * Uses the object schema because `.partial()` cannot be applied safely to the
+ * refined final theme settings schema.
  *
  * @remarks
- * - Contrat : payload partiel aligné sur la forme des settings.
- * - `lightTokens` et `darkTokens` acceptent aussi des patchs partiels.
- * - On part de `ThemeSettingsObjectSchema` et non `ThemeSettingsSchema`
- *   car `.partial()` n’est pas compatible avec un schéma contenant des refinements.
+ * Token groups also accept partial patches.
  */
 export const UpdateThemeSettingsIntentSchema =
   ThemeSettingsObjectSchema.partial()
@@ -31,9 +32,6 @@ export const UpdateThemeSettingsIntentSchema =
     })
     .strict();
 
-/**
- * DTO d’intention : résultat typé du parsing du payload de mise à jour.
- */
 export type UpdateThemeSettingsIntentDTO = z.infer<
   typeof UpdateThemeSettingsIntentSchema
 >;

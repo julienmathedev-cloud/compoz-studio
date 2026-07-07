@@ -1,16 +1,15 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/confirm/components/ConfirmationDialogDescription.tsx
- * @layer ui/molecules
+ * @file apps/studio/src/features/confirm/ConfirmationDialogDescription.tsx
+ * @layer studio/features/confirm
  *
  * @description
- * Composition UI pour les dialogues de confirmation : texte d’introduction optionnel
- * + liste de warnings/hints via `HintList`.
+ * Presentational confirmation dialog body with optional intro text and hint list content.
  *
  * @remarks
- * - Le rendu est purement présentational.
- * - La tonalité visuelle est pilotée par `variant`.
+ * - Delegates visual tone to `HintList` through `variant`.
+ * - Accepts authored React content for both intro and hints so callers can include links or formatted text.
  */
 
 import type { ReactNode } from "react";
@@ -21,17 +20,11 @@ import { HintList } from "@compoz/studio/components/molecules/feedback/HintList"
 type Variant = "info" | "warning" | "success" | "error";
 
 export type ConfirmationDialogProps = Readonly<{
-  /** Intro optionnelle (contenu déjà rédigé). */
   intro?: ReactNode;
-  /** Liste de hints/warnings (textes ou JSX). */
   hints: ReadonlyArray<ReactNode>;
-  /** Tonalité visuelle (`info`/`warning`/`success`/`error`). */
   variant?: Variant;
 }>;
 
-/**
- * Rend une intro optionnelle suivie d’une liste de hints.
- */
 export function ConfirmationDialogDescription({
   intro,
   hints,

@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/styles/shared/typography.ts
- * @layer styles/shared
+ * @layer ui/styles/shared
  *
  * @description
- * Tokens typographiques SITE pour le rendu “prose” (rich text + contenus).
+ * Defines shared prose typography class tokens for rich text and content rendering.
  */
 
 export const PROSE_BASE = [
@@ -15,19 +15,17 @@ export const PROSE_BASE = [
   "prose-strong:text-foreground",
   "prose-a:text-foreground",
 
-  // spacing
   "prose-p:my-1",
   "prose-li:my-1",
   "prose-li:[&>p]:my-1",
   "prose-li:[&>p]:leading-relaxed",
 
-  // default lists
   "prose-ul:list-disc",
   "prose-ol:list-decimal",
   "prose-ul:pl-6",
   "prose-ol:pl-6",
 
-  // Liste customisée
+  // Custom list variants rely on TipTap list metadata.
   "[&_ul[data-list-variant=check]]:!list-none",
   "[&_ul[data-list-variant=arrow]]:!list-none",
   "[&_ul[data-list-variant=check]]:pl-0",
@@ -47,7 +45,6 @@ export const PROSE_BASE = [
   "[&_ul[data-list-variant=check]>li]:before:content-['✓']",
   "[&_ul[data-list-variant=arrow]>li]:before:content-['→']",
 
-  // quote
   "prose-blockquote:border-l-4",
   "prose-blockquote:pl-4",
   "prose-blockquote:italic",

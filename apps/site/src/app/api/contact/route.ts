@@ -3,16 +3,15 @@
  * @layer site/app
  *
  * @description
- * Route API publique d’envoi de formulaire de contact via Resend.
+ * Public contact form API route powered by Resend.
  *
  * @remarks
- * - Route server-only.
- * - Valide défensivement le payload reçu.
- * - Envoie un email vers l’adresse configurée dans la cellule formulaire.
- * - Utilise `CONTACT_FROM_EMAIL` comme expéditeur.
- * - Supporte les champs dynamiques configurés depuis le builder.
- * - Utilise `subject` / `sujet` comme convention optionnelle pour le sujet du mail.
- * - Utilise `email` comme convention optionnelle pour permettre une réponse directe.
+ * - Runs server-side and validates the received payload defensively.
+ * - Sends email to the destination configured by the form cell.
+ * - Uses `CONTACT_FROM_EMAIL` as the sender address.
+ * - Supports dynamic fields configured from the builder.
+ * - Uses `subject` / `sujet` as optional subject conventions.
+ * - Uses `email` as the optional reply-to convention.
  */
 
 import { NextResponse } from "next/server";

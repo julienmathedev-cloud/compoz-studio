@@ -3,7 +3,7 @@
  * @layer studio/app
  *
  * @description
- * Page « Menu » (Studio) — route du dashboard.
+ * Studio Dashboard route that delegates menu settings to `MenuPage`.
  */
 
 import { MenuPage } from "@compoz/studio/features/settings/menus/MenuPage";

@@ -2,10 +2,16 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/testimonials/TestimonialsCellEditor.tsx
- * @layer ui/studio/pages/blocks/editor/cells
+ * @layer studio/features/builder/editor/cells/testimonials
  *
  * @description
- * Éditeur RHF-aware d’une TestimonialsCell.
+ * RHF-aware TestimonialsCell editor for heading fields, display mode, and testimonial item editing.
+ *
+ * @remarks
+ * - Binds title, description, and display mode directly through RHF `useController`.
+ * - Manages testimonial items through `useFieldArray` so values, errors, and reordering stay consistent.
+ * - Reads live item values through `useWatch` and delegates item rendering to `TestimonialsListEditor`.
+ * - Passes optional image uploads down to testimonial item editors.
  */
 
 import { useTranslations } from "next-intl";
@@ -157,9 +163,7 @@ export function TestimonialsCellEditor({
         placeholder={t(
           "studio.cellEditorTabs.testimonialsCellEditor.descriptionPlaceholder",
         )}
-        help={t(
-          "studio.cellEditorTabs.testimonialsCellEditor.descriptionHelp",
-        )}
+        help={t("studio.cellEditorTabs.testimonialsCellEditor.descriptionHelp")}
         rows={3}
       />
 

@@ -2,22 +2,15 @@
 
 /**
  * @file apps/studio/src/features/settings/theme/useThemeSettings.ts
- * @layer hooks/studio/site/theme
+ * @layer studio/features/settings/theme
  *
  * @description
- * Hook Studio spécialisé pour gérer les réglages du thème public via l’API.
+ * Studio hook for loading, diffing, saving, and caching public theme settings.
  *
  * @remarks
- * - Basé sur le pattern Settings RHF-first (`useSettingsResource`).
- * - Travaille exclusivement sur le modèle UI (`ThemeFormValues`).
- * - Orchestration UI-only : defaults, load, diff minimal, save, notifications.
- * - Aucune logique métier ni validation domaine.
- * - Le cache settings/status est scopé par Prisma Website.id.
- *
- * Option B, bundle read :
- * - READ : provient du bundle global React Query.
- * - WRITE : reste slice-by-slice via PATCH theme.
- * - Après un save : patch du cache bundle theme + invalidate status.
+ * - Reads from the shared settings bundle cache, then writes only the `theme` slice through PATCH.
+ * - Keeps RHF form values as the local editing shape and normalizes values at load/save boundaries.
+ * - After save, patches the bundle cache and invalidates the site status read model.
  */
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -60,25 +53,18 @@ export function useThemeSettings(): UseThemeSettingsResult {
   const resource = useSettingsResource<ThemeFormValues>({
     entityLabel,
 
-    /**
-     * Valeurs par défaut domaine → UI → normalisation.
-     */
     defaults: normalizeThemeFormValues(
       toThemeFormValuesFromDTO(DEFAULT_THEME_SETTINGS),
     ),
 
-    /**
-     * READ bundle : cache-first + fetchQuery fallback.
-     */
+    /** Shared bundle read with cache-first behavior handled by `getSettingsBundle`. */
     load: async (state: ContentState) => {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
       return normalizeThemeFormValues(toThemeFormValuesFromDTO(bundle.theme));
     },
 
-    /**
-     * WRITE slice PATCH + patch bundle cache.
-     */
+    /** Writes the theme slice, then mirrors the response into the settings bundle cache. */
     save: async (next, opts) => {
       const patch = toUpdateThemeIntentDTOFromFormValues(next);
       const dto = await settingsStudioApi.theme.patch(patch, opts);
@@ -96,28 +82,18 @@ export function useThemeSettings(): UseThemeSettingsResult {
       return normalizeThemeFormValues(toThemeFormValuesFromDTO(dto.settings));
     },
 
-    /**
-     * Diff minimal : ne renvoie que les champs réellement modifiés.
-     */
+    /** PATCH semantics: only changed form fields are sent to the API. */
     buildPatch: (baseline, next) =>
       buildShallowDiff(
         normalizeThemeFormValues(baseline),
         normalizeThemeFormValues(next),
       ) ?? null,
 
-    /**
-     * Baseline stable et cohérente à l’entrée/sortie réseau.
-     */
     onLoaded: normalizeThemeFormValues,
 
-    /**
-     * Normalisation safe avant diff/save.
-     */
     beforeSave: normalizeThemeFormValues,
 
-    /**
-     * Après save : invalide le read-model status et le bundle settings.
-     */
+    /** Keeps derived status and shared bundle queries aligned after a successful save. */
     onSaved: () => {
       void invalidateSiteStatus(queryClient, websiteId);
 

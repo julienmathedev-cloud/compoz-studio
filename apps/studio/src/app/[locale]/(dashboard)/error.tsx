@@ -5,11 +5,11 @@
  * @layer studio/app
  *
  * @description
- * Error boundary du Dashboard Studio.
+ * Error boundary for the Studio Dashboard.
  *
  * @remarks
- * - Doit être un composant client (Next.js Error Boundary).
- * - Fournit une action "Réessayer" via `reset()`.
+ * - Must be a client component because this is a Next.js Error Boundary.
+ * - Provides a retry action through `reset()`.
  */
 
 import { useTranslations } from "next-intl";
@@ -42,7 +42,7 @@ export default function StudioError({ error, reset }: StudioErrorProps) {
 
         <Text variant="muted">{t("studio.pages.error.description")}</Text>
 
-        {/* Optionnel : message utile (éviter d’exposer en prod) */}
+        {/* Optional diagnostic message; avoid exposing it in production. */}
         {process.env.NODE_ENV !== "production" && error?.message ? (
           <Text variant="meta" className="wrap-break-words">
             {error.message}

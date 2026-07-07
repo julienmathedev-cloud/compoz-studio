@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/validators/cells/shared-image.ts
  * @layer core/domain/pages/validators
- * @description
- * Validateur partagé des images de cells.
+ * @description Shared domain validators for image-based cells.
  */
 
 import { assertImage } from "@compoz/core/domain/assets/validators/image";

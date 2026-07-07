@@ -1,16 +1,12 @@
 /**
  * @file apps/studio/src/features/settings/mappers/legal-menu-form.ts
- * @layer ui-mappers/studio/site
+ * @layer studio/features/settings/mappers
+ *
  * @description
- * Mappers UI LegalMenu (studio forms) :
- * - DTO -> valeurs de formulaire RHF
- * - normalisation UI (draft-friendly)
- * - Shape depuis FormValues (preview)
- * - INTENTS DTO pour l’API
+ * Studio legal menu settings mappers for form values, preview shape, and API intents.
  *
  * @remarks
- * - DTO -> Shape runtime (shared, renderer) : `toLegalMenuSettingsShapeFromDTO` (package ui).
- * - Ici, la normalisation `href` est "draft-friendly" (internal/external) pour le studio.
+ * - Hrefs stay draft-friendly so internal and external links can be edited before validation.
  */
 
 import type {
@@ -42,12 +38,6 @@ function normalizeHrefDraftKeepEmpty(href: string): string {
   return normalizeHrefDraft(v);
 }
 
-/* ------------------------------ item mappers ------------------------------ */
-
-/**
- * DTO domaine -> UI (RHF)
- * Contrat : seules les propriétés exposées côté UI sont retournées.
- */
 function toLegalMenuItemFormValuesFromDTO(
   it: LegalMenuItemDTO,
 ): LegalMenuItemFormValues {
@@ -59,10 +49,6 @@ function toLegalMenuItemFormValuesFromDTO(
   };
 }
 
-/**
- * Normalise un item LegalMenu côté UI : trim et coercition.
- * Contrat : forme prête pour le formulaire RHF.
- */
 export function normalizeLegalMenuItemFormValues(
   i: LegalMenuItemFormValues,
 ): LegalMenuItemFormValues {
@@ -74,8 +60,6 @@ export function normalizeLegalMenuItemFormValues(
   };
 }
 
-/* ----------------------- Domaine (DTO) -> UI (form values) ------------------ */
-
 export function toLegalMenuFormValuesFromDTO(
   dto: LegalMenuSettingsDTO,
 ): LegalMenuFormValues {
@@ -83,16 +67,6 @@ export function toLegalMenuFormValuesFromDTO(
   return { items: items.map(toLegalMenuItemFormValuesFromDTO) };
 }
 
-/* ------------------- Studio (RHF) -> Preview/Public (SettingsShape) ----------- */
-
-/**
- * Transforme les valeurs du formulaire LegalMenu en shape Settings canonique.
- *
- * @remarks
- * - Utilisé par la preview studio (draft).
- * - Retourne une shape "frontière" (strings), sans dérivations métier.
- * - Normalise `href` en "draft-friendly".
- */
 export function toLegalMenuSettingsShapeFromFormValues(
   values: LegalMenuFormValues,
 ): LegalMenuSettingsShape {
@@ -108,20 +82,12 @@ export function toLegalMenuSettingsShapeFromFormValues(
   };
 }
 
-/**
- * DTO -> Shape (re-export studio convenience)
- *
- * @remarks
- * Optionnel : garde un point d’entrée unique côté studio si tu veux,
- * sinon tu peux importer directement depuis `@compoz/ui/site/mappers/legal-menu-shape`.
- */
+/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
 export function toLegalMenuSettingsShape(
   dto: LegalMenuSettingsDTO,
 ): LegalMenuSettingsShape {
   return toLegalMenuSettingsShapeFromDTO(dto);
 }
-
-/* ---------------------------- Normalisations UI ---------------------------- */
 
 export function normalizeLegalMenuFormValues(
   values: LegalMenuFormValues,
@@ -133,13 +99,7 @@ export function normalizeLegalMenuFormValues(
   };
 }
 
-/* ------------------------------ UI -> INTENT (API) -------------------------- */
-
-/**
- * Transforme un INTENT UI partiel en DTO d’intent (draft-only) :
- * - Ne renvoie que les clés présentes dans `p`.
- * - Applique trim/coercition comme pour les form values complètes.
- */
+/** Builds a partial API intent while preserving PATCH semantics. */
 export function toUpdateLegalMenuIntentDTOFromFormValues(
   p: Partial<LegalMenuFormValues>,
 ): UpdateLegalMenuSettingsIntentDTO {

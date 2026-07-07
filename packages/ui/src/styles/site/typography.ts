@@ -1,12 +1,9 @@
 /**
  * @file packages/ui/src/styles/site/typography.ts
- * @layer styles/site
+ * @layer ui/styles/site
  *
  * @description
- * Tokens typographiques SITE pour le rendu “prose” (rich text + contenus).
- *
- * @remarks
- * Utilisés côté site (public) et côté studio (preview/renderer).
+ * Re-exports shared prose typography tokens for public site rendering surfaces.
  */
 
 import {

@@ -3,15 +3,13 @@
  * @layer studio/app
  *
  * @description
- * Layout localisé i18n du Dashboard Studio.
+ * Localized layout for authenticated Studio Dashboard routes.
  *
  * @remarks
- * - Initialise la locale (`setRequestLocale`).
- * - Fournit `NextIntlClientProvider`.
- * - Résout la session Studio et le Website actif côté server.
- * - Monte les providers client globaux (React Query, thème, sidebar, toasts, etc.).
- * - Ne contient pas `<html>` / `<body>` (réservés au root `app/layout.tsx`).
- * - Génère les params statiques `[locale]` pour Next.js.
+ * - Resolves the Studio session and active Website server-side before mounting the shell.
+ * - Redirects stale Website sessions through the dedicated reset endpoint.
+ * - Mounts shared providers for i18n, React Query, theme, sidebar, tooltips, and toasts.
+ * - Does not render `<html>` / `<body>`; those are owned by root `app/layout.tsx`.
  */
 
 import type { ReactNode } from "react";
@@ -49,10 +47,6 @@ type LocaleLayoutProps = Readonly<{
   >;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
 function isLocale(value: string): value is Locale {
   return routing.locales.includes(value as Locale);
 }
@@ -71,17 +65,9 @@ function normalizeWebsiteName(value: unknown): string | undefined {
   return websiteName ? websiteName : undefined;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Static params                                                              */
-/* -------------------------------------------------------------------------- */
-
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
-
-/* -------------------------------------------------------------------------- */
-/* Layout                                                                     */
-/* -------------------------------------------------------------------------- */
 
 export default async function LocaleLayout({
   children,

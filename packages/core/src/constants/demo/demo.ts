@@ -1,33 +1,20 @@
 /**
  * @file packages/core/src/constants/demo/demo.ts
- * @layer core/constants
+ * @layer core/constants/demo
  *
  * @description
- * Constantes partagées liées au système de sandbox démo Compoz.
+ * Shared constants for the Compoz demo sandbox system.
  *
  * @remarks
- * - Centralise les conventions V1 utilisées par le bootstrap, l’auth
- *   et le cleanup des sandboxes démo.
- * - Ne contient volontairement aucune logique métier.
- */
+ * - Centralizes V1 conventions used by demo bootstrap, auth, and sandbox cleanup.
+ * - Contains no business logic by design.
+ * /
 
-/**
- * Website seed source de vérité utilisé pour cloner une sandbox démo.
- *
- * @remarks
- * Cette valeur correspond à un Prisma Website.id.
- */
+/** Prisma Website.id used as the source seed when cloning a demo sandbox. */
 export const DEMO_SEED_WEBSITE_ID = "demo" as const;
 
-/**
- * Cookie permettant d’identifier l’instance sandbox associée au visiteur.
- */
+/** Cookie name used to bind a visitor to their demo sandbox instance. */
 export const DEMO_INSTANCE_COOKIE_NAME = "compoz_demo_instance" as const;
 
-/**
- * Durée de vie par défaut d’une sandbox démo V1.
- *
- * Valeur actuelle :
- * - 24 heures
- */
+/** Default V1 demo sandbox lifetime: 24 hours. */
 export const DEMO_SANDBOX_TTL_MS = 24 * 60 * 60 * 1000;

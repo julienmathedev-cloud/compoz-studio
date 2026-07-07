@@ -1,13 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/demo/mobile-menu.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/demo
  *
  * @description
- * Skin UI pour le menu mobile du site (thème Demo).
- *
- * @remarks
- * - Renforce les micro-interactions du menu mobile.
- * - Repose sur le socle structurel du thème Default.
+ * Defines the demo skin overrides for the public site mobile menu.
  */
 
 import type { SiteMobileMenuUiOverride } from "@compoz/ui/site/site-ui.types";

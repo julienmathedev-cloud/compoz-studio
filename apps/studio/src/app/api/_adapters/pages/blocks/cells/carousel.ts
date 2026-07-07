@@ -3,13 +3,11 @@
  * @layer studio/app/api/adapters
  *
  * @description
- * Studio API adapter for CarouselCell.
+ * Studio API adapter for `CarouselCell` values.
  *
  * @remarks
- * The carousel adapter owns cell-level concerns such as `variant`,
- * `showDots`, `showArrows`, `itemKind`, and `cssClassName`.
- *
- * Reusable item shapes are delegated to item adapters.
+ * - Keeps cell-level fields here, such as `variant`, `showDots`, `showArrows`, `itemKind`, and `cssClassName`.
+ * - Delegates reusable item shapes to item adapters.
  */
 
 import type { CarouselCell } from "@compoz/core/domain/pages/entities/cell";

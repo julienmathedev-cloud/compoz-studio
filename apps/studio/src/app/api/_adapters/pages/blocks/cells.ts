@@ -3,7 +3,7 @@
  * @layer studio/app/api/adapters
  *
  * @description
- * Studio API adapters entry point for page block cells.
+ * Dispatches page block cell intents to their dedicated Studio API adapters.
  */
 
 import type { Cell } from "@compoz/core/domain/pages/entities/cell";

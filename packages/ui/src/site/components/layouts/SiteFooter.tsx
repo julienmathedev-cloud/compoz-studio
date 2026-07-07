@@ -1,18 +1,12 @@
 /**
  * @file packages/ui/src/site/components/layouts/SiteFooter.tsx
- * @layer ui/site/components
+ * @layer ui/site/components/layouts
  *
  * @description
- * Footer site : powered by, copyright (année optionnelle) + navigation secondaire (menu légal).
+ * Renders the public site footer with powered-by, copyright, and legal navigation surfaces.
  *
  * @remarks
- * - Rend `null` si aucune information n’est affichable.
- * - Les items du menu légal sont normalisés localement pour déterminer si un rendu est nécessaire.
- * - Le style est fourni par le skin/template via `ui`.
- *
- * @accessibility
- * - Le footer porte un `aria-label` (landmark explicite).
- * - Les liens légaux sont rendus via `SiteLegalMenu`.
+ * Returns nothing when no footer content is renderable; legal links are delegated to `SiteLegalMenu`.
  */
 
 import Link from "next/link";
@@ -27,8 +21,6 @@ import type { LegalMenuSettingsShape } from "@compoz/validation/site/settings/me
 export type SiteFooterProps = Readonly<{
   footer: FooterSettingsShape;
   legalMenu: LegalMenuSettingsShape;
-
-  /** Optionnel : classes UI injectées par le skin/template. */
   ui: SiteFooterUi;
 }>;
 

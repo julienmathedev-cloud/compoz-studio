@@ -2,18 +2,15 @@
 
 /**
  * @file apps/studio/src/features/pages/blocks/components/molecules/BlockCellsDescription.tsx
- * @layer ui/studio/pages/blocks/molecules
+ * @layer studio/features/pages/blocks/components/molecules
  *
  * @description
- * Résumé UI d’un block :
- * - nom seul
- * - badges seuls
- * - nom + badges
+ * Block summary renderer for title, cell badges, or title-and-badges modes.
  *
  * @remarks
- * - Strictement UI-only.
- * - Supporte le block `section` (V0.9).
- * - Fournit un fallback lisible pour les autres types de blocks.
+ * - Extracts cell badges only for `section` blocks, where rows, columns, and cells exist.
+ * - Provides a readable fallback summary for non-section block types.
+ * - Keeps badge tooltips accessible with focusable triggers and screen-reader labels.
  */
 
 import type { BlockDTO, CellDTO } from "@compoz/core/domain/pages/dto";

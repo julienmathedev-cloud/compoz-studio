@@ -2,15 +2,14 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/primary-menu/components/molecules/PrimaryMenuChildRow.tsx
- * @layer ui/studio/molecules
+ * @layer studio/features/settings/menus/primary-menu/components/molecules
+ *
  * @description
- * Composant représentant une ligne d’item dans le formulaire du menu principal.
- * Il gère les champs `label`, `href` et `newTab` en utilisant react-hook-form.
+ * RHF-connected sortable row for editing one child item in the primary menu.
  *
  * @remarks
- * - Utilise `useController` pour connecter les champs au formulaire RHF.
- * - Gère la validation et l’affichage des erreurs pour chaque champ.
- * - Permet la validation immédiate du champ `href` lors de changements programmatiques.
+ * - Keeps `useController` inside the row so each sortable child owns its field subscriptions.
+ * - Auto-fills an internal href from the label only while the href field is still an untouched draft.
  */
 
 import type { InternalPageOptionDTO } from "@compoz/core/domain/pages/dto";
@@ -27,13 +26,9 @@ import type {
 } from "react-hook-form";
 import { useController } from "react-hook-form";
 
-// Types UI locaux (erreurs / invalid par champ).
 type RowErrorMessages = Partial<Record<"label" | "href", string | undefined>>;
 type RowInvalidFlags = Partial<Record<"label" | "href", boolean>>;
 
-/**
- * Props de la row enfant (sous-lien d’un parent).
- */
 type ChildRowProps = Readonly<{
   sortableId: string;
   pIdx: number;
@@ -47,9 +42,6 @@ type ChildRowProps = Readonly<{
   onRemove: () => void;
 }>;
 
-/**
- * Row RHF (enfant) — obligatoire pour appeler `useController`.
- */
 export function PrimaryMenuChildRow({
   sortableId,
   pIdx,
@@ -111,6 +103,7 @@ export function PrimaryMenuChildRow({
         : undefined,
   };
 
+  /** Forces href validation after programmatic link-field updates. */
   const validateHrefNow = (markTouched?: boolean) => {
     if (markTouched) {
       hrefCtrl.field.onBlur();
@@ -119,10 +112,10 @@ export function PrimaryMenuChildRow({
     void trigger(`items.${pIdx}.children.${cIdx}.href` as const);
   };
 
+  /** Auto-fills draft internal links from the label without overwriting user-edited hrefs. */
   const handleLabelBlur = () => {
     labelCtrl.field.onBlur();
 
-    // Option 1 : externe dérivé depuis href
     const hrefNow = String(hrefCtrl.field.value ?? "");
     const flags = resolveLinkFlags(hrefNow);
 
@@ -134,6 +127,7 @@ export function PrimaryMenuChildRow({
     if (hrefCtrl.fieldState.isTouched) return;
 
     const currentHref = hrefNow.trim();
+    // New child rows start with `/`; keep it editable until the label can produce a better internal slug.
     const isEmptyInternalDraft = currentHref === "" || currentHref === "/";
 
     if (!isEmptyInternalDraft) return;

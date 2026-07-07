@@ -2,10 +2,17 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/testimonials/TestimonialsListEditor.tsx
- * @layer ui/studio/pages/blocks/editor/testimonials
+ * @layer studio/features/builder/editor/cells/testimonials
  *
  * @description
- * Éditeur UI de liste de témoignages avec ajout, suppression et reorder.
+ * RHF-aware list editor for TestimonialsCell items, including add, remove, and reorder actions.
+ *
+ * @remarks
+ * - Receives `useFieldArray` actions from `TestimonialsCellEditor`.
+ * - Reordering is handled by dnd-kit while append/remove/move stay delegated to RHF.
+ * - React keys and dnd-kit sorting use RHF `fieldId` for each testimonial item.
+ * - Guards reordering when watched item values are temporarily out of sync with fields.
+ * - Passes optional image uploads down to nested testimonial editors.
  */
 
 import {

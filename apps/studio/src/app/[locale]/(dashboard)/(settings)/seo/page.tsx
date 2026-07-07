@@ -3,7 +3,7 @@
  * @layer studio/app
  *
  * @description
- * Page « SEO » (Studio) — route du dashboard.
+ * Studio Dashboard route that delegates SEO settings to `SeoPage`.
  */
 
 import { SeoPage } from "@compoz/studio/features/settings/seo/SeoPage";

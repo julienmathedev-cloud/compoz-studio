@@ -3,11 +3,11 @@
  * @layer studio/app
  *
  * @description
- * Page de preview “empty” (SSR-safe) : rend un empty state déterministe.
+ * SSR-safe empty preview page that renders a deterministic empty state.
  *
  * @remarks
- * - Pas de "use client" ici.
- * - Lit `searchParams.label` côté server pour éviter tout mismatch d’hydratation.
+ * - No `"use client"` directive here.
+ * - Reads `searchParams.label` on the server to avoid hydration mismatches.
  */
 
 import { EmptyState } from "@compoz/studio/components/molecules/feedback/EmptyState";

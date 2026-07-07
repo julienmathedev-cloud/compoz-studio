@@ -1,9 +1,9 @@
 /**
  * @file packages/ui/src/site/skins/demo/pager.ui.ts
- * @layer ui/site/skins
+ * @layer ui/site/skins/demo
  *
  * @description
- * Skin UI — pager site (thème Démo).
+ * Defines the demo skin overrides for public site detail page pagination.
  */
 
 import type { SiteDetailPagerUiOverride } from "@compoz/ui/site/site-ui.types";

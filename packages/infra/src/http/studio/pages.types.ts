@@ -1,23 +1,13 @@
 /**
  * @file packages/infra/src/http/studio/pages.types.ts
  * @layer infra/http/studio
- * @description
- * DTO SoT des réponses pages (Studio).
- *
+ * @description DTO contracts for Studio page endpoints.
  * @remarks
- * - Aligné sur les routes Next (préfixées via ENDPOINTS) :
- *   - /api/.../pages
- *   - /api/.../pages/[pageId]
- *   - /api/.../pages/[pageId]/blocks
- * - Aucun import depuis `app/api/...`
+ * These DTOs stay aligned with the HTTP routes without importing from `app/api`.
  */
 
 import type { BlockDTO, PageDTO } from "@compoz/core/domain/pages/dto";
 import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
-
-/* -------------------------------------------------------------------------- */
-/* Pages index                                                                */
-/* -------------------------------------------------------------------------- */
 
 export type GetPagesIndexResponse = Readonly<{ index: SiteIndexDTO }>;
 
@@ -34,10 +24,6 @@ export type UpdatePageResponse = Readonly<{
 }>;
 
 export type DeletePageResponse = Readonly<{ index: SiteIndexDTO }>;
-
-/* -------------------------------------------------------------------------- */
-/* Blocks                                                                     */
-/* -------------------------------------------------------------------------- */
 
 export type ListPageBlocksResponse = Readonly<{
   blocks: ReadonlyArray<BlockDTO>;

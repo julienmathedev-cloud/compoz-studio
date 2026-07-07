@@ -1,8 +1,8 @@
 /**
  * @file packages/validation/src/pages/blocks/cells/details/common.ts
- * @layer schemas
+ * @layer validation/pages/blocks/cells/details
  * @description
- * Atomes Zod partagés pour les cells.
+ * Defines shared Zod atoms for cell detail schemas.
  */
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";

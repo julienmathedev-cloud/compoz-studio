@@ -2,19 +2,14 @@
 
 /**
  * @file apps/studio/src/components/molecules/fields/ColorPicker.tsx
- * @layer ui/studio/molecules
+ * @layer studio/molecules/fields
  *
  * @description
- * Color picker bas niveau (V1) :
- * - carré saturation / luminosité
- * - slider de teinte (hue)
- * - sortie contrôlée en HEX
+ * Low-level HEX color picker with saturation/value surface and hue slider.
  *
  * @remarks
- * - HEX only.
- * - Sans alpha.
- * - Sans pipette.
- * - Strictement UI-only.
+ * - Outputs controlled HEX values only.
+ * - Does not support alpha or eyedropper selection.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -23,20 +18,12 @@ import { Slider } from "@compoz/ui/components/ui/slider";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_SM } from "@compoz/ui/styles/studio/layout";
 
-/* -------------------------------------------------------------------------- */
-/* Types                                                                      */
-/* -------------------------------------------------------------------------- */
-
 export type ColorPickerProps = Readonly<{
   value: string;
   onChange: (nextHex: string) => void;
   disabled?: boolean;
   className?: string;
 }>;
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 type HsvColor = Readonly<{
   h: number;
@@ -174,10 +161,6 @@ function hsvToHex(hsv: HsvColor): string {
   const { r, g, b } = hsvToRgb(hsv.h, hsv.s, hsv.v);
   return rgbToHex(r, g, b);
 }
-
-/* -------------------------------------------------------------------------- */
-/* Component                                                                  */
-/* -------------------------------------------------------------------------- */
 
 export function ColorPicker({
   value,

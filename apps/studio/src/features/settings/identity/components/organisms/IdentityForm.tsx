@@ -1,18 +1,14 @@
 "use client";
 
 /**
- * @file apps/studio/src/features/settings/identity/IdentityForm.tsx
- * @layer ui/studio/settings/identity/organisms
+ * @file apps/studio/src/features/settings/identity/components/organisms/IdentityForm.tsx
+ * @layer studio/features/settings/identity/components/organisms
  *
  * @description
- * Formulaire d’édition de l’identité (titre, tagline, logo, favicon) — RHF + Zod comme source de vérité UI.
+ * RHF and Zod Studio form for site identity settings.
  *
  * @remarks
- * - Contrôlé : le parent fournit `initialValues` et reçoit `onSubmit`.
- * - Les warnings UI (non bloquants) sont dérivés des valeurs RHF et remontés au parent.
- * - Les groupes Logo / Favicon sont gérés via des composants RHF-aware (`LogoFields`, `FaviconFields`).
- * - La logique “near limit” sur `siteName` / `tagline` reste locale à ce formulaire.
- * - Le reset RHF est géré localement puis notifié au parent via `onReset` (optionnel).
+ * - Keeps logo and favicon wiring in RHF-aware field groups while this form owns near-limit hints and invalid-submit focus.
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,57 +52,33 @@ type UploadedRasterImage = Readonly<{
   mediaAssetId?: string;
 }>;
 
-/**
- * Seuil à partir duquel on affiche une aide “proche de la limite”.
- */
 const NEAR_LIMIT_THRESHOLD = 10;
 
-/**
- * Priorité de focus des champs bloquants lors d’un submit invalide.
- *
- * @remarks
- * - `logo` est un objet complexe.
- * - On cible explicitement le champ `logo.alt` via l’ID généré par `LogoFields`.
- */
+/** Invalid-submit focus priority; `logo.alt` is targeted through the generated field id. */
 const FIELD_PRIORITY = ["siteName", "logo.alt"] as const;
 
 type FocusableFieldName = (typeof FIELD_PRIORITY)[number];
 
-/**
- * Props du composant `IdentityForm`.
- */
 type IdentityFormProps = Readonly<{
-  /** Valeurs initiales (baseline) fournies par la section. */
   initialValues: IdentityFormValues;
 
-  /** Indique qu’une sauvegarde est en cours côté parent. */
   isSaving?: boolean;
 
-  /** Callback appelé avec des valeurs validées par Zod (`IdentityFormSchema`). */
   onSubmit: (values: IdentityFormValues) => void | Promise<void>;
 
-  /** Handler optionnel : permet au parent de réagir à un reset UI. */
   onReset?: () => void;
 
-  /** Upload optionnel du logo : reçoit un fichier et retourne une URL publique. */
   onUploadLogo?: (file: File) => Promise<UploadedRasterImage>;
 
-  /** Upload optionnel de la favicon : reçoit un fichier et retourne une URL publique. */
   onUploadFavicon?: (file: File) => Promise<UploadedRasterImage>;
 
-  /** Handler optionnel : remonte les warnings UI (non bloquants). */
   onWarningKeysChange?: (keys: IdentityWarningKey[]) => void;
 
-  /** Handler optionnel : remonte le nombre d’erreurs bloquantes. */
   onBlockingErrorsCountChange?: (count: number) => void;
 
-  /** Handler optionnel : remonte l’état dirty (guard / navigation). */
   onDirtyChange?: (dirty: boolean) => void;
 }>;
 
-/**
- * Formulaire de configuration de l’identité du site (studio).
- */
 export function IdentityForm({
   initialValues,
   isSaving,
@@ -139,25 +111,14 @@ export function IdentityForm({
     onDirtyChange,
   });
 
-  /**
-   * Préfixe stable pour ce formulaire (IDs dérivés : siteName, tagline, favicon, etc.).
-   */
   const idPrefix = useIdPrefix("identity-form");
 
-  /**
-   * IDs pour les champs simples (`InputField`).
-   */
   const siteNameIds = createFieldIds(idPrefix, "siteName");
   const taglineIds = createFieldIds(idPrefix, "tagline");
   const faviconIds = createFieldIds(idPrefix, "faviconUrl");
   const logoAltIds = createFieldIds(idPrefix, "logo.alt");
 
-  /**
-   * Valeurs RHF live :
-   * - aides "near limit" (`siteName` / `tagline`)
-   * - warnings d’identité (`logo` / `faviconUrl`)
-   * - alimentation de `LogoFields` / `FaviconFields`
-   */
+  /** Watched values drive near-limit hints, identity warnings, and media field groups. */
   const watchedValues = useWatch({ control });
   const values: IdentityFormValues = (watchedValues ??
     initialValues) as IdentityFormValues;
@@ -165,9 +126,6 @@ export function IdentityForm({
   const siteName = values.siteName ?? "";
   const tagline = values.tagline ?? "";
 
-  /**
-   * Aides "near limit" (non bloquantes) sur `siteName` / `tagline`.
-   */
   const siteNameRemaining = Math.max(
     0,
     IDENTITY_SITENAME.MAX - siteName.length,
@@ -188,9 +146,6 @@ export function IdentityForm({
         })
       : t("studio.identityForm.tagline.help");
 
-  /**
-   * Champs RHF dédiés pour les groupes Logo / Favicon.
-   */
   const logoCtrl = useController({
     name: "logo",
     control,
@@ -208,9 +163,6 @@ export function IdentityForm({
 
   const showError = isSubmitted || submitCount > 0;
 
-  /**
-   * Erreurs bloquantes.
-   */
   const invalidSiteName =
     (showError || Boolean(touchedFields.siteName)) &&
     Boolean(errors.siteName?.message ?? errors.siteName);
@@ -237,9 +189,6 @@ export function IdentityForm({
       ? String(errors.logo.alt.message)
       : undefined;
 
-  /**
-   * Warnings d’identité (logo / favicon) basés sur les valeurs RHF.
-   */
   const warningKeys = useIdentityUiWarnings(values.logo, values.faviconUrl);
 
   useStableWarningKeys({

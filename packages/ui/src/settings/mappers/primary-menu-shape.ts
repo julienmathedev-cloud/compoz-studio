@@ -1,16 +1,12 @@
 /**
- * @file packages/ui/src/site/mappers/primary-menu-shape.ts
- * @layer ui/site/mappers
+ * @file packages/ui/src/settings/mappers/primary-menu-shape.ts
+ * @layer ui/settings/mappers
  *
  * @description
- * Mapper "shared runtime" PrimaryMenu :
- * - DTO domaine -> PrimaryMenuSettingsShape (frontière stable)
+ * Maps primary menu settings DTOs to stable runtime primary menu settings shapes shared by site rendering and Studio preview.
  *
  * @remarks
- * - Utilisé par le renderer public (site) ET par la preview/renderer côté studio.
- * - Ici, on ne gère ni RHF, ni intents API.
- * - On ne fait pas de normalisation "draft" : on convertit le DTO tel quel
- *   en shape frontière attendue par le renderer.
+ * API intents and draft/form-oriented normalization stay outside this boundary mapper.
  */
 
 import type { PrimaryMenuSettingsDTO } from "@compoz/core/domain/site/dto";
@@ -18,10 +14,6 @@ import type { PrimaryMenuSettingsDTO } from "@compoz/core/domain/site/dto";
 import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 
 import { trimKeepEmpty } from "@compoz/ui/lib/form-utils";
-
-/* -------------------------------------------------------------------------- */
-/*                         DTO item types (source de vérité)                  */
-/* -------------------------------------------------------------------------- */
 
 type PrimaryMenuDTOItem = NonNullable<PrimaryMenuSettingsDTO["items"]>[number];
 type PrimaryMenuDTOChild = NonNullable<PrimaryMenuDTOItem["children"]>[number];
@@ -38,11 +30,9 @@ function toStrictBool(v: unknown): boolean {
 }
 
 function toHrefString(v: unknown): string {
-  // DTO attendu string | null | undefined. Si jamais "dirty", on force une string best-effort.
   return typeof v === "string" ? v : String(v ?? "");
 }
 
-/** DTO -> Shape : child (renderer). */
 function toPrimaryMenuSettingsShapeChildFromDTO(
   it: PrimaryMenuDTOChild,
 ): PrimaryMenuShapeChild {
@@ -54,7 +44,6 @@ function toPrimaryMenuSettingsShapeChildFromDTO(
   };
 }
 
-/** DTO -> Shape : item top-level (renderer). */
 function toPrimaryMenuSettingsShapeItemFromDTO(
   it: PrimaryMenuDTOItem,
 ): PrimaryMenuShapeItem {
@@ -72,16 +61,12 @@ function toPrimaryMenuSettingsShapeItemFromDTO(
     id: trimKeepEmpty(String(it.id ?? "")),
     label: trimKeepEmpty(it.label),
     href,
-    // Parent avec children => jamais newTab (contrat schema)
+    // Parent items with children must not open in a new tab.
     newTab: hasChildren ? false : toStrictBool(it.newTab),
     ...(hasChildren ? { children } : {}),
   };
 }
 
-/**
- * Domaine (DTO) -> Renderer (Shape)
- * Contrat : retourne une shape stable pour le renderer (arrays mutables).
- */
 export function toPrimaryMenuSettingsShapeFromDTO(
   dto: PrimaryMenuSettingsDTO | null | undefined,
 ): PrimaryMenuSettingsShape {

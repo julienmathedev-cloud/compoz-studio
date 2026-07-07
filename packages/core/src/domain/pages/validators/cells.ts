@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/validators/cells.ts
  * @layer core/domain/pages/validators
- * @description
- * Validations métier **pures** pour les cellules d’une page (V0.5).
+ * @description Pure domain validators for page cells.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";

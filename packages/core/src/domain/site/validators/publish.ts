@@ -1,14 +1,9 @@
 /**
  * @file packages/core/src/domain/site/validators/publish.ts
- * @layer core/domain
- * @description
- * Génération des avertissements non bloquants lors de la publication du site,
- * “Index-only + warnings optionnels dépendants des settings (si fournis)”.
- *
+ * @layer core/domain/site/validators
+ * @description Publication warnings and blocking publish invariants.
  * @remarks
- * - Ces warnings n’empêchent pas la publication.
- * - Les avertissements dépendant d’autres sources (pages, settings) sont gérés
- *   directement dans le use-case `publishSite`.
+ * Warnings are non-blocking; blocking validation errors are wrapped for UI consumption.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
@@ -29,7 +24,6 @@ import { assertIdentitySettings } from "@compoz/core/domain/site/validators/iden
 import { assertSeoSettings } from "@compoz/core/domain/site/validators/seo";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 
-/** Codes d’avertissements possibles lors d’une publication. */
 export type PublishWarningCode =
   | typeof EC.PUBLISH_EMPTY_INDEX
   | typeof EC.PUBLISH_SETTINGS_COPY_FAILED
@@ -46,16 +40,9 @@ export type PublishWarningCode =
   | typeof EC.PUBLISH_SEO_ROBOTS_NOINDEX
   | typeof EC.PUBLISH_SEO_BASEURL_MISSING;
 
-/** Type métier pour les warnings de publication. */
 export type PublishWarning = UiWarning<PublishWarningCode>;
 
-/**
- * Inspecte l’index source avant publication et génère les warnings associés.
- *
- * @remarks
- * - Index-only : toujours calculé.
- * - Live warnings : calculés si `settings` est fourni (V0.5).
- */
+/** Returns index and settings warnings that do not block publication. */
 export function publishWarnings(
   index: SiteIndex,
   settings?: Pick<
@@ -65,18 +52,15 @@ export function publishWarnings(
 ): ReadonlyArray<PublishWarning> {
   const warnings: PublishWarning[] = [];
 
-  /* --- index vide --- */
   if (index.pages.length === 0) {
     warnings.push({ code: EC.PUBLISH_EMPTY_INDEX, path: ["pages"] });
   }
 
-  /* --- home absente de l’index --- */
   const hasHome = index.pages.some((p) => p.slug === HOME_SLUG);
   if (!hasHome) {
     warnings.push({ code: EC.PUBLISH_HOME_MISSING, path: ["pages", "home"] });
   }
 
-  /* --- live warnings (settings) --- */
   if (settings) {
     const primaryItems = settings.primaryMenu?.items ?? [];
     if (primaryItems.length === 0) {
@@ -151,13 +135,7 @@ export function publishWarnings(
   return warnings;
 }
 
-/**
- * Warnings dépendant du contenu des pages.
- *
- * @remarks
- * - `pagesById` représente la source de vérité des pages réellement candidates à la publication.
- * - Une page sans H1 génère un warning non bloquant.
- */
+/** Returns page-content warnings for pages actually considered for publication. */
 export function publishPageWarnings(
   index: SiteIndex,
   pagesById: ReadonlyMap<string, Page>,
@@ -189,12 +167,7 @@ export function publishPageWarnings(
   return warnings;
 }
 
-/**
- * Invariants bloquants : `IdentitySettings` + `SeoSettings`.
- *
- * @remarks
- * - Injection `isProd` pour délier les validateurs du runtime (pas de `process.env` dans le domaine).
- */
+/** Wraps blocking identity and SEO invariant failures into a validation error. */
 export function assertPublishInvariantsOrThrowValidationError(input: {
   identity: unknown;
   seo: unknown;

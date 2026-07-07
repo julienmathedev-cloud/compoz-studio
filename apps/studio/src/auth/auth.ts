@@ -3,19 +3,12 @@
  * @layer studio/auth
  *
  * @description
- * Configuration Auth.js (NextAuth) pour le Studio.
+ * Auth.js (NextAuth) configuration for the Studio.
  *
  * @remarks
- * Responsabilités :
- * - Provider Credentials email/password via `UsersRepository`.
- * - Session JWT, sans adapter DB NextAuth.
- * - Injection RBAC + websiteIds + defaultWebsiteId dans le token et la session.
- * - Propagation éventuelle des métadonnées de sandbox démo dans le token
- *   et la session.
- *
- * Source of truth :
- * - Auth et CRUD admin lisent/écrivent dans le même repository Studio users.
- * - Aucun store auth séparé.
+ * - Uses the Studio users repository as the single source of truth for auth and admin CRUD.
+ * - Runs credentials auth with JWT sessions and no NextAuth database adapter.
+ * - Propagates RBAC, Website access, and optional demo sandbox metadata into the token and session.
  */
 
 import { STUDIO_SESSION_MAX_AGE_SECONDS } from "@compoz/studio/auth/session-cookies";
@@ -115,8 +108,8 @@ export const authOptions: NextAuthOptions = {
       }
 
       /**
-       * NextAuth renseigne souvent `token.sub = user.id`.
-       * On garde ce fallback uniquement pour consolider `userId`.
+       * NextAuth often sets `token.sub = user.id`.
+       * Keep this fallback only to consolidate `userId`.
        */
       if (!token.userId && token.sub) {
         token.userId = token.sub;

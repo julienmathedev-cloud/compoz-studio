@@ -1,6 +1,9 @@
 /**
  * @file packages/core/src/domain/users/use-cases/update-user.types.ts
- * @layer core/domain
+ * @layer core/domain/users/use-cases
+ * @description Types for the update user use-case.
+ * @remarks
+ * This file is a type-only contract and must contain no runtime logic.
  */
 
 import type {
@@ -16,11 +19,6 @@ export type UpdateUserInput = {
   name?: string;
   status?: UserStatus;
   rbac?: UserRbac;
-
-  /**
-   * Optionnel : changement de password.
-   * ⚠️ Ne fait pas partie de l'entité User.
-   */
   password?: string;
 };
 

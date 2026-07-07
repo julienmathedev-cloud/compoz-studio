@@ -2,14 +2,13 @@
 
 /**
  * @file apps/studio/src/features/settings/menus/MenuPage.tsx
- * @layer ui/studio/pages
+ * @layer studio/features/settings/menus
  *
  * @description
- * Page “Menus” (studio) — conteneur des sections menu principal et menu légal.
+ * Studio page that groups primary and legal menu settings sections.
  *
  * @remarks
- * - Agrège l’état `dirty` des sections (Primary + Legal) pour le guard/navigation.
- * - UI-only : aucune logique métier.
+ * - Aggregates section dirty states so the shared Studio Dirty Guard can protect navigation.
  */
 
 import { Heading } from "@compoz/studio/components/atoms/typography/Heading";
@@ -22,9 +21,6 @@ import { STUDIO_SECTION } from "@compoz/ui/styles/studio/layout";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-/**
- * Page Menus : agrège l’état dirty des sections (studio).
- */
 export function MenuPage() {
   const t = useTranslations();
   const dirtyGuard = useStudioDirtyGuard();
@@ -45,7 +41,7 @@ export function MenuPage() {
     setLegalDirty(dirty);
   }, []);
 
-  // Synchronise le dirty guard avec l’état agrégé
+  // Keep the shared Dirty Guard aligned with both menu sections.
   useEffect(() => {
     dirtyGuard.setDirty(aggregatedDirty);
   }, [dirtyGuard, aggregatedDirty]);

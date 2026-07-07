@@ -3,15 +3,12 @@
  * @layer studio/app/api
  *
  * @description
- * Route API Studio pour la création et le listing des pages du Website actif.
+ * Studio API route for listing and creating draft pages of the active Website.
  *
  * @remarks
- * Responsabilités :
- * - GET  : retourne l’index des pages en draft.
- * - POST : crée une page en draft et met à jour l’index draft par patch.
- * - Draft-only : pas de résolution de state via body/query,
- *   toujours DEFAULT_CONTENT_STATE.
- * - Les repositories sont scopés par Prisma Website.id.
+ * - Draft-only route: always reads and writes `DEFAULT_CONTENT_STATE`.
+ * - Page creation patches the `SiteIndexDTO` source of truth without a global rebuild.
+ * - Repositories are scoped by Prisma Website.id.
  */
 
 import "server-only";
@@ -40,10 +37,6 @@ import {
   type CreatePageIntentDTO,
 } from "@compoz/validation/pages/page-intents";
 
-/* -------------------------------------------------------------------------- */
-/* GET /api/pages                                                             */
-/* -------------------------------------------------------------------------- */
-
 export async function GET(req: Request) {
   const NS = "api.studio.pages.GET" as const;
 
@@ -56,7 +49,7 @@ export async function GET(req: Request) {
       async () => {
         const siteRepo = getSiteRepository({ websiteId });
 
-        // L’index est la source de vérité pour la liste des pages côté Studio.
+        // The index is the Studio source of truth for the page list.
         const index = await siteRepo.readIndex(DEFAULT_CONTENT_STATE);
 
         const res: GetPagesIndexResponse = { index };
@@ -66,10 +59,6 @@ export async function GET(req: Request) {
     );
   });
 }
-
-/* -------------------------------------------------------------------------- */
-/* POST /api/pages                                                            */
-/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
   const NS = "api.studio.pages.POST" as const;
@@ -104,9 +93,8 @@ export async function POST(req: Request) {
         const nowIso = new Date().toISOString();
 
         /**
-         * A) Lire l’index source of truth une seule fois :
-         * - sert de base pour patcher l’index après création,
-         * - sert aussi à construire l’ensemble des slugs existants.
+         * Reads the source-of-truth index once because it is used both for the
+         * index patch and for the existing slug set.
          */
         const currentIndex = await siteRepo.readIndex(DEFAULT_CONTENT_STATE);
 
@@ -128,7 +116,7 @@ export async function POST(req: Request) {
         const { page } = await runCreate({ ...payload, existingSlugs });
 
         /**
-         * B) Patch de l’index source of truth, sans rebuild global.
+         * Patches the source-of-truth index without a full rebuild.
          */
         const baseIndex: SiteIndexDTO =
           currentIndex ??
@@ -164,10 +152,10 @@ export async function POST(req: Request) {
         });
 
         /**
-         * Invalidation du cache de status du Website actif.
+         * Invalidates the active Website status cache.
          *
-         * Le cache peut encore être implémenté en KV côté infra,
-         * mais son scope métier est le Prisma Website.id.
+         * The cache may still be backed by KV in infra, but its business scope is
+         * the Prisma Website.id.
          */
         try {
           logger.debug?.("route.statusCache.invalidate.start", {

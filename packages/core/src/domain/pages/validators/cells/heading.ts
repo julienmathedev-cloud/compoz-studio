@@ -1,8 +1,7 @@
 /**
  * @file packages/core/src/domain/pages/validators/cells/heading.ts
  * @layer core/domain/pages/validators
- * @description
- * Validateurs métier de HeadingCell.
+ * @description Domain validator for heading cells.
  */
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";

@@ -2,6 +2,8 @@
  * @file packages/infra/src/websites/resolve-studio-website.ts
  * @layer infra/websites
  * @description Prisma-backed Studio active website resolution.
+ * @remarks
+ * Resolution prefers the active admin cookie, then the user default, then accessible websites, with demo as the admin-only fallback.
  */
 
 import { prisma } from "@compoz/infra/prisma/prisma-client";

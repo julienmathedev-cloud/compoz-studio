@@ -2,21 +2,17 @@
 
 /**
  * @file apps/studio/src/features/builder/editor/cells/GalleryCellEditor.tsx
- * @layer ui/studio/pages/blocks/editor/cells
+ * @layer studio/features/builder/editor/cells
  *
  * @description
- * Éditeur RHF-aware d’une GalleryCell avec ajout, suppression,
- * réordonnancement et édition des images.
+ * RHF-aware GalleryCell editor for layout options, reveal behavior, links, and image item editing.
  *
  * @remarks
- * - Connecté directement à RHF via `useController` et `useFieldArray`.
- * - Réutilise `ImageListEditor`.
- * - Les images sont gérées par RHF via `useFieldArray`.
- * - Les options de cellule (`maxColumns`, `linksEnabled`) restent portées
- *   au niveau de la cellule gallery.
- * - Le reorder s’appuie sur `move()` pour conserver l’état RHF.
- * - `replace()` reste utilisé pour les normalisations métier globales
- *   (ex: suppression des href quand `linksEnabled` est désactivé).
+ * - Binds max columns, links, and reveal controls directly through RHF `useController`.
+ * - Manages gallery images through `useFieldArray` so values, errors, and reordering stay consistent.
+ * - Reads live image values through `useWatch` and delegates item rendering to `ImageListEditor`.
+ * - Uses `move()` to preserve RHF state while reordering.
+ * - Uses `replace()` only for global normalization, such as clearing href values when links are disabled.
  */
 
 import { useTranslations } from "next-intl";

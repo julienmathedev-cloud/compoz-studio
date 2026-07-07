@@ -2,17 +2,13 @@
 
 /**
  * @file packages/ui/src/site/components/organisms/SitePrimaryMenu.tsx
- * @layer ui/site/organisms
+ * @layer ui/site/components/organisms
  *
  * @description
- * Organism site : menu principal (niveau racine + sous-items via dropdown).
+ * Renders the public site primary menu with root links and dropdown children.
  *
  * @remarks
- * - Rend `null` si la liste d’items est vide.
- * - Les liens simples sont rendus via `SiteNavLink`.
- * - Les items avec enfants sont rendus via `SiteNavDropdown`.
- * - Les clés de liste utilisent désormais l’identifiant métier stable `id`.
- * - Le style est fourni par le skin/template via `ui`.
+ * Returns nothing when no item is available; simple links are delegated to `SiteNavLink`, and parent items with children are delegated to `SiteNavDropdown`.
  */
 
 import { useMemo } from "react";
@@ -32,16 +28,11 @@ import type { SitePrimaryMenuUi } from "@compoz/ui/site/site-ui.types";
 import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
 
 export type SitePrimaryMenuProps = Readonly<{
-  /** Settings du menu principal (shape preview/site). */
   settings: PrimaryMenuSettingsShape;
 
-  /** Optionnel : classes UI injectées par le skin/template. */
   ui: SitePrimaryMenuUi;
 }>;
 
-/**
- * Menu principal public (UI).
- */
 export function SitePrimaryMenu({ settings, ui }: SitePrimaryMenuProps) {
   const pathname = usePathname() || "/";
   const items = Array.isArray(settings?.items) ? settings.items : [];

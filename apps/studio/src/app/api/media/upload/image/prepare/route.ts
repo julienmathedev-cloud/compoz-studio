@@ -3,14 +3,13 @@
  * @layer studio/app/api
  *
  * @description
- * Prépare un upload image temporaire côté Blob :
- * génère une clé temp scopée par Website.id qui servira de pathname
- * pour le client upload.
+ * Prepares a temporary image upload in Blob storage by generating a temp key
+ * scoped by Website.id. That key is then used as the client upload pathname.
  *
  * @remarks
- * - Nécessite une session Studio valide.
- * - Les uploads temporaires sont scopés par Prisma Website.id.
- * - Le `tempKey` généré suit la convention :
+ * - Requires a valid Studio session.
+ * - Temporary uploads are scoped by Prisma Website.id.
+ * - The generated `tempKey` follows this convention:
  *   `websites/:websiteId/_tmp/media/:year/:month/:filename`
  */
 
@@ -42,10 +41,6 @@ const ALLOWED_MIMES = new Set([
   "image/x-icon",
   "image/vnd.microsoft.icon",
 ]);
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -110,10 +105,6 @@ function buildTempStorageKey(args: {
 }): string {
   return `websites/${args.websiteId}/_tmp/media/${args.year}/${args.month}/${args.filename}`;
 }
-
-/* -------------------------------------------------------------------------- */
-/* POST                                                                       */
-/* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
   const NS = "api.studio.media.upload.image.prepare.POST" as const;

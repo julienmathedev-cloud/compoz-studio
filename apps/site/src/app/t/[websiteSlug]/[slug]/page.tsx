@@ -3,14 +3,14 @@
  * @layer site/app
  *
  * @description
- * Fallback public explicite : `/t/:websiteSlug/:pageSlug` rend une page publiée du Website.
+ * Explicit public fallback route for published non-home pages by Website slug.
  *
  * @remarks
- * - Le segment `websiteSlug` correspond au Prisma `Website.slug`.
- * - Le segment `slug` correspond au slug de la page publiée.
- * - Le Website est résolu via Prisma avant le chargement du contenu.
- * - Les loaders de contenu utilisent le Prisma `Website.id`.
- * - L’UI/skin et les URLs fallback utilisent le Prisma `Website.slug`.
+ * - The `websiteSlug` route segment is Prisma `Website.slug`.
+ * - The `slug` route segment is the published page slug.
+ * - The Website is resolved through Prisma before loading content.
+ * - Content loaders use Prisma `Website.id`, while UI, skin, and fallback URLs use Prisma `Website.slug`.
+ * - The reserved `home` slug redirects to the canonical fallback root path.
  */
 
 import type { Metadata } from "next";
@@ -47,10 +47,7 @@ type PageParams = Readonly<{
   >;
 }>;
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
+/** Applies the SEO title template used for social metadata previews. */
 function applyTitleTemplate(
   title: string | undefined,
   template: string,
@@ -76,6 +73,7 @@ async function resolveWebsiteFromParams(params: PageParams["params"]) {
   return website;
 }
 
+/** Builds canonical fallback URLs under `/t/:websiteSlug`. */
 function fallbackPathForPageSlug(params: {
   websiteSlug: string;
   pageSlug: string;
@@ -87,10 +85,6 @@ function fallbackPathForPageSlug(params: {
     ? websitePrefix
     : `${websitePrefix}/${encodeURIComponent(pageSlug)}`;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Metadata                                                                   */
-/* -------------------------------------------------------------------------- */
 
 export async function generateMetadata({
   params,
@@ -155,10 +149,6 @@ export async function generateMetadata({
     socialTitle: resolvedTitle,
   });
 }
-
-/* -------------------------------------------------------------------------- */
-/* Page                                                                       */
-/* -------------------------------------------------------------------------- */
 
 export default async function WebsiteFallbackPage({ params }: PageParams) {
   const { slug: pageSlug } = await unwrapParams(params);

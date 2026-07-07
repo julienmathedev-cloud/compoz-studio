@@ -1,15 +1,9 @@
 /**
  * @file packages/infra/src/lib/require-website-id.ts
  * @layer infra/lib
- *
- * @description
- * Normalise et exige un `websiteId` infra.
- *
+ * @description Normalizes and requires an infra-scoped website id.
  * @remarks
- * - Ne fournit aucun fallback implicite.
- * - Échoue vite si le scope Website est absent.
- * - Le fallback éventuel doit être décidé plus haut : session, resolver public,
- *   ou configuration explicite.
+ * No implicit fallback is allowed here; fallback decisions belong to sessions, public resolvers, or explicit configuration.
  */
 
 export function requireWebsiteId(input: unknown, context: string): string {

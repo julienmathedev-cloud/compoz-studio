@@ -1,7 +1,7 @@
 /**
  * @file packages/core/src/constants/theme/theme-fonts.ts
  * @layer core/constants/theme
- * @description Polices supportées par Compoz + helpers de sélection.
+ * @description Supported theme fonts and selection helpers.
  */
 
 export const THEME_FONT_CATEGORIES = ["sans", "serif", "display"] as const;
@@ -14,9 +14,8 @@ export type ThemeFontDefinition = Readonly<{
   category: ThemeFontCategory;
   description: string;
   /**
-   * Valeur stockée dans les settings thème.
-   * Pour la V1, on conserve directement la stack CSS
-   * afin de rester compatible avec le modèle actuel.
+   * Value persisted in theme settings.
+   * V1 stores the CSS stack directly to stay compatible with the current model.
    */
   fontFamily: string;
 }>;

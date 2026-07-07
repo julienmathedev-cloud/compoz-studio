@@ -38,3 +38,4 @@ next-env.d.ts
 
 # Prisma generated client
 packages/infra/src/prisma/generated/
+AGENTS.md

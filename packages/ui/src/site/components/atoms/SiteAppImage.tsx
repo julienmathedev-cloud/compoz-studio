@@ -105,6 +105,7 @@ export function SiteAppImage({
       placeholder={placeholder}
       blurDataURL={placeholder === "blur" ? blurDataURL : undefined}
       style={style}
+      unoptimized={true}
     />
   );
 }

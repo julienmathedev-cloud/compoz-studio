@@ -8,10 +8,7 @@ import type { DemoSandboxRepository } from "@compoz/core/domain/demo/ports/demo-
 import type { UsersRepository } from "@compoz/core/domain/users/ports/users-repository";
 
 export interface DemoSandboxDataCleaner {
-  deleteSandboxData: (websiteId: string) => Promise<{
-    keysMatched: number;
-    keysDeleted: number;
-  }>;
+  deleteSandboxData(websiteId: string): Promise<void>;
 }
 
 export interface CleanupExpiredDemoSandboxesDeps {
@@ -40,8 +37,6 @@ export type CleanupExpiredDemoSandboxesResult = Readonly<{
     websiteId: string;
     userId: string;
     status: "cleaned" | "failed";
-    keysMatched?: number;
-    keysDeleted?: number;
     error?: string;
   }>;
 }>;

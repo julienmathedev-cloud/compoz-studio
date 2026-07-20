@@ -10,10 +10,7 @@ import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
 
 export class PrismaDemoSandboxDataCleaner implements DemoSandboxDataCleaner {
-  async deleteSandboxData(websiteId: string): Promise<{
-    keysMatched: number;
-    keysDeleted: number;
-  }> {
+  async deleteSandboxData(websiteId: string): Promise<void> {
     const normalizedWebsiteId = requireWebsiteId(
       websiteId,
       "PrismaDemoSandboxDataCleaner.deleteSandboxData",
@@ -53,10 +50,5 @@ export class PrismaDemoSandboxDataCleaner implements DemoSandboxDataCleaner {
         type: "sandbox",
       },
     });
-
-    return {
-      keysMatched: 0,
-      keysDeleted: 0,
-    };
   }
 }

@@ -64,16 +64,12 @@ export function cleanupExpiredDemoSandboxes({
       websiteId: string;
       userId: string;
       status: "cleaned" | "failed";
-      keysMatched?: number;
-      keysDeleted?: number;
       error?: string;
     }> = [];
 
     for (const sandbox of expiredSandboxes) {
       try {
-        const sandboxDataCleanup = await sandboxDataCleaner.deleteSandboxData(
-          sandbox.websiteId,
-        );
+        await sandboxDataCleaner.deleteSandboxData(sandbox.websiteId);
 
         await users.deleteById(sandbox.userId);
         await demoSandboxes.deleteByDemoInstanceId(sandbox.demoInstanceId);
@@ -83,8 +79,6 @@ export function cleanupExpiredDemoSandboxes({
           websiteId: sandbox.websiteId,
           userId: sandbox.userId,
           status: "cleaned",
-          keysMatched: sandboxDataCleanup.keysMatched,
-          keysDeleted: sandboxDataCleanup.keysDeleted,
         });
       } catch (error) {
         items.push({

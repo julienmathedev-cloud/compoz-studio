@@ -3,7 +3,7 @@
  * @layer core/domain/site/ports
  * @description Storage-agnostic persistence port for the site aggregate.
  * @remarks
- * The repository owns both the page index order and site settings for each content state.
+ * The repository owns the page index and site settings for each content state.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
@@ -15,10 +15,10 @@ export interface SiteRepository {
   /** Idempotently prepares the backing storage. */
   ensureBase(): Promise<void>;
 
-  /** Reads the ordered page index for a content state. */
+  /** Reads the page index for a content state. */
   readIndex(state: ContentState): Promise<Readonly<SiteIndex>>;
 
-  /** Replaces the ordered page index for a content state. */
+  /** Persists the page index and its logical write timestamp. */
   putIndex(state: ContentState, index: Readonly<SiteIndex>): Promise<void>;
 
   readSettings(state: ContentState): Promise<Readonly<SiteSettings>>;

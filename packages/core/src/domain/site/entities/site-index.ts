@@ -3,13 +3,15 @@
  * @layer core/domain/site/entities
  * @description Canonical site page index.
  * @remarks
- * `pages[]` order is the source of truth and must not be sorted implicitly.
+ * Holds the published page summaries for a content state.
  */
 
 import type { PageSummary } from "@compoz/core/domain/pages/entities/page";
 
 export interface SiteIndex {
-  /** Source-of-truth page order. */
+  /** Canonical page summaries for the content state. */
   pages: ReadonlyArray<PageSummary>;
+
+  /** ISO timestamp of the latest logical index write. */
   updatedAt: string;
 }

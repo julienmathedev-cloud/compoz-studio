@@ -25,6 +25,10 @@ import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { setSiteIndexCache } from "@compoz/studio/features/site-index/cache";
+import {
+  invalidateSiteStatus,
+  invalidateSiteStatusDetails,
+} from "@compoz/studio/features/site/status/invalidate";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 
@@ -77,6 +81,11 @@ export function useReorderPageChildren(
 
     onSuccess: async (nextIndex, variables) => {
       setSiteIndexCache(queryClient, websiteId, state, nextIndex);
+
+      await Promise.all([
+        invalidateSiteStatus(queryClient, websiteId),
+        invalidateSiteStatusDetails(queryClient, websiteId),
+      ]);
 
       logger.debug("reorder.ok", {
         websiteId,

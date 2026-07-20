@@ -26,9 +26,9 @@ export type SiteRepoOptions = Readonly<{
 const repoByKey = new Map<string, SiteRepository>();
 let hasLoggedReuse = false;
 
-/** Unknown repository implementations intentionally fall back to KV during migration. */
+/** Prisma is canonical; explicit KV and memory selections remain temporarily available until D2. */
 function resolveSiteRepoImpl(): SiteRepoImpl {
-  const raw = (process.env["SITE_REPO_IMPL"] ?? "kv").toLowerCase();
+  const raw = (process.env["SITE_REPO_IMPL"] ?? "prisma").toLowerCase();
 
   if (raw === "memory" || raw === "kv" || raw === "prisma") {
     return raw;
@@ -36,10 +36,10 @@ function resolveSiteRepoImpl(): SiteRepoImpl {
 
   logger.warn("site.repository.unknownImplFallback", {
     requestedImpl: raw,
-    fallbackImpl: "kv",
+    fallbackImpl: "prisma",
   });
 
-  return "kv";
+  return "prisma";
 }
 
 function resolveWebsiteId(opts: SiteRepoOptions): string {
@@ -97,7 +97,7 @@ export function getSiteRepository(opts: SiteRepoOptions): SiteRepository {
   return created;
 }
 
-/** Site status snapshots remain KV-backed during the Prisma migration. */
+/** Site status snapshots remain Redis-backed as a reconstructible cache until D2. */
 export function getSiteStatusCache(opts: SiteRepoOptions): SiteStatusCachePort {
   const websiteId = requireWebsiteId(opts.websiteId, "getSiteStatusCache");
 

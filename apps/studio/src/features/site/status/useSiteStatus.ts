@@ -31,7 +31,6 @@ export function useSiteStatus() {
 
       return response.status;
     },
-    placeholderData: (previous?: SiteStatusDTO) => previous,
   } as const;
 
   return useQuery<SiteStatusDTO>(options);

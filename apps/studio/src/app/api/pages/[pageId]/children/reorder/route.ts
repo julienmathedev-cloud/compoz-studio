@@ -8,7 +8,7 @@
  * @remarks
  * - Reorders only pages whose `parentId` matches the route `pageId`.
  * - Writes the draft index, which is the Studio source of truth for page hierarchy.
- * - Index-only mutation: does not modify page content, blocks, settings, or status caches.
+ * - Invalidates Website-scoped status snapshots because order is publishable state.
  * - The repository is scoped by Prisma Website.id.
  */
 
@@ -20,7 +20,7 @@ import { reorderPageChildren } from "@compoz/core/domain/pages/use-cases/reorder
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import type { ReorderChildrenResponse } from "@compoz/infra/http/studio/pages.types";
 import { log, logSpan } from "@compoz/infra/lib/log";
-import { getSiteRepository } from "@compoz/infra/site";
+import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
@@ -62,6 +62,7 @@ export async function POST(req: Request, ctx: { params: unknown }) {
         );
 
         const siteRepo = getSiteRepository({ websiteId });
+        const statusCache = getSiteStatusCache({ websiteId });
 
         const run = reorderPageChildren({
           site: siteRepo,
@@ -71,6 +72,11 @@ export async function POST(req: Request, ctx: { params: unknown }) {
           parentId: pageId,
           childIds: dto.childIds,
         });
+
+        await Promise.all([
+          statusCache.invalidateStatus(),
+          statusCache.invalidateStatusDetails(),
+        ]);
 
         logger.debug("route.children.reordered", {
           websiteId,

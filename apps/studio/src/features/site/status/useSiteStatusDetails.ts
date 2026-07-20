@@ -13,7 +13,7 @@
  * - The query key is scoped by Prisma Website.id to avoid cache collisions when switching the active website.
  */
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import type {
   SiteStatusDetailsDTO,
@@ -62,9 +62,6 @@ export function useSiteStatusDetails({
     },
 
     enabled: isEnabled,
-
-    /** Keeps the previous result visible while status detail filters change. */
-    placeholderData: keepPreviousData,
   } as const;
 
   return useQuery<SiteStatusDetailsDTO>(options);

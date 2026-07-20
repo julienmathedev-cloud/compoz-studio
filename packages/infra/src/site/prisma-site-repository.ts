@@ -3,7 +3,7 @@
  * @layer infra/site
  * @description Prisma-backed SiteRepository implementation.
  * @remarks
- * Persistent settings are stored in PostgreSQL; SiteIndex is computed from Page rows ordered by `Page.position`.
+ * Settings and the published index timestamp are persisted in PostgreSQL; index pages are projected by `Page.position`.
  */
 
 import {
@@ -29,6 +29,24 @@ type PrismaSiteRepositoryOptions = Readonly<{
 
 function toPrismaContentState(state: ContentState): PrismaContentState {
   return state === CONTENT_STATE.PUBLISHED ? "published" : "draft";
+}
+
+function parseCanonicalIndexTimestamp(updatedAt: string): Date {
+  const normalized = updatedAt.trim();
+
+  const parsed = new Date(normalized);
+
+  if (
+    !normalized ||
+    Number.isNaN(parsed.getTime()) ||
+    parsed.toISOString() !== normalized
+  ) {
+    throw new TypeError(
+      "SiteIndex.updatedAt must be a canonical UTC timestamp produced by Date.toISOString().",
+    );
+  }
+
+  return parsed;
 }
 
 export class PrismaSiteRepository implements SiteRepository {
@@ -57,46 +75,76 @@ export class PrismaSiteRepository implements SiteRepository {
   async readIndex(state: ContentState): Promise<SiteIndex> {
     const prismaState = toPrismaContentState(state);
 
-    const pages = await prisma.page.findMany({
-      where: {
-        websiteId: this.websiteId,
-        state: prismaState,
-      },
-      orderBy: [{ position: "asc" }, { createdAt: "asc" }],
-      select: {
-        pageId: true,
-        slug: true,
-        name: true,
-        parentPageId: true,
-        updatedAt: true,
-      },
-    });
+    const [pages, website] = await Promise.all([
+      prisma.page.findMany({
+        where: {
+          websiteId: this.websiteId,
+          state: prismaState,
+        },
+        orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+        select: {
+          pageId: true,
+          slug: true,
+          name: true,
+          parentPageId: true,
+          updatedAt: true,
+        },
+      }),
+      state === CONTENT_STATE.PUBLISHED
+        ? prisma.website.findUnique({
+            where: { id: this.websiteId },
+            select: { lastPublishedAt: true },
+          })
+        : Promise.resolve(null),
+    ]);
 
-    return toDomainSiteIndex(pages, state);
+    const index = toDomainSiteIndex(pages, state);
+
+    if (state !== CONTENT_STATE.PUBLISHED) return index;
+
+    return {
+      ...index,
+      updatedAt: website?.lastPublishedAt?.toISOString() ?? "",
+    };
   }
 
   async putIndex(
     state: ContentState,
     index: Readonly<SiteIndex>,
   ): Promise<void> {
+    const lastPublishedAt =
+      state === CONTENT_STATE.PUBLISHED
+        ? parseCanonicalIndexTimestamp(index.updatedAt)
+        : null;
+
     await this.ensureBase();
 
     const prismaState = toPrismaContentState(state);
-
-    await prisma.$transaction(
-      index.pages.map((page, position) =>
-        prisma.page.updateMany({
-          where: {
-            websiteId: this.websiteId,
-            state: prismaState,
-            pageId: page.id,
-          },
-          data: {
-            position,
-          },
-        }),
-      ),
+    const positionUpdates = index.pages.map((page, position) =>
+      prisma.page.updateMany({
+        where: {
+          websiteId: this.websiteId,
+          state: prismaState,
+          pageId: page.id,
+        },
+        data: {
+          position,
+        },
+      }),
     );
+
+    if (lastPublishedAt) {
+      await prisma.$transaction([
+        ...positionUpdates,
+        prisma.website.update({
+          where: { id: this.websiteId },
+          data: { lastPublishedAt },
+        }),
+      ]);
+      return;
+    }
+
+    await prisma.$transaction(positionUpdates);
   }
 
   async readSettings(state: ContentState): Promise<SiteSettings> {

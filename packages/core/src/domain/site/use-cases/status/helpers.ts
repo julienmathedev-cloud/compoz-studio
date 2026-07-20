@@ -14,6 +14,20 @@ import type {
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import { safeStringify } from "@compoz/core/domain/site/use-cases/status/site-diff";
 
+/** Detects summary divergence for a page present in both indexes. */
+export function pageIndexEntryDiffers(args: {
+  draftRef: Readonly<PageSummary>;
+  publishedRef: Readonly<PageSummary>;
+}): boolean {
+  const { draftRef, publishedRef } = args;
+
+  return (
+    draftRef.slug !== publishedRef.slug ||
+    draftRef.name !== publishedRef.name ||
+    draftRef.parentId !== publishedRef.parentId
+  );
+}
+
 export function computeSettingsDiff(
   draftSettings: Readonly<SiteSettings>,
   publishedSettings: Readonly<SiteSettings>,
@@ -59,8 +73,10 @@ export function computePagesAndBlocksDiff(args: {
     publishedPagesById,
   } = args;
 
-  const draftRefById = new Map(draftIndexRefs.map((r) => [r.id, r]));
-  const publishedRefById = new Map(publishedIndexRefs.map((r) => [r.id, r]));
+  const draftRefById = new Map(draftIndexRefs.map((ref) => [ref.id, ref]));
+  const publishedRefById = new Map(
+    publishedIndexRefs.map((ref) => [ref.id, ref]),
+  );
 
   // Counters: pages
   let pagesNew = 0;
@@ -77,29 +93,32 @@ export function computePagesAndBlocksDiff(args: {
 
   // Count published blocks from the published source-of-truth index.
   for (const ref of publishedIndexRefs) {
-    const p = publishedPagesById.get(ref.id);
-    const blocks = Array.isArray(p?.blocks) ? p.blocks : [];
+    const page = publishedPagesById.get(ref.id);
+    const blocks = Array.isArray(page?.blocks) ? page.blocks : [];
+
     blocksPublished += blocks.length;
   }
 
   // Pages present in published but missing from draft are deleted.
-  for (const pubRef of publishedIndexRefs) {
-    if (!draftRefById.has(pubRef.id)) {
+  for (const publishedRef of publishedIndexRefs) {
+    if (!draftRefById.has(publishedRef.id)) {
       pagesDeleted++;
 
-      const pubPage = publishedPagesById.get(pubRef.id);
-      const pubBlocks = Array.isArray(pubPage?.blocks) ? pubPage.blocks : [];
+      const publishedPage = publishedPagesById.get(publishedRef.id);
+      const publishedBlocks = Array.isArray(publishedPage?.blocks)
+        ? publishedPage.blocks
+        : [];
 
       // Blocks removed through page deletion are considered deleted too.
-      blocksDeleted += pubBlocks.length;
+      blocksDeleted += publishedBlocks.length;
     }
   }
 
   // Draft indexed pages are the admin source of truth.
-  for (const dRef of draftIndexRefs) {
-    const publishedRef = publishedRefById.get(dRef.id);
+  for (const draftRef of draftIndexRefs) {
+    const publishedRef = publishedRefById.get(draftRef.id);
+    const draftPage = draftPagesById.get(draftRef.id);
 
-    const draftPage = draftPagesById.get(dRef.id);
     if (!draftPage) continue;
 
     const draftBlocks = Array.isArray(draftPage.blocks)
@@ -115,50 +134,67 @@ export function computePagesAndBlocksDiff(args: {
       continue;
     }
 
-    const publishedPage = publishedPagesById.get(dRef.id);
+    const publishedPage = publishedPagesById.get(draftRef.id);
 
-    // Page-level modification is based on the metadata update timestamp.
+    // Page-level changes include metadata and index summary divergence.
     const publishedMetaUpdatedAt = String(publishedPage?.meta?.updatedAt ?? "");
-    const draftMetaUpdatedAt = String(draftPage?.meta?.updatedAt ?? "");
-    const isPageModified = draftMetaUpdatedAt !== publishedMetaUpdatedAt;
-    if (isPageModified) pagesModified++;
+    const draftMetaUpdatedAt = String(draftPage.meta?.updatedAt ?? "");
+
+    const isPageModified =
+      draftMetaUpdatedAt !== publishedMetaUpdatedAt ||
+      pageIndexEntryDiffers({
+        draftRef,
+        publishedRef,
+      });
+
+    if (isPageModified) {
+      pagesModified++;
+    }
 
     const publishedBlocks = Array.isArray(publishedPage?.blocks)
       ? (publishedPage.blocks as ReadonlyArray<Block>)
       : [];
 
     const publishedBlocksById = new Map<string, Block>();
-    for (const b of publishedBlocks) {
-      if (b && typeof b === "object" && typeof b.id === "string") {
-        publishedBlocksById.set(b.id, b);
+
+    for (const block of publishedBlocks) {
+      if (block && typeof block === "object" && typeof block.id === "string") {
+        publishedBlocksById.set(block.id, block);
       }
     }
 
     // Draft blocks determine new and modified block counters.
     const draftBlockIds = new Set<string>();
 
-    for (const b of draftBlocks) {
-      const id = typeof b?.id === "string" ? b.id : "";
+    for (const block of draftBlocks) {
+      const id = typeof block?.id === "string" ? block.id : "";
+
       if (!id) continue;
+
       draftBlockIds.add(id);
 
-      const pb = publishedBlocksById.get(id);
+      const publishedBlock = publishedBlocksById.get(id);
 
-      if (!pb) {
+      if (!publishedBlock) {
         blocksNew++;
         continue;
       }
 
-      if (safeStringify(b) !== safeStringify(pb)) {
+      if (safeStringify(block) !== safeStringify(publishedBlock)) {
         blocksModified++;
       }
     }
 
     // Published blocks missing from draft are deleted.
-    for (const pb of publishedBlocks) {
-      const id = typeof pb?.id === "string" ? pb.id : "";
+    for (const publishedBlock of publishedBlocks) {
+      const id =
+        typeof publishedBlock?.id === "string" ? publishedBlock.id : "";
+
       if (!id) continue;
-      if (!draftBlockIds.has(id)) blocksDeleted++;
+
+      if (!draftBlockIds.has(id)) {
+        blocksDeleted++;
+      }
     }
   }
 

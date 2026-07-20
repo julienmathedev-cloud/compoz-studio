@@ -52,9 +52,10 @@ export function publishSite({
 
     await Promise.all([site.ensureBase(), pages.ensureBase()]);
 
-    const [sourceIndex, sourceSettings] = await Promise.all([
+    const [sourceIndex, sourceSettings, previousTargetIndex] = await Promise.all([
       site.readIndex(from),
       site.readSettings(from),
+      site.readIndex(to),
     ]);
 
     warnings.push(...publishWarnings(sourceIndex, sourceSettings));
@@ -85,13 +86,11 @@ export function publishSite({
 
     if (cleanOrphans) {
       // Cleanup is aligned with the target source-of-truth index.
-      const targetIndex = await site.readIndex(to);
-
       const cleanup = await deleteOrphanPages({
         pages,
         fromRefs: pagesCopy.copiedRefs,
         to,
-        existingRefs: targetIndex.pages,
+        existingRefs: previousTargetIndex.pages,
       });
 
       warnings.push(...cleanup.warnings);
@@ -108,9 +107,13 @@ export function publishSite({
 
     if (to === CONTENT_STATE.PUBLISHED && revalidator) {
       try {
-        const slugs = pagesCopy.copiedRefs
-          .map((r) => String(r.slug ?? "").trim())
-          .filter(Boolean);
+        const slugs = Array.from(
+          new Set(
+            [...previousTargetIndex.pages, ...pagesCopy.copiedRefs]
+              .map((r) => String(r.slug ?? "").trim())
+              .filter(Boolean),
+          ),
+        );
 
         await revalidator.revalidatePublished({ slugs });
       } catch {

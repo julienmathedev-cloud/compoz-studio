@@ -74,9 +74,6 @@ export function useReadSiteIndex(
 
       return index;
     },
-
-    /** Keeps the previous SiteIndex visible while the state changes or a refetch is pending. */
-    placeholderData: (previous: SiteIndexDTO | undefined) => previous,
   });
 
   useEffect(() => {

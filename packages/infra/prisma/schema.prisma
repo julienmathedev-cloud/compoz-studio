@@ -50,6 +50,7 @@ model Website {
   type            WebsiteType @default(site)
   sourceWebsiteId String?
   expiresAt       DateTime?
+  lastPublishedAt DateTime?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 

@@ -9,7 +9,7 @@
  *
  * @remarks
  * - Studio cache keys are scoped by Prisma Website.id and content state.
- * - Keeps previous data during refetches to avoid transient `undefined` states.
+ * - Uses the React Query AbortSignal for cancellable bundle reads.
  */
 
 import type { QueryFunctionContext } from "@tanstack/react-query";
@@ -46,9 +46,6 @@ export function useSettingsBundle(
 
       return dto.settings as SiteSettings;
     },
-
-    // Avoids transient `data=undefined` states during refetch, HMR, or aborts.
-    placeholderData: (previous: SiteSettings | undefined) => previous,
   });
 }
 

@@ -10,7 +10,6 @@
  * @remarks
  * - Reads draft pages by default through `DEFAULT_CONTENT_STATE`.
  * - Uses load instrumentation with the requested content state for logs and notifications.
- * - Keeps previous page data during refetches to avoid UI flicker.
  * - Returns `PageDTO | null` so disabled queries remain easy for UI consumers to handle.
  * - Studio query keys are scoped by Prisma Website.id and content state.
  */
@@ -63,11 +62,8 @@ export function useReadPage(
           websiteId,
         },
       );
-
       return response.page;
     },
-
-    placeholderData: (previous: PageDTO | undefined) => previous,
   });
 
   useEffect(() => {

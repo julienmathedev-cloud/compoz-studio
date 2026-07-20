@@ -9,8 +9,7 @@
  *
  * @remarks
  * - Reads draft blocks by default through `DEFAULT_CONTENT_STATE`.
- * - Uses save/load instrumentation with the requested content state for logs and notifications.
- * - Keeps previous block data during refetches to avoid UI flicker.
+ * - Uses load instrumentation with the requested content state for logs and notifications.
  * - Studio query keys are scoped by Prisma Website.id and content state.
  */
 
@@ -82,7 +81,6 @@ export function useListPageBlocks(
     },
 
     refetchOnWindowFocus: false,
-    placeholderData: (previous?: ReadonlyArray<BlockDTO>) => previous ?? [],
   });
 
   useEffect(() => {

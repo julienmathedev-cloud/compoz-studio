@@ -9,17 +9,18 @@
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";
-import type { Page } from "@compoz/core/domain/pages/entities/page";
+import type {
+  Page,
+  PageSummary,
+} from "@compoz/core/domain/pages/entities/page";
 import type { SiteStatusDetailsDTO } from "@compoz/core/domain/site/dto";
-
+import type { SiteStatusPageDetails } from "@compoz/core/domain/site/entities/site-status-details";
 import type {
   GetSiteStatusDetailsDeps,
   GetSiteStatusDetailsInput,
   GetSiteStatusDetailsResult,
 } from "@compoz/core/domain/site/use-cases/status/get-site-status-details.types";
-
-import type { SiteStatusPageDetails } from "@compoz/core/domain/site/entities/site-status-details";
-
+import { pageIndexEntryDiffers } from "@compoz/core/domain/site/use-cases/status/helpers";
 import {
   buildBlockDetails,
   pageDiffKind,
@@ -55,12 +56,15 @@ export function getSiteStatusDetails({
 
     // Targeted mode: compute a single page.
     if (pageId) {
-      const [d, p] = await Promise.all([
-        pages.readById(CONTENT_STATE.DRAFT, pageId),
-        pages.readById(CONTENT_STATE.PUBLISHED, pageId),
-      ]);
+      const [draftPage, publishedPage, draftIndex, publishedIndex] =
+        await Promise.all([
+          pages.readById(CONTENT_STATE.DRAFT, pageId),
+          pages.readById(CONTENT_STATE.PUBLISHED, pageId),
+          site.readIndex(CONTENT_STATE.DRAFT),
+          site.readIndex(CONTENT_STATE.PUBLISHED),
+        ]);
 
-      if (!d && !p) {
+      if (!draftPage && !publishedPage) {
         const empty: SiteStatusDetailsDTO = {
           scope,
           includeBlocks,
@@ -75,13 +79,34 @@ export function getSiteStatusDetails({
         return { details: empty };
       }
 
-      const diff = pageDiffKind(d ?? null, p ?? null);
+      const draftRef = draftIndex.pages.find((ref) => ref.id === pageId);
+      const publishedRef = publishedIndex.pages.find(
+        (ref) => ref.id === pageId,
+      );
 
-      const draftBlocks = Array.isArray(d?.blocks)
-        ? (d.blocks as ReadonlyArray<Block>)
+      const contentDiff = pageDiffKind(
+        draftPage ?? null,
+        publishedPage ?? null,
+      );
+
+      const indexEntryChanged =
+        draftRef !== undefined &&
+        publishedRef !== undefined &&
+        pageIndexEntryDiffers({
+          draftRef,
+          publishedRef,
+        });
+
+      const diff =
+        contentDiff === "published" && indexEntryChanged
+          ? "modified"
+          : contentDiff;
+
+      const draftBlocks = Array.isArray(draftPage?.blocks)
+        ? (draftPage.blocks as ReadonlyArray<Block>)
         : [];
-      const publishedBlocks = Array.isArray(p?.blocks)
-        ? (p.blocks as ReadonlyArray<Block>)
+      const publishedBlocks = Array.isArray(publishedPage?.blocks)
+        ? (publishedPage.blocks as ReadonlyArray<Block>)
         : [];
 
       const {
@@ -95,8 +120,8 @@ export function getSiteStatusDetails({
       if (!(scope === "dirty" && !pageHasChanges)) {
         pagesDetails.push({
           id: pageId,
-          slug: String(d?.slug ?? p?.slug ?? ""),
-          name: String(d?.name ?? p?.name ?? ""),
+          slug: String(draftPage?.slug ?? publishedPage?.slug ?? ""),
+          name: String(draftPage?.name ?? publishedPage?.name ?? ""),
           diff,
           blocks: blockCounts,
           ...(includeBlocks ? { blockItems } : null),
@@ -131,25 +156,52 @@ export function getSiteStatusDetails({
     ]);
 
     const draftById = new Map<string, Page>();
-    for (const p of draftPagesArr) if (p) draftById.set(p.id, p);
+    for (const page of draftPagesArr) {
+      if (page) draftById.set(page.id, page);
+    }
 
     const publishedById = new Map<string, Page>();
-    for (const p of publishedPagesArr) if (p) publishedById.set(p.id, p);
+    for (const page of publishedPagesArr) {
+      if (page) publishedById.set(page.id, page);
+    }
+
+    const draftRefById = new Map<string, PageSummary>(
+      draftIndex.pages.map((ref) => [ref.id, ref]),
+    );
+    const publishedRefById = new Map<string, PageSummary>(
+      publishedIndex.pages.map((ref) => [ref.id, ref]),
+    );
 
     for (const id of ids) {
-      const d = draftById.get(id) ?? null;
-      const p = publishedById.get(id) ?? null;
+      const draftPage = draftById.get(id) ?? null;
+      const publishedPage = publishedById.get(id) ?? null;
 
       // Ignore refs that exist in an index but no longer resolve to a page on either side.
-      if (!d && !p) continue;
+      if (!draftPage && !publishedPage) continue;
 
-      const diff = pageDiffKind(d, p);
+      const contentDiff = pageDiffKind(draftPage, publishedPage);
 
-      const draftBlocks = Array.isArray(d?.blocks)
-        ? (d.blocks as ReadonlyArray<Block>)
+      const draftRef = draftRefById.get(id);
+      const publishedRef = publishedRefById.get(id);
+
+      const indexEntryChanged =
+        draftRef !== undefined &&
+        publishedRef !== undefined &&
+        pageIndexEntryDiffers({
+          draftRef,
+          publishedRef,
+        });
+
+      const diff =
+        contentDiff === "published" && indexEntryChanged
+          ? "modified"
+          : contentDiff;
+
+      const draftBlocks = Array.isArray(draftPage?.blocks)
+        ? (draftPage.blocks as ReadonlyArray<Block>)
         : [];
-      const publishedBlocks = Array.isArray(p?.blocks)
-        ? (p.blocks as ReadonlyArray<Block>)
+      const publishedBlocks = Array.isArray(publishedPage?.blocks)
+        ? (publishedPage.blocks as ReadonlyArray<Block>)
         : [];
 
       const {
@@ -164,8 +216,8 @@ export function getSiteStatusDetails({
 
       pagesDetails.push({
         id,
-        slug: String(d?.slug ?? p?.slug ?? ""),
-        name: String(d?.name ?? p?.name ?? ""),
+        slug: String(draftPage?.slug ?? publishedPage?.slug ?? ""),
+        name: String(draftPage?.name ?? publishedPage?.name ?? ""),
         diff,
         blocks: blockCounts,
         ...(includeBlocks ? { blockItems } : null),
@@ -196,13 +248,20 @@ function unionPageIdsFromIndexes(
 ): string[] {
   const ids = new Set<string>();
 
-  for (const r of draftRefs) {
-    const id = String(r?.id ?? "").trim();
-    if (id) ids.add(id);
+  for (const ref of draftRefs) {
+    const id = String(ref?.id ?? "").trim();
+
+    if (id) {
+      ids.add(id);
+    }
   }
-  for (const r of publishedRefs) {
-    const id = String(r?.id ?? "").trim();
-    if (id) ids.add(id);
+
+  for (const ref of publishedRefs) {
+    const id = String(ref?.id ?? "").trim();
+
+    if (id) {
+      ids.add(id);
+    }
   }
 
   return [...ids];

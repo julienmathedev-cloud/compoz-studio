@@ -142,8 +142,6 @@
     "SLUG_REQUIRED": "Le slug est requis.",
     "SLUG_INVALID_FORMAT": "Le slug est invalide (format attendu : kebab-case).",
     "SLUG_RESERVED": "Ce slug est réservé et ne peut pas être utilisé.",
-    "SLUG_NORMALIZED_DIFFERENT": "Le slug a été normalisé automatiquement.",
-    "SLUG_RESERVED_HINT": "Ce slug est réservé, veuillez en choisir un autre.",
 
     "PAGE_TITLE_REQUIRED": "Le titre de la page est requis.",
     "PAGE_TITLE_TOO_SHORT": "Le titre est trop court.",

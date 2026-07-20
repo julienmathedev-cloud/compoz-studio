@@ -29,9 +29,9 @@ export class HttpError extends Error {
   }
 }
 
-/** Standard API error envelope, with legacy string-error compatibility. */
+/** Standard API error envelope. */
 type ErrorEnvelope = {
-  error: string | { code?: string; message?: string };
+  error: { code?: string; message?: string };
 };
 
 function isErrorEnvelope(x: unknown): x is ErrorEnvelope {
@@ -43,7 +43,6 @@ function isErrorEnvelope(x: unknown): x is ErrorEnvelope {
   }
 
   const e = (x as Record<string, unknown>)["error"];
-  if (typeof e === "string") return true;
   return isUnknownObject(e) && ("code" in e || "message" in e);
 }
 
@@ -104,14 +103,10 @@ export async function apiFetch<T>(
         if (isErrorEnvelope(body)) {
           const e = body.error;
 
-          if (typeof e === "string") {
-            message = e;
-          } else {
-            if (typeof e.code === "string") code = e.code;
-            if (typeof e.message === "string") message = e.message;
+          if (typeof e.code === "string") code = e.code;
+          if (typeof e.message === "string") message = e.message;
 
-            if (!e.message && code) message = String(code);
-          }
+          if (!e.message && code) message = String(code);
         } else if (isMessageOnly(body)) {
           message = body.message;
         }

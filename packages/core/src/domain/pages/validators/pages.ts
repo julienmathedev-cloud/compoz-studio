@@ -211,28 +211,3 @@ export function assertSitemap(
 
   assertPriority(sitemap.priority, [...path, "priority"]);
 }
-
-export function assertPage(p: Page): void {
-  assertNameRequired(p.name, ["page", "name"]);
-  assertPageSlug(p.slug, ["page", "slug"]);
-  assertSeoTitle(p.seoTitle, ["page", "seoTitle"]);
-  assertSeoDescription(p.seoDescription, ["page", "seoDescription"]);
-
-  const normalizedParentId = assertParentId(p.parentId, ["page", "parentId"]);
-
-  if (normalizedParentId !== null && normalizedParentId === p.id) {
-    throw new DomainError({
-      code: EC.INVALID_ARGUMENT,
-      message: EC.INVALID_ARGUMENT,
-      details: { path: ["page", "parentId"], meta: { reason: "self_parent" } },
-    });
-  }
-
-  assertSitemap(p.sitemap, ["page", "sitemap"]);
-
-  assertPaginationEnabled({
-    parentId: normalizedParentId,
-    paginationEnabled: p.paginationEnabled,
-    path: ["page", "paginationEnabled"],
-  });
-}

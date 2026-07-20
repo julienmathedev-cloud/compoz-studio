@@ -76,8 +76,6 @@ export const ROW_CENTER = [
 
 export const GRID_SM_2 = ["grid", "gap-4", "sm:grid-cols-2"] as const;
 
-export const GRID_SM_3 = ["grid", "gap-4", "sm:grid-cols-3"] as const;
-
 export const EMPTY_CARD = [
   "rounded-xl",
   "border",

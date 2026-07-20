@@ -87,14 +87,6 @@ export type UpdateSectionBlockIntentDTO = z.infer<
   typeof UpdateSectionBlockIntentSchema
 >;
 
-export const DeleteBlockIntentSchema = z
-  .object({
-    blockId: BlockIdSchema,
-  })
-  .strict();
-
-export type DeleteBlockIntentDTO = z.infer<typeof DeleteBlockIntentSchema>;
-
 export const ReorderBlocksIntentSchema = z
   .object({
     orderedBlockIds: OrderedBlockIdsIntentSchema,

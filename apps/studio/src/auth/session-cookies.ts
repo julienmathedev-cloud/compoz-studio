@@ -7,7 +7,6 @@
  */
 
 export const ACTIVE_WEBSITE_COOKIE = "compoz_active_website" as const;
-export const LEGACY_ACTIVE_TENANT_COOKIE = "compoz_active_tenant" as const;
 
 export const STUDIO_SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
 

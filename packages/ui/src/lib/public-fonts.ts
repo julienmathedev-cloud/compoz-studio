@@ -215,14 +215,6 @@ function isPublicFontKey(value: string): value is PublicFontKey {
   return value in PUBLIC_FONTS;
 }
 
-export function resolveFontPreloadHref(
-  fontId: string | null | undefined,
-): string | null {
-  const key = String(fontId ?? "").trim();
-
-  return isPublicFontKey(key) ? PUBLIC_FONTS[key].preloadHref : null;
-}
-
 /** Resolves a public font config, falling back to Inter for unknown persisted values. */
 export function resolvePublicFontConfig(
   fontKey: string | null | undefined,

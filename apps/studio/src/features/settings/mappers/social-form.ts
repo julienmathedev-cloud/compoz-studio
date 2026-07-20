@@ -12,7 +12,6 @@ import type { SocialFormValues } from "@compoz/validation/site/settings/social/s
 import type { UpdateSocialSettingsIntentDTO } from "@compoz/validation/site/settings/social/social-intents";
 
 import { trimKeepEmpty } from "@compoz/ui/lib/form-utils";
-import { toSocialSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/social-shape";
 
 export function toSocialFormValuesFromDTO(
   dto: SocialSettingsDTO,
@@ -53,11 +52,6 @@ export function normalizeSocialFormValues(
         }))
       : [],
   };
-}
-
-/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
-export function toSocialSettingsShape(dto: SocialSettingsDTO) {
-  return toSocialSettingsShapeFromDTO(dto);
 }
 
 /** Builds a partial API intent while preserving PATCH semantics. */

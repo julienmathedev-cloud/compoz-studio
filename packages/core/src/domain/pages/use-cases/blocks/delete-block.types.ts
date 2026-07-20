@@ -18,8 +18,6 @@ export type DeleteBlockInput = {
   blockId: string;
 };
 
-export type DeleteBlockPatchInput = Omit<DeleteBlockInput, "pageId">;
-
 export interface DeleteBlockResult {
   page: Page;
   blocks: ReadonlyArray<Block>;

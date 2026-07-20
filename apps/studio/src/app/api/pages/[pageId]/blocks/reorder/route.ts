@@ -22,7 +22,6 @@ import type { ReorderBlocksResponse } from "@compoz/infra/http/studio/pages.type
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteStatusCache } from "@compoz/infra/site";
-import { adaptReorderBlocksIntent } from "@compoz/studio/app/api/_adapters/pages/blocks/blocks";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
@@ -67,8 +66,6 @@ export async function POST(req: Request, ctx: { params: unknown }) {
           },
         );
 
-        const adapted = adaptReorderBlocksIntent(dto);
-
         const pagesRepo = getPagesRepository({ websiteId });
         const statusCache = getSiteStatusCache({ websiteId });
 
@@ -78,7 +75,8 @@ export async function POST(req: Request, ctx: { params: unknown }) {
 
         const { page } = await run({
           pageId,
-          ...adapted,
+
+          orderedBlockIds: dto.orderedBlockIds,
         });
 
         /**

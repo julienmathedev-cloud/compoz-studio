@@ -6,13 +6,6 @@
  * Defines shared Studio typography class tokens for headings, text variants, and UI component mappings.
  */
 
-export const TITLE_LOGO = [
-  "text-lg",
-  "md:text-xl",
-  "font-bold",
-  "leading-tight",
-] as const;
-
 export const TITLE_H1 = [
   "text-2xl",
   "md:text-3xl",

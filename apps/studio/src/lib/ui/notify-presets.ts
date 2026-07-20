@@ -29,12 +29,3 @@ export function notifyUpdated(title: string, description: string): void {
 export function notifyNoChanges(title: string, description: string): void {
   notify.info(title, description);
 }
-
-/** Used when a save action is requested without any dirty form changes. */
-export function notifyValidationError(
-  title: string,
-  description: string,
-): void {
-  /** Used for business or UI errors that should be shown as blocking feedback. */
-  notify.error(title, description);
-}

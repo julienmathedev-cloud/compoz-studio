@@ -102,10 +102,6 @@ export function kvAuditEnabled(): boolean {
   return DEBUG_ENABLED;
 }
 
-export function kvTraceEnabled(): boolean {
-  return TRACE_ENABLED;
-}
-
 export async function kvCmd<T>(
   context: string,
   op: KvOp,

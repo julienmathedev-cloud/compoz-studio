@@ -22,29 +22,27 @@
     "isolatedModules": true,
     "incremental": true,
 
-    // ✅ OBLIGATOIRE pour utiliser "paths"
-    "baseUrl": ".",
     "paths": {
-      "@compoz/studio": ["apps/studio/src"],
-      "@compoz/studio/*": ["apps/studio/src/*"],
+      "@compoz/studio": ["./apps/studio/src"],
+      "@compoz/studio/*": ["./apps/studio/src/*"],
 
-      "@compoz/site": ["apps/site/src"],
-      "@compoz/site/*": ["apps/site/src/*"],
+      "@compoz/site": ["./apps/site/src"],
+      "@compoz/site/*": ["./apps/site/src/*"],
 
-      "@compoz/core": ["packages/core/src"],
-      "@compoz/core/*": ["packages/core/src/*"],
+      "@compoz/core": ["./packages/core/src"],
+      "@compoz/core/*": ["./packages/core/src/*"],
 
-      "@compoz/infra": ["packages/infra/src"],
-      "@compoz/infra/*": ["packages/infra/src/*"],
+      "@compoz/infra": ["./packages/infra/src"],
+      "@compoz/infra/*": ["./packages/infra/src/*"],
 
-      "@compoz/ui": ["packages/ui/src"],
-      "@compoz/ui/*": ["packages/ui/src/*"],
+      "@compoz/ui": ["./packages/ui/src"],
+      "@compoz/ui/*": ["./packages/ui/src/*"],
 
-      "@compoz/validation": ["packages/validation/src"],
-      "@compoz/validation/*": ["packages/validation/src/*"],
+      "@compoz/validation": ["./packages/validation/src"],
+      "@compoz/validation/*": ["./packages/validation/src/*"],
 
-      "@compoz/http": ["packages/http/src"],
-      "@compoz/http/*": ["packages/http/src/*"]
+      "@compoz/http": ["./packages/http/src"],
+      "@compoz/http/*": ["./packages/http/src/*"]
     }
   }
 }

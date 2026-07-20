@@ -34,6 +34,7 @@ import {
 } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 
+import { toUpdateUserIntentDTOFromFormValues } from "@compoz/studio/features/admin/users/mappers/users-form";
 import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
 import type { UserFormValues } from "@compoz/validation/users/user-form";
 import type { UpdateUserIntentDTO } from "@compoz/validation/users/user-intents";
@@ -61,34 +62,6 @@ type UpdateUserMutationResult = Readonly<{
 }>;
 
 const lg = log.child({ ns: "hook", name: "useUpdateUser" });
-
-// UI patch to API intent DTO.
-
-/**
- * Builds the API patch from a shallow UI diff.
- *
- * @remarks
- * - Empty passwords are omitted so they do not trigger a password change.
- */
-function toUpdateUserIntentDTOFromFormPatch(
-  p: Partial<UserFormValues>,
-): UpdateUserIntentDTO {
-  const out: UpdateUserIntentDTO = {};
-
-  if ("email" in p && p.email !== undefined) out.email = String(p.email).trim();
-  if ("name" in p && p.name !== undefined) out.name = String(p.name).trim();
-
-  if ("password" in p && p.password !== undefined) {
-    const pwd = String(p.password ?? "").trim();
-    if (pwd) out.password = pwd;
-  }
-
-  if ("rbac" in p && p.rbac !== undefined) {
-    out.rbac = p.rbac;
-  }
-
-  return out;
-}
 
 export function useUpdateUser(onSuccess?: () => void): UseUpdateUserResult {
   const t = useTranslations();
@@ -167,7 +140,7 @@ export function useUpdateUser(onSuccess?: () => void): UseUpdateUserResult {
         return;
       }
 
-      const payload = toUpdateUserIntentDTOFromFormPatch(uiPatch);
+      const payload = toUpdateUserIntentDTOFromFormValues(uiPatch);
       const fields = Object.keys(payload ?? {});
 
       if (fields.length === 0) {

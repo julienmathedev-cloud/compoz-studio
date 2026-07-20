@@ -3,7 +3,7 @@
  * @layer ui/lib/social
  * @description UI source of truth for supported social kinds, labels, and icons.
  * @remarks
- * `twitter` is a legacy alias normalized to `x`; icon rendering returns a `ReactNode` to avoid React component warnings.
+ * Icon rendering returns a `ReactNode` to avoid React component warnings.
  */
 
 import type { SocialKind } from "@compoz/core/constants/social/social-kinds";
@@ -152,12 +152,11 @@ const BRAND_ICONS: Readonly<Partial<Record<SocialKind, SimpleIcon>>> = {
 
 const DEFAULT_ICON_CLASS = "h-4 w-4 flex-none overflow-visible";
 
-/** Normalizes legacy or case-insensitive input to a UI social kind. */
+/** Normalizes case-insensitive input to a UI social kind. */
 export function normalizeSocialKind(kind: string): string {
-  const k = String(kind ?? "")
+  return String(kind ?? "")
     .trim()
     .toLowerCase();
-  return k === "twitter" ? "x" : k;
 }
 
 function isSocialKind(value: string): value is SocialKind {

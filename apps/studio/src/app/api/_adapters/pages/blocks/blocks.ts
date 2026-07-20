@@ -11,14 +11,10 @@ import { trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type {
   CreateSectionBlockIntentDTO,
-  DeleteBlockIntentDTO,
-  ReorderBlocksIntentDTO,
   UpdateSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
 
 import type { CreateSectionBlockPatchInput } from "@compoz/core/domain/pages/use-cases/blocks/create-section-block.types";
-import type { DeleteBlockPatchInput } from "@compoz/core/domain/pages/use-cases/blocks/delete-block.types";
-import type { ReorderBlocksPatchInput } from "@compoz/core/domain/pages/use-cases/blocks/reorder-blocks.types";
 import type {
   SectionBlockPatch,
   UpdateSectionBlockPatchInput,
@@ -134,20 +130,4 @@ export function adaptUpdateSectionBlockIntent(
   });
 
   return out;
-}
-
-export function adaptDeleteBlockIntent(
-  dto: DeleteBlockIntentDTO,
-): DeleteBlockPatchInput {
-  return {
-    blockId: trimOrKeep(dto.blockId),
-  };
-}
-
-export function adaptReorderBlocksIntent(
-  dto: ReorderBlocksIntentDTO,
-): ReorderBlocksPatchInput {
-  return {
-    orderedBlockIds: dto.orderedBlockIds.map(trimOrKeep),
-  };
 }

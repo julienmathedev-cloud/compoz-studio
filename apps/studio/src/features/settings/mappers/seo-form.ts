@@ -13,7 +13,6 @@ import type { SeoFormValues } from "@compoz/validation/site/settings/seo/seo-for
 import type { UpdateSeoSettingsIntentDTO } from "@compoz/validation/site/settings/seo/seo-intents";
 
 import { asBool, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
-import { toSeoSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/seo-shape";
 
 const DEFAULT_TWITTER_CARD = TWITTER_CARD_TYPES[1] ?? TWITTER_CARD_TYPES[0];
 
@@ -129,11 +128,6 @@ export function normalizeSeoFormValues(values: SeoFormValues): SeoFormValues {
       creator: trimKeepEmpty(values.twitter.creator),
     },
   };
-}
-
-/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
-export function toSeoSettingsShape(dto: SeoSettingsDTO) {
-  return toSeoSettingsShapeFromDTO(dto);
 }
 
 /** Builds a partial API intent while preserving PATCH semantics. */

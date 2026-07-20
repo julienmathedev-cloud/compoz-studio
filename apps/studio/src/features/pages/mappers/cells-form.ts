@@ -410,21 +410,7 @@ export function toCellFormValuesFromDTO(cell: CellDTO): CellFormValues {
   return toCellShapeFromDTO(cell);
 }
 
-export function ensureCellsLength(
-  cells: ReadonlyArray<CellFormValues>,
-  columns: 1 | 2 | 3,
-): CellFormValues[] {
-  const output = Array.from(cells ?? []).slice(0, columns);
-
-  while (output.length < columns) {
-    output.push(createEmptyCell("richText"));
-  }
-
-  return output;
-}
-
 // Structured card item UI-safe normalization.
-
 export function normalizeStructuredCardButton(
   button: StructuredCardItemFormValues["button"],
 ): StructuredCardItemFormValues["button"] {

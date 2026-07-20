@@ -157,10 +157,9 @@ Optional variables are used for integrations and operational behavior:
 - `COMPOZ_REVALIDATE_SECRET`: protects public site revalidation routes.
 - `COMPOZ_CRON_SECRET`: protects internal cleanup routes.
 - `RESEND_API_KEY` and `CONTACT_FROM_EMAIL`: contact form email delivery.
-- `KV_REST_API_URL` or `UPSTASH_REDIS_REST_URL`: Upstash Redis endpoint.
-- `KV_REST_API_TOKEN` or `UPSTASH_REDIS_REST_TOKEN`: Upstash Redis token.
+- `KV_REST_API_URL`: Upstash Redis endpoint.
+- `KV_REST_API_TOKEN`: Upstash Redis token.
 - `SITE_REPO_IMPL` and `USERS_REPO_IMPL`: repository implementation selection. Pages always use Prisma.
-- `NEXT_PUBLIC_API_PREFIX` and `NEXT_PUBLIC_API_VERSION`: API endpoint configuration.
 - `NEXT_PUBLIC_LOG_LEVEL`: logging verbosity.
 
 Additional environment variables exist for demo, telemetry, and site verification flows. They should be configured only when those flows are needed.

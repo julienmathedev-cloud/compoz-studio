@@ -25,13 +25,6 @@ import { asBool, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 import { resolveLinkFlags } from "@compoz/ui/lib/links/helpers";
 import { toExternalDraft, toInternalDraft } from "@compoz/ui/lib/normalize";
 
-import { toPrimaryMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/primary-menu-shape";
-
-/** Defensive fallback for legacy DTOs missing a persisted menu item id. */
-function createId(): string {
-  return crypto.randomUUID();
-}
-
 /** Normalizes a non-empty href to the internal/external draft format. */
 function normalizeHrefDraft(href: string): string {
   const raw = String(href ?? "").trim();
@@ -54,7 +47,7 @@ function toChildFormValuesFromDTO(
   it: PrimaryMenuDTOChild,
 ): PrimaryMenuChildFormValues {
   return {
-    id: trimKeepEmpty(String(it.id ?? "")) || createId(),
+    id: trimKeepEmpty(String(it.id ?? "")),
     label: trimKeepEmpty(it.label),
     href: String(it.href ?? ""),
     newTab: asBool(it.newTab),
@@ -65,7 +58,7 @@ function toTopItemFormValuesFromDTO(
   it: PrimaryMenuDTOItem,
 ): PrimaryMenuItemFormValues {
   const base: PrimaryMenuItemFormValues = {
-    id: trimKeepEmpty(String(it.id ?? "")) || createId(),
+    id: trimKeepEmpty(String(it.id ?? "")),
     label: trimKeepEmpty(it.label),
     href: String(it.href ?? ""),
     newTab: asBool(it.newTab),
@@ -86,7 +79,7 @@ function normalizeChildFormValues(
   i: PrimaryMenuChildFormValues,
 ): PrimaryMenuChildFormValues {
   return {
-    id: trimKeepEmpty(i.id) || createId(),
+    id: trimKeepEmpty(i.id),
     label: trimKeepEmpty(i.label),
     href: normalizeHrefDraftKeepEmpty(i.href),
     newTab: asBool(i.newTab),
@@ -100,7 +93,7 @@ function normalizeTopItemFormValues(
   const hasChildren = Array.isArray(children) && children.length > 0;
 
   return {
-    id: trimKeepEmpty(i.id) || createId(),
+    id: trimKeepEmpty(i.id),
     label: trimKeepEmpty(i.label),
     href: normalizeHrefDraftKeepEmpty(i.href),
     // Parent items with children are never opened in a new tab.
@@ -131,7 +124,7 @@ export function toPrimaryMenuSettingsShapeFromFormValues(
   return {
     items:
       values.items?.map((item) => ({
-        id: trimKeepEmpty(item.id) || createId(),
+        id: trimKeepEmpty(item.id),
         label: trimKeepEmpty(item.label),
         href: normalizeHrefDraftKeepEmpty(item.href),
         newTab:
@@ -140,20 +133,13 @@ export function toPrimaryMenuSettingsShapeFromFormValues(
             : asBool(item.newTab),
         children:
           item.children?.map((child) => ({
-            id: trimKeepEmpty(child.id) || createId(),
+            id: trimKeepEmpty(child.id),
             label: trimKeepEmpty(child.label),
             href: normalizeHrefDraftKeepEmpty(child.href),
             newTab: asBool(child.newTab),
           })) ?? [],
       })) ?? [],
   };
-}
-
-/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
-export function toPrimaryMenuSettingsShape(
-  dto: PrimaryMenuSettingsDTO,
-): PrimaryMenuSettingsShape {
-  return toPrimaryMenuSettingsShapeFromDTO(dto);
 }
 
 /** Intent item aliases intentionally mirror the API DTO shape. */
@@ -184,7 +170,7 @@ function normalizeIntentDTOChild(
   c: PrimaryMenuChildFormValues,
 ): PrimaryMenuIntentDTOChild {
   return {
-    id: trimKeepEmpty(c.id) || createId(),
+    id: trimKeepEmpty(c.id),
     label: trimKeepEmpty(c.label),
     href: normalizeHrefDraftKeepEmpty(c.href),
     newTab: asBool(c.newTab),
@@ -205,7 +191,7 @@ function normalizeIntentDTOTopItem(
       parentHrefDraft.trim().length === 0 ? "/" : parentHrefDraft;
 
     return {
-      id: trimKeepEmpty(it.id) || createId(),
+      id: trimKeepEmpty(it.id),
       label: trimKeepEmpty(it.label),
       href: parentHref,
       newTab: false,
@@ -214,7 +200,7 @@ function normalizeIntentDTOTopItem(
   }
 
   return {
-    id: trimKeepEmpty(it.id) || createId(),
+    id: trimKeepEmpty(it.id),
     label: trimKeepEmpty(it.label),
     href: normalizeHrefDraftKeepEmpty(it.href),
     newTab: asBool(it.newTab),

@@ -18,8 +18,6 @@ export type ReorderBlocksInput = {
   orderedBlockIds: ReadonlyArray<BlockId>;
 };
 
-export type ReorderBlocksPatchInput = Omit<ReorderBlocksInput, "pageId">;
-
 export interface ReorderBlocksResult {
   page: Page;
   blocks: ReadonlyArray<Block>;

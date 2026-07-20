@@ -184,16 +184,6 @@ export const THEME_FONT_CATEGORY_LABEL: Readonly<
   display: "Display / signature",
 } as const;
 
-export function getThemeFontsByCategory(category: ThemeFontCategory) {
-  return THEME_FONTS.filter((font) => font.category === category);
-}
-
 export function getThemeFontById(id: string | null | undefined) {
   return THEME_FONTS.find((font) => font.id === id);
-}
-
-export function getThemeFontByFontFamily(
-  fontFamily: string | null | undefined,
-) {
-  return THEME_FONTS.find((font) => font.fontFamily === fontFamily);
 }

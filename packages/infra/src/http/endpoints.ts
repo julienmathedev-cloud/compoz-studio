@@ -3,7 +3,7 @@
  * @layer infra/http
  * @description Centralized Studio API endpoint map.
  * @remarks
- * Endpoint paths are built from normalized segments and can include a public API prefix and optional version.
+ * Endpoint paths are built from normalized segments under the fixed `/api` base path.
  */
 
 const TRIM_SLASHES_RE = /^\/+|\/+$/g;
@@ -17,11 +17,7 @@ function ep(...segs: Array<string | number | null | undefined>): string {
   return "/" + parts.join("/");
 }
 
-const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX ?? "/api";
-const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION;
-const VERSION_SEG = API_VERSION ? [API_VERSION] : [];
-
-const STUDIO_BASE = ep(API_PREFIX, ...VERSION_SEG);
+const STUDIO_BASE = "/api";
 
 const SITE_BASE = ep(STUDIO_BASE, "site");
 const SETTINGS_BASE = ep(STUDIO_BASE, "settings");

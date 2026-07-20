@@ -12,7 +12,6 @@ import {
 } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type {
-  User,
   UserRbac,
   UserRole,
   UserStatus,
@@ -209,18 +208,6 @@ export function assertUserRbac(
   });
 
   return { role, websiteIds, defaultWebsiteId };
-}
-
-export function assertUser(user: User): void {
-  assertNonEmptyString({
-    value: user.id,
-    code: EC.USER_ID_REQUIRED,
-    path: ["user", "id"],
-  });
-
-  assertUserEmail(user.email, ["user", "email"]);
-  assertUserName(user.name, ["user", "name"]);
-  assertUserRbac(user.rbac, ["user", "rbac"]);
 }
 
 export function assertUserStatus(

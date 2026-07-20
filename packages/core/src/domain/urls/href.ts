@@ -123,60 +123,6 @@ export function asBrandedHref(s: string): BrandedHref {
   return rel(trimmed);
 }
 
-function brandHrefSafe(
-  input: unknown,
-  prev?: BrandedHref,
-): BrandedHref | undefined {
-  if (typeof input !== "string") return prev;
-
-  const s = input.trim();
-  if (!s) return prev;
-
-  if (isHashAnchor(s)) {
-    return anchor(s);
-  }
-
-  const i = s.indexOf(":");
-
-  if (i > 0) {
-    const proto = s.slice(0, i + 1).toLowerCase();
-
-    if (proto === "mailto:") {
-      return isMailtoHref(s) ? mail(s) : prev;
-    }
-
-    if (proto === "http:" || proto === "https:") {
-      try {
-        const u = new URL(s);
-        if (isAbsoluteHttpProtocol(u.protocol) && u.hostname) {
-          return abs(s);
-        }
-      } catch {}
-      return prev;
-    }
-  }
-
-  return isRelativeUrl(s) ? rel(s) : prev;
-}
-
-export function brandAssetUrlSafe(
-  input: unknown,
-  prev?: AssetUrl,
-): AssetUrl | undefined {
-  const v = brandHrefSafe(input, prev);
-  if (!v) return prev;
-
-  return isMailHref(v) ? prev : v;
-}
-
-function isMailHref(href: BrandedHref): href is MailtoUrl {
-  return href.startsWith("mailto:");
-}
-
-export function isAbsoluteAssetUrl(u: AssetUrl): u is AbsoluteHttpUrl {
-  return u.startsWith("http://") || u.startsWith("https://");
-}
-
 function isHttpAbsoluteUrl(s: string): boolean {
   const v = s.trim().toLowerCase();
   return v.startsWith("http://") || v.startsWith("https://");

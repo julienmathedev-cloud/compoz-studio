@@ -30,6 +30,7 @@ import { ImageListEditor } from "@compoz/studio/features/builder/editor/cells/im
 import { StructuredCardListEditor } from "@compoz/studio/features/builder/editor/cells/structured-card/StructuredCardListEditor";
 import {
   createEmptyCardItem,
+  createEmptyCarouselItem,
   createEmptyExtendedCardItem,
   createEmptyImageEditor,
   createEmptyStructuredCardItem,
@@ -91,13 +92,6 @@ export type CarouselCellEditorProps = Readonly<{
   showError?: boolean;
   onUploadImage?: (file: File) => Promise<UploadedRasterImage>;
 }>;
-
-function getEmptyItemByKind(kind: CarouselItemKind) {
-  if (kind === "image") return createEmptyImageEditor();
-  if (kind === "card") return createEmptyCardItem();
-  if (kind === "extendedCard") return createEmptyExtendedCardItem();
-  return createEmptyStructuredCardItem();
-}
 
 function normalizeEditorItemKind(
   value: CarouselItemKind | undefined,
@@ -229,7 +223,7 @@ export function CarouselCellEditor({
                 visualMode="studio"
                 onClick={() => {
                   itemKindCtrl.field.onChange(item);
-                  replace([getEmptyItemByKind(item)]);
+                  replace([createEmptyCarouselItem(item)]);
                 }}
                 disabled={disabled}
               >

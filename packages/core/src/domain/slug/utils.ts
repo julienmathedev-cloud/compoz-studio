@@ -7,11 +7,7 @@
  */
 
 import { SITE_PATH } from "@compoz/core/constants/web/paths";
-import {
-  HOME_SLUG,
-  RESERVED_SLUGS,
-  SLUG_FINAL_RE,
-} from "@compoz/core/domain/slug/constants";
+import { HOME_SLUG, RESERVED_SLUGS } from "@compoz/core/domain/slug/constants";
 
 export function normalizeSlug(input: string, maxLen?: number): string {
   if (!input) return "";
@@ -31,10 +27,6 @@ export function normalizeSlug(input: string, maxLen?: number): string {
   }
 
   return s;
-}
-
-export function isValidSlug(s: string): boolean {
-  return SLUG_FINAL_RE.test(s);
 }
 
 const RESERVED_SET = new Set<string>(RESERVED_SLUGS);

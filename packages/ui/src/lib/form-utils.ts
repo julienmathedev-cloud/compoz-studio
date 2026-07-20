@@ -29,13 +29,6 @@ export const asBool = (v: unknown): boolean => {
   return Boolean(v);
 };
 
-export const emptyToUndef = (
-  s: string | null | undefined,
-): string | undefined => {
-  const v = trimKeepEmpty(s);
-  return v.length > 0 ? v : undefined;
-};
-
 /** Maps asset form values to PATCH semantics. */
 export const assetUiToPatch = (
   s: string | null | undefined,

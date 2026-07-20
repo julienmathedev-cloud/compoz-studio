@@ -17,7 +17,6 @@ import type { ThemeFormValues } from "@compoz/validation/site/settings/theme/the
 import type { UpdateThemeSettingsIntentDTO } from "@compoz/validation/site/settings/theme/theme-intents";
 
 import { asBool, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
-import { toThemeSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/theme-shape";
 
 function normalizeThemeTokens(
   tokens: ThemeFormValues["lightTokens"] | ThemeFormValues["darkTokens"],
@@ -98,13 +97,6 @@ export function toThemeSettingsShapeFromFormValues(
 
   const parsed = ThemeSettingsSchema.safeParse(candidate);
   return parsed.success ? parsed.data : candidate;
-}
-
-/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
-export function toThemeSettingsShape(
-  dto: ThemeSettingsDTO,
-): ThemeSettingsShape {
-  return toThemeSettingsShapeFromDTO(dto);
 }
 
 export function normalizeThemeFormValues(

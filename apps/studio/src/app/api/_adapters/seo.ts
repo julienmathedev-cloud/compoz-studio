@@ -64,15 +64,10 @@ function cleanStringList(
 
 function adaptStructuredData(
   value: UpdateSeoSettingsIntentDTO["structuredData"],
-  legacyEnabled?: boolean,
 ): StructuredDataSettings {
-  if (typeof value === "boolean") {
-    return { enabled: value, entityType: "organization" };
-  }
-
   if (!value) {
     return {
-      enabled: legacyEnabled ?? false,
+      enabled: false,
       entityType: "organization",
     };
   }
@@ -90,7 +85,7 @@ function adaptStructuredData(
   ) as StructuredDataAddress;
 
   return {
-    enabled: value.enabled ?? legacyEnabled ?? false,
+    enabled: value.enabled ?? false,
     entityType: value.entityType ?? "organization",
     name: trimOptionalString(value.name),
     description: trimOptionalString(value.description),
@@ -130,7 +125,6 @@ export function adaptUpdateSeoIntent(
     hasCanonicalUrl: "canonicalUrl" in dto,
     hasRobots: "robots" in dto,
     hasStructuredData: "structuredData" in dto,
-    hasStructuredDataEnabled: "structuredDataEnabled" in dto,
     hasOpenGraph: "openGraph" in dto,
     hasTwitter: "twitter" in dto,
   });
@@ -161,11 +155,8 @@ export function adaptUpdateSeoIntent(
     patch.robots = trimNullableString(dto.robots);
   }
 
-  if ("structuredData" in dto || "structuredDataEnabled" in dto) {
-    patch.structuredData = adaptStructuredData(
-      dto.structuredData,
-      dto.structuredDataEnabled,
-    );
+  if ("structuredData" in dto) {
+    patch.structuredData = adaptStructuredData(dto.structuredData);
   }
 
   // OpenGraph patch.

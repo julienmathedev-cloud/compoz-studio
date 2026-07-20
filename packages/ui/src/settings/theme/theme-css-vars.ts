@@ -9,8 +9,6 @@
  * Shared by Studio preview, draft rendering, and public rendering; no domain logic belongs here.
  */
 
-import type { CSSProperties } from "react";
-
 import { resolveThemeFontFamily } from "@compoz/ui/settings/theme/theme-font-runtime";
 import type {
   PublicThemeTokensShape,
@@ -83,11 +81,4 @@ export function themeSettingsToCssVars(
     "--website-font-body": bodyFont,
     "--website-font-heading": headingFont,
   };
-}
-
-/** Returns theme CSS variables in the shape expected by React `style`. */
-export function themeSettingsToCssStyle(
-  theme: ThemeSettingsShape,
-): CSSProperties {
-  return themeSettingsToCssVars(theme) as CSSProperties;
 }

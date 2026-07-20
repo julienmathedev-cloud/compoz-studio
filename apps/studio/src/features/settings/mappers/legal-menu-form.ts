@@ -24,7 +24,6 @@ import type { UpdateLegalMenuSettingsIntentDTO } from "@compoz/validation/site/s
 import { asBool, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
 import { resolveLinkFlags } from "@compoz/ui/lib/links/helpers";
 import { toExternalDraft, toInternalDraft } from "@compoz/ui/lib/normalize";
-import { toLegalMenuSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/legal-menu-shape";
 
 function normalizeHrefDraft(href: string): string {
   const raw = String(href ?? "").trim();
@@ -80,13 +79,6 @@ export function toLegalMenuSettingsShapeFromFormValues(
       newTab: asBool(it.newTab),
     })),
   };
-}
-
-/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
-export function toLegalMenuSettingsShape(
-  dto: LegalMenuSettingsDTO,
-): LegalMenuSettingsShape {
-  return toLegalMenuSettingsShapeFromDTO(dto);
 }
 
 export function normalizeLegalMenuFormValues(

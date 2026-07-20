@@ -15,7 +15,6 @@ import type { IdentityFormValues } from "@compoz/validation/site/settings/identi
 import type { UpdateIdentitySettingsIntentDTO } from "@compoz/validation/site/settings/identity/identity-intents";
 
 import { assetUiToPatch, trimKeepEmpty } from "@compoz/ui/lib/form-utils";
-import { toIdentitySettingsShapeFromDTO } from "@compoz/ui/settings/mappers/identity-shape";
 
 function optionalTrimmedString(
   value: string | null | undefined,
@@ -79,13 +78,6 @@ export function toIdentitySettingsShapeFromFormValues(
 
   const parsed = IdentitySettingsSchema.safeParse(candidate);
   return parsed.success ? parsed.data : candidate;
-}
-
-/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
-export function toIdentitySettingsShape(
-  dto: IdentitySettingsDTO,
-): IdentitySettingsShape {
-  return toIdentitySettingsShapeFromDTO(dto);
 }
 
 export function normalizeIdentityFormValues(

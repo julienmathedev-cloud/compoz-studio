@@ -50,44 +50,16 @@ function defaultSettings(): SiteSettings {
   };
 }
 
-type PersistedSeoSettings = Omit<Partial<SeoSettings>, "structuredData"> & {
-  structuredData?: SeoSettings["structuredData"] | boolean;
-  structuredDataEnabled?: boolean;
-};
-
 function normalizeSeoSettings(
-  seo: PersistedSeoSettings | null | undefined,
+  seo: Partial<SeoSettings> | null | undefined,
 ): SeoSettings {
-  const legacyEnabled =
-    typeof seo?.structuredData === "boolean"
-      ? seo.structuredData
-      : typeof seo?.structuredDataEnabled === "boolean"
-        ? seo.structuredDataEnabled
-        : undefined;
-
-  const structuredData =
-    seo?.structuredData &&
-    typeof seo.structuredData === "object" &&
-    !Array.isArray(seo.structuredData)
-      ? {
-          ...DEFAULT_SEO_SETTINGS.structuredData,
-          ...seo.structuredData,
-        }
-      : {
-          ...DEFAULT_SEO_SETTINGS.structuredData,
-          enabled: legacyEnabled ?? DEFAULT_SEO_SETTINGS.structuredData.enabled,
-        };
-
-  const {
-    structuredData: _legacyStructuredData,
-    structuredDataEnabled: _legacyStructuredDataEnabled,
-    ...current
-  } = seo ?? {};
-
   return {
     ...DEFAULT_SEO_SETTINGS,
-    ...current,
-    structuredData,
+    ...seo,
+    structuredData: {
+      ...DEFAULT_SEO_SETTINGS.structuredData,
+      ...seo?.structuredData,
+    },
   };
 }
 
@@ -153,15 +125,13 @@ export class InMemorySiteRepository implements SiteRepository {
     this.setIndex(state, structuredClone(index));
   }
 
-  /** Returns cloned settings with legacy SEO and theme defaults normalized. */
+  /** Returns cloned settings with nested SEO and theme defaults normalized. */
   async readSettings(state: ContentState): Promise<SiteSettings> {
     const settings = this.pickSettings(state) ?? defaultSettings();
 
     return structuredClone({
       ...settings,
-      seo: normalizeSeoSettings(
-        settings.seo as PersistedSeoSettings | undefined,
-      ),
+      seo: normalizeSeoSettings(settings.seo),
       theme: mergeThemeSettings(settings.theme),
     });
   }

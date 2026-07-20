@@ -116,11 +116,7 @@ const UpdateSeoSettingsIntentObjectSchema = SeoSettingsObjectSchema.partial()
 
     openGraph: z.union([OpenGraphPatchSchema, z.null()]).optional(),
     twitter: z.union([TwitterPatchSchema, z.null()]).optional(),
-
-    structuredData: z
-      .union([StructuredDataPatchSchema, z.boolean()])
-      .optional(),
-    structuredDataEnabled: z.boolean().optional(),
+    structuredData: StructuredDataPatchSchema.optional(),
   })
   .strict();
 

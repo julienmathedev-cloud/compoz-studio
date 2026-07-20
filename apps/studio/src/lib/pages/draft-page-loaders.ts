@@ -8,8 +8,7 @@
  * @remarks
  * - Uses React `cache()` to dedupe repository and read calls during the same server render.
  * - Resolves slugs to page ids through the core SiteIndex helpers.
- * - The active website is resolved from the Studio session and uses Prisma Website.id.
- * - Demo sandbox sessions may still carry an explicit temporary KV scope through `sandboxTenantId`, but this module should not expose generic tenant wording.
+ * - The active website is resolved from the Studio session using the current Prisma Website.id.
  */
 
 import "server-only";

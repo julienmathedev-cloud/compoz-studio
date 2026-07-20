@@ -8,13 +8,8 @@
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
-import type { UiWarning } from "@compoz/core/domain/errors/issue.types";
 import { SLUG_FINAL_RE } from "@compoz/core/domain/slug/constants";
 import { isReservedSlug, normalizeSlug } from "@compoz/core/domain/slug/utils";
-
-export type SlugWarning = UiWarning<
-  typeof EC.SLUG_NORMALIZED_DIFFERENT | typeof EC.SLUG_RESERVED_HINT
->;
 
 export function assertSlug(
   raw: string | undefined,
@@ -47,30 +42,4 @@ export function assertSlug(
   }
 
   return normalized;
-}
-
-export function getSlugUiWarnings(
-  raw: string | undefined,
-  path: (string | number)[] = ["slug"],
-): SlugWarning[] {
-  const out: SlugWarning[] = [];
-  const normalized = normalizeSlug(raw ?? "");
-
-  if (raw && normalized && raw !== normalized) {
-    out.push({
-      code: EC.SLUG_NORMALIZED_DIFFERENT,
-      path,
-      meta: { normalized },
-    });
-  }
-
-  if (normalized && isReservedSlug(normalized)) {
-    out.push({
-      code: EC.SLUG_RESERVED_HINT,
-      path,
-      meta: { normalized },
-    });
-  }
-
-  return out;
 }

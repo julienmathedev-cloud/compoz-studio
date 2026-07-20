@@ -15,7 +15,6 @@ import { NextResponse } from "next/server";
 
 import {
   ACTIVE_WEBSITE_COOKIE,
-  LEGACY_ACTIVE_TENANT_COOKIE,
   NEXTAUTH_STUDIO_COOKIES,
 } from "@compoz/studio/auth/session-cookies";
 import { routing } from "@compoz/studio/i18n/routing";
@@ -76,7 +75,6 @@ export function GET(request: NextRequest) {
   const response = NextResponse.redirect(url);
 
   deleteCookie(response, ACTIVE_WEBSITE_COOKIE);
-  deleteCookie(response, LEGACY_ACTIVE_TENANT_COOKIE);
 
   for (const cookieName of collectAuthCookieNames(request)) {
     deleteCookie(response, cookieName);

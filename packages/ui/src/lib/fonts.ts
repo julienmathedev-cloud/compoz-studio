@@ -26,8 +26,8 @@ import {
   Sora,
   Source_Serif_4,
   Space_Grotesk,
-  Urbanist,
   Spectral,
+  Urbanist,
 } from "next/font/google";
 
 const inter = Inter({
@@ -185,47 +185,6 @@ export type FontKey =
   | "caveat"
   | "fjalla-one"
   | "spectral";
-
-const fontVariablesByKey: Readonly<Record<FontKey, string>> = {
-  inter: inter.variable,
-  manrope: manrope.variable,
-  "plus-jakarta-sans": plusJakartaSans.variable,
-  "dm-sans": dmSans.variable,
-  outfit: outfit.variable,
-  sora: sora.variable,
-  urbanist: urbanist.variable,
-  "space-grotesk": spaceGrotesk.variable,
-  "playfair-display": playfairDisplay.variable,
-  "cormorant-garamond": cormorantGaramond.variable,
-  lora: lora.variable,
-  merriweather: merriweather.variable,
-  "source-serif-4": sourceSerif4.variable,
-  "libre-baskerville": libreBaskerville.variable,
-  "bebas-neue": bebasNeue.variable,
-  "abril-fatface": abrilFatface.variable,
-  oswald: oswald.variable,
-  pacifico: pacifico.variable,
-  caveat: caveat.variable,
-  "fjalla-one": fjallaOne.variable,
-  spectral: spectral.variable,
-};
-
-function isFontKey(value: string): value is FontKey {
-  return value in fontVariablesByKey;
-}
-
-export function getFontVariablesClassName(
-  fontKeys: string | readonly string[] | null | undefined,
-): string {
-  const rawKeys = Array.isArray(fontKeys) ? fontKeys : [fontKeys];
-  const keys = Array.from(new Set(rawKeys.filter(Boolean))).filter(isFontKey);
-
-  if (keys.length === 0) {
-    return inter.variable;
-  }
-
-  return keys.map((key) => fontVariablesByKey[key]).join(" ");
-}
 
 export const allFontVariablesClassName = [
   inter.variable,

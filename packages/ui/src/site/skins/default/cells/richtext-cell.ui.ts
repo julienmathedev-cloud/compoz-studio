@@ -7,8 +7,8 @@
  */
 
 import type { SiteRichTextUi } from "@compoz/ui/site/site-ui.types";
-import { SITE_PROSE } from "@compoz/ui/styles/site/typography";
+import { PROSE_CLASSNAME } from "@compoz/ui/styles/shared/typography";
 
 export const defaultRichTextUi: SiteRichTextUi = {
-  root: SITE_PROSE,
+  root: PROSE_CLASSNAME,
 };

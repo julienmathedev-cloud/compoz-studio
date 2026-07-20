@@ -12,7 +12,6 @@ import type { FooterFormValues } from "@compoz/validation/site/settings/footer/f
 import type { UpdateFooterSettingsIntentDTO } from "@compoz/validation/site/settings/footer/footer-intents";
 
 import { trimKeepEmpty } from "@compoz/ui/lib/form-utils";
-import { toFooterSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/footer-shape";
 
 export function toFooterFormValuesFromDTO(
   dto: FooterSettingsDTO,
@@ -30,13 +29,6 @@ export function toFooterSettingsShapeFromFormValues(
     copyright: values.copyright,
     showYear: values.showYear,
   };
-}
-
-/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
-export function toFooterSettingsShape(
-  dto: FooterSettingsDTO,
-): FooterSettingsShape {
-  return toFooterSettingsShapeFromDTO(dto);
 }
 
 export function normalizeFooterFormValues(

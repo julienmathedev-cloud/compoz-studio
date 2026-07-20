@@ -205,10 +205,3 @@ export async function logSpan<T>(
     throw err;
   }
 }
-
-export async function logSpanNoCtx<T>(
-  name: string,
-  fn: () => Promise<T> | T,
-): Promise<T> {
-  return logSpan(name, undefined, fn);
-}

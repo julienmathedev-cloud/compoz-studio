@@ -13,7 +13,6 @@
 import { useMemo } from "react";
 
 import { PAGE_NAME } from "@compoz/core/constants/limits/pages";
-import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 import { normalizeSlug } from "@compoz/core/domain/slug/utils";
 import type { PageFormValues } from "@compoz/validation/pages/page-form";
 
@@ -42,35 +41,4 @@ export function computePageWarnings(values: PageFormValues): PageWarningKey[] {
 /** Memoizes page form warnings for form consumers. */
 export function usePageUiWarnings(values: PageFormValues): PageWarningKey[] {
   return useMemo(() => computePageWarnings(values), [values]);
-}
-
-/** Builds existing slugs while excluding the current page by id, not by mutable slug. */
-export function buildSlugSet(
-  index: SiteIndexDTO | null | undefined,
-  currentPageId?: string,
-): ReadonlySet<string> {
-  const slugs = new Set<string>();
-  if (!index) return slugs;
-
-  for (const page of index.pages) {
-    if (currentPageId && page.id === currentPageId) continue;
-
-    const slug = String(page.slug ?? "").trim();
-    if (!slug) continue;
-
-    slugs.add(slug);
-  }
-
-  return slugs;
-}
-
-/** Memoizes existing slugs for duplicate checks. */
-export function useSlugSet(
-  index: SiteIndexDTO | null | undefined,
-  currentPageId?: string,
-): ReadonlySet<string> {
-  return useMemo(
-    () => buildSlugSet(index, currentPageId),
-    [index, currentPageId],
-  );
 }

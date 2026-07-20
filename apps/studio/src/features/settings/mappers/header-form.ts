@@ -12,7 +12,6 @@ import type { HeaderFormValues } from "@compoz/validation/site/settings/header/h
 import type { UpdateHeaderSettingsIntentDTO } from "@compoz/validation/site/settings/header/header-intents";
 
 import { asBool } from "@compoz/ui/lib/form-utils";
-import { toHeaderSettingsShapeFromDTO } from "@compoz/ui/settings/mappers/header-shape";
 
 export function toHeaderFormValuesFromDTO(
   dto: HeaderSettingsDTO,
@@ -36,13 +35,6 @@ export function toHeaderSettingsShapeFromFormValues(
     blur: asBool(values.blur),
     swapPrimaryAndSocial: asBool(values.swapPrimaryAndSocial),
   };
-}
-
-/** Re-exports the shared DTO-to-runtime-shape mapper for Studio callers. */
-export function toHeaderSettingsShape(
-  dto: HeaderSettingsDTO,
-): HeaderSettingsShape {
-  return toHeaderSettingsShapeFromDTO(dto);
 }
 
 export function normalizeHeaderFormValues(

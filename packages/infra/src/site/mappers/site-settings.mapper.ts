@@ -3,7 +3,7 @@
  * @layer infra/site
  * @description Maps Prisma SiteSettings JSON rows to domain settings and back to Prisma write data.
  * @remarks
- * Invalid persisted JSON object shapes fall back to domain defaults; legacy SEO structured data shapes are normalized here.
+ * Invalid persisted JSON object shapes fall back to domain defaults.
  */
 
 import { DEFAULT_FOOTER_SETTINGS } from "@compoz/core/domain/site/defaults/footer";
@@ -48,11 +48,6 @@ export type PrismaSiteSettingsCreateData = PrismaSiteSettingsUpdateData & {
   state: PrismaContentState;
 };
 
-type PersistedSeoSettings = Omit<Partial<SeoSettings>, "structuredData"> & {
-  structuredData?: SeoSettings["structuredData"] | boolean;
-  structuredDataEnabled?: boolean;
-};
-
 function defaultSettings(): SiteSettings {
   return {
     header: { ...DEFAULT_HEADER_SETTINGS },
@@ -90,38 +85,15 @@ function toJsonValue(value: unknown): Prisma.InputJsonValue {
 }
 
 function normalizeSeoSettings(seo: unknown): SeoSettings {
-  const persisted = isRecord(seo) ? (seo as PersistedSeoSettings) : undefined;
-
-  const legacyEnabled =
-    typeof persisted?.structuredData === "boolean"
-      ? persisted.structuredData
-      : typeof persisted?.structuredDataEnabled === "boolean"
-        ? persisted.structuredDataEnabled
-        : undefined;
-
-  const structuredData =
-    persisted?.structuredData &&
-    typeof persisted.structuredData === "object" &&
-    !Array.isArray(persisted.structuredData)
-      ? {
-          ...DEFAULT_SEO_SETTINGS.structuredData,
-          ...persisted.structuredData,
-        }
-      : {
-          ...DEFAULT_SEO_SETTINGS.structuredData,
-          enabled: legacyEnabled ?? DEFAULT_SEO_SETTINGS.structuredData.enabled,
-        };
-
-  const {
-    structuredData: _legacyStructuredData,
-    structuredDataEnabled: _legacyStructuredDataEnabled,
-    ...current
-  } = persisted ?? {};
+  const persisted = isRecord(seo) ? (seo as Partial<SeoSettings>) : undefined;
 
   return {
     ...DEFAULT_SEO_SETTINGS,
-    ...current,
-    structuredData,
+    ...persisted,
+    structuredData: {
+      ...DEFAULT_SEO_SETTINGS.structuredData,
+      ...persisted?.structuredData,
+    },
   };
 }
 
@@ -189,8 +161,4 @@ export function toPrismaSiteSettingsUpdateData(
     seo: toJsonValue(settings.seo),
     theme: toJsonValue(settings.theme),
   };
-}
-
-export function toDefaultSiteSettings(): SiteSettings {
-  return defaultSettings();
 }

@@ -14,22 +14,6 @@ function clampIndex(index: number, min: number, max: number): number {
   return Math.min(Math.max(index, min), max);
 }
 
-export function setAt<T>(arr: ReadonlyArray<T>, index: number, value: T): T[] {
-  if (!isValidIndex(arr.length, index)) return Array.from(arr);
-
-  const next = Array.from(arr);
-  next[index] = value;
-  return next;
-}
-
-export function removeAt<T>(arr: ReadonlyArray<T>, index: number): T[] {
-  if (!isValidIndex(arr.length, index)) return Array.from(arr);
-
-  const next = Array.from(arr);
-  next.splice(index, 1);
-  return next;
-}
-
 export function insertAt<T>(
   arr: ReadonlyArray<T>,
   index: number,

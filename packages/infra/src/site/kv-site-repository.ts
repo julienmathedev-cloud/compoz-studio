@@ -64,44 +64,16 @@ function defaultSettings(): SiteSettings {
   };
 }
 
-type PersistedSeoSettings = Omit<Partial<SeoSettings>, "structuredData"> & {
-  structuredData?: SeoSettings["structuredData"] | boolean;
-  structuredDataEnabled?: boolean;
-};
-
 function normalizeSeoSettings(
-  seo: PersistedSeoSettings | null | undefined,
+  seo: Partial<SeoSettings> | null | undefined,
 ): SeoSettings {
-  const legacyEnabled =
-    typeof seo?.structuredData === "boolean"
-      ? seo.structuredData
-      : typeof seo?.structuredDataEnabled === "boolean"
-        ? seo.structuredDataEnabled
-        : undefined;
-
-  const structuredData =
-    seo?.structuredData &&
-    typeof seo.structuredData === "object" &&
-    !Array.isArray(seo.structuredData)
-      ? {
-          ...DEFAULT_SEO_SETTINGS.structuredData,
-          ...seo.structuredData,
-        }
-      : {
-          ...DEFAULT_SEO_SETTINGS.structuredData,
-          enabled: legacyEnabled ?? DEFAULT_SEO_SETTINGS.structuredData.enabled,
-        };
-
-  const {
-    structuredData: _legacyStructuredData,
-    structuredDataEnabled: _legacyStructuredDataEnabled,
-    ...current
-  } = seo ?? {};
-
   return {
     ...DEFAULT_SEO_SETTINGS,
-    ...current,
-    structuredData,
+    ...seo,
+    structuredData: {
+      ...DEFAULT_SEO_SETTINGS.structuredData,
+      ...seo?.structuredData,
+    },
   };
 }
 
@@ -182,7 +154,7 @@ export class KvSiteRepository implements SiteRepository {
       legalMenu: json.legalMenu ?? defaults.legalMenu,
       identity: json.identity ?? defaults.identity,
       social: json.social ?? defaults.social,
-      seo: normalizeSeoSettings(json.seo as PersistedSeoSettings | undefined),
+      seo: normalizeSeoSettings(json.seo),
       theme: mergeThemeSettings(json.theme),
     };
   }

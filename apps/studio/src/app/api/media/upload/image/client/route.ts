@@ -24,6 +24,7 @@ import type {
   UploadImageClientPayload,
   UploadImageKind,
 } from "@compoz/infra/http/studio/media.types";
+import { assertBlobMediaStorageConfigured } from "@compoz/infra/media/storage";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
@@ -130,6 +131,8 @@ export async function POST(req: Request) {
 
   return handleRoute(NS, req, async () => {
     const { websiteId } = await requireSessionWithWebsite();
+    assertBlobMediaStorageConfigured();
+
     const body = (await req.json()) as HandleUploadBody;
 
     const json = await handleUpload({

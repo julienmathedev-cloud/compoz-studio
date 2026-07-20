@@ -35,7 +35,6 @@ enum WebsiteRole {
 
 enum MediaStorageProvider {
   vercel_blob
-  local
 }
 
 enum MediaAssetKind {

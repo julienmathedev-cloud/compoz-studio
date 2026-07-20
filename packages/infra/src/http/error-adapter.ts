@@ -32,7 +32,6 @@ const EXPLICIT_STATUS: Partial<Record<ErrorCode, number>> = {
 
 const INFRA_CODE_PREFIXES_500 = [
   /^REPO_/,
-  /^FS_/,
   /^DB_/,
   /^STORAGE_/,
 ] as const;

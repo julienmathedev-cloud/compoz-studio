@@ -113,12 +113,6 @@ function assertWebsiteTempKey(tempKey: string, websiteId: string): void {
   }
 }
 
-function currentMediaProvider(): MediaStorageProvider {
-  return String(process.env["BLOB_READ_WRITE_TOKEN"] ?? "").trim()
-    ? MediaStorageProvider.vercel_blob
-    : MediaStorageProvider.local;
-}
-
 async function upsertMediaAsset(args: {
   websiteId: string;
   kind: MediaAssetKind;
@@ -134,7 +128,7 @@ async function upsertMediaAsset(args: {
   wasResized: boolean;
   wasCompressed: boolean;
 }): Promise<string> {
-  const provider = currentMediaProvider();
+  const provider = MediaStorageProvider.vercel_blob;
 
   const asset = await prisma.mediaAsset.upsert({
     where: {
@@ -182,8 +176,8 @@ export async function POST(req: Request) {
   const NS = "api.studio.media.upload.image.finalize.POST" as const;
 
   return handleRoute(NS, req, async () => {
-    const storage = getMediaStorage();
     const { websiteId } = await requireSessionWithWebsite();
+    const storage = getMediaStorage();
 
     const body = (await req.json()) as FinalizeImageUploadRequest;
 
@@ -328,11 +322,6 @@ export async function POST(req: Request) {
 
     const optimizedSize = optimized.buffer.length;
 
-    /**
-     * Premium UX:
-     * When no real transformation happened, flags are fully neutralized to
-     * avoid unnecessary toasts.
-     */
     const wasResized =
       optimized.originalWidth > 0 &&
       optimized.originalHeight > 0 &&

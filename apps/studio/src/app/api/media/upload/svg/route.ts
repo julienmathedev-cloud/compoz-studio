@@ -54,12 +54,6 @@ function buildStorageKey(args: {
   return `websites/${args.websiteId}/${args.year}/${args.month}/${args.filename}`;
 }
 
-function currentMediaProvider(): MediaStorageProvider {
-  return String(process.env["BLOB_READ_WRITE_TOKEN"] ?? "").trim()
-    ? MediaStorageProvider.vercel_blob
-    : MediaStorageProvider.local;
-}
-
 async function upsertSvgMediaAsset(args: {
   websiteId: string;
   key: string;
@@ -70,7 +64,7 @@ async function upsertSvgMediaAsset(args: {
   width: number;
   height: number;
 }): Promise<string> {
-  const provider = currentMediaProvider();
+  const provider = MediaStorageProvider.vercel_blob;
 
   const asset = await prisma.mediaAsset.upsert({
     where: {
@@ -113,13 +107,7 @@ function parseSvgLength(raw: string | null | undefined): number | null {
 
   if (!value) return null;
 
-  /**
-   * Accept only reasonable CSS/px lengths or unitless values interpreted as px.
-   *
-   * Accepted examples:
-   * - "240"
-   * - "240px"
-   */
+  // Accept positive unitless or pixel lengths only.
   const match = value.match(/^([0-9]+(?:\.[0-9]+)?)(px)?$/);
 
   if (!match) return null;
@@ -184,8 +172,8 @@ export async function POST(req: Request) {
 
   return handleRoute(NS, req, async () => {
     const logger = log.child({ ns: NS });
-    const storage = getMediaStorage();
     const { websiteId } = await requireSessionWithWebsite();
+    const storage = getMediaStorage();
 
     return logSpan(
       NS,

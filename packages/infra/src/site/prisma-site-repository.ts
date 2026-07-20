@@ -14,6 +14,7 @@ import type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
+import type { Prisma, PrismaClient } from "@compoz/infra/prisma/generated";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
 import { toDomainSiteIndex } from "@compoz/infra/site/mappers/site-index.mapper";
 import {
@@ -25,6 +26,7 @@ import {
 
 type PrismaSiteRepositoryOptions = Readonly<{
   websiteId: string;
+  client?: PrismaClient | Prisma.TransactionClient;
 }>;
 
 function toPrismaContentState(state: ContentState): PrismaContentState {
@@ -51,16 +53,18 @@ function parseCanonicalIndexTimestamp(updatedAt: string): Date {
 
 export class PrismaSiteRepository implements SiteRepository {
   private readonly websiteId: string;
+  private readonly client: PrismaClient | Prisma.TransactionClient;
 
   constructor(opts: PrismaSiteRepositoryOptions) {
     this.websiteId = requireWebsiteId(
       opts.websiteId,
       "PrismaSiteRepository.constructor",
     );
+    this.client = opts.client ?? prisma;
   }
 
   async ensureBase(): Promise<void> {
-    await prisma.website.upsert({
+    await this.client.website.upsert({
       where: { id: this.websiteId },
       create: {
         id: this.websiteId,
@@ -76,7 +80,7 @@ export class PrismaSiteRepository implements SiteRepository {
     const prismaState = toPrismaContentState(state);
 
     const [pages, website] = await Promise.all([
-      prisma.page.findMany({
+      this.client.page.findMany({
         where: {
           websiteId: this.websiteId,
           state: prismaState,
@@ -91,7 +95,7 @@ export class PrismaSiteRepository implements SiteRepository {
         },
       }),
       state === CONTENT_STATE.PUBLISHED
-        ? prisma.website.findUnique({
+        ? this.client.website.findUnique({
             where: { id: this.websiteId },
             select: { lastPublishedAt: true },
           })
@@ -121,7 +125,7 @@ export class PrismaSiteRepository implements SiteRepository {
 
     const prismaState = toPrismaContentState(state);
     const positionUpdates = index.pages.map((page, position) =>
-      prisma.page.updateMany({
+      this.client.page.updateMany({
         where: {
           websiteId: this.websiteId,
           state: prismaState,
@@ -134,23 +138,33 @@ export class PrismaSiteRepository implements SiteRepository {
     );
 
     if (lastPublishedAt) {
-      await prisma.$transaction([
+      const writes = [
         ...positionUpdates,
-        prisma.website.update({
+        this.client.website.update({
           where: { id: this.websiteId },
           data: { lastPublishedAt },
         }),
-      ]);
+      ];
+
+      if ("$transaction" in this.client) {
+        await this.client.$transaction(writes);
+      } else {
+        await Promise.all(writes);
+      }
       return;
     }
 
-    await prisma.$transaction(positionUpdates);
+    if ("$transaction" in this.client) {
+      await this.client.$transaction(positionUpdates);
+    } else {
+      await Promise.all(positionUpdates);
+    }
   }
 
   async readSettings(state: ContentState): Promise<SiteSettings> {
     const prismaState = toPrismaContentState(state);
 
-    const row = await prisma.siteSettings.findUnique({
+    const row = await this.client.siteSettings.findUnique({
       where: {
         websiteId_state: {
           websiteId: this.websiteId,
@@ -170,7 +184,7 @@ export class PrismaSiteRepository implements SiteRepository {
 
     const prismaState = toPrismaContentState(state);
 
-    await prisma.siteSettings.upsert({
+    await this.client.siteSettings.upsert({
       where: {
         websiteId_state: {
           websiteId: this.websiteId,

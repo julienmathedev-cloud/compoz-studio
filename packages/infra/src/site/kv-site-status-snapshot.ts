@@ -232,7 +232,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
     }
   }
 
-  async invalidateStatus(): Promise<void> {
+  async invalidateStatus(): Promise<boolean> {
     const key = statusVersionKey(this.websiteId);
 
     try {
@@ -245,14 +245,16 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
       await kvCmd(kvCtx("invalidate.status.expire"), "other", () =>
         getUpstashRedis().expire(key, VERSION_TTL_SECONDS),
       );
+      return true;
     } catch (error) {
       this.statusVersionMemo = null;
       this.warn("status.invalidate", error);
+      return false;
     }
   }
 
   /** Invalidates all detail snapshots by bumping the shared version key. */
-  async invalidateStatusDetails(): Promise<void> {
+  async invalidateStatusDetails(): Promise<boolean> {
     const key = statusDetailsVersionKey(this.websiteId);
 
     try {
@@ -265,21 +267,27 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
       await kvCmd(kvCtx("invalidate.details.expire"), "other", () =>
         getUpstashRedis().expire(key, VERSION_TTL_SECONDS),
       );
+      return true;
     } catch (error) {
       this.detailsVersionMemo = null;
       this.warn("details.invalidate", error);
+      return false;
     }
   }
 
   /** Targeted invalidation intentionally falls back to the version bump strategy. */
   async invalidateStatusDetailsSnapshot(
     _query: SiteStatusDetailsQuery,
-  ): Promise<void> {
-    await this.invalidateStatusDetails();
+  ): Promise<boolean> {
+    return this.invalidateStatusDetails();
   }
 
-  async invalidateAll(): Promise<void> {
-    await this.invalidateStatus();
-    await this.invalidateStatusDetails();
+  async invalidateAll(): Promise<boolean> {
+    const [statusInvalidated, detailsInvalidated] = await Promise.all([
+      this.invalidateStatus(),
+      this.invalidateStatusDetails(),
+    ]);
+
+    return statusInvalidated && detailsInvalidated;
   }
 }

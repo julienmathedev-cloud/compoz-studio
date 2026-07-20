@@ -17,11 +17,13 @@ import {
   toPrismaPageUpdateData,
   type PrismaContentState,
 } from "@compoz/infra/pages/mappers/page.mapper";
+import type { Prisma, PrismaClient } from "@compoz/infra/prisma/generated";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
 import { PageSchema } from "@compoz/validation/pages/page";
 
 type PrismaPagesRepositoryOptions = Readonly<{
   websiteId: string;
+  client?: PrismaClient | Prisma.TransactionClient;
 }>;
 
 type PreparedPage = Readonly<{
@@ -84,16 +86,18 @@ function preparePagesForPutMany(
 
 export class PrismaPagesRepository implements PagesRepository {
   private readonly websiteId: string;
+  private readonly client: PrismaClient | Prisma.TransactionClient;
 
   constructor(opts: PrismaPagesRepositoryOptions) {
     this.websiteId = requireWebsiteId(
       opts.websiteId,
       "PrismaPagesRepository.constructor",
     );
+    this.client = opts.client ?? prisma;
   }
 
   async ensureBase(): Promise<void> {
-    await prisma.website.upsert({
+    await this.client.website.upsert({
       where: { id: this.websiteId },
       create: {
         id: this.websiteId,
@@ -112,7 +116,7 @@ export class PrismaPagesRepository implements PagesRepository {
       return null;
     }
 
-    const row = await prisma.page.findUnique({
+    const row = await this.client.page.findUnique({
       where: {
         websiteId_state_pageId: {
           websiteId: this.websiteId,
@@ -132,7 +136,7 @@ export class PrismaPagesRepository implements PagesRepository {
       return null;
     }
 
-    const row = await prisma.page.findUnique({
+    const row = await this.client.page.findUnique({
       where: {
         websiteId_state_slug: {
           websiteId: this.websiteId,
@@ -157,7 +161,7 @@ export class PrismaPagesRepository implements PagesRepository {
       return pageIds.map(() => null);
     }
 
-    const rows = await prisma.page.findMany({
+    const rows = await this.client.page.findMany({
       where: {
         websiteId: this.websiteId,
         state: prismaState,
@@ -184,7 +188,7 @@ export class PrismaPagesRepository implements PagesRepository {
 
     await this.ensureBase();
 
-    const slugOwner = await prisma.page.findUnique({
+    const slugOwner = await this.client.page.findUnique({
       where: {
         websiteId_state_slug: {
           websiteId: this.websiteId,
@@ -199,7 +203,7 @@ export class PrismaPagesRepository implements PagesRepository {
       throw new Error("PrismaPagesRepository.put: slug already exists.");
     }
 
-    const existing = await prisma.page.findUnique({
+    const existing = await this.client.page.findUnique({
       where: {
         websiteId_state_pageId: {
           websiteId: this.websiteId,
@@ -213,7 +217,7 @@ export class PrismaPagesRepository implements PagesRepository {
     const nextPosition =
       existing?.position ??
       ((
-        await prisma.page.aggregate({
+        await this.client.page.aggregate({
           where: {
             websiteId: this.websiteId,
             state: prismaState,
@@ -222,7 +226,7 @@ export class PrismaPagesRepository implements PagesRepository {
         })
       )._max.position ?? -1) + 1;
 
-    await prisma.page.upsert({
+    await this.client.page.upsert({
       where: {
         websiteId_state_pageId: {
           websiteId: this.websiteId,
@@ -275,7 +279,7 @@ export class PrismaPagesRepository implements PagesRepository {
     const slugs = prepared.map((item) => item.slug);
 
     const [existingRows, slugRows, maxPosition] = await Promise.all([
-      prisma.page.findMany({
+      this.client.page.findMany({
         where: {
           websiteId: this.websiteId,
           state: prismaState,
@@ -283,7 +287,7 @@ export class PrismaPagesRepository implements PagesRepository {
         },
         select: { pageId: true, position: true },
       }),
-      prisma.page.findMany({
+      this.client.page.findMany({
         where: {
           websiteId: this.websiteId,
           state: prismaState,
@@ -291,7 +295,7 @@ export class PrismaPagesRepository implements PagesRepository {
         },
         select: { pageId: true, slug: true },
       }),
-      prisma.page.aggregate({
+      this.client.page.aggregate({
         where: {
           websiteId: this.websiteId,
           state: prismaState,
@@ -318,30 +322,35 @@ export class PrismaPagesRepository implements PagesRepository {
 
     let nextPosition = (maxPosition._max.position ?? -1) + 1;
 
-    await prisma.$transaction(
-      prepared.map((item) => {
-        const existingPosition = existingPositionById.get(item.id);
-        const position =
-          existingPosition === undefined ? nextPosition++ : existingPosition;
+    const writes = prepared.map((item) => {
+      const existingPosition = existingPositionById.get(item.id);
+      const position =
+        existingPosition === undefined ? nextPosition++ : existingPosition;
 
-        return prisma.page.upsert({
-          where: {
-            websiteId_state_pageId: {
-              websiteId: this.websiteId,
-              state: prismaState,
-              pageId: item.id,
-            },
+      return this.client.page.upsert({
+        where: {
+          websiteId_state_pageId: {
+            websiteId: this.websiteId,
+            state: prismaState,
+            pageId: item.id,
           },
-          create: toPrismaPageCreateData(
-            this.websiteId,
-            prismaState,
-            item.page,
-            position,
-          ),
-          update: toPrismaPageUpdateData(item.page),
-        });
-      }),
-    );
+        },
+        create: toPrismaPageCreateData(
+          this.websiteId,
+          prismaState,
+          item.page,
+          position,
+        ),
+        update: toPrismaPageUpdateData(item.page),
+      });
+    });
+
+    if ("$transaction" in this.client) {
+      await this.client.$transaction(writes);
+      return;
+    }
+
+    await Promise.all(writes);
   }
 
   async deleteById(state: ContentState, pageId: string): Promise<void> {
@@ -351,7 +360,7 @@ export class PrismaPagesRepository implements PagesRepository {
       return;
     }
 
-    await prisma.page.deleteMany({
+    await this.client.page.deleteMany({
       where: {
         websiteId: this.websiteId,
         state: toPrismaContentState(state),
@@ -367,7 +376,7 @@ export class PrismaPagesRepository implements PagesRepository {
       return false;
     }
 
-    const row = await prisma.page.findUnique({
+    const row = await this.client.page.findUnique({
       where: {
         websiteId_state_pageId: {
           websiteId: this.websiteId,
@@ -388,7 +397,7 @@ export class PrismaPagesRepository implements PagesRepository {
       return false;
     }
 
-    const row = await prisma.page.findUnique({
+    const row = await this.client.page.findUnique({
       where: {
         websiteId_state_slug: {
           websiteId: this.websiteId,

@@ -7,8 +7,7 @@
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
-import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
-import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
+import type { PublishSiteTransaction } from "@compoz/core/domain/site/ports/publish-site-transaction";
 import type { PublishWarning } from "@compoz/core/domain/site/validators/publish";
 
 /**
@@ -27,8 +26,7 @@ export interface PublishSiteRuntime {
 }
 
 export interface PublishSiteDeps {
-  site: SiteRepository;
-  pages: PagesRepository;
+  transaction: PublishSiteTransaction;
   runtime: PublishSiteRuntime;
   /** Optional infra-side revalidation to avoid coupling core to a web framework. */
   revalidator?: PublicRevalidator;
@@ -37,7 +35,7 @@ export interface PublishSiteDeps {
 export interface PublishSiteInput {
   from?: ContentState;
   to?: ContentState;
-  /** Deletes target pages missing from the target source-of-truth index. */
+  /** Exact Published snapshots require orphan cleanup; `false` is rejected. */
   cleanOrphans?: boolean;
 }
 

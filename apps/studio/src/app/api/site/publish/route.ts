@@ -7,8 +7,8 @@
  *
  * @remarks
  * - Resolves publish states from body, query, then defaults.
- * - Runs `publishSite` to copy index, settings, pages, and warnings.
- * - Invalidates status caches and triggers public revalidation on a best-effort basis.
+ * - Runs `publishSite` through the specialized Prisma transaction boundary.
+ * - Invalidates status caches and triggers public revalidation after commit.
  * - Studio repositories are scoped by Prisma Website.id.
  * - Public revalidation uses Website.slug for `/t/:websiteSlug` routes.
  */
@@ -25,8 +25,10 @@ import { throwHttp } from "@compoz/http/http-error";
 import { readJsonOptionalOrEmpty } from "@compoz/infra/http/read-json";
 import type { PublishSiteResponse } from "@compoz/infra/http/studio/site.types";
 import { log, logSpan } from "@compoz/infra/lib/log";
-import { getPagesRepository } from "@compoz/infra/pages";
-import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
+import {
+  getPublishSiteTransaction,
+  getSiteStatusCache,
+} from "@compoz/infra/site";
 import { requireNonDemoSession } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
@@ -119,6 +121,7 @@ async function revalidatePublicAfterPublish(params: {
       baseUrl,
       websiteSlug: params.websiteSlug,
     });
+    throw error;
   }
 }
 
@@ -167,8 +170,7 @@ export async function POST(req: Request) {
         });
 
         const run = publishSite({
-          site: getSiteRepository({ websiteId }),
-          pages: getPagesRepository({ websiteId }),
+          transaction: getPublishSiteTransaction({ websiteId }),
           runtime: { isProd },
           revalidator: {
             async revalidatePublished({ slugs }) {
@@ -180,20 +182,10 @@ export async function POST(req: Request) {
           },
         });
 
-        const result = await run({
+        const committedResult = await run({
           from,
           to,
           cleanOrphans: dto.cleanOrphans,
-        });
-
-        logger.debug?.("publish.metrics", {
-          websiteId,
-          websiteSlug,
-          from: result.from,
-          to: result.to,
-          pagesCopied: result.pagesCopied,
-          settingsCopied: result.settingsCopied,
-          warnings: result.warnings.length,
         });
 
         /**
@@ -204,15 +196,18 @@ export async function POST(req: Request) {
          */
         const statusCache = getSiteStatusCache({ websiteId });
 
+        let cacheInvalidated = false;
+
         try {
           logger.debug?.("route.statusCache.invalidateAll.start", {
             websiteId,
           });
 
-          await statusCache.invalidateAll();
+          cacheInvalidated = await statusCache.invalidateAll();
 
           logger.debug?.("route.statusCache.invalidateAll.done", {
             websiteId,
+            cacheInvalidated,
           });
         } catch (error) {
           logger.error?.("route.statusCache.invalidateAll.failed", {
@@ -220,6 +215,30 @@ export async function POST(req: Request) {
             err: String(error),
           });
         }
+
+        const result: PublishSiteResponse["publishResult"] = cacheInvalidated
+          ? committedResult
+          : {
+              ...committedResult,
+              warnings: [
+                ...committedResult.warnings,
+                {
+                  code: EC.PUBLISH_STATUS_CACHE_INVALIDATION_FAILED,
+                  path: ["studio", "statusCache"],
+                },
+              ],
+            };
+
+        logger.debug?.("publish.metrics", {
+          websiteId,
+          websiteSlug,
+          from: result.from,
+          to: result.to,
+          pagesCopied: result.pagesCopied,
+          settingsCopied: result.settingsCopied,
+          warnings: result.warnings.length,
+          cacheInvalidated,
+        });
 
         const res: PublishSiteResponse = {
           publishResult: result,

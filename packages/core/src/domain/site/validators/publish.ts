@@ -26,10 +26,10 @@ import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 
 export type PublishWarningCode =
   | typeof EC.PUBLISH_EMPTY_INDEX
-  | typeof EC.PUBLISH_SETTINGS_COPY_FAILED
   | typeof EC.PUBLISH_PAGE_MISSING
-  | typeof EC.PUBLISH_PAGE_DELETE_FAILED
   | typeof EC.PUBLISH_PAGE_H1_MISSING
+  | typeof EC.PUBLISH_REVALIDATION_FAILED
+  | typeof EC.PUBLISH_STATUS_CACHE_INVALIDATION_FAILED
   | typeof EC.PUBLISH_HOME_MISSING
   | typeof EC.PUBLISH_PRIMARY_MENU_EMPTY
   | typeof EC.PUBLISH_LEGAL_MENU_EMPTY

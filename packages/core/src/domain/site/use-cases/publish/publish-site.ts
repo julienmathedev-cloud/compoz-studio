@@ -1,9 +1,10 @@
 /**
  * @file packages/core/src/domain/site/use-cases/publish/publish-site.ts
  * @layer core/domain/site/use-cases/publish
- * @description Publishes a site from one content state to another.
+ * @description Atomically publishes the Draft site snapshot to Published.
  * @remarks
- * Blocking invariants are checked before writing settings, and the published index is derived only from pages that were actually copied.
+ * Blocking invariants and content warnings are computed from the same coherent
+ * Draft read; public revalidation remains a post-commit best-effort effect.
  */
 
 import {
@@ -14,11 +15,7 @@ import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type { Page } from "@compoz/core/domain/pages/entities/page";
 import type { SiteIndex } from "@compoz/core/domain/site/entities";
-import {
-  copyPages,
-  copySettingsBestEffort,
-  deleteOrphanPages,
-} from "@compoz/core/domain/site/use-cases/publish/helpers";
+import { preparePagesForPublication } from "@compoz/core/domain/site/use-cases/publish/helpers";
 import type {
   PublishSiteDeps,
   PublishSiteInput,
@@ -32,8 +29,7 @@ import {
 } from "@compoz/core/domain/site/validators/publish";
 
 export function publishSite({
-  site,
-  pages,
+  transaction,
   runtime,
   revalidator,
 }: PublishSiteDeps) {
@@ -42,83 +38,96 @@ export function publishSite({
   ): Promise<PublishSiteResult> {
     const from: ContentState = input?.from ?? CONTENT_STATE.DRAFT;
     const to: ContentState = input?.to ?? CONTENT_STATE.PUBLISHED;
-    const cleanOrphans = input?.cleanOrphans ?? true;
-
-    const warnings: PublishWarning[] = [];
 
     if (from === to) {
       throw new DomainError({ code: EC.PUBLISH_IDENTICAL_STATES });
     }
 
-    await Promise.all([site.ensureBase(), pages.ensureBase()]);
-
-    const [sourceIndex, sourceSettings, previousTargetIndex] = await Promise.all([
-      site.readIndex(from),
-      site.readSettings(from),
-      site.readIndex(to),
-    ]);
-
-    warnings.push(...publishWarnings(sourceIndex, sourceSettings));
-
-    const sourcePagesArr = await pages.readManyById(
-      from,
-      sourceIndex.pages.map((ref) => ref.id),
-    );
-
-    const sourcePagesById = new Map<string, Page>();
-    for (const page of sourcePagesArr) {
-      if (page) sourcePagesById.set(page.id, page);
+    if (from !== CONTENT_STATE.DRAFT || to !== CONTENT_STATE.PUBLISHED) {
+      throw new DomainError({ code: EC.PUBLISH_DIRECTION_UNSUPPORTED });
     }
 
-    warnings.push(...publishPageWarnings(sourceIndex, sourcePagesById));
+    if (input?.cleanOrphans === false) {
+      throw new DomainError({ code: EC.PUBLISH_EXACT_SNAPSHOT_REQUIRED });
+    }
 
-    // Runtime is injected so the domain layer never reads process.env.
-    const { isProd } = runtime;
+    const committed = await transaction.run(async (context) => {
+      const { site, pages } = context;
 
-    assertPublishInvariantsOrThrowValidationError({
-      identity: sourceSettings.identity,
-      seo: sourceSettings.seo,
-      isProd,
-    });
+      const [sourceIndex, sourceSettings, previousTargetIndex] =
+        await Promise.all([
+          site.readIndex(CONTENT_STATE.DRAFT),
+          site.readSettings(CONTENT_STATE.DRAFT),
+          site.readIndex(CONTENT_STATE.PUBLISHED),
+        ]);
 
-    const pagesCopy = await copyPages(pages, sourceIndex.pages, from, to);
-    warnings.push(...pagesCopy.warnings);
+      const sourcePagesArr = await pages.readManyById(
+        CONTENT_STATE.DRAFT,
+        sourceIndex.pages.map((ref) => ref.id),
+      );
 
-    if (cleanOrphans) {
-      // Cleanup is aligned with the target source-of-truth index.
-      const cleanup = await deleteOrphanPages({
-        pages,
-        fromRefs: pagesCopy.copiedRefs,
-        to,
-        existingRefs: previousTargetIndex.pages,
+      const prepared = preparePagesForPublication(
+        sourceIndex.pages,
+        sourcePagesArr,
+      );
+
+      const warnings: PublishWarning[] = [
+        ...publishWarnings(sourceIndex, sourceSettings),
+        ...prepared.warnings,
+      ];
+
+      const sourcePagesById = new Map<string, Page>();
+
+      for (const page of prepared.pages) {
+        sourcePagesById.set(page.id, page);
+      }
+
+      const publishableIndex: SiteIndex = {
+        ...sourceIndex,
+        pages: prepared.copiedRefs,
+      };
+
+      warnings.push(...publishPageWarnings(publishableIndex, sourcePagesById));
+
+      // Runtime is injected so the domain layer never reads process.env.
+      assertPublishInvariantsOrThrowValidationError({
+        identity: sourceSettings.identity,
+        seo: sourceSettings.seo,
+        isProd: runtime.isProd,
       });
 
-      warnings.push(...cleanup.warnings);
-    }
+      await context.replacePublishedSnapshot({
+        pages: prepared.pages,
+        settings: sourceSettings,
+        publishedAt: new Date().toISOString(),
+      });
 
-    const settingsCopy = await copySettingsBestEffort(site, sourceSettings, to);
-    warnings.push(...settingsCopy.warnings);
+      const slugs = Array.from(
+        new Set(
+          [...previousTargetIndex.pages, ...prepared.copiedRefs]
+            .map((ref) => String(ref.slug ?? "").trim())
+            .filter(Boolean),
+        ),
+      );
 
-    const stampedIndex: SiteIndex = {
-      pages: pagesCopy.copiedRefs,
-      updatedAt: new Date().toISOString(),
-    };
-    await site.putIndex(to, stampedIndex);
+      return {
+        pagesCopied: prepared.pages.length,
+        settingsCopied: true,
+        warnings,
+        slugs,
+      };
+    });
 
-    if (to === CONTENT_STATE.PUBLISHED && revalidator) {
+    const warnings: PublishWarning[] = [...committed.warnings];
+
+    if (revalidator) {
       try {
-        const slugs = Array.from(
-          new Set(
-            [...previousTargetIndex.pages, ...pagesCopy.copiedRefs]
-              .map((r) => String(r.slug ?? "").trim())
-              .filter(Boolean),
-          ),
-        );
-
-        await revalidator.revalidatePublished({ slugs });
+        await revalidator.revalidatePublished({
+          slugs: committed.slugs,
+        });
       } catch {
         warnings.push({
-          code: EC.PUBLISH_SETTINGS_COPY_FAILED,
+          code: EC.PUBLISH_REVALIDATION_FAILED,
           path: ["public", "revalidate"],
           meta: { to },
         });
@@ -126,8 +135,8 @@ export function publishSite({
     }
 
     return {
-      pagesCopied: pagesCopy.pagesCopied,
-      settingsCopied: settingsCopy.settingsCopied,
+      pagesCopied: committed.pagesCopied,
+      settingsCopied: committed.settingsCopied,
       warnings,
       from,
       to,

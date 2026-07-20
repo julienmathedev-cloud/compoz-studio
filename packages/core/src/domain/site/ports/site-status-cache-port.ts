@@ -25,17 +25,21 @@ export interface SiteStatusCachePort {
     details: SiteStatusDetails,
   ): Promise<void>;
 
-  /** Invalidates the overview status snapshot. */
-  invalidateStatus(): Promise<void>;
+  /** Invalidates the overview status snapshot. Returns whether the invalidation completed successfully. */
 
-  /** Invalidates all indexed status details snapshots. */
-  invalidateStatusDetails(): Promise<void>;
+  invalidateStatus(): Promise<boolean>;
 
-  /** Optional targeted invalidation to avoid scanning indexed detail snapshots. */
+  /** Invalidates all indexed status details snapshots. Returns whether the invalidation completed successfully. */
+
+  invalidateStatusDetails(): Promise<boolean>;
+
+  /** Optional targeted invalidation to avoid scanning indexed detail snapshots. Returns whether the invalidation completed successfully. */
+
   invalidateStatusDetailsSnapshot?: (
     query: SiteStatusDetailsQuery,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
 
-  /** Invalidates every status cache snapshot. */
-  invalidateAll(): Promise<void>;
+  /** Invalidates every status cache snapshot. Returns whether the invalidation completed successfully. */
+
+  invalidateAll(): Promise<boolean>;
 }

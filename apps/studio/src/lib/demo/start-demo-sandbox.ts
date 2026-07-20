@@ -32,25 +32,9 @@ import { buildDemoUserPassword } from "@compoz/studio/auth/demo-auth";
 
 type RunStartDemoSandboxInput = Readonly<{ demoInstanceId?: string }>;
 
-/** Ensures the demo flow runs only with Prisma-backed repositories. */
-function requirePrismaRepoImpl(name: string): void {
-  const value = String(process.env[name] ?? "")
-    .trim()
-    .toLowerCase();
-
-  if (value !== "prisma") {
-    throw new Error(
-      `runStartDemoSandbox: ${name}=prisma is required for the Prisma demo flow.`,
-    );
-  }
-}
-
 export async function runStartDemoSandbox({
   demoInstanceId,
 }: RunStartDemoSandboxInput) {
-  requirePrismaRepoImpl("USERS_REPO_IMPL");
-  requirePrismaRepoImpl("SITE_REPO_IMPL");
-
   const users = getUsersRepository();
   const demoSandboxes = new PrismaDemoSandboxRepository();
   const seedReader = new PrismaDemoSeedReader();

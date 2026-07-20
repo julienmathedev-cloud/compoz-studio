@@ -159,7 +159,6 @@ Optional variables are used for integrations and operational behavior:
 - `RESEND_API_KEY` and `CONTACT_FROM_EMAIL`: contact form email delivery.
 - `KV_REST_API_URL`: Upstash Redis endpoint.
 - `KV_REST_API_TOKEN`: Upstash Redis token.
-- `SITE_REPO_IMPL` and `USERS_REPO_IMPL`: repository implementation selection. Pages always use Prisma.
 - `NEXT_PUBLIC_LOG_LEVEL`: logging verbosity.
 
 Additional environment variables exist for demo, telemetry, and site verification flows. They should be configured only when those flows are needed.

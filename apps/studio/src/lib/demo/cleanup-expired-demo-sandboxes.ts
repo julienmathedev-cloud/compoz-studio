@@ -23,23 +23,9 @@ type RunCleanupExpiredDemoSandboxesInput = Readonly<{
   continueOnError?: boolean;
 }>;
 
-function requirePrismaRepoImpl(name: string): void {
-  const value = String(process.env[name] ?? "")
-    .trim()
-    .toLowerCase();
-
-  if (value !== "prisma") {
-    throw new Error(
-      `runCleanupExpiredDemoSandboxes: ${name}=prisma is required for the Prisma demo cleanup.`,
-    );
-  }
-}
-
 export async function runCleanupExpiredDemoSandboxes(
   input: RunCleanupExpiredDemoSandboxesInput = {},
 ) {
-  requirePrismaRepoImpl("USERS_REPO_IMPL");
-
   const demoSandboxes = new PrismaDemoSandboxRepository();
   const users = getUsersRepository();
   const sandboxDataCleaner = new PrismaDemoSandboxDataCleaner();

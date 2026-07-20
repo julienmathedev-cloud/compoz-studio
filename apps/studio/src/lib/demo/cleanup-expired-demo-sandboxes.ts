@@ -7,36 +7,50 @@
  *
  * @remarks
  * - Wires the infrastructure dependencies required by the `cleanupExpiredDemoSandboxes` use case.
- * - Provides a reusable server entry point for a future API route or Vercel cron job.
- * - Demo cleanup may still remove KV data linked to sandboxes, but this orchestration should no longer expose generic tenant wording.
+ * - Provides the server entry point used by the internal cleanup API route, which can be called manually or by a Vercel cron job.
+ * - Deletes Prisma sandbox websites and relies on database cascades for their related records.
  */
 
 import "server-only";
 
 import { cleanupExpiredDemoSandboxes } from "@compoz/core/domain/demo/use-cases/cleanup-expired-demo-sandboxes";
 
-import { KvDemoSandboxDataCleaner } from "@compoz/infra/demo/kv-demo-sandbox-data-cleaner";
-import { KvDemoSandboxRepository } from "@compoz/infra/demo/kv-demo-sandbox-repository";
-import { KvUsersRepository } from "@compoz/infra/users/kv-users-repository";
+import { PrismaDemoSandboxDataCleaner } from "@compoz/infra/demo/prisma-demo-sandbox-data-cleaner";
+import { PrismaDemoSandboxRepository } from "@compoz/infra/demo/prisma-demo-sandbox-repository";
+import { getUsersRepository } from "@compoz/infra/users";
 
 type RunCleanupExpiredDemoSandboxesInput = Readonly<{
   continueOnError?: boolean;
 }>;
 
+function requirePrismaRepoImpl(name: string): void {
+  const value = String(process.env[name] ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (value !== "prisma") {
+    throw new Error(
+      `runCleanupExpiredDemoSandboxes: ${name}=prisma is required for the Prisma demo cleanup.`,
+    );
+  }
+}
+
 export async function runCleanupExpiredDemoSandboxes(
   input: RunCleanupExpiredDemoSandboxesInput = {},
 ) {
-  const demoSandboxes = new KvDemoSandboxRepository();
-  const users = new KvUsersRepository();
-  const sandboxDataCleaner = new KvDemoSandboxDataCleaner();
+  requirePrismaRepoImpl("USERS_REPO_IMPL");
 
-  const run = cleanupExpiredDemoSandboxes({
+  const demoSandboxes = new PrismaDemoSandboxRepository();
+  const users = getUsersRepository();
+  const sandboxDataCleaner = new PrismaDemoSandboxDataCleaner();
+
+  const cleanupSandboxes = cleanupExpiredDemoSandboxes({
     demoSandboxes,
     users,
     sandboxDataCleaner,
   });
 
-  return run({
+  return cleanupSandboxes({
     continueOnError: input.continueOnError,
   });
 }

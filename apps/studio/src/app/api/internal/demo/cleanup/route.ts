@@ -8,7 +8,7 @@
  * @remarks
  * - Designed to be called manually or by a Vercel cron job.
  * - Protected by a dedicated HTTP secret.
- * - Cleans up sandbox records, demo users, and KV data associated with
+ * - Cleans up sandbox websites, demo users, and related Prisma records for
  *   expired sandboxes.
  */
 

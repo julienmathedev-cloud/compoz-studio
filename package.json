@@ -20,8 +20,7 @@
     "lint:strict": "pnpm -r --if-present lint:strict",
     "typecheck": "pnpm -r --if-present typecheck",
     "check": "pnpm lint:strict && pnpm typecheck && pnpm build",
-    "check:i18n": "tsx --tsconfig ./scripts/tsconfig.json ./scripts/check-i18n.ts",
-    "backup:upstash": "pnpm --filter @compoz/infra backup:upstash"
+    "check:i18n": "tsx --tsconfig ./scripts/tsconfig.json ./scripts/check-i18n.ts"
   },
   "engines": {
     "node": ">=22"

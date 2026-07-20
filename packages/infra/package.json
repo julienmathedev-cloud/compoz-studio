@@ -8,8 +8,6 @@
     "lint": "eslint .",
     "lint:strict": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit --project tsconfig.json",
-    "migrate:default-to-demo": "tsx src/scripts/migrate-default-to-demo.ts",
-    "backup:upstash": "tsx src/scripts/backup-upstash-local.ts",
     "db:validate": "prisma validate --schema prisma/schema.prisma",
     "db:generate": "prisma generate --schema prisma/schema.prisma",
     "db:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma",

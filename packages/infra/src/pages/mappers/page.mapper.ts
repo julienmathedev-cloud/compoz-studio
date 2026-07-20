@@ -2,16 +2,12 @@
  * @file packages/infra/src/pages/mappers/page.mapper.ts
  * @layer infra/pages
  * @description Maps Prisma page rows to domain pages and domain pages back to Prisma write data.
- * @remarks
- * Legacy block normalization is applied before schema parsing so old stored pages remain readable.
  */
 
 import { Prisma } from "@compoz/infra/prisma/generated";
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";
 import type { Page, PageMeta } from "@compoz/core/domain/pages/entities/page";
-
-import { normalizePageLegacyBlocks } from "@compoz/infra/pages/mappers/page-legacy-normalizer";
 
 import { PageSchema, type PageShape } from "@compoz/validation/pages/page";
 
@@ -88,7 +84,7 @@ function toDomainPageFromShape(p: PageShape): Page {
 }
 
 export function toDomainPage(row: PrismaPageRow): Page {
-  const normalized = normalizePageLegacyBlocks({
+  const parsed = PageSchema.parse({
     id: row.pageId,
     parentId: row.parentPageId,
     slug: row.slug,
@@ -104,7 +100,6 @@ export function toDomainPage(row: PrismaPageRow): Page {
     paginationEnabled: row.paginationEnabled,
   });
 
-  const parsed = PageSchema.parse(normalized);
   return toDomainPageFromShape(parsed);
 }
 

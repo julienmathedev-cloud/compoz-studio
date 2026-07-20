@@ -36,7 +36,7 @@ The repository is private and intended to be shared for technical review on requ
 - Zod validation schemas shared across application boundaries.
 - React Hook Form based form flows in the studio application.
 - Prisma and PostgreSQL persistence layer.
-- Repository implementations for Prisma, key-value storage, and in-memory usage where applicable.
+- Prisma and PostgreSQL persistence for websites and pages, with key-value storage used for operational caches and status snapshots.
 - Shared renderer and design system components.
 
 ## Tech stack
@@ -54,7 +54,7 @@ The repository is private and intended to be shared for technical review on requ
 - Radix UI
 - NextAuth
 - Vercel Blob integration for media storage
-- Upstash Redis integration for key-value storage
+- Upstash Redis integration for operational caches and site status snapshots
 - Resend integration for contact handling
 
 ## Architecture
@@ -160,7 +160,7 @@ Optional variables are used for integrations and operational behavior:
 - `RESEND_API_KEY` and `CONTACT_FROM_EMAIL`: contact form email delivery.
 - `KV_REST_API_URL` or `UPSTASH_REDIS_REST_URL`: Upstash Redis endpoint.
 - `KV_REST_API_TOKEN` or `UPSTASH_REDIS_REST_TOKEN`: Upstash Redis token.
-- `SITE_REPO_IMPL`, `PAGES_REPO_IMPL`, and `USERS_REPO_IMPL`: repository implementation selection.
+- `SITE_REPO_IMPL` and `USERS_REPO_IMPL`: repository implementation selection. Pages always use Prisma.
 - `NEXT_PUBLIC_API_PREFIX` and `NEXT_PUBLIC_API_VERSION`: API endpoint configuration.
 - `NEXT_PUBLIC_LOG_LEVEL`: logging verbosity.
 

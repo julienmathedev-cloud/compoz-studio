@@ -415,7 +415,6 @@ export async function runStartDemoSandbox({
 }: RunStartDemoSandboxInput) {
   requirePrismaRepoImpl("USERS_REPO_IMPL");
   requirePrismaRepoImpl("SITE_REPO_IMPL");
-  requirePrismaRepoImpl("PAGES_REPO_IMPL");
 
   const users = getUsersRepository();
   const demoSandboxes = new PrismaDemoSandboxRepository();

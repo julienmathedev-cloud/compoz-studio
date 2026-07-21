@@ -231,19 +231,12 @@ export function PageBlocksListSection({
     setOrderedChildren(children);
   }, [childrenSig, children]);
 
-  const list = useMemo(() => blocks ?? [], [blocks]);
-
-  /** Optimistic block order prevents a visual flash between drop and network refetch. */
   const [orderedBlocks, setOrderedBlocks] =
-    useState<ReadonlyArray<BlockDTO>>(list);
-
-  const blocksSig = useMemo(() => {
-    return JSON.stringify(list.map((block) => block.id));
-  }, [list]);
+    useState<ReadonlyArray<BlockDTO>>(blocks);
 
   useEffect(() => {
-    setOrderedBlocks(list);
-  }, [blocksSig, list]);
+    setOrderedBlocks(blocks);
+  }, [blocks]);
 
   const blockStatuses = useSiteStatusDetails({
     enabled: true,

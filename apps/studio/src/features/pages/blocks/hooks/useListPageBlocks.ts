@@ -30,6 +30,8 @@ import { withLoadLogs } from "@compoz/ui/hooks/instrumentation";
 
 const logger = log.child({ ns: "hook", name: "useListPageBlocks" });
 
+const EMPTY_BLOCKS: ReadonlyArray<BlockDTO> = [];
+
 type UseListPageBlocksResult = Readonly<{
   blocks: ReadonlyArray<BlockDTO>;
   isLoading: boolean;
@@ -97,7 +99,7 @@ export function useListPageBlocks(
   }, [query.error, websiteId, pageIdKey, state]);
 
   return {
-    blocks: enabled ? (query.data ?? []) : [],
+    blocks: enabled ? (query.data ?? EMPTY_BLOCKS) : EMPTY_BLOCKS,
     isLoading: enabled ? query.isPending : false,
     isFetching: enabled ? query.isFetching : false,
   };

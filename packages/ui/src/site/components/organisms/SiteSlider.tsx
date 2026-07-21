@@ -20,11 +20,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@compoz/ui/components/ui/button";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteCarouselItem } from "@compoz/ui/site/components/organisms/SiteCarouselItem";
-import type { NormalizedCarouselItem } from "@compoz/ui/site/components/organisms/carousel-item.types";
 import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
+import type {
+  CarouselItemKindShape,
+  CarouselItemShape,
+} from "@compoz/validation/pages/blocks/cells/cell";
 
 export type SiteSliderProps = Readonly<{
-  items: ReadonlyArray<NormalizedCarouselItem>;
+  itemKind: CarouselItemKindShape;
+  items: ReadonlyArray<CarouselItemShape>;
   ui: SiteCarouselUi;
   showDots?: boolean;
   showArrows?: boolean;
@@ -38,6 +42,7 @@ function shouldNormalizeLoopAbsIndex(abs: number, count: number): boolean {
 }
 
 export function SiteSlider({
+  itemKind,
   items,
   ui,
   showDots = true,
@@ -224,6 +229,7 @@ export function SiteSlider({
               >
                 <SiteCarouselItem
                   item={item}
+                  itemKind={itemKind}
                   ui={ui}
                   mode="slider"
                   isFullBleed={isFullBleed}

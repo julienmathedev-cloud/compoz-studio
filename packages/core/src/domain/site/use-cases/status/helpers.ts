@@ -3,7 +3,8 @@
  * @layer core/domain/site/use-cases/status
  * @description Pure helpers for computing site status diffs.
  * @remarks
- * No I/O belongs here; deep comparisons intentionally use `safeStringify` in V0.5.
+ * No I/O belongs here; deep comparisons intentionally use `safeStringify`
+ * in V0.5.
  */
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";
@@ -12,9 +13,12 @@ import type {
   PageSummary,
 } from "@compoz/core/domain/pages/entities/page";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
-import { safeStringify } from "@compoz/core/domain/site/use-cases/status/site-diff";
 
-/** Detects summary divergence for a page present in both indexes. */
+import {
+  pageDiffKind,
+  safeStringify,
+} from "@compoz/core/domain/site/use-cases/status/site-diff";
+
 export function pageIndexEntryDiffers(args: {
   draftRef: Readonly<PageSummary>;
   publishedRef: Readonly<PageSummary>;
@@ -28,6 +32,80 @@ export function pageIndexEntryDiffers(args: {
   );
 }
 
+type ChildIdsByParent = Map<string | null, ReadonlyArray<string>>;
+
+function groupChildIdsByParent(
+  refs: ReadonlyArray<PageSummary>,
+): ChildIdsByParent {
+  const groups = new Map<string | null, string[]>();
+
+  for (const ref of refs) {
+    const parentId = ref.parentId ?? null;
+    const childIds = groups.get(parentId);
+
+    if (childIds) {
+      childIds.push(ref.id);
+    } else {
+      groups.set(parentId, [ref.id]);
+    }
+  }
+
+  return groups;
+}
+
+function containSameIds(
+  first: ReadonlyArray<string>,
+  second: ReadonlyArray<string>,
+): boolean {
+  if (first.length !== second.length) {
+    return false;
+  }
+
+  const secondIds = new Set(second);
+
+  return first.every((id) => secondIds.has(id));
+}
+
+/**
+ * Detects pure sibling-order changes and returns the owning parent page IDs.
+ *
+ * Membership changes are excluded here because new, deleted, or reparented
+ * pages are already represented by their own page diffs.
+ */
+export function findParentIdsWithChangedChildOrder(args: {
+  draftIndexRefs: ReadonlyArray<PageSummary>;
+  publishedIndexRefs: ReadonlyArray<PageSummary>;
+}): ReadonlySet<string> {
+  const draftByParent = groupChildIdsByParent(args.draftIndexRefs);
+  const publishedByParent = groupChildIdsByParent(args.publishedIndexRefs);
+
+  const parentIds = new Set<string | null>([
+    ...draftByParent.keys(),
+    ...publishedByParent.keys(),
+  ]);
+
+  const changedParentIds = new Set<string>();
+
+  for (const parentId of parentIds) {
+    // Root-page ordering has no owning parent page to mark.
+    if (!parentId) continue;
+
+    const draftChildIds = draftByParent.get(parentId) ?? [];
+    const publishedChildIds = publishedByParent.get(parentId) ?? [];
+
+    // Additions, deletions and reparenting are not pure reorder operations.
+    if (!containSameIds(draftChildIds, publishedChildIds)) {
+      continue;
+    }
+
+    if (safeStringify(draftChildIds) !== safeStringify(publishedChildIds)) {
+      changedParentIds.add(parentId);
+    }
+  }
+
+  return changedParentIds;
+}
+
 export function computeSettingsDiff(
   draftSettings: Readonly<SiteSettings>,
   publishedSettings: Readonly<SiteSettings>,
@@ -38,26 +116,26 @@ export function computeSettingsDiff(
   const settingsHasChanges = isDeepChanged(draftSettings, publishedSettings);
 
   const changedSettings = {
-    identity: isDeepChanged(
-      draftSettings?.identity,
-      publishedSettings?.identity,
-    ),
+    identity: isDeepChanged(draftSettings.identity, publishedSettings.identity),
     primaryMenu: isDeepChanged(
-      draftSettings?.primaryMenu,
-      publishedSettings?.primaryMenu,
+      draftSettings.primaryMenu,
+      publishedSettings.primaryMenu,
     ),
     legalMenu: isDeepChanged(
-      draftSettings?.legalMenu,
-      publishedSettings?.legalMenu,
+      draftSettings.legalMenu,
+      publishedSettings.legalMenu,
     ),
-    social: isDeepChanged(draftSettings?.social, publishedSettings?.social),
-    header: isDeepChanged(draftSettings?.header, publishedSettings?.header),
-    footer: isDeepChanged(draftSettings?.footer, publishedSettings?.footer),
-    seo: isDeepChanged(draftSettings?.seo, publishedSettings?.seo),
-    theme: isDeepChanged(draftSettings?.theme, publishedSettings?.theme),
+    social: isDeepChanged(draftSettings.social, publishedSettings.social),
+    header: isDeepChanged(draftSettings.header, publishedSettings.header),
+    footer: isDeepChanged(draftSettings.footer, publishedSettings.footer),
+    seo: isDeepChanged(draftSettings.seo, publishedSettings.seo),
+    theme: isDeepChanged(draftSettings.theme, publishedSettings.theme),
   } as const;
 
-  return { settingsHasChanges, changedSettings } as const;
+  return {
+    settingsHasChanges,
+    changedSettings,
+  } as const;
 }
 
 export function computePagesAndBlocksDiff(args: {
@@ -74,9 +152,15 @@ export function computePagesAndBlocksDiff(args: {
   } = args;
 
   const draftRefById = new Map(draftIndexRefs.map((ref) => [ref.id, ref]));
+
   const publishedRefById = new Map(
     publishedIndexRefs.map((ref) => [ref.id, ref]),
   );
+
+  const parentIdsWithChangedChildOrder = findParentIdsWithChangedChildOrder({
+    draftIndexRefs,
+    publishedIndexRefs,
+  });
 
   // Counters: pages
   let pagesNew = 0;
@@ -93,25 +177,31 @@ export function computePagesAndBlocksDiff(args: {
 
   // Count published blocks from the published source-of-truth index.
   for (const ref of publishedIndexRefs) {
-    const page = publishedPagesById.get(ref.id);
-    const blocks = Array.isArray(page?.blocks) ? page.blocks : [];
+    const publishedPage = publishedPagesById.get(ref.id);
 
-    blocksPublished += blocks.length;
+    const publishedBlocks = Array.isArray(publishedPage?.blocks)
+      ? publishedPage.blocks
+      : [];
+
+    blocksPublished += publishedBlocks.length;
   }
 
   // Pages present in published but missing from draft are deleted.
   for (const publishedRef of publishedIndexRefs) {
-    if (!draftRefById.has(publishedRef.id)) {
-      pagesDeleted++;
-
-      const publishedPage = publishedPagesById.get(publishedRef.id);
-      const publishedBlocks = Array.isArray(publishedPage?.blocks)
-        ? publishedPage.blocks
-        : [];
-
-      // Blocks removed through page deletion are considered deleted too.
-      blocksDeleted += publishedBlocks.length;
+    if (draftRefById.has(publishedRef.id)) {
+      continue;
     }
+
+    pagesDeleted++;
+
+    const publishedPage = publishedPagesById.get(publishedRef.id);
+
+    const publishedBlocks = Array.isArray(publishedPage?.blocks)
+      ? publishedPage.blocks
+      : [];
+
+    // Blocks removed through page deletion are considered deleted too.
+    blocksDeleted += publishedBlocks.length;
   }
 
   // Draft indexed pages are the admin source of truth.
@@ -131,21 +221,24 @@ export function computePagesAndBlocksDiff(args: {
     if (!publishedRef) {
       pagesNew++;
       blocksNew += draftBlocks.length;
+
       continue;
     }
 
     const publishedPage = publishedPagesById.get(draftRef.id);
 
-    // Page-level changes include metadata and index summary divergence.
-    const publishedMetaUpdatedAt = String(publishedPage?.meta?.updatedAt ?? "");
-    const draftMetaUpdatedAt = String(draftPage.meta?.updatedAt ?? "");
+    const pageStateDiffers =
+      !publishedPage || pageDiffKind(draftPage, publishedPage) === "modified";
+
+    const indexEntryDiffers = pageIndexEntryDiffers({
+      draftRef,
+      publishedRef,
+    });
+
+    const childOrderDiffers = parentIdsWithChangedChildOrder.has(draftRef.id);
 
     const isPageModified =
-      draftMetaUpdatedAt !== publishedMetaUpdatedAt ||
-      pageIndexEntryDiffers({
-        draftRef,
-        publishedRef,
-      });
+      pageStateDiffers || indexEntryDiffers || childOrderDiffers;
 
     if (isPageModified) {
       pagesModified++;
@@ -177,6 +270,7 @@ export function computePagesAndBlocksDiff(args: {
 
       if (!publishedBlock) {
         blocksNew++;
+
         continue;
       }
 
@@ -202,6 +296,7 @@ export function computePagesAndBlocksDiff(args: {
   const pagesPublished = publishedIndexRefs.length;
 
   const pagesHasChanges = pagesNew + pagesModified + pagesDeleted > 0;
+
   const blocksHasChanges = blocksNew + blocksModified + blocksDeleted > 0;
 
   return {

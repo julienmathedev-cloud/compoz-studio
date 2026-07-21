@@ -3,7 +3,8 @@
  * @layer core/domain/site/use-cases/status
  * @description Returns lazy-loaded draft versus published page and block status details.
  * @remarks
- * Uses a read-through status details cache and recomputes from source-of-truth indexes on cache miss.
+ * Uses a read-through status details cache and recomputes from source-of-truth
+ * indexes on cache miss.
  */
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -20,7 +21,10 @@ import type {
   GetSiteStatusDetailsInput,
   GetSiteStatusDetailsResult,
 } from "@compoz/core/domain/site/use-cases/status/get-site-status-details.types";
-import { pageIndexEntryDiffers } from "@compoz/core/domain/site/use-cases/status/helpers";
+import {
+  findParentIdsWithChangedChildOrder,
+  pageIndexEntryDiffers,
+} from "@compoz/core/domain/site/use-cases/status/helpers";
 import {
   buildBlockDetails,
   pageDiffKind,
@@ -79,7 +83,15 @@ export function getSiteStatusDetails({
         return { details: empty };
       }
 
+      const parentIdsWithChangedChildOrder = findParentIdsWithChangedChildOrder(
+        {
+          draftIndexRefs: draftIndex.pages,
+          publishedIndexRefs: publishedIndex.pages,
+        },
+      );
+
       const draftRef = draftIndex.pages.find((ref) => ref.id === pageId);
+
       const publishedRef = publishedIndex.pages.find(
         (ref) => ref.id === pageId,
       );
@@ -97,14 +109,17 @@ export function getSiteStatusDetails({
           publishedRef,
         });
 
+      const childOrderChanged = parentIdsWithChangedChildOrder.has(pageId);
+
       const diff =
-        contentDiff === "published" && indexEntryChanged
+        contentDiff === "published" && (indexEntryChanged || childOrderChanged)
           ? "modified"
           : contentDiff;
 
       const draftBlocks = Array.isArray(draftPage?.blocks)
         ? (draftPage.blocks as ReadonlyArray<Block>)
         : [];
+
       const publishedBlocks = Array.isArray(publishedPage?.blocks)
         ? (publishedPage.blocks as ReadonlyArray<Block>)
         : [];
@@ -112,10 +127,10 @@ export function getSiteStatusDetails({
       const {
         items: blockItems,
         counts: blockCounts,
-        hasChanges,
+        hasChanges: blocksHaveChanges,
       } = buildBlockDetails(draftBlocks, publishedBlocks);
 
-      const pageHasChanges = diff !== "published" || hasChanges;
+      const pageHasChanges = diff !== "published" || blocksHaveChanges;
 
       if (!(scope === "dirty" && !pageHasChanges)) {
         pagesDetails.push({
@@ -142,11 +157,17 @@ export function getSiteStatusDetails({
       return { details };
     }
 
-    // Global mode: page ids come from the union of draft and published source-of-truth indexes.
+    // Global mode: page IDs come from the union of draft and published
+    // source-of-truth indexes.
     const [draftIndex, publishedIndex] = await Promise.all([
       site.readIndex(CONTENT_STATE.DRAFT),
       site.readIndex(CONTENT_STATE.PUBLISHED),
     ]);
+
+    const parentIdsWithChangedChildOrder = findParentIdsWithChangedChildOrder({
+      draftIndexRefs: draftIndex.pages,
+      publishedIndexRefs: publishedIndex.pages,
+    });
 
     const ids = unionPageIdsFromIndexes(draftIndex.pages, publishedIndex.pages);
 
@@ -156,18 +177,25 @@ export function getSiteStatusDetails({
     ]);
 
     const draftById = new Map<string, Page>();
+
     for (const page of draftPagesArr) {
-      if (page) draftById.set(page.id, page);
+      if (page) {
+        draftById.set(page.id, page);
+      }
     }
 
     const publishedById = new Map<string, Page>();
+
     for (const page of publishedPagesArr) {
-      if (page) publishedById.set(page.id, page);
+      if (page) {
+        publishedById.set(page.id, page);
+      }
     }
 
     const draftRefById = new Map<string, PageSummary>(
       draftIndex.pages.map((ref) => [ref.id, ref]),
     );
+
     const publishedRefById = new Map<string, PageSummary>(
       publishedIndex.pages.map((ref) => [ref.id, ref]),
     );
@@ -176,8 +204,11 @@ export function getSiteStatusDetails({
       const draftPage = draftById.get(id) ?? null;
       const publishedPage = publishedById.get(id) ?? null;
 
-      // Ignore refs that exist in an index but no longer resolve to a page on either side.
-      if (!draftPage && !publishedPage) continue;
+      // Ignore refs that exist in an index but no longer resolve to a page
+      // on either side.
+      if (!draftPage && !publishedPage) {
+        continue;
+      }
 
       const contentDiff = pageDiffKind(draftPage, publishedPage);
 
@@ -192,14 +223,17 @@ export function getSiteStatusDetails({
           publishedRef,
         });
 
+      const childOrderChanged = parentIdsWithChangedChildOrder.has(id);
+
       const diff =
-        contentDiff === "published" && indexEntryChanged
+        contentDiff === "published" && (indexEntryChanged || childOrderChanged)
           ? "modified"
           : contentDiff;
 
       const draftBlocks = Array.isArray(draftPage?.blocks)
         ? (draftPage.blocks as ReadonlyArray<Block>)
         : [];
+
       const publishedBlocks = Array.isArray(publishedPage?.blocks)
         ? (publishedPage.blocks as ReadonlyArray<Block>)
         : [];
@@ -207,12 +241,14 @@ export function getSiteStatusDetails({
       const {
         items: blockItems,
         counts: blockCounts,
-        hasChanges,
+        hasChanges: blocksHaveChanges,
       } = buildBlockDetails(draftBlocks, publishedBlocks);
 
-      const pageHasChanges = diff !== "published" || hasChanges;
+      const pageHasChanges = diff !== "published" || blocksHaveChanges;
 
-      if (scope === "dirty" && !pageHasChanges) continue;
+      if (scope === "dirty" && !pageHasChanges) {
+        continue;
+      }
 
       pagesDetails.push({
         id,

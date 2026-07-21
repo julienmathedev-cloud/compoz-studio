@@ -3,7 +3,9 @@
  * @layer core/domain/site/use-cases/status
  * @description Pure draft versus published diff helpers for pages and blocks.
  * @remarks
- * Page diffs use `meta.updatedAt`; block diffs intentionally use JSON comparison in V0.5.
+ * Page diffs compare the current semantic state while ignoring the technical
+ * `meta.updatedAt` audit timestamp. Block diffs intentionally use JSON
+ * comparison in V0.5.
  */
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";
@@ -24,7 +26,29 @@ export function safeStringify(value: unknown): string {
 
 export function asNonEmptyString(input: unknown): string | undefined {
   const s = String(input ?? "").trim();
+
   return s ? s : undefined;
+}
+
+/**
+ * Removes only the technical update timestamp from page comparison.
+ *
+ * Blocks deliberately remain part of the comparable value so that block
+ * content changes and block reordering both modify the owning page.
+ */
+function toComparablePage(page: Readonly<Page>) {
+  const { meta, ...pageWithoutMeta } = page;
+
+  if (!meta) {
+    return pageWithoutMeta;
+  }
+
+  const { updatedAt: _updatedAt, ...metaWithoutUpdatedAt } = meta;
+
+  return {
+    ...pageWithoutMeta,
+    meta: metaWithoutUpdatedAt,
+  };
 }
 
 export function pageDiffKind(
@@ -35,24 +59,26 @@ export function pageDiffKind(
   if (!draft && published) return "deleted";
   if (!draft || !published) return "published";
 
-  const du = String(draft.meta?.updatedAt ?? "");
-  const pu = String(published.meta?.updatedAt ?? "");
-
-  // Missing timestamps are treated as no proven modification.
-  if (!du || !pu) return "published";
-
-  return du !== pu ? "modified" : "published";
+  return safeStringify(toComparablePage(draft)) !==
+    safeStringify(toComparablePage(published))
+    ? "modified"
+    : "published";
 }
 
 type BlockMap = Map<string, Block>;
 
 function toBlockMap(blocks: ReadonlyArray<Block>): BlockMap {
-  const m = new Map<string, Block>();
-  for (const b of blocks) {
-    const id = typeof b?.id === "string" ? b.id : "";
-    if (id) m.set(id, b);
+  const map = new Map<string, Block>();
+
+  for (const block of blocks) {
+    const id = typeof block?.id === "string" ? block.id : "";
+
+    if (id) {
+      map.set(id, block);
+    }
   }
-  return m;
+
+  return map;
 }
 
 export function blockDiffKind(draft?: Block, published?: Block): SiteDiffKind {
@@ -74,50 +100,49 @@ export function buildBlockDetails(
   hasChanges: boolean;
 } {
   const draftMap = toBlockMap(draftBlocks);
-  const pubMap = toBlockMap(publishedBlocks);
+  const publishedMap = toBlockMap(publishedBlocks);
 
   let blocksNew = 0;
   let blocksModified = 0;
   let blocksDeleted = 0;
 
-  // Stable order keeps KV snapshots and admin output deterministic.
+  // Stable order keeps cached snapshots and admin output deterministic.
   const allIds = Array.from(
-    new Set<string>([...draftMap.keys(), ...pubMap.keys()]),
+    new Set<string>([...draftMap.keys(), ...publishedMap.keys()]),
   ).sort();
 
   const items: SiteStatusBlockDetails[] = [];
 
   for (const id of allIds) {
-    const d = draftMap.get(id);
-    const p = pubMap.get(id);
+    const draft = draftMap.get(id);
+    const published = publishedMap.get(id);
 
-    // Compare once when both block versions exist.
-    const diff =
-      d && p
-        ? safeStringify(d) !== safeStringify(p)
-          ? "modified"
-          : "published"
-        : blockDiffKind(d, p);
+    const diff = blockDiffKind(draft, published);
 
     if (diff === "new") blocksNew++;
     if (diff === "modified") blocksModified++;
     if (diff === "deleted") blocksDeleted++;
 
     const type =
-      typeof d?.type === "string"
-        ? d.type
-        : typeof p?.type === "string"
-          ? p.type
+      typeof draft?.type === "string"
+        ? draft.type
+        : typeof published?.type === "string"
+          ? published.type
           : undefined;
 
     const name =
-      typeof d?.name === "string"
-        ? d.name
-        : typeof p?.name === "string"
-          ? p.name
+      typeof draft?.name === "string"
+        ? draft.name
+        : typeof published?.name === "string"
+          ? published.name
           : undefined;
 
-    items.push({ id, type, name, diff });
+    items.push({
+      id,
+      type,
+      name,
+      diff,
+    });
   }
 
   const hasChanges = blocksNew + blocksModified + blocksDeleted > 0;

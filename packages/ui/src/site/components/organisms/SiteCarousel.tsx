@@ -14,10 +14,15 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import type {
+  CarouselItemKindShape,
+  CarouselItemShape,
+  ImageEditorShape,
+} from "@compoz/validation/pages/blocks/cells/cell";
+
 import { Button } from "@compoz/ui/components/ui/button";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteCarouselItem } from "@compoz/ui/site/components/organisms/SiteCarouselItem";
-import type { NormalizedCarouselItem } from "@compoz/ui/site/components/organisms/carousel-item.types";
 import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
 
 const DEFAULT_INTERVAL_MS = 5000;
@@ -34,7 +39,8 @@ function readPrefersReducedMotion(): boolean {
 }
 
 export type SiteCarouselProps = Readonly<{
-  items: ReadonlyArray<NormalizedCarouselItem>;
+  itemKind: CarouselItemKindShape;
+  items: ReadonlyArray<CarouselItemShape>;
   ui: SiteCarouselUi;
   showDots?: boolean;
   showArrows?: boolean;
@@ -44,6 +50,7 @@ export type SiteCarouselProps = Readonly<{
 }>;
 
 export function SiteCarousel({
+  itemKind,
   items,
   ui,
   showDots = true,
@@ -61,13 +68,8 @@ export function SiteCarousel({
   const hasVisibleArrows = showArrows && count > 1;
   const safeMs = Math.max(intervalMs, MIN_INTERVAL_MS);
   const safeIndex = count === 0 ? 0 : Math.min(currentIndex, count - 1);
-  const isImageOnly = items.every((item) => item.kind === "image");
+  const isImageOnly = itemKind === "image";
   const activeItem = items[safeIndex];
-
-  const activeCaption =
-    activeItem?.kind === "image" && typeof activeItem.caption === "string"
-      ? activeItem.caption.trim()
-      : "";
 
   useEffect(() => {
     if (!hasAutoplay) {
@@ -132,9 +134,14 @@ export function SiteCarousel({
     };
   }, [count, hasAutoplay, safeMs]);
 
-  if (count === 0) {
+  if (!activeItem) {
     return null;
   }
+
+  const activeCaption =
+    itemKind === "image"
+      ? ((activeItem as ImageEditorShape).caption ?? "").trim()
+      : "";
 
   const goPrev = () => {
     setCurrentIndex((prev) => (prev === 0 ? count - 1 : prev - 1));
@@ -202,6 +209,7 @@ export function SiteCarousel({
                 >
                   <SiteCarouselItem
                     item={item}
+                    itemKind={itemKind}
                     ui={ui}
                     mode="carousel"
                     isFullBleed={isFullBleed}
@@ -214,7 +222,8 @@ export function SiteCarousel({
           </div>
         ) : (
           <SiteCarouselItem
-            item={items[safeIndex]}
+            item={activeItem}
+            itemKind={itemKind}
             ui={ui}
             isFullBleed={isFullBleed}
             priority={priority && safeIndex === 0}

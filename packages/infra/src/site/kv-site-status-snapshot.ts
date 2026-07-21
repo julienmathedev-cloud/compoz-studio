@@ -28,7 +28,7 @@ type KvSiteStatusSnapshotOptions = Readonly<{
 
 const SNAPSHOT_FORMAT_VERSION = 1 as const;
 const SNAPSHOT_TTL_SECONDS = 15 * 60;
-const VERSION_TTL_SECONDS = 30 * 24 * 60 * 60;
+const VERSION_TTL_SECONDS = 2 * 60 * 60;
 
 type SnapshotEnvelope<T> = Readonly<{
   formatVersion: typeof SNAPSHOT_FORMAT_VERSION;

@@ -3,23 +3,33 @@
  * @layer ui/site/components/organisms
  *
  * @description
- * Renders one normalized carousel or slider item.
+ * Renders one validated carousel or slider item.
  *
  * @remarks
  * Image items use `SiteAppImage`; card-like items delegate to the matching public site card component.
  */
+
+import type { CSSProperties } from "react";
+
+import type {
+  CardItemShape,
+  CarouselItemKindShape,
+  CarouselItemShape,
+  ExtendedCardItemShape,
+  ImageEditorShape,
+  StructuredCardItemShape,
+} from "@compoz/validation/pages/blocks/cells/cell";
 
 import { renderContentIcon } from "@compoz/ui/lib/icons/content-icons";
 import { SiteAppImage } from "@compoz/ui/site/components/atoms/SiteAppImage";
 import { SiteCard } from "@compoz/ui/site/components/molecules/SiteCard";
 import { SiteExtendedCard } from "@compoz/ui/site/components/molecules/SiteExtendedCard";
 import { SiteStructuredCard } from "@compoz/ui/site/components/molecules/SiteStructuredCard";
-import type { NormalizedCarouselItem } from "@compoz/ui/site/components/organisms/carousel-item.types";
 import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
-import type { CSSProperties } from "react";
 
 export type SiteCarouselItemProps = Readonly<{
-  item: NormalizedCarouselItem;
+  item: CarouselItemShape;
+  itemKind: CarouselItemKindShape;
   ui: SiteCarouselUi;
   mode?: "carousel" | "slider";
   isFullBleed?: boolean;
@@ -29,6 +39,7 @@ export type SiteCarouselItemProps = Readonly<{
 
 export function SiteCarouselItem({
   item,
+  itemKind,
   ui,
   mode = "carousel",
   isFullBleed = false,
@@ -39,17 +50,16 @@ export function SiteCarouselItem({
     ? ui.contentItem.active
     : ui.contentItem.inactive;
 
-  if (item.kind === "image") {
+  if (itemKind === "image") {
+    const image = item as ImageEditorShape;
     const imageUi = mode === "slider" ? ui.imageItemSlider : ui.imageItem;
 
     if (mode === "slider") {
-      const hasImageDimensions =
-        typeof item.width === "number" &&
-        item.width > 0 &&
-        typeof item.height === "number" &&
-        item.height > 0;
+      const hasImageDimensions = image.width > 0 && image.height > 0;
 
-      const imageRatio = hasImageDimensions ? item.width / item.height : 16 / 9;
+      const imageRatio = hasImageDimensions
+        ? image.width / image.height
+        : 16 / 9;
 
       const containedImageStyle: CSSProperties = {
         width: `min(100%, calc(70vh * ${imageRatio}))`,
@@ -65,10 +75,10 @@ export function SiteCarouselItem({
         >
           <SiteAppImage
             image={{
-              src: item.src,
-              alt: item.alt,
-              width: item.width,
-              height: item.height,
+              src: image.src,
+              alt: image.alt,
+              width: image.width,
+              height: image.height,
             }}
             sizes="100vw"
             className={
@@ -88,10 +98,10 @@ export function SiteCarouselItem({
       >
         <SiteAppImage
           image={{
-            src: item.src,
-            alt: item.alt,
-            width: item.width,
-            height: item.height,
+            src: image.src,
+            alt: image.alt,
+            width: image.width,
+            height: image.height,
           }}
           fill
           sizes="100vw"
@@ -103,15 +113,19 @@ export function SiteCarouselItem({
     );
   }
 
-  if (item.kind === "card") {
+  if (itemKind === "card") {
+    const card = item as CardItemShape;
+
     return (
       <div className={contentStateClassName}>
         <SiteCard
-          title={item.title}
-          description={item.description}
+          title={card.title}
+          description={card.description}
           icon={
-            item.icon
-              ? renderContentIcon(item.icon, { className: ui.card.icon })
+            card.icon
+              ? renderContentIcon(card.icon, {
+                  className: ui.card.icon,
+                })
               : undefined
           }
           ui={ui.card}
@@ -120,17 +134,19 @@ export function SiteCarouselItem({
     );
   }
 
-  if (item.kind === "extendedCard") {
+  if (itemKind === "extendedCard") {
+    const card = item as ExtendedCardItemShape;
+
     return (
       <div className={contentStateClassName}>
         <SiteExtendedCard
-          title={item.title}
-          description={item.description}
-          bullets={item.bullets}
-          footer={item.footer}
+          title={card.title}
+          description={card.description}
+          bullets={card.bullets}
+          footer={card.footer ?? undefined}
           icon={
-            item.icon
-              ? renderContentIcon(item.icon, {
+            card.icon
+              ? renderContentIcon(card.icon, {
                   className: ui.extendedCard.icon,
                 })
               : undefined
@@ -142,14 +158,26 @@ export function SiteCarouselItem({
     );
   }
 
+  const card = item as StructuredCardItemShape;
+
   return (
     <div className={contentStateClassName}>
       <SiteStructuredCard
-        title={item.title}
-        meta={item.meta}
-        sections={item.sections}
-        image={item.image}
-        button={item.button}
+        title={card.title}
+        meta={card.meta ?? undefined}
+        sections={card.sections}
+        image={
+          card.image
+            ? {
+                src: card.image.src,
+                alt: card.image.alt,
+                width: card.image.width,
+                height: card.image.height,
+                caption: card.image.caption ?? undefined,
+              }
+            : undefined
+        }
+        button={card.button ?? undefined}
         ui={ui.structuredCard}
       />
     </div>

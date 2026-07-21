@@ -20,6 +20,10 @@ import type { SocialSettingsShape } from "@compoz/validation/site/settings/socia
 import { DynamicIcon } from "lucide-react/dynamic";
 import type dynamicIconImports from "lucide-react/dynamicIconImports";
 
+import {
+  collectSectionIds,
+  useActiveSection,
+} from "@compoz/ui/hooks/useActiveSection";
 import { renderSocialKindIcon } from "@compoz/ui/lib/social/social-kind-icons";
 import { cn } from "@compoz/ui/lib/utils";
 import { SiteIconLink } from "@compoz/ui/site/components/atoms/SiteIconLink";
@@ -27,10 +31,6 @@ import {
   SiteNavActiveSectionProvider,
   SiteNavLink,
 } from "@compoz/ui/site/components/atoms/SiteNavLink";
-import {
-  collectSectionIds,
-  useActiveSection,
-} from "@compoz/ui/hooks/useActiveSection";
 import type { SiteMobileMenuUi } from "@compoz/ui/site/site-ui.types";
 
 export type SiteMobileMenuProps = Readonly<{
@@ -45,6 +45,13 @@ export type SiteMobileMenuProps = Readonly<{
 const ICON_MENU: keyof typeof dynamicIconImports = "menu";
 const ICON_CLOSE: keyof typeof dynamicIconImports = "x";
 const ICON_CHEVRON: keyof typeof dynamicIconImports = "chevron-right";
+
+const EMPTY_PRIMARY_MENU_ITEMS: ReadonlyArray<
+  PrimaryMenuSettingsShape["items"][number]
+> = [];
+
+const EMPTY_SOCIAL_ITEMS: ReadonlyArray<SocialSettingsShape["items"][number]> =
+  [];
 
 const MENU_ID = "site-mobile-menu";
 
@@ -70,8 +77,9 @@ export function SiteMobileMenu({
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
 
-  const items = primaryMenu.items ?? [];
-  const socials = social.items ?? [];
+  const items = primaryMenu.items ?? EMPTY_PRIMARY_MENU_ITEMS;
+  const socials = social.items ?? EMPTY_SOCIAL_ITEMS;
+
   const sectionIds = useMemo(
     () => collectSectionIds(items, pathname),
     [items, pathname],

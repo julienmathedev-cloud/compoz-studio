@@ -31,6 +31,8 @@ type UseListUsersResult = Readonly<{
 
 const lg = log.child({ ns: "hook", name: "useListUsers" });
 
+const EMPTY_USERS: ReadonlyArray<UserSummaryDTO> = [];
+
 export function useListUsers(): UseListUsersResult {
   const t = useTranslations();
   const entityLabel = t("studio.shared.entities.users");
@@ -63,7 +65,7 @@ export function useListUsers(): UseListUsersResult {
   }, [query.error, entityLabel]);
 
   return {
-    users: query.data ?? [],
+    users: query.data ?? EMPTY_USERS,
     isLoading: query.isPending,
   } as const;
 }

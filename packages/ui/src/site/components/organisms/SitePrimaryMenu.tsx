@@ -11,8 +11,8 @@
  * Returns nothing when no item is available; simple links are delegated to `SiteNavLink`, and parent items with children are delegated to `SiteNavDropdown`.
  */
 
-import { useMemo } from "react";
 import { usePathname } from "next/navigation";
+import { useMemo } from "react";
 
 import {
   collectSectionIds,
@@ -29,13 +29,18 @@ import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/
 
 export type SitePrimaryMenuProps = Readonly<{
   settings: PrimaryMenuSettingsShape;
-
   ui: SitePrimaryMenuUi;
 }>;
 
+const EMPTY_PRIMARY_MENU_ITEMS: ReadonlyArray<
+  PrimaryMenuSettingsShape["items"][number]
+> = [];
+
 export function SitePrimaryMenu({ settings, ui }: SitePrimaryMenuProps) {
-  const pathname = usePathname() || "/";
-  const items = Array.isArray(settings?.items) ? settings.items : [];
+  const pathname = usePathname() ?? "/";
+  const items = Array.isArray(settings?.items)
+    ? settings.items
+    : EMPTY_PRIMARY_MENU_ITEMS;
   const sectionIds = useMemo(
     () => collectSectionIds(items, pathname),
     [items, pathname],

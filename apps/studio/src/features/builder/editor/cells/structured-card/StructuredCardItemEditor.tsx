@@ -19,7 +19,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useTranslations } from "next-intl";
-import type { ComponentProps } from "react";
 import type { Control, FieldArrayPath, FieldPath } from "react-hook-form";
 import { useController, useFieldArray } from "react-hook-form";
 
@@ -48,7 +47,9 @@ const BUTTON_VARIANTS = ["default", "secondary", "outline", "ghost"] as const;
 
 type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
 type ButtonIconPosition = "before" | "after";
-type ButtonIconValue = ComponentProps<typeof ButtonIconFields>["icon"];
+type ButtonIconValue = NonNullable<
+  StructuredCardItemFormValues["button"]
+>["icon"];
 
 type UploadedRasterImage = Readonly<{
   url: string;
@@ -97,6 +98,10 @@ function toSectionBlockFieldArrayPath(
 
 function toNullableString(value: unknown): string | null {
   return typeof value === "string" ? value : null;
+}
+
+function isButtonVariant(value: string): value is ButtonVariant {
+  return BUTTON_VARIANTS.includes(value as ButtonVariant);
 }
 
 function toButtonIconValue(value: unknown): ButtonIconValue {
@@ -293,26 +298,30 @@ export function StructuredCardItemEditor({
     toNullableString(buttonVariantCtrl.field.value) ??
     toNullableString(watchedItem?.button?.variant);
 
-  const currentButtonVariant: ButtonVariant =
-    currentButtonVariantRaw &&
-    BUTTON_VARIANTS.includes(currentButtonVariantRaw as ButtonVariant)
-      ? (currentButtonVariantRaw as ButtonVariant)
+  const currentButtonVariant =
+    currentButtonVariantRaw && isButtonVariant(currentButtonVariantRaw)
+      ? currentButtonVariantRaw
       : "default";
 
   const imageSrcValue = String(
     imageSrcCtrl.field.value ?? watchedItem?.image?.src ?? "",
   );
+
   const imageAltValue = String(
     imageAltCtrl.field.value ?? watchedItem?.image?.alt ?? "",
   );
+
   const imageCaptionValue = String(
     imageCaptionCtrl.field.value ?? watchedItem?.image?.caption ?? "",
   );
+
   const titleValue = String(titleCtrl.field.value ?? watchedItem?.title ?? "");
   const metaValue = String(metaCtrl.field.value ?? watchedItem?.meta ?? "");
+
   const buttonLabelValue = String(
     buttonLabelCtrl.field.value ?? watchedItem?.button?.label ?? "",
   );
+
   const buttonHrefValue = String(
     buttonHrefCtrl.field.value ?? watchedItem?.button?.href ?? "",
   );
@@ -501,9 +510,7 @@ export function StructuredCardItemEditor({
                     "studio.cellEditorTabs.buttonsCellEditor.labelLabel",
                   )}
                   value={buttonLabelValue}
-                  onChange={(next) => {
-                    buttonLabelCtrl.field.onChange(next);
-                  }}
+                  onChange={buttonLabelCtrl.field.onChange}
                   onBlur={buttonLabelCtrl.field.onBlur}
                   disabled={disabled}
                   placeholder={t(
@@ -517,9 +524,7 @@ export function StructuredCardItemEditor({
                 <LinkFieldsItem
                   idPrefix={buttonLinkIdPrefix}
                   href={buttonHrefValue}
-                  onHrefChange={(next) => {
-                    buttonHrefCtrl.field.onChange(next);
-                  }}
+                  onHrefChange={buttonHrefCtrl.field.onChange}
                   disabled={disabled}
                 />
 
@@ -530,7 +535,9 @@ export function StructuredCardItemEditor({
                   )}
                   value={currentButtonVariant}
                   onChange={(next) => {
-                    buttonVariantCtrl.field.onChange(next as ButtonVariant);
+                    if (isButtonVariant(next)) {
+                      buttonVariantCtrl.field.onChange(next);
+                    }
                   }}
                   items={BUTTON_VARIANTS.map((variant) => ({
                     value: variant,
@@ -557,7 +564,7 @@ export function StructuredCardItemEditor({
 
             <Separator />
 
-            <div className={cn(STACK_SM)}>
+            <div className={cn(STACK_MD)}>
               {structuredCardSectionFields.map((section, sectionIndex) => (
                 <StructuredCardSectionEditor
                   key={section.fieldId}

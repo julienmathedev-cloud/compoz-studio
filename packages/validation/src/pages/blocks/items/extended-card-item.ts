@@ -14,6 +14,7 @@ import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
+import { ButtonItemSchema } from "@compoz/validation/pages/blocks/cells/details/buttons";
 import { CellItemIdSchema } from "@compoz/validation/pages/blocks/cells/details/common";
 
 export const ExtendedCardBulletSchema = z
@@ -24,6 +25,8 @@ export const ExtendedCardBulletSchema = z
 export const ExtendedCardItemSchema = z
   .object({
     id: CellItemIdSchema,
+
+    eyebrow: z.string().trim().nullable(),
 
     title: z
       .string()
@@ -51,5 +54,7 @@ export const ExtendedCardItemSchema = z
         message: ERROR_CODES.CELL_CARDS_EXTENDED_ITEM_ICON_INVALID,
       })
       .nullable(),
+
+    button: ButtonItemSchema.nullable(),
   })
   .strict();

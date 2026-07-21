@@ -15,13 +15,18 @@
 import type { CardItem } from "@compoz/core/domain/pages/entities/cell";
 import type { CardItemIntentDTO } from "@compoz/validation/pages/blocks/cells/cell-intents";
 
+import { adaptOptionalButtonItem } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/buttons";
 import { trimOrKeep } from "@compoz/studio/lib/strings";
 
 export function adaptCardItem(dto: CardItemIntentDTO): CardItem {
+  const eyebrow = dto.eyebrow ? trimOrKeep(dto.eyebrow) : "";
+
   return {
     id: trimOrKeep(dto.id),
+    eyebrow: eyebrow.length > 0 ? eyebrow : null,
     title: trimOrKeep(dto.title),
     description: trimOrKeep(dto.description),
-    icon: dto.icon ? (trimOrKeep(dto.icon) as CardItem["icon"]) : null,
+    icon: dto.icon ?? null,
+    button: adaptOptionalButtonItem(dto.button),
   };
 }

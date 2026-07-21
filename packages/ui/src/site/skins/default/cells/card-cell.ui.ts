@@ -7,9 +7,10 @@
  */
 
 import type { SiteCardUi } from "@compoz/ui/site/site-ui.types";
+import { defaultSiteButtonUi } from "@compoz/ui/site/skins/default/atoms/site-button.ui";
 
 export const defaultCardUi: SiteCardUi = {
-  root: "w-full",
+  root: "h-full w-full",
 
   grid: "grid gap-6",
 
@@ -34,9 +35,18 @@ export const defaultCardUi: SiteCardUi = {
 
   icon: "h-7 w-7 shrink-0 text-primary",
 
+  eyebrow:
+    "text-sm font-semibold uppercase tracking-wide text-muted-foreground",
+
   title: "",
 
-  content: "h-full",
+  content: "flex flex-1 flex-col",
 
   description: "text-muted-foreground",
+
+  buttonWrapper: "mt-auto pt-4",
+
+  button: "",
+
+  buttonUi: defaultSiteButtonUi,
 } as const;

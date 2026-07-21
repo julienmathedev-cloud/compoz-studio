@@ -10,6 +10,7 @@ import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type { ExtendedCardItem } from "@compoz/core/domain/pages/entities/cell";
+import { assertButtonItem } from "@compoz/core/domain/pages/validators/cells/button";
 
 type Path = ReadonlyArray<string | number>;
 
@@ -27,6 +28,14 @@ export function assertExtendedCardItem(item: ExtendedCardItem, path: Path) {
       code: EC.CELL_CARDS_EXTENDED_ITEM_ID_REQUIRED,
       message: EC.CELL_CARDS_EXTENDED_ITEM_ID_REQUIRED,
       details: { path: [...path, "id"] },
+    });
+  }
+
+  if (item.eyebrow !== null && typeof item.eyebrow !== "string") {
+    throw new DomainError({
+      code: EC.CELL_CARDS_EXTENDED_ITEM_INVALID,
+      message: EC.CELL_CARDS_EXTENDED_ITEM_INVALID,
+      details: { path: [...path, "eyebrow"] },
     });
   }
 
@@ -86,5 +95,9 @@ export function assertExtendedCardItem(item: ExtendedCardItem, path: Path) {
         details: { path: [...path, "bullets", i] },
       });
     }
+  }
+
+  if (item.button !== null) {
+    assertButtonItem(item.button, [...path, "button"]);
   }
 }

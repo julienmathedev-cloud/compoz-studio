@@ -47,8 +47,6 @@ export function CardItemsRenderer({
 
   if (items.length < 1) return null;
 
-  const cols = columns;
-
   return (
     <div
       className={ui.root}
@@ -62,10 +60,11 @@ export function CardItemsRenderer({
         {items.map((item, index) => {
           const title = normalizeString(item.title, "");
           const description = normalizeString(item.description, "");
-          const seed = index % cols;
+          const seed = index % columns;
 
           const card = (
             <SiteCard
+              eyebrow={item.eyebrow ?? undefined}
               title={title}
               description={description}
               icon={
@@ -73,6 +72,7 @@ export function CardItemsRenderer({
                   ? renderContentIcon(item.icon, { className: ui.icon })
                   : undefined
               }
+              button={item.button ?? undefined}
               align={align}
               ui={ui}
             />
@@ -84,6 +84,7 @@ export function CardItemsRenderer({
               data-card-item
               data-card-index={index}
               data-card-column={seed}
+              className="h-full"
             >
               {reveal ? (
                 <SiteReveal
@@ -93,7 +94,9 @@ export function CardItemsRenderer({
                   amount={0.1}
                   className={cn(ui.content)}
                 >
-                  <div data-card-content>{card}</div>
+                  <div data-card-content className="h-full">
+                    {card}
+                  </div>
                 </SiteReveal>
               ) : (
                 <div className={cn(ui.content)} data-card-content>

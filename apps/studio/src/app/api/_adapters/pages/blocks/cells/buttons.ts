@@ -17,7 +17,7 @@ import type {
   ButtonsCellIntentDTO,
 } from "@compoz/validation/pages/blocks/cells/cell-intents";
 
-function adaptButtonItem(dto: ButtonItemIntentDTO): ButtonItem {
+export function adaptButtonItem(dto: ButtonItemIntentDTO): ButtonItem {
   return {
     id: trimOrKeep(dto.id),
     label: trimOrKeep(dto.label),
@@ -26,6 +26,16 @@ function adaptButtonItem(dto: ButtonItemIntentDTO): ButtonItem {
     icon: dto.icon ?? null,
     iconPosition: dto.iconPosition === "after" ? "after" : "before",
   };
+}
+
+export function adaptOptionalButtonItem(
+  dto: ButtonItemIntentDTO | null,
+): ButtonItem | null {
+  if (!dto || trimOrKeep(dto.label).length === 0) {
+    return null;
+  }
+
+  return adaptButtonItem(dto);
 }
 
 export function adaptButtonsCell(dto: ButtonsCellIntentDTO): ButtonsCell {

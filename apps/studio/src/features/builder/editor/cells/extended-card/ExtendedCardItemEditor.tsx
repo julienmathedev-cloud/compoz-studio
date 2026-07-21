@@ -10,7 +10,7 @@
  * @remarks
  * - Binds item fields directly through RHF `useController`.
  * - Uses `sortableId` only for dnd-kit sorting.
- * - Shows title and description errors only after `showError` or the field has been touched.
+ * - Shows field errors only after `showError` or the field has been touched.
  * - Uses `watchedItem` as a visual fallback to keep rendering stable during RHF rebinding after reordering.
  * - Mounts `IconPicker` on demand to reduce layout cost when several cards are open.
  */
@@ -25,20 +25,32 @@ import { useController } from "react-hook-form";
 
 import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
+import { ButtonIconFields } from "@compoz/studio/components/molecules/fields/ButtonIconFields";
 import { IconPicker } from "@compoz/studio/components/molecules/fields/IconPicker";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
+import { LinkFieldsItem } from "@compoz/studio/components/molecules/fields/LinkFieldsItem";
+import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
 import { DragHandle } from "@compoz/studio/features/dnd/DragHandle";
 import { Card, CardContent } from "@compoz/ui/components/ui/card";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import {
   getContentIconLabel,
+  isContentIconKind,
   renderContentIcon,
 } from "@compoz/ui/lib/icons/content-icons";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 import type { ExtendedCardItemFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
+
+const BUTTON_VARIANTS = ["default", "secondary", "outline", "ghost"] as const;
+
+type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
+type ButtonIconPosition = "before" | "after";
+type ButtonIconValue = NonNullable<
+  ExtendedCardItemFormValues["button"]
+>["icon"];
 
 type ExtendedCardFieldBasePath =
   `rows.${number}.columns.${number}.cells.${number}`;
@@ -67,6 +79,14 @@ function toNullableString(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
+function isButtonVariant(value: string): value is ButtonVariant {
+  return BUTTON_VARIANTS.includes(value as ButtonVariant);
+}
+
+function toButtonIconValue(value: unknown): ButtonIconValue {
+  return typeof value === "string" && isContentIconKind(value) ? value : null;
+}
+
 export function ExtendedCardItemEditor({
   control,
   basePath,
@@ -83,6 +103,12 @@ export function ExtendedCardItemEditor({
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
   const itemBasePath = `${basePath}.items.${index}` as ExtendedCardItemBasePath;
+
+  const eyebrowCtrl = useController({
+    name: toSectionBlockFieldPath(`${itemBasePath}.eyebrow`),
+    control,
+    defaultValue: watchedItem?.eyebrow ?? "",
+  });
 
   const titleCtrl = useController({
     name: toSectionBlockFieldPath(`${itemBasePath}.title`),
@@ -114,6 +140,36 @@ export function ExtendedCardItemEditor({
     defaultValue: watchedItem?.bullets ?? [],
   });
 
+  const buttonLabelCtrl = useController({
+    name: toSectionBlockFieldPath(`${itemBasePath}.button.label`),
+    control,
+    defaultValue: watchedItem?.button?.label ?? "",
+  });
+
+  const buttonHrefCtrl = useController({
+    name: toSectionBlockFieldPath(`${itemBasePath}.button.href`),
+    control,
+    defaultValue: watchedItem?.button?.href ?? "",
+  });
+
+  const buttonVariantCtrl = useController({
+    name: toSectionBlockFieldPath(`${itemBasePath}.button.variant`),
+    control,
+    defaultValue: watchedItem?.button?.variant ?? "default",
+  });
+
+  const buttonIconCtrl = useController({
+    name: toSectionBlockFieldPath(`${itemBasePath}.button.icon`),
+    control,
+    defaultValue: watchedItem?.button?.icon ?? null,
+  });
+
+  const buttonIconPositionCtrl = useController({
+    name: toSectionBlockFieldPath(`${itemBasePath}.button.iconPosition`),
+    control,
+    defaultValue: watchedItem?.button?.iconPosition ?? "before",
+  });
+
   const {
     attributes,
     listeners,
@@ -126,14 +182,29 @@ export function ExtendedCardItemEditor({
     disabled,
   });
 
+  const eyebrowIds = createFieldIds(idPrefix, "eyebrow");
   const titleIds = createFieldIds(idPrefix, "title");
   const descriptionIds = createFieldIds(idPrefix, "description");
   const footerIds = createFieldIds(idPrefix, "footer");
   const bulletsIds = createFieldIds(idPrefix, "bullets");
+  const buttonLabelIds = createFieldIds(idPrefix, "button-label");
+  const buttonVariantIds = createFieldIds(idPrefix, "button-variant");
+  const buttonLinkIdPrefix = `${idPrefix}-button-link`;
 
+  const shouldShowEyebrowError = showError || eyebrowCtrl.fieldState.isTouched;
   const shouldShowTitleError = showError || titleCtrl.fieldState.isTouched;
   const shouldShowDescriptionError =
     showError || descriptionCtrl.fieldState.isTouched;
+  const shouldShowButtonLabelError =
+    showError || buttonLabelCtrl.fieldState.isTouched;
+
+  const eyebrowInvalid =
+    shouldShowEyebrowError && Boolean(eyebrowCtrl.fieldState.error?.message);
+
+  const eyebrowError =
+    shouldShowEyebrowError && eyebrowCtrl.fieldState.error?.message
+      ? String(eyebrowCtrl.fieldState.error.message)
+      : undefined;
 
   const titleInvalid =
     shouldShowTitleError && Boolean(titleCtrl.fieldState.error?.message);
@@ -152,13 +223,56 @@ export function ExtendedCardItemEditor({
       ? String(descriptionCtrl.fieldState.error.message)
       : undefined;
 
+  const buttonLabelInvalid =
+    shouldShowButtonLabelError &&
+    Boolean(buttonLabelCtrl.fieldState.error?.message);
+
+  const buttonLabelError =
+    shouldShowButtonLabelError && buttonLabelCtrl.fieldState.error?.message
+      ? String(buttonLabelCtrl.fieldState.error.message)
+      : undefined;
+
+  const eyebrowValue = String(
+    eyebrowCtrl.field.value ?? watchedItem?.eyebrow ?? "",
+  );
+
   const titleValue = String(titleCtrl.field.value ?? watchedItem?.title ?? "");
+
   const descriptionValue = String(
     descriptionCtrl.field.value ?? watchedItem?.description ?? "",
   );
+
   const footerValue = String(
     footerCtrl.field.value ?? watchedItem?.footer ?? "",
   );
+
+  const buttonLabelValue = String(
+    buttonLabelCtrl.field.value ?? watchedItem?.button?.label ?? "",
+  );
+
+  const buttonHrefValue = String(
+    buttonHrefCtrl.field.value ?? watchedItem?.button?.href ?? "",
+  );
+
+  const currentButtonVariantRaw =
+    toNullableString(buttonVariantCtrl.field.value) ??
+    toNullableString(watchedItem?.button?.variant);
+
+  const currentButtonVariant =
+    currentButtonVariantRaw && isButtonVariant(currentButtonVariantRaw)
+      ? currentButtonVariantRaw
+      : "default";
+
+  const buttonIconValue: ButtonIconValue =
+    toButtonIconValue(buttonIconCtrl.field.value) ??
+    toButtonIconValue(watchedItem?.button?.icon);
+
+  const rawButtonIconPosition =
+    toNullableString(buttonIconPositionCtrl.field.value) ??
+    toNullableString(watchedItem?.button?.iconPosition);
+
+  const buttonIconPositionValue: ButtonIconPosition =
+    rawButtonIconPosition === "after" ? "after" : "before";
 
   const bulletsArray = Array.isArray(bulletsCtrl.field.value)
     ? bulletsCtrl.field.value
@@ -168,10 +282,9 @@ export function ExtendedCardItemEditor({
 
   const bulletsValue = bulletsArray.join("\n");
 
-  const iconValue: string | null =
+  const iconValue =
     toNullableString(iconCtrl.field.value) ??
-    toNullableString(watchedItem?.icon) ??
-    null;
+    toNullableString(watchedItem?.icon);
 
   const selectedIconPreview: ReactNode = iconValue
     ? renderContentIcon(iconValue, { className: "h-4 w-4" })
@@ -212,15 +325,33 @@ export function ExtendedCardItemEditor({
         <div className="pt-1">
           <div className={cn(STACK_MD)}>
             <InputField
+              ids={eyebrowIds}
+              inputRef={eyebrowCtrl.field.ref}
+              label={t(
+                "studio.cellEditorTabs.extendedCardCellEditor.eyebrowLabel",
+              )}
+              value={eyebrowValue}
+              onChange={eyebrowCtrl.field.onChange}
+              onBlur={eyebrowCtrl.field.onBlur}
+              disabled={disabled}
+              placeholder={t(
+                "studio.cellEditorTabs.extendedCardCellEditor.eyebrowPlaceholder",
+              )}
+              help={t(
+                "studio.cellEditorTabs.extendedCardCellEditor.eyebrowHelp",
+              )}
+              invalid={eyebrowInvalid}
+              error={eyebrowError}
+            />
+
+            <InputField
               ids={titleIds}
               inputRef={titleCtrl.field.ref}
               label={t(
                 "studio.cellEditorTabs.extendedCardCellEditor.titleLabel",
               )}
               value={titleValue}
-              onChange={(next) => {
-                titleCtrl.field.onChange(next);
-              }}
+              onChange={titleCtrl.field.onChange}
               onBlur={titleCtrl.field.onBlur}
               disabled={disabled}
               placeholder={t(
@@ -237,9 +368,7 @@ export function ExtendedCardItemEditor({
                 "studio.cellEditorTabs.extendedCardCellEditor.descriptionLabel",
               )}
               value={descriptionValue}
-              onChange={(next) => {
-                descriptionCtrl.field.onChange(next);
-              }}
+              onChange={descriptionCtrl.field.onChange}
               onBlur={descriptionCtrl.field.onBlur}
               disabled={disabled}
               placeholder={t(
@@ -260,8 +389,7 @@ export function ExtendedCardItemEditor({
               )}
               value={bulletsValue}
               onChange={(next) => {
-                const parsedBullets = next.split("\n");
-                bulletsCtrl.field.onChange(parsedBullets);
+                bulletsCtrl.field.onChange(next.split("\n"));
               }}
               onBlur={() => {
                 const rawBullets = Array.isArray(bulletsCtrl.field.value)
@@ -292,9 +420,7 @@ export function ExtendedCardItemEditor({
                 "studio.cellEditorTabs.extendedCardCellEditor.footerLabel",
               )}
               value={footerValue}
-              onChange={(next) => {
-                footerCtrl.field.onChange(next);
-              }}
+              onChange={footerCtrl.field.onChange}
               onBlur={footerCtrl.field.onBlur}
               disabled={disabled}
               placeholder={t(
@@ -313,7 +439,7 @@ export function ExtendedCardItemEditor({
               <button
                 type="button"
                 disabled={disabled}
-                onClick={() => setIsIconPickerOpen((prev) => !prev)}
+                onClick={() => setIsIconPickerOpen((previous) => !previous)}
                 className={cn(
                   "flex w-full items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-left",
                   "transition-colors hover:bg-accent/50",
@@ -354,9 +480,7 @@ export function ExtendedCardItemEditor({
               {isIconPickerOpen ? (
                 <IconPicker
                   value={iconValue}
-                  onChange={(next) => {
-                    iconCtrl.field.onChange(next);
-                  }}
+                  onChange={iconCtrl.field.onChange}
                   disabled={disabled}
                 />
               ) : null}
@@ -364,6 +488,65 @@ export function ExtendedCardItemEditor({
               <Text as="p" variant="meta">
                 {t("studio.cellEditorTabs.extendedCardCellEditor.iconHelp")}
               </Text>
+            </div>
+
+            <div className={cn(STACK_MD)}>
+              <Text as="p" className="text-sm font-semibold">
+                {t("studio.cellEditorTabs.extendedCardCellEditor.buttonLabel")}
+              </Text>
+
+              <InputField
+                ids={buttonLabelIds}
+                inputRef={buttonLabelCtrl.field.ref}
+                label={t("studio.cellEditorTabs.buttonsCellEditor.labelLabel")}
+                value={buttonLabelValue}
+                onChange={buttonLabelCtrl.field.onChange}
+                onBlur={buttonLabelCtrl.field.onBlur}
+                disabled={disabled}
+                placeholder={t(
+                  "studio.cellEditorTabs.buttonsCellEditor.labelPlaceholder",
+                )}
+                help={t("studio.cellEditorTabs.buttonsCellEditor.labelHelp")}
+                invalid={buttonLabelInvalid}
+                error={buttonLabelError}
+              />
+
+              <LinkFieldsItem
+                idPrefix={buttonLinkIdPrefix}
+                href={buttonHrefValue}
+                onHrefChange={buttonHrefCtrl.field.onChange}
+                disabled={disabled}
+              />
+
+              <SelectField
+                ids={buttonVariantIds}
+                label={t(
+                  "studio.cellEditorTabs.buttonsCellEditor.variantLabel",
+                )}
+                value={currentButtonVariant}
+                onChange={(next) => {
+                  if (isButtonVariant(next)) {
+                    buttonVariantCtrl.field.onChange(next);
+                  }
+                }}
+                items={BUTTON_VARIANTS.map((variant) => ({
+                  value: variant,
+                  label: t(
+                    `studio.cellEditorTabs.buttonsCellEditor.variants.${variant}`,
+                  ),
+                }))}
+                disabled={disabled}
+                help={t("studio.cellEditorTabs.buttonsCellEditor.variantHelp")}
+              />
+
+              <ButtonIconFields
+                idPrefix={`${idPrefix}-button-icon`}
+                icon={buttonIconValue}
+                iconPosition={buttonIconPositionValue}
+                onIconChange={buttonIconCtrl.field.onChange}
+                onIconPositionChange={buttonIconPositionCtrl.field.onChange}
+                disabled={disabled}
+              />
             </div>
           </div>
         </div>

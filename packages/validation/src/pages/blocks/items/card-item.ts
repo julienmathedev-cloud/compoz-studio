@@ -14,11 +14,13 @@ import { CONTENT_ICON_KINDS } from "@compoz/core/constants/icons/content-icons";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { z } from "zod";
 
+import { ButtonItemSchema } from "@compoz/validation/pages/blocks/cells/details/buttons";
 import { CellItemIdSchema } from "@compoz/validation/pages/blocks/cells/details/common";
 
 export const CardItemSchema = z
   .object({
     id: CellItemIdSchema,
+    eyebrow: z.string().trim().nullable(),
     title: z.string().trim().min(1, ERROR_CODES.CELL_CARD_ITEM_TITLE_REQUIRED),
     description: z
       .string()
@@ -29,5 +31,6 @@ export const CardItemSchema = z
         message: ERROR_CODES.CELL_CARD_ITEM_ICON_INVALID,
       })
       .nullable(),
+    button: ButtonItemSchema.nullable(),
   })
   .strict();

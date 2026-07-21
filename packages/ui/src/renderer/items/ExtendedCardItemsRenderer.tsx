@@ -47,8 +47,6 @@ export function ExtendedCardItemsRenderer({
 
   if (items.length < 1) return null;
 
-  const cols = columns;
-
   return (
     <div
       className={ui.root}
@@ -68,10 +66,11 @@ export function ExtendedCardItemsRenderer({
             .map((bullet) => normalizeString(bullet, ""))
             .filter(Boolean);
 
-          const seed = index % cols;
+          const seed = index % columns;
 
           const card = (
             <SiteExtendedCard
+              eyebrow={item.eyebrow ?? undefined}
               title={title}
               description={description}
               icon={
@@ -81,6 +80,7 @@ export function ExtendedCardItemsRenderer({
               }
               bullets={bullets}
               footer={footer || undefined}
+              button={item.button ?? undefined}
               align={align}
               ui={ui}
             />
@@ -92,6 +92,7 @@ export function ExtendedCardItemsRenderer({
               data-card-item
               data-card-index={index}
               data-card-column={seed}
+              className="h-full"
             >
               {reveal ? (
                 <SiteReveal
@@ -101,7 +102,9 @@ export function ExtendedCardItemsRenderer({
                   amount={0.1}
                   className={cn(ui.content)}
                 >
-                  <div data-card-content>{card}</div>
+                  <div data-card-content className="h-full">
+                    {card}
+                  </div>
                 </SiteReveal>
               ) : (
                 <div className={cn(ui.content)} data-card-content>

@@ -14,12 +14,14 @@ import type {
   StructuredCardItem,
   StructuredCardSection,
 } from "@compoz/core/domain/pages/entities/cell";
-import { adaptImage } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/image";
-import { trimOrKeep } from "@compoz/studio/lib/strings";
 import type {
   StructuredCardItemIntentDTO,
   StructuredCardSectionIntentDTO,
 } from "@compoz/validation/pages/blocks/cells/cell-intents";
+
+import { adaptOptionalButtonItem } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/buttons";
+import { adaptImage } from "@compoz/studio/app/api/_adapters/pages/blocks/cells/image";
+import { trimOrKeep } from "@compoz/studio/lib/strings";
 
 function adaptStructuredCardSection(
   dto: StructuredCardSectionIntentDTO,
@@ -34,33 +36,16 @@ function adaptStructuredCardSection(
 export function adaptStructuredCardItem(
   dto: StructuredCardItemIntentDTO,
 ): StructuredCardItem {
-  const hasImage =
-    dto.image != null && typeof dto.image.src === "string"
-      ? trimOrKeep(dto.image.src).length > 0
-      : false;
+  const hasImage = dto.image != null && trimOrKeep(dto.image.src).length > 0;
 
-  const hasButtonLabel =
-    dto.button != null && typeof dto.button.label === "string"
-      ? trimOrKeep(dto.button.label).length > 0
-      : false;
+  const meta = dto.meta ? trimOrKeep(dto.meta) : "";
 
   return {
     id: trimOrKeep(dto.id),
     image: hasImage && dto.image ? adaptImage(dto.image) : null,
     title: trimOrKeep(dto.title),
-    meta: dto.meta ? trimOrKeep(dto.meta) : null,
+    meta: meta.length > 0 ? meta : null,
     sections: dto.sections.map(adaptStructuredCardSection),
-    button:
-      hasButtonLabel && dto.button
-        ? {
-            id: trimOrKeep(dto.button.id),
-            label: trimOrKeep(dto.button.label),
-            href: trimOrKeep(dto.button.href),
-            variant: dto.button.variant,
-            icon: dto.button.icon ?? null,
-            iconPosition:
-              dto.button.iconPosition === "after" ? "after" : "before",
-          }
-        : null,
+    button: adaptOptionalButtonItem(dto.button),
   };
 }

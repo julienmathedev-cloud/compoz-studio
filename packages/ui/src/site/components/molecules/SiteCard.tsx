@@ -18,27 +18,42 @@ import {
   CardTitle,
 } from "@compoz/ui/components/ui/card";
 import { cn } from "@compoz/ui/lib/utils";
+import {
+  SiteButton,
+  type SiteButtonProps,
+} from "@compoz/ui/site/components/atoms/SiteButton";
 import type { SiteCardUi } from "@compoz/ui/site/site-ui.types";
 
 export type SiteCardAlign = "left" | "center";
 
+type SiteCardButton = Pick<
+  SiteButtonProps,
+  "label" | "href" | "variant" | "icon" | "iconPosition"
+>;
+
 export type SiteCardProps = Readonly<{
+  eyebrow?: string;
   title: string;
   description: string;
   icon?: ReactNode;
+  button?: SiteCardButton;
   align?: SiteCardAlign;
   ui: SiteCardUi;
   className?: string;
 }>;
 
 export function SiteCard({
+  eyebrow,
   title,
   description,
   icon,
+  button,
   align = "left",
   ui,
   className,
 }: SiteCardProps) {
+  const normalizedButton = button?.label?.trim() ? button : undefined;
+
   return (
     <Card className={cn(ui.card, className)}>
       <CardHeader className={cn(ui.header, ui.align[align])}>
@@ -49,12 +64,30 @@ export function SiteCard({
             </div>
           ) : null}
 
-          <CardTitle className={ui.title}>{title}</CardTitle>
+          <div className="min-w-0">
+            {eyebrow ? <p className={ui.eyebrow}>{eyebrow}</p> : null}
+
+            <CardTitle className={ui.title}>{title}</CardTitle>
+          </div>
         </div>
       </CardHeader>
 
       <CardContent className={cn(ui.content, ui.align[align])}>
         <p className={ui.description}>{description}</p>
+
+        {normalizedButton ? (
+          <div className={ui.buttonWrapper}>
+            <SiteButton
+              label={normalizedButton.label}
+              href={normalizedButton.href}
+              variant={normalizedButton.variant}
+              icon={normalizedButton.icon}
+              iconPosition={normalizedButton.iconPosition}
+              className={cn(ui.button)}
+              ui={ui.buttonUi}
+            />
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

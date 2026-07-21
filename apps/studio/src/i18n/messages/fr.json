@@ -1829,6 +1829,10 @@
         "itemsLabel": "Cartes",
         "itemsHelp": "Ajoutez et organisez les cartes affichées dans cette section.",
 
+        "eyebrowLabel": "Surtitre",
+        "eyebrowPlaceholder": "Texte court au-dessus du titre",
+        "eyebrowHelp": "Texte optionnel affiché au-dessus du titre.",
+
         "titleLabel": "Titre",
         "titlePlaceholder": "Titre de la carte",
         "titleHelp": "Titre principal affiché dans la carte.",
@@ -1849,6 +1853,8 @@
         "iconLabel": "Icône",
         "iconPlaceholder": "Nom de l’icône",
         "iconHelp": "Nom d’icône optionnel à afficher dans la carte.",
+
+        "buttonLabel": "Bouton",
 
         "alignLabel": "Alignement",
         "aligns": {
@@ -1986,6 +1992,9 @@
           "3": "3",
           "4": "4"
         },
+        "eyebrowLabel": "Eyebrow",
+        "eyebrowPlaceholder": "Texte court au-dessus du titre",
+        "eyebrowHelp": "Texte optionnel affiché au-dessus du titre.",
         "titleLabel": "Titre",
         "titlePlaceholder": "Ex. : Votre site est difficile à modifier",
         "titleHelp": "Titre court et facile à parcourir de la carte.",
@@ -1994,7 +2003,8 @@
         "descriptionHelp": "Texte court pour expliquer l’idée principale.",
         "iconLabel": "Icône",
         "iconPlaceholder": "Ex. : ⚡",
-        "iconHelp": "Icône ou emoji optionnel pour renforcer la lecture visuelle."
+        "iconHelp": "Icône ou emoji optionnel pour renforcer la lecture visuelle.",
+        "buttonLabel": "Bouton"
       },
 
       "separatorCellEditor": {

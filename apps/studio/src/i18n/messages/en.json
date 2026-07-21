@@ -1825,6 +1825,10 @@
         "itemsLabel": "Cards",
         "itemsHelp": "Add and organize the cards displayed in this section.",
 
+        "eyebrowLabel": "Eyebrow",
+        "eyebrowPlaceholder": "Short text above the title",
+        "eyebrowHelp": "Optional text displayed above the title.",
+
         "titleLabel": "Title",
         "titlePlaceholder": "Card title",
         "titleHelp": "Main title displayed in the card.",
@@ -1845,6 +1849,8 @@
         "iconLabel": "Icon",
         "iconPlaceholder": "Icon name",
         "iconHelp": "Optional icon name displayed in the card.",
+
+        "buttonLabel": "Button",
 
         "alignLabel": "Alignment",
         "aligns": {
@@ -1982,6 +1988,9 @@
           "3": "3",
           "4": "4"
         },
+        "eyebrowLabel": "Eyebrow",
+        "eyebrowPlaceholder": "Short text above the title",
+        "eyebrowHelp": "Optional text displayed above the title.",
         "titleLabel": "Title",
         "titlePlaceholder": "e.g. Your site is hard to update",
         "titleHelp": "Short and scannable card title.",
@@ -1990,7 +1999,8 @@
         "descriptionHelp": "Short text explaining the main idea.",
         "iconLabel": "Icon",
         "iconPlaceholder": "e.g. ⚡",
-        "iconHelp": "Optional icon or emoji to enhance visual readability."
+        "iconHelp": "Optional icon or emoji to enhance visual readability.",
+        "buttonLabel": "Button"
       },
 
       "separatorCellEditor": {

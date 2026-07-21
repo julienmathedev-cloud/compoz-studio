@@ -7,12 +7,15 @@
  */
 
 import type { ContentIconKind } from "@compoz/core/constants/icons/content-icons";
+import type { ButtonItem } from "@compoz/core/domain/pages/entities/cells/buttons";
 
 export type ExtendedCardItem = {
   id: string;
+  eyebrow: string | null;
   title: string;
   description: string;
   bullets: ReadonlyArray<string>;
   footer: string | null;
   icon: ContentIconKind | null;
+  button: ButtonItem | null;
 };

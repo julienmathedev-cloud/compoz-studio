@@ -259,56 +259,50 @@ export type SiteCardUi = Readonly<{
   headerTop: string;
   iconContainer: string;
   icon: string;
+  eyebrow: string;
   title: string;
   content: string;
   description: string;
+  buttonWrapper: string;
+  button: string;
+  buttonUi: SiteButtonUi;
 }>;
 
 export type SiteCardUiOverride = DeepPartial<SiteCardUi>;
 
 export type SiteExtendedCardUi = Readonly<{
   root: string;
-
   grid: string;
-
   columns: Readonly<{
     1: string;
     2: string;
     3: string;
   }>;
-
   align: Readonly<{
     left: string;
     center: string;
   }>;
-
   card: string;
-
   header: string;
-
   headerTop: string;
-
   icon: string;
-
+  eyebrow: string;
   title: string;
-
   content: string;
-
   description: string;
-
   bulletsList: string;
-
   bulletsAlign: Readonly<{
     left: string;
     center: string;
   }>;
-
   footer: string;
-
   footerAlign: Readonly<{
     left: string;
     center: string;
   }>;
+  buttonWrapper: string;
+  button: string;
+  buttonUi: SiteButtonUi;
 }>;
 
 export type SiteExtendedCardUiOverride = DeepPartial<SiteExtendedCardUi>;
@@ -321,7 +315,6 @@ export type SiteStructuredCardUi = Readonly<{
     2: string;
     3: string;
   }>;
-
   card: string;
   imageWrapper: string;
   image: string;

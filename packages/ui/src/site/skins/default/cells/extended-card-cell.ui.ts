@@ -7,9 +7,10 @@
  */
 
 import type { SiteExtendedCardUi } from "@compoz/ui/site/site-ui.types";
+import { defaultSiteButtonUi } from "@compoz/ui/site/skins/default/atoms/site-button.ui";
 
 export const defaultExtendedCardUi: SiteExtendedCardUi = {
-  root: "w-full",
+  root: "h-full w-full",
 
   grid: "grid gap-6",
 
@@ -32,21 +33,32 @@ export const defaultExtendedCardUi: SiteExtendedCardUi = {
 
   icon: "h-7 w-7 shrink-0 text-primary",
 
+  eyebrow:
+    "text-sm font-semibold uppercase tracking-wide text-muted-foreground",
+
   title: "",
 
-  content: "flex flex-col gap-3 h-full",
+  content: "flex flex-1 flex-col gap-3",
 
   description: "text-muted-foreground",
 
   bulletsList: "flex flex-col gap-1",
+
   bulletsAlign: {
     left: "items-start",
     center: "items-center",
   },
 
   footer: "text-sm text-muted-foreground",
+
   footerAlign: {
     left: "",
     center: "justify-center text-center",
   },
+
+  buttonWrapper: "ml-auto",
+
+  button: "",
+
+  buttonUi: defaultSiteButtonUi,
 } as const;

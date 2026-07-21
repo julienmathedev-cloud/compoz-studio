@@ -136,20 +136,24 @@ export function createEmptyFormSubmitButton(): FormSubmitButtonFormValues {
 export function createEmptyCardItem(): CardItemFormValues {
   return {
     id: createUiId(),
+    eyebrow: null,
     title: "",
     description: "",
     icon: null,
+    button: createEmptyButtonItem(),
   };
 }
 
 export function createEmptyExtendedCardItem(): ExtendedCardItemFormValues {
   return {
     id: createUiId(),
+    eyebrow: null,
     title: "",
     description: "",
     bullets: [],
     footer: null,
     icon: null,
+    button: createEmptyButtonItem(),
   };
 }
 
@@ -410,10 +414,10 @@ export function toCellFormValuesFromDTO(cell: CellDTO): CellFormValues {
   return toCellShapeFromDTO(cell);
 }
 
-// Structured card item UI-safe normalization.
-export function normalizeStructuredCardButton(
-  button: StructuredCardItemFormValues["button"],
-): StructuredCardItemFormValues["button"] {
+// Optional button item UI-safe normalization.
+export function normalizeOptionalButtonItem(
+  button: ButtonItemFormValues | null,
+): ButtonItemFormValues {
   if (!button) {
     return createEmptyButtonItem();
   }
@@ -422,6 +426,22 @@ export function normalizeStructuredCardButton(
     ...button,
     ...normalizeButtonPresentation(button, ""),
     href: button.href?.trim() ?? "",
+  };
+}
+
+function normalizeCardItem(item: CardItemFormValues): CardItemFormValues {
+  return {
+    ...item,
+    button: normalizeOptionalButtonItem(item.button),
+  };
+}
+
+function normalizeExtendedCardItem(
+  item: ExtendedCardItemFormValues,
+): ExtendedCardItemFormValues {
+  return {
+    ...item,
+    button: normalizeOptionalButtonItem(item.button),
   };
 }
 
@@ -450,15 +470,14 @@ export function normalizeStructuredCardItem(
   return {
     ...item,
     image: normalizeStructuredCardImage(item.image),
-    button: normalizeStructuredCardButton(item.button),
+    button: normalizeOptionalButtonItem(item.button),
   };
 }
 
-// Structured card item validation normalization.
-
-export function toStructuredCardButtonForValidation(
-  button: StructuredCardItemFormValues["button"],
-): StructuredCardItemFormValues["button"] {
+// Optional button item validation normalization.
+export function toOptionalButtonItemForValidation(
+  button: ButtonItemFormValues | null,
+): ButtonItemFormValues | null {
   if (!button) return null;
 
   const label = button.label?.trim() ?? "";
@@ -474,6 +493,27 @@ export function toStructuredCardButtonForValidation(
     ...presentation,
     label,
     href,
+  };
+}
+
+function toCardItemForValidation(
+  item: CardItemFormValues,
+): CardItemFormValues {
+  return {
+    ...item,
+    eyebrow: item.eyebrow?.trim() ? item.eyebrow.trim() : null,
+    button: toOptionalButtonItemForValidation(item.button),
+  };
+}
+
+function toExtendedCardItemForValidation(
+  item: ExtendedCardItemFormValues,
+): ExtendedCardItemFormValues {
+  return {
+    ...item,
+    eyebrow: item.eyebrow?.trim() ? item.eyebrow.trim() : null,
+    footer: item.footer?.trim() ? item.footer.trim() : null,
+    button: toOptionalButtonItemForValidation(item.button),
   };
 }
 
@@ -520,7 +560,7 @@ export function toStructuredCardItemForValidation(
   return {
     ...item,
     image: toStructuredCardImageForValidation(item.image),
-    button: toStructuredCardButtonForValidation(item.button),
+    button: toOptionalButtonItemForValidation(item.button),
   };
 }
 
@@ -532,6 +572,14 @@ function normalizeCarouselItem(
 ): CarouselItemFormValues {
   if (itemKind === "structuredCard") {
     return normalizeStructuredCardItem(item as StructuredCardItemFormValues);
+  }
+
+  if (itemKind === "card") {
+    return normalizeCardItem(item as CardItemFormValues);
+  }
+
+  if (itemKind === "extendedCard") {
+    return normalizeExtendedCardItem(item as ExtendedCardItemFormValues);
   }
 
   return item;
@@ -547,6 +595,14 @@ function normalizeCarouselItemForValidation(
     );
   }
 
+  if (itemKind === "card") {
+    return toCardItemForValidation(item as CardItemFormValues);
+  }
+
+  if (itemKind === "extendedCard") {
+    return toExtendedCardItemForValidation(item as ExtendedCardItemFormValues);
+  }
+
   return item;
 }
 
@@ -556,6 +612,14 @@ function normalizeCardCollectionItem(
 ): CardCollectionItemFormValues {
   if (cardKind === "structuredCard") {
     return normalizeStructuredCardItem(item as StructuredCardItemFormValues);
+  }
+
+  if (cardKind === "card") {
+    return normalizeCardItem(item as CardItemFormValues);
+  }
+
+  if (cardKind === "extendedCard") {
+    return normalizeExtendedCardItem(item as ExtendedCardItemFormValues);
   }
 
   return item;
@@ -569,6 +633,14 @@ function normalizeCardCollectionItemForValidation(
     return toStructuredCardItemForValidation(
       item as StructuredCardItemFormValues,
     );
+  }
+
+  if (cardKind === "card") {
+    return toCardItemForValidation(item as CardItemFormValues);
+  }
+
+  if (cardKind === "extendedCard") {
+    return toExtendedCardItemForValidation(item as ExtendedCardItemFormValues);
   }
 
   return item;

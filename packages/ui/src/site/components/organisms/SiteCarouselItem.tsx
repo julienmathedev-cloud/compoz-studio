@@ -119,6 +119,7 @@ export function SiteCarouselItem({
     return (
       <div className={contentStateClassName}>
         <SiteCard
+          eyebrow={card.eyebrow ?? undefined}
           title={card.title}
           description={card.description}
           icon={
@@ -128,6 +129,7 @@ export function SiteCarouselItem({
                 })
               : undefined
           }
+          button={card.button ?? undefined}
           ui={ui.card}
         />
       </div>
@@ -140,10 +142,12 @@ export function SiteCarouselItem({
     return (
       <div className={contentStateClassName}>
         <SiteExtendedCard
+          eyebrow={card.eyebrow ?? undefined}
           title={card.title}
           description={card.description}
           bullets={card.bullets}
           footer={card.footer ?? undefined}
+          button={card.button ?? undefined}
           icon={
             card.icon
               ? renderContentIcon(card.icon, {

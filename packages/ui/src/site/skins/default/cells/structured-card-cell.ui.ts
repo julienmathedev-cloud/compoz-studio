@@ -10,7 +10,7 @@ import type { SiteStructuredCardUi } from "@compoz/ui/site/site-ui.types";
 import { defaultSiteButtonUi } from "@compoz/ui/site/skins/default/atoms/site-button.ui";
 
 export const defaultStructuredCardUi: SiteStructuredCardUi = {
-  root: "",
+  root: "h-full",
 
   grid: "grid gap-6",
 

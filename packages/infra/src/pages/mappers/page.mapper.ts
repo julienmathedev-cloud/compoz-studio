@@ -4,11 +4,10 @@
  * @description Maps Prisma page rows to domain pages and domain pages back to Prisma write data.
  */
 
-import { Prisma } from "@compoz/infra/prisma/generated";
-
 import type { Block } from "@compoz/core/domain/pages/entities/block";
 import type { Page, PageMeta } from "@compoz/core/domain/pages/entities/page";
-
+import { normalizePersistedPageBlocks } from "@compoz/infra/pages/normalizers/normalize-persisted-page-blocks";
+import { Prisma } from "@compoz/infra/prisma/generated";
 import { PageSchema, type PageShape } from "@compoz/validation/pages/page";
 
 export type PrismaContentState = "draft" | "published";
@@ -91,7 +90,7 @@ export function toDomainPage(row: PrismaPageRow): Page {
     name: row.name,
     seoTitle: row.seoTitle,
     seoDescription: row.seoDescription,
-    blocks: row.blocks,
+    blocks: normalizePersistedPageBlocks(row.blocks),
     meta: {
       createdAt: row.metaCreatedAt.toISOString(),
       updatedAt: row.metaUpdatedAt.toISOString(),

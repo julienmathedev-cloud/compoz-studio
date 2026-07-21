@@ -5,10 +5,8 @@
  * @remarks
  * Cell-level options remain in parent mappers such as card collections and carousels.
  */
-
 import type { StructuredCardItemDTO } from "@compoz/core/domain/pages/dto";
 import type { StructuredCardItemFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
-
 export function toStructuredCardItemShapeFromDTO(
   item: StructuredCardItemDTO,
 ): StructuredCardItemFormValues {
@@ -35,7 +33,6 @@ export function toStructuredCardItemShapeFromDTO(
       : null,
   };
 }
-
 export function toStructuredCardItemsShapeFromDTO(
   items: ReadonlyArray<StructuredCardItemDTO>,
 ): StructuredCardItemFormValues[] {

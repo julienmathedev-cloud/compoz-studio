@@ -257,6 +257,7 @@ export type SiteCardUi = Readonly<{
   card: string;
   header: string;
   headerTop: string;
+  headerTitle: string;
   iconContainer: string;
   icon: string;
   eyebrow: string;
@@ -285,7 +286,9 @@ export type SiteExtendedCardUi = Readonly<{
   card: string;
   header: string;
   headerTop: string;
+  headerTitle: string;
   icon: string;
+  iconContainer: string;
   eyebrow: string;
   title: string;
   content: string;

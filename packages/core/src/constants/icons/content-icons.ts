@@ -14,6 +14,7 @@ export const CONTENT_ICON_KINDS = [
   "activity",
   "alert-triangle",
   "arrow-down-from-line",
+  "arrow-right",
   "arrow-right-left",
   "badge-alert",
   "badge-check",

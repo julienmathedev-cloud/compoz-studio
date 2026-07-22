@@ -64,7 +64,7 @@ export function SiteCard({
             </div>
           ) : null}
 
-          <div className="min-w-0">
+          <div className={cn(ui.headerTitle, "min-w-0")}>
             {eyebrow ? <p className={ui.eyebrow}>{eyebrow}</p> : null}
 
             <CardTitle className={ui.title}>{title}</CardTitle>

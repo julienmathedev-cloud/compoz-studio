@@ -52,8 +52,12 @@ export function SiteExtendedCard({
     <Card className={cn(ui.card, className)}>
       <CardHeader className={cn(ui.header, ui.align[align])}>
         <div className={cn(ui.headerTop, ui.align[align])}>
-          {icon ? <div aria-hidden="true">{icon}</div> : null}
-          <div className="min-w-0">
+          {icon ? (
+            <div aria-hidden="true" className={ui.iconContainer}>
+              {icon}
+            </div>
+          ) : null}
+          <div className={cn(ui.headerTitle, "min-w-0")}>
             {eyebrow ? <p className={ui.eyebrow}>{eyebrow}</p> : null}
             <CardTitle className={ui.title}>{title}</CardTitle>
           </div>

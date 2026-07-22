@@ -24,7 +24,7 @@ export const portfolioStructuredCardUi: SiteStructuredCardUiOverride = {
   caption:
     "max-w-3xl text-sm leading-relaxed text-muted-foreground md:text-base",
 
-  content: "flex flex-1 flex-col gap-4 p-2 pt-0 md:p-6 md:pt-2 pb-0 md:pb-0",
+  content: "h-full gap-4 p-2 pt-0 md:p-6 md:pt-2 pb-0 md:pb-0",
 
   sections: "flex flex-col gap-4",
 

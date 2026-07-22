@@ -31,14 +31,18 @@ export const defaultExtendedCardUi: SiteExtendedCardUi = {
 
   headerTop: "flex items-center! gap-5",
 
+  headerTitle: "space-y-2",
+
   icon: "h-7 w-7 shrink-0 text-primary",
+
+  iconContainer: "",
 
   eyebrow:
     "text-sm font-semibold uppercase tracking-wide text-muted-foreground",
 
   title: "",
 
-  content: "flex flex-1 flex-col gap-3",
+  content: "h-full gap-3",
 
   description: "text-muted-foreground",
 

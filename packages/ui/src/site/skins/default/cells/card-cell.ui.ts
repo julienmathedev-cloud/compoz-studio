@@ -31,6 +31,8 @@ export const defaultCardUi: SiteCardUi = {
 
   headerTop: "flex items-center! gap-5",
 
+  headerTitle: "space-y-2",
+
   iconContainer: "",
 
   icon: "h-7 w-7 shrink-0 text-primary",
@@ -40,7 +42,7 @@ export const defaultCardUi: SiteCardUi = {
 
   title: "",
 
-  content: "flex flex-1 flex-col",
+  content: "h-full",
 
   description: "text-muted-foreground",
 

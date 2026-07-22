@@ -33,7 +33,7 @@ export const defaultStructuredCardUi: SiteStructuredCardUi = {
 
   caption: "text-sm text-muted-foreground",
 
-  content: "flex flex-col gap-4 p-4 pt-0 flex-1",
+  content: "h-full gap-4 p-4 pt-0 flex-1",
 
   sections: "flex flex-col gap-3",
 

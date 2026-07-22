@@ -8,11 +8,18 @@
  * Renders a public site carousel with optional autoplay, arrows, dots, and full-bleed image mode.
  *
  * @remarks
- * Autoplay respects reduced-motion preferences and pauses when the document is hidden.
+ * - Autoplay respects reduced-motion preferences and pauses when the document is hidden.
+ * - Image carousels initially mount the active, previous, and next images.
+ * - Remaining images are mounted and loaded sequentially.
+ * - Once mounted, an image remains in the DOM for the lifetime of the carousel.
+ * - Image lifecycle handlers remain stable across slide changes.
+ * - Image errors are captured by the slide wrapper instead of being passed
+ *   directly to `next/image`.
  */
 
+import { useCallback, useEffect, useMemo, useState } from "react";
+
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
 
 import type {
   CarouselItemKindShape,
@@ -25,17 +32,87 @@ import { cn } from "@compoz/ui/lib/utils";
 import { SiteCarouselItem } from "@compoz/ui/site/components/organisms/SiteCarouselItem";
 import type { SiteCarouselUi } from "@compoz/ui/site/site-ui.types";
 
-const DEFAULT_INTERVAL_MS = 5000;
-const MIN_INTERVAL_MS = 2000;
-const FIRST_INTERVAL_MS = 2500;
+const DEFAULT_INTERVAL_MS = 4000;
 
 function readPrefersReducedMotion(): boolean {
   if (typeof window === "undefined") {
     return false;
   }
 
-  const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-  return Boolean(mq?.matches);
+  const mediaQuery = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+
+  return Boolean(mediaQuery?.matches);
+}
+
+function normalizeIndex(index: number, count: number): number {
+  if (count === 0) {
+    return 0;
+  }
+
+  return ((index % count) + count) % count;
+}
+
+function getInitialImageIndices(
+  activeIndex: number,
+  count: number,
+): ReadonlySet<number> {
+  const indices = new Set<number>();
+
+  if (count === 0) {
+    return indices;
+  }
+
+  indices.add(normalizeIndex(activeIndex, count));
+
+  if (count > 1) {
+    indices.add(normalizeIndex(activeIndex + 1, count));
+  }
+
+  if (count > 2) {
+    indices.add(normalizeIndex(activeIndex - 1, count));
+  }
+
+  return indices;
+}
+
+function addIndex(
+  previousIndices: ReadonlySet<number>,
+  index: number,
+): ReadonlySet<number> {
+  if (previousIndices.has(index)) {
+    return previousIndices;
+  }
+
+  const nextIndices = new Set(previousIndices);
+  nextIndices.add(index);
+
+  return nextIndices;
+}
+
+function haveAllRequestedImagesSettled(
+  requestedIndices: ReadonlySet<number>,
+  settledIndices: ReadonlySet<number>,
+): boolean {
+  for (const index of requestedIndices) {
+    if (!settledIndices.has(index)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function findNextUnrequestedIndex(
+  requestedIndices: ReadonlySet<number>,
+  count: number,
+): number | null {
+  for (let index = 0; index < count; index += 1) {
+    if (!requestedIndices.has(index)) {
+      return index;
+    }
+  }
+
+  return null;
 }
 
 export type SiteCarouselProps = Readonly<{
@@ -60,83 +137,174 @@ export function SiteCarousel({
   priority = false,
 }: SiteCarouselProps) {
   const count = items.length;
+  const isImageOnly = itemKind === "image";
+
+  const itemsSignature = items.map((item) => item.id).join("|");
 
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const [pendingIndex, setPendingIndex] = useState<number | null>(null);
+
+  const [requestedIndices, setRequestedIndices] = useState<ReadonlySet<number>>(
+    () => (isImageOnly ? getInitialImageIndices(0, count) : new Set<number>()),
+  );
+
+  const [settledIndices, setSettledIndices] = useState<ReadonlySet<number>>(
+    () => new Set<number>(),
+  );
+
   const [prefersReducedMotion] = useState(() => readPrefersReducedMotion());
 
-  const hasAutoplay = !prefersReducedMotion && intervalMs > 0 && count > 1;
-  const hasVisibleArrows = showArrows && count > 1;
-  const safeMs = Math.max(intervalMs, MIN_INTERVAL_MS);
   const safeIndex = count === 0 ? 0 : Math.min(currentIndex, count - 1);
-  const isImageOnly = itemKind === "image";
+
   const activeItem = items[safeIndex];
+
+  const hasAutoplay = !prefersReducedMotion && intervalMs > 0 && count > 1;
+
+  const hasVisibleArrows = showArrows && count > 1;
+
+  const markImageSettled = useCallback((index: number) => {
+    setSettledIndices((previousIndices) => addIndex(previousIndices, index));
+  }, []);
+
+  /*
+   * Keep one stable lifecycle handler per image.
+   *
+   * This prevents `next/image` from receiving a new callback reference every
+   * time the active slide changes.
+   */
+  const imageSettledHandlers = useMemo(
+    () =>
+      Array.from({ length: count }, (_, index) => () => {
+        markImageSettled(index);
+      }),
+    [count, markImageSettled],
+  );
+
+  /*
+   * Reset loading state only when the actual item collection changes.
+   * Navigating between slides does not reset requested or settled images.
+   */
+  useEffect(() => {
+    setCurrentIndex(0);
+    setPendingIndex(null);
+    setSettledIndices(new Set<number>());
+
+    setRequestedIndices(
+      isImageOnly ? getInitialImageIndices(0, count) : new Set<number>(),
+    );
+  }, [count, isImageOnly, itemsSignature]);
+
+  /*
+   * Once every currently requested image has settled, mount exactly one
+   * additional image.
+   */
+  useEffect(() => {
+    if (
+      !isImageOnly ||
+      count === 0 ||
+      requestedIndices.size >= count ||
+      !haveAllRequestedImagesSettled(requestedIndices, settledIndices)
+    ) {
+      return;
+    }
+
+    const nextIndex = findNextUnrequestedIndex(requestedIndices, count);
+
+    if (nextIndex === null) {
+      return;
+    }
+
+    setRequestedIndices((previousIndices) =>
+      addIndex(previousIndices, nextIndex),
+    );
+  }, [count, isImageOnly, requestedIndices, settledIndices]);
+
+  /*
+   * Keep the current slide visible until a directly requested image has
+   * loaded or failed.
+   */
+  useEffect(() => {
+    if (pendingIndex === null || !settledIndices.has(pendingIndex)) {
+      return;
+    }
+
+    setCurrentIndex(pendingIndex);
+
+    setPendingIndex(null);
+  }, [pendingIndex, settledIndices]);
 
   useEffect(() => {
     if (!hasAutoplay) {
       return;
     }
 
-    let firstTimeout: ReturnType<typeof setTimeout> | null = null;
     let intervalId: ReturnType<typeof setInterval> | null = null;
 
     const tick = () => {
-      setCurrentIndex((prev) => (prev === count - 1 ? 0 : prev + 1));
-    };
-
-    const startInterval = () => {
-      intervalId = setInterval(tick, safeMs);
+      setCurrentIndex((previousIndex) =>
+        previousIndex === count - 1 ? 0 : previousIndex + 1,
+      );
     };
 
     const start = () => {
-      if (firstTimeout || intervalId) {
+      if (intervalId !== null) {
         return;
       }
 
-      firstTimeout = setTimeout(() => {
-        tick();
-        startInterval();
-      }, FIRST_INTERVAL_MS);
+      intervalId = setInterval(tick, intervalMs);
+    };
+
+    const stop = () => {
+      if (intervalId === null) {
+        return;
+      }
+
+      clearInterval(intervalId);
+      intervalId = null;
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        start();
+        return;
+      }
+
+      stop();
     };
 
     if (document.visibilityState === "visible") {
       start();
     }
 
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        start();
-        return;
-      }
-
-      if (firstTimeout) {
-        clearTimeout(firstTimeout);
-        firstTimeout = null;
-      }
-
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
-    };
-
-    document.addEventListener("visibilitychange", onVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      document.removeEventListener("visibilitychange", onVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
 
-      if (firstTimeout) {
-        clearTimeout(firstTimeout);
-      }
-
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
+      stop();
     };
-  }, [count, hasAutoplay, safeMs]);
+  }, [count, hasAutoplay, intervalMs]);
 
   if (!activeItem) {
     return null;
   }
+
+  const requestSlide = (index: number) => {
+    const targetIndex = normalizeIndex(index, count);
+
+    if (!isImageOnly || settledIndices.has(targetIndex)) {
+      setPendingIndex(null);
+      setCurrentIndex(targetIndex);
+      return;
+    }
+
+    setRequestedIndices((previousIndices) =>
+      addIndex(previousIndices, targetIndex),
+    );
+
+    setPendingIndex(targetIndex);
+  };
 
   const activeCaption =
     itemKind === "image"
@@ -144,11 +312,11 @@ export function SiteCarousel({
       : "";
 
   const goPrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? count - 1 : prev - 1));
+    requestSlide(safeIndex - 1);
   };
 
   const goNext = () => {
-    setCurrentIndex((prev) => (prev === count - 1 ? 0 : prev + 1));
+    requestSlide(safeIndex + 1);
   };
 
   return (
@@ -159,6 +327,7 @@ export function SiteCarousel({
       )}
       aria-roledescription="carousel"
       aria-label="Carousel"
+      aria-busy={pendingIndex !== null}
     >
       <p className="sr-only" aria-live="polite">
         Slide {safeIndex + 1} sur {count}
@@ -172,7 +341,7 @@ export function SiteCarousel({
             aria-label="Slide précédent"
             className={cn(ui.carousel.arrowButton, "left-0")}
           >
-            <ChevronLeft className={ui.carousel.arrowIcon} />
+            <ChevronLeft className={ui.carousel.arrowIcon} aria-hidden="true" />
           </Button>
 
           <Button
@@ -181,7 +350,10 @@ export function SiteCarousel({
             aria-label="Slide suivant"
             className={cn(ui.carousel.arrowButton, "right-0")}
           >
-            <ChevronRight className={ui.carousel.arrowIcon} />
+            <ChevronRight
+              className={ui.carousel.arrowIcon}
+              aria-hidden="true"
+            />
           </Button>
         </>
       ) : null}
@@ -194,7 +366,15 @@ export function SiteCarousel({
         {isImageOnly ? (
           <div className={ui.carousel.track}>
             {items.map((item, index) => {
+              if (!requestedIndices.has(index)) {
+                return null;
+              }
+
               const isActive = index === safeIndex;
+
+              const isPriorityImage = priority && index === 0;
+
+              const settledHandler = imageSettledHandlers[index];
 
               return (
                 <div
@@ -206,6 +386,7 @@ export function SiteCarousel({
                       : ui.carousel.slideInactive,
                   )}
                   aria-hidden={!isActive}
+                  onErrorCapture={settledHandler}
                 >
                   <SiteCarouselItem
                     item={item}
@@ -213,8 +394,11 @@ export function SiteCarousel({
                     ui={ui}
                     mode="carousel"
                     isFullBleed={isFullBleed}
-                    priority={priority && index === 0}
+                    priority={isPriorityImage}
                     isActive={isActive}
+                    imageLoading={isPriorityImage ? undefined : "eager"}
+                    imageFetchPriority={isPriorityImage ? "high" : "low"}
+                    onImageLoad={settledHandler}
                   />
                 </div>
               );
@@ -241,18 +425,21 @@ export function SiteCarousel({
           {items.map((item, index) => {
             const isActive = index === safeIndex;
 
+            const isPending = index === pendingIndex;
+
             return (
               <button
                 key={item.id}
                 type="button"
                 aria-label={`Aller au slide ${index + 1}`}
                 aria-current={isActive ? "true" : undefined}
+                aria-busy={isPending ? "true" : undefined}
                 className={cn(
                   ui.carousel.dot,
                   isActive ? ui.carousel.dotActive : ui.carousel.dotInactive,
                 )}
                 onClick={() => {
-                  setCurrentIndex(index);
+                  requestSlide(index);
                 }}
               />
             );

@@ -6,10 +6,13 @@
  * Renders one validated carousel or slider item.
  *
  * @remarks
- * Image items use `SiteAppImage`; card-like items delegate to the matching public site card component.
+ * - Image items use `SiteAppImage`.
+ * - Image load callbacks and network hints are forwarded to support
+ *   progressive loading in carousels and sliders.
+ * - Card-like items delegate to the matching public site card component.
  */
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactEventHandler } from "react";
 
 import type {
   CardItemShape,
@@ -35,6 +38,9 @@ export type SiteCarouselItemProps = Readonly<{
   isFullBleed?: boolean;
   priority?: boolean;
   isActive?: boolean;
+  imageLoading?: "eager" | "lazy";
+  imageFetchPriority?: "auto" | "high" | "low";
+  onImageLoad?: ReactEventHandler<HTMLImageElement>;
 }>;
 
 export function SiteCarouselItem({
@@ -45,6 +51,9 @@ export function SiteCarouselItem({
   isFullBleed = false,
   priority = false,
   isActive = false,
+  imageLoading,
+  imageFetchPriority = "auto",
+  onImageLoad,
 }: SiteCarouselItemProps) {
   const contentStateClassName = isActive
     ? ui.contentItem.active
@@ -53,6 +62,14 @@ export function SiteCarouselItem({
   if (itemKind === "image") {
     const image = item as ImageEditorShape;
     const imageUi = mode === "slider" ? ui.imageItemSlider : ui.imageItem;
+
+    /*
+     * Next.js priority images already receive eager/preload semantics.
+     * Avoid combining `priority` with an explicit `loading` value.
+     */
+    const resolvedLoading = priority ? undefined : imageLoading;
+
+    const resolvedFetchPriority = priority ? "high" : imageFetchPriority;
 
     if (mode === "slider") {
       const hasImageDimensions = image.width > 0 && image.height > 0;
@@ -86,7 +103,9 @@ export function SiteCarouselItem({
             }
             style={isFullBleed ? undefined : containedImageStyle}
             priority={priority}
-            fetchPriority={priority ? "high" : "auto"}
+            loading={resolvedLoading}
+            fetchPriority={resolvedFetchPriority}
+            onLoad={onImageLoad}
           />
         </div>
       );
@@ -107,7 +126,9 @@ export function SiteCarouselItem({
           sizes="100vw"
           className={isFullBleed ? imageUi.coverImage : imageUi.containedImage}
           priority={priority}
-          fetchPriority={priority ? "high" : "auto"}
+          loading={resolvedLoading}
+          fetchPriority={resolvedFetchPriority}
+          onLoad={onImageLoad}
         />
       </div>
     );

@@ -16,7 +16,7 @@
 
 import { useTranslations } from "next-intl";
 import type { Control } from "react-hook-form";
-import { useController, useFieldArray } from "react-hook-form";
+import { useController, useFieldArray, useWatch } from "react-hook-form";
 
 import { Text } from "@compoz/studio/components/atoms/typography/Text";
 import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
@@ -26,11 +26,15 @@ import { InputField } from "@compoz/studio/components/molecules/fields/InputFiel
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
 import { FormFieldItemEditor } from "@compoz/studio/features/builder/editor/cells/form/FormFieldItemEditor";
-import { createEmptyFormField } from "@compoz/studio/features/pages/mappers/cells-form";
+import {
+  changeFormFieldType,
+  createEmptyFormField,
+} from "@compoz/studio/features/pages/mappers/cells-form";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
+import type { FormFieldFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 
 type SelectedCellLocation = Readonly<{
   rowIndex: number;
@@ -121,7 +125,7 @@ export function FormCellEditor({
     control,
   });
 
-  const { fields, append, remove } = useFieldArray<
+  const { fields, append, remove, update } = useFieldArray<
     SectionBlockFormValues,
     FormFieldsPath,
     "fieldId"
@@ -130,6 +134,11 @@ export function FormCellEditor({
     name: fieldsPath,
     keyName: "fieldId",
   });
+
+  const watchedFields = useWatch({
+    control,
+    name: fieldsPath,
+  }) as FormFieldFormValues[] | undefined;
 
   const toIds = createFieldIds(idPrefix, "to");
   const submitLabelIds = createFieldIds(idPrefix, "submitButtonLabel");
@@ -291,6 +300,15 @@ export function FormCellEditor({
             disabled={disabled}
             canRemove={fields.length > 1}
             onRemove={() => remove(index)}
+            onTypeChange={(type) => {
+              const currentField = watchedFields?.[index];
+
+              if (!currentField) {
+                return;
+              }
+
+              update(index, changeFormFieldType(currentField, type));
+            }}
             showError={showError}
           />
         ))}

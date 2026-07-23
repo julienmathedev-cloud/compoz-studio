@@ -330,6 +330,11 @@
     "CELL_FORM_FIELD_TYPE_INVALID": "The field type is invalid.",
     "CELL_FORM_FIELD_PLACEHOLDER_INVALID": "The field placeholder is invalid.",
     "CELL_FORM_FIELD_REQUIRED_INVALID": "The 'required' field value is invalid.",
+    "CELL_FORM_FIELD_OPTIONS_INVALID": "The field options are invalid.",
+    "CELL_FORM_FIELD_SELECT_OPTIONS_MIN_1": "A select field must contain at least one option.",
+    "CELL_FORM_FIELD_SELECT_OPTION_LABEL_REQUIRED": "The option label is required.",
+    "CELL_FORM_FIELD_SELECT_OPTION_VALUE_REQUIRED": "The option value is required.",
+    "CELL_FORM_FIELD_SELECT_OPTION_VALUE_DUPLICATE": "Option values must be unique.",
 
     "CELL_HEADING_LEVEL_INVALID": "The heading level is invalid.",
     "CELL_HEADING_TITLE_REQUIRED": "The title is required.",
@@ -1945,10 +1950,18 @@
         "fieldRequiredLabel": "Required field",
         "fieldRequiredHelp": "Indicates whether this field must be filled in.",
 
+        "fieldOptionsLabel": "Options",
+        "fieldOptionsHelp": "Add the available choices. The value is used in the URL, while the label is sent in the message.",
+        "fieldOptionLabelLabel": "Option label",
+        "fieldOptionLabelPlaceholder": "Assessment",
+        "fieldOptionValueLabel": "Option value",
+        "fieldOptionValuePlaceholder": "assessment",
+
         "fieldTypes": {
           "text": "Text",
           "email": "Email",
-          "textarea": "Textarea"
+          "textarea": "Textarea",
+          "select": "Select"
         }
       },
 

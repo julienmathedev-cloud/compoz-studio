@@ -8,8 +8,9 @@
  * RHF-aware editor for one FormCell field item.
  *
  * @remarks
- * - Binds field settings directly through RHF `useController`.
+ * - Binds common field settings directly through RHF `useController`.
  * - Edits name, label, type, placeholder, and required state.
+ * - Delegates select option editing to `FormSelectOptionsEditor`.
  * - Shows name and label errors only after `showError` or the field has been touched.
  */
 
@@ -17,23 +18,34 @@ import { useTranslations } from "next-intl";
 import type { Control } from "react-hook-form";
 import { useController } from "react-hook-form";
 
+import type { FormFieldType } from "@compoz/core/domain/pages/entities/cells/form";
 import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
 import { FormGrid } from "@compoz/studio/components/layouts/FormGrid";
 import { InputField } from "@compoz/studio/components/molecules/fields/InputField";
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
+import { FormSelectOptionsEditor } from "@compoz/studio/features/builder/editor/cells/form/FormSelectOptionsEditor";
+import type {
+  FormFieldBasePath,
+  FormFieldItemPath,
+  FormFieldOptionsPath,
+} from "@compoz/studio/features/builder/editor/cells/form/form-field-editor.types";
 import { Card, CardContent } from "@compoz/ui/components/ui/card";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { cn } from "@compoz/ui/lib/utils";
 import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 
-type FormFieldType = "text" | "email" | "textarea";
+const FIELD_TYPES = [
+  "text",
+  "email",
+  "textarea",
+  "select",
+] as const satisfies ReadonlyArray<FormFieldType>;
 
-const FIELD_TYPES = ["text", "email", "textarea"] as const;
-
-type FormFieldBasePath = `rows.${number}.columns.${number}.cells.${number}`;
-type FormFieldItemPath = `${FormFieldBasePath}.fields.${number}`;
+function isFormFieldType(value: string): value is FormFieldType {
+  return FIELD_TYPES.some((fieldType) => fieldType === value);
+}
 
 export type FormFieldItemEditorProps = Readonly<{
   control: Control<SectionBlockFormValues>;
@@ -43,6 +55,7 @@ export type FormFieldItemEditorProps = Readonly<{
   disabled?: boolean;
   canRemove?: boolean;
   onRemove: () => void;
+  onTypeChange: (type: FormFieldType) => void;
   showError?: boolean;
 }>;
 
@@ -54,6 +67,7 @@ export function FormFieldItemEditor({
   disabled = false,
   canRemove = true,
   onRemove,
+  onTypeChange,
   showError = false,
 }: FormFieldItemEditorProps) {
   const t = useTranslations();
@@ -92,9 +106,9 @@ export function FormFieldItemEditor({
   const requiredIds = createFieldIds(idPrefix, "required");
 
   const fieldType: FormFieldType =
-    typeCtrl.field.value &&
-    FIELD_TYPES.includes(typeCtrl.field.value as FormFieldType)
-      ? (typeCtrl.field.value as FormFieldType)
+    typeof typeCtrl.field.value === "string" &&
+    isFormFieldType(typeCtrl.field.value)
+      ? typeCtrl.field.value
       : "text";
 
   const shouldShowNameError = showError || nameCtrl.fieldState.isTouched;
@@ -169,7 +183,9 @@ export function FormFieldItemEditor({
             label={t("studio.cellEditorTabs.formCellEditor.fieldTypeLabel")}
             value={fieldType}
             onChange={(next) => {
-              typeCtrl.field.onChange(next as FormFieldType);
+              if (isFormFieldType(next)) {
+                onTypeChange(next);
+              }
             }}
             items={FIELD_TYPES.map((item) => ({
               value: item,
@@ -208,6 +224,16 @@ export function FormFieldItemEditor({
           disabled={disabled}
           help={t("studio.cellEditorTabs.formCellEditor.fieldRequiredHelp")}
         />
+
+        {fieldType === "select" ? (
+          <FormSelectOptionsEditor
+            control={control}
+            optionsPath={`${itemPath}.options` as FormFieldOptionsPath}
+            idPrefix={idPrefix}
+            disabled={disabled}
+            showError={showError}
+          />
+        ) : null}
       </CardContent>
     </Card>
   );

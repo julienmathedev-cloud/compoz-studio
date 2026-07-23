@@ -8,7 +8,9 @@
  * Renders the public contact form used by form cells.
  *
  * @remarks
- * Supports parent-provided submission or the `/api/contact` fallback, and sends field metadata so dynamic fields keep readable labels server-side.
+ * - Supports parent-provided submission or the `/api/contact` fallback.
+ * - Sends field metadata so dynamic fields keep readable labels server-side.
+ * - Supports select prefill from validated URL query parameters.
  */
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -22,6 +24,13 @@ import {
 } from "@compoz/ui/components/ui/card";
 import { Field, FieldLabel } from "@compoz/ui/components/ui/field";
 import { Input } from "@compoz/ui/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@compoz/ui/components/ui/select";
 import { Textarea } from "@compoz/ui/components/ui/textarea";
 import { renderContentIcon } from "@compoz/ui/lib/icons/content-icons";
 import { cn } from "@compoz/ui/lib/utils";
@@ -69,10 +78,21 @@ export function SiteContactForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>("idle");
 
+  const currentSearch =
+    typeof window === "undefined" ? "" : window.location.search;
+
   useEffect(() => {
     setValues(buildInitialValues(fields));
     setSubmitStatus("idle");
   }, [fields]);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(currentSearch);
+
+    setValues((previousValues) =>
+      applySelectQueryPrefill(fields, previousValues, searchParams),
+    );
+  }, [currentSearch, fields]);
 
   if (visibleFields.length < 1) {
     return null;
@@ -92,14 +112,24 @@ export function SiteContactForm({
   });
 
   const handleChange = (name: string, value: string) => {
-    setValues((prev) => ({
-      ...prev,
+    setValues((previousValues) => ({
+      ...previousValues,
       [name]: value,
     }));
 
     if (submitStatus !== "idle") {
       setSubmitStatus("idle");
     }
+  };
+
+  const handleSelectChange = (name: string, nextValue: string) => {
+    // Radix Select may emit an empty value while synchronizing a controlled
+    // select inside a form, even without a corresponding user interaction.
+    if (nextValue === "") {
+      return;
+    }
+
+    handleChange(name, nextValue);
   };
 
   const submitWithApi = async (nextValues: SiteContactFormSubmitValues) => {
@@ -138,10 +168,12 @@ export function SiteContactForm({
       setIsSubmitting(true);
       setSubmitStatus("idle");
 
+      const submittedValues = toSubmittedValues(visibleFields, values);
+
       if (onSubmit) {
-        await onSubmit(values);
+        await onSubmit(submittedValues);
       } else {
-        await submitWithApi(values);
+        await submitWithApi(submittedValues);
       }
 
       setValues(buildInitialValues(fields));
@@ -169,6 +201,7 @@ export function SiteContactForm({
                 <Field key={field.id} className={cn(ui.field)}>
                   <FieldLabel htmlFor={field.id} className={cn(ui.label)}>
                     <span>{field.label}</span>
+
                     {field.required ? (
                       <>
                         <span
@@ -177,12 +210,39 @@ export function SiteContactForm({
                         >
                           *
                         </span>
+
                         <span className="sr-only"> champ obligatoire</span>
                       </>
                     ) : null}
                   </FieldLabel>
 
-                  {isTextarea ? (
+                  {field.type === "select" ? (
+                    <Select
+                      name={field.name}
+                      value={value}
+                      onValueChange={(nextValue) =>
+                        handleSelectChange(field.name, nextValue)
+                      }
+                      required={Boolean(field.required)}
+                      disabled={isFormDisabled}
+                    >
+                      <SelectTrigger
+                        id={field.id}
+                        aria-required={Boolean(field.required)}
+                        className={cn("w-full", ui.input)}
+                      >
+                        <SelectValue placeholder={field.placeholder ?? ""} />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        {field.options.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : isTextarea ? (
                     <Textarea
                       id={field.id}
                       name={field.name}
@@ -262,6 +322,58 @@ function buildInitialValues(
   return output;
 }
 
+/** Applies only declared select values without replacing an existing field value. */
+function applySelectQueryPrefill(
+  fields: readonly FormFieldShape[],
+  values: SiteContactFormSubmitValues,
+  searchParams: URLSearchParams,
+): SiteContactFormSubmitValues {
+  let hasChange = false;
+  const output = { ...values };
+
+  for (const field of fields) {
+    if (field.type !== "select" || output[field.name] !== "") {
+      continue;
+    }
+
+    const queryValue = searchParams.get(field.name);
+
+    if (
+      !queryValue ||
+      !field.options.some((option) => option.value === queryValue)
+    ) {
+      continue;
+    }
+
+    output[field.name] = queryValue;
+    hasChange = true;
+  }
+
+  return hasChange ? output : values;
+}
+
+/** Converts internal select values to their readable labels for submissions. */
+function toSubmittedValues(
+  fields: readonly FormFieldShape[],
+  values: SiteContactFormSubmitValues,
+): SiteContactFormSubmitValues {
+  const output = { ...values };
+
+  for (const field of fields) {
+    if (field.type !== "select") {
+      continue;
+    }
+
+    const option = field.options.find(
+      (candidate) => candidate.value === values[field.name],
+    );
+
+    output[field.name] = option?.label ?? "";
+  }
+
+  return output;
+}
+
 function renderSubmitButtonContent({
   label,
   icon,
@@ -284,7 +396,9 @@ function renderSubmitButtonContent({
   return (
     <span className={cn(ui.submitButtonUi.content)}>
       {iconPosition === "before" ? iconNode : null}
+
       <span className={cn(ui.submitButtonUi.label)}>{label}</span>
+
       {iconPosition === "after" ? iconNode : null}
     </span>
   );

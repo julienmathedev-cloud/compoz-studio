@@ -24,13 +24,30 @@ export function toFormCellShapeFromDTO(
     },
     successMessage: cell.successMessage,
     errorMessage: cell.errorMessage,
-    fields: cell.fields.map((field) => ({
-      id: field.id,
-      name: field.name,
-      label: field.label,
-      type: field.type,
-      placeholder: field.placeholder,
-      required: field.required,
-    })),
+    fields: cell.fields.map((field) => {
+      const base = {
+        id: field.id,
+        name: field.name,
+        label: field.label,
+        placeholder: field.placeholder,
+        required: field.required,
+      };
+
+      if (field.type !== "select") {
+        return {
+          ...base,
+          type: field.type,
+        };
+      }
+
+      return {
+        ...base,
+        type: "select" as const,
+        options: field.options.map((option) => ({
+          label: option.label,
+          value: option.value,
+        })),
+      };
+    }),
   };
 }

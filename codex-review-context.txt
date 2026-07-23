@@ -1,0 +1,23 @@
+BASE_COMMIT=7190e4a79b95d54777da63f993f5dfbe00117162
+
+ M apps/site/public/site-skins/portfolio/custom.css
+ M apps/studio/public/site-skins/portfolio/custom.css
+ M apps/studio/src/app/api/_adapters/pages/blocks/cells/form.ts
+ M apps/studio/src/features/builder/editor/cells/form/FormCellEditor.tsx
+ M apps/studio/src/features/builder/editor/cells/form/FormFieldItemEditor.tsx
+ M apps/studio/src/features/pages/mappers/cells-form.ts
+ M apps/studio/src/i18n/messages/en.json
+ M apps/studio/src/i18n/messages/fr.json
+ M packages/core/src/domain/errors/codes.ts
+ M packages/core/src/domain/pages/entities/cell.ts
+ M packages/core/src/domain/pages/entities/cells/form.ts
+ M packages/core/src/domain/pages/validators/cells/form.ts
+ M packages/ui/src/pages/mappers/cells/form.ts
+ M packages/ui/src/renderer/cells/FormCellRenderer.tsx
+ M packages/ui/src/site/components/molecules/SiteContactForm.tsx
+ M packages/ui/src/site/skins/portfolio/cells/buttons-cell.ui.ts
+ M packages/ui/src/site/skins/portfolio/cells/extended-card-cell.ui.ts
+ M packages/validation/src/pages/blocks/cells/cell.ts
+ M packages/validation/src/pages/blocks/cells/details/form.ts
+?? codex-review-context.txt
+?? codex-review.tar.gz

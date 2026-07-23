@@ -250,6 +250,35 @@ export function createEmptyFormField(): FormFieldFormValues {
   };
 }
 
+export function changeFormFieldType(
+  field: FormFieldFormValues,
+  type: FormFieldFormValues["type"],
+): FormFieldFormValues {
+  const base = {
+    id: field.id,
+    name: field.name,
+    label: field.label,
+    placeholder: field.placeholder,
+    required: field.required,
+  };
+
+  if (type === "select") {
+    return {
+      ...base,
+      type,
+      options:
+        field.type === "select"
+          ? field.options
+          : [{ label: "", value: "" }],
+    };
+  }
+
+  return {
+    ...base,
+    type,
+  };
+}
+
 export function createEmptyCell(kind: CellFormValues["kind"]): CellFormValues {
   const id = createUiId();
 
@@ -442,6 +471,34 @@ function normalizeExtendedCardItem(
   return {
     ...item,
     button: normalizeOptionalButtonItem(item.button),
+  };
+}
+
+function normalizeFormField(
+  field: FormFieldFormValues,
+): FormFieldFormValues {
+  const base = {
+    id: field.id,
+    name: field.name,
+    label: field.label,
+    placeholder: field.placeholder,
+    required: field.required,
+  };
+
+  if (field.type !== "select") {
+    return {
+      ...base,
+      type: field.type,
+    };
+  }
+
+  return {
+    ...base,
+    type: "select",
+    options: field.options.map((option) => ({
+      label: option.label.trim(),
+      value: option.value.trim(),
+    })),
   };
 }
 
@@ -668,6 +725,7 @@ export function toCellFormValuesForValidation(
       ...cell,
       cssClassName: normalizedCssClassName,
       submitButton: normalizeButtonPresentation(cell.submitButton, "Envoyer"),
+      fields: cell.fields.map(normalizeFormField),
     };
   }
 
@@ -757,6 +815,7 @@ export function normalizeCellFormValues(cell: CellFormValues): CellFormValues {
       ...cell,
       cssClassName: normalizedCssClassName,
       submitButton: normalizeButtonPresentation(cell.submitButton, "Envoyer"),
+      fields: cell.fields.map(normalizeFormField),
     };
   }
 

@@ -331,6 +331,11 @@
     "CELL_FORM_FIELD_TYPE_INVALID": "Le type de champ est invalide.",
     "CELL_FORM_FIELD_PLACEHOLDER_INVALID": "Le texte indicatif du champ est invalide.",
     "CELL_FORM_FIELD_REQUIRED_INVALID": "La valeur du champ « requis » est invalide.",
+    "CELL_FORM_FIELD_OPTIONS_INVALID": "Les options du champ sont invalides.",
+    "CELL_FORM_FIELD_SELECT_OPTIONS_MIN_1": "Un champ de type liste doit contenir au moins une option.",
+    "CELL_FORM_FIELD_SELECT_OPTION_LABEL_REQUIRED": "Le libellé de l’option est requis.",
+    "CELL_FORM_FIELD_SELECT_OPTION_VALUE_REQUIRED": "La valeur de l’option est requise.",
+    "CELL_FORM_FIELD_SELECT_OPTION_VALUE_DUPLICATE": "Les valeurs des options doivent être uniques.",
 
     "CELL_HEADING_LEVEL_INVALID": "Le niveau du titre est invalide.",
     "CELL_HEADING_TITLE_REQUIRED": "Le titre est requis.",
@@ -1949,10 +1954,18 @@
         "fieldRequiredLabel": "Champ obligatoire",
         "fieldRequiredHelp": "Indique si ce champ doit obligatoirement être rempli.",
 
+        "fieldOptionsLabel": "Options",
+        "fieldOptionsHelp": "Ajoutez les options proposées. La valeur est utilisée dans l’URL, le libellé est envoyé dans le message.",
+        "fieldOptionLabelLabel": "Libellé de l’option",
+        "fieldOptionLabelPlaceholder": "Diagnostic",
+        "fieldOptionValueLabel": "Valeur de l’option",
+        "fieldOptionValuePlaceholder": "diagnostic",
+
         "fieldTypes": {
           "text": "Texte",
           "email": "E-mail",
-          "textarea": "Texte long"
+          "textarea": "Texte long",
+          "select": "Liste déroulante"
         }
       },
 

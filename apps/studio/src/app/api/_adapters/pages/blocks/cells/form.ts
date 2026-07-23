@@ -18,13 +18,28 @@ import type {
 } from "@compoz/validation/pages/blocks/cells/cell-intents";
 
 function adaptFormField(dto: FormFieldIntentDTO): FormField {
-  return {
+  const base = {
     id: trimOrKeep(dto.id),
     name: trimOrKeep(dto.name),
     label: trimOrKeep(dto.label),
-    type: dto.type,
     placeholder: dto.placeholder ? trimOrKeep(dto.placeholder) : null,
     required: dto.required,
+  };
+
+  if (dto.type !== "select") {
+    return {
+      ...base,
+      type: dto.type,
+    };
+  }
+
+  return {
+    ...base,
+    type: "select",
+    options: dto.options.map((option) => ({
+      label: trimOrKeep(option.label),
+      value: trimOrKeep(option.value),
+    })),
   };
 }
 

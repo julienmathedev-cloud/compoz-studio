@@ -11,7 +11,7 @@ import { assertButtonPresentation } from "@compoz/core/domain/pages/validators/c
 
 type Path = ReadonlyArray<string | number>;
 
-const FORM_FIELD_TYPES = ["text", "email", "textarea"] as const;
+const FORM_FIELD_TYPES = ["text", "email", "textarea", "select"] as const;
 
 export function assertFormCell(
   cell: Extract<Cell, { kind: "form" }>,
@@ -149,6 +149,77 @@ function assertFormField(field: FormField, path: Path) {
       message: EC.CELL_FORM_FIELD_REQUIRED_INVALID,
       details: { path: [...path, "required"] },
     });
+  }
+
+  if (field.type !== "select") {
+    if ("options" in field) {
+      throw new DomainError({
+        code: EC.CELL_FORM_FIELD_OPTIONS_INVALID,
+        message: EC.CELL_FORM_FIELD_OPTIONS_INVALID,
+        details: { path: [...path, "options"] },
+      });
+    }
+
+    return;
+  }
+
+  if (!Array.isArray(field.options)) {
+    throw new DomainError({
+      code: EC.CELL_FORM_FIELD_OPTIONS_INVALID,
+      message: EC.CELL_FORM_FIELD_OPTIONS_INVALID,
+      details: { path: [...path, "options"] },
+    });
+  }
+
+  if (field.options.length < 1) {
+    throw new DomainError({
+      code: EC.CELL_FORM_FIELD_SELECT_OPTIONS_MIN_1,
+      message: EC.CELL_FORM_FIELD_SELECT_OPTIONS_MIN_1,
+      details: { path: [...path, "options"] },
+    });
+  }
+
+  const seenValues = new Set<string>();
+
+  for (let index = 0; index < field.options.length; index++) {
+    const option = field.options[index];
+    const optionPath = [...path, "options", index];
+
+    if (!option || typeof option !== "object") {
+      throw new DomainError({
+        code: EC.CELL_FORM_FIELD_OPTIONS_INVALID,
+        message: EC.CELL_FORM_FIELD_OPTIONS_INVALID,
+        details: { path: optionPath },
+      });
+    }
+
+    if (typeof option.label !== "string" || !option.label.trim()) {
+      throw new DomainError({
+        code: EC.CELL_FORM_FIELD_SELECT_OPTION_LABEL_REQUIRED,
+        message: EC.CELL_FORM_FIELD_SELECT_OPTION_LABEL_REQUIRED,
+        details: { path: [...optionPath, "label"] },
+      });
+    }
+
+    if (typeof option.value !== "string" || !option.value.trim()) {
+      throw new DomainError({
+        code: EC.CELL_FORM_FIELD_SELECT_OPTION_VALUE_REQUIRED,
+        message: EC.CELL_FORM_FIELD_SELECT_OPTION_VALUE_REQUIRED,
+        details: { path: [...optionPath, "value"] },
+      });
+    }
+
+    const normalizedValue = option.value.trim();
+
+    if (seenValues.has(normalizedValue)) {
+      throw new DomainError({
+        code: EC.CELL_FORM_FIELD_SELECT_OPTION_VALUE_DUPLICATE,
+        message: EC.CELL_FORM_FIELD_SELECT_OPTION_VALUE_DUPLICATE,
+        details: { path: [...optionPath, "value"] },
+      });
+    }
+
+    seenValues.add(normalizedValue);
   }
 }
 

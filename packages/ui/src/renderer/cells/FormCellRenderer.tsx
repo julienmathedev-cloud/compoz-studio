@@ -70,14 +70,28 @@ function normalizeFields(
 ): FormFieldShape[] {
   if (!fields?.length) return [];
 
-  return fields.filter(isRenderableFormField).map((field) => ({
-    id: normalizeString(field.id, ""),
-    name: normalizeString(field.name, ""),
-    label: normalizeString(field.label, ""),
-    type: field.type,
-    placeholder: normalizeNullableString(field.placeholder),
-    required: field.required === true,
-  }));
+  return fields.filter(isRenderableFormField).map((field) => {
+    const base = {
+      id: normalizeString(field.id, ""),
+      name: normalizeString(field.name, ""),
+      label: normalizeString(field.label, ""),
+      placeholder: normalizeNullableString(field.placeholder),
+      required: field.required === true,
+    };
+
+    if (field.type !== "select") {
+      return {
+        ...base,
+        type: field.type,
+      };
+    }
+
+    return {
+      ...base,
+      type: "select" as const,
+      options: normalizeFormSelectOptions(field.options),
+    };
+  });
 }
 
 function isRenderableFormField(field: FormFieldShape): boolean {
@@ -87,9 +101,37 @@ function isRenderableFormField(field: FormFieldShape): boolean {
 
   if (!id || !name || !label) return false;
 
-  return (
-    field.type === "text" || field.type === "email" || field.type === "textarea"
-  );
+  if (
+    field.type === "text" ||
+    field.type === "email" ||
+    field.type === "textarea"
+  ) {
+    return true;
+  }
+
+  if (field.type !== "select") {
+    return false;
+  }
+
+  const options = normalizeFormSelectOptions(field.options);
+
+  if (options.length < 1 || options.length !== field.options.length) {
+    return false;
+  }
+
+  return new Set(options.map((option) => option.value)).size === options.length;
+}
+
+function normalizeFormSelectOptions(
+  options: Extract<FormFieldShape, { type: "select" }>["options"],
+): Extract<FormFieldShape, { type: "select" }>["options"] {
+
+  return options
+    .map((option) => ({
+      label: normalizeString(option.label, ""),
+      value: normalizeString(option.value, ""),
+    }))
+    .filter((option) => option.label.length > 0 && option.value.length > 0);
 }
 
 function normalizeNullableString(value: string | null): string | null {

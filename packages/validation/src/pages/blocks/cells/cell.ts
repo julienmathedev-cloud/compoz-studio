@@ -33,7 +33,10 @@ import type {
   FormButtonVariantSchema,
   FormFieldSchema,
   FormFieldTypeSchema,
+  FormSelectFieldSchema,
+  FormSelectOptionSchema,
   FormSubmitButtonSchema,
+  FormTextFieldSchema,
 } from "@compoz/validation/pages/blocks/cells/details/form";
 import { FormCellSchema } from "@compoz/validation/pages/blocks/cells/details/form";
 import { GalleryCellSchema } from "@compoz/validation/pages/blocks/cells/details/gallery";
@@ -149,6 +152,9 @@ export type StructuredCardItemShape = z.infer<typeof StructuredCardItemSchema>;
 export type FormFieldTypeShape = z.infer<typeof FormFieldTypeSchema>;
 export type FormButtonVariantShape = z.infer<typeof FormButtonVariantSchema>;
 export type FormSubmitButtonShape = z.infer<typeof FormSubmitButtonSchema>;
+export type FormSelectOptionShape = z.infer<typeof FormSelectOptionSchema>;
+export type FormTextFieldShape = z.infer<typeof FormTextFieldSchema>;
+export type FormSelectFieldShape = z.infer<typeof FormSelectFieldSchema>;
 export type FormFieldShape = z.infer<typeof FormFieldSchema>;
 export type FormCellShape = z.infer<typeof FormCellSchema>;
 export type TimelineKeywordShape = z.infer<typeof TimelineKeywordSchema>;
@@ -200,7 +206,10 @@ export {
   FormCellSchema,
   FormFieldSchema,
   FormFieldTypeSchema,
+  FormSelectOptionSchema,
+  FormSelectFieldSchema,
   FormSubmitButtonSchema,
+  FormTextFieldSchema,
 } from "@compoz/validation/pages/blocks/cells/details/form";
 
 export {

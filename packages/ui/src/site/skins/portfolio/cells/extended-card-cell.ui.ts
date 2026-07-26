@@ -19,6 +19,8 @@ export const portfolioExtendedCardUi: SiteExtendedCardUiOverride = {
 
   icon: "icon-hover-pulse h-5 w-5 text-primary",
 
+  bulletsList: "mt-3",
+
   footer: "text-primary",
 
   button: cardGhostButtonClass,

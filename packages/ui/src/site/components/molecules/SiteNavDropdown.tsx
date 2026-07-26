@@ -5,10 +5,13 @@
  * @layer ui/site/components/molecules
  *
  * @description
- * Renders a public site navigation dropdown with a trigger and portal-mounted menu panel.
+ * Renders a public site navigation disclosure with a button trigger and a
+ * portal-mounted list of navigation links.
  *
  * @remarks
- * Handles menu roles, keyboard navigation, hover opening, touch double-tap behavior, href guardrails through `SiteNavLink`, and fixed panel positioning from the trigger rect.
+ * Handles active-section state, keyboard focus transitions, mouse hover,
+ * touch focus behavior, themed portal placement, and fixed panel positioning
+ * from the trigger rectangle.
  */
 
 import { usePathname } from "next/navigation";
@@ -16,16 +19,12 @@ import type {
   Dispatch,
   FocusEvent,
   KeyboardEvent,
-  MouseEvent,
-  MutableRefObject,
-  PointerEvent,
   ReactNode,
   RefObject,
   SetStateAction,
 } from "react";
 import {
   useCallback,
-  useEffect,
   useId,
   useLayoutEffect,
   useMemo,
@@ -52,13 +51,25 @@ type SiteNavItem = Readonly<{
   newTab?: boolean;
 }>;
 
+type DropdownPortalLayout = Readonly<{
+  rect: DOMRect;
+  container: HTMLElement;
+}>;
+
 export type SiteNavDropdownProps = Readonly<{
+  /**
+   * Optional section URL used to determine the active state of the trigger.
+   * The trigger itself is always rendered as a button.
+   */
   href?: string;
+
   label?: string;
   ariaLabel?: string;
   className?: string;
   children?: ReactNode;
+
   items: ReadonlyArray<SiteNavItem>;
+
   itemContainerClass?: string;
   itemLinkClass?: string;
   itemLabelClass?: string;
@@ -78,39 +89,19 @@ export function SiteNavDropdown({
   panelClass,
 }: SiteNavDropdownProps) {
   const [open, setOpen] = useState(false);
+  const [portalLayout, setPortalLayout] = useState<DropdownPortalLayout | null>(
+    null,
+  );
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement | HTMLAnchorElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const triggerId = useId();
   const panelId = useId();
-
-  const [rect, setRect] = useState<DOMRect | null>(null);
-
-  useLayoutEffect(() => {
-    if (open && triggerRef.current) {
-      setRect(triggerRef.current.getBoundingClientRect());
-    }
-  }, [open]);
-
-  const isCoarseRef = useRef(false);
-  const lastTapTsRef = useRef(0);
-  const suppressNextClickRef = useRef(false);
-  const DOUBLE_TAP_MS = 450;
-
-  useEffect(() => {
-    const mm = window.matchMedia?.("(pointer: coarse)");
-    isCoarseRef.current = mm ? mm.matches : (navigator.maxTouchPoints ?? 0) > 0;
-  }, []);
 
   const pathname = usePathname() ?? "/";
 
   const normalizedHref = useMemo(() => normalizeString(href), [href]);
-
-  const triggerHref = useMemo(() => {
-    return normalizedHref ? resolveInternalHref(pathname, normalizedHref) : "";
-  }, [normalizedHref, pathname]);
 
   const safeItems = useMemo(() => {
     return items.filter(
@@ -121,16 +112,16 @@ export function SiteNavDropdown({
     );
   }, [items]);
 
-  const hasSubItems = safeItems.length > 0;
-
-  const isButtonTrigger =
-    !normalizedHref || normalizedHref === "#" || hasSubItems;
-
   const triggerText = children ?? label ?? normalizedHref;
-  const computedTriggerAria = getAriaLabel(ariaLabel, triggerText, "Menu");
+  const computedTriggerAria = getAriaLabel(
+    ariaLabel,
+    triggerText,
+    "Navigation",
+  );
 
   const isCurrentTrigger =
     !!normalizedHref &&
+    normalizedHref !== "#" &&
     isActiveLink(
       pathname,
       resolveInternalHref(pathname, normalizedHref),
@@ -144,11 +135,32 @@ export function SiteNavDropdown({
       return false;
     }
 
-    const resolved = resolveInternalHref(pathname, itemHref);
-    return isActiveLink(pathname, resolved, "startsWith");
+    const resolvedHref = resolveInternalHref(pathname, itemHref);
+
+    return isActiveLink(pathname, resolvedHref, "startsWith");
   });
 
   const sectionActive = isCurrentTrigger || childActive;
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setPortalLayout(null);
+      return;
+    }
+
+    const trigger = triggerRef.current;
+
+    if (!trigger) {
+      return;
+    }
+
+    setPortalLayout({
+      rect: trigger.getBoundingClientRect(),
+      container:
+        trigger.closest<HTMLElement>("[data-site-theme-boundary]") ??
+        document.body,
+    });
+  }, [open]);
 
   const focusFirstItem = () => {
     const element = panelRef.current?.querySelector<HTMLElement>(
@@ -163,17 +175,17 @@ export function SiteNavDropdown({
   };
 
   function focusNextTopLevelAfterThisDropdown() {
-    const li = containerRef.current?.closest("li");
+    const listItem = containerRef.current?.closest("li");
 
-    if (!li) {
+    if (!listItem) {
       return;
     }
 
-    let next: HTMLElement | null = li.nextElementSibling as HTMLElement | null;
+    let nextItem = listItem.nextElementSibling as HTMLElement | null;
 
-    while (next) {
-      const nextFocusable = next.querySelector<HTMLElement>(
-        'a,button,[tabindex]:not([tabindex="-1"])',
+    while (nextItem) {
+      const nextFocusable = nextItem.querySelector<HTMLElement>(
+        'a, button, [tabindex]:not([tabindex="-1"])',
       );
 
       if (nextFocusable) {
@@ -181,7 +193,7 @@ export function SiteNavDropdown({
         return;
       }
 
-      next = next.nextElementSibling as HTMLElement | null;
+      nextItem = nextItem.nextElementSibling as HTMLElement | null;
     }
 
     triggerRef.current?.focus();
@@ -197,7 +209,9 @@ export function SiteNavDropdown({
     );
   };
 
-  const handleTriggerFocus = () => setOpen(true);
+  const handleTriggerFocus = () => {
+    setOpen(true);
+  };
 
   const handleTriggerBlur = (event: FocusEvent) => {
     if (!isInDropdown(event.relatedTarget)) {
@@ -215,18 +229,13 @@ export function SiteNavDropdown({
     setTimeout(() => setOpen(false), 0);
   }, []);
 
-  const setTriggerEl = (
-    element: HTMLButtonElement | HTMLAnchorElement | null,
-  ) => {
-    triggerRef.current = element;
-  };
-
   const resolveNewTab = (itemHref: string, newTab?: boolean) => {
     if (typeof newTab === "boolean") {
       return newTab;
     }
 
     const flags = resolveLinkFlags(normalizeString(itemHref));
+
     return Boolean(flags.rawExternal);
   };
 
@@ -237,79 +246,30 @@ export function SiteNavDropdown({
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      {isButtonTrigger ? (
-        <button
-          ref={setTriggerEl}
-          id={triggerId}
-          type="button"
-          aria-label={computedTriggerAria}
-          aria-haspopup="menu"
-          aria-expanded={open}
-          aria-controls={panelId}
-          onFocus={handleTriggerFocus}
-          onBlur={handleTriggerBlur}
-          onKeyDown={(event) =>
-            handleTriggerKeyDown(event, open, setOpen, focusFirstItem)
-          }
-          className={cn(className, itemContainerClass, itemLinkClass)}
-          data-section-active={sectionActive || undefined}
-        >
-          {triggerText}
-        </button>
-      ) : (
-        <SiteNavLink
-          ref={setTriggerEl}
-          id={triggerId}
-          href={triggerHref || normalizedHref}
-          ariaLabel={ariaLabel}
-          aria-haspopup="menu"
-          aria-expanded={open}
-          aria-controls={panelId}
-          onFocus={handleTriggerFocus}
-          onBlur={handleTriggerBlur}
-          onKeyDown={(event) =>
-            handleTriggerKeyDown(event, open, setOpen, focusFirstItem)
-          }
-          onClick={(event) =>
-            handleDropdownTriggerClick(
-              event,
-              open,
-              setOpen,
-              focusFirstItem,
-              suppressNextClickRef,
-              isCoarseRef,
-              lastTapTsRef,
-              DOUBLE_TAP_MS,
-            )
-          }
-          onPointerDown={(event) =>
-            handleDropdownTriggerPointerDown(
-              event,
-              open,
-              setOpen,
-              focusFirstItem,
-              suppressNextClickRef,
-            )
-          }
-          className={cn(className, itemContainerClass)}
-          linkClassName={cn(itemLinkClass)}
-          labelClassName={cn(itemLabelClass)}
-          data-section-active={sectionActive || undefined}
-        >
-          {triggerText}
-        </SiteNavLink>
-      )}
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-label={computedTriggerAria}
+        aria-expanded={open}
+        aria-controls={panelId}
+        onFocus={handleTriggerFocus}
+        onBlur={handleTriggerBlur}
+        onKeyDown={(event) =>
+          handleTriggerKeyDown(event, open, setOpen, focusFirstItem)
+        }
+        className={cn(className, itemContainerClass, itemLinkClass)}
+        data-section-active={sectionActive || undefined}
+      >
+        <span className={cn(itemLabelClass)}>{triggerText}</span>
+      </button>
 
       {open &&
-        rect &&
+        portalLayout &&
         createPortal(
           <div
             ref={panelRef}
             id={panelId}
-            role="menu"
-            aria-labelledby={triggerId}
-            aria-hidden={!open}
-            data-state={open ? "open" : "closed"}
+            data-state="open"
             onKeyDown={(event) =>
               handlePanelKeyDown(
                 event,
@@ -320,167 +280,112 @@ export function SiteNavDropdown({
               )
             }
             onBlur={handlePanelBlur}
-            style={{ position: "fixed", left: rect.left, top: rect.bottom }}
+            style={{
+              position: "fixed",
+              left: portalLayout.rect.left,
+              top: portalLayout.rect.bottom,
+            }}
             className={cn(
               panelClass,
-              "motion-reduce:transition-none motion-reduce:animate-none",
-              open
-                ? "opacity-100 pointer-events-auto"
-                : "opacity-0 pointer-events-none",
+              "pointer-events-auto opacity-100",
+              "motion-reduce:animate-none motion-reduce:transition-none",
             )}
           >
             <ul>
               {safeItems.map((item) => (
-                <li key={item.id} className={cn("list-none")} role="none">
+                <li key={item.id} className="list-none">
                   <SiteNavLink
                     href={item.href}
                     label={item.label}
                     ariaLabel={item.ariaLabel}
                     newTab={resolveNewTab(item.href, item.newTab)}
-                    role="menuitem"
                     className={cn(itemContainerClass)}
                     linkClassName={cn(itemLinkClass)}
+                    labelClassName={cn(itemLabelClass)}
                     onClick={handleItemClick}
                   />
                 </li>
               ))}
             </ul>
           </div>,
-          document.body,
+          portalLayout.container,
         )}
     </div>
   );
 }
 
 function handleTriggerKeyDown(
-  e: KeyboardEvent,
+  event: KeyboardEvent,
   open: boolean,
   setOpen: Dispatch<SetStateAction<boolean>>,
   focusFirstItem: () => void,
 ) {
-  if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
-    e.preventDefault();
+  if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown") {
+    event.preventDefault();
     setOpen(true);
     requestAnimationFrame(focusFirstItem);
     return;
   }
 
-  if (e.key === "Tab" && !e.shiftKey) {
+  /*
+   * The dropdown panel is portalled outside the trigger's DOM subtree.
+   * Explicit focus transfer restores the expected navigation order.
+   */
+  if (event.key === "Tab" && !event.shiftKey) {
     if (!open) {
       setOpen(true);
     }
 
-    e.preventDefault();
+    event.preventDefault();
     requestAnimationFrame(focusFirstItem);
     return;
   }
 
-  if (e.key === "Escape") {
+  if (event.key === "Escape") {
     setOpen(false);
-  }
-}
-
-function handleDropdownTriggerClick(
-  e: MouseEvent<HTMLAnchorElement>,
-  open: boolean,
-  setOpen: Dispatch<SetStateAction<boolean>>,
-  focusFirstItem: () => void,
-  suppressNextClickRef: MutableRefObject<boolean>,
-  isCoarseRef: MutableRefObject<boolean>,
-  lastTapTsRef: MutableRefObject<number>,
-  doubleTapMs: number,
-) {
-  if (isCoarseRef.current && suppressNextClickRef.current) {
-    e.preventDefault();
-    e.stopPropagation();
-    suppressNextClickRef.current = false;
-    return;
-  }
-
-  if (!isCoarseRef.current) {
-    return;
-  }
-
-  const now = Date.now();
-  const elapsed = now - (lastTapTsRef.current || 0);
-  lastTapTsRef.current = now;
-
-  if (!open) {
-    e.preventDefault();
-    e.stopPropagation();
-    setOpen(true);
-    requestAnimationFrame(focusFirstItem);
-    return;
-  }
-
-  if (elapsed <= doubleTapMs) {
-    setOpen(false);
-    return;
-  }
-
-  e.preventDefault();
-  e.stopPropagation();
-  setOpen(false);
-}
-
-function handleDropdownTriggerPointerDown(
-  e: PointerEvent<HTMLAnchorElement>,
-  open: boolean,
-  setOpen: Dispatch<SetStateAction<boolean>>,
-  focusFirstItem: () => void,
-  suppressNextClickRef: MutableRefObject<boolean>,
-) {
-  if (e.pointerType !== "touch" && e.pointerType !== "pen") {
-    return;
-  }
-
-  if (!open) {
-    e.preventDefault();
-    e.stopPropagation();
-    suppressNextClickRef.current = true;
-    setOpen(true);
-    requestAnimationFrame(focusFirstItem);
   }
 }
 
 function handlePanelKeyDown(
-  e: KeyboardEvent,
+  event: KeyboardEvent,
   setOpen: Dispatch<SetStateAction<boolean>>,
   refocusTrigger: () => void,
   focusNextTopLevelAfterThisDropdown: () => void,
   panelRef: RefObject<HTMLDivElement | null>,
 ) {
-  if (e.key === "Escape") {
-    e.preventDefault();
+  if (event.key === "Escape") {
+    event.preventDefault();
     setOpen(false);
     requestAnimationFrame(refocusTrigger);
     return;
   }
 
-  if (e.key === "Tab") {
-    const focusables = panelRef.current?.querySelectorAll<HTMLElement>(
-      'a,button,[tabindex]:not([tabindex="-1"])',
-    );
+  if (event.key !== "Tab") {
+    return;
+  }
 
-    if (!focusables || focusables.length === 0) {
-      return;
-    }
+  const focusables = panelRef.current?.querySelectorAll<HTMLElement>(
+    'a, button, [tabindex]:not([tabindex="-1"])',
+  );
 
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
+  if (!focusables || focusables.length === 0) {
+    return;
+  }
 
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      setOpen(false);
-      requestAnimationFrame(refocusTrigger);
-      return;
-    }
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
 
-    if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      setOpen(false);
-      requestAnimationFrame(focusNextTopLevelAfterThisDropdown);
-    }
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    setOpen(false);
+    requestAnimationFrame(refocusTrigger);
+    return;
+  }
+
+  if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    setOpen(false);
+    requestAnimationFrame(focusNextTopLevelAfterThisDropdown);
   }
 }
 

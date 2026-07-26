@@ -19,8 +19,8 @@ export const defaultButtonsUi: SiteButtonsUi = {
   },
   gap: {
     sm: "gap-2",
-    md: "gap-2 sm:gap-6",
-    lg: "gap-2 sm:gap-12",
+    md: "gap-2 md:gap-4 lg:gap-6",
+    lg: "gap-2 md:gap-6 lg:gap-12",
   },
   button: "",
   buttonUi: defaultSiteButtonUi,

@@ -17,11 +17,13 @@ export const portfolioHeadingUi: SiteHeadingUiOverride = {
   levelHero:
     "max-w-3xl text-5xl font-black leading-[1] tracking-[-0.075em] text-balance md:text-6xl lg:text-7xl",
 
+  subtitle: "max-w-none",
+
   subtitleHero:
     "max-w-3xl text-lg leading-relaxed text-muted-foreground md:text-xl",
 
   separatorHero: "bg-primary",
 
   highlight:
-    "inline-block bg-gradient-to-r from-primary via-primary/80 to-primary bg-[length:200%_100%] bg-clip-text text-transparent animate-highlight-shift",
-} as const;
+    "inline-block bg-gradient-to-r from-primary via-primary/80 to-primary bg-[length:200%_100%] bg-clip-text text-transparent animate-highlight-shift pe-[0.04em] -me-[0.04em]",
+};

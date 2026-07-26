@@ -13,7 +13,7 @@ import sanitizeHtml, { type Attributes, type IOptions } from "sanitize-html";
 function sanitizeListVariant(attribs: Attributes): Attributes {
   const value = (attribs["data-list-variant"] ?? "").trim();
 
-  if (value === "check" || value === "arrow") {
+  if (value === "check" || value === "arrow" || value === "cross") {
     return { "data-list-variant": value };
   }
 

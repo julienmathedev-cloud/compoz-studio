@@ -89,17 +89,18 @@
 }
 
 .portfolio-dark-section {
-  background:
-    radial-gradient(
-      circle at top right,
-      rgba(255, 255, 255, 0.08),
-      transparent 32%
-    ),
-    var(--primary);
+  --portfolio-dark-accent: rgba(255, 255, 255, 0.65);
+  --portfolio-dark-text: rgba(255, 255, 255, 0.85);
+  --portfolio-dark-border: rgba(255, 255, 255, 0.14);
+  --portfolio-dark-border-hover: rgba(255, 255, 255, 0.28);
+  --portfolio-dark-surface: rgba(255, 255, 255, 0.035);
+  --portfolio-dark-surface-hover: rgba(255, 255, 255, 0.055);
+
+  background: var(--primary);
 }
 
 .portfolio-eyebrow-dark :where(p, strong) {
-  color: rgba(255, 255, 255, 0.65) !important;
+  color: var(--portfolio-dark-accent) !important;
   line-height: 1.2;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -111,18 +112,18 @@
 }
 
 .portfolio-dark-section p {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--portfolio-dark-text);
 }
 
 .portfolio-dark-section [data-card-content] > * {
-  border-color: rgba(255, 255, 255, 0.14) !important;
-  background: rgba(255, 255, 255, 0.035) !important;
+  border-color: var(--portfolio-dark-border) !important;
+  background: var(--portfolio-dark-surface) !important;
   box-shadow: none !important;
 }
 
 .portfolio-dark-section [data-card-content] > *:hover {
-  border-color: rgba(255, 255, 255, 0.28) !important;
-  background: rgba(255, 255, 255, 0.055) !important;
+  border-color: var(--portfolio-dark-border-hover) !important;
+  background: var(--portfolio-dark-surface-hover) !important;
 }
 
 .portfolio-dark-section [data-slot="card-title"] {
@@ -132,7 +133,19 @@
 }
 
 .portfolio-dark-section [data-card-content] p {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--portfolio-dark-text);
+}
+
+.portfolio-dark-arrow-list ul[data-list-variant="arrow"] > li::before {
+  color: var(--portfolio-dark-accent, rgba(255, 255, 255, 0.65)) !important;
+}
+
+.portfolio-dark-check-list ul[data-list-variant="check"] > li::before {
+  color: var(--portfolio-dark-accent, rgba(255, 255, 255, 0.65)) !important;
+}
+
+.portfolio-dark-cross-list ul[data-list-variant="cross"] > li::before {
+  color: var(--portfolio-dark-accent, rgba(255, 255, 255, 0.65)) !important;
 }
 
 .portfolio-compoz-heading strong {

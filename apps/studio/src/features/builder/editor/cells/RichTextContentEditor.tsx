@@ -28,6 +28,7 @@ import {
   AlignJustify,
   AlignLeft,
   AlignRight,
+  ArrowRight,
   Bold,
   Check,
   ChevronDown,
@@ -41,6 +42,7 @@ import {
   Trash2,
   Underline as UnderlineIcon,
   Undo2,
+  X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useMemo, useState } from "react";
@@ -88,15 +90,16 @@ export type RichTextContentEditorProps = Readonly<{
 }>;
 
 type BlockKind = "list" | "blockquote";
-type UnorderedListVariant = "check" | "arrow";
+type UnorderedListVariant = "check" | "arrow" | "cross";
 type ListOption =
   | "none"
   | "bulletList"
   | "orderedList"
   | "checkList"
-  | "arrowList";
+  | "arrowList"
+  | "crossList";
 
-const UNORDERED_LIST_VARIANTS = ["check", "arrow"] as const;
+const UNORDERED_LIST_VARIANTS = ["check", "arrow", "cross"] as const;
 
 function isUnorderedListVariant(value: unknown): value is UnorderedListVariant {
   return (
@@ -108,6 +111,7 @@ function isUnorderedListVariant(value: unknown): value is UnorderedListVariant {
 function listVariantForOption(option: ListOption): UnorderedListVariant | null {
   if (option === "checkList") return "check";
   if (option === "arrowList") return "arrow";
+  if (option === "crossList") return "cross";
   return null;
 }
 
@@ -262,6 +266,7 @@ export function RichTextContentEditor({
       orderedList: t("studio.cellEditorTabs.richText.orderedList"),
       checkList: t("studio.cellEditorTabs.richText.checkList"),
       arrowList: t("studio.cellEditorTabs.richText.arrowList"),
+      crossList: t("studio.cellEditorTabs.richText.crossList"),
       quote: t("studio.cellEditorTabs.richText.quote"),
       bold: t("studio.cellEditorTabs.richText.bold"),
       italic: t("studio.cellEditorTabs.richText.italic"),
@@ -372,6 +377,9 @@ export function RichTextContentEditor({
     (editor.isActive("bulletList") &&
       activeListVariant === "arrow" &&
       "arrowList") ||
+    (editor.isActive("bulletList") &&
+      activeListVariant === "cross" &&
+      "crossList") ||
     (editor.isActive("bulletList") && "bulletList") ||
     (editor.isActive("orderedList") && "orderedList") ||
     "none";
@@ -401,6 +409,9 @@ export function RichTextContentEditor({
       (next === "arrowList" &&
         isActiveBulletList &&
         activeVariant === "arrow") ||
+      (next === "crossList" &&
+        isActiveBulletList &&
+        activeVariant === "cross") ||
       (next === "orderedList" && isActiveOrderedList) ||
       next === "none";
 
@@ -657,8 +668,19 @@ export function RichTextContentEditor({
                   title={labels.arrowList}
                   disabled={disabled}
                 >
-                  <span className="text-base leading-none">→</span>
+                  <ArrowRight />
                   <span className="text-xs">{labels.arrowList}</span>
+                </DropdownMenuRadioItem>
+
+                <DropdownMenuRadioItem
+                  visualMode="studio"
+                  value="crossList"
+                  aria-label={labels.crossList}
+                  title={labels.crossList}
+                  disabled={disabled}
+                >
+                  <X />
+                  <span className="text-xs">{labels.crossList}</span>
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuGroup>

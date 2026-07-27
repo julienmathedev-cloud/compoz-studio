@@ -42,7 +42,7 @@ export const defaultStructuredCardUi: SiteStructuredCardUi = {
   sectionTitle:
     "text-sm font-semibold uppercase tracking-wide text-muted-foreground",
 
-  sectionText: "text-sm text-foreground text-justify",
+  sectionText: "text-sm text-foreground",
 
   buttonWrapper: "pt-2 flex justify-center mt-auto",
 

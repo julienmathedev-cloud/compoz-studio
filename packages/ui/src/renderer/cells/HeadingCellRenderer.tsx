@@ -181,6 +181,7 @@ function renderHighlightedTitle(
     parts.push(
       <span
         key={`${range.start}-${range.end}-${index}`}
+        data-text-highlight
         className={highlightClassName}
       >
         {title.slice(range.start, range.end)}

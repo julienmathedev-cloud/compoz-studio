@@ -25,5 +25,5 @@ export const portfolioHeadingUi: SiteHeadingUiOverride = {
   separatorHero: "bg-primary",
 
   highlight:
-    "inline-block bg-gradient-to-r from-primary via-primary/80 to-primary bg-[length:200%_100%] bg-clip-text text-transparent animate-highlight-shift pe-[0.04em] -me-[0.04em]",
+    "inline-block bg-gradient-to-r from-primary via-[oklch(0.63_0.14_148)] to-primary bg-[length:200%_100%] bg-clip-text text-transparent animate-highlight-shift pe-[0.04em] -me-[0.04em]",
 };

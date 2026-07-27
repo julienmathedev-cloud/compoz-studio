@@ -10,6 +10,7 @@
  * @remarks
  * - Receives the HTML source of truth through `value` and reports updates through `onChange`.
  * - Keeps RHF wiring out of this component; it only owns rich text editing behavior.
+ * - Keeps persisted links neutral by storing only their portable href.
  * - Extends Tiptap links so editable links require modifier or middle-click to open.
  * - Adds custom unordered list variants through a `data-list-variant` attribute.
  * - Normalizes trailing empty paragraphs before sending HTML updates upstream.
@@ -74,6 +75,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@compoz/ui/components/ui/toggle-group";
+import { resolveLinkFlags } from "@compoz/ui/lib/links/helpers";
 import { cn } from "@compoz/ui/lib/utils";
 import { PROSE_CLASSNAME } from "@compoz/ui/styles/shared/typography";
 import { STACK_MD, STUDIO_BORDER_PANEL } from "@compoz/ui/styles/studio/layout";
@@ -112,6 +114,7 @@ function listVariantForOption(option: ListOption): UnorderedListVariant | null {
   if (option === "checkList") return "check";
   if (option === "arrowList") return "arrow";
   if (option === "crossList") return "cross";
+
   return null;
 }
 
@@ -128,7 +131,6 @@ function applyCurrentBulletListVariantAfterIndent(
   variant: UnorderedListVariant | null,
 ) {
   if (!variant) return;
-
   if (!editor.isActive("bulletList")) return;
 
   editor
@@ -143,6 +145,7 @@ function applyCurrentBulletListVariantAfterIndent(
 const EnhancedLink = Link.extend({
   addProseMirrorPlugins() {
     return [
+      ...(this.parent?.() ?? []),
       new Plugin({
         key: new PluginKey("linkClickHandler"),
         props: {
@@ -151,10 +154,12 @@ const EnhancedLink = Link.extend({
 
             const target = event.target as HTMLElement | null;
             const anchor = target?.closest?.("a") as HTMLAnchorElement | null;
+
             if (!anchor) return false;
 
             const href =
               anchor.getAttribute("href") ?? anchor.getAttribute("data-href");
+
             if (!href) return true;
 
             const qualifiedClick =
@@ -163,7 +168,7 @@ const EnhancedLink = Link.extend({
 
             event.preventDefault();
 
-            if (qualifiedClick) {
+            if (qualifiedClick && !resolveLinkFlags(href).unsafe) {
               window.open(href, "_blank", "noopener,noreferrer");
             }
 
@@ -187,10 +192,12 @@ const BulletListVariantAttribute = Extension.create({
             default: null,
             parseHTML: (element: HTMLElement) => {
               const value = element.getAttribute("data-list-variant");
+
               return isUnorderedListVariant(value) ? value : null;
             },
             renderHTML: (attributes: Record<string, unknown>) => {
               const value = attributes.listVariant;
+
               return isUnorderedListVariant(value)
                 ? { "data-list-variant": value }
                 : {};
@@ -217,6 +224,10 @@ function buildExtensions() {
       openOnClick: false,
       autolink: true,
       linkOnPaste: true,
+      HTMLAttributes: {
+        target: null,
+        rel: null,
+      },
     }),
     TextAlign.configure({
       types: ["paragraph", "listItem"],
@@ -332,7 +343,6 @@ export function RichTextContentEditor({
     if (!editor) return;
 
     const current = cleanupRichTextHtml(editor.getHTML());
-
     const next = cleanupRichTextHtml(value || "");
 
     const currentNorm = normalizeRichTextHtmlForCompare(current);
@@ -345,6 +355,7 @@ export function RichTextContentEditor({
 
   useEffect(() => {
     if (!editor) return;
+
     editor.setEditable(!disabled);
   }, [disabled, editor]);
 
@@ -461,6 +472,7 @@ export function RichTextContentEditor({
     if (disabled) return;
 
     const chain = clearBlockConflicts(editor, "blockquote");
+
     chain.toggleBlockquote().run();
   };
 
@@ -468,6 +480,7 @@ export function RichTextContentEditor({
     if (disabled) return;
 
     const chain = editor.chain().focus();
+
     if (next === "left") return chain.setTextAlign("left").run();
     if (next === "center") return chain.setTextAlign("center").run();
     if (next === "right") return chain.setTextAlign("right").run();
@@ -485,12 +498,7 @@ export function RichTextContentEditor({
       return;
     }
 
-    editor
-      .chain()
-      .focus()
-      .extendMarkRange("link")
-      .setLink({ href, target: "_blank", rel: "noopener noreferrer nofollow" })
-      .run();
+    editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
 
     setLinkOpen(false);
   };
@@ -510,8 +518,6 @@ export function RichTextContentEditor({
 
     event.preventDefault();
     event.stopPropagation();
-
-    if (!editor) return;
 
     if (editor.isActive("listItem")) {
       const currentVariant = getActiveBulletListVariant(editor);
@@ -617,6 +623,7 @@ export function RichTextContentEditor({
                 value={(listValue || "none") as string}
                 onValueChange={(next) => {
                   if (disabled) return;
+
                   applyList(next as ListOption);
                 }}
               >
@@ -764,6 +771,7 @@ export function RichTextContentEditor({
               if (!next) return;
 
               const existing = editor.getAttributes("link")?.href;
+
               setLinkDraft(typeof existing === "string" ? existing : "");
             }}
           >
@@ -790,7 +798,7 @@ export function RichTextContentEditor({
               align="start"
               sideOffset={6}
               className="w-[360px] rounded-lg p-2"
-              onOpenAutoFocus={(e) => e.preventDefault()}
+              onOpenAutoFocus={(event) => event.preventDefault()}
             >
               <div className="flex items-center gap-2">
                 <InputGroup
@@ -810,10 +818,16 @@ export function RichTextContentEditor({
                     placeholder="https://…"
                     disabled={disabled}
                     value={linkDraft}
-                    onChange={(e) => setLinkDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") applyLink();
-                      if (e.key === "Escape") setLinkOpen(false);
+                    onChange={(event) => setLinkDraft(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        applyLink();
+                      }
+
+                      if (event.key === "Escape") {
+                        setLinkOpen(false);
+                      }
                     }}
                     autoFocus
                   />
@@ -831,6 +845,7 @@ export function RichTextContentEditor({
                 >
                   <Check />
                 </Button>
+
                 <Button
                   size="icon"
                   variant="ghost"
@@ -876,6 +891,7 @@ export function RichTextContentEditor({
               if (editor.isActive("subscript")) {
                 editor.chain().focus().toggleSubscript().run();
               }
+
               editor.chain().focus().toggleSuperscript().run();
             }}
           >
@@ -892,6 +908,7 @@ export function RichTextContentEditor({
               if (editor.isActive("superscript")) {
                 editor.chain().focus().toggleSuperscript().run();
               }
+
               editor.chain().focus().toggleSubscript().run();
             }}
           >
@@ -908,6 +925,7 @@ export function RichTextContentEditor({
           spacing={1}
           onValueChange={(next) => {
             if (!next) return;
+
             applyAlign(next);
           }}
         >
@@ -980,13 +998,22 @@ function clearBlockConflicts(editor: Editor, next: BlockKind) {
   const chain = editor.chain().focus();
 
   if (next === "blockquote") {
-    if (editor.isActive("bulletList")) chain.toggleBulletList();
-    if (editor.isActive("orderedList")) chain.toggleOrderedList();
+    if (editor.isActive("bulletList")) {
+      chain.toggleBulletList();
+    }
+
+    if (editor.isActive("orderedList")) {
+      chain.toggleOrderedList();
+    }
+
     return chain;
   }
 
   if (next === "list") {
-    if (editor.isActive("blockquote")) chain.toggleBlockquote();
+    if (editor.isActive("blockquote")) {
+      chain.toggleBlockquote();
+    }
+
     return chain;
   }
 

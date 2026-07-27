@@ -1,7 +1,7 @@
 /**
  * @file packages/ui/src/lib/links/helpers.ts
  * @layer ui/lib/links
- * @description Pure link helpers for href safety, active link checks, and mount-aware internal URLs.
+ * @description Pure shared link helpers for href safety, path checks, and mount-aware internal URLs.
  * @remarks
  * Rejects dangerous schemes even when trivially obfuscated or encoded; no UI or Next.js dependency belongs here.
  */
@@ -15,7 +15,11 @@ export type UnsafeReason =
   | "file"
   | "about"
   | "chrome"
-  | "encoded";
+  | "unknown-protocol"
+  | "invalid-http-url"
+  | "invalid-protocol"
+  | "encoded"
+  | "unsupported-network-reference";
 
 export type LinkFlags = Readonly<{
   rawExternal: boolean;
@@ -25,11 +29,7 @@ export type LinkFlags = Readonly<{
   unsafeReason?: UnsafeReason;
 }>;
 
-function isAbsoluteUrl(href: string): boolean {
-  return /^(https?:)?\/\//i.test(href);
-}
-
-/** Non-http protocols that are still treated as external links. */
+/** Non-http protocols that retain their native browser behavior. */
 const SPECIAL_PROTOCOLS = ["mailto:", "tel:"] as const;
 
 /** Schemes forbidden in rendered href attributes. */
@@ -42,23 +42,9 @@ const UNSAFE_PROTOCOLS = [
   "chrome",
 ] as const;
 
-type UnsafeHrefResult = Readonly<{
-  unsafe: boolean;
-  reason?: UnsafeReason;
-}>;
-
-function isSpecialProtocol(
-  href?: string | null,
-  list: readonly string[] = SPECIAL_PROTOCOLS,
-): boolean {
-  if (typeof href !== "string") {
-    return false;
-  }
-
-  const lower = href.toLowerCase();
-
-  return list.some((protocol) => lower.startsWith(protocol));
-}
+const ENCODED_UNSAFE_PROTOCOL_PATTERN = new RegExp(
+  `^(${UNSAFE_PROTOCOLS.join("|")})(%3a|&#58;|&#x3a;)`,
+);
 
 export function slugifyPath(input: string): string {
   return input
@@ -85,7 +71,7 @@ export function normalizePath(path: string): string {
     let normalized = path || "/";
 
     if (!normalized.startsWith("/")) {
-      normalized = "/" + normalized;
+      normalized = `/${normalized}`;
     }
 
     if (normalized.length > 1) {
@@ -106,66 +92,136 @@ export function isActiveLink(
 
   return mode === "exact"
     ? current === target
-    : current === target || current.startsWith(target + "/");
+    : current === target || current.startsWith(`${target}/`);
 }
 
-/** Removes leading controls and trivial whitespace obfuscation before unsafe-scheme checks. */
+/**
+ * Removes controls and trivial whitespace obfuscation before unsafe-scheme
+ * checks. This normalization must only be used to reject candidates, never
+ * to positively recognize an allowed protocol.
+ */
 function normalizeUnsafeCandidate(href: string): string {
   const leadingStripped = href.replace(/^[\s\u0000-\u001F]+/, "");
-  const lower = leadingStripped.toLowerCase();
 
-  return lower.replace(/[\s\u0000-\u001F]+/g, "");
+  return leadingStripped.toLowerCase().replace(/[\s\u0000-\u001F]+/g, "");
 }
 
-function isUnsafeHref(href?: string | null): UnsafeHrefResult {
-  if (typeof href !== "string") {
-    return { unsafe: false };
+/** Recognizes only a syntactically valid protocol at the start of the href. */
+function getStrictExplicitProtocol(href: string): string | null {
+  return /^([a-z][a-z\d+.-]*:)/i.exec(href.trim())?.[1].toLowerCase() ?? null;
+}
+
+function isSpecialProtocol(protocol: string | null): boolean {
+  return (
+    protocol !== null &&
+    SPECIAL_PROTOCOLS.includes(protocol as (typeof SPECIAL_PROTOCOLS)[number])
+  );
+}
+
+/** Protocol-relative and backslash network references are intentionally unsupported. */
+function isUnsupportedNetworkPathReference(href: string): boolean {
+  return /^[\\/]{2}/.test(href);
+}
+
+/**
+ * Validates both the explicit HTTP(S) syntax and the resulting parsed URL.
+ *
+ * `new URL()` alone is intentionally insufficient because it repairs several
+ * malformed variants such as `https:example.com` or `https:/example.com`.
+ */
+function isStrictHttpUrl(href: string): boolean {
+  const trimmed = href.trim();
+
+  if (
+    trimmed.includes("\\") ||
+    !/^https?:\/\/[^\s/?#\\]+(?:[/?#]|$)/i.test(trimmed)
+  ) {
+    return false;
+  }
+
+  try {
+    const url = new URL(trimmed);
+
+    return (
+      (url.protocol === "http:" || url.protocol === "https:") &&
+      url.hostname.length > 0
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Detects a protocol-like value that becomes recognizable only after removing
+ * trivial whitespace or control-character obfuscation.
+ */
+function hasMalformedProtocolPrefix(href: string): boolean {
+  return /^[a-z][a-z\d+.-]*:/i.test(normalizeUnsafeCandidate(href));
+}
+
+function getUnsafeReason(
+  href: string,
+  protocol: string | null,
+): UnsafeReason | undefined {
+  const trimmed = href.trim();
+
+  if (isUnsupportedNetworkPathReference(trimmed)) {
+    return "unsupported-network-reference";
   }
 
   const cleaned = normalizeUnsafeCandidate(href);
 
-  for (const protocol of UNSAFE_PROTOCOLS) {
-    if (cleaned.startsWith(`${protocol}:`)) {
-      return { unsafe: true, reason: protocol };
+  for (const unsafeProtocol of UNSAFE_PROTOCOLS) {
+    if (cleaned.startsWith(`${unsafeProtocol}:`)) {
+      return unsafeProtocol;
     }
   }
 
-  const encodedProtoRe = new RegExp(
-    `^(${UNSAFE_PROTOCOLS.join("|")})(%3a|&#58;|&#x3a;)`,
-  );
-
-  if (encodedProtoRe.test(cleaned)) {
-    return { unsafe: true, reason: "encoded" };
+  if (ENCODED_UNSAFE_PROTOCOL_PATTERN.test(cleaned)) {
+    return "encoded";
   }
 
-  return { unsafe: false };
+  if (
+    (protocol === "http:" || protocol === "https:") &&
+    !isStrictHttpUrl(href)
+  ) {
+    return "invalid-http-url";
+  }
+
+  if (protocol === null && hasMalformedProtocolPrefix(href)) {
+    return "invalid-protocol";
+  }
+
+  if (
+    protocol !== null &&
+    protocol !== "http:" &&
+    protocol !== "https:" &&
+    !isSpecialProtocol(protocol)
+  ) {
+    return "unknown-protocol";
+  }
+
+  return undefined;
 }
 
 export function resolveLinkFlags(href: string): LinkFlags {
   const raw = String(href ?? "").trim();
-  const { unsafe, reason } = isUnsafeHref(raw);
-
-  const special = isSpecialProtocol(raw);
-  const rawExternal = isAbsoluteUrl(raw) || special;
-  const external = rawExternal && !special;
+  const protocol = getStrictExplicitProtocol(raw);
+  const unsafeReason = getUnsafeReason(raw, protocol);
+  const special = isSpecialProtocol(protocol);
+  const rawExternal = protocol === "http:" || protocol === "https:" || special;
 
   return {
     rawExternal,
     special,
-    external,
-    unsafe,
-    unsafeReason: reason,
+    external: rawExternal && !special,
+    unsafe: unsafeReason !== undefined,
+    unsafeReason,
   };
 }
 
 function isMountPath(path: string, mount: string): boolean {
-  return path === mount || path.startsWith(mount + "/");
-}
-
-function isPreviewPath(path: string): boolean {
-  const current = normalizePath(path);
-
-  return isMountPath(current, "/preview");
+  return path === mount || path.startsWith(`${mount}/`);
 }
 
 function resolveWebsiteSlugMountBase(currentPath: string): string | null {
@@ -180,7 +236,7 @@ function resolveWebsiteSlugMountBase(currentPath: string): string | null {
 }
 
 export function shouldDisableLinksInPreview(currentPath: string): boolean {
-  return isPreviewPath(currentPath);
+  return isMountPath(normalizePath(currentPath), STUDIO_PATH.preview);
 }
 
 /** Resolves the active site mount base for preview, draft, hosted, and `/t/:websiteSlug` routes. */
@@ -204,7 +260,10 @@ export function resolveSiteMountBase(currentPath: string): string {
   return SITE_PATH.home;
 }
 
-/** Prefixes safe root-relative internal hrefs with the active site mount base without double-prefixing. */
+/**
+ * Prefixes safe root-relative internal hrefs with the active site mount base
+ * without double-prefixing.
+ */
 export function resolveInternalHref(currentPath: string, href: string): string {
   const raw = String(href ?? "").trim();
 
@@ -214,29 +273,24 @@ export function resolveInternalHref(currentPath: string, href: string): string {
 
   const flags = resolveLinkFlags(raw);
 
-  if (flags.rawExternal || flags.unsafe) {
-    return raw;
-  }
-
-  if (!raw.startsWith("/")) {
+  if (flags.rawExternal || flags.unsafe || !raw.startsWith("/")) {
     return raw;
   }
 
   const url = new URL(raw, "http://dummy");
   const suffix = `${url.search}${url.hash}`;
   const base = resolveSiteMountBase(currentPath);
+  const target = normalizePath(raw);
 
   if (base === "/") {
-    return `${normalizePath(raw)}${suffix}`;
+    return `${target}${suffix}`;
   }
-
-  const target = normalizePath(raw);
 
   if (target === "/") {
     return `${base}${suffix}`;
   }
 
-  if (target === base || target.startsWith(base + "/")) {
+  if (target === base || target.startsWith(`${base}/`)) {
     return `${target}${suffix}`;
   }
 

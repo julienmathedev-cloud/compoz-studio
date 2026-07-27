@@ -8,6 +8,7 @@
 
 import type { ComponentType } from "react";
 
+import type { RichTextLinkContext } from "@compoz/ui/lib/links/rich-text-link-resolver";
 import { SectionBlockRenderer } from "@compoz/ui/renderer/SectionBlockRenderer";
 
 import type {
@@ -26,6 +27,7 @@ export type BlockRenderer = ComponentType<{
   cellsUi: SiteCellsUi;
   revealUi: SiteRevealPresetUi;
   runtimeFeatures?: SiteRuntimeFeatures;
+  linkContext: RichTextLinkContext;
 }>;
 
 export const blockRegistry: Record<string, BlockRenderer> = {

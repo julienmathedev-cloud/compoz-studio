@@ -7,8 +7,8 @@
  *
  * @remarks
  * - Uses React `cache()` to dedupe repository and read calls during the same server render.
- * - Resolves slugs to page ids through the core SiteIndex helpers.
- * - The active website is resolved from the Studio session using the current Prisma Website.id.
+ * Resolves the runtime-only Rich Text link context for draft rendering.
+ * Portable stored links are remounted under `/draft` by the shared UI resolver.
  */
 
 import "server-only";
@@ -21,6 +21,8 @@ import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteRepository } from "@compoz/infra/site";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
+import { getPublishedSiteUrl } from "@compoz/studio/config/siteOrigin";
+import type { RichTextLinkContext } from "@compoz/ui/lib/links/rich-text-link-resolver";
 import { toSlug } from "@compoz/ui/lib/routing/slug";
 
 type DraftWebsite = Readonly<{
@@ -95,6 +97,31 @@ async function getDraftPageByResolvedSlugForWebsite(
 export async function getDraftSettingsByWebsiteId(websiteId: string) {
   return readDraftSettingsCached(websiteId);
 }
+
+/**
+ * Resolves runtime-only Rich Text link bases for draft rendering. Portable
+ * stored links are remounted under `/draft` by the shared UI resolver.
+ */
+export const getDraftRichTextLinkContext = cache(
+  async (currentPath: string): Promise<RichTextLinkContext> => {
+    const website = await getWebsite();
+    const settings = await getDraftSettingsByWebsiteId(website.websiteId);
+    const publishedSiteUrl = getPublishedSiteUrl({
+      websiteSlug: website.slug,
+      publishedBaseUrl: settings?.seo?.baseUrl,
+    });
+    const publishedBase = new URL(publishedSiteUrl);
+    return {
+      currentPath,
+      internalBases: [
+        {
+          origin: publishedBase.origin,
+          mountBase: publishedBase.pathname || "/",
+        },
+      ],
+    };
+  },
+);
 
 export async function getDraftIndexByWebsiteId(websiteId: string) {
   return readDraftIndexCached(websiteId);

@@ -20,6 +20,7 @@ import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import {
   getPublishedIndexByWebsiteId,
   getPublishedPageBySlugByWebsiteId,
+  getPublishedRichTextLinkContext,
   getPublishedSettingsByWebsiteId,
   getWebsite,
 } from "@compoz/site/lib/pages/published-page-loaders";
@@ -124,6 +125,11 @@ export default async function SitePage({ params }: PageParams) {
   const runtimeFeatures = resolveSiteRuntimeFeatures(websiteSlug);
 
   const settings = await getPublishedSettingsByWebsiteId(websiteId);
+  const pathname = `/${encodeURIComponent(slug)}`;
+  const linkContext = await getPublishedRichTextLinkContext({
+    currentPath: pathname,
+    canonicalBaseUrl: settings?.seo?.baseUrl,
+  });
   const revealPreset = settings?.theme?.revealPreset ?? "fade-up";
   const revealUi = ui.reveal[revealPreset];
 
@@ -145,8 +151,6 @@ export default async function SitePage({ params }: PageParams) {
         ? SITE_PATH.home
         : `/${encodeURIComponent(pageSlug)}`,
   });
-
-  const pathname = `/${encodeURIComponent(slug)}`;
 
   const jsonLd = settings
     ? buildSiteJsonLd({
@@ -172,6 +176,7 @@ export default async function SitePage({ params }: PageParams) {
         pager={pager}
         revealUi={revealUi}
         runtimeFeatures={runtimeFeatures}
+        linkContext={linkContext}
       />
     </>
   );

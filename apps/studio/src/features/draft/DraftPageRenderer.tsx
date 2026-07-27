@@ -14,6 +14,7 @@
  */
 
 import type { SitePager } from "@compoz/ui/lib/app-helpers/site-pager";
+import type { RichTextLinkContext } from "@compoz/ui/lib/links/rich-text-link-resolver";
 import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
 import { useTheme } from "@compoz/ui/settings/theme/ThemeProvider";
 import { useSiteUi } from "@compoz/ui/site/providers/SiteUiProvider";
@@ -24,12 +25,14 @@ type DraftPageRendererProps = Readonly<{
   blocks: ReadonlyArray<BlockShape>;
   pager?: SitePager | null;
   runtimeFeatures?: SiteRuntimeFeatures;
+  linkContext: RichTextLinkContext;
 }>;
 
 export function DraftPageRenderer({
   blocks,
   pager,
   runtimeFeatures,
+  linkContext,
 }: DraftPageRendererProps) {
   const ui = useSiteUi();
   const theme = useTheme();
@@ -43,6 +46,7 @@ export function DraftPageRenderer({
       pager={pager ?? undefined}
       revealUi={revealUi}
       runtimeFeatures={runtimeFeatures}
+      linkContext={linkContext}
     />
   );
 }

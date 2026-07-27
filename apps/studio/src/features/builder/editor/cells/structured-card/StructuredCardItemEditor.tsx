@@ -39,7 +39,7 @@ import { Separator } from "@compoz/ui/components/ui/separator";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import { isContentIconKind } from "@compoz/ui/lib/icons/content-icons";
 import { cn } from "@compoz/ui/lib/utils";
-import { STACK_MD, STACK_SM } from "@compoz/ui/styles/studio/layout";
+import { STACK_MD } from "@compoz/ui/styles/studio/layout";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 import type { StructuredCardItemFormValues } from "@compoz/validation/pages/blocks/cells/cell-form";
 

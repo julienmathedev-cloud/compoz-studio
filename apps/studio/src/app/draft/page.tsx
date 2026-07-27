@@ -15,6 +15,7 @@ import { DraftPageRenderer } from "@compoz/studio/features/draft/DraftPageRender
 import {
   getDraftHomePageByWebsiteId,
   getDraftIndexByWebsiteId,
+  getDraftRichTextLinkContext,
   getWebsiteId,
 } from "@compoz/studio/lib/pages/draft-page-loaders";
 import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
@@ -44,8 +45,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
 function hrefForDraftSlug(slug: string): string {
   const s = toSlug(slug);
-  if (!s || s === HOME_SLUG) return STUDIO_PATH.draft;
-  return `/${STUDIO_PATH.draft}/${encodeURIComponent(s)}`;
+
+  if (!s || s === HOME_SLUG) {
+    return STUDIO_PATH.draft;
+  }
+
+  return `${STUDIO_PATH.draft}/${encodeURIComponent(s)}`;
 }
 
 export default async function DraftRootPage() {
@@ -57,6 +62,8 @@ export default async function DraftRootPage() {
 
   const page = await getDraftHomePageByWebsiteId(websiteId);
   if (!page) notFound();
+
+  const linkContext = await getDraftRichTextLinkContext(STUDIO_PATH.draft);
 
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
     .map(toBlockShapeFromDTO)
@@ -73,6 +80,7 @@ export default async function DraftRootPage() {
       blocks={blocks}
       pager={pager}
       runtimeFeatures={runtimeFeatures}
+      linkContext={linkContext}
     />
   );
 }

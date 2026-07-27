@@ -11,6 +11,7 @@
 
 import type { ReactNode } from "react";
 
+import type { RichTextLinkContext } from "@compoz/ui/lib/links/rich-text-link-resolver";
 import { blockRegistry } from "@compoz/ui/renderer/blockRegistry";
 import type {
   SiteBlockSectionUi,
@@ -28,6 +29,7 @@ export type BlocksRendererProps = Readonly<{
   runtimeFeatures?: SiteRuntimeFeatures;
   variant?: "site" | "preview";
   className?: string;
+  linkContext: RichTextLinkContext;
 }>;
 
 export function BlocksRenderer({
@@ -38,6 +40,7 @@ export function BlocksRenderer({
   runtimeFeatures,
   variant = "site",
   className,
+  linkContext,
 }: BlocksRendererProps) {
   if (!blocks || blocks.length === 0) return null;
 
@@ -60,6 +63,7 @@ export function BlocksRenderer({
             cellsUi={cellsUi}
             revealUi={revealUi}
             runtimeFeatures={runtimeFeatures}
+            linkContext={linkContext}
           />
         );
       })}

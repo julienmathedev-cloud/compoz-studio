@@ -9,6 +9,7 @@
  * Handles first-media LCP targeting, responsive column reversal, spacer wrapper visibility, and optional SEO-only H1 hiding.
  */
 
+import type { RichTextLinkContext } from "@compoz/ui/lib/links/rich-text-link-resolver";
 import { cn } from "@compoz/ui/lib/utils";
 import { cellRegistry } from "@compoz/ui/renderer/cells/cellRegistry";
 
@@ -35,6 +36,7 @@ export type SectionRendererProps = Readonly<{
   cellsUi: SiteCellsUi;
   revealUi: SiteRevealPresetUi;
   runtimeFeatures?: SiteRuntimeFeatures;
+  linkContext: RichTextLinkContext;
 }>;
 
 type CellPosition = Readonly<{
@@ -52,6 +54,7 @@ export function SectionBlockRenderer({
   cellsUi,
   revealUi,
   runtimeFeatures,
+  linkContext,
 }: SectionRendererProps) {
   const containerMode = block.containerMode ?? "contained";
 
@@ -127,6 +130,7 @@ export function SectionBlockRenderer({
                               cellsUi,
                               revealUi,
                               isLcpMedia,
+                              linkContext,
                             )}
                           </div>
                         );
@@ -234,6 +238,7 @@ function renderCellFromRegistry(
   cellsUi: SiteCellsUi,
   revealUi: SiteRevealPresetUi,
   isLcpMedia: boolean,
+  linkContext: RichTextLinkContext,
 ): ReactNode {
   const renderer = cellRegistry[cell.kind];
 
@@ -245,6 +250,7 @@ function renderCellFromRegistry(
     revealUi,
     isFullBleed: isFull,
     isLcpMedia,
+    linkContext,
   });
 }
 

@@ -14,6 +14,7 @@ import { DraftPageRenderer } from "@compoz/studio/features/draft/DraftPageRender
 import {
   getDraftIndexByWebsiteId,
   getDraftPageBySlugByWebsiteId,
+  getDraftRichTextLinkContext,
   getWebsiteId,
 } from "@compoz/studio/lib/pages/draft-page-loaders";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
@@ -74,6 +75,10 @@ export default async function DraftPage({ params }: PageParams) {
   const page = await getDraftPageBySlugByWebsiteId(websiteId, s);
   if (!page) notFound();
 
+  const linkContext = await getDraftRichTextLinkContext(
+    `/draft/${encodeURIComponent(s)}`,
+  );
+
   const blocks: ReadonlyArray<BlockShape> = (page.blocks ?? [])
     .map(toBlockShapeFromDTO)
     .filter((b): b is BlockShape => Boolean(b));
@@ -89,6 +94,7 @@ export default async function DraftPage({ params }: PageParams) {
       blocks={blocks}
       pager={pager}
       runtimeFeatures={runtimeFeatures}
+      linkContext={linkContext}
     />
   );
 }

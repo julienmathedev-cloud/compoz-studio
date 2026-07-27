@@ -20,6 +20,7 @@ import { resolvePublicWebsiteFromRouteSlug } from "@compoz/infra/websites/resolv
 import {
   getPublishedHomePageByWebsiteId,
   getPublishedIndexByWebsiteId,
+  getPublishedRichTextLinkContext,
   getPublishedSettingsByWebsiteId,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import { buildPageMetadata } from "@compoz/site/lib/seo/buildPageMetadata";
@@ -151,6 +152,10 @@ export default async function WebsiteFallbackRootPage({ params }: PageParams) {
     .filter((block): block is BlockShape => Boolean(block));
 
   const websitePrefix = `/t/${encodeURIComponent(websiteSlug)}`;
+  const linkContext = await getPublishedRichTextLinkContext({
+    currentPath: websitePrefix,
+    canonicalBaseUrl: settings?.seo?.baseUrl,
+  });
 
   const pager = computeSitePager({
     page,
@@ -185,6 +190,7 @@ export default async function WebsiteFallbackRootPage({ params }: PageParams) {
         pager={pager}
         revealUi={revealUi}
         runtimeFeatures={runtimeFeatures}
+        linkContext={linkContext}
       />
     </>
   );

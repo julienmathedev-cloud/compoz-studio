@@ -3,7 +3,9 @@
  * @layer infra/lib
  * @description Server-only HTML sanitizer for TipTap rich text content.
  * @remarks
- * Keeps a strict allowlist and normalizes links to open safely in a new tab.
+ * Keeps a strict allowlist and persists neutral anchor markup. Final link
+ * classification, mount resolution, and legacy normalization are applied by
+ * the UI renderer from the active site link context.
  */
 
 import "server-only";
@@ -18,6 +20,11 @@ function sanitizeListVariant(attribs: Attributes): Attributes {
   }
 
   return {};
+}
+
+/** Keeps unsupported network-path references out of persisted Rich Text HTML. */
+function isUnsupportedNetworkPathReference(href: string): boolean {
+  return /^[\\/]{2}/.test(href);
 }
 
 export const RICH_TEXT_SANITIZE_OPTIONS = {
@@ -44,7 +51,7 @@ export const RICH_TEXT_SANITIZE_OPTIONS = {
   ],
 
   allowedAttributes: {
-    a: ["href", "target", "rel"],
+    a: ["href"],
     ul: ["data-list-variant"],
     p: ["style"],
     h2: ["style"],
@@ -71,13 +78,11 @@ export const RICH_TEXT_SANITIZE_OPTIONS = {
     }),
     a: (_tagName: string, attribs: Attributes) => {
       const href = (attribs.href ?? "").trim();
-      if (!href) return { tagName: "span", attribs: {} };
+      if (!href || isUnsupportedNetworkPathReference(href)) {
+        return { tagName: "span", attribs: {} };
+      }
 
-      const nextAttrs: Attributes = {
-        href,
-        target: "_blank",
-        rel: "noopener noreferrer nofollow",
-      };
+      const nextAttrs: Attributes = { href };
 
       return { tagName: "a", attribs: nextAttrs };
     },

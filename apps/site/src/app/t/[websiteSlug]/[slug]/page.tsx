@@ -21,6 +21,7 @@ import { resolvePublicWebsiteFromRouteSlug } from "@compoz/infra/websites/resolv
 import {
   getPublishedIndexByWebsiteId,
   getPublishedPageBySlugByWebsiteId,
+  getPublishedRichTextLinkContext,
   getPublishedSettingsByWebsiteId,
 } from "@compoz/site/lib/pages/published-page-loaders";
 import {
@@ -161,6 +162,7 @@ export default async function WebsiteFallbackPage({ params }: PageParams) {
     return redirect(fallbackPathForPageSlug({ websiteSlug, pageSlug }));
   }
 
+
   const index = await getPublishedIndexByWebsiteId(websiteId);
 
   if (!index) {
@@ -196,6 +198,10 @@ export default async function WebsiteFallbackPage({ params }: PageParams) {
     websiteSlug,
     pageSlug: page.slug,
   });
+  const linkContext = await getPublishedRichTextLinkContext({
+    currentPath: pathname,
+    canonicalBaseUrl: settings?.seo?.baseUrl,
+  });
 
   const jsonLd = settings
     ? buildSiteJsonLd({
@@ -221,6 +227,7 @@ export default async function WebsiteFallbackPage({ params }: PageParams) {
         pager={pager}
         revealUi={revealUi}
         runtimeFeatures={runtimeFeatures}
+        linkContext={linkContext}
       />
     </>
   );

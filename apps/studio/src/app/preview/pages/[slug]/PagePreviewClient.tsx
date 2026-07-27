@@ -25,6 +25,7 @@ import { log } from "@compoz/infra/lib/log";
 import { PreviewShell } from "@compoz/studio/features/preview/PreviewShell";
 import { usePreviewOverride } from "@compoz/studio/features/preview/hooks/usePreviewOverride";
 import { computeSitePager } from "@compoz/ui/lib/app-helpers/site-pager";
+import type { RichTextLinkContext } from "@compoz/ui/lib/links/rich-text-link-resolver";
 import { toSlug } from "@compoz/ui/lib/routing/slug";
 import { SitePageRenderer } from "@compoz/ui/renderer/SitePageRenderer";
 import { useTheme } from "@compoz/ui/settings/theme/ThemeProvider";
@@ -51,11 +52,13 @@ function hrefForDraftSlug(slug: string): string {
 type PagePreviewClientProps = Readonly<{
   slug: string;
   runtimeFeatures: SiteRuntimeFeatures;
+  linkContext: RichTextLinkContext;
 }>;
 
 export function PagePreviewClient({
   slug,
   runtimeFeatures,
+  linkContext,
 }: PagePreviewClientProps) {
   const pageScope = useMemo(() => `page:${slug}`, [slug]);
 
@@ -160,6 +163,7 @@ export function PagePreviewClient({
         pager={pager}
         revealUi={revealUi}
         runtimeFeatures={runtimeFeatures}
+        linkContext={linkContext}
       />
     </PreviewShell>
   );

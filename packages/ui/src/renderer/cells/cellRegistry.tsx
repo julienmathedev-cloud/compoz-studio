@@ -8,6 +8,7 @@
 
 import type { ReactNode } from "react";
 
+import type { RichTextLinkContext } from "@compoz/ui/lib/links/rich-text-link-resolver";
 import { ButtonsCellRenderer } from "@compoz/ui/renderer/cells/ButtonsCellRenderer";
 import { CardCollectionCellRenderer } from "@compoz/ui/renderer/cells/CardCollectionCellRenderer";
 import { CarouselCellRenderer } from "@compoz/ui/renderer/cells/CarouselCellRenderer";
@@ -50,6 +51,7 @@ export type CellRenderArgs = Readonly<{
   revealUi: SiteRevealPresetUi;
   isFullBleed: boolean;
   isLcpMedia: boolean;
+  linkContext: RichTextLinkContext;
 }>;
 
 export type CellRenderer = (args: CellRenderArgs) => ReactNode;
@@ -63,11 +65,12 @@ export const cellRegistry: Record<string, CellRenderer> = {
     />
   ),
 
-  richText: ({ cell, ui, revealUi }) => (
+  richText: ({ cell, ui, revealUi, linkContext }) => (
     <RichTextCellRenderer
       cell={cell as RichTextCellShape}
       ui={ui.richText}
       revealUi={revealUi}
+      linkContext={linkContext}
     />
   ),
 

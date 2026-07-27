@@ -18,6 +18,7 @@ import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import {
   getPublishedHomePageByWebsiteId,
   getPublishedIndexByWebsiteId,
+  getPublishedRichTextLinkContext,
   getPublishedSettingsByWebsiteId,
   getWebsite,
 } from "@compoz/site/lib/pages/published-page-loaders";
@@ -103,6 +104,10 @@ export default async function SiteRootPage() {
   const runtimeFeatures = resolveSiteRuntimeFeatures(websiteSlug);
 
   const settings = await getPublishedSettingsByWebsiteId(websiteId);
+  const linkContext = await getPublishedRichTextLinkContext({
+    currentPath: SITE_PATH.home,
+    canonicalBaseUrl: settings?.seo?.baseUrl,
+  });
   const revealPreset = settings?.theme?.revealPreset ?? "fade-up";
   const revealUi = ui.reveal[revealPreset];
 
@@ -146,6 +151,7 @@ export default async function SiteRootPage() {
         pager={pager}
         revealUi={revealUi}
         runtimeFeatures={runtimeFeatures}
+        linkContext={linkContext}
       />
     </>
   );

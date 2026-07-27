@@ -7,7 +7,8 @@
  *
  * @remarks
  * - Delete mutations detach direct child pages before removing the draft page.
- * - Mutations patch the `SiteIndexDTO` source of truth without a global rebuild/list pass.
+ * - The page index is projected from Prisma Page rows ordered by `Page.position`.
+ * - Page updates persist the page and affected menu settings atomically.
  * - Repositories are scoped by Prisma Website.id.
  */
 
@@ -22,7 +23,6 @@ import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 import {
   detachChildrenByParentId,
   removePageById,
-  upsertPageRef,
 } from "@compoz/core/domain/site/index/utils";
 import { throwHttp } from "@compoz/http/http-error";
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
@@ -33,7 +33,10 @@ import type {
 } from "@compoz/infra/http/studio/pages.types";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getPagesRepository } from "@compoz/infra/pages";
+import { PrismaPagesRepository } from "@compoz/infra/pages/prisma-pages-repository";
+import { prisma } from "@compoz/infra/prisma/prisma-client";
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
+import { PrismaSiteRepository } from "@compoz/infra/site/prisma-site-repository";
 import { adaptUpdatePagePayload } from "@compoz/studio/app/api/_adapters/pages/pages";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
@@ -159,10 +162,13 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
         await runDelete({ pageId });
 
         /**
-         * Patch the source-of-truth index without a global rebuild.
+         * Patch page positions for the delete flow.
          *
          * - `detachChildrenByParentId` sets `parentId` to `null` in the index.
          * - `removePageById` removes the deleted page reference.
+         *
+         * This existing delete behavior remains outside the slug-update fix
+         * and should be reassessed during the dedicated SiteIndex review.
          */
         const baseIndex =
           currentIndex ??
@@ -264,55 +270,43 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
           },
         );
 
-        const pagesRepo = getPagesRepository({ websiteId });
-        const siteRepo = getSiteRepository({ websiteId });
         const statusCache = getSiteStatusCache({ websiteId });
-
         const payload = adaptUpdatePagePayload(dto);
 
-        const runUpdate = updatePage({
-          pages: pagesRepo,
-          site: siteRepo,
-        });
+        const { page, index } = await prisma.$transaction(
+          async (transactionClient) => {
+            const pagesRepo = new PrismaPagesRepository({
+              websiteId,
+              client: transactionClient,
+            });
 
-        const { page } = await runUpdate({ pageId, ...payload });
+            const siteRepo = new PrismaSiteRepository({
+              websiteId,
+              client: transactionClient,
+            });
 
-        /**
-         * Patch the source-of-truth index without a global rebuild.
-         */
-        await siteRepo.ensureBase();
+            const runUpdate = updatePage({
+              pages: pagesRepo,
+              site: siteRepo,
+            });
 
-        const nowIso = new Date().toISOString();
+            const { page } = await runUpdate({
+              pageId,
+              ...payload,
+            });
 
-        const currentIndex = await siteRepo.readIndex(DEFAULT_CONTENT_STATE);
+            /**
+             * The index is a projection of Page rows, not a separately stored
+             * aggregate. Reading it after the page write returns the updated
+             * page projection without rewriting every page position.
+             */
+            const index = await siteRepo.readIndex(DEFAULT_CONTENT_STATE);
 
-        const baseIndex =
-          currentIndex ??
-          ({
-            pages: [],
-            updatedAt: nowIso,
-          } as SiteIndexDTO);
+            return { page, index };
+          },
+        );
 
-        const nextIndexEntity = upsertPageRef(baseIndex, {
-          id: page.id,
-          slug: page.slug,
-          name: page.name,
-          parentId: page.parentId,
-        });
-
-        const index: SiteIndexDTO = {
-          pages: nextIndexEntity.pages.map((pageRef) => ({
-            id: pageRef.id,
-            slug: pageRef.slug,
-            name: pageRef.name,
-            parentId: pageRef.parentId,
-          })),
-          updatedAt: nowIso,
-        };
-
-        await siteRepo.putIndex(DEFAULT_CONTENT_STATE, index);
-
-        logger.debug("route.index.patched", {
+        logger.debug("route.index.read", {
           websiteId,
           pagesCount: index.pages.length,
         });

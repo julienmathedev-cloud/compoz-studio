@@ -124,6 +124,7 @@ export class PrismaSiteRepository implements SiteRepository {
     await this.ensureBase();
 
     const prismaState = toPrismaContentState(state);
+
     const positionUpdates = index.pages.map((page, position) =>
       this.client.page.updateMany({
         where: {
@@ -151,6 +152,7 @@ export class PrismaSiteRepository implements SiteRepository {
       } else {
         await Promise.all(writes);
       }
+
       return;
     }
 

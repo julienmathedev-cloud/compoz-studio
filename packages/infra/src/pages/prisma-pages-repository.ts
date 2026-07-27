@@ -186,8 +186,6 @@ export class PrismaPagesRepository implements PagesRepository {
     const prepared = assertValidPageForPut(page);
     const prismaState = toPrismaContentState(state);
 
-    await this.ensureBase();
-
     const slugOwner = await this.client.page.findUnique({
       where: {
         websiteId_state_slug: {
@@ -213,6 +211,12 @@ export class PrismaPagesRepository implements PagesRepository {
       },
       select: { position: true },
     });
+
+    // An existing Page row already proves that its Website foreign-key target
+    // exists. Avoid a redundant Website upsert on the page-update hot path.
+    if (!existing) {
+      await this.ensureBase();
+    }
 
     const nextPosition =
       existing?.position ??

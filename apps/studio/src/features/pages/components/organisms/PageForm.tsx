@@ -28,6 +28,7 @@ import {
   PAGE_SEO_DESCRIPTION,
   PAGE_SEO_TITLE,
 } from "@compoz/core/constants/limits/pages";
+import { SITE_PATH } from "@compoz/core/constants/web/paths";
 import { SLUG_FINAL_RE } from "@compoz/core/domain/slug/constants";
 import { normalizeSlug } from "@compoz/core/domain/slug/utils";
 import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
@@ -38,6 +39,11 @@ import { InputField } from "@compoz/studio/components/molecules/fields/InputFiel
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
 import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
+import {
+  createSlugAutoSyncState,
+  getAutoSlugFromName,
+  type SlugAutoSyncState,
+} from "@compoz/studio/features/pages/lib/page-slug-auto-sync";
 import {
   usePageUiWarnings,
   type PageWarningKey,
@@ -151,8 +157,9 @@ export function PageForm({
     "paginationEnabled",
   );
 
-  const slugLockedRef = useRef(false);
-  const lastAutoSlugRef = useRef<string>("");
+  const slugAutoSyncRef = useRef(
+    createSlugAutoSyncState({ initialValues, mode }),
+  );
 
   useEffect(() => {
     rhfReset(initialValues, {
@@ -161,8 +168,8 @@ export function PageForm({
       keepErrors: false,
     });
 
-    resetSlugAutoSync(initialValues, slugLockedRef, lastAutoSlugRef);
-  }, [initialValues, rhfReset]);
+    slugAutoSyncRef.current = createSlugAutoSyncState({ initialValues, mode });
+  }, [initialValues, mode, rhfReset]);
 
   useEffect(() => {
     if (mode !== "edit" || !bFocusFields || isBusy) return;
@@ -351,8 +358,7 @@ export function PageForm({
                 field,
                 getValues,
                 setValue,
-                slugLockedRef,
-                lastAutoSlugRef,
+                slugAutoSyncRef.current,
               )
             }
             placeholder={
@@ -390,13 +396,15 @@ export function PageForm({
               const trimmed = raw.trim();
 
               const normalized =
-                trimmed === "/" ? "/" : trimmed.replace(/^\/+/, "");
+                trimmed === SITE_PATH.home
+                  ? SITE_PATH.home
+                  : trimmed.replace(/^\/+/, "");
 
               if (
-                normalized !== "/" &&
-                normalized !== lastAutoSlugRef.current
+                normalized !== SITE_PATH.home &&
+                normalized !== slugAutoSyncRef.current.lastAutoSlug
               ) {
-                slugLockedRef.current = true;
+                slugAutoSyncRef.current.locked = true;
               }
 
               field.onChange(normalized);
@@ -731,7 +739,10 @@ export function PageForm({
                 keepErrors: false,
               });
 
-              resetSlugAutoSync(initialValues, slugLockedRef, lastAutoSlugRef);
+              slugAutoSyncRef.current = createSlugAutoSyncState({
+                initialValues,
+                mode,
+              });
               onReset?.();
             }}
           />
@@ -743,51 +754,26 @@ export function PageForm({
 
 PageForm.displayName = "PageForm";
 
-function resetSlugAutoSync(
-  initialValues: PageFormValues,
-  slugLockedRef: ReturnType<typeof useRef<boolean>>,
-  lastAutoSlugRef: ReturnType<typeof useRef<string>>,
-) {
-  slugLockedRef.current = false;
-
-  const initialSlug = (initialValues.slug ?? "").trim();
-  lastAutoSlugRef.current =
-    initialSlug === "/" ? "/" : normalizeSlug(initialSlug);
-}
-
 /** Auto-updates the slug from the name on blur until the user manually locks the slug. */
 function handleNameBlur(
   field: { onBlur: () => void },
   getValues: (name: "name" | "slug") => string | undefined,
   setValue: UseFormSetValue<PageFormValues>,
-  slugLockedRef: ReturnType<typeof useRef<boolean>>,
-  lastAutoSlugRef: ReturnType<typeof useRef<string>>,
+  slugAutoSyncState: SlugAutoSyncState,
 ) {
   field.onBlur();
 
-  const nameNow = (getValues("name") ?? "").trim();
-  const slugNow = (getValues("slug") ?? "").trim();
+  const nextAutoSlug = getAutoSlugFromName({
+    name: getValues("name") ?? "",
+    slug: getValues("slug") ?? "",
+    state: slugAutoSyncState,
+  });
 
-  if (slugNow === "/") return;
+  if (nextAutoSlug === null) return;
 
-  const nextAuto = normalizeSlug(nameNow);
-
-  const canAutoUpdate =
-    !slugLockedRef.current &&
-    (slugNow === "" || slugNow === lastAutoSlugRef.current);
-
-  if (!canAutoUpdate) return;
-
-  if (slugNow === nextAuto) {
-    lastAutoSlugRef.current = nextAuto;
-    return;
-  }
-
-  setValue("slug", nextAuto, {
+  setValue("slug", nextAutoSlug, {
     shouldDirty: true,
     shouldTouch: false,
     shouldValidate: true,
   });
-
-  lastAutoSlugRef.current = nextAuto;
 }

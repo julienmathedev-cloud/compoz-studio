@@ -10,7 +10,6 @@ import {
   DEFAULT_CONTENT_STATE,
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
-import { SITE_PATH } from "@compoz/core/constants/web/paths";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type { Page } from "@compoz/core/domain/pages/entities/page";
@@ -29,8 +28,7 @@ import type {
   UpdatePageInput,
   UpdatePageResult,
 } from "@compoz/core/domain/pages/use-cases/update-page.types";
-import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
-import { toInternalPathFromSlug } from "@compoz/core/domain/slug/utils";
+import { replacePagePathInMenus } from "@compoz/core/domain/site/helpers/replace-page-path-in-menus";
 
 export function updatePage({
   pages,
@@ -40,6 +38,7 @@ export function updatePage({
 }: UpdatePageDeps) {
   return async function run(input: UpdatePageInput): Promise<UpdatePageResult> {
     const pageId = String(input.pageId ?? "").trim();
+
     if (!pageId) {
       throw new DomainError({
         code: EC.INVALID_ARGUMENT,
@@ -73,18 +72,26 @@ export function updatePage({
     applyPaginationEnabledPatch({ existing, next, changed, input });
     applySitemapPatch({ existing, next, changed, input });
 
-    if (changed.length === 0) return { page: existing };
+    if (changed.length === 0) {
+      return { page: existing };
+    }
+
+    const menuUpdate =
+      slugChange && site
+        ? await prepareMenusForSlugRename({
+            site,
+            state: DEFAULT_CONTENT_STATE,
+            fromSlug: slugChange.from,
+            toSlug: slugChange.to,
+          })
+        : null;
 
     next.meta = { ...existing.meta, updatedAt: nowIso() };
+
     await pages.put(DEFAULT_CONTENT_STATE, next);
 
-    if (slugChange && site) {
-      await tryUpdateMenusForSlugRename({
-        site,
-        state: DEFAULT_CONTENT_STATE,
-        fromSlug: slugChange.from,
-        toSlug: slugChange.to,
-      });
+    if (menuUpdate?.changed && site) {
+      await site.putSettings(DEFAULT_CONTENT_STATE, menuUpdate.settings);
     }
 
     // Cache invalidation stays outside the core domain.
@@ -101,7 +108,6 @@ async function readExistingPageById({
   state: ContentState;
   pageId: string;
 }): Promise<Page> {
-  await pages.ensureBase();
   const existing = await pages.readById(state, pageId);
 
   if (!existing) {
@@ -114,71 +120,18 @@ async function readExistingPageById({
   return existing;
 }
 
-async function tryUpdateMenusForSlugRename(args: {
+async function prepareMenusForSlugRename(args: {
   site: NonNullable<UpdatePageDeps["site"]>;
   state: ContentState;
   fromSlug: string;
   toSlug: string;
-}): Promise<void> {
+}) {
   const { site, state, fromSlug, toSlug } = args;
+  const settings = await site.readSettings(state);
 
-  const fromPath = toInternalPathFromSlug(fromSlug);
-  const toPath = toInternalPathFromSlug(toSlug);
-
-  if (fromPath === toPath) return;
-
-  try {
-    await site.ensureBase();
-
-    const settings = await site.readSettings(state);
-
-    function patchItems<T extends { href: string }>(
-      items: ReadonlyArray<T> | undefined,
-    ) {
-      const list = items ?? [];
-      let changed = false;
-
-      const nextItems = list.map((it) => {
-        const href = String(it.href ?? "").trim();
-
-        if (href === fromPath) {
-          changed = true;
-          return { ...it, href: toPath };
-        }
-
-        if (
-          fromSlug === HOME_SLUG &&
-          (href === `/${HOME_SLUG}` || href === HOME_SLUG)
-        ) {
-          changed = true;
-          return { ...it, href: SITE_PATH.home };
-        }
-
-        return it;
-      });
-
-      return { nextItems, changed } as const;
-    }
-
-    const primary = patchItems(settings.primaryMenu?.items);
-    const legal = patchItems(settings.legalMenu?.items);
-
-    if (!primary.changed && !legal.changed) return;
-
-    const nextSettings = {
-      ...settings,
-
-      primaryMenu: settings.primaryMenu
-        ? { ...settings.primaryMenu, items: primary.nextItems }
-        : settings.primaryMenu,
-
-      legalMenu: settings.legalMenu
-        ? { ...settings.legalMenu, items: legal.nextItems }
-        : settings.legalMenu,
-    };
-
-    await site.putSettings(state, nextSettings);
-  } catch {
-    return;
-  }
+  return replacePagePathInMenus({
+    settings,
+    fromSlug,
+    toSlug,
+  });
 }

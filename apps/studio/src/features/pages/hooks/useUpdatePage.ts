@@ -31,6 +31,7 @@ import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteConte
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
 import { toUpdatePageIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/pages-form";
 import { setSiteIndexCache } from "@compoz/studio/features/site-index/cache";
+import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
 import {
   invalidatePageStatusViews,
   invalidateSiteStatus,
@@ -137,9 +138,22 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
         page,
       );
 
+      const slugWasPatched = fields.includes("slug");
+
       await Promise.all([
         invalidateSiteStatus(queryClient, websiteId),
         invalidatePageStatusViews(queryClient, websiteId),
+        ...(slugWasPatched
+          ? [
+              queryClient.invalidateQueries({
+                queryKey: settingsBundleKey(
+                  websiteId,
+                  DEFAULT_CONTENT_STATE,
+                ),
+                refetchType: "all",
+              }),
+            ]
+          : []),
       ]);
 
       logger.debug("update.ok", {

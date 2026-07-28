@@ -15,13 +15,19 @@ import type {
   PrimaryMenuItem,
   PrimaryMenuSettings,
   SeoSettings,
-  SiteIndex,
   SiteStatus,
   SocialItem,
   SocialSettings,
   ThemeSettings,
 } from "@compoz/core/domain/site/entities";
-import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
+import type {
+  DraftSiteIndexWithRevision,
+  SiteIndex,
+} from "@compoz/core/domain/site/entities/site-index";
+import type {
+  SiteSettings,
+  SiteSettingsRevisions,
+} from "@compoz/core/domain/site/entities/site-settings";
 import type {
   SiteDiffKind,
   SiteStatusBlockDetails,
@@ -33,6 +39,9 @@ import type {
 import type { PublishSiteResult } from "@compoz/core/domain/site/use-cases/publish/publish-site.types";
 
 export type SiteIndexDTO = Readonly<SiteIndex>;
+
+export type DraftSiteIndexWithRevisionDTO =
+  Readonly<DraftSiteIndexWithRevision>;
 
 export type HeaderSettingsDTO = Readonly<HeaderSettings>;
 export type FooterSettingsDTO = Readonly<FooterSettings>;
@@ -57,6 +66,13 @@ export type SiteSettingsDTO = Readonly<{
   identity: IdentitySettingsDTO;
   seo: SeoSettingsDTO;
   theme: ThemeSettingsDTO;
+}>;
+
+export type SiteSettingsRevisionsDTO = Readonly<SiteSettingsRevisions>;
+
+export type SiteSettingsWithRevisionsDTO = Readonly<{
+  settings: SiteSettingsDTO;
+  revisions: SiteSettingsRevisionsDTO;
 }>;
 
 /** Write DTO currently aligned with the full domain aggregate, not PATCH semantics. */

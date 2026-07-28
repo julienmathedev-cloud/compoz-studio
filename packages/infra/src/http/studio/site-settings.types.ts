@@ -13,14 +13,12 @@ import type {
   LegalMenuSettingsDTO,
   PrimaryMenuSettingsDTO,
   SeoSettingsDTO,
-  SiteSettingsDTO,
+  SiteSettingsWithRevisionsDTO,
   SocialSettingsDTO,
   ThemeSettingsDTO,
 } from "@compoz/core/domain/site/dto";
 
-export type GetSettingsBundleResponse = Readonly<{
-  settings: SiteSettingsDTO;
-}>;
+export type GetSettingsBundleResponse = SiteSettingsWithRevisionsDTO;
 
 type HeaderSettingsResponse = Readonly<{ settings: HeaderSettingsDTO }>;
 export type GetHeaderResponse = HeaderSettingsResponse;

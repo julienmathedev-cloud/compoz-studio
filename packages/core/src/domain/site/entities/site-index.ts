@@ -15,3 +15,9 @@ export interface SiteIndex {
   /** ISO timestamp of the latest logical index write. */
   updatedAt: string;
 }
+
+/** Draft structure projection carrying the Website-level OCC revision. */
+export interface DraftSiteIndexWithRevision {
+  index: SiteIndex;
+  draftStructureRevision: number;
+}

@@ -50,6 +50,18 @@ export interface Page {
   paginationEnabled: boolean;
 }
 
+/** Technical revisions attached to a persisted page read. */
+export interface PageRevisions {
+  metaRevision: number;
+  blocksRevision: number;
+}
+
+/** Studio-oriented page projection keeping OCC metadata outside editorial data. */
+export interface PageWithRevisions {
+  page: Page;
+  revisions: PageRevisions;
+}
+
 export type PageSummary = Pick<Page, "id" | "slug" | "name" | "parentId">;
 
 export type InternalPageOption = Readonly<{

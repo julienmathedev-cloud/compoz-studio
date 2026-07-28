@@ -7,13 +7,21 @@
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
-import type { Page } from "@compoz/core/domain/pages/entities/page";
+import type {
+  Page,
+  PageWithRevisions,
+} from "@compoz/core/domain/pages/entities/page";
 
 export interface PagesRepository {
   /** Idempotently prepares the storage backend when needed. */
   ensureBase(): Promise<void>;
 
   readById(state: ContentState, pageId: string): Promise<Page | null>;
+
+  readByIdWithRevisions(
+    state: ContentState,
+    pageId: string,
+  ): Promise<PageWithRevisions | null>;
 
   readBySlug(state: ContentState, slug: string): Promise<Page | null>;
 

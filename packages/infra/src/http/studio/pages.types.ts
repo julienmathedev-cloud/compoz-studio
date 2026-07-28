@@ -6,17 +6,24 @@
  * These DTOs stay aligned with the HTTP routes without importing from `app/api`.
  */
 
-import type { BlockDTO, PageDTO } from "@compoz/core/domain/pages/dto";
-import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
+import type {
+  BlockDTO,
+  PageDTO,
+  PageWithRevisionsDTO,
+} from "@compoz/core/domain/pages/dto";
+import type {
+  DraftSiteIndexWithRevisionDTO,
+  SiteIndexDTO,
+} from "@compoz/core/domain/site/dto";
 
-export type GetPagesIndexResponse = Readonly<{ index: SiteIndexDTO }>;
+export type GetPagesIndexResponse = DraftSiteIndexWithRevisionDTO;
 
 export type CreatePageResponse = Readonly<{
   page: PageDTO;
   index: SiteIndexDTO;
 }>;
 
-export type GetPageByIdResponse = Readonly<{ page: PageDTO }>;
+export type GetPageByIdResponse = PageWithRevisionsDTO;
 
 export type UpdatePageResponse = Readonly<{
   page: PageDTO;

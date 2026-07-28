@@ -32,12 +32,20 @@ import type {
 import type {
   InternalPageOption,
   Page,
+  PageRevisions,
   PageSitemap,
   PageSummary,
   SitemapChangeFreq,
 } from "@compoz/core/domain/pages/entities/page";
 
 export type PageDTO = Readonly<Page>;
+
+export type PageRevisionsDTO = Readonly<PageRevisions>;
+
+export type PageWithRevisionsDTO = Readonly<{
+  page: PageDTO;
+  revisions: PageRevisionsDTO;
+}>;
 
 export type PageSummaryDTO = Readonly<PageSummary>;
 

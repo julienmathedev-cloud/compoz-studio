@@ -5,7 +5,11 @@
  */
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";
-import type { Page, PageMeta } from "@compoz/core/domain/pages/entities/page";
+import type {
+  Page,
+  PageMeta,
+  PageWithRevisions,
+} from "@compoz/core/domain/pages/entities/page";
 import { normalizePersistedPageBlocks } from "@compoz/infra/pages/normalizers/normalize-persisted-page-blocks";
 import { Prisma } from "@compoz/infra/prisma/generated";
 import { PageSchema, type PageShape } from "@compoz/validation/pages/page";
@@ -22,6 +26,8 @@ export type PrismaPageRow = {
   blocks: unknown;
   sitemap: unknown;
   paginationEnabled: boolean;
+  metaRevision: number;
+  blocksRevision: number;
   metaCreatedAt: Date;
   metaUpdatedAt: Date;
   createdAt: Date;
@@ -100,6 +106,18 @@ export function toDomainPage(row: PrismaPageRow): Page {
   });
 
   return toDomainPageFromShape(parsed);
+}
+
+export function toDomainPageWithRevisions(
+  row: PrismaPageRow,
+): PageWithRevisions {
+  return {
+    page: toDomainPage(row),
+    revisions: {
+      metaRevision: row.metaRevision,
+      blocksRevision: row.blocksRevision,
+    },
+  };
 }
 
 export function toPrismaPageCreateData(

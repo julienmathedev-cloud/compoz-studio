@@ -8,11 +8,15 @@ import {
   CONTENT_STATE,
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
-import type { Page } from "@compoz/core/domain/pages/entities/page";
+import type {
+  Page,
+  PageWithRevisions,
+} from "@compoz/core/domain/pages/entities/page";
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import {
   toDomainPage,
+  toDomainPageWithRevisions,
   toPrismaPageCreateData,
   toPrismaPageUpdateData,
   type PrismaContentState,
@@ -127,6 +131,29 @@ export class PrismaPagesRepository implements PagesRepository {
     });
 
     return row ? toDomainPage(row) : null;
+  }
+
+  async readByIdWithRevisions(
+    state: ContentState,
+    pageId: string,
+  ): Promise<PageWithRevisions | null> {
+    const id = normalizeValue(pageId);
+
+    if (!id) {
+      return null;
+    }
+
+    const row = await this.client.page.findUnique({
+      where: {
+        websiteId_state_pageId: {
+          websiteId: this.websiteId,
+          state: toPrismaContentState(state),
+          pageId: id,
+        },
+      },
+    });
+
+    return row ? toDomainPageWithRevisions(row) : null;
   }
 
   async readBySlug(state: ContentState, slug: string): Promise<Page | null> {

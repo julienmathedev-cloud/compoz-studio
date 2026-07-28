@@ -10,8 +10,14 @@ import {
   CONTENT_STATE,
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
-import type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
-import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
+import type {
+  DraftSiteIndexWithRevision,
+  SiteIndex,
+} from "@compoz/core/domain/site/entities/site-index";
+import type {
+  SiteSettings,
+  SiteSettingsWithRevisions,
+} from "@compoz/core/domain/site/entities/site-settings";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import type { Prisma, PrismaClient } from "@compoz/infra/prisma/generated";
@@ -19,6 +25,7 @@ import { prisma } from "@compoz/infra/prisma/prisma-client";
 import { toDomainSiteIndex } from "@compoz/infra/site/mappers/site-index.mapper";
 import {
   toDomainSiteSettings,
+  toDomainSiteSettingsWithRevisions,
   toPrismaSiteSettingsCreateData,
   toPrismaSiteSettingsUpdateData,
   type PrismaContentState,
@@ -112,6 +119,27 @@ export class PrismaSiteRepository implements SiteRepository {
     };
   }
 
+  async readDraftIndexWithRevision(): Promise<DraftSiteIndexWithRevision> {
+    const [index, website] = await Promise.all([
+      this.readIndex(CONTENT_STATE.DRAFT),
+      this.client.website.findUnique({
+        where: { id: this.websiteId },
+        select: { draftStructureRevision: true },
+      }),
+    ]);
+
+    if (!website) {
+      throw new Error(
+        "PrismaSiteRepository.readDraftIndexWithRevision: website not found.",
+      );
+    }
+
+    return {
+      index,
+      draftStructureRevision: website.draftStructureRevision,
+    };
+  }
+
   async putIndex(
     state: ContentState,
     index: Readonly<SiteIndex>,
@@ -176,6 +204,23 @@ export class PrismaSiteRepository implements SiteRepository {
     });
 
     return toDomainSiteSettings(row);
+  }
+
+  async readSettingsWithRevisions(
+    state: ContentState,
+  ): Promise<SiteSettingsWithRevisions> {
+    const prismaState = toPrismaContentState(state);
+
+    const row = await this.client.siteSettings.findUnique({
+      where: {
+        websiteId_state: {
+          websiteId: this.websiteId,
+          state: prismaState,
+        },
+      },
+    });
+
+    return toDomainSiteSettingsWithRevisions(row);
   }
 
   async putSettings(

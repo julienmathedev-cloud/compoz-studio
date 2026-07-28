@@ -16,7 +16,11 @@ import { DEFAULT_SOCIAL_SETTINGS } from "@compoz/core/domain/site/defaults/socia
 import { DEFAULT_THEME_SETTINGS } from "@compoz/core/domain/site/defaults/theme";
 
 import type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
-import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
+import type {
+  SiteSettings,
+  SiteSettingsRevisions,
+  SiteSettingsWithRevisions,
+} from "@compoz/core/domain/site/entities/site-settings";
 import type { Prisma } from "@compoz/infra/prisma/generated";
 
 export type PrismaContentState = "draft" | "published";
@@ -30,6 +34,17 @@ export type PrismaSiteSettingsRow = {
   identity: unknown;
   seo: unknown;
   theme: unknown;
+};
+
+export type PrismaSiteSettingsWithRevisionsRow = PrismaSiteSettingsRow & {
+  headerRevision: number;
+  footerRevision: number;
+  identityRevision: number;
+  socialRevision: number;
+  seoRevision: number;
+  themeRevision: number;
+  primaryMenuRevision: number;
+  legalMenuRevision: number;
 };
 
 export type PrismaSiteSettingsUpdateData = {
@@ -133,6 +148,39 @@ export function toDomainSiteSettings(
     social: readObjectSetting(row.social, d.social),
     seo: normalizeSeoSettings(row.seo),
     theme: mergeThemeSettings(row.theme),
+  };
+}
+
+function defaultSettingsRevisions(): SiteSettingsRevisions {
+  return {
+    headerRevision: 0,
+    footerRevision: 0,
+    identityRevision: 0,
+    socialRevision: 0,
+    seoRevision: 0,
+    themeRevision: 0,
+    primaryMenuRevision: 0,
+    legalMenuRevision: 0,
+  };
+}
+
+export function toDomainSiteSettingsWithRevisions(
+  row: PrismaSiteSettingsWithRevisionsRow | null | undefined,
+): SiteSettingsWithRevisions {
+  return {
+    settings: toDomainSiteSettings(row),
+    revisions: row
+      ? {
+          headerRevision: row.headerRevision,
+          footerRevision: row.footerRevision,
+          identityRevision: row.identityRevision,
+          socialRevision: row.socialRevision,
+          seoRevision: row.seoRevision,
+          themeRevision: row.themeRevision,
+          primaryMenuRevision: row.primaryMenuRevision,
+          legalMenuRevision: row.legalMenuRevision,
+        }
+      : defaultSettingsRevisions(),
   };
 }
 

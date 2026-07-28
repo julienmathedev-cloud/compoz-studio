@@ -42,9 +42,10 @@ export async function GET(req: Request) {
 
         await repo.ensureBase();
 
-        const settings = await repo.readSettings(state);
+        const { settings, revisions } =
+          await repo.readSettingsWithRevisions(state);
 
-        const res: GetSettingsBundleResponse = { settings };
+        const res: GetSettingsBundleResponse = { settings, revisions };
 
         return res;
       },

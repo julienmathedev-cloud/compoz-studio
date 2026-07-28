@@ -7,8 +7,14 @@
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
-import type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
-import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
+import type {
+  DraftSiteIndexWithRevision,
+  SiteIndex,
+} from "@compoz/core/domain/site/entities/site-index";
+import type {
+  SiteSettings,
+  SiteSettingsWithRevisions,
+} from "@compoz/core/domain/site/entities/site-settings";
 
 /** Persistence contract for the site aggregate. */
 export interface SiteRepository {
@@ -18,10 +24,19 @@ export interface SiteRepository {
   /** Reads the page index for a content state. */
   readIndex(state: ContentState): Promise<Readonly<SiteIndex>>;
 
+  /** Reads the draft page index with its Website-level technical revision. */
+  readDraftIndexWithRevision(): Promise<
+    Readonly<DraftSiteIndexWithRevision>
+  >;
+
   /** Persists the page index and its logical write timestamp. */
   putIndex(state: ContentState, index: Readonly<SiteIndex>): Promise<void>;
 
   readSettings(state: ContentState): Promise<Readonly<SiteSettings>>;
+
+  readSettingsWithRevisions(
+    state: ContentState,
+  ): Promise<Readonly<SiteSettingsWithRevisions>>;
 
   putSettings(
     state: ContentState,

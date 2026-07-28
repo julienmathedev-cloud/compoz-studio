@@ -27,3 +27,21 @@ export interface SiteSettings {
   seo: SeoSettings;
   theme: ThemeSettings;
 }
+
+/** Granular technical revisions for each persisted settings section. */
+export interface SiteSettingsRevisions {
+  headerRevision: number;
+  footerRevision: number;
+  identityRevision: number;
+  socialRevision: number;
+  seoRevision: number;
+  themeRevision: number;
+  primaryMenuRevision: number;
+  legalMenuRevision: number;
+}
+
+/** Studio-oriented settings projection keeping revisions out of public data. */
+export interface SiteSettingsWithRevisions {
+  settings: SiteSettings;
+  revisions: SiteSettingsRevisions;
+}

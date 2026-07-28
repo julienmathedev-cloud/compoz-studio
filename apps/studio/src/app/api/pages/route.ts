@@ -50,9 +50,13 @@ export async function GET(req: Request) {
         const siteRepo = getSiteRepository({ websiteId });
 
         // The index is the Studio source of truth for the page list.
-        const index = await siteRepo.readIndex(DEFAULT_CONTENT_STATE);
+        const { index, draftStructureRevision } =
+          await siteRepo.readDraftIndexWithRevision();
 
-        const res: GetPagesIndexResponse = { index };
+        const res: GetPagesIndexResponse = {
+          index,
+          draftStructureRevision,
+        };
 
         return res;
       },

@@ -66,16 +66,19 @@ export async function GET(req: Request, ctx: { params: unknown }) {
         });
 
         const pagesRepo = getPagesRepository({ websiteId });
-        const page = await pagesRepo.readById(state, pageId);
+        const pageRead = await pagesRepo.readByIdWithRevisions(state, pageId);
 
-        if (!page) {
+        if (!pageRead) {
           throwHttp(404, {
             code: EC.PAGE_NOT_FOUND,
             message: EC.PAGE_NOT_FOUND,
           });
         }
 
-        const res: GetPageByIdResponse = { page: page as PageDTO };
+        const res: GetPageByIdResponse = {
+          page: pageRead.page as PageDTO,
+          revisions: pageRead.revisions,
+        };
 
         return res;
       },

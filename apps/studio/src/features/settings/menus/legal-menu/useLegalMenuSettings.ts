@@ -60,7 +60,7 @@ export function useLegalMenuSettings(): UseLegalMenuSettingsResult {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
       return normalizeLegalMenuFormValues(
-        toLegalMenuFormValuesFromDTO(bundle.legalMenu),
+        toLegalMenuFormValuesFromDTO(bundle.settings.legalMenu),
       );
     },
 
@@ -73,10 +73,11 @@ export function useLegalMenuSettings(): UseLegalMenuSettingsResult {
         queryClient,
         websiteId,
         DEFAULT_CONTENT_STATE,
-        (previous) => ({
-          ...previous,
-          legalMenu: dto.settings,
-        }),
+        {
+          settings: {
+            legalMenu: dto.settings,
+          },
+        },
       );
 
       return normalizeLegalMenuFormValues(

@@ -59,7 +59,7 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
       return normalizeIdentityFormValues(
-        toIdentityFormValuesFromDTO(bundle.identity),
+        toIdentityFormValuesFromDTO(bundle.settings.identity),
       );
     },
 
@@ -72,10 +72,11 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
         queryClient,
         websiteId,
         DEFAULT_CONTENT_STATE,
-        (previous) => ({
-          ...previous,
-          identity: dto.settings,
-        }),
+        {
+          settings: {
+            identity: dto.settings,
+          },
+        },
       );
 
       return normalizeIdentityFormValues(

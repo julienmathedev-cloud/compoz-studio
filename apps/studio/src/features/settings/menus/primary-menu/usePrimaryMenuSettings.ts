@@ -60,7 +60,7 @@ export function usePrimaryMenuSettings(): UsePrimaryMenuSettingsResult {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
       return normalizePrimaryMenuFormValues(
-        toPrimaryMenuFormValuesFromDTO(bundle.primaryMenu),
+        toPrimaryMenuFormValuesFromDTO(bundle.settings.primaryMenu),
       );
     },
 
@@ -73,10 +73,11 @@ export function usePrimaryMenuSettings(): UsePrimaryMenuSettingsResult {
         queryClient,
         websiteId,
         DEFAULT_CONTENT_STATE,
-        (previous) => ({
-          ...previous,
-          primaryMenu: dto.settings,
-        }),
+        {
+          settings: {
+            primaryMenu: dto.settings,
+          },
+        },
       );
 
       return normalizePrimaryMenuFormValues(

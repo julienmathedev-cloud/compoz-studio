@@ -61,7 +61,9 @@ export function useSeoSettings(): UseSeoSettingsResult {
     load: async (state: ContentState) => {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
-      return normalizeSeoFormValues(toSeoFormValuesFromDTO(bundle.seo));
+      return normalizeSeoFormValues(
+        toSeoFormValuesFromDTO(bundle.settings.seo),
+      );
     },
 
     /** Writes the SEO slice, then mirrors the response into the settings bundle cache. */
@@ -73,10 +75,11 @@ export function useSeoSettings(): UseSeoSettingsResult {
         queryClient,
         websiteId,
         DEFAULT_CONTENT_STATE,
-        (previous) => ({
-          ...previous,
-          seo: dto.settings,
-        }),
+        {
+          settings: {
+            seo: dto.settings,
+          },
+        },
       );
 
       return normalizeSeoFormValues(toSeoFormValuesFromDTO(dto.settings));

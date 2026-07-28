@@ -60,7 +60,7 @@ export function useHeaderSettings(): UseHeaderSettingsResult {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
       return normalizeHeaderFormValues(
-        toHeaderFormValuesFromDTO(bundle.header),
+        toHeaderFormValuesFromDTO(bundle.settings.header),
       );
     },
 
@@ -73,10 +73,11 @@ export function useHeaderSettings(): UseHeaderSettingsResult {
         queryClient,
         websiteId,
         DEFAULT_CONTENT_STATE,
-        (previous) => ({
-          ...previous,
-          header: dto.settings,
-        }),
+        {
+          settings: {
+            header: dto.settings,
+          },
+        },
       );
 
       return normalizeHeaderFormValues(toHeaderFormValuesFromDTO(dto.settings));

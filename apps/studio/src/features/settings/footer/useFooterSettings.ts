@@ -60,7 +60,7 @@ export function useFooterSettings(): UseFooterSettingsResult {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
       return normalizeFooterFormValues(
-        toFooterFormValuesFromDTO(bundle.footer),
+        toFooterFormValuesFromDTO(bundle.settings.footer),
       );
     },
 
@@ -72,10 +72,11 @@ export function useFooterSettings(): UseFooterSettingsResult {
         queryClient,
         websiteId,
         DEFAULT_CONTENT_STATE,
-        (previous) => ({
-          ...previous,
-          footer: dto.settings,
-        }),
+        {
+          settings: {
+            footer: dto.settings,
+          },
+        },
       );
 
       return normalizeFooterFormValues(toFooterFormValuesFromDTO(dto.settings));

@@ -60,7 +60,7 @@ export function useSocialSettings(): UseSocialSettingsResult {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
       return normalizeSocialFormValues(
-        toSocialFormValuesFromDTO(bundle.social),
+        toSocialFormValuesFromDTO(bundle.settings.social),
       );
     },
 
@@ -73,10 +73,11 @@ export function useSocialSettings(): UseSocialSettingsResult {
         queryClient,
         websiteId,
         DEFAULT_CONTENT_STATE,
-        (previous) => ({
-          ...previous,
-          social: dto.settings,
-        }),
+        {
+          settings: {
+            social: dto.settings,
+          },
+        },
       );
 
       return normalizeSocialFormValues(toSocialFormValuesFromDTO(dto.settings));

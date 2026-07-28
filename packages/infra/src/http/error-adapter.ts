@@ -22,6 +22,8 @@ const EXPLICIT_STATUS: Partial<Record<ErrorCode, number>> = {
   [ERROR_CODES.NOT_FOUND]: 404,
   [ERROR_CODES.PAGE_NOT_FOUND]: 404,
   [ERROR_CODES.CONFLICT]: 409,
+  [ERROR_CODES.REVISION_REQUIRED]: 428,
+  [ERROR_CODES.SETTINGS_SECTION_REVISION_CONFLICT]: 409,
   [ERROR_CODES.VALIDATION_ERROR]: 422,
   [ERROR_CODES.INVALID_ARGUMENT]: 400,
 
@@ -29,6 +31,10 @@ const EXPLICIT_STATUS: Partial<Record<ErrorCode, number>> = {
   [ERROR_CODES.INTERNAL]: 500,
   [ERROR_CODES.UNKNOWN]: 500,
 };
+
+const DOMAIN_ERROR_DETAILS_HTTP_ALLOWLIST = new Set<ErrorCode>([
+  ERROR_CODES.SETTINGS_SECTION_REVISION_CONFLICT,
+]);
 
 const INFRA_CODE_PREFIXES_500 = [
   /^REPO_/,
@@ -60,6 +66,13 @@ function toHttpErrorBody(err: unknown): HttpErrorBody {
 
   if (shouldExposeMessage() && err.message) {
     base.message = err.message;
+  }
+
+  if (
+    err.details !== undefined &&
+    DOMAIN_ERROR_DETAILS_HTTP_ALLOWLIST.has(err.code)
+  ) {
+    base.details = err.details;
   }
 
   return base;

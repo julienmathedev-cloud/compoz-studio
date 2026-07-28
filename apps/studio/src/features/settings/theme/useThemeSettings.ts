@@ -61,7 +61,9 @@ export function useThemeSettings(): UseThemeSettingsResult {
     load: async (state: ContentState) => {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
-      return normalizeThemeFormValues(toThemeFormValuesFromDTO(bundle.theme));
+      return normalizeThemeFormValues(
+        toThemeFormValuesFromDTO(bundle.settings.theme),
+      );
     },
 
     /** Writes the theme slice, then mirrors the response into the settings bundle cache. */
@@ -73,10 +75,11 @@ export function useThemeSettings(): UseThemeSettingsResult {
         queryClient,
         websiteId,
         DEFAULT_CONTENT_STATE,
-        (previous) => ({
-          ...previous,
-          theme: dto.settings,
-        }),
+        {
+          settings: {
+            theme: dto.settings,
+          },
+        },
       );
 
       return normalizeThemeFormValues(toThemeFormValuesFromDTO(dto.settings));

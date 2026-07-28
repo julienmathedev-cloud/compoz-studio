@@ -11,10 +11,16 @@
  */
 
 import { FooterSettingsSchema } from "@compoz/validation/site/settings/footer/footer";
-import type { z } from "zod";
+import { z } from "zod";
 
 export const UpdateFooterSettingsIntentSchema =
-  FooterSettingsSchema.partial().strict();
+  z
+    .object({
+      baseline: FooterSettingsSchema,
+      patch: FooterSettingsSchema.partial().strict(),
+      expectedRevision: z.number().int().nonnegative().optional(),
+    })
+    .strict();
 
 export type UpdateFooterSettingsIntentDTO = z.infer<
   typeof UpdateFooterSettingsIntentSchema

@@ -16,6 +16,7 @@ import { DEFAULT_SOCIAL_SETTINGS } from "@compoz/core/domain/site/defaults/socia
 import { DEFAULT_THEME_SETTINGS } from "@compoz/core/domain/site/defaults/theme";
 
 import type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
+import type { FooterSettings } from "@compoz/core/domain/site/entities/footer";
 import type {
   SiteSettings,
   SiteSettingsRevisions,
@@ -97,6 +98,12 @@ function readObjectSetting<T extends object>(value: unknown, fallback: T): T {
 /** Centralizes the domain-to-Prisma JSON boundary cast. */
 function toJsonValue(value: unknown): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
+}
+
+export function toPrismaFooterSettings(
+  footer: Readonly<FooterSettings>,
+): Prisma.InputJsonValue {
+  return toJsonValue(footer);
 }
 
 function normalizeSeoSettings(seo: unknown): SeoSettings {

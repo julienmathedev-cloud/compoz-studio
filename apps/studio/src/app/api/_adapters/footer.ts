@@ -6,7 +6,7 @@
  * Studio API adapter for footer settings update intents.
  *
  * @remarks
- * - Builds a partial domain patch while preserving optional-field semantics.
+ * - Normalizes the complete baseline and partial patch independently.
  * - Leaves state handling to the route.
  */
 
@@ -23,21 +23,23 @@ export function adaptUpdateFooterIntent(
   const started = Date.now();
 
   log.debug("studio.adapter.footer.patch.start", {
-    hasShowYear: typeof dto.showYear === "boolean",
-    hasCopyright: typeof dto.copyright === "string",
-    copyrightLen:
-      typeof dto.copyright === "string" ? dto.copyright.length : undefined,
+    expectedRevision: dto.expectedRevision,
+    patchKeys: Object.keys(dto.patch),
   });
 
+  const baseline: FooterSettings = {
+    copyright: trimOrKeep(dto.baseline.copyright),
+    showYear: dto.baseline.showYear,
+  };
   const patch: Partial<FooterSettings> = {};
 
-  if (typeof dto.showYear === "boolean") {
-    patch.showYear = dto.showYear;
+  if (typeof dto.patch.showYear === "boolean") {
+    patch.showYear = dto.patch.showYear;
   }
 
-  if (typeof dto.copyright === "string") {
+  if (typeof dto.patch.copyright === "string") {
     // Empty string is allowed by design for this UX.
-    patch.copyright = trimOrKeep(dto.copyright);
+    patch.copyright = trimOrKeep(dto.patch.copyright);
   }
 
   log.debug("studio.adapter.footer.patch.end", {
@@ -45,5 +47,9 @@ export function adaptUpdateFooterIntent(
     outKeys: Object.keys(patch),
   });
 
-  return { patch };
+  return {
+    baseline,
+    patch,
+    expectedRevision: dto.expectedRevision,
+  };
 }

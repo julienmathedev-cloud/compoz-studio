@@ -14,6 +14,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useRef } from "react";
 
 import {
   DEFAULT_CONTENT_STATE,
@@ -46,6 +47,10 @@ export function useFooterSettings(): UseFooterSettingsResult {
   const t = useTranslations();
   const queryClient = useQueryClient();
   const websiteId = useWebsiteId();
+  const snapshotRef = useRef<{
+    baseline: FooterFormValues;
+    revision: number;
+  } | null>(null);
 
   const entityLabel = t("studio.shared.entities.footer");
 
@@ -56,30 +61,62 @@ export function useFooterSettings(): UseFooterSettingsResult {
       toFooterFormValuesFromDTO(DEFAULT_FOOTER_SETTINGS),
     ),
 
-    load: async (state: ContentState) => {
+    load: async (state: ContentState, opts) => {
       const bundle = await getSettingsBundle(queryClient, websiteId, state);
 
-      return normalizeFooterFormValues(
+      if (opts?.signal?.aborted) {
+        throw new DOMException("The operation was aborted.", "AbortError");
+      }
+
+      const baseline = normalizeFooterFormValues(
         toFooterFormValuesFromDTO(bundle.settings.footer),
       );
+
+      snapshotRef.current =
+        state === DEFAULT_CONTENT_STATE
+          ? {
+              baseline: { ...baseline },
+              revision: bundle.revisions.footerRevision,
+            }
+          : null;
+
+      return baseline;
     },
 
     save: async (next, opts) => {
-      const patch = toUpdateFooterIntentDTOFromFormValues(next);
-      const dto = await settingsStudioApi.footer.patch(patch, opts);
+      const snapshot = snapshotRef.current;
 
-      patchSettingsBundleCache(
-        queryClient,
-        websiteId,
-        DEFAULT_CONTENT_STATE,
-        {
-          settings: {
-            footer: dto.settings,
-          },
-        },
+      if (!snapshot) {
+        throw new Error(
+          "Footer settings cannot be saved without a revisioned draft snapshot.",
+        );
+      }
+
+      const intent = toUpdateFooterIntentDTOFromFormValues(
+        snapshot.baseline,
+        next,
+        snapshot.revision,
+      );
+      const dto = await settingsStudioApi.footer.patch(intent, opts);
+      const baseline = normalizeFooterFormValues(
+        toFooterFormValuesFromDTO(dto.settings),
       );
 
-      return normalizeFooterFormValues(toFooterFormValuesFromDTO(dto.settings));
+      snapshotRef.current = {
+        baseline: { ...baseline },
+        revision: dto.revision,
+      };
+
+      patchSettingsBundleCache(queryClient, websiteId, DEFAULT_CONTENT_STATE, {
+        settings: {
+          footer: dto.settings,
+        },
+        revisions: {
+          footerRevision: dto.revision,
+        },
+      });
+
+      return baseline;
     },
 
     // Only send fields that changed after normalization.

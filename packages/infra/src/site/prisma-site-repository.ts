@@ -18,7 +18,11 @@ import type {
   SiteSettings,
   SiteSettingsWithRevisions,
 } from "@compoz/core/domain/site/entities/site-settings";
-import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
+import type {
+  CompareAndSetDraftFooterInput,
+  DraftFooterWithRevision,
+  SiteRepository,
+} from "@compoz/core/domain/site/ports/site-repository";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import { Prisma, type PrismaClient } from "@compoz/infra/prisma/generated";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
@@ -26,6 +30,7 @@ import { toDomainSiteIndex } from "@compoz/infra/site/mappers/site-index.mapper"
 import {
   toDomainSiteSettings,
   toDomainSiteSettingsWithRevisions,
+  toPrismaFooterSettings,
   toPrismaSiteSettingsCreateData,
   toPrismaSiteSettingsUpdateData,
   type PrismaContentState,
@@ -243,6 +248,98 @@ export class PrismaSiteRepository implements SiteRepository {
     });
 
     return toDomainSiteSettingsWithRevisions(row);
+  }
+
+  async compareAndSetDraftFooter(
+    input: CompareAndSetDraftFooterInput,
+  ): Promise<DraftFooterWithRevision | null> {
+    const client = this.client;
+
+    if ("$transaction" in client) {
+      return (client as PrismaClient).$transaction(async (tx) => {
+        const repository = new PrismaSiteRepository({
+          websiteId: this.websiteId,
+          client: tx,
+        });
+
+        return repository.compareAndSetDraftFooter(input);
+      });
+    }
+
+    const transactionClient = client as Prisma.TransactionClient;
+    const update = await transactionClient.siteSettings.updateMany({
+      where: {
+        websiteId: this.websiteId,
+        state: "draft",
+        footerRevision: input.expectedRevision,
+      },
+      data: {
+        footer: toPrismaFooterSettings(input.footer),
+        footerRevision: { increment: 1 },
+      },
+    });
+
+    if (update.count === 1) {
+      const row = await transactionClient.siteSettings.findUnique({
+        where: {
+          websiteId_state: {
+            websiteId: this.websiteId,
+            state: "draft",
+          },
+        },
+      });
+
+      if (!row) {
+        throw new Error(
+          "PrismaSiteRepository.compareAndSetDraftFooter: updated footer row not found.",
+        );
+      }
+
+      const bundle = toDomainSiteSettingsWithRevisions(row);
+
+      return {
+        settings: bundle.settings.footer,
+        revision: bundle.revisions.footerRevision,
+      };
+    }
+
+    if (input.expectedRevision !== 0) return null;
+
+    const defaults = toDomainSiteSettings(null);
+    const creation = await transactionClient.siteSettings.createMany({
+      data: {
+        ...toPrismaSiteSettingsCreateData(this.websiteId, "draft", {
+          ...defaults,
+          footer: input.footer,
+        }),
+        footerRevision: 1,
+      },
+      skipDuplicates: true,
+    });
+
+    if (creation.count === 0) return null;
+
+    const row = await transactionClient.siteSettings.findUnique({
+      where: {
+        websiteId_state: {
+          websiteId: this.websiteId,
+          state: "draft",
+        },
+      },
+    });
+
+    if (!row) {
+      throw new Error(
+        "PrismaSiteRepository.compareAndSetDraftFooter: created footer row not found.",
+      );
+    }
+
+    const bundle = toDomainSiteSettingsWithRevisions(row);
+
+    return {
+      settings: bundle.settings.footer,
+      revision: bundle.revisions.footerRevision,
+    };
   }
 
   async putSettings(

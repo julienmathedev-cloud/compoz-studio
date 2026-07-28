@@ -7,7 +7,7 @@
  *
  * @remarks
  * - `PATCH` adapts the update intent into a domain patch before running the use case.
- * - The repository merges with defaults to keep the footer consistent.
+ * - `GET` and `PATCH` return the footer together with its coherent revision.
  * - The repository and status cache are scoped by Prisma Website.id.
  */
 
@@ -39,10 +39,11 @@ export async function GET(req: Request) {
       { ns: NS, method: "GET", state, websiteId },
       async () => {
         const repo = getSiteRepository({ websiteId });
-        const settings = await repo.readSettings(state);
+        const bundle = await repo.readSettingsWithRevisions(state);
 
         const res: GetFooterResponse = {
-          settings: settings.footer,
+          settings: bundle.settings.footer,
+          revision: bundle.revisions.footerRevision,
         };
 
         return res;
@@ -79,11 +80,12 @@ export async function PATCH(req: Request) {
       const statusCache = getSiteStatusCache({ websiteId });
 
       const run = updateFooterSettings({ repo });
-      const { settings } = await run(input);
+      const result = await run(input);
 
       logger.debug?.("route.footer.patch.afterWrite", {
         websiteId,
-        footerKeys: settings.footer ? Object.keys(settings.footer) : [],
+        expectedRevision: input.expectedRevision,
+        revision: result.revision,
       });
 
       /**
@@ -113,7 +115,8 @@ export async function PATCH(req: Request) {
       }
 
       const res: PatchFooterResponse = {
-        settings: settings.footer,
+        settings: result.settings,
+        revision: result.revision,
       };
 
       return res;

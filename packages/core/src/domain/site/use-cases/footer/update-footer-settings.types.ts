@@ -7,7 +7,6 @@
  */
 
 import type { FooterSettings } from "@compoz/core/domain/site/entities";
-import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 
 export interface UpdateFooterSettingsDeps {
@@ -15,9 +14,12 @@ export interface UpdateFooterSettingsDeps {
 }
 
 export interface UpdateFooterSettingsInput {
+  baseline: FooterSettings;
   patch: Partial<FooterSettings>;
+  expectedRevision?: number;
 }
 
 export interface UpdateFooterSettingsResult {
-  settings: SiteSettings;
+  settings: FooterSettings;
+  revision: number;
 }

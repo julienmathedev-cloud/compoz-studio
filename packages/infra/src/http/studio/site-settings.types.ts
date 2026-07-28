@@ -24,7 +24,10 @@ type HeaderSettingsResponse = Readonly<{ settings: HeaderSettingsDTO }>;
 export type GetHeaderResponse = HeaderSettingsResponse;
 export type PatchHeaderResponse = HeaderSettingsResponse;
 
-type FooterSettingsResponse = Readonly<{ settings: FooterSettingsDTO }>;
+type FooterSettingsResponse = Readonly<{
+  settings: FooterSettingsDTO;
+  revision: number;
+}>;
 export type GetFooterResponse = FooterSettingsResponse;
 export type PatchFooterResponse = FooterSettingsResponse;
 

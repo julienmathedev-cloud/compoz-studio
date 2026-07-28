@@ -264,6 +264,33 @@ void test("patches one revision while retaining every other revision", () => {
   queryClient.clear();
 });
 
+void test("patches footer settings and its revision in one cache update", () => {
+  const queryClient = createQueryClient();
+  const bundle = createSettingsBundle();
+  const key = settingsBundleKey(WEBSITE_ID, DEFAULT_CONTENT_STATE);
+  const nextFooter = {
+    ...DEFAULT_FOOTER_SETTINGS,
+    copyright: "Atomic footer",
+  };
+
+  queryClient.setQueryData(key, bundle);
+
+  patchSettingsBundleCache(queryClient, WEBSITE_ID, DEFAULT_CONTENT_STATE, {
+    settings: { footer: nextFooter },
+    revisions: { footerRevision: 9 },
+  });
+
+  const cached = queryClient.getQueryData<SiteSettingsWithRevisionsDTO>(key);
+
+  assert.ok(cached);
+  assert.deepEqual(cached.settings.footer, nextFooter);
+  assert.equal(cached.revisions.footerRevision, 9);
+  assert.equal(cached.settings.header, bundle.settings.header);
+  assert.equal(cached.revisions.headerRevision, bundle.revisions.headerRevision);
+
+  queryClient.clear();
+});
+
 void test("does not patch a legacy cached settings projection", () => {
   const queryClient = createQueryClient();
   const bundle = createSettingsBundle();

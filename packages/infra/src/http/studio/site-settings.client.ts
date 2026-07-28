@@ -38,6 +38,7 @@ import type {
   PatchSocialResponse,
   PatchThemeResponse,
 } from "@compoz/infra/http/studio/site-settings.types";
+import type { UpdateFooterSettingsIntentDTO } from "@compoz/validation/site/settings/footer/footer-intents";
 
 async function getResponse<TResponse>(
   endpoint: string,
@@ -152,8 +153,8 @@ export const settingsStudioApi = {
       );
     },
 
-    async patch<TPatch extends object>(
-      patch: TPatch,
+    async patch(
+      patch: UpdateFooterSettingsIntentDTO,
       opts?: HttpOpts,
     ): Promise<PatchFooterResponse> {
       return logSpan(
@@ -164,7 +165,7 @@ export const settingsStudioApi = {
           state: DEFAULT_CONTENT_STATE,
         },
         () =>
-          patchResponse<PatchFooterResponse, TPatch>(
+          patchResponse<PatchFooterResponse, UpdateFooterSettingsIntentDTO>(
             ENDPOINTS.STUDIO.SETTINGS.footer,
             patch,
             opts,

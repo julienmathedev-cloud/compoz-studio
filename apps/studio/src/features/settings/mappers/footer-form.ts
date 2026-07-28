@@ -41,13 +41,25 @@ export function normalizeFooterFormValues(
 }
 
 /** Builds a partial API intent while preserving PATCH semantics. */
-export function toUpdateFooterIntentDTOFromFormValues(
+export function toFooterPatchDTOFromFormValues(
   p: Partial<FooterFormValues>,
-): UpdateFooterSettingsIntentDTO {
-  const out: UpdateFooterSettingsIntentDTO = {};
+): UpdateFooterSettingsIntentDTO["patch"] {
+  const out: UpdateFooterSettingsIntentDTO["patch"] = {};
 
   if ("copyright" in p) out.copyright = trimKeepEmpty(p.copyright);
   if ("showYear" in p) out.showYear = Boolean(p.showYear);
 
   return out;
+}
+
+export function toUpdateFooterIntentDTOFromFormValues(
+  baseline: FooterFormValues,
+  patch: Partial<FooterFormValues>,
+  expectedRevision: number,
+): UpdateFooterSettingsIntentDTO {
+  return {
+    baseline: normalizeFooterFormValues(baseline),
+    patch: toFooterPatchDTOFromFormValues(patch),
+    expectedRevision,
+  };
 }

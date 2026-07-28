@@ -15,6 +15,17 @@ import type {
   SiteSettings,
   SiteSettingsWithRevisions,
 } from "@compoz/core/domain/site/entities/site-settings";
+import type { FooterSettings } from "@compoz/core/domain/site/entities/footer";
+
+export type CompareAndSetDraftFooterInput = Readonly<{
+  expectedRevision: number;
+  footer: Readonly<FooterSettings>;
+}>;
+
+export type DraftFooterWithRevision = Readonly<{
+  settings: FooterSettings;
+  revision: number;
+}>;
 
 /** Persistence contract for the site aggregate. */
 export interface SiteRepository {
@@ -37,6 +48,10 @@ export interface SiteRepository {
   readSettingsWithRevisions(
     state: ContentState,
   ): Promise<Readonly<SiteSettingsWithRevisions>>;
+
+  compareAndSetDraftFooter(
+    input: CompareAndSetDraftFooterInput,
+  ): Promise<DraftFooterWithRevision | null>;
 
   putSettings(
     state: ContentState,

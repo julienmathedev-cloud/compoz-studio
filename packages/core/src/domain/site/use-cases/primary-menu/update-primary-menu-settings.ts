@@ -1,15 +1,13 @@
 /**
  * @file packages/core/src/domain/site/use-cases/primary-menu/update-primary-menu-settings.ts
  * @layer core/domain/site/use-cases/primary-menu
- * @description Applies a shallow patch to primary menu settings.
- * @remarks
- * Primary menu invariants are asserted before persistence; violations raise a `DomainError`.
+ * @description Applies a revisioned three-way merge to primary-menu settings.
+ * @remarks The items array is atomic and structurally compared; the merged result uses the business validator before CAS.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-import { shallowMergeWithChangedKeys } from "@compoz/core/domain/site/_shared/merge";
-import type { PrimaryMenuSettings } from "@compoz/core/domain/site/entities/primary-menu";
-import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
+import { equalJsonValue } from "@compoz/core/domain/revisions/json-value-equality";
+import { updateRevisionedSettingsSection } from "@compoz/core/domain/site/use-cases/_shared/update-revisioned-settings-section";
 import type {
   UpdatePrimaryMenuSettingsDeps,
   UpdatePrimaryMenuSettingsInput,
@@ -17,35 +15,32 @@ import type {
 } from "@compoz/core/domain/site/use-cases/primary-menu/update-primary-menu-settings.types";
 import { assertPrimaryMenuSettings } from "@compoz/core/domain/site/validators/primary-menu";
 
-export function updatePrimaryMenuSettings({
-  repo,
-}: UpdatePrimaryMenuSettingsDeps) {
-  return async function run(
+const PRIMARY_MENU_FIELDS = ["items"] as const;
+export function updatePrimaryMenuSettings({ repo }: UpdatePrimaryMenuSettingsDeps) {
+  return (
     input: UpdatePrimaryMenuSettingsInput,
-  ): Promise<UpdatePrimaryMenuSettingsResult> {
-    const patch = input.patch ?? {};
+  ): Promise<UpdatePrimaryMenuSettingsResult> =>
+    updateRevisionedSettingsSection({
+      repo,
+      input,
+      resourceId: "primaryMenu",
+      fields: PRIMARY_MENU_FIELDS,
+      readCurrent: async () => {
+        const bundle = await repo.readSettingsWithRevisions(
+          DEFAULT_CONTENT_STATE,
+        );
 
-    await repo.ensureBase();
-
-    const current = await repo.readSettings(DEFAULT_CONTENT_STATE);
-
-    const { next: menuNext, changedKeys } =
-      shallowMergeWithChangedKeys<PrimaryMenuSettings>(
-        current.primaryMenu,
-        patch,
-      );
-
-    if (changedKeys.length === 0) {
-      return { settings: current };
-    }
-
-    // Blocking domain invariants before persistence.
-    assertPrimaryMenuSettings(menuNext);
-
-    const next: SiteSettings = { ...current, primaryMenu: menuNext };
-
-    await repo.putSettings(DEFAULT_CONTENT_STATE, next);
-
-    return { settings: next };
-  };
+        return {
+          settings: bundle.settings.primaryMenu,
+          revision: bundle.revisions.primaryMenuRevision,
+        };
+      },
+      compareAndSet: (expectedRevision, primaryMenu) =>
+        repo.compareAndSetDraftPrimaryMenu({
+          expectedRevision,
+          primaryMenu,
+        }),
+      equals: (_field, left, right) => equalJsonValue(left, right),
+      validate: assertPrimaryMenuSettings,
+    });
 }

@@ -17,6 +17,12 @@ import { DEFAULT_THEME_SETTINGS } from "@compoz/core/domain/site/defaults/theme"
 
 import type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
 import type { FooterSettings } from "@compoz/core/domain/site/entities/footer";
+import type { HeaderSettings } from "@compoz/core/domain/site/entities/header";
+import type { IdentitySettings } from "@compoz/core/domain/site/entities/identity";
+import type { LegalMenuSettings } from "@compoz/core/domain/site/entities/legal-menu";
+import type { PrimaryMenuSettings } from "@compoz/core/domain/site/entities/primary-menu";
+import type { SocialSettings } from "@compoz/core/domain/site/entities/social";
+import type { ThemeSettings } from "@compoz/core/domain/site/entities/theme";
 import type {
   SiteSettings,
   SiteSettingsRevisions,
@@ -104,6 +110,48 @@ export function toPrismaFooterSettings(
   footer: Readonly<FooterSettings>,
 ): Prisma.InputJsonValue {
   return toJsonValue(footer);
+}
+
+export function toPrismaHeaderSettings(
+  header: Readonly<HeaderSettings>,
+): Prisma.InputJsonValue {
+  return toJsonValue(header);
+}
+
+export function toPrismaIdentitySettings(
+  identity: Readonly<IdentitySettings>,
+): Prisma.InputJsonValue {
+  return toJsonValue(identity);
+}
+
+export function toPrismaPrimaryMenuSettings(
+  primaryMenu: Readonly<PrimaryMenuSettings>,
+): Prisma.InputJsonValue {
+  return toJsonValue(primaryMenu);
+}
+
+export function toPrismaLegalMenuSettings(
+  legalMenu: Readonly<LegalMenuSettings>,
+): Prisma.InputJsonValue {
+  return toJsonValue(legalMenu);
+}
+
+export function toPrismaSocialSettings(
+  social: Readonly<SocialSettings>,
+): Prisma.InputJsonValue {
+  return toJsonValue(social);
+}
+
+export function toPrismaSeoSettings(
+  seo: Readonly<SeoSettings>,
+): Prisma.InputJsonValue {
+  return toJsonValue(seo);
+}
+
+export function toPrismaThemeSettings(
+  theme: Readonly<ThemeSettings>,
+): Prisma.InputJsonValue {
+  return toJsonValue(theme);
 }
 
 function normalizeSeoSettings(seo: unknown): SeoSettings {

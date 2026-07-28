@@ -6,7 +6,6 @@
  * This file is a type-only contract and must contain no runtime logic.
  */
 
-import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import type { SocialSettings } from "@compoz/core/domain/site/entities/social";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 
@@ -15,9 +14,12 @@ export interface UpdateSocialSettingsDeps {
 }
 
 export interface UpdateSocialSettingsInput {
+  baseline: SocialSettings;
   patch: Partial<SocialSettings>;
+  expectedRevision?: number;
 }
 
 export interface UpdateSocialSettingsResult {
-  settings: SiteSettings;
+  settings: SocialSettings;
+  revision: number;
 }

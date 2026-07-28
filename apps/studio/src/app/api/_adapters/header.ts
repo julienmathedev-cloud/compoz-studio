@@ -14,11 +14,12 @@ import { log } from "@compoz/infra/lib/log";
 
 import type { HeaderSettings } from "@compoz/core/domain/site/entities/header";
 import type { UpdateHeaderSettingsInput } from "@compoz/core/domain/site/use-cases/header/update-header-settings.types";
-import type { UpdateHeaderSettingsIntentDTO } from "@compoz/validation/site/settings/header/header-intents";
+import type { UpdateHeaderSettingsOCCIntentDTO } from "@compoz/validation/site/settings/header/header-intents";
 
 export function adaptUpdateHeaderIntent(
-  dto: UpdateHeaderSettingsIntentDTO,
+  intent: UpdateHeaderSettingsOCCIntentDTO,
 ): UpdateHeaderSettingsInput {
+  const dto = intent.patch;
   const started = Date.now();
 
   log.debug("studio.adapter.header.patch.start", {
@@ -46,5 +47,5 @@ export function adaptUpdateHeaderIntent(
     outKeys: Object.keys(patch),
   });
 
-  return { patch };
+  return { baseline: intent.baseline, patch, expectedRevision: intent.expectedRevision };
 }

@@ -39,10 +39,11 @@ export async function GET(req: Request) {
       { ns: NS, method: "GET", state, websiteId },
       async () => {
         const repo = getSiteRepository({ websiteId });
-        const settings = await repo.readSettings(state);
+        const bundle = await repo.readSettingsWithRevisions(state);
 
         const res: GetLegalMenuResponse = {
-          settings: settings.legalMenu,
+          settings: bundle.settings.legalMenu,
+          revision: bundle.revisions.legalMenuRevision,
         };
 
         return res;
@@ -79,13 +80,11 @@ export async function PATCH(req: Request) {
       const statusCache = getSiteStatusCache({ websiteId });
 
       const run = updateLegalMenuSettings({ repo });
-      const { settings } = await run(input);
+      const { settings, revision } = await run(input);
 
       logger.debug?.("route.legalMenu.patch.afterWrite", {
         websiteId,
-        legalMenuKeys: settings.legalMenu
-          ? Object.keys(settings.legalMenu)
-          : [],
+        legalMenuKeys: Object.keys(settings),
       });
 
       /**
@@ -115,7 +114,8 @@ export async function PATCH(req: Request) {
       }
 
       const res: PatchLegalMenuResponse = {
-        settings: settings.legalMenu,
+        settings,
+        revision,
       };
 
       return res;

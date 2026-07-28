@@ -25,6 +25,7 @@ import {
 } from "@compoz/validation/common/url-fragments";
 import {
   SeoSettingsObjectSchema,
+  SeoSettingsSchema,
   StructuredDataEntityTypeSchema,
 } from "@compoz/validation/site/settings/seo/seo";
 import { z } from "zod";
@@ -238,7 +239,7 @@ export function validateSeoSettingsPatchValues(
 /**
  * Creates a SEO update intent schema with caller-provided runtime validation options.
  */
-export function createUpdateSeoSettingsIntentSchema(
+function createUpdateSeoSettingsPatchSchema(
   opts?: SeoIntentValidationOptions,
 ) {
   return UpdateSeoSettingsIntentObjectSchema.superRefine((patch, ctx) =>
@@ -246,9 +247,22 @@ export function createUpdateSeoSettingsIntentSchema(
   );
 }
 
+export function createUpdateSeoSettingsIntentSchema(
+  opts?: SeoIntentValidationOptions,
+) {
+  return z
+    .object({
+      baseline: SeoSettingsSchema,
+      patch: createUpdateSeoSettingsPatchSchema(opts),
+      expectedRevision: z.number().int().nonnegative().optional(),
+    })
+    .strict();
+}
+
 export const UpdateSeoSettingsIntentSchema =
   createUpdateSeoSettingsIntentSchema();
 
-export type UpdateSeoSettingsIntentDTO = z.infer<
+export type UpdateSeoSettingsIntentDTO = z.infer<typeof UpdateSeoSettingsIntentObjectSchema>;
+export type UpdateSeoSettingsOCCIntentDTO = z.infer<
   typeof UpdateSeoSettingsIntentSchema
 >;

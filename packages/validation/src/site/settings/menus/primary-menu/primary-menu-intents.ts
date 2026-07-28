@@ -11,11 +11,15 @@
  */
 
 import { PrimaryMenuSettingsSchema } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
-import type { z } from "zod";
+import { z } from "zod";
 
-export const UpdatePrimaryMenuSettingsIntentSchema =
-  PrimaryMenuSettingsSchema.partial().strict();
+export const UpdatePrimaryMenuSettingsIntentSchema = z.object({
+  baseline: PrimaryMenuSettingsSchema,
+  patch: PrimaryMenuSettingsSchema.partial().strict(),
+  expectedRevision: z.number().int().nonnegative().optional(),
+}).strict();
 
-export type UpdatePrimaryMenuSettingsIntentDTO = z.infer<
+export type UpdatePrimaryMenuSettingsIntentDTO = z.infer<typeof UpdatePrimaryMenuSettingsIntentSchema>["patch"];
+export type UpdatePrimaryMenuSettingsOCCIntentDTO = z.infer<
   typeof UpdatePrimaryMenuSettingsIntentSchema
 >;

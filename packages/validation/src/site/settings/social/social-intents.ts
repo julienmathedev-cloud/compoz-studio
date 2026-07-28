@@ -11,11 +11,15 @@
  */
 
 import { SocialSettingsSchema } from "@compoz/validation/site/settings/social/social";
-import type { z } from "zod";
+import { z } from "zod";
 
-export const UpdateSocialSettingsIntentSchema =
-  SocialSettingsSchema.partial().strict();
+export const UpdateSocialSettingsIntentSchema = z.object({
+  baseline: SocialSettingsSchema,
+  patch: SocialSettingsSchema.partial().strict(),
+  expectedRevision: z.number().int().nonnegative().optional(),
+}).strict();
 
-export type UpdateSocialSettingsIntentDTO = z.infer<
+export type UpdateSocialSettingsIntentDTO = z.infer<typeof UpdateSocialSettingsIntentSchema>["patch"];
+export type UpdateSocialSettingsOCCIntentDTO = z.infer<
   typeof UpdateSocialSettingsIntentSchema
 >;

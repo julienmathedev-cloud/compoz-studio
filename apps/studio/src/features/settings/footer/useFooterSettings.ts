@@ -14,7 +14,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useRef } from "react";
+import { useRef, useLayoutEffect } from "react";
 
 import {
   DEFAULT_CONTENT_STATE,
@@ -23,6 +23,11 @@ import {
 import { DEFAULT_FOOTER_SETTINGS } from "@compoz/core/domain/site/defaults/footer";
 import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
+import {
+  createRevisionedDraftSnapshot,
+  requireCurrentSettingsOperation,
+  throwIfSettingsOperationAborted,
+} from "@compoz/studio/features/settings/_shared/revisioned-draft-snapshot";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
@@ -47,10 +52,14 @@ export function useFooterSettings(): UseFooterSettingsResult {
   const t = useTranslations();
   const queryClient = useQueryClient();
   const websiteId = useWebsiteId();
-  const snapshotRef = useRef<{
-    baseline: FooterFormValues;
-    revision: number;
-  } | null>(null);
+  const snapshot = useRef(
+    createRevisionedDraftSnapshot<FooterFormValues>(),
+  ).current;
+  const websiteIdRef = useRef(websiteId);
+
+  useLayoutEffect(() => {
+    websiteIdRef.current = websiteId;
+  }, [websiteId]);
 
   const entityLabel = t("studio.shared.entities.footer");
 
@@ -62,61 +71,75 @@ export function useFooterSettings(): UseFooterSettingsResult {
     ),
 
     load: async (state: ContentState, opts) => {
-      const bundle = await getSettingsBundle(queryClient, websiteId, state);
+      const load = snapshot.beginLoad();
+      const capturedWebsiteId = websiteIdRef.current;
+      const bundle = await getSettingsBundle(
+        queryClient,
+        capturedWebsiteId,
+        state,
+      );
 
-      if (opts?.signal?.aborted) {
-        throw new DOMException("The operation was aborted.", "AbortError");
-      }
+      throwIfSettingsOperationAborted(opts?.signal);
 
       const baseline = normalizeFooterFormValues(
         toFooterFormValuesFromDTO(bundle.settings.footer),
       );
 
-      snapshotRef.current =
-        state === DEFAULT_CONTENT_STATE
-          ? {
-              baseline: { ...baseline },
-              revision: bundle.revisions.footerRevision,
-            }
-          : null;
-
-      return baseline;
+      return requireCurrentSettingsOperation(
+        snapshot.commitLoad(load, {
+          websiteId: capturedWebsiteId,
+          baseline,
+          revision: bundle.revisions.footerRevision,
+          writable: state === DEFAULT_CONTENT_STATE,
+          isWebsiteCurrent: () => websiteIdRef.current === capturedWebsiteId,
+        }),
+      );
     },
 
     save: async (next, opts) => {
-      const snapshot = snapshotRef.current;
+      const capturedWebsiteId = websiteIdRef.current;
+      const capturedSnapshot = snapshot.captureForSave(capturedWebsiteId);
 
-      if (!snapshot) {
+      if (!capturedSnapshot) {
         throw new Error(
           "Footer settings cannot be saved without a revisioned draft snapshot.",
         );
       }
 
       const intent = toUpdateFooterIntentDTOFromFormValues(
-        snapshot.baseline,
+        capturedSnapshot.baseline,
         next,
-        snapshot.revision,
+        capturedSnapshot.expectedRevision,
       );
       const dto = await settingsStudioApi.footer.patch(intent, opts);
+      throwIfSettingsOperationAborted(opts?.signal);
+
       const baseline = normalizeFooterFormValues(
         toFooterFormValuesFromDTO(dto.settings),
       );
 
-      snapshotRef.current = {
-        baseline: { ...baseline },
-        revision: dto.revision,
-      };
-
-      patchSettingsBundleCache(queryClient, websiteId, DEFAULT_CONTENT_STATE, {
-        settings: {
-          footer: dto.settings,
+      patchSettingsBundleCache(
+        queryClient,
+        capturedWebsiteId,
+        DEFAULT_CONTENT_STATE,
+        {
+          settings: {
+            footer: dto.settings,
+          },
+          revisions: {
+            footerRevision: dto.revision,
+          },
         },
-        revisions: {
-          footerRevision: dto.revision,
-        },
-      });
+      );
 
-      return baseline;
+      return requireCurrentSettingsOperation(
+        snapshot.commitSave(capturedSnapshot, {
+          websiteId: capturedWebsiteId,
+          baseline,
+          revision: dto.revision,
+          isWebsiteCurrent: () => websiteIdRef.current === capturedWebsiteId,
+        }),
+      );
     },
 
     // Only send fields that changed after normalization.

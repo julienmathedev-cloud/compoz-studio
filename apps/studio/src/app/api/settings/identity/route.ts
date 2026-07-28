@@ -39,10 +39,11 @@ export async function GET(req: Request) {
       { ns: NS, method: "GET", state, websiteId },
       async () => {
         const repo = getSiteRepository({ websiteId });
-        const settings = await repo.readSettings(state);
+        const bundle = await repo.readSettingsWithRevisions(state);
 
         const res: GetIdentityResponse = {
-          settings: settings.identity,
+          settings: bundle.settings.identity,
+          revision: bundle.revisions.identityRevision,
         };
 
         return res;
@@ -79,11 +80,11 @@ export async function PATCH(req: Request) {
       const statusCache = getSiteStatusCache({ websiteId });
 
       const run = updateIdentitySettings({ repo });
-      const { settings } = await run(input);
+      const { settings, revision } = await run(input);
 
       logger.debug?.("route.identity.patch.afterWrite", {
         websiteId,
-        identityKeys: settings.identity ? Object.keys(settings.identity) : [],
+        identityKeys: Object.keys(settings),
       });
 
       /**
@@ -113,7 +114,8 @@ export async function PATCH(req: Request) {
       }
 
       const res: PatchIdentityResponse = {
-        settings: settings.identity,
+        settings,
+        revision,
       };
 
       return res;

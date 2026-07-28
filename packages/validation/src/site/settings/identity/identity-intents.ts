@@ -14,7 +14,7 @@ import { IDENTITY_SITENAME } from "@compoz/core/constants/limits/identity";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { ImageSchema } from "@compoz/validation/common/image";
 import { AssetUrlSchema } from "@compoz/validation/common/url-fragments";
-import { IdentitySettingsBaseSchema } from "@compoz/validation/site/settings/identity/identity";
+import { IdentitySettingsBaseSchema, IdentitySettingsSchema } from "@compoz/validation/site/settings/identity/identity";
 import { z } from "zod";
 
 /**
@@ -28,7 +28,7 @@ const AssetUrlPatchableSchema = z.union([
 
 const LogoPatchableSchema = z.union([ImageSchema, z.null()]);
 
-export const UpdateIdentitySettingsIntentSchema =
+const IdentitySettingsPatchSchema =
   IdentitySettingsBaseSchema.partial()
     .extend({
       logo: LogoPatchableSchema.optional(),
@@ -50,6 +50,13 @@ export const UpdateIdentitySettingsIntentSchema =
     })
     .strict();
 
-export type UpdateIdentitySettingsIntentDTO = z.infer<
+export const UpdateIdentitySettingsIntentSchema = z.object({
+  baseline: IdentitySettingsSchema,
+  patch: IdentitySettingsPatchSchema,
+  expectedRevision: z.number().int().nonnegative().optional(),
+}).strict();
+
+export type UpdateIdentitySettingsIntentDTO = z.infer<typeof IdentitySettingsPatchSchema>;
+export type UpdateIdentitySettingsOCCIntentDTO = z.infer<
   typeof UpdateIdentitySettingsIntentSchema
 >;

@@ -17,7 +17,7 @@ import { trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type { IdentitySettings } from "@compoz/core/domain/site/entities/identity";
 import type { UpdateIdentitySettingsInput } from "@compoz/core/domain/site/use-cases/identity/update-identity-settings.types";
-import type { UpdateIdentitySettingsIntentDTO } from "@compoz/validation/site/settings/identity/identity-intents";
+import type { UpdateIdentitySettingsOCCIntentDTO } from "@compoz/validation/site/settings/identity/identity-intents";
 
 function optionalTrimmedString(
   value: string | null | undefined,
@@ -28,8 +28,9 @@ function optionalTrimmedString(
 }
 
 export function adaptUpdateIdentityIntent(
-  dto: UpdateIdentitySettingsIntentDTO,
+  intent: UpdateIdentitySettingsOCCIntentDTO,
 ): UpdateIdentitySettingsInput {
+  const dto = intent.patch;
   const started = Date.now();
 
   log.debug("studio.adapter.identity.patch.start", {
@@ -113,5 +114,36 @@ export function adaptUpdateIdentityIntent(
     outKeys: Object.keys(patch),
   });
 
-  return { patch };
+  const baselineLogo = intent.baseline.logo;
+  const baselineFaviconMediaAssetId = optionalTrimmedString(
+    intent.baseline.faviconMediaAssetId,
+  );
+
+  return {
+    baseline: {
+      siteName: trimOrKeep(intent.baseline.siteName),
+      tagline:
+        intent.baseline.tagline === null
+          ? null
+          : trimOrKeep(intent.baseline.tagline) || null,
+      logo:
+        baselineLogo === null
+          ? null
+          : {
+              src: trimOrKeep(baselineLogo.src),
+              alt: trimOrKeep(baselineLogo.alt),
+              width: baselineLogo.width,
+              height: baselineLogo.height,
+              ...(optionalTrimmedString(baselineLogo.mediaAssetId)
+                ? { mediaAssetId: optionalTrimmedString(baselineLogo.mediaAssetId) }
+                : {}),
+            },
+      faviconUrl: asAssetUrlOrNull(intent.baseline.faviconUrl),
+      ...(baselineFaviconMediaAssetId
+        ? { faviconMediaAssetId: baselineFaviconMediaAssetId }
+        : {}),
+    },
+    patch,
+    expectedRevision: intent.expectedRevision,
+  };
 }

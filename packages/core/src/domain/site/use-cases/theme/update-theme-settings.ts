@@ -1,15 +1,13 @@
 /**
  * @file packages/core/src/domain/site/use-cases/theme/update-theme-settings.ts
  * @layer core/domain/site/use-cases/theme
- * @description Applies a shallow patch to theme settings.
- * @remarks
- * The patch is validated upstream; theme invariants are asserted before persistence.
+ * @description Applies a revisioned, field-level three-way merge to theme settings.
+ * @remarks Light and dark token sets are atomic composites compared structurally; the merged result uses the business validator before CAS.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-import { shallowMergeWithChangedKeys } from "@compoz/core/domain/site/_shared/merge";
-import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
-import type { ThemeSettings } from "@compoz/core/domain/site/entities/theme";
+import { equalJsonValue } from "@compoz/core/domain/revisions/json-value-equality";
+import { updateRevisionedSettingsSection } from "@compoz/core/domain/site/use-cases/_shared/update-revisioned-settings-section";
 import type {
   UpdateThemeSettingsDeps,
   UpdateThemeSettingsInput,
@@ -17,29 +15,42 @@ import type {
 } from "@compoz/core/domain/site/use-cases/theme/update-theme-settings.types";
 import { assertThemeSettings } from "@compoz/core/domain/site/validators/theme";
 
+const THEME_FIELDS = [
+  "enableDarkMode",
+  "mode",
+  "fontFamily",
+  "headingFont",
+  "revealPreset",
+  "lightTokens",
+  "darkTokens",
+] as const;
+const STRUCTURAL_THEME_FIELDS = new Set<string>(["lightTokens", "darkTokens"]);
 export function updateThemeSettings({ repo }: UpdateThemeSettingsDeps) {
-  return async function run(
-    input: UpdateThemeSettingsInput,
-  ): Promise<UpdateThemeSettingsResult> {
-    const patch: Partial<ThemeSettings> = input.patch ?? {};
+  return (input: UpdateThemeSettingsInput): Promise<UpdateThemeSettingsResult> =>
+    updateRevisionedSettingsSection({
+      repo,
+      input,
+      resourceId: "theme",
+      fields: THEME_FIELDS,
+      readCurrent: async () => {
+        const bundle = await repo.readSettingsWithRevisions(
+          DEFAULT_CONTENT_STATE,
+        );
 
-    await repo.ensureBase();
-
-    const current = await repo.readSettings(DEFAULT_CONTENT_STATE);
-
-    const { next: themeNext, changedKeys } =
-      shallowMergeWithChangedKeys<ThemeSettings>(current.theme, patch);
-
-    if (changedKeys.length === 0) {
-      return { settings: current };
-    }
-
-    assertThemeSettings(themeNext);
-
-    const next: SiteSettings = { ...current, theme: themeNext };
-
-    await repo.putSettings(DEFAULT_CONTENT_STATE, next);
-
-    return { settings: next };
-  };
+        return {
+          settings: bundle.settings.theme,
+          revision: bundle.revisions.themeRevision,
+        };
+      },
+      compareAndSet: (expectedRevision, theme) =>
+        repo.compareAndSetDraftTheme({
+          expectedRevision,
+          theme,
+        }),
+      equals: (field, left, right) =>
+        STRUCTURAL_THEME_FIELDS.has(field)
+          ? equalJsonValue(left, right)
+          : Object.is(left, right),
+      validate: assertThemeSettings,
+    });
 }

@@ -11,11 +11,15 @@
  */
 
 import { HeaderSettingsSchema } from "@compoz/validation/site/settings/header/header";
-import type { z } from "zod";
+import { z } from "zod";
 
-export const UpdateHeaderSettingsIntentSchema =
-  HeaderSettingsSchema.partial().strict();
+export const UpdateHeaderSettingsIntentSchema = z.object({
+  baseline: HeaderSettingsSchema,
+  patch: HeaderSettingsSchema.partial().strict(),
+  expectedRevision: z.number().int().nonnegative().optional(),
+}).strict();
 
-export type UpdateHeaderSettingsIntentDTO = z.infer<
+export type UpdateHeaderSettingsIntentDTO = z.infer<typeof UpdateHeaderSettingsIntentSchema>["patch"];
+export type UpdateHeaderSettingsOCCIntentDTO = z.infer<
   typeof UpdateHeaderSettingsIntentSchema
 >;

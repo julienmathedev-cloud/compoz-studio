@@ -1,15 +1,13 @@
 /**
  * @file packages/core/src/domain/site/use-cases/legal-menu/update-legal-menu-settings.ts
  * @layer core/domain/site/use-cases/legal-menu
- * @description Applies a shallow patch to legal menu settings.
- * @remarks
- * Legal menu invariants are asserted before persistence; violations raise a `DomainError`.
+ * @description Applies a revisioned three-way merge to legal-menu settings.
+ * @remarks The items array is atomic and structurally compared; the merged result uses the business validator before CAS.
  */
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-import { shallowMergeWithChangedKeys } from "@compoz/core/domain/site/_shared/merge";
-import type { LegalMenuSettings } from "@compoz/core/domain/site/entities/legal-menu";
-import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
+import { equalJsonValue } from "@compoz/core/domain/revisions/json-value-equality";
+import { updateRevisionedSettingsSection } from "@compoz/core/domain/site/use-cases/_shared/update-revisioned-settings-section";
 import type {
   UpdateLegalMenuSettingsDeps,
   UpdateLegalMenuSettingsInput,
@@ -17,30 +15,32 @@ import type {
 } from "@compoz/core/domain/site/use-cases/legal-menu/update-legal-menu-settings.types";
 import { assertLegalMenuSettings } from "@compoz/core/domain/site/validators/legal-menu";
 
+const LEGAL_MENU_FIELDS = ["items"] as const;
 export function updateLegalMenuSettings({ repo }: UpdateLegalMenuSettingsDeps) {
-  return async function run(
+  return (
     input: UpdateLegalMenuSettingsInput,
-  ): Promise<UpdateLegalMenuSettingsResult> {
-    const patch = input.patch ?? {};
+  ): Promise<UpdateLegalMenuSettingsResult> =>
+    updateRevisionedSettingsSection({
+      repo,
+      input,
+      resourceId: "legalMenu",
+      fields: LEGAL_MENU_FIELDS,
+      readCurrent: async () => {
+        const bundle = await repo.readSettingsWithRevisions(
+          DEFAULT_CONTENT_STATE,
+        );
 
-    await repo.ensureBase();
-
-    const current = await repo.readSettings(DEFAULT_CONTENT_STATE);
-
-    const { next: legalMenuNext, changedKeys } =
-      shallowMergeWithChangedKeys<LegalMenuSettings>(current.legalMenu, patch);
-
-    if (changedKeys.length === 0) {
-      return { settings: current };
-    }
-
-    // Blocking domain invariants before persistence.
-    assertLegalMenuSettings(legalMenuNext);
-
-    const next: SiteSettings = { ...current, legalMenu: legalMenuNext };
-
-    await repo.putSettings(DEFAULT_CONTENT_STATE, next);
-
-    return { settings: next };
-  };
+        return {
+          settings: bundle.settings.legalMenu,
+          revision: bundle.revisions.legalMenuRevision,
+        };
+      },
+      compareAndSet: (expectedRevision, legalMenu) =>
+        repo.compareAndSetDraftLegalMenu({
+          expectedRevision,
+          legalMenu,
+        }),
+      equals: (_field, left, right) => equalJsonValue(left, right),
+      validate: assertLegalMenuSettings,
+    });
 }

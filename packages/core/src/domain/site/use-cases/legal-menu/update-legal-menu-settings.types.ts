@@ -7,7 +7,6 @@
  */
 
 import type { LegalMenuSettings } from "@compoz/core/domain/site/entities/legal-menu";
-import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 
 export interface UpdateLegalMenuSettingsDeps {
@@ -15,10 +14,12 @@ export interface UpdateLegalMenuSettingsDeps {
 }
 
 export interface UpdateLegalMenuSettingsInput {
-  /** Shallow patch applied to the persisted legal menu settings. */
+  baseline: LegalMenuSettings;
   patch: Partial<LegalMenuSettings>;
+  expectedRevision?: number;
 }
 
 export interface UpdateLegalMenuSettingsResult {
-  settings: SiteSettings;
+  settings: LegalMenuSettings;
+  revision: number;
 }

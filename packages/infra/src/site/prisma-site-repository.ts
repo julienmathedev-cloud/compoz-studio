@@ -19,6 +19,20 @@ import type {
   SiteSettingsWithRevisions,
 } from "@compoz/core/domain/site/entities/site-settings";
 import type {
+  CompareAndSetDraftHeaderInput,
+  CompareAndSetDraftIdentityInput,
+  CompareAndSetDraftLegalMenuInput,
+  CompareAndSetDraftPrimaryMenuInput,
+  CompareAndSetDraftSeoInput,
+  CompareAndSetDraftSocialInput,
+  CompareAndSetDraftThemeInput,
+  DraftHeaderWithRevision,
+  DraftIdentityWithRevision,
+  DraftLegalMenuWithRevision,
+  DraftPrimaryMenuWithRevision,
+  DraftSeoWithRevision,
+  DraftSocialWithRevision,
+  DraftThemeWithRevision,
   CompareAndSetDraftFooterInput,
   DraftFooterWithRevision,
   SiteRepository,
@@ -31,14 +45,47 @@ import {
   toDomainSiteSettings,
   toDomainSiteSettingsWithRevisions,
   toPrismaFooterSettings,
+  toPrismaHeaderSettings,
+  toPrismaIdentitySettings,
+  toPrismaLegalMenuSettings,
+  toPrismaPrimaryMenuSettings,
+  toPrismaSeoSettings,
   toPrismaSiteSettingsCreateData,
   toPrismaSiteSettingsUpdateData,
+  toPrismaSocialSettings,
+  toPrismaThemeSettings,
   type PrismaContentState,
 } from "@compoz/infra/site/mappers/site-settings.mapper";
 
 type PrismaSiteRepositoryOptions = Readonly<{
   websiteId: string;
   client?: PrismaClient | Prisma.TransactionClient;
+}>;
+
+type DraftSettingsSectionCasOptions<TSettings> = Readonly<{
+  updateWhere: (expectedRevision: number) => Prisma.SiteSettingsWhereInput;
+  updateData: (settings: Readonly<TSettings>) => Prisma.SiteSettingsUpdateManyMutationInput;
+  createSettings: (
+    defaults: SiteSettings,
+    settings: Readonly<TSettings>,
+  ) => SiteSettings;
+  createRevision: Partial<
+    Pick<
+      Prisma.SiteSettingsCreateManyInput,
+      | "headerRevision"
+      | "footerRevision"
+      | "identityRevision"
+      | "primaryMenuRevision"
+      | "legalMenuRevision"
+      | "socialRevision"
+      | "seoRevision"
+      | "themeRevision"
+    >
+  >;
+  result: (
+    bundle: SiteSettingsWithRevisions,
+  ) => Readonly<{ settings: TSettings; revision: number }>;
+  operation: string;
 }>;
 
 function toPrismaContentState(state: ContentState): PrismaContentState {
@@ -253,6 +300,36 @@ export class PrismaSiteRepository implements SiteRepository {
   async compareAndSetDraftFooter(
     input: CompareAndSetDraftFooterInput,
   ): Promise<DraftFooterWithRevision | null> {
+    return this.compareAndSetDraftSettingsSection(
+      {
+        expectedRevision: input.expectedRevision,
+        settings: input.footer,
+      },
+      {
+        operation: "PrismaSiteRepository.compareAndSetDraftFooter",
+        updateWhere: (footerRevision) => ({
+          websiteId: this.websiteId,
+          state: "draft",
+          footerRevision,
+        }),
+        updateData: (footer) => ({
+          footer: toPrismaFooterSettings(footer),
+          footerRevision: { increment: 1 },
+        }),
+        createSettings: (defaults, footer) => ({ ...defaults, footer }),
+        createRevision: { footerRevision: 1 },
+        result: (bundle) => ({
+          settings: bundle.settings.footer,
+          revision: bundle.revisions.footerRevision,
+        }),
+      },
+    );
+  }
+
+  private async compareAndSetDraftSettingsSection<TSettings>(
+    input: Readonly<{ expectedRevision: number; settings: Readonly<TSettings> }>,
+    options: DraftSettingsSectionCasOptions<TSettings>,
+  ): Promise<Readonly<{ settings: TSettings; revision: number }> | null> {
     const client = this.client;
 
     if ("$transaction" in client) {
@@ -262,21 +339,14 @@ export class PrismaSiteRepository implements SiteRepository {
           client: tx,
         });
 
-        return repository.compareAndSetDraftFooter(input);
+        return repository.compareAndSetDraftSettingsSection(input, options);
       });
     }
 
     const transactionClient = client as Prisma.TransactionClient;
     const update = await transactionClient.siteSettings.updateMany({
-      where: {
-        websiteId: this.websiteId,
-        state: "draft",
-        footerRevision: input.expectedRevision,
-      },
-      data: {
-        footer: toPrismaFooterSettings(input.footer),
-        footerRevision: { increment: 1 },
-      },
+      where: options.updateWhere(input.expectedRevision),
+      data: options.updateData(input.settings),
     });
 
     if (update.count === 1) {
@@ -288,31 +358,24 @@ export class PrismaSiteRepository implements SiteRepository {
           },
         },
       });
-
       if (!row) {
         throw new Error(
-          "PrismaSiteRepository.compareAndSetDraftFooter: updated footer row not found.",
+          `${options.operation}: updated draft settings row not found.`,
         );
       }
-
-      const bundle = toDomainSiteSettingsWithRevisions(row);
-
-      return {
-        settings: bundle.settings.footer,
-        revision: bundle.revisions.footerRevision,
-      };
+      return options.result(toDomainSiteSettingsWithRevisions(row));
     }
 
     if (input.expectedRevision !== 0) return null;
 
-    const defaults = toDomainSiteSettings(null);
     const creation = await transactionClient.siteSettings.createMany({
       data: {
-        ...toPrismaSiteSettingsCreateData(this.websiteId, "draft", {
-          ...defaults,
-          footer: input.footer,
-        }),
-        footerRevision: 1,
+        ...toPrismaSiteSettingsCreateData(
+          this.websiteId,
+          "draft",
+          options.createSettings(toDomainSiteSettings(null), input.settings),
+        ),
+        ...options.createRevision,
       },
       skipDuplicates: true,
     });
@@ -327,19 +390,215 @@ export class PrismaSiteRepository implements SiteRepository {
         },
       },
     });
-
     if (!row) {
       throw new Error(
-        "PrismaSiteRepository.compareAndSetDraftFooter: created footer row not found.",
+        `${options.operation}: created draft settings row not found.`,
       );
     }
+    return options.result(toDomainSiteSettingsWithRevisions(row));
+  }
 
-    const bundle = toDomainSiteSettingsWithRevisions(row);
+  async compareAndSetDraftHeader(
+    input: CompareAndSetDraftHeaderInput,
+  ): Promise<DraftHeaderWithRevision | null> {
+    return this.compareAndSetDraftSettingsSection(
+      {
+        expectedRevision: input.expectedRevision,
+        settings: input.header,
+      },
+      {
+        operation: "PrismaSiteRepository.compareAndSetDraftHeader",
+        updateWhere: (headerRevision) => ({
+          websiteId: this.websiteId,
+          state: "draft",
+          headerRevision,
+        }),
+        updateData: (header) => ({
+          header: toPrismaHeaderSettings(header),
+          headerRevision: { increment: 1 },
+        }),
+        createSettings: (defaults, header) => ({ ...defaults, header }),
+        createRevision: { headerRevision: 1 },
+        result: (bundle) => ({
+          settings: bundle.settings.header,
+          revision: bundle.revisions.headerRevision,
+        }),
+      },
+    );
+  }
 
-    return {
-      settings: bundle.settings.footer,
-      revision: bundle.revisions.footerRevision,
-    };
+  async compareAndSetDraftIdentity(
+    input: CompareAndSetDraftIdentityInput,
+  ): Promise<DraftIdentityWithRevision | null> {
+    return this.compareAndSetDraftSettingsSection(
+      {
+        expectedRevision: input.expectedRevision,
+        settings: input.identity,
+      },
+      {
+        operation: "PrismaSiteRepository.compareAndSetDraftIdentity",
+        updateWhere: (identityRevision) => ({
+          websiteId: this.websiteId,
+          state: "draft",
+          identityRevision,
+        }),
+        updateData: (identity) => ({
+          identity: toPrismaIdentitySettings(identity),
+          identityRevision: { increment: 1 },
+        }),
+        createSettings: (defaults, identity) => ({ ...defaults, identity }),
+        createRevision: { identityRevision: 1 },
+        result: (bundle) => ({
+          settings: bundle.settings.identity,
+          revision: bundle.revisions.identityRevision,
+        }),
+      },
+    );
+  }
+
+  async compareAndSetDraftPrimaryMenu(
+    input: CompareAndSetDraftPrimaryMenuInput,
+  ): Promise<DraftPrimaryMenuWithRevision | null> {
+    return this.compareAndSetDraftSettingsSection(
+      {
+        expectedRevision: input.expectedRevision,
+        settings: input.primaryMenu,
+      },
+      {
+        operation: "PrismaSiteRepository.compareAndSetDraftPrimaryMenu",
+        updateWhere: (primaryMenuRevision) => ({
+          websiteId: this.websiteId,
+          state: "draft",
+          primaryMenuRevision,
+        }),
+        updateData: (primaryMenu) => ({
+          primaryMenu: toPrismaPrimaryMenuSettings(primaryMenu),
+          primaryMenuRevision: { increment: 1 },
+        }),
+        createSettings: (defaults, primaryMenu) => ({ ...defaults, primaryMenu }),
+        createRevision: { primaryMenuRevision: 1 },
+        result: (bundle) => ({
+          settings: bundle.settings.primaryMenu,
+          revision: bundle.revisions.primaryMenuRevision,
+        }),
+      },
+    );
+  }
+
+  async compareAndSetDraftLegalMenu(
+    input: CompareAndSetDraftLegalMenuInput,
+  ): Promise<DraftLegalMenuWithRevision | null> {
+    return this.compareAndSetDraftSettingsSection(
+      {
+        expectedRevision: input.expectedRevision,
+        settings: input.legalMenu,
+      },
+      {
+        operation: "PrismaSiteRepository.compareAndSetDraftLegalMenu",
+        updateWhere: (legalMenuRevision) => ({
+          websiteId: this.websiteId,
+          state: "draft",
+          legalMenuRevision,
+        }),
+        updateData: (legalMenu) => ({
+          legalMenu: toPrismaLegalMenuSettings(legalMenu),
+          legalMenuRevision: { increment: 1 },
+        }),
+        createSettings: (defaults, legalMenu) => ({ ...defaults, legalMenu }),
+        createRevision: { legalMenuRevision: 1 },
+        result: (bundle) => ({
+          settings: bundle.settings.legalMenu,
+          revision: bundle.revisions.legalMenuRevision,
+        }),
+      },
+    );
+  }
+
+  async compareAndSetDraftSocial(
+    input: CompareAndSetDraftSocialInput,
+  ): Promise<DraftSocialWithRevision | null> {
+    return this.compareAndSetDraftSettingsSection(
+      {
+        expectedRevision: input.expectedRevision,
+        settings: input.social,
+      },
+      {
+        operation: "PrismaSiteRepository.compareAndSetDraftSocial",
+        updateWhere: (socialRevision) => ({
+          websiteId: this.websiteId,
+          state: "draft",
+          socialRevision,
+        }),
+        updateData: (social) => ({
+          social: toPrismaSocialSettings(social),
+          socialRevision: { increment: 1 },
+        }),
+        createSettings: (defaults, social) => ({ ...defaults, social }),
+        createRevision: { socialRevision: 1 },
+        result: (bundle) => ({
+          settings: bundle.settings.social,
+          revision: bundle.revisions.socialRevision,
+        }),
+      },
+    );
+  }
+
+  async compareAndSetDraftSeo(
+    input: CompareAndSetDraftSeoInput,
+  ): Promise<DraftSeoWithRevision | null> {
+    return this.compareAndSetDraftSettingsSection(
+      {
+        expectedRevision: input.expectedRevision,
+        settings: input.seo,
+      },
+      {
+        operation: "PrismaSiteRepository.compareAndSetDraftSeo",
+        updateWhere: (seoRevision) => ({
+          websiteId: this.websiteId,
+          state: "draft",
+          seoRevision,
+        }),
+        updateData: (seo) => ({
+          seo: toPrismaSeoSettings(seo),
+          seoRevision: { increment: 1 },
+        }),
+        createSettings: (defaults, seo) => ({ ...defaults, seo }),
+        createRevision: { seoRevision: 1 },
+        result: (bundle) => ({
+          settings: bundle.settings.seo,
+          revision: bundle.revisions.seoRevision,
+        }),
+      },
+    );
+  }
+
+  async compareAndSetDraftTheme(
+    input: CompareAndSetDraftThemeInput,
+  ): Promise<DraftThemeWithRevision | null> {
+    return this.compareAndSetDraftSettingsSection(
+      {
+        expectedRevision: input.expectedRevision,
+        settings: input.theme,
+      },
+      {
+        operation: "PrismaSiteRepository.compareAndSetDraftTheme",
+        updateWhere: (themeRevision) => ({
+          websiteId: this.websiteId,
+          state: "draft",
+          themeRevision,
+        }),
+        updateData: (theme) => ({
+          theme: toPrismaThemeSettings(theme),
+          themeRevision: { increment: 1 },
+        }),
+        createSettings: (defaults, theme) => ({ ...defaults, theme }),
+        createRevision: { themeRevision: 1 },
+        result: (bundle) => ({
+          settings: bundle.settings.theme,
+          revision: bundle.revisions.themeRevision,
+        }),
+      },
+    );
   }
 
   async putSettings(

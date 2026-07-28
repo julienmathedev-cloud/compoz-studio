@@ -15,6 +15,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useLayoutEffect, useRef } from "react";
 
 import {
   DEFAULT_CONTENT_STATE,
@@ -23,6 +24,11 @@ import {
 import { DEFAULT_THEME_SETTINGS } from "@compoz/core/domain/site/defaults/theme";
 import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
+import {
+  createRevisionedDraftSnapshot,
+  requireCurrentSettingsOperation,
+  throwIfSettingsOperationAborted,
+} from "@compoz/studio/features/settings/_shared/revisioned-draft-snapshot";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
@@ -47,6 +53,14 @@ export function useThemeSettings(): UseThemeSettingsResult {
   const t = useTranslations();
   const queryClient = useQueryClient();
   const websiteId = useWebsiteId();
+  const snapshot = useRef(
+    createRevisionedDraftSnapshot<ThemeFormValues>(),
+  ).current;
+  const websiteIdRef = useRef(websiteId);
+
+  useLayoutEffect(() => {
+    websiteIdRef.current = websiteId;
+  }, [websiteId]);
 
   const entityLabel = t("studio.shared.entities.theme");
 
@@ -58,31 +72,77 @@ export function useThemeSettings(): UseThemeSettingsResult {
     ),
 
     /** Shared bundle read with cache-first behavior handled by `getSettingsBundle`. */
-    load: async (state: ContentState) => {
-      const bundle = await getSettingsBundle(queryClient, websiteId, state);
+    load: async (state: ContentState, opts) => {
+      const load = snapshot.beginLoad();
+      const capturedWebsiteId = websiteIdRef.current;
+      const bundle = await getSettingsBundle(
+        queryClient,
+        capturedWebsiteId,
+        state,
+      );
+      throwIfSettingsOperationAborted(opts?.signal);
 
-      return normalizeThemeFormValues(
+      const baseline = normalizeThemeFormValues(
         toThemeFormValuesFromDTO(bundle.settings.theme),
+      );
+
+      return requireCurrentSettingsOperation(
+        snapshot.commitLoad(load, {
+          websiteId: capturedWebsiteId,
+          baseline,
+          revision: bundle.revisions.themeRevision,
+          writable: state === DEFAULT_CONTENT_STATE,
+          isWebsiteCurrent: () => websiteIdRef.current === capturedWebsiteId,
+        }),
       );
     },
 
     /** Writes the theme slice, then mirrors the response into the settings bundle cache. */
     save: async (next, opts) => {
+      const capturedWebsiteId = websiteIdRef.current;
+      const capturedSnapshot = snapshot.captureForSave(capturedWebsiteId);
+
+      if (!capturedSnapshot) {
+        throw new Error(
+          "Theme settings cannot be saved without a revisioned draft snapshot.",
+        );
+      }
+
       const patch = toUpdateThemeIntentDTOFromFormValues(next);
-      const dto = await settingsStudioApi.theme.patch(patch, opts);
+      const dto = await settingsStudioApi.theme.patch(
+        {
+          baseline: capturedSnapshot.baseline,
+          patch,
+          expectedRevision: capturedSnapshot.expectedRevision,
+        },
+        opts,
+      );
+      throwIfSettingsOperationAborted(opts?.signal);
+
+      const baseline = normalizeThemeFormValues(
+        toThemeFormValuesFromDTO(dto.settings),
+      );
 
       patchSettingsBundleCache(
         queryClient,
-        websiteId,
+        capturedWebsiteId,
         DEFAULT_CONTENT_STATE,
         {
           settings: {
             theme: dto.settings,
           },
+          revisions: { themeRevision: dto.revision },
         },
       );
 
-      return normalizeThemeFormValues(toThemeFormValuesFromDTO(dto.settings));
+      return requireCurrentSettingsOperation(
+        snapshot.commitSave(capturedSnapshot, {
+          websiteId: capturedWebsiteId,
+          baseline,
+          revision: dto.revision,
+          isWebsiteCurrent: () => websiteIdRef.current === capturedWebsiteId,
+        }),
+      );
     },
 
     /** PATCH semantics: only changed form fields are sent to the API. */

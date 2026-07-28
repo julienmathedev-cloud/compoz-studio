@@ -39,10 +39,11 @@ export async function GET(req: Request) {
       { ns: NS, method: "GET", state, websiteId },
       async () => {
         const repo = getSiteRepository({ websiteId });
-        const settings = await repo.readSettings(state);
+        const bundle = await repo.readSettingsWithRevisions(state);
 
         const res: GetSeoResponse = {
-          settings: settings.seo,
+          settings: bundle.settings.seo,
+          revision: bundle.revisions.seoRevision,
         };
 
         return res;
@@ -85,11 +86,11 @@ export async function PATCH(req: Request) {
       const statusCache = getSiteStatusCache({ websiteId });
 
       const run = updateSeoSettings({ repo });
-      const { settings } = await run(input);
+      const { settings, revision } = await run(input);
 
       logger.debug?.("route.seo.patch.afterWrite", {
         websiteId,
-        seoKeys: settings.seo ? Object.keys(settings.seo) : [],
+        seoKeys: Object.keys(settings),
       });
 
       /**
@@ -119,7 +120,8 @@ export async function PATCH(req: Request) {
       }
 
       const res: PatchSeoResponse = {
-        settings: settings.seo,
+        settings,
+        revision,
       };
 
       return res;

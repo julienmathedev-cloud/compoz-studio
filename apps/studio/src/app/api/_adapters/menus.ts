@@ -25,8 +25,8 @@ import type { UpdatePrimaryMenuSettingsInput } from "@compoz/core/domain/site/us
 import { asAssetUrl } from "@compoz/core/domain/urls/href";
 import { log } from "@compoz/infra/lib/log";
 import { trimOrKeep } from "@compoz/studio/lib/strings";
-import type { UpdateLegalMenuSettingsIntentDTO } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-intents";
-import type { UpdatePrimaryMenuSettingsIntentDTO } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-intents";
+import type { UpdateLegalMenuSettingsOCCIntentDTO } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-intents";
+import type { UpdatePrimaryMenuSettingsOCCIntentDTO } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-intents";
 
 // Legal menu adapters.
 
@@ -68,8 +68,9 @@ function adaptLegalItem(dto: {
  * Contract: `items` is processed only when it is an array. Each item is adapted.
  */
 export function adaptUpdateLegalMenuIntent(
-  dto: UpdateLegalMenuSettingsIntentDTO,
+  intent: UpdateLegalMenuSettingsOCCIntentDTO,
 ): UpdateLegalMenuSettingsInput {
+  const dto = intent.patch;
   const started = Date.now();
 
   log.debug("studio.adapter.legalMenu.patch.start", {
@@ -88,7 +89,11 @@ export function adaptUpdateLegalMenuIntent(
     outKeys: Object.keys(patch),
   });
 
-  return { patch };
+  return {
+    baseline: { items: intent.baseline.items.map(adaptLegalItem) },
+    patch,
+    expectedRevision: intent.expectedRevision,
+  };
 }
 
 // Primary menu adapters. Primary menus support two levels at most.
@@ -160,8 +165,9 @@ function adaptPrimaryItem(dto: {
  * Contract: `items` is processed only when it is an array.
  */
 export function adaptUpdatePrimaryMenuIntent(
-  dto: UpdatePrimaryMenuSettingsIntentDTO,
+  intent: UpdatePrimaryMenuSettingsOCCIntentDTO,
 ): UpdatePrimaryMenuSettingsInput {
+  const dto = intent.patch;
   const started = Date.now();
 
   log.debug("studio.adapter.primaryMenu.patch.start", {
@@ -180,5 +186,9 @@ export function adaptUpdatePrimaryMenuIntent(
     outKeys: Object.keys(patch),
   });
 
-  return { patch };
+  return {
+    baseline: { items: intent.baseline.items.map(adaptPrimaryItem) },
+    patch,
+    expectedRevision: intent.expectedRevision,
+  };
 }

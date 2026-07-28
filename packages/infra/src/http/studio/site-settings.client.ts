@@ -39,6 +39,13 @@ import type {
   PatchThemeResponse,
 } from "@compoz/infra/http/studio/site-settings.types";
 import type { UpdateFooterSettingsIntentDTO } from "@compoz/validation/site/settings/footer/footer-intents";
+import type { UpdateHeaderSettingsOCCIntentDTO } from "@compoz/validation/site/settings/header/header-intents";
+import type { UpdateIdentitySettingsOCCIntentDTO } from "@compoz/validation/site/settings/identity/identity-intents";
+import type { UpdateLegalMenuSettingsOCCIntentDTO } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-intents";
+import type { UpdatePrimaryMenuSettingsOCCIntentDTO } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-intents";
+import type { UpdateSeoSettingsOCCIntentDTO } from "@compoz/validation/site/settings/seo/seo-intents";
+import type { UpdateSocialSettingsOCCIntentDTO } from "@compoz/validation/site/settings/social/social-intents";
+import type { UpdateThemeSettingsOCCIntentDTO } from "@compoz/validation/site/settings/theme/theme-intents";
 
 async function getResponse<TResponse>(
   endpoint: string,
@@ -113,8 +120,8 @@ export const settingsStudioApi = {
       );
     },
 
-    async patch<TPatch extends object>(
-      patch: TPatch,
+    async patch(
+      patch: UpdateHeaderSettingsOCCIntentDTO,
       opts?: HttpOpts,
     ): Promise<PatchHeaderResponse> {
       return logSpan(
@@ -125,7 +132,7 @@ export const settingsStudioApi = {
           state: DEFAULT_CONTENT_STATE,
         },
         () =>
-          patchResponse<PatchHeaderResponse, TPatch>(
+          patchResponse<PatchHeaderResponse, UpdateHeaderSettingsOCCIntentDTO>(
             ENDPOINTS.STUDIO.SETTINGS.header,
             patch,
             opts,
@@ -193,8 +200,8 @@ export const settingsStudioApi = {
       );
     },
 
-    async patch<TPatch extends object>(
-      patch: TPatch,
+    async patch(
+      patch: UpdateIdentitySettingsOCCIntentDTO,
       opts?: HttpOpts,
     ): Promise<PatchIdentityResponse> {
       return logSpan(
@@ -205,7 +212,7 @@ export const settingsStudioApi = {
           state: DEFAULT_CONTENT_STATE,
         },
         () =>
-          patchResponse<PatchIdentityResponse, TPatch>(
+          patchResponse<PatchIdentityResponse, UpdateIdentitySettingsOCCIntentDTO>(
             ENDPOINTS.STUDIO.SETTINGS.identity,
             patch,
             opts,
@@ -233,8 +240,8 @@ export const settingsStudioApi = {
       );
     },
 
-    async patch<TPatch extends object>(
-      patch: TPatch,
+    async patch(
+      patch: UpdateLegalMenuSettingsOCCIntentDTO,
       opts?: HttpOpts,
     ): Promise<PatchLegalMenuResponse> {
       return logSpan(
@@ -245,7 +252,7 @@ export const settingsStudioApi = {
           state: DEFAULT_CONTENT_STATE,
         },
         () =>
-          patchResponse<PatchLegalMenuResponse, TPatch>(
+          patchResponse<PatchLegalMenuResponse, UpdateLegalMenuSettingsOCCIntentDTO>(
             ENDPOINTS.STUDIO.SETTINGS.legalMenu,
             patch,
             opts,
@@ -277,8 +284,8 @@ export const settingsStudioApi = {
       );
     },
 
-    async patch<TPatch extends object>(
-      patch: TPatch,
+    async patch(
+      patch: UpdatePrimaryMenuSettingsOCCIntentDTO,
       opts?: HttpOpts,
     ): Promise<PatchPrimaryMenuResponse> {
       return logSpan(
@@ -289,7 +296,7 @@ export const settingsStudioApi = {
           state: DEFAULT_CONTENT_STATE,
         },
         () =>
-          patchResponse<PatchPrimaryMenuResponse, TPatch>(
+          patchResponse<PatchPrimaryMenuResponse, UpdatePrimaryMenuSettingsOCCIntentDTO>(
             ENDPOINTS.STUDIO.SETTINGS.primaryMenu,
             patch,
             opts,
@@ -317,8 +324,8 @@ export const settingsStudioApi = {
       );
     },
 
-    async patch<TPatch extends object>(
-      patch: TPatch,
+    async patch(
+      patch: UpdateSeoSettingsOCCIntentDTO,
       opts?: HttpOpts,
     ): Promise<PatchSeoResponse> {
       return logSpan(
@@ -329,7 +336,7 @@ export const settingsStudioApi = {
           state: DEFAULT_CONTENT_STATE,
         },
         () =>
-          patchResponse<PatchSeoResponse, TPatch>(
+          patchResponse<PatchSeoResponse, UpdateSeoSettingsOCCIntentDTO>(
             ENDPOINTS.STUDIO.SETTINGS.seo,
             patch,
             opts,
@@ -357,8 +364,8 @@ export const settingsStudioApi = {
       );
     },
 
-    async patch<TPatch extends object>(
-      patch: TPatch,
+    async patch(
+      patch: UpdateSocialSettingsOCCIntentDTO,
       opts?: HttpOpts,
     ): Promise<PatchSocialResponse> {
       return logSpan(
@@ -369,7 +376,7 @@ export const settingsStudioApi = {
           state: DEFAULT_CONTENT_STATE,
         },
         () =>
-          patchResponse<PatchSocialResponse, TPatch>(
+          patchResponse<PatchSocialResponse, UpdateSocialSettingsOCCIntentDTO>(
             ENDPOINTS.STUDIO.SETTINGS.social,
             patch,
             opts,
@@ -397,8 +404,8 @@ export const settingsStudioApi = {
       );
     },
 
-    async patch<TPatch extends object>(
-      patch: TPatch,
+    async patch(
+      patch: UpdateThemeSettingsOCCIntentDTO,
       opts?: HttpOpts,
     ): Promise<PatchThemeResponse> {
       return logSpan(
@@ -409,7 +416,7 @@ export const settingsStudioApi = {
           state: DEFAULT_CONTENT_STATE,
         },
         () =>
-          patchResponse<PatchThemeResponse, TPatch>(
+          patchResponse<PatchThemeResponse, UpdateThemeSettingsOCCIntentDTO>(
             ENDPOINTS.STUDIO.SETTINGS.theme,
             patch,
             opts,

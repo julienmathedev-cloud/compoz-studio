@@ -39,10 +39,11 @@ export async function GET(req: Request) {
       { ns: NS, method: "GET", state, websiteId },
       async () => {
         const repo = getSiteRepository({ websiteId });
-        const settings = await repo.readSettings(state);
+        const bundle = await repo.readSettingsWithRevisions(state);
 
         const res: GetPrimaryMenuResponse = {
-          settings: settings.primaryMenu,
+          settings: bundle.settings.primaryMenu,
+          revision: bundle.revisions.primaryMenuRevision,
         };
 
         return res;
@@ -79,13 +80,11 @@ export async function PATCH(req: Request) {
       const statusCache = getSiteStatusCache({ websiteId });
 
       const run = updatePrimaryMenuSettings({ repo });
-      const { settings } = await run(input);
+      const { settings, revision } = await run(input);
 
       logger.debug?.("route.primaryMenu.patch.afterWrite", {
         websiteId,
-        primaryMenuKeys: settings.primaryMenu
-          ? Object.keys(settings.primaryMenu)
-          : [],
+        primaryMenuKeys: Object.keys(settings),
       });
 
       /**
@@ -115,7 +114,8 @@ export async function PATCH(req: Request) {
       }
 
       const res: PatchPrimaryMenuResponse = {
-        settings: settings.primaryMenu,
+        settings,
+        revision,
       };
 
       return res;

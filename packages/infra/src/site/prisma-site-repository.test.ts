@@ -1,12 +1,13 @@
 /**
  * @file packages/infra/src/site/prisma-site-repository.test.ts
  * @layer infra/site
- * @description Unit tests for the Prisma draft-footer compare-and-set write.
+ * @description Unit tests for the Prisma revisioned settings-section compare-and-set write.
  */
 
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { DEFAULT_FOOTER_SETTINGS } from "@compoz/core/domain/site/defaults/footer";
 import { DEFAULT_HEADER_SETTINGS } from "@compoz/core/domain/site/defaults/header";
 import { DEFAULT_IDENTITY_SETTINGS } from "@compoz/core/domain/site/defaults/identity";
 import { DEFAULT_LEGAL_MENU_SETTINGS } from "@compoz/core/domain/site/defaults/legal-menu";
@@ -14,11 +15,45 @@ import { DEFAULT_PRIMARY_MENU_SETTINGS } from "@compoz/core/domain/site/defaults
 import { DEFAULT_SEO_SETTINGS } from "@compoz/core/domain/site/defaults/seo";
 import { DEFAULT_SOCIAL_SETTINGS } from "@compoz/core/domain/site/defaults/social";
 import { DEFAULT_THEME_SETTINGS } from "@compoz/core/domain/site/defaults/theme";
-import type { PrismaClient } from "@compoz/infra/prisma/generated";
+import { asBrandedHref, rel } from "@compoz/core/domain/urls/href";
+import { type Prisma, type PrismaClient } from "@compoz/infra/prisma/generated";
 import { PrismaSiteRepository } from "@compoz/infra/site/prisma-site-repository";
 
 const WEBSITE_ID = "website-1";
 const NEXT_FOOTER = { copyright: "Next", showYear: false };
+
+const NEXT_PRIMARY_MENU = {
+  items: [
+    {
+      id: "primary-test",
+      label: "Primary test",
+      href: rel("/primary-test"),
+      newTab: false,
+      children: [],
+    },
+  ],
+};
+
+const NEXT_LEGAL_MENU = {
+  items: [
+    {
+      id: "legal-test",
+      label: "Legal test",
+      href: rel("/legal-test"),
+      newTab: false,
+    },
+  ],
+};
+
+const NEXT_SOCIAL = {
+  items: [
+    {
+      id: "social-test",
+      kind: "website" as const,
+      href: asBrandedHref("https://example.com/social-test"),
+    },
+  ],
+};
 
 function persistedRow(footerRevision: number, footer = NEXT_FOOTER) {
   return {
@@ -80,11 +115,253 @@ function createFakeClient(options: FakeOptions) {
 
   return {
     client,
+    transactionClient: tx as unknown as Prisma.TransactionClient,
     updateManyCalls,
     createManyCalls,
     getFindCount: () => findCount,
   };
 }
+
+const SECTION_CAS_CASES = [
+  {
+    section: "footer",
+    revision: "footerRevision",
+    settings: NEXT_FOOTER,
+    run: (repository: PrismaSiteRepository, expectedRevision: number) =>
+      repository.compareAndSetDraftFooter({
+        expectedRevision,
+        footer: NEXT_FOOTER,
+      }),
+  },
+  {
+    section: "header",
+    revision: "headerRevision",
+    settings: { ...DEFAULT_HEADER_SETTINGS, blur: true },
+    run: (repository: PrismaSiteRepository, expectedRevision: number) =>
+      repository.compareAndSetDraftHeader({
+        expectedRevision,
+        header: { ...DEFAULT_HEADER_SETTINGS, blur: true },
+      }),
+  },
+  {
+    section: "identity",
+    revision: "identityRevision",
+    settings: { ...DEFAULT_IDENTITY_SETTINGS, siteName: "Identity" },
+    run: (repository: PrismaSiteRepository, expectedRevision: number) =>
+      repository.compareAndSetDraftIdentity({
+        expectedRevision,
+        identity: { ...DEFAULT_IDENTITY_SETTINGS, siteName: "Identity" },
+      }),
+  },
+  {
+    section: "primaryMenu",
+    revision: "primaryMenuRevision",
+    settings: NEXT_PRIMARY_MENU,
+    run: (repository: PrismaSiteRepository, expectedRevision: number) =>
+      repository.compareAndSetDraftPrimaryMenu({
+        expectedRevision,
+        primaryMenu: NEXT_PRIMARY_MENU,
+      }),
+  },
+  {
+    section: "legalMenu",
+    revision: "legalMenuRevision",
+    settings: NEXT_LEGAL_MENU,
+    run: (repository: PrismaSiteRepository, expectedRevision: number) =>
+      repository.compareAndSetDraftLegalMenu({
+        expectedRevision,
+        legalMenu: NEXT_LEGAL_MENU,
+      }),
+  },
+  {
+    section: "social",
+    revision: "socialRevision",
+    settings: NEXT_SOCIAL,
+    run: (repository: PrismaSiteRepository, expectedRevision: number) =>
+      repository.compareAndSetDraftSocial({
+        expectedRevision,
+        social: NEXT_SOCIAL,
+      }),
+  },
+  {
+    section: "seo",
+    revision: "seoRevision",
+    settings: { ...DEFAULT_SEO_SETTINGS, defaultTitle: "SEO" },
+    run: (repository: PrismaSiteRepository, expectedRevision: number) =>
+      repository.compareAndSetDraftSeo({
+        expectedRevision,
+        seo: { ...DEFAULT_SEO_SETTINGS, defaultTitle: "SEO" },
+      }),
+  },
+  {
+    section: "theme",
+    revision: "themeRevision",
+    settings: { ...DEFAULT_THEME_SETTINGS, mode: "dark" as const },
+    run: (repository: PrismaSiteRepository, expectedRevision: number) =>
+      repository.compareAndSetDraftTheme({
+        expectedRevision,
+        theme: { ...DEFAULT_THEME_SETTINGS, mode: "dark" },
+      }),
+  },
+] as const;
+
+void test("maps every settings CAS primitive to only its section and revision", async () => {
+  for (const sectionCase of SECTION_CAS_CASES) {
+    const revision = 37;
+    const row = {
+      ...persistedRow(0),
+      [sectionCase.section]: sectionCase.settings,
+      [sectionCase.revision]: revision + 1,
+    };
+    const fake = createFakeClient({
+      updateCount: 1,
+      readRow: row,
+    });
+    const repository = new PrismaSiteRepository({
+      websiteId: WEBSITE_ID,
+      client: fake.client,
+    });
+
+    const result = await sectionCase.run(repository, revision);
+    const call = fake.updateManyCalls[0] as {
+      where: Record<string, unknown>;
+      data: Record<string, unknown>;
+    };
+
+    assert.deepEqual(call.where, {
+      websiteId: WEBSITE_ID,
+      state: "draft",
+      [sectionCase.revision]: revision,
+    });
+    assert.deepEqual(call.data, {
+      [sectionCase.section]: sectionCase.settings,
+      [sectionCase.revision]: { increment: 1 },
+    });
+    assert.deepEqual(result, {
+      settings: sectionCase.settings,
+      revision: revision + 1,
+    });
+  }
+});
+
+void test("creates complete draft defaults with only the targeted section revision", async () => {
+  const sections = [
+    "footer",
+    "header",
+    "identity",
+    "primaryMenu",
+    "legalMenu",
+    "social",
+    "seo",
+    "theme",
+  ] as const;
+  const revisions = [
+    "footerRevision",
+    "headerRevision",
+    "identityRevision",
+    "primaryMenuRevision",
+    "legalMenuRevision",
+    "socialRevision",
+    "seoRevision",
+    "themeRevision",
+  ] as const;
+  const defaults = {
+    footer: DEFAULT_FOOTER_SETTINGS,
+    header: DEFAULT_HEADER_SETTINGS,
+    identity: DEFAULT_IDENTITY_SETTINGS,
+    primaryMenu: DEFAULT_PRIMARY_MENU_SETTINGS,
+    legalMenu: DEFAULT_LEGAL_MENU_SETTINGS,
+    social: DEFAULT_SOCIAL_SETTINGS,
+    seo: DEFAULT_SEO_SETTINGS,
+    theme: DEFAULT_THEME_SETTINGS,
+  };
+
+  for (const sectionCase of SECTION_CAS_CASES) {
+    const row = {
+      ...persistedRow(0),
+      [sectionCase.section]: sectionCase.settings,
+      [sectionCase.revision]: 1,
+    };
+    const fake = createFakeClient({
+      updateCount: 0,
+      readRow: row,
+    });
+    const repository = new PrismaSiteRepository({
+      websiteId: WEBSITE_ID,
+      client: fake.client,
+    });
+
+    const result = await sectionCase.run(repository, 0);
+    const call = fake.createManyCalls[0] as {
+      data: Record<string, unknown>;
+      skipDuplicates: boolean;
+    };
+
+    assert.equal(fake.createManyCalls.length, 1);
+    assert.equal(call.skipDuplicates, true);
+    assert.equal(call.data.websiteId, WEBSITE_ID);
+    assert.equal(call.data.state, "draft");
+    assert.deepEqual(call.data[sectionCase.section], sectionCase.settings);
+
+    for (const section of sections) {
+      if (section !== sectionCase.section) {
+        assert.deepEqual(call.data[section], defaults[section]);
+      }
+    }
+
+    assert.equal(call.data[sectionCase.revision], 1);
+    for (const revision of revisions) {
+      if (revision !== sectionCase.revision) {
+        assert.notEqual(call.data[revision], 1);
+      }
+    }
+    assert.deepEqual(
+      revisions.filter((revision) => revision in call.data),
+      [sectionCase.revision],
+    );
+    assert.deepEqual(result, {
+      settings: sectionCase.settings,
+      revision: 1,
+    });
+  }
+});
+
+void test("uses a TransactionClient without starting a nested transaction", async () => {
+  const identity = {
+    ...DEFAULT_IDENTITY_SETTINGS,
+    siteName: "Transaction identity",
+  };
+  const row = {
+    ...persistedRow(0),
+    identity,
+    identityRevision: 4,
+  };
+  const callbackFake = createFakeClient({ updateCount: 1, readRow: row });
+  const transactionFake = createFakeClient({ updateCount: 1, readRow: row });
+  const callbackRepository = new PrismaSiteRepository({
+    websiteId: WEBSITE_ID,
+    client: callbackFake.client,
+  });
+  const transactionRepository = new PrismaSiteRepository({
+    websiteId: WEBSITE_ID,
+    client: transactionFake.transactionClient,
+  });
+
+  const callbackResult = await callbackRepository.compareAndSetDraftIdentity({
+    expectedRevision: 3,
+    identity,
+  });
+  const transactionResult =
+    await transactionRepository.compareAndSetDraftIdentity({
+      expectedRevision: 3,
+      identity,
+    });
+
+  assert.deepEqual(transactionResult, callbackResult);
+  assert.deepEqual(transactionResult, { settings: identity, revision: 4 });
+  assert.equal(transactionFake.updateManyCalls.length, 1);
+  assert.equal("$transaction" in transactionFake.transactionClient, false);
+});
 
 void test("filters the footer update by draft revision and writes only footer CAS data", async () => {
   const fake = createFakeClient({ updateCount: 1 });
@@ -128,7 +405,7 @@ void test("rejects when the updated footer row cannot be read atomically", async
         expectedRevision: 3,
         footer: NEXT_FOOTER,
       }),
-    /updated footer row not found/,
+    /updated draft settings row not found/,
   );
 });
 
@@ -219,7 +496,7 @@ void test("rejects when the created footer row cannot be read atomically", async
         expectedRevision: 0,
         footer: NEXT_FOOTER,
       }),
-    /created footer row not found/,
+    /created draft settings row not found/,
   );
 });
 

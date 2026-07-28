@@ -39,10 +39,11 @@ export async function GET(req: Request) {
       { ns: NS, method: "GET", state, websiteId },
       async () => {
         const repo = getSiteRepository({ websiteId });
-        const settings = await repo.readSettings(state);
+        const bundle = await repo.readSettingsWithRevisions(state);
 
         const res: GetHeaderResponse = {
-          settings: settings.header,
+          settings: bundle.settings.header,
+          revision: bundle.revisions.headerRevision,
         };
 
         return res;
@@ -79,11 +80,11 @@ export async function PATCH(req: Request) {
       const statusCache = getSiteStatusCache({ websiteId });
 
       const run = updateHeaderSettings({ repo });
-      const { settings } = await run(input);
+      const { settings, revision } = await run(input);
 
       logger.debug?.("route.header.patch.afterWrite", {
         websiteId,
-        headerKeys: settings.header ? Object.keys(settings.header) : [],
+        headerKeys: Object.keys(settings),
       });
 
       /**
@@ -113,7 +114,8 @@ export async function PATCH(req: Request) {
       }
 
       const res: PatchHeaderResponse = {
-        settings: settings.header,
+        settings,
+        revision,
       };
 
       return res;

@@ -15,12 +15,18 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useLayoutEffect, useRef } from "react";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_SEO_SETTINGS } from "@compoz/core/domain/site/defaults/seo";
 import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
+import {
+  createRevisionedDraftSnapshot,
+  requireCurrentSettingsOperation,
+  throwIfSettingsOperationAborted,
+} from "@compoz/studio/features/settings/_shared/revisioned-draft-snapshot";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
@@ -49,6 +55,14 @@ export function useSeoSettings(): UseSeoSettingsResult {
   const t = useTranslations();
   const queryClient = useQueryClient();
   const websiteId = useWebsiteId();
+  const snapshot = useRef(
+    createRevisionedDraftSnapshot<SeoFormValues>(),
+  ).current;
+  const websiteIdRef = useRef(websiteId);
+
+  useLayoutEffect(() => {
+    websiteIdRef.current = websiteId;
+  }, [websiteId]);
 
   const entityLabel = t("studio.shared.entities.seo");
 
@@ -58,31 +72,77 @@ export function useSeoSettings(): UseSeoSettingsResult {
     defaults: DEFAULT_SEO_FORM_VALUES,
 
     /** Shared bundle read with cache-first behavior handled by `getSettingsBundle`. */
-    load: async (state: ContentState) => {
-      const bundle = await getSettingsBundle(queryClient, websiteId, state);
+    load: async (state: ContentState, opts) => {
+      const load = snapshot.beginLoad();
+      const capturedWebsiteId = websiteIdRef.current;
+      const bundle = await getSettingsBundle(
+        queryClient,
+        capturedWebsiteId,
+        state,
+      );
+      throwIfSettingsOperationAborted(opts?.signal);
 
-      return normalizeSeoFormValues(
+      const baseline = normalizeSeoFormValues(
         toSeoFormValuesFromDTO(bundle.settings.seo),
+      );
+
+      return requireCurrentSettingsOperation(
+        snapshot.commitLoad(load, {
+          websiteId: capturedWebsiteId,
+          baseline,
+          revision: bundle.revisions.seoRevision,
+          writable: state === DEFAULT_CONTENT_STATE,
+          isWebsiteCurrent: () => websiteIdRef.current === capturedWebsiteId,
+        }),
       );
     },
 
     /** Writes the SEO slice, then mirrors the response into the settings bundle cache. */
     save: async (next, opts) => {
+      const capturedWebsiteId = websiteIdRef.current;
+      const capturedSnapshot = snapshot.captureForSave(capturedWebsiteId);
+
+      if (!capturedSnapshot) {
+        throw new Error(
+          "SEO settings cannot be saved without a revisioned draft snapshot.",
+        );
+      }
+
       const patch = toUpdateSeoIntentDTOFromFormValues(next);
-      const dto = await settingsStudioApi.seo.patch(patch, opts);
+      const dto = await settingsStudioApi.seo.patch(
+        {
+          baseline: capturedSnapshot.baseline,
+          patch,
+          expectedRevision: capturedSnapshot.expectedRevision,
+        },
+        opts,
+      );
+      throwIfSettingsOperationAborted(opts?.signal);
+
+      const baseline = normalizeSeoFormValues(
+        toSeoFormValuesFromDTO(dto.settings),
+      );
 
       patchSettingsBundleCache(
         queryClient,
-        websiteId,
+        capturedWebsiteId,
         DEFAULT_CONTENT_STATE,
         {
           settings: {
             seo: dto.settings,
           },
+          revisions: { seoRevision: dto.revision },
         },
       );
 
-      return normalizeSeoFormValues(toSeoFormValuesFromDTO(dto.settings));
+      return requireCurrentSettingsOperation(
+        snapshot.commitSave(capturedSnapshot, {
+          websiteId: capturedWebsiteId,
+          baseline,
+          revision: dto.revision,
+          isWebsiteCurrent: () => websiteIdRef.current === capturedWebsiteId,
+        }),
+      );
     },
 
     /** PATCH semantics: only changed form fields are sent to the API. */

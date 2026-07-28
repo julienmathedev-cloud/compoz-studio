@@ -10,11 +10,12 @@
  * consistency rules are handled by the domain layer.
  */
 
-import type { z } from "zod";
+import { z } from "zod";
 
 import {
   PublicThemeTokensSchema,
   ThemeSettingsObjectSchema,
+  ThemeSettingsSchema,
 } from "@compoz/validation/site/settings/theme/theme";
 
 /**
@@ -22,16 +23,23 @@ import {
  * refined final theme settings schema.
  *
  * @remarks
- * Token groups also accept partial patches.
+ * Token groups remain atomic OCC values even when the outer section patch is partial.
  */
-export const UpdateThemeSettingsIntentSchema =
+const ThemeSettingsPatchSchema =
   ThemeSettingsObjectSchema.partial()
     .extend({
-      lightTokens: PublicThemeTokensSchema.partial().optional(),
-      darkTokens: PublicThemeTokensSchema.partial().optional(),
+      lightTokens: PublicThemeTokensSchema.optional(),
+      darkTokens: PublicThemeTokensSchema.optional(),
     })
     .strict();
 
-export type UpdateThemeSettingsIntentDTO = z.infer<
+export const UpdateThemeSettingsIntentSchema = z.object({
+  baseline: ThemeSettingsSchema,
+  patch: ThemeSettingsPatchSchema,
+  expectedRevision: z.number().int().nonnegative().optional(),
+}).strict();
+
+export type UpdateThemeSettingsIntentDTO = z.infer<typeof ThemeSettingsPatchSchema>;
+export type UpdateThemeSettingsOCCIntentDTO = z.infer<
   typeof UpdateThemeSettingsIntentSchema
 >;

@@ -39,10 +39,11 @@ export async function GET(req: Request) {
       { ns: NS, method: "GET", state, websiteId },
       async () => {
         const repo = getSiteRepository({ websiteId });
-        const settings = await repo.readSettings(state);
+        const bundle = await repo.readSettingsWithRevisions(state);
 
         const res: GetSocialResponse = {
-          settings: settings.social,
+          settings: bundle.settings.social,
+          revision: bundle.revisions.socialRevision,
         };
 
         return res;
@@ -79,11 +80,11 @@ export async function PATCH(req: Request) {
       const statusCache = getSiteStatusCache({ websiteId });
 
       const run = updateSocialSettings({ repo });
-      const { settings } = await run(input);
+      const { settings, revision } = await run(input);
 
       logger.debug?.("route.social.patch.afterWrite", {
         websiteId,
-        socialKeys: settings.social ? Object.keys(settings.social) : [],
+        socialKeys: Object.keys(settings),
       });
 
       /**
@@ -113,7 +114,8 @@ export async function PATCH(req: Request) {
       }
 
       const res: PatchSocialResponse = {
-        settings: settings.social,
+        settings,
+        revision,
       };
 
       return res;

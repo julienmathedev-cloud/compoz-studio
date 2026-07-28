@@ -1,31 +1,33 @@
 /**
  * @file apps/studio/src/app/api/_adapters/seo.ts
  * @layer studio/app/api/adapters
- *
- * @description
- * Studio API adapter for SEO settings update intents.
- *
- * @remarks
- * - Builds a partial domain patch from the fields present in the intent.
- * - Partially adapts `openGraph`, `twitter`, and structured data blocks.
- * - Leaves defaults and invariants such as `twitter.card` to the domain/repository layer.
+ * @description Studio API adapter for SEO settings update intents.
+ * @remarks The transport accepts partial composite patches. This adapter completes each present composite from the normalized client baseline so the domain receives atomic, complete values.
  */
 
+import { DEFAULT_SEO_SETTINGS } from "@compoz/core/domain/site/defaults/seo";
 import type {
+  OpenGraphSettings,
   SeoSettings,
   StructuredDataAddress,
   StructuredDataSettings,
+  TwitterSettings,
 } from "@compoz/core/domain/site/entities/seo";
 import type { UpdateSeoSettingsInput } from "@compoz/core/domain/site/use-cases/seo/update-seo-settings.types";
 import { asAssetUrlOrNull } from "@compoz/core/domain/urls/href";
 import { log } from "@compoz/infra/lib/log";
 import { trimOrKeep } from "@compoz/studio/lib/strings";
-
 import type {
   OpenGraphPatchDTO,
+  StructuredDataPatchDTO,
   TwitterPatchDTO,
   UpdateSeoSettingsIntentDTO,
+  UpdateSeoSettingsOCCIntentDTO,
 } from "@compoz/validation/site/settings/seo/seo-intents";
+
+function hasOwnProperty(value: object, key: PropertyKey): boolean {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
 
 function trimNullableString(value: string | null | undefined): string | null {
   if (value === null || typeof value === "undefined") return null;
@@ -62,59 +64,233 @@ function cleanStringList(
   return cleaned.length > 0 ? cleaned : undefined;
 }
 
-function adaptStructuredData(
-  value: UpdateSeoSettingsIntentDTO["structuredData"],
-): StructuredDataSettings {
-  if (!value) {
-    return {
-      enabled: false,
-      entityType: "organization",
-    };
+function adaptOpenGraphUrl(
+  value: string | null | undefined,
+): OpenGraphSettings["defaultImageUrl"] {
+  if (value === null || typeof value === "undefined") return null;
+
+  const trimmed = trimOrKeep(value);
+  return trimmed.length === 0 ? null : asAssetUrlOrNull(trimmed);
+}
+
+function adaptStructuredDataAddress(
+  baseline: StructuredDataAddress | undefined,
+  patch: StructuredDataPatchDTO["address"] | undefined,
+): StructuredDataAddress | undefined {
+  if (!patch) return baseline ? { ...baseline } : undefined;
+
+  const streetAddress = hasOwnProperty(patch, "streetAddress")
+    ? trimOptionalString(patch.streetAddress)
+    : baseline?.streetAddress;
+  const postalCode = hasOwnProperty(patch, "postalCode")
+    ? trimOptionalString(patch.postalCode)
+    : baseline?.postalCode;
+  const addressLocality = hasOwnProperty(patch, "addressLocality")
+    ? trimOptionalString(patch.addressLocality)
+    : baseline?.addressLocality;
+  const addressRegion = hasOwnProperty(patch, "addressRegion")
+    ? trimOptionalString(patch.addressRegion)
+    : baseline?.addressRegion;
+  const addressCountry = hasOwnProperty(patch, "addressCountry")
+    ? trimOptionalString(patch.addressCountry)
+    : baseline?.addressCountry;
+
+  if (
+    !streetAddress &&
+    !postalCode &&
+    !addressLocality &&
+    !addressRegion &&
+    !addressCountry
+  ) {
+    return undefined;
   }
 
-  const address: StructuredDataAddress = {
-    streetAddress: trimOptionalString(value.address?.streetAddress),
-    postalCode: trimOptionalString(value.address?.postalCode),
-    addressLocality: trimOptionalString(value.address?.addressLocality),
-    addressRegion: trimOptionalString(value.address?.addressRegion),
-    addressCountry: trimOptionalString(value.address?.addressCountry),
-  };
-
-  const cleanAddress = Object.fromEntries(
-    Object.entries(address).filter(([, addressValue]) => addressValue),
-  ) as StructuredDataAddress;
-
   return {
-    enabled: value.enabled ?? false,
-    entityType: value.entityType ?? "organization",
-    name: trimOptionalString(value.name),
-    description: trimOptionalString(value.description),
-    telephone: trimOptionalString(value.telephone),
-    email: trimOptionalString(value.email),
-    address: Object.keys(cleanAddress).length > 0 ? cleanAddress : undefined,
-    areaServed: cleanStringList(value.areaServed),
-    priceRange: trimOptionalString(value.priceRange),
-    openingHours: cleanStringList(value.openingHours),
+    ...(streetAddress ? { streetAddress } : {}),
+    ...(postalCode ? { postalCode } : {}),
+    ...(addressLocality ? { addressLocality } : {}),
+    ...(addressRegion ? { addressRegion } : {}),
+    ...(addressCountry ? { addressCountry } : {}),
   };
 }
 
-// Intent to domain patch.
+function adaptStructuredDataPatch(
+  baseline: StructuredDataSettings,
+  patch: UpdateSeoSettingsIntentDTO["structuredData"],
+): StructuredDataSettings {
+  if (!patch) return { ...baseline };
+
+  const name = hasOwnProperty(patch, "name")
+    ? trimOptionalString(patch.name)
+    : baseline.name;
+  const description = hasOwnProperty(patch, "description")
+    ? trimOptionalString(patch.description)
+    : baseline.description;
+  const telephone = hasOwnProperty(patch, "telephone")
+    ? trimOptionalString(patch.telephone)
+    : baseline.telephone;
+  const email = hasOwnProperty(patch, "email")
+    ? trimOptionalString(patch.email)
+    : baseline.email;
+  const priceRange = hasOwnProperty(patch, "priceRange")
+    ? trimOptionalString(patch.priceRange)
+    : baseline.priceRange;
+  const areaServed = hasOwnProperty(patch, "areaServed")
+    ? cleanStringList(patch.areaServed)
+    : baseline.areaServed ? [...baseline.areaServed] : undefined;
+  const openingHours = hasOwnProperty(patch, "openingHours")
+    ? cleanStringList(patch.openingHours)
+    : baseline.openingHours ? [...baseline.openingHours] : undefined;
+  const address = adaptStructuredDataAddress(baseline.address, patch.address);
+
+  return {
+    enabled: hasOwnProperty(patch, "enabled")
+      ? patch.enabled ?? false
+      : baseline.enabled,
+    entityType: hasOwnProperty(patch, "entityType")
+      ? patch.entityType ?? "organization"
+      : baseline.entityType,
+    ...(name ? { name } : {}),
+    ...(description ? { description } : {}),
+    ...(telephone ? { telephone } : {}),
+    ...(email ? { email } : {}),
+    ...(address ? { address } : {}),
+    ...(areaServed ? { areaServed } : {}),
+    ...(priceRange ? { priceRange } : {}),
+    ...(openingHours ? { openingHours } : {}),
+  };
+}
+
+function emptyOpenGraph(): OpenGraphSettings {
+  return {
+    title: null,
+    description: null,
+    defaultImageUrl: null,
+    imageAlt: "",
+  };
+}
+
+function adaptOpenGraphPatch(
+  baseline: SeoSettings["openGraph"],
+  patch: OpenGraphPatchDTO,
+): OpenGraphSettings {
+  const source = baseline ?? emptyOpenGraph();
+  const defaultImageUrl = hasOwnProperty(patch, "defaultImageUrl")
+    ? adaptOpenGraphUrl(patch.defaultImageUrl)
+    : source.defaultImageUrl;
+  const defaultImageMediaAssetId = hasOwnProperty(
+    patch,
+    "defaultImageMediaAssetId",
+  )
+    ? optionalTrimmedString(patch.defaultImageMediaAssetId)
+    : hasOwnProperty(patch, "defaultImageUrl")
+      ? undefined
+      : source.defaultImageMediaAssetId;
+
+  return {
+    title: hasOwnProperty(patch, "title")
+      ? trimNullableString(patch.title)
+      : source.title,
+    description: hasOwnProperty(patch, "description")
+      ? trimNullableString(patch.description)
+      : source.description,
+    defaultImageUrl,
+    imageAlt: hasOwnProperty(patch, "imageAlt")
+      ? trimNullableString(patch.imageAlt) ?? ""
+      : source.imageAlt,
+    ...(defaultImageUrl !== null && defaultImageMediaAssetId
+      ? { defaultImageMediaAssetId }
+      : {}),
+  };
+}
+
+function adaptTwitterPatch(
+  baseline: SeoSettings["twitter"],
+  patch: TwitterPatchDTO,
+): TwitterSettings {
+  const source = baseline ?? DEFAULT_SEO_SETTINGS.twitter;
+
+  if (!source) {
+    throw new Error("DEFAULT_SEO_SETTINGS.twitter must be complete.");
+  }
+
+  return {
+    card: hasOwnProperty(patch, "card") ? patch.card ?? source.card : source.card,
+    site: hasOwnProperty(patch, "site")
+      ? trimNullableString(patch.site)
+      : source.site,
+    creator: hasOwnProperty(patch, "creator")
+      ? trimNullableString(patch.creator)
+      : source.creator,
+  };
+}
+
+function adaptOpenGraphBaseline(
+  value: UpdateSeoSettingsOCCIntentDTO["baseline"]["openGraph"],
+): SeoSettings["openGraph"] {
+  if (value === null) return null;
+
+  return {
+    title: trimNullableString(value.title),
+    description: trimNullableString(value.description),
+    defaultImageUrl: adaptOpenGraphUrl(value.defaultImageUrl),
+    imageAlt: trimOrKeep(value.imageAlt),
+    ...(optionalTrimmedString(value.defaultImageMediaAssetId)
+      ? {
+          defaultImageMediaAssetId: optionalTrimmedString(
+            value.defaultImageMediaAssetId,
+          ),
+        }
+      : {}),
+  };
+}
+
+function adaptTwitterBaseline(
+  value: UpdateSeoSettingsOCCIntentDTO["baseline"]["twitter"],
+): SeoSettings["twitter"] {
+  return value === null
+    ? null
+    : {
+        card: value.card,
+        site: trimNullableString(value.site),
+        creator: trimNullableString(value.creator),
+      };
+}
+
+function adaptSeoBaseline(
+  baseline: UpdateSeoSettingsOCCIntentDTO["baseline"],
+): SeoSettings {
+  const openGraph = adaptOpenGraphBaseline(baseline.openGraph);
+  const twitter = adaptTwitterBaseline(baseline.twitter);
+
+  return {
+    baseUrl: trimNullableString(baseline.baseUrl),
+    defaultTitle: trimNullableString(baseline.defaultTitle),
+    titleTemplate: trimNullableString(baseline.titleTemplate),
+    defaultDescription: trimNullableString(baseline.defaultDescription),
+    canonicalUrl: trimNullableString(baseline.canonicalUrl),
+    robots: trimNullableString(baseline.robots),
+    openGraph,
+    twitter,
+    structuredData: adaptStructuredDataPatch(
+      DEFAULT_SEO_SETTINGS.structuredData,
+      baseline.structuredData,
+    ),
+  };
+}
 
 /**
- * Converts an SEO intent DTO into a partial `SeoSettings` domain patch.
+ * Converts an SEO intent DTO into a partial domain patch.
  *
- * Contract:
- * - Only keys present in the intent are set.
- * - Strings are trimmed; empty values become `null`.
- * - `openGraph` / `twitter`: shallow patch, only for present fields.
- * - `defaultImageUrl`: ""/null => null (explicit clear), otherwise normalized
- *   through `asAssetUrlOrNull`.
- * - `defaultImageMediaAssetId`: optional MediaAsset link, removed when the
- *   image URL is cleared or replaced without an associated id.
+ * Transport composites may be sub-patches. Each composite explicitly present
+ * in the patch is completed from the normalized baseline before it reaches the
+ * domain, where Open Graph, Twitter, and structured data are atomic values.
  */
 export function adaptUpdateSeoIntent(
-  dto: UpdateSeoSettingsIntentDTO,
+  intent: UpdateSeoSettingsOCCIntentDTO,
 ): UpdateSeoSettingsInput {
+  const baseline = adaptSeoBaseline(intent.baseline);
+  const dto = intent.patch;
   const started = Date.now();
 
   log.debug("studio.adapter.seo.patch.start", {
@@ -131,125 +307,40 @@ export function adaptUpdateSeoIntent(
 
   const patch: Partial<SeoSettings> = {};
 
-  if ("baseUrl" in dto) {
-    patch.baseUrl = trimNullableString(dto.baseUrl);
-  }
-
+  if ("baseUrl" in dto) patch.baseUrl = trimNullableString(dto.baseUrl);
   if ("defaultTitle" in dto) {
     patch.defaultTitle = trimNullableString(dto.defaultTitle);
   }
-
   if ("defaultDescription" in dto) {
     patch.defaultDescription = trimNullableString(dto.defaultDescription);
   }
-
   if ("titleTemplate" in dto) {
     patch.titleTemplate = trimNullableString(dto.titleTemplate);
   }
-
   if ("canonicalUrl" in dto) {
     patch.canonicalUrl = trimNullableString(dto.canonicalUrl);
   }
-
-  if ("robots" in dto) {
-    patch.robots = trimNullableString(dto.robots);
-  }
+  if ("robots" in dto) patch.robots = trimNullableString(dto.robots);
 
   if ("structuredData" in dto) {
-    patch.structuredData = adaptStructuredData(dto.structuredData);
+    patch.structuredData = adaptStructuredDataPatch(
+      baseline.structuredData,
+      dto.structuredData,
+    );
   }
 
-  // OpenGraph patch.
-
-  if ("openGraph" in dto) {
-    const ogIn = dto.openGraph as OpenGraphPatchDTO | null | undefined;
-
-    if (ogIn === null) {
-      patch.openGraph = null;
-    } else if (ogIn && typeof ogIn === "object") {
-      const ogOut: Partial<NonNullable<SeoSettings["openGraph"]>> = {};
-
-      if ("title" in ogIn) {
-        ogOut.title = trimNullableString(ogIn.title);
-      }
-
-      if ("description" in ogIn) {
-        ogOut.description = trimNullableString(ogIn.description);
-      }
-
-      if ("imageAlt" in ogIn) {
-        ogOut.imageAlt = trimNullableString(ogIn.imageAlt) ?? "";
-      }
-
-      if ("defaultImageUrl" in ogIn) {
-        const raw = ogIn.defaultImageUrl;
-
-        if (raw === null) {
-          ogOut.defaultImageUrl = null;
-        } else if (typeof raw === "string") {
-          const trimmedUrl = trimOrKeep(raw);
-          ogOut.defaultImageUrl =
-            trimmedUrl.length === 0 ? null : asAssetUrlOrNull(trimmedUrl);
-        }
-
-        /**
-         * URL is the rendering source of truth.
-         *
-         * If the image URL is patched but no MediaAsset id is provided,
-         * the previous id must not survive. This covers manual URL edits and
-         * clears, because `undefined` is usually omitted from JSON payloads.
-         */
-        if (!("defaultImageMediaAssetId" in ogIn)) {
-          ogOut.defaultImageMediaAssetId = undefined;
-        }
-      }
-
-      if ("defaultImageMediaAssetId" in ogIn) {
-        ogOut.defaultImageMediaAssetId = optionalTrimmedString(
-          ogIn.defaultImageMediaAssetId,
-        );
-      }
-
-      /**
-       * Clearing the URL always wins over any stale id still present in the
-       * incoming payload.
-       */
-      if ("defaultImageUrl" in ogIn && !ogOut.defaultImageUrl) {
-        ogOut.defaultImageMediaAssetId = undefined;
-      }
-
-      if (Object.keys(ogOut).length > 0) {
-        patch.openGraph = ogOut as NonNullable<SeoSettings["openGraph"]>;
-      }
-    }
+  if ("openGraph" in dto && dto.openGraph !== undefined) {
+    patch.openGraph =
+      dto.openGraph === null
+        ? null
+        : adaptOpenGraphPatch(baseline.openGraph, dto.openGraph);
   }
 
-  // Twitter patch.
-
-  if ("twitter" in dto) {
-    const twIn = dto.twitter as TwitterPatchDTO | null | undefined;
-
-    if (twIn === null) {
-      patch.twitter = null;
-    } else if (twIn && typeof twIn === "object") {
-      const twOut: Partial<NonNullable<SeoSettings["twitter"]>> = {};
-
-      if ("card" in twIn && typeof twIn.card === "string") {
-        twOut.card = twIn.card as NonNullable<SeoSettings["twitter"]>["card"];
-      }
-
-      if ("site" in twIn) {
-        twOut.site = trimNullableString(twIn.site);
-      }
-
-      if ("creator" in twIn) {
-        twOut.creator = trimNullableString(twIn.creator);
-      }
-
-      if (Object.keys(twOut).length > 0) {
-        patch.twitter = twOut as NonNullable<SeoSettings["twitter"]>;
-      }
-    }
+  if ("twitter" in dto && dto.twitter !== undefined) {
+    patch.twitter =
+      dto.twitter === null
+        ? null
+        : adaptTwitterPatch(baseline.twitter, dto.twitter);
   }
 
   log.debug("studio.adapter.seo.patch.end", {
@@ -257,5 +348,9 @@ export function adaptUpdateSeoIntent(
     outKeys: Object.keys(patch),
   });
 
-  return { patch };
+  return {
+    baseline,
+    patch,
+    expectedRevision: intent.expectedRevision,
+  };
 }

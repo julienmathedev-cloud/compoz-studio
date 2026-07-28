@@ -83,6 +83,13 @@ function createRepository(options?: {
       casInputs.push(input);
       return casResults.shift() ?? null;
     },
+    compareAndSetDraftHeader: async () => null,
+    compareAndSetDraftIdentity: async () => null,
+    compareAndSetDraftPrimaryMenu: async () => null,
+    compareAndSetDraftLegalMenu: async () => null,
+    compareAndSetDraftSocial: async () => null,
+    compareAndSetDraftSeo: async () => null,
+    compareAndSetDraftTheme: async () => null,
     putSettings: async (
       _state: ContentState,
       _settings: Readonly<SiteSettings>,

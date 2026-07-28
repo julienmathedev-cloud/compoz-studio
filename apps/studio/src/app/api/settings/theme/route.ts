@@ -39,10 +39,11 @@ export async function GET(req: Request) {
       { ns: NS, method: "GET", state, websiteId },
       async () => {
         const repo = getSiteRepository({ websiteId });
-        const settings = await repo.readSettings(state);
+        const bundle = await repo.readSettingsWithRevisions(state);
 
         const res: GetThemeResponse = {
-          settings: settings.theme,
+          settings: bundle.settings.theme,
+          revision: bundle.revisions.themeRevision,
         };
 
         return res;
@@ -79,11 +80,11 @@ export async function PATCH(req: Request) {
       const statusCache = getSiteStatusCache({ websiteId });
 
       const run = updateThemeSettings({ repo });
-      const { settings } = await run(input);
+      const { settings, revision } = await run(input);
 
       logger.debug?.("route.theme.patch.afterWrite", {
         websiteId,
-        themeKeys: settings.theme ? Object.keys(settings.theme) : [],
+        themeKeys: Object.keys(settings),
       });
 
       /**
@@ -113,7 +114,8 @@ export async function PATCH(req: Request) {
       }
 
       const res: PatchThemeResponse = {
-        settings: settings.theme,
+        settings,
+        revision,
       };
 
       return res;

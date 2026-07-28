@@ -7,7 +7,6 @@
  */
 
 import type { IdentitySettings } from "@compoz/core/domain/site/entities/identity";
-import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 
 export interface UpdateIdentitySettingsDeps {
@@ -15,9 +14,12 @@ export interface UpdateIdentitySettingsDeps {
 }
 
 export interface UpdateIdentitySettingsInput {
+  baseline: IdentitySettings;
   patch: Partial<IdentitySettings>;
+  expectedRevision?: number;
 }
 
 export interface UpdateIdentitySettingsResult {
-  settings: SiteSettings;
+  settings: IdentitySettings;
+  revision: number;
 }

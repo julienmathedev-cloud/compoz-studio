@@ -7,7 +7,6 @@
  */
 
 import type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
-import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 
 export interface UpdateSeoSettingsDeps {
@@ -15,10 +14,12 @@ export interface UpdateSeoSettingsDeps {
 }
 
 export interface UpdateSeoSettingsInput {
-  /** Shallow patch applied to the persisted SEO settings. */
+  baseline: SeoSettings;
   patch: Partial<SeoSettings>;
+  expectedRevision?: number;
 }
 
 export interface UpdateSeoSettingsResult {
-  settings: SiteSettings;
+  settings: SeoSettings;
+  revision: number;
 }

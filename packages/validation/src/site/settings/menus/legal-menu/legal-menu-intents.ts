@@ -11,11 +11,15 @@
  */
 
 import { LegalMenuSettingsSchema } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu";
-import type { z } from "zod";
+import { z } from "zod";
 
-export const UpdateLegalMenuSettingsIntentSchema =
-  LegalMenuSettingsSchema.partial().strict();
+export const UpdateLegalMenuSettingsIntentSchema = z.object({
+  baseline: LegalMenuSettingsSchema,
+  patch: LegalMenuSettingsSchema.partial().strict(),
+  expectedRevision: z.number().int().nonnegative().optional(),
+}).strict();
 
-export type UpdateLegalMenuSettingsIntentDTO = z.infer<
+export type UpdateLegalMenuSettingsIntentDTO = z.infer<typeof UpdateLegalMenuSettingsIntentSchema>["patch"];
+export type UpdateLegalMenuSettingsOCCIntentDTO = z.infer<
   typeof UpdateLegalMenuSettingsIntentSchema
 >;

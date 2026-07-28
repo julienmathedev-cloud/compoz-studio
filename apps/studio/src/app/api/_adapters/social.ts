@@ -19,7 +19,7 @@ import { asBrandedHref } from "@compoz/core/domain/urls/href";
 import { log } from "@compoz/infra/lib/log";
 import { trimOrKeep } from "@compoz/studio/lib/strings";
 
-import type { UpdateSocialSettingsIntentDTO } from "@compoz/validation/site/settings/social/social-intents";
+import type { UpdateSocialSettingsOCCIntentDTO } from "@compoz/validation/site/settings/social/social-intents";
 
 /**
  * Converts a social item DTO into a domain item.
@@ -46,8 +46,9 @@ function adaptSocialItem(dto: {
  * Missing `items` does not reset the existing social links.
  */
 export function adaptUpdateSocialIntent(
-  dto: UpdateSocialSettingsIntentDTO,
+  intent: UpdateSocialSettingsOCCIntentDTO,
 ): UpdateSocialSettingsInput {
+  const dto = intent.patch;
   const started = Date.now();
 
   log.debug("studio.adapter.social.patch.start", {
@@ -66,5 +67,9 @@ export function adaptUpdateSocialIntent(
     outKeys: Object.keys(patch),
   });
 
-  return { patch };
+  return {
+    baseline: { items: intent.baseline.items.map(adaptSocialItem) },
+    patch,
+    expectedRevision: intent.expectedRevision,
+  };
 }

@@ -15,12 +15,18 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useLayoutEffect, useRef } from "react";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_LEGAL_MENU_SETTINGS } from "@compoz/core/domain/site/defaults/legal-menu";
 import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
+import {
+  createRevisionedDraftSnapshot,
+  requireCurrentSettingsOperation,
+  throwIfSettingsOperationAborted,
+} from "@compoz/studio/features/settings/_shared/revisioned-draft-snapshot";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
@@ -45,6 +51,14 @@ export function useLegalMenuSettings(): UseLegalMenuSettingsResult {
   const t = useTranslations();
   const queryClient = useQueryClient();
   const websiteId = useWebsiteId();
+  const snapshot = useRef(
+    createRevisionedDraftSnapshot<LegalMenuFormValues>(),
+  ).current;
+  const websiteIdRef = useRef(websiteId);
+
+  useLayoutEffect(() => {
+    websiteIdRef.current = websiteId;
+  }, [websiteId]);
 
   const entityLabel = t("studio.shared.entities.legalMenu");
 
@@ -56,32 +70,76 @@ export function useLegalMenuSettings(): UseLegalMenuSettingsResult {
     ),
 
     /** Shared bundle read with cache-first behavior handled by `getSettingsBundle`. */
-    load: async (state: ContentState) => {
-      const bundle = await getSettingsBundle(queryClient, websiteId, state);
+    load: async (state: ContentState, opts) => {
+      const load = snapshot.beginLoad();
+      const capturedWebsiteId = websiteIdRef.current;
+      const bundle = await getSettingsBundle(
+        queryClient,
+        capturedWebsiteId,
+        state,
+      );
+      throwIfSettingsOperationAborted(opts?.signal);
 
-      return normalizeLegalMenuFormValues(
+      const baseline = normalizeLegalMenuFormValues(
         toLegalMenuFormValuesFromDTO(bundle.settings.legalMenu),
+      );
+
+      return requireCurrentSettingsOperation(
+        snapshot.commitLoad(load, {
+          websiteId: capturedWebsiteId,
+          baseline,
+          revision: bundle.revisions.legalMenuRevision,
+          writable: state === DEFAULT_CONTENT_STATE,
+          isWebsiteCurrent: () => websiteIdRef.current === capturedWebsiteId,
+        }),
       );
     },
 
     /** Writes the legal menu slice, then mirrors the response into the settings bundle cache. */
     save: async (next, opts) => {
+      const capturedWebsiteId = websiteIdRef.current;
+      const capturedSnapshot = snapshot.captureForSave(capturedWebsiteId);
+
+      if (!capturedSnapshot) {
+        throw new Error(
+          "Legal menu settings cannot be saved without a revisioned draft snapshot.",
+        );
+      }
+
       const patch = toUpdateLegalMenuIntentDTOFromFormValues(next);
-      const dto = await settingsStudioApi.legalMenu.patch(patch, opts);
+      const dto = await settingsStudioApi.legalMenu.patch(
+        {
+          baseline: capturedSnapshot.baseline,
+          patch,
+          expectedRevision: capturedSnapshot.expectedRevision,
+        },
+        opts,
+      );
+      throwIfSettingsOperationAborted(opts?.signal);
+
+      const baseline = normalizeLegalMenuFormValues(
+        toLegalMenuFormValuesFromDTO(dto.settings),
+      );
 
       patchSettingsBundleCache(
         queryClient,
-        websiteId,
+        capturedWebsiteId,
         DEFAULT_CONTENT_STATE,
         {
           settings: {
             legalMenu: dto.settings,
           },
+          revisions: { legalMenuRevision: dto.revision },
         },
       );
 
-      return normalizeLegalMenuFormValues(
-        toLegalMenuFormValuesFromDTO(dto.settings),
+      return requireCurrentSettingsOperation(
+        snapshot.commitSave(capturedSnapshot, {
+          websiteId: capturedWebsiteId,
+          baseline,
+          revision: dto.revision,
+          isWebsiteCurrent: () => websiteIdRef.current === capturedWebsiteId,
+        }),
       );
     },
 

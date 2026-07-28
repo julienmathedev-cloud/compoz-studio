@@ -7,7 +7,6 @@
  */
 
 import type { HeaderSettings } from "@compoz/core/domain/site/entities";
-import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 
 export interface UpdateHeaderSettingsDeps {
@@ -15,10 +14,12 @@ export interface UpdateHeaderSettingsDeps {
 }
 
 export interface UpdateHeaderSettingsInput {
-  /** Shallow patch applied to the persisted header settings. */
+  baseline: HeaderSettings;
   patch: Partial<HeaderSettings>;
+  expectedRevision?: number;
 }
 
 export interface UpdateHeaderSettingsResult {
-  settings: SiteSettings;
+  settings: HeaderSettings;
+  revision: number;
 }

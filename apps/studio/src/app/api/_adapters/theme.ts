@@ -19,27 +19,41 @@ import type {
   ThemeSettings,
 } from "@compoz/core/domain/site/entities/theme";
 import type { UpdateThemeSettingsInput } from "@compoz/core/domain/site/use-cases/theme/update-theme-settings.types";
-import type { UpdateThemeSettingsIntentDTO } from "@compoz/validation/site/settings/theme/theme-intents";
+import type { UpdateThemeSettingsOCCIntentDTO } from "@compoz/validation/site/settings/theme/theme-intents";
 
 function adaptThemeTokensPatch(
-  tokens: Partial<PublicThemeTokens> | undefined,
-): Partial<PublicThemeTokens> | undefined {
+  tokens: PublicThemeTokens | undefined,
+): PublicThemeTokens | undefined {
   if (!tokens) return undefined;
 
-  const patch: Partial<PublicThemeTokens> = {};
-
-  for (const [key, value] of Object.entries(tokens)) {
-    if (typeof value === "string") {
-      patch[key as keyof PublicThemeTokens] = trimOrKeep(value);
-    }
-  }
-
-  return Object.keys(patch).length > 0 ? patch : undefined;
+  return {
+    background: trimOrKeep(tokens.background),
+    foreground: trimOrKeep(tokens.foreground),
+    chrome: trimOrKeep(tokens.chrome),
+    card: trimOrKeep(tokens.card),
+    "card-foreground": trimOrKeep(tokens["card-foreground"]),
+    popover: trimOrKeep(tokens.popover),
+    "popover-foreground": trimOrKeep(tokens["popover-foreground"]),
+    primary: trimOrKeep(tokens.primary),
+    "primary-foreground": trimOrKeep(tokens["primary-foreground"]),
+    secondary: trimOrKeep(tokens.secondary),
+    "secondary-foreground": trimOrKeep(tokens["secondary-foreground"]),
+    muted: trimOrKeep(tokens.muted),
+    "muted-foreground": trimOrKeep(tokens["muted-foreground"]),
+    accent: trimOrKeep(tokens.accent),
+    "accent-foreground": trimOrKeep(tokens["accent-foreground"]),
+    destructive: trimOrKeep(tokens.destructive),
+    "destructive-foreground": trimOrKeep(tokens["destructive-foreground"]),
+    border: trimOrKeep(tokens.border),
+    input: trimOrKeep(tokens.input),
+    ring: trimOrKeep(tokens.ring),
+  };
 }
 
 export function adaptUpdateThemeIntent(
-  dto: UpdateThemeSettingsIntentDTO,
+  intent: UpdateThemeSettingsOCCIntentDTO,
 ): UpdateThemeSettingsInput {
+  const dto = intent.patch;
   const started = Date.now();
 
   log.debug("studio.adapter.theme.patch.start", {
@@ -77,12 +91,12 @@ export function adaptUpdateThemeIntent(
 
   const lightTokensPatch = adaptThemeTokensPatch(dto.lightTokens);
   if (lightTokensPatch) {
-    patch.lightTokens = lightTokensPatch as ThemeSettings["lightTokens"];
+    patch.lightTokens = lightTokensPatch;
   }
 
   const darkTokensPatch = adaptThemeTokensPatch(dto.darkTokens);
   if (darkTokensPatch) {
-    patch.darkTokens = darkTokensPatch as ThemeSettings["darkTokens"];
+    patch.darkTokens = darkTokensPatch;
   }
 
   log.debug("studio.adapter.theme.patch.end", {
@@ -90,5 +104,13 @@ export function adaptUpdateThemeIntent(
     outKeys: Object.keys(patch),
   });
 
-  return { patch };
+  return {
+    baseline: {
+      ...intent.baseline,
+      lightTokens: { ...intent.baseline.lightTokens },
+      darkTokens: { ...intent.baseline.darkTokens },
+    },
+    patch,
+    expectedRevision: intent.expectedRevision,
+  };
 }

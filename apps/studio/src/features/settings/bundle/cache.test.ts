@@ -28,6 +28,39 @@ import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys"
 
 const WEBSITE_ID = "website-1";
 
+const NEXT_PRIMARY_MENU_SETTINGS = {
+  items: [
+    {
+      id: "primary-test",
+      label: "Primary test",
+      href: "/primary-test",
+      newTab: false,
+      children: [],
+    },
+  ],
+};
+
+const NEXT_LEGAL_MENU_SETTINGS = {
+  items: [
+    {
+      id: "legal-test",
+      label: "Legal test",
+      href: "/legal-test",
+      newTab: false,
+    },
+  ],
+};
+
+const NEXT_SOCIAL_SETTINGS = {
+  items: [
+    {
+      id: "social-test",
+      kind: "website",
+      href: "https://example.com/social-test",
+    },
+  ],
+};
+
 function createQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
@@ -289,6 +322,67 @@ void test("patches footer settings and its revision in one cache update", () => 
   assert.equal(cached.revisions.headerRevision, bundle.revisions.headerRevision);
 
   queryClient.clear();
+});
+
+void test("patches each settings-section and revision pair without touching the other pairs", () => {
+  const cases = [
+    [
+      "footer",
+      "footerRevision",
+      { ...DEFAULT_FOOTER_SETTINGS, copyright: "Footer" },
+    ],
+    ["header", "headerRevision", { ...DEFAULT_HEADER_SETTINGS, blur: true }],
+    [
+      "identity",
+      "identityRevision",
+      { ...DEFAULT_IDENTITY_SETTINGS, siteName: "Identity" },
+    ],
+    ["primaryMenu", "primaryMenuRevision", NEXT_PRIMARY_MENU_SETTINGS],
+    ["legalMenu", "legalMenuRevision", NEXT_LEGAL_MENU_SETTINGS],
+    ["social", "socialRevision", NEXT_SOCIAL_SETTINGS],
+    ["seo", "seoRevision", { ...DEFAULT_SEO_SETTINGS, defaultTitle: "SEO" }],
+    ["theme", "themeRevision", { ...DEFAULT_THEME_SETTINGS, mode: "dark" }],
+  ] as const;
+
+  for (const [section, revision, settings] of cases) {
+    const queryClient = createQueryClient();
+    const bundle = createSettingsBundle();
+    const key = settingsBundleKey(WEBSITE_ID, DEFAULT_CONTENT_STATE);
+    const nextRevision = bundle.revisions[revision] + 10;
+
+    queryClient.setQueryData(key, bundle);
+    assert.notDeepEqual(bundle.settings[section], settings);
+
+    patchSettingsBundleCache(queryClient, WEBSITE_ID, DEFAULT_CONTENT_STATE, {
+      settings: { [section]: settings },
+      revisions: { [revision]: nextRevision },
+    });
+
+    const cached = queryClient.getQueryData<SiteSettingsWithRevisionsDTO>(key);
+    assert.ok(cached);
+    assert.deepEqual(cached.settings[section], settings);
+    assert.equal(cached.revisions[revision], nextRevision);
+
+    for (const otherSection of Object.keys(bundle.settings) as Array<
+      keyof SiteSettingsWithRevisionsDTO["settings"]
+    >) {
+      if (otherSection !== section) {
+        assert.equal(cached.settings[otherSection], bundle.settings[otherSection]);
+      }
+    }
+    for (const otherRevision of Object.keys(bundle.revisions) as Array<
+      keyof SiteSettingsWithRevisionsDTO["revisions"]
+    >) {
+      if (otherRevision !== revision) {
+        assert.equal(
+          cached.revisions[otherRevision],
+          bundle.revisions[otherRevision],
+        );
+      }
+    }
+
+    queryClient.clear();
+  }
 });
 
 void test("does not patch a legacy cached settings projection", () => {

@@ -20,7 +20,7 @@ import type {
 
 export type GetSettingsBundleResponse = SiteSettingsWithRevisionsDTO;
 
-type HeaderSettingsResponse = Readonly<{ settings: HeaderSettingsDTO }>;
+type HeaderSettingsResponse = Readonly<{ settings: HeaderSettingsDTO; revision: number }>;
 export type GetHeaderResponse = HeaderSettingsResponse;
 export type PatchHeaderResponse = HeaderSettingsResponse;
 
@@ -31,28 +31,26 @@ type FooterSettingsResponse = Readonly<{
 export type GetFooterResponse = FooterSettingsResponse;
 export type PatchFooterResponse = FooterSettingsResponse;
 
-type IdentitySettingsResponse = Readonly<{ settings: IdentitySettingsDTO }>;
+type IdentitySettingsResponse = Readonly<{ settings: IdentitySettingsDTO; revision: number }>;
 export type GetIdentityResponse = IdentitySettingsResponse;
 export type PatchIdentityResponse = IdentitySettingsResponse;
 
-type PrimaryMenuSettingsResponse = Readonly<{
-  settings: PrimaryMenuSettingsDTO;
-}>;
+type PrimaryMenuSettingsResponse = Readonly<{ settings: PrimaryMenuSettingsDTO; revision: number }>;
 export type GetPrimaryMenuResponse = PrimaryMenuSettingsResponse;
 export type PatchPrimaryMenuResponse = PrimaryMenuSettingsResponse;
 
-type LegalMenuSettingsResponse = Readonly<{ settings: LegalMenuSettingsDTO }>;
+type LegalMenuSettingsResponse = Readonly<{ settings: LegalMenuSettingsDTO; revision: number }>;
 export type GetLegalMenuResponse = LegalMenuSettingsResponse;
 export type PatchLegalMenuResponse = LegalMenuSettingsResponse;
 
-type SeoSettingsResponse = Readonly<{ settings: SeoSettingsDTO }>;
+type SeoSettingsResponse = Readonly<{ settings: SeoSettingsDTO; revision: number }>;
 export type GetSeoResponse = SeoSettingsResponse;
 export type PatchSeoResponse = SeoSettingsResponse;
 
-type SocialSettingsResponse = Readonly<{ settings: SocialSettingsDTO }>;
+type SocialSettingsResponse = Readonly<{ settings: SocialSettingsDTO; revision: number }>;
 export type GetSocialResponse = SocialSettingsResponse;
 export type PatchSocialResponse = SocialSettingsResponse;
 
-type ThemeSettingsResponse = Readonly<{ settings: ThemeSettingsDTO }>;
+type ThemeSettingsResponse = Readonly<{ settings: ThemeSettingsDTO; revision: number }>;
 export type GetThemeResponse = ThemeSettingsResponse;
 export type PatchThemeResponse = ThemeSettingsResponse;

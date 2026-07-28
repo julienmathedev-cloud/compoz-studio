@@ -7,7 +7,6 @@
  */
 
 import type { PrimaryMenuSettings } from "@compoz/core/domain/site/entities/primary-menu";
-import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 
 export interface UpdatePrimaryMenuSettingsDeps {
@@ -15,9 +14,12 @@ export interface UpdatePrimaryMenuSettingsDeps {
 }
 
 export interface UpdatePrimaryMenuSettingsInput {
+  baseline: PrimaryMenuSettings;
   patch: Partial<PrimaryMenuSettings>;
+  expectedRevision?: number;
 }
 
 export interface UpdatePrimaryMenuSettingsResult {
-  settings: SiteSettings;
+  settings: PrimaryMenuSettings;
+  revision: number;
 }

@@ -44,22 +44,23 @@ enum MediaAssetKind {
 }
 
 model Website {
-  id              String      @id
-  slug            String      @unique
-  name            String
-  type            WebsiteType @default(site)
-  sourceWebsiteId String?
-  expiresAt       DateTime?
-  lastPublishedAt DateTime?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id                     String      @id
+  slug                   String      @unique
+  name                   String
+  type                   WebsiteType @default(site)
+  sourceWebsiteId        String?
+  expiresAt              DateTime?
+  lastPublishedAt        DateTime?
+  draftStructureRevision Int         @default(0)
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
 
-  domains       WebsiteDomain[]
-  accesses      WebsiteAccess[]
-  pages         Page[]
-  siteSettings  SiteSettings[]
-  mediaAssets   MediaAsset[]
-  demoSandbox   DemoSandbox?
+  domains      WebsiteDomain[]
+  accesses     WebsiteAccess[]
+  pages        Page[]
+  siteSettings SiteSettings[]
+  mediaAssets  MediaAsset[]
+  demoSandbox  DemoSandbox?
 
   @@index([type])
   @@index([expiresAt])
@@ -107,6 +108,8 @@ model Page {
   seoTitle          String?
   seoDescription    String?
   blocks            Json
+  metaRevision      Int          @default(0)
+  blocksRevision    Int          @default(0)
   sitemap           Json?
   paginationEnabled Boolean      @default(false)
   position          Int          @default(0)
@@ -125,19 +128,27 @@ model Page {
 }
 
 model SiteSettings {
-  id          String       @id @default(cuid())
-  websiteId   String
-  state       ContentState
-  header      Json
-  footer      Json
-  primaryMenu Json
-  legalMenu   Json
-  social      Json
-  identity    Json
-  seo         Json
-  theme       Json
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id                  String       @id @default(cuid())
+  websiteId           String
+  state               ContentState
+  header              Json
+  footer              Json
+  primaryMenu         Json
+  legalMenu           Json
+  social              Json
+  identity            Json
+  seo                 Json
+  theme               Json
+  headerRevision      Int          @default(0)
+  footerRevision      Int          @default(0)
+  primaryMenuRevision Int          @default(0)
+  legalMenuRevision   Int          @default(0)
+  socialRevision      Int          @default(0)
+  identityRevision    Int          @default(0)
+  seoRevision         Int          @default(0)
+  themeRevision       Int          @default(0)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
   website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
 

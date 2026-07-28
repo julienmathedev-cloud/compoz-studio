@@ -34,6 +34,7 @@ export type DeletePageResponse = Readonly<{ index: SiteIndexDTO }>;
 
 export type ListPageBlocksResponse = Readonly<{
   blocks: ReadonlyArray<BlockDTO>;
+  blocksRevision: number;
 }>;
 
 export type AddSectionBlockResponse = Readonly<{ page: PageDTO }>;

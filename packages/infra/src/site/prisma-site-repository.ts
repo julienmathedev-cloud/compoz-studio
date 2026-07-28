@@ -20,7 +20,7 @@ import type {
 } from "@compoz/core/domain/site/entities/site-settings";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
-import type { Prisma, PrismaClient } from "@compoz/infra/prisma/generated";
+import { Prisma, type PrismaClient } from "@compoz/infra/prisma/generated";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
 import { toDomainSiteIndex } from "@compoz/infra/site/mappers/site-index.mapper";
 import {
@@ -120,9 +120,31 @@ export class PrismaSiteRepository implements SiteRepository {
   }
 
   async readDraftIndexWithRevision(): Promise<DraftSiteIndexWithRevision> {
+    const client = this.client;
+
+    if ("$transaction" in client) {
+      const prismaClient = client as PrismaClient;
+
+      return prismaClient.$transaction(
+        async (tx) => {
+          const repository = new PrismaSiteRepository({
+            websiteId: this.websiteId,
+            client: tx,
+          });
+
+          return repository.readDraftIndexWithRevision();
+        },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+        },
+      );
+    }
+
+    const transactionClient = client as Prisma.TransactionClient;
+
     const [index, website] = await Promise.all([
       this.readIndex(CONTENT_STATE.DRAFT),
-      this.client.website.findUnique({
+      transactionClient.website.findUnique({
         where: { id: this.websiteId },
         select: { draftStructureRevision: true },
       }),

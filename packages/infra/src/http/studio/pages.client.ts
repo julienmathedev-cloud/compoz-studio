@@ -17,6 +17,8 @@ import type {
 } from "@compoz/validation/pages/blocks/block-intents";
 import type {
   CreatePageIntentDTO,
+  DeletePageIntentDTO,
+  ReorderChildrenIntentDTO,
   UpdatePageIntentDTO,
 } from "@compoz/validation/pages/page-intents";
 
@@ -289,14 +291,22 @@ export const pagesStudioApi = {
     );
   },
 
-  async remove(pageId: string, opts?: HttpOpts): Promise<DeletePageResponse> {
+  async remove(
+    pageId: string,
+    payload: DeletePageIntentDTO,
+    opts?: HttpOpts,
+  ): Promise<DeletePageResponse> {
     return logSpan(
       "compoz:studio:svc:pages",
       { endpoint: ENDPOINTS.STUDIO.PAGES.byId("<pageId>"), method: "DELETE" },
       async () => {
         const res = await apiFetch<DeletePageResponse>(
           ENDPOINTS.STUDIO.PAGES.byId(encodeSegment(pageId)),
-          { method: "DELETE", ...(opts ?? {}) },
+          {
+            method: "DELETE",
+            body: JSON.stringify(payload),
+            ...(opts ?? {}),
+          },
         );
 
         return assertJsonResponse(
@@ -309,7 +319,7 @@ export const pagesStudioApi = {
 
   async reorderChildren(
     parentId: string,
-    childIds: string[],
+    payload: ReorderChildrenIntentDTO,
     opts?: HttpOpts,
   ): Promise<ReorderChildrenResponse> {
     const url = `${ENDPOINTS.STUDIO.PAGES.byId(
@@ -325,7 +335,7 @@ export const pagesStudioApi = {
       async () => {
         const res = await apiFetch<ReorderChildrenResponse>(url, {
           method: "POST",
-          body: JSON.stringify({ childIds }),
+          body: JSON.stringify(payload),
           ...(opts ?? {}),
         });
 

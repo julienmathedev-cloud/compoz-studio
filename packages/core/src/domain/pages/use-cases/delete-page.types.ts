@@ -4,17 +4,18 @@
  * @description Contracts for deleting a page.
  */
 
-import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
+import type {
+  DraftPageStructureTransaction,
+  DraftStructureSnapshot,
+} from "@compoz/core/domain/pages/ports/draft-page-structure-transaction";
 
 export interface DeletePageInput {
   pageId: string;
+  expectedDraftStructureRevision: number;
 }
 
-export interface DeletePageResult {
-  ok: true;
-  pageId: string;
-}
+export type DeletePageResult = DraftStructureSnapshot;
 
 export interface DeletePageDeps {
-  pages: PagesRepository;
+  structure: DraftPageStructureTransaction;
 }

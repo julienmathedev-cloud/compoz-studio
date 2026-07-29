@@ -216,7 +216,6 @@ function createRepository(
       index: { pages: [], updatedAt: "" },
       draftStructureRevision: 0,
     }),
-    putIndex: async () => undefined,
     readSettings: async () => reads[0].settings,
     readSettingsWithRevisions: async () =>
       reads[Math.min(readIndex++, reads.length - 1)],

@@ -20,11 +20,22 @@ import {
   DEFAULT_CONTENT_STATE,
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
-import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
+import type { DraftSiteIndexWithRevisionDTO } from "@compoz/core/domain/site/dto";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
-import { setSiteIndexCache } from "@compoz/studio/features/site-index/cache";
+import {
+  adoptDraftStructureConflict,
+  draftStructureMutationOptions,
+  requireDraftStructureSnapshot,
+} from "@compoz/studio/features/pages/hooks/draft-structure-mutation";
+import {
+  patchDraftStructureCache,
+  rollbackDraftStructureReorder,
+  setDraftStructureCache,
+  type ReorderOptimisticContext,
+} from "@compoz/studio/features/site-index/cache";
+import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
 import {
   invalidateSiteStatus,
   invalidateSiteStatusDetails,
@@ -44,26 +55,55 @@ type UseReorderPageChildrenResult = Readonly<{
 
 const logger = log.child({ ns: "hook", name: "useReorderPageChildren" });
 
+function optimisticReorder(
+  snapshot: DraftSiteIndexWithRevisionDTO,
+  parentId: string,
+  childIds: ReadonlyArray<string>,
+): DraftSiteIndexWithRevisionDTO {
+  const children = snapshot.index.pages.filter(
+    (page) => page.parentId === parentId,
+  );
+  const byId = new Map(children.map((page) => [page.id, page]));
+  let cursor = 0;
+
+  return {
+    ...snapshot,
+    index: {
+      ...snapshot.index,
+      pages: snapshot.index.pages.map((page) =>
+        page.parentId === parentId
+          ? (byId.get(childIds[cursor++]) ?? page)
+          : page,
+      ),
+    },
+  };
+}
+
 export function useReorderPageChildren(
   state: ContentState = DEFAULT_CONTENT_STATE,
 ): UseReorderPageChildrenResult {
   const queryClient = useQueryClient();
   const websiteId = useWebsiteId();
 
-  const mutation = useMutation<SiteIndexDTO, unknown, ReorderChildrenArgs>({
-    mutationKey: [
-      "w",
-      websiteId,
-      "studio",
-      "pages",
-      "children",
-      "reorder",
-      state,
-    ] as const,
+  const mutation = useMutation<
+    DraftSiteIndexWithRevisionDTO,
+    unknown,
+    ReorderChildrenArgs,
+    ReorderOptimisticContext
+  >({
+    ...draftStructureMutationOptions(websiteId),
 
     mutationFn: async ({ parentId, childIds }) => {
       const parentIdKey = String(parentId ?? "").trim();
       const orderedChildIds = childIds ?? [];
+      await queryClient.cancelQueries({
+        queryKey: siteIndexKey(websiteId, state),
+        exact: true,
+      });
+      const current = requireDraftStructureSnapshot(
+        queryClient,
+        websiteId,
+      );
 
       const response = await logSpan(
         "ui.pages.children.reorder",
@@ -73,14 +113,50 @@ export function useReorderPageChildren(
           parentId: parentIdKey,
           count: orderedChildIds.length,
         },
-        () => pagesStudioApi.reorderChildren(parentIdKey, orderedChildIds),
+        () =>
+          pagesStudioApi.reorderChildren(parentIdKey, {
+            childIds: orderedChildIds,
+            expectedDraftStructureRevision:
+              current.draftStructureRevision,
+          }),
       );
 
-      return response.index;
+      return response;
     },
 
-    onSuccess: async (nextIndex, variables) => {
-      setSiteIndexCache(queryClient, websiteId, state, nextIndex);
+    onMutate: async ({ parentId, childIds }) => {
+      await queryClient.cancelQueries({
+        queryKey: siteIndexKey(websiteId, state),
+        exact: true,
+      });
+      const before = requireDraftStructureSnapshot(
+        queryClient,
+        websiteId,
+      );
+      const optimistic = optimisticReorder(
+        before,
+        parentId,
+        childIds,
+      );
+      patchDraftStructureCache(
+        queryClient,
+        websiteId,
+        state,
+        () => optimistic,
+      );
+      return {
+        before,
+        optimistic,
+        parentPageId: parentId,
+        orderedPageIdsBefore: before.index.pages
+          .filter((page) => page.parentId === parentId)
+          .map((page) => page.id),
+        orderedPageIdsOptimistic: [...childIds],
+      };
+    },
+
+    onSuccess: async (nextSnapshot, variables) => {
+      setDraftStructureCache(queryClient, websiteId, state, nextSnapshot);
 
       await Promise.all([
         invalidateSiteStatus(queryClient, websiteId),
@@ -95,7 +171,21 @@ export function useReorderPageChildren(
       });
     },
 
-    onError: (error: unknown) => {
+    onError: (error: unknown, _variables, context) => {
+      const adopted = adoptDraftStructureConflict(
+        queryClient,
+        websiteId,
+        error,
+      );
+      if (!adopted && context) {
+        patchDraftStructureCache(
+          queryClient,
+          websiteId,
+          state,
+          (current) =>
+            rollbackDraftStructureReorder(current, context),
+        );
+      }
       notify.fromError(error, UiError.unexpectedSave);
 
       logger.error("reorder.failed", {
@@ -113,10 +203,9 @@ export function useReorderPageChildren(
       const parentIdKey = String(parentId ?? "").trim();
       const orderedChildIds = childIds ?? [];
 
-      if (!parentIdKey || orderedChildIds.length === 0) {
+      if (!parentIdKey) {
         return;
       }
-
       await mutation.mutateAsync({
         parentId: parentIdKey,
         childIds: orderedChildIds,

@@ -26,7 +26,13 @@ import { log } from "@compoz/infra/lib/log";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { removePageBlocksCache } from "@compoz/studio/features/pages/blocks/cache/cache";
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
-import { setSiteIndexCache } from "@compoz/studio/features/site-index/cache";
+import {
+  adoptDraftStructureConflict,
+  draftStructureMutationOptions,
+  requireDraftStructureSnapshot,
+} from "@compoz/studio/features/pages/hooks/draft-structure-mutation";
+import { setDraftStructureCache } from "@compoz/studio/features/site-index/cache";
+import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
 import {
   invalidatePageStatusViews,
   invalidateSiteStatus,
@@ -59,16 +65,28 @@ export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
   const [deletingPageId, setDeletingPageId] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationKey: ["w", websiteId, "studio", "pages", "delete"] as const,
+    ...draftStructureMutationOptions(websiteId),
 
     mutationFn: async (args: DeletePageArgs) => {
       const pageId = String(args.pageId ?? "").trim();
       const fields = ["pageId"] as const;
+      await queryClient.cancelQueries({
+        queryKey: siteIndexKey(
+          websiteId,
+          DEFAULT_CONTENT_STATE,
+        ),
+        exact: true,
+      });
+      const snapshot = requireDraftStructureSnapshot(queryClient, websiteId);
 
       const response = await withSaveLogs(
         "useDeletePage",
         DEFAULT_CONTENT_STATE,
-        () => pagesStudioApi.remove(pageId),
+        () =>
+          pagesStudioApi.remove(pageId, {
+            expectedDraftStructureRevision:
+              snapshot.draftStructureRevision,
+          }),
         {
           entity: entityLabel,
           fields,
@@ -80,7 +98,7 @@ export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
       return {
         ...args,
         pageId,
-        nextIndex: response.index,
+        nextSnapshot: response,
       } as const;
     },
 
@@ -93,14 +111,12 @@ export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
         }),
       );
 
-      if (args.nextIndex) {
-        setSiteIndexCache(
-          queryClient,
-          websiteId,
-          DEFAULT_CONTENT_STATE,
-          args.nextIndex,
-        );
-      }
+      setDraftStructureCache(
+        queryClient,
+        websiteId,
+        DEFAULT_CONTENT_STATE,
+        args.nextSnapshot,
+      );
 
       queryClient.removeQueries({
         queryKey: pageByIdKey(websiteId, args.pageId, DEFAULT_CONTENT_STATE),
@@ -122,13 +138,14 @@ export function useDeletePage(onSuccess?: () => void): UseDeletePageResult {
       logger.debug("delete.ok", {
         websiteId,
         pageId: args.pageId,
-        pagesInIndex: args.nextIndex?.pages?.length ?? undefined,
+        pagesInIndex: args.nextSnapshot.index.pages.length,
       });
 
       onSuccess?.();
     },
 
     onError: (error: unknown, args) => {
+      adoptDraftStructureConflict(queryClient, websiteId, error);
       notify.fromError(error, UiError.unexpectedSave);
 
       logger.error("delete.failed", {

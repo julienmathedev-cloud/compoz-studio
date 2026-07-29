@@ -24,7 +24,13 @@ import { log } from "@compoz/infra/lib/log";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
 import { toCreatePageIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/pages-form";
-import { setSiteIndexCache } from "@compoz/studio/features/site-index/cache";
+import {
+  adoptDraftStructureConflict,
+  draftStructureMutationOptions,
+  requireDraftStructureSnapshot,
+} from "@compoz/studio/features/pages/hooks/draft-structure-mutation";
+import { setDraftStructureCache } from "@compoz/studio/features/site-index/cache";
+import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
 import {
   invalidatePageStatusViews,
   invalidateSiteStatus,
@@ -52,11 +58,22 @@ export function useCreatePage(onSuccess?: () => void): UseCreatePageResult {
   const entityLabel = t("studio.shared.entities.page");
 
   const mutation = useMutation({
-    mutationKey: ["w", websiteId, "studio", "pages", "create"] as const,
+    ...draftStructureMutationOptions(websiteId),
 
     mutationFn: async (values: PageFormValues) => {
+      await queryClient.cancelQueries({
+        queryKey: siteIndexKey(
+          websiteId,
+          DEFAULT_CONTENT_STATE,
+        ),
+        exact: true,
+      });
+      const snapshot = requireDraftStructureSnapshot(queryClient, websiteId);
       const payload: CreatePageIntentDTO =
-        toCreatePageIntentDTOFromFormValues(values);
+        toCreatePageIntentDTOFromFormValues(
+          values,
+          snapshot.draftStructureRevision,
+        );
 
       const fields = Object.keys(payload ?? {});
 
@@ -75,11 +92,14 @@ export function useCreatePage(onSuccess?: () => void): UseCreatePageResult {
         payload,
         fields,
         page: response.page,
-        index: response.index,
+        snapshot: {
+          index: response.index,
+          draftStructureRevision: response.draftStructureRevision,
+        },
       } as const;
     },
 
-    onSuccess: async ({ payload, fields, page, index }) => {
+    onSuccess: async ({ payload, fields, page, snapshot }) => {
       notifyCreated(
         t("notifications.created.title", { entity: entityLabel }),
         t("notifications.created.description", {
@@ -93,14 +113,17 @@ export function useCreatePage(onSuccess?: () => void): UseCreatePageResult {
         pageId: page?.id,
         slug: page?.slug,
         fields,
-        pagesInIndex: index?.pages?.length ?? undefined,
+        pagesInIndex: snapshot.index.pages.length,
       });
 
       const pageIdValue = String(page?.id ?? "").trim();
 
-      if (index) {
-        setSiteIndexCache(queryClient, websiteId, DEFAULT_CONTENT_STATE, index);
-      }
+      setDraftStructureCache(
+        queryClient,
+        websiteId,
+        DEFAULT_CONTENT_STATE,
+        snapshot,
+      );
 
       if (pageIdValue) {
         queryClient.setQueryData(
@@ -118,6 +141,7 @@ export function useCreatePage(onSuccess?: () => void): UseCreatePageResult {
     },
 
     onError: (error: unknown) => {
+      adoptDraftStructureConflict(queryClient, websiteId, error);
       notify.fromError(error, UiError.unexpectedSave);
 
       logger.error("create.failed", {

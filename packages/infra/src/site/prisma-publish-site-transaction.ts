@@ -156,7 +156,7 @@ export class PrismaPublishSiteTransaction implements PublishSiteTransaction {
 
             const site = new PrismaSiteRepository({
               websiteId: this.websiteId,
-              client: transactionClient,
+              transactionClient,
             });
             const pages = new PrismaPagesRepository({
               websiteId: this.websiteId,

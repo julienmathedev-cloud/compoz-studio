@@ -15,6 +15,7 @@ import {
   isDomainErrorLike,
 } from "@compoz/core/domain/errors/domain-error";
 import type { Page } from "@compoz/core/domain/pages/entities/page";
+import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { assertSlug } from "@compoz/core/domain/slug/validator";
 
 export function assertNameRequired(
@@ -71,7 +72,7 @@ export function assertPageSlug(
   }
 }
 
-/** Root pages cannot enable pagination. */
+/** Root-page pagination is normalized because it is derived from the final hierarchy. */
 export function assertPaginationEnabled(args: {
   parentId: string | null;
   paginationEnabled: unknown;
@@ -87,15 +88,23 @@ export function assertPaginationEnabled(args: {
     });
   }
 
-  if (parentId === null && paginationEnabled === true) {
+  return parentId === null ? false : paginationEnabled;
+}
+
+/** Validates hierarchy-dependent invariants against a page's effective final state. */
+export function normalizeFinalPageState(page: Page): Page {
+  if (page.slug === HOME_SLUG && page.parentId !== null) {
     throw new DomainError({
-      code: EC.INVALID_ARGUMENT,
-      message: EC.INVALID_ARGUMENT,
-      details: { path, meta: { reason: "root_page_cannot_paginate" } },
+      code: EC.PAGE_PARENT_INVALID,
+      message: EC.PAGE_PARENT_INVALID,
     });
   }
 
-  return paginationEnabled;
+  if (page.parentId !== null || page.paginationEnabled === false) {
+    return page;
+  }
+
+  return { ...page, paginationEnabled: false };
 }
 
 export function assertPriority(

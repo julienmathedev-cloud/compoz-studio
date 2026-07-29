@@ -158,6 +158,10 @@
     "PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE": "La priorité du sitemap doit être comprise entre 0 et 1.",
     "PAGE_NOT_FOUND": "La page demandée est introuvable.",
     "PAGE_ID_REQUIRED": "L’identifiant de la page est requis.",
+    "DRAFT_STRUCTURE_REVISION_CONFLICT": "La structure des pages a changé. L’état le plus récent a été chargé ; veuillez recommencer votre action.",
+    "PAGE_REORDER_INVALID": "L’ordre des pages est invalide ou incomplet.",
+    "PAGE_HIERARCHY_CYCLE": "Ce déplacement créerait un cycle dans la hiérarchie des pages.",
+    "PAGE_PARENT_INVALID": "La page parente sélectionnée n’est pas valide.",
 
     "LEGAL_MENU_LABEL_REQUIRED": "Le libellé du lien légal est requis.",
     "LEGAL_MENU_LABEL_TOO_LONG": "Le libellé du lien légal est trop long.",

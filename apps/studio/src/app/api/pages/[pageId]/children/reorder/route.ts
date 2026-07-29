@@ -7,7 +7,7 @@
  *
  * @remarks
  * - Reorders only pages whose `parentId` matches the route `pageId`.
- * - Writes the draft index, which is the Studio source of truth for page hierarchy.
+ * - Persists Page positions through the Website-locked structure transaction.
  * - Invalidates Website-scoped status snapshots because order is publishable state.
  * - The repository is scoped by Prisma Website.id.
  */
@@ -16,11 +16,14 @@ import "server-only";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
+import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import { reorderPageChildren } from "@compoz/core/domain/pages/use-cases/reorder-page-children";
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import type { ReorderChildrenResponse } from "@compoz/infra/http/studio/pages.types";
 import { log, logSpan } from "@compoz/infra/lib/log";
-import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
+import { getDraftPageStructureTransaction } from "@compoz/infra/pages";
+import { getSiteStatusCache } from "@compoz/infra/site";
+import { invalidateCommittedReorderStatus } from "@compoz/studio/app/api/pages/[pageId]/children/reorder/invalidate-reorder-status";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
@@ -51,6 +54,13 @@ export async function POST(req: Request, ctx: { params: unknown }) {
         });
 
         const body = await readJsonOr400(req);
+        if (
+          body === null ||
+          typeof body !== "object" ||
+          !("expectedDraftStructureRevision" in body)
+        ) {
+          throw new DomainError({ code: EC.REVISION_REQUIRED });
+        }
 
         const dto: ReorderChildrenIntentDTO = parseDTOOrHttp(
           ReorderChildrenIntentSchema,
@@ -61,32 +71,34 @@ export async function POST(req: Request, ctx: { params: unknown }) {
           },
         );
 
-        const siteRepo = getSiteRepository({ websiteId });
+        const structure = getDraftPageStructureTransaction({ websiteId });
         const statusCache = getSiteStatusCache({ websiteId });
 
         const run = reorderPageChildren({
-          site: siteRepo,
+          structure,
         });
 
-        const { index } = await run({
-          parentId: pageId,
-          childIds: dto.childIds,
-        });
-
-        await Promise.all([
-          statusCache.invalidateStatus(),
-          statusCache.invalidateStatusDetails(),
-        ]);
-
-        logger.debug("route.children.reordered", {
+        return invalidateCommittedReorderStatus({
           websiteId,
-          pageId,
-          count: dto.childIds.length,
+          statusCache,
+          logger,
+          commit: async (): Promise<ReorderChildrenResponse> => {
+            const { index, draftStructureRevision } = await run({
+              parentId: pageId,
+              childIds: dto.childIds,
+              expectedDraftStructureRevision:
+                dto.expectedDraftStructureRevision,
+            });
+
+            logger.debug("route.children.reordered", {
+              websiteId,
+              pageId,
+              count: dto.childIds.length,
+            });
+
+            return { index, draftStructureRevision };
+          },
         });
-
-        const res: ReorderChildrenResponse = { index };
-
-        return res;
       },
     );
   });

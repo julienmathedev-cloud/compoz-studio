@@ -25,18 +25,18 @@ import {
   applySitemapPatch,
   applySlugPatch,
 } from "@compoz/core/domain/pages/use-cases/helpers/apply-page-patch";
+import { normalizeFinalPageState } from "@compoz/core/domain/pages/validators/pages";
 import type {
   ChangedKey,
   UpdatePageDeps,
   UpdatePageInput,
   UpdatePageResult,
 } from "@compoz/core/domain/pages/use-cases/update-page.types";
-import { replacePagePathInMenus } from "@compoz/core/domain/site/helpers/replace-page-path-in-menus";
+import { assertDraftStructureRevision } from "@compoz/core/domain/pages/use-cases/helpers/assert-draft-structure-revision";
 
 export function updatePage({
   pages,
-  // Optional dependency used to update menu hrefs after a slug rename.
-  site,
+  structure,
   nowIso = () => new Date().toISOString(),
 }: UpdatePageDeps) {
   return async function run(input: UpdatePageInput): Promise<UpdatePageResult> {
@@ -76,54 +76,91 @@ export function updatePage({
     applyPaginationEnabledPatch({ existing, next, changed, input });
     applySitemapPatch({ existing, next, changed, input });
 
-    if (changed.length === 0) {
-      return { page: existing };
+    const normalized = normalizeFinalPageState(next);
+    if (normalized.paginationEnabled !== next.paginationEnabled) {
+      next.paginationEnabled = normalized.paginationEnabled;
+      if (next.paginationEnabled === existing.paginationEnabled) {
+        const changedIndex = changed.indexOf("paginationEnabled");
+        if (changedIndex !== -1) changed.splice(changedIndex, 1);
+      } else if (!changed.includes("paginationEnabled")) {
+        changed.push("paginationEnabled");
+      }
     }
 
-    const menuUpdate =
-      slugChange && site
-        ? await prepareMenusForSlugRename({
-            site,
-            state: DEFAULT_CONTENT_STATE,
-            fromSlug: slugChange.from,
-            toSlug: slugChange.to,
-          })
-        : null;
+    if (changed.length === 0) {
+      const result =
+        "parentId" in input
+          ? await structure.update({
+              pageId,
+              parentPageId: existing.parentId,
+              expectedDraftStructureRevision:
+                assertDraftStructureRevision(
+                  input.expectedDraftStructureRevision,
+                ),
+            })
+          : await structure.update({ pageId });
+
+      return {
+        page: result.page,
+        structure: {
+          index: result.index,
+          draftStructureRevision: result.draftStructureRevision,
+        },
+      };
+    }
 
     const metaUpdatedAt = nowIso();
     next.meta = { ...existing.meta, updatedAt: metaUpdatedAt };
 
     const metadataChanged = changed.some((key) => key !== "parentId");
-    const parentChanged = changed.includes("parentId");
 
-    if (metadataChanged) {
-      await pages.updateDraftPageMetadata({
+    if ("parentId" in input || metadataChanged) {
+      const write = {
         pageId,
-        slug: next.slug,
-        name: next.name,
-        seoTitle: next.seoTitle,
-        seoDescription: next.seoDescription,
-        sitemap: next.sitemap,
-        paginationEnabled: next.paginationEnabled,
-        metaRevision: pageRead.revisions.metaRevision,
-        metaUpdatedAt,
-      });
+        ...(metadataChanged
+          ? {
+              metadata: {
+                page: next,
+                metaRevision: pageRead.revisions.metaRevision,
+              },
+            }
+          : {}),
+        ...(slugChange
+          ? {
+              menuRenameExpectedRevisions: {
+                expectedPrimaryMenuRevision:
+                  input.expectedPrimaryMenuRevision,
+                expectedLegalMenuRevision:
+                  input.expectedLegalMenuRevision,
+              },
+            }
+          : {}),
+      };
+      const result =
+        "parentId" in input
+          ? await structure.update({
+              ...write,
+              parentPageId: next.parentId,
+              expectedDraftStructureRevision:
+                assertDraftStructureRevision(
+                  input.expectedDraftStructureRevision,
+                ),
+            })
+          : await structure.update(write);
+
+      return {
+        page: result.page,
+        structure: {
+          index: result.index,
+          draftStructureRevision: result.draftStructureRevision,
+        },
+      };
     }
 
-    if (parentChanged) {
-      await pages.updateDraftPageParent({
-        pageId,
-        parentId: next.parentId,
-        metaUpdatedAt,
-      });
-    }
-
-    if (menuUpdate?.changed && site) {
-      await site.putSettings(DEFAULT_CONTENT_STATE, menuUpdate.settings);
-    }
-
-    // Cache invalidation stays outside the core domain.
-    return { page: next };
+    throw new DomainError({
+      code: EC.INVALID_ARGUMENT,
+      message: EC.INVALID_ARGUMENT,
+    });
   };
 }
 
@@ -146,20 +183,4 @@ async function readExistingPageById({
   }
 
   return existing;
-}
-
-async function prepareMenusForSlugRename(args: {
-  site: NonNullable<UpdatePageDeps["site"]>;
-  state: ContentState;
-  fromSlug: string;
-  toSlug: string;
-}) {
-  const { site, state, fromSlug, toSlug } = args;
-  const settings = await site.readSettings(state);
-
-  return replacePagePathInMenus({
-    settings,
-    fromSlug,
-    toSlug,
-  });
 }

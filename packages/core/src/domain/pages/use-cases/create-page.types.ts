@@ -9,10 +9,15 @@ import type {
   PageSitemap,
 } from "@compoz/core/domain/pages/entities/page";
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
+import type {
+  DraftPageStructureTransaction,
+  DraftStructureSnapshot,
+} from "@compoz/core/domain/pages/ports/draft-page-structure-transaction";
 import type { IdGenerator } from "@compoz/core/domain/ports/id-generator";
 
 export interface CreatePageDeps {
   pages: PagesRepository;
+  structure: DraftPageStructureTransaction;
   idGenerator: IdGenerator;
 
   /** Optional ISO clock override. */
@@ -29,8 +34,9 @@ export type CreatePageInput = {
   sitemap: Partial<PageSitemap> | null;
   existingSlugs?: ReadonlySet<string>;
   paginationEnabled: boolean;
+  expectedDraftStructureRevision: number;
 };
 
-export interface CreatePageResult {
+export interface CreatePageResult extends DraftStructureSnapshot {
   page: Page;
 }

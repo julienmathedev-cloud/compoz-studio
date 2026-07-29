@@ -1,361 +1,380 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/page-draft-writers.test.ts
  * @layer core/domain/pages/use-cases
- * @description Verifies that Page use cases call only their narrow draft writer.
+ * @description Verifies interactive structure writes use only the OCC transaction port.
  */
 
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ContentState } from "@compoz/core/constants/common/content-state";
-import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
-import { DomainError } from "@compoz/core/domain/errors/domain-error";
-import type { Block } from "@compoz/core/domain/pages/entities/block";
-import type {
-  Page,
-  PageWithRevisions,
-} from "@compoz/core/domain/pages/entities/page";
-import type {
-  CreateDraftPageInput,
-  DetachDraftPageChildrenInput,
-  PagesRepository,
-  UpdateDraftPageBlocksInput,
-  UpdateDraftPageMetadataInput,
-  UpdateDraftPageParentInput,
-} from "@compoz/core/domain/pages/ports/pages-repository";
-import { createSectionBlock } from "@compoz/core/domain/pages/use-cases/blocks/create-section-block";
-import { deleteBlock } from "@compoz/core/domain/pages/use-cases/blocks/delete-block";
-import { reorderBlocks } from "@compoz/core/domain/pages/use-cases/blocks/reorder-blocks";
-import { updateSectionBlock } from "@compoz/core/domain/pages/use-cases/blocks/update-section-block";
+import type { Page } from "@compoz/core/domain/pages/entities/page";
+import type { DraftPageStructureTransaction } from "@compoz/core/domain/pages/ports/draft-page-structure-transaction";
+import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
 import { createPage } from "@compoz/core/domain/pages/use-cases/create-page";
 import { deletePage } from "@compoz/core/domain/pages/use-cases/delete-page";
+import { reorderPageChildren } from "@compoz/core/domain/pages/use-cases/reorder-page-children";
 import { updatePage } from "@compoz/core/domain/pages/use-cases/update-page";
 
-const CREATED_AT = "2026-01-01T00:00:00.000Z";
-const UPDATED_AT = "2026-01-02T00:00:00.000Z";
-const NEXT_UPDATED_AT = "2026-01-03T00:00:00.000Z";
-
-const BLOCK_A: Block = {
-  id: "block-a",
-  type: "section",
-  name: "Block A",
-  containerMode: "contained",
-  lcpPriority: false,
-  rows: [],
-};
-
-const BLOCK_B: Block = {
-  id: "block-b",
-  type: "section",
-  name: "Block B",
-  containerMode: "fullBleed",
-  lcpPriority: false,
-  rows: [],
-};
-
+const NOW = "2026-07-29T10:00:00.000Z";
 const PAGE: Page = {
-  id: "page-id",
-  parentId: "parent-id",
-  slug: "page-slug",
-  name: "Page name",
-  seoTitle: "SEO title",
-  seoDescription: "SEO description",
-  blocks: [BLOCK_A, BLOCK_B],
-  sitemap: {
-    include: true,
-    changefreq: "monthly",
-    priority: 0.7,
-  },
-  paginationEnabled: true,
-  meta: {
-    createdAt: CREATED_AT,
-    updatedAt: UPDATED_AT,
-  },
+  id: "page-a",
+  parentId: null,
+  slug: "page-a",
+  name: "Page A",
+  seoTitle: null,
+  seoDescription: null,
+  blocks: [],
+  sitemap: null,
+  paginationEnabled: false,
+  meta: { createdAt: NOW, updatedAt: NOW },
 };
-
-const PAGE_READ: PageWithRevisions = {
-  page: PAGE,
-  revisions: {
-    metaRevision: 19,
-    blocksRevision: 29,
+const SNAPSHOT = {
+  index: {
+    pages: [
+      {
+        id: PAGE.id,
+        parentId: PAGE.parentId,
+        slug: PAGE.slug,
+        name: PAGE.name,
+      },
+    ],
+    updatedAt: NOW,
   },
-};
+  draftStructureRevision: 4,
+} as const;
 
-function forbiddenWriter(name: string): () => Promise<never> {
-  return async () => {
-    throw new DomainError({
-      code: ERROR_CODES.INVALID_ARGUMENT,
-      message: `Foreign writer called: ${name}`,
-    });
-  };
-}
-
-function createPagesRepository(
+function pagesRepository(
+  page: Page = PAGE,
   overrides: Partial<PagesRepository> = {},
 ): PagesRepository {
   return {
     ensureBase: async () => undefined,
-    readById: async () => {
-      throw new DomainError({
-        code: ERROR_CODES.INVALID_ARGUMENT,
-        message: "Legacy readById called",
-      });
-    },
-    readByIdWithRevisions: async () => PAGE_READ,
+    readById: async () => page,
+    readByIdWithRevisions: async () => ({
+      page,
+      revisions: { metaRevision: 2, blocksRevision: 3 },
+    }),
     readBySlug: async () => null,
-    readManyById: async (
-      _state: ContentState,
-      pageIds: ReadonlyArray<string>,
-    ) => pageIds.map(() => null),
-    createDraftPage: forbiddenWriter("createDraftPage"),
-    createDraftPages: forbiddenWriter("createDraftPages"),
-    updateDraftPageMetadata: forbiddenWriter("updateDraftPageMetadata"),
-    updateDraftPageBlocks: forbiddenWriter("updateDraftPageBlocks"),
-    updateDraftPageParent: forbiddenWriter("updateDraftPageParent"),
-    detachDraftPageChildren: forbiddenWriter("detachDraftPageChildren"),
-    deleteDraftPage: forbiddenWriter("deleteDraftPage"),
-    existsById: async () => false,
+    readManyById: async (_state, ids) =>
+      ids.map((id) => (id === page.id ? page : null)),
+    updateDraftPageMetadata: async () => undefined,
+    updateDraftPageBlocks: async () => undefined,
+    existsById: async () => true,
     existsBySlug: async () => false,
     ...overrides,
   };
 }
 
-void test("createPage calls only createDraftPage with an explicit creation input", async () => {
-  const inputs: CreateDraftPageInput[] = [];
-  const pages = createPagesRepository({
-    createDraftPage: async (input) => {
-      inputs.push(input);
-    },
-  });
-  const run = createPage({
-    pages,
-    idGenerator: { nextId: () => "created-page-id" },
-    nowIso: () => NEXT_UPDATED_AT,
-  });
+function structureTransaction(
+  overrides: Partial<DraftPageStructureTransaction> = {},
+): DraftPageStructureTransaction {
+  return {
+    create: async ({ page }) => ({ ...SNAPSHOT, page }),
+    reorder: async () => SNAPSHOT,
+    update: async () => ({ ...SNAPSHOT, page: PAGE }),
+    delete: async () => SNAPSHOT,
+    ...overrides,
+  };
+}
 
-  const result = await run({
-    name: "Created page",
-    slug: "created-page",
-    seoTitle: "Created title",
-    seoDescription: "Created description",
-    parentId: null,
-    sitemap: null,
-    existingSlugs: new Set(),
-    paginationEnabled: false,
-  });
+void test("update transaction type requires OCC whenever parentPageId is present", () => {
+  const accepts = (
+    _command: Parameters<DraftPageStructureTransaction["update"]>[0],
+  ) => undefined;
 
-  assert.equal(result.page.id, "created-page-id");
-  assert.deepEqual(inputs, [
-    {
-      pageId: "created-page-id",
-      parentId: null,
-      slug: "created-page",
-      name: "Created page",
-      seoTitle: "Created title",
-      seoDescription: "Created description",
-      blocks: [],
-      sitemap: null,
-      paginationEnabled: false,
-      metaCreatedAt: NEXT_UPDATED_AT,
-      metaUpdatedAt: NEXT_UPDATED_AT,
-    },
-  ]);
+  accepts({ pageId: PAGE.id });
+  accepts({
+    pageId: PAGE.id,
+    parentPageId: null,
+    expectedDraftStructureRevision: 4,
+  });
+  // @ts-expect-error A parent mutation cannot be constructed without OCC.
+  accepts({ pageId: PAGE.id, parentPageId: null });
 });
 
-const blockMutationCases: ReadonlyArray<
-  Readonly<{
-    name: string;
-    run: (pages: PagesRepository) => Promise<void>;
-  }>
-> = [
-  {
-    name: "createSectionBlock",
-    run: async (pages) => {
-      await createSectionBlock({
-        pages,
-        idGenerator: { nextId: () => "created-block" },
-        nowIso: () => NEXT_UPDATED_AT,
-      })({
-        pageId: PAGE.id,
-        name: "Created block",
-        containerMode: "contained",
-        lcpPriority: false,
-        rows: [],
-      });
+void test("createPage sends the required revision and initial metadata through the structure transaction", async () => {
+  const commands: Parameters<DraftPageStructureTransaction["create"]>[0][] =
+    [];
+  const structure = structureTransaction({
+    create: async (input) => {
+      commands.push(input);
+      return { ...SNAPSHOT, page: input.page };
     },
-  },
-  {
-    name: "updateSectionBlock",
-    run: async (pages) => {
-      await updateSectionBlock({
-        pages,
-        nowIso: () => NEXT_UPDATED_AT,
-      })({
-        pageId: PAGE.id,
-        blockId: BLOCK_A.id,
-        patch: { name: "Updated block" },
-      });
-    },
-  },
-  {
-    name: "deleteBlock",
-    run: async (pages) => {
-      await deleteBlock({
-        pages,
-        nowIso: () => NEXT_UPDATED_AT,
-      })({
-        pageId: PAGE.id,
-        blockId: BLOCK_B.id,
-      });
-    },
-  },
-  {
-    name: "reorderBlocks",
-    run: async (pages) => {
-      await reorderBlocks({
-        pages,
-        nowIso: () => NEXT_UPDATED_AT,
-      })({
-        pageId: PAGE.id,
-        orderedBlockIds: [BLOCK_B.id, BLOCK_A.id],
-      });
-    },
-  },
-];
+  });
 
-for (const mutation of blockMutationCases) {
-  void test(`${mutation.name} calls only updateDraftPageBlocks`, async () => {
-    const inputs: UpdateDraftPageBlocksInput[] = [];
-    const pages = createPagesRepository({
-      updateDraftPageBlocks: async (input) => {
-        inputs.push(input);
+  const result = await createPage({
+    pages: pagesRepository(),
+    structure,
+    idGenerator: { nextId: () => "created-page" },
+    nowIso: () => NOW,
+  })({
+    name: "Created page",
+    slug: "created-page",
+    seoTitle: null,
+    seoDescription: null,
+    parentId: null,
+    sitemap: null,
+    paginationEnabled: false,
+    expectedDraftStructureRevision: 3,
+  });
+
+  assert.equal(commands[0]?.expectedDraftStructureRevision, 3);
+  assert.equal(commands[0]?.page.meta.createdAt, NOW);
+  assert.deepEqual(commands[0]?.page.blocks, []);
+  assert.equal(result.draftStructureRevision, 4);
+});
+
+void test("reorderPageChildren forwards even an empty permutation to transactional validation", async () => {
+  let command: Parameters<DraftPageStructureTransaction["reorder"]>[0] | null =
+    null;
+  const result = await reorderPageChildren({
+    structure: structureTransaction({
+      reorder: async (input) => {
+        command = input;
+        return SNAPSHOT;
       },
-    });
+    }),
+  })({
+    parentId: "parent",
+    childIds: [],
+    expectedDraftStructureRevision: 4,
+  });
 
-    await mutation.run(pages);
+  assert.deepEqual(command, {
+    parentPageId: "parent",
+    orderedPageIds: [],
+    expectedDraftStructureRevision: 4,
+  });
+  assert.equal(result.draftStructureRevision, 4);
+});
 
-    assert.equal(inputs.length, 1);
-    assert.equal(inputs[0]?.pageId, PAGE.id);
-    assert.equal(inputs[0]?.blocksRevision, PAGE_READ.revisions.blocksRevision);
-    assert.equal(inputs[0]?.metaUpdatedAt, NEXT_UPDATED_AT);
-    assert.deepEqual(Object.keys(inputs[0] ?? {}).sort(), [
-      "blocks",
-      "blocksRevision",
-      "metaUpdatedAt",
-      "pageId",
-    ]);
+void test("updatePage routes a parent and metadata patch through one structure command", async () => {
+  const commands: Parameters<DraftPageStructureTransaction["update"]>[0][] =
+    [];
+  const parented = { ...PAGE, parentId: "parent-a" };
+  const pages = pagesRepository(parented, {
+    updateDraftPageMetadata: async () => {
+      assert.fail("metadata must not be written outside the structure transaction");
+    },
+  });
+  const structure = structureTransaction({
+    update: async (input) => {
+      commands.push(input);
+      return {
+        ...SNAPSHOT,
+        page: {
+          ...input.metadata!.page,
+          parentId: input.parentPageId ?? parented.parentId,
+        },
+      };
+    },
+  });
+
+  const result = await updatePage({
+    pages,
+    structure,
+    nowIso: () => NOW,
+  })({
+    pageId: PAGE.id,
+    parentId: null,
+    name: "Renamed",
+    expectedDraftStructureRevision: 4,
+  });
+
+  assert.equal(commands[0]?.parentPageId, null);
+  assert.equal(commands[0]?.expectedDraftStructureRevision, 4);
+  assert.equal(commands[0]?.metadata?.page.name, "Renamed");
+  assert.equal(commands[0]?.metadata?.metaRevision, 2);
+  assert.equal(result.structure?.draftStructureRevision, 4);
+});
+
+void test("updatePage parent no-op still checks OCC and returns the current snapshot", async () => {
+  let calls = 0;
+  const result = await updatePage({
+    pages: pagesRepository(),
+    structure: structureTransaction({
+      update: async (command) => {
+        calls += 1;
+        assert.equal(command.parentPageId, null);
+        assert.equal(command.expectedDraftStructureRevision, 4);
+        return { ...SNAPSHOT, page: PAGE };
+      },
+    }),
+  })({
+    pageId: PAGE.id,
+    parentId: null,
+    expectedDraftStructureRevision: 4,
+  });
+
+  assert.equal(calls, 1);
+  assert.equal(result.structure?.draftStructureRevision, 4);
+});
+
+void test("metadata-only update remains atomic in the structure transaction without requiring structure OCC", async () => {
+  let metadataWrites = 0;
+  let structureWrites = 0;
+  const result = await updatePage({
+    pages: pagesRepository(PAGE, {
+      updateDraftPageMetadata: async (input) => {
+        metadataWrites += 1;
+        assert.equal(input.name, "Renamed");
+      },
+    }),
+    structure: structureTransaction({
+      update: async (command) => {
+        structureWrites += 1;
+        assert.equal(command.parentPageId, undefined);
+        assert.equal(command.expectedDraftStructureRevision, undefined);
+        assert.equal(command.metadata?.page.name, "Renamed");
+        return { ...SNAPSHOT, page: command.metadata.page };
+      },
+    }),
+    nowIso: () => NOW,
+  })({ pageId: PAGE.id, name: "Renamed" });
+
+  assert.equal(metadataWrites, 0);
+  assert.equal(structureWrites, 1);
+  assert.equal(result.page.name, "Renamed");
+});
+
+void test("slug rename carries only the known menu revisions", async () => {
+  let command:
+    | Parameters<DraftPageStructureTransaction["update"]>[0]
+    | undefined;
+  await updatePage({
+    pages: pagesRepository(),
+    structure: structureTransaction({
+      update: async (input) => {
+        command = input;
+        return { ...SNAPSHOT, page: input.metadata!.page };
+      },
+    }),
+  })({
+    pageId: PAGE.id,
+    slug: "renamed",
+    expectedPrimaryMenuRevision: 7,
+    expectedLegalMenuRevision: 9,
+  });
+
+  assert.deepEqual(command?.menuRenameExpectedRevisions, {
+    expectedPrimaryMenuRevision: 7,
+    expectedLegalMenuRevision: 9,
+  });
+});
+
+for (const [name, patch] of [
+  ["identical name", { name: PAGE.name }],
+  ["normalized identical slug", { slug: "/page-a/" }],
+] as const) {
+  void test(`metadata ${name} returns the locked current snapshot without a write command`, async () => {
+    let command:
+      | Parameters<DraftPageStructureTransaction["update"]>[0]
+      | undefined;
+    const result = await updatePage({
+      pages: pagesRepository(),
+      structure: structureTransaction({
+        update: async (input) => {
+          command = input;
+          return { ...SNAPSHOT, page: PAGE };
+        },
+      }),
+    })({ pageId: PAGE.id, ...patch });
+
+    assert.deepEqual(command, { pageId: PAGE.id });
+    assert.strictEqual(result.page, PAGE);
+    assert.strictEqual(result.structure.index, SNAPSHOT.index);
+    assert.equal(result.structure.draftStructureRevision, 4);
   });
 }
 
-void test("updatePage metadata calls only updateDraftPageMetadata", async () => {
-  const metadataInputs: UpdateDraftPageMetadataInput[] = [];
-  const pages = createPagesRepository({
-    updateDraftPageMetadata: async (input) => {
-      metadataInputs.push(input);
-    },
+for (const parentPatch of [
+  {},
+  { parentId: "parent-a", expectedDraftStructureRevision: 4 },
+  { parentId: "parent-b", expectedDraftStructureRevision: 4 },
+] as const) {
+  void test(`a child cannot become home with parent patch ${JSON.stringify(parentPatch)}`, async () => {
+    let structureWrites = 0;
+    const child = { ...PAGE, parentId: "parent-a" };
+    await assert.rejects(
+      () =>
+        updatePage({
+          pages: pagesRepository(child),
+          structure: structureTransaction({
+            update: async () => {
+              structureWrites += 1;
+              return { ...SNAPSHOT, page: child };
+            },
+          }),
+        })({
+          pageId: child.id,
+          slug: "/",
+          ...parentPatch,
+        }),
+      (error: unknown) =>
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "PAGE_PARENT_INVALID",
+    );
+    assert.equal(structureWrites, 0);
   });
+}
 
+void test("root pagination is normalized to false in metadata-only patches", async () => {
+  const root = { ...PAGE, paginationEnabled: false };
+  let command:
+    | Parameters<DraftPageStructureTransaction["update"]>[0]
+    | undefined;
   const result = await updatePage({
-    pages,
-    nowIso: () => NEXT_UPDATED_AT,
+    pages: pagesRepository(root),
+    structure: structureTransaction({
+      update: async (input) => {
+        command = input;
+        return { ...SNAPSHOT, page: root };
+      },
+    }),
+  })({
+    pageId: root.id,
+    paginationEnabled: true,
+  });
+
+  assert.deepEqual(command, { pageId: root.id });
+  assert.equal(result.page.paginationEnabled, false);
+  assert.equal(result.structure.draftStructureRevision, 4);
+});
+
+void test("deletePage uses the structure transaction and is no longer idempotent", async () => {
+  let command: Parameters<DraftPageStructureTransaction["delete"]>[0] | null =
+    null;
+  const result = await deletePage({
+    structure: structureTransaction({
+      delete: async (input) => {
+        command = input;
+        return SNAPSHOT;
+      },
+    }),
   })({
     pageId: PAGE.id,
-    name: "Renamed page",
+    expectedDraftStructureRevision: 3,
   });
 
-  assert.equal(result.page.name, "Renamed page");
-  assert.deepEqual(metadataInputs, [
-    {
-      pageId: PAGE.id,
-      slug: PAGE.slug,
-      name: "Renamed page",
-      seoTitle: PAGE.seoTitle,
-      seoDescription: PAGE.seoDescription,
-      sitemap: PAGE.sitemap,
-      paginationEnabled: PAGE.paginationEnabled,
-      metaRevision: PAGE_READ.revisions.metaRevision,
-      metaUpdatedAt: NEXT_UPDATED_AT,
-    },
-  ]);
-});
-
-void test("updatePage parent calls only updateDraftPageParent", async () => {
-  const parentInputs: UpdateDraftPageParentInput[] = [];
-  const pages = createPagesRepository({
-    updateDraftPageParent: async (input) => {
-      parentInputs.push(input);
-    },
-  });
-
-  const result = await updatePage({
-    pages,
-    nowIso: () => NEXT_UPDATED_AT,
-  })({
+  assert.deepEqual(command, {
     pageId: PAGE.id,
-    parentId: "next-parent",
+    expectedDraftStructureRevision: 3,
   });
-
-  assert.equal(result.page.parentId, "next-parent");
-  assert.deepEqual(parentInputs, [
-    {
-      pageId: PAGE.id,
-      parentId: "next-parent",
-      metaUpdatedAt: NEXT_UPDATED_AT,
-    },
-  ]);
+  assert.equal(result.index.pages.length, 1);
 });
 
-void test("updatePage mixed changes call metadata and parent writers once each", async () => {
-  const metadataInputs: UpdateDraftPageMetadataInput[] = [];
-  const parentInputs: UpdateDraftPageParentInput[] = [];
-  const pages = createPagesRepository({
-    updateDraftPageMetadata: async (input) => {
-      metadataInputs.push(input);
-    },
-    updateDraftPageParent: async (input) => {
-      parentInputs.push(input);
-    },
-  });
-
-  await updatePage({
-    pages,
-    nowIso: () => NEXT_UPDATED_AT,
-  })({
-    pageId: PAGE.id,
-    seoTitle: "Next SEO title",
-    parentId: "next-parent",
-  });
-
-  assert.equal(metadataInputs.length, 1);
-  assert.equal(parentInputs.length, 1);
-  assert.equal(metadataInputs[0]?.metaUpdatedAt, NEXT_UPDATED_AT);
-  assert.equal(parentInputs[0]?.metaUpdatedAt, NEXT_UPDATED_AT);
-});
-
-void test("deletePage calls only deleteDraftPage", async () => {
-  const deletedPageIds: string[] = [];
-  const pages = createPagesRepository({
-    deleteDraftPage: async (pageId) => {
-      deletedPageIds.push(pageId);
-    },
-  });
-
-  assert.deepEqual(await deletePage({ pages })({ pageId: PAGE.id }), {
-    ok: true,
-    pageId: PAGE.id,
-  });
-  assert.deepEqual(deletedPageIds, [PAGE.id]);
-});
-
-void test("the PagesRepository fake rejects detachDraftPageChildren by default", async () => {
-  const pages = createPagesRepository();
-  const input: DetachDraftPageChildrenInput = {
-    parentId: PAGE.id,
-    metaUpdatedAt: NEXT_UPDATED_AT,
-  };
-
+void test("structure use cases reject a missing revision with REVISION_REQUIRED", async () => {
   await assert.rejects(
-    () => pages.detachDraftPageChildren(input),
-    /Foreign writer called/,
+    () =>
+      deletePage({ structure: structureTransaction() })({
+        pageId: PAGE.id,
+        expectedDraftStructureRevision: undefined as unknown as number,
+      }),
+    (error: unknown) =>
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "REVISION_REQUIRED",
   );
 });

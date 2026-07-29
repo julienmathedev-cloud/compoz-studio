@@ -8,7 +8,7 @@
  * Builds internal page picker options from the SiteIndex.
  *
  * @remarks
- * - Reads the SiteIndex through `useReadSiteIndex(state)` as the source of truth.
+ * - Reads the SiteIndex projection through `useReadSiteIndex(state)`.
  * - Centralizes filtering and label rules so internal page pickers stay consistent.
  * - Supports href or page id option values depending on the caller use case.
  */

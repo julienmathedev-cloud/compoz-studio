@@ -11,7 +11,10 @@ import type {
 } from "@compoz/core/domain/demo/use-cases/create-demo-sandbox-from-seed.types";
 import type { Page } from "@compoz/core/domain/pages/entities/page";
 
-import { getPagesRepository } from "@compoz/infra/pages";
+import {
+  getDraftPageStructureInitializer,
+  getPagesRepository,
+} from "@compoz/infra/pages";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
 import { getSiteRepository } from "@compoz/infra/site";
 
@@ -144,15 +147,16 @@ export class PrismaDemoSandboxCloner implements DemoSandboxCloner {
       });
 
       const targetSite = getSiteRepository({ websiteId: targetWebsiteId });
-      const targetPages = getPagesRepository({ websiteId: targetWebsiteId });
+      const targetStructure = getDraftPageStructureInitializer({
+        websiteId: targetWebsiteId,
+      });
 
       await targetSite.ensureBase();
-      await targetPages.ensureBase();
 
       await targetSite.putSettings(CONTENT_STATE.DRAFT, settings);
 
       if (pages.length > 0) {
-        await targetPages.createDraftPages(
+        await targetStructure.createDraftPages(
           pages.map((page) => ({
             pageId: page.id,
             parentId: page.parentId,
@@ -168,8 +172,6 @@ export class PrismaDemoSandboxCloner implements DemoSandboxCloner {
           })),
         );
       }
-
-      await targetSite.putIndex(CONTENT_STATE.DRAFT, index);
     } catch (error) {
       // Roll back the sandbox website when cloning fails, without masking the original error.
       await this.deleteSandboxWebsite(targetWebsiteId).catch(() => undefined);

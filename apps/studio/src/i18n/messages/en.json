@@ -158,6 +158,10 @@
     "PAGE_SITEMAP_PRIORITY_OUT_OF_RANGE": "Sitemap priority must be between 0 and 1.",
     "PAGE_NOT_FOUND": "The requested page was not found.",
     "PAGE_ID_REQUIRED": "Page ID is required.",
+    "DRAFT_STRUCTURE_REVISION_CONFLICT": "The page structure changed. The latest state was loaded; please retry your action.",
+    "PAGE_REORDER_INVALID": "The page order is invalid or incomplete.",
+    "PAGE_HIERARCHY_CYCLE": "This move would create a cycle in the page hierarchy.",
+    "PAGE_PARENT_INVALID": "The selected parent page is invalid.",
 
     "LEGAL_MENU_LABEL_REQUIRED": "Legal link label is required.",
     "LEGAL_MENU_LABEL_TOO_LONG": "Legal link label is too long.",

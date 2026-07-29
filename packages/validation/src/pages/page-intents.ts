@@ -61,6 +61,7 @@ export const CreatePageIntentSchema = z
     sitemap: PageSitemapIntentSchema.nullable(),
 
     paginationEnabled: z.boolean(),
+    expectedDraftStructureRevision: z.number().int().nonnegative(),
   })
   .strict();
 
@@ -87,6 +88,9 @@ export const UpdatePageIntentSchema = z
 
     sitemap: PageSitemapIntentSchema.nullable().optional(),
     paginationEnabled: z.boolean().optional(),
+    expectedDraftStructureRevision: z.number().int().nonnegative().optional(),
+    expectedPrimaryMenuRevision: z.number().int().nonnegative().optional(),
+    expectedLegalMenuRevision: z.number().int().nonnegative().optional(),
   })
   .strict();
 
@@ -94,10 +98,19 @@ export type UpdatePageIntentDTO = z.infer<typeof UpdatePageIntentSchema>;
 
 export const ReorderChildrenIntentSchema = z
   .object({
-    childIds: z.array(PageIdSchema).min(1),
+    childIds: z.array(PageIdSchema),
+    expectedDraftStructureRevision: z.number().int().nonnegative(),
   })
   .strict();
 
 export type ReorderChildrenIntentDTO = z.infer<
   typeof ReorderChildrenIntentSchema
 >;
+
+export const DeletePageIntentSchema = z
+  .object({
+    expectedDraftStructureRevision: z.number().int().nonnegative(),
+  })
+  .strict();
+
+export type DeletePageIntentDTO = z.infer<typeof DeletePageIntentSchema>;

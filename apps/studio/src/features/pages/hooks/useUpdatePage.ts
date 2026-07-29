@@ -23,14 +23,21 @@ import { useCallback, useMemo, useState } from "react";
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import type { PageDTO } from "@compoz/core/domain/pages/dto";
-import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import type { UpdatePageResponse } from "@compoz/infra/http/studio/pages.types";
 import { log } from "@compoz/infra/lib/log";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
 import { toUpdatePageIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/pages-form";
-import { setSiteIndexCache } from "@compoz/studio/features/site-index/cache";
+import {
+  adoptDraftStructureConflict,
+  draftStructureMutationOptions,
+  refreshMenuSettingsAfterConflict,
+  requireDraftStructureSnapshot,
+  resolveMenuRenameExpectedRevisions,
+} from "@compoz/studio/features/pages/hooks/draft-structure-mutation";
+import { adoptDraftStructurePagePatchCache } from "@compoz/studio/features/site-index/cache";
+import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
 import {
   invalidatePageStatusViews,
@@ -59,7 +66,10 @@ type UpdatePageMutationResult = Readonly<{
   nextSlug: string;
   fields: ReadonlyArray<string>;
   page: PageDTO;
-  index?: SiteIndexDTO;
+  snapshot: Readonly<{
+    index: UpdatePageResponse["index"];
+    draftStructureRevision: number;
+  }>;
 }>;
 
 type UseUpdatePageResult = Readonly<{
@@ -83,13 +93,35 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
 
   const [updatingPageId, setUpdatingPageId] = useState<string | null>(null);
 
-  const mutation = useMutation({
-    mutationKey: ["w", websiteId, "studio", "pages", "update"] as const,
-
-    mutationFn: async (
-      args: UpdatePageArgs,
-    ): Promise<UpdatePageMutationResult> => {
+  const mutationFn = async (
+    args: UpdatePageArgs,
+  ): Promise<UpdatePageMutationResult> => {
       const { pageId, payload, fields } = args;
+      await queryClient.cancelQueries({
+        queryKey: siteIndexKey(
+          websiteId,
+          DEFAULT_CONTENT_STATE,
+        ),
+        exact: true,
+      });
+      const requestPayload: UpdatePageIntentDTO = { ...payload };
+      const structural = "parentId" in payload;
+      if (structural) {
+        requestPayload.expectedDraftStructureRevision =
+          requireDraftStructureSnapshot(
+            queryClient,
+            websiteId,
+          ).draftStructureRevision;
+      }
+      if ("slug" in payload) {
+        Object.assign(
+          requestPayload,
+          await resolveMenuRenameExpectedRevisions(
+            queryClient,
+            websiteId,
+          ),
+        );
+      }
 
       const response = await withSaveLogs(
         "useUpdatePage",
@@ -97,7 +129,7 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
         async () => {
           const result: UpdatePageResponse = await pagesStudioApi.update(
             pageId,
-            payload,
+            requestPayload,
           );
 
           return result;
@@ -111,7 +143,6 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
       );
 
       const page = response.page;
-      const index = (response as Partial<UpdatePageResponse>).index;
       const nextSlug = String(payload.slug ?? "").trim();
 
       return {
@@ -119,19 +150,32 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
         nextSlug,
         fields,
         page,
-        index,
+        snapshot: {
+          index: response.index,
+          draftStructureRevision: response.draftStructureRevision,
+        },
       } as const;
-    },
+    };
 
-    onSuccess: async ({ pageId, nextSlug, fields, page, index }) => {
+  const handleSuccess = async ({
+    pageId,
+    nextSlug,
+    fields,
+    page,
+    snapshot,
+  }: UpdatePageMutationResult) => {
       notifyUpdated(
         t("notifications.updated.title", { entity: entityLabel }),
         t("notifications.updated.description", { fields: fields.join(", ") }),
       );
 
-      if (index) {
-        setSiteIndexCache(queryClient, websiteId, DEFAULT_CONTENT_STATE, index);
-      }
+      adoptDraftStructurePagePatchCache(
+        queryClient,
+        websiteId,
+        snapshot,
+        page,
+        DEFAULT_CONTENT_STATE,
+      );
 
       queryClient.setQueryData(
         pageByIdKey(websiteId, pageId, DEFAULT_CONTENT_STATE),
@@ -164,27 +208,46 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
       });
 
       onSuccess?.();
-    },
+    };
 
-    onError: (error: unknown) => {
+  const handleError = async (
+    error: unknown,
+    args: UpdatePageArgs,
+  ) => {
+      adoptDraftStructureConflict(queryClient, websiteId, error);
+      if ("slug" in args.payload) {
+        await refreshMenuSettingsAfterConflict(
+          queryClient,
+          websiteId,
+          error,
+        );
+      }
       notify.fromError(error, UiError.unexpectedSave);
 
       logger.error("update.failed", {
         websiteId,
         msg: String(error),
       });
-    },
+    };
 
-    onSettled: () => {
+  const handleSettled = () => {
       setUpdatingPageId(null);
-    },
+    };
 
+  const mutation = useMutation({
+    ...draftStructureMutationOptions(websiteId),
+    mutationFn,
+    onSuccess: handleSuccess,
+    onError: handleError,
+    onSettled: handleSettled,
     retry: false,
   });
 
+  const isPending = mutation.isPending;
+
   const update = useCallback(
     async (pageId: string, baseline: PageFormValues, next: PageFormValues) => {
-      if (mutation.isPending) return;
+      if (isPending) return;
 
       const pageIdKey = String(pageId ?? "").trim();
 
@@ -235,16 +298,23 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
         fields,
       });
     },
-    [entityLabel, mutation, t, websiteId, updatingPageId],
+    [
+      entityLabel,
+      isPending,
+      mutation,
+      t,
+      websiteId,
+      updatingPageId,
+    ],
   );
 
   return useMemo(
     () => ({
       update,
       updatingPageId,
-      isUpdating: mutation.isPending,
+      isUpdating: isPending,
     }),
-    [update, updatingPageId, mutation.isPending],
+    [update, updatingPageId, isPending],
   );
 }
 

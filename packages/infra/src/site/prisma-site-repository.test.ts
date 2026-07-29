@@ -89,6 +89,7 @@ function createFakeClient(options: FakeOptions) {
   let findCount = 0;
 
   const tx = {
+    $queryRaw: async () => [{ id: WEBSITE_ID }],
     siteSettings: {
       updateMany: async (args: unknown) => {
         updateManyCalls.push(args);
@@ -338,13 +339,18 @@ void test("uses a TransactionClient without starting a nested transaction", asyn
   };
   const callbackFake = createFakeClient({ updateCount: 1, readRow: row });
   const transactionFake = createFakeClient({ updateCount: 1, readRow: row });
+  Object.assign(transactionFake.transactionClient, {
+    $transaction: async () => {
+      assert.fail("a transaction-scoped repository must not nest transactions");
+    },
+  });
   const callbackRepository = new PrismaSiteRepository({
     websiteId: WEBSITE_ID,
     client: callbackFake.client,
   });
   const transactionRepository = new PrismaSiteRepository({
     websiteId: WEBSITE_ID,
-    client: transactionFake.transactionClient,
+    transactionClient: transactionFake.transactionClient,
   });
 
   const callbackResult = await callbackRepository.compareAndSetDraftIdentity({
@@ -360,7 +366,7 @@ void test("uses a TransactionClient without starting a nested transaction", asyn
   assert.deepEqual(transactionResult, callbackResult);
   assert.deepEqual(transactionResult, { settings: identity, revision: 4 });
   assert.equal(transactionFake.updateManyCalls.length, 1);
-  assert.equal("$transaction" in transactionFake.transactionClient, false);
+  assert.equal("$transaction" in transactionFake.transactionClient, true);
 });
 
 void test("filters the footer update by draft revision and writes only footer CAS data", async () => {

@@ -47,17 +47,6 @@ export type UpdateDraftPageBlocksInput = Readonly<{
   metaUpdatedAt: string;
 }>;
 
-export type UpdateDraftPageParentInput = Readonly<{
-  pageId: string;
-  parentId: string | null;
-  metaUpdatedAt: string;
-}>;
-
-export type DetachDraftPageChildrenInput = Readonly<{
-  parentId: string;
-  metaUpdatedAt: string;
-}>;
-
 export interface PagesRepository {
   /** Idempotently prepares the storage backend when needed. */
   ensureBase(): Promise<void>;
@@ -79,26 +68,11 @@ export interface PagesRepository {
     pageIds: ReadonlyArray<string>,
   ): Promise<Array<Page | null>>;
 
-  createDraftPage(input: CreateDraftPageInput): Promise<void>;
-
-  createDraftPages(
-    inputs: ReadonlyArray<CreateDraftPageInput>,
-  ): Promise<void>;
-
   updateDraftPageMetadata(
     input: UpdateDraftPageMetadataInput,
   ): Promise<void>;
 
   updateDraftPageBlocks(input: UpdateDraftPageBlocksInput): Promise<void>;
-
-  updateDraftPageParent(input: UpdateDraftPageParentInput): Promise<void>;
-
-  detachDraftPageChildren(
-    input: DetachDraftPageChildrenInput,
-  ): Promise<number>;
-
-  /** Deletes a draft by id without failing when the page no longer exists. */
-  deleteDraftPage(pageId: string): Promise<void>;
 
   existsById(state: ContentState, pageId: string): Promise<boolean>;
 

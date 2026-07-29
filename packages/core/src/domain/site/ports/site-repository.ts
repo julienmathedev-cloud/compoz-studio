@@ -3,7 +3,7 @@
  * @layer core/domain/site/ports
  * @description Storage-agnostic persistence port for the site aggregate.
  * @remarks
- * The repository owns the page index and site settings for each content state.
+ * Page indexes are read projections; structure writes use their dedicated transactional ports.
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
@@ -61,9 +61,6 @@ export interface SiteRepository {
   readDraftIndexWithRevision(): Promise<
     Readonly<DraftSiteIndexWithRevision>
   >;
-
-  /** Persists the page index and its logical write timestamp. */
-  putIndex(state: ContentState, index: Readonly<SiteIndex>): Promise<void>;
 
   readSettings(state: ContentState): Promise<Readonly<SiteSettings>>;
 

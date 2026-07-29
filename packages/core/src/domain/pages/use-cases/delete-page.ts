@@ -13,8 +13,9 @@ import type {
   DeletePageInput,
   DeletePageResult,
 } from "@compoz/core/domain/pages/use-cases/delete-page.types";
+import { assertDraftStructureRevision } from "@compoz/core/domain/pages/use-cases/helpers/assert-draft-structure-revision";
 
-export function deletePage({ pages }: DeletePageDeps) {
+export function deletePage({ structure }: DeletePageDeps) {
   return async function run(input: DeletePageInput): Promise<DeletePageResult> {
     const pageId = String(input.pageId ?? "").trim();
 
@@ -26,9 +27,11 @@ export function deletePage({ pages }: DeletePageDeps) {
       });
     }
 
-    await pages.ensureBase();
-    await pages.deleteDraftPage(pageId);
-
-    return { ok: true, pageId: pageId };
+    return structure.delete({
+      pageId,
+      expectedDraftStructureRevision: assertDraftStructureRevision(
+        input.expectedDraftStructureRevision,
+      ),
+    });
   };
 }

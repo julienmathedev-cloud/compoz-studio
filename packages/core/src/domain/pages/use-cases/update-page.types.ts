@@ -9,7 +9,10 @@ import type {
   PageSitemap,
 } from "@compoz/core/domain/pages/entities/page";
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
-import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
+import type {
+  DraftPageStructureTransaction,
+  DraftStructureSnapshot,
+} from "@compoz/core/domain/pages/ports/draft-page-structure-transaction";
 
 /** Optional fields are patch fields; `seoTitle`, `seoDescription`, and `sitemap` can explicitly reset to `null`. */
 export type UpdatePageInput = {
@@ -21,18 +24,19 @@ export type UpdatePageInput = {
   parentId?: string | null;
   sitemap?: Partial<PageSitemap> | null;
   paginationEnabled?: boolean;
+  expectedDraftStructureRevision?: number;
+  expectedPrimaryMenuRevision?: number;
+  expectedLegalMenuRevision?: number;
 };
 
 export interface UpdatePageResult {
   page: Page;
+  structure: DraftStructureSnapshot;
 }
 
 export interface UpdatePageDeps {
   pages: PagesRepository;
-
-  /** Optional site repository used to update menu hrefs after a slug rename. */
-  site?: SiteRepository;
-
+  structure: DraftPageStructureTransaction;
   nowIso?: () => string;
 }
 

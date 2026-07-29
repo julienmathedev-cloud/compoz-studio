@@ -87,6 +87,7 @@ export function adaptCreatePagePayload(
     parentId: dto.parentId,
     sitemap: normalizeSitemap(dto.sitemap) ?? null,
     paginationEnabled: dto.parentId === null ? false : dto.paginationEnabled,
+    expectedDraftStructureRevision: dto.expectedDraftStructureRevision,
   };
 
   if ("slug" in dto && typeof dto.slug === "string") {
@@ -164,6 +165,16 @@ export function adaptUpdatePagePayload(
 
   if ("sitemap" in dto) {
     out.sitemap = normalizeSitemap(dto.sitemap);
+  }
+
+  if ("expectedDraftStructureRevision" in dto) {
+    out.expectedDraftStructureRevision = dto.expectedDraftStructureRevision;
+  }
+  if ("expectedPrimaryMenuRevision" in dto) {
+    out.expectedPrimaryMenuRevision = dto.expectedPrimaryMenuRevision;
+  }
+  if ("expectedLegalMenuRevision" in dto) {
+    out.expectedLegalMenuRevision = dto.expectedLegalMenuRevision;
   }
 
   log.debug("studio.adapter.pages.update.end", {

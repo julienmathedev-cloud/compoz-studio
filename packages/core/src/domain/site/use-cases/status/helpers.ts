@@ -204,7 +204,7 @@ export function computePagesAndBlocksDiff(args: {
     blocksDeleted += publishedBlocks.length;
   }
 
-  // Draft indexed pages are the admin source of truth.
+  // Draft index pages are the ordered admin projection.
   for (const draftRef of draftIndexRefs) {
     const publishedRef = publishedRefById.get(draftRef.id);
     const draftPage = draftPagesById.get(draftRef.id);

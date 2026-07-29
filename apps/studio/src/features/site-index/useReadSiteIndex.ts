@@ -22,15 +22,20 @@ import {
   DEFAULT_CONTENT_STATE,
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
-import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
+import type {
+  DraftSiteIndexWithRevisionDTO,
+  SiteIndexDTO,
+} from "@compoz/core/domain/site/dto";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
+import { adoptMonotoneDraftStructureRead } from "@compoz/studio/features/site-index/cache";
 import { notify } from "@compoz/studio/lib/ui/notify";
 
 type UseReadSiteIndexResult = Readonly<{
   index: SiteIndexDTO | null;
+  draftStructureRevision: number | null;
 
   isLoading: boolean;
 }>;
@@ -46,15 +51,20 @@ export function useReadSiteIndex(
   const entityLabel = t("studio.shared.entities.siteIndex");
   const enabled = Boolean(String(websiteId ?? "").trim());
 
-  const query = useQuery<SiteIndexDTO, Error>({
+  const query = useQuery<DraftSiteIndexWithRevisionDTO, Error>({
     queryKey: siteIndexKey(websiteId, state),
     enabled,
+    structuralSharing: (current, incoming) =>
+      adoptMonotoneDraftStructureRead(
+        current as DraftSiteIndexWithRevisionDTO | undefined,
+        incoming as DraftSiteIndexWithRevisionDTO,
+      ),
 
     queryFn: async ({
       signal,
     }: {
       signal: AbortSignal;
-    }): Promise<SiteIndexDTO> => {
+    }): Promise<DraftSiteIndexWithRevisionDTO> => {
       const response = await logSpan(
         "ui.siteIndex.load",
         {
@@ -64,15 +74,13 @@ export function useReadSiteIndex(
         () => pagesStudioApi.getIndex(state, { signal }),
       );
 
-      const index = response.index;
-
       logger.debug("read.ok", {
         websiteId,
         state,
-        count: index.pages.length,
+        count: response.index.pages.length,
       });
 
-      return index;
+      return response;
     },
   });
 
@@ -90,7 +98,10 @@ export function useReadSiteIndex(
   }, [query.error, websiteId, state, entityLabel]);
 
   return {
-    index: enabled ? (query.data ?? null) : null,
+    index: enabled ? (query.data?.index ?? null) : null,
+    draftStructureRevision: enabled
+      ? (query.data?.draftStructureRevision ?? null)
+      : null,
     isLoading: enabled ? query.isPending : false,
   };
 }

@@ -21,6 +21,7 @@ export type GetPagesIndexResponse = DraftSiteIndexWithRevisionDTO;
 export type CreatePageResponse = Readonly<{
   page: PageDTO;
   index: SiteIndexDTO;
+  draftStructureRevision: number;
 }>;
 
 export type GetPageByIdResponse = PageWithRevisionsDTO;
@@ -28,9 +29,10 @@ export type GetPageByIdResponse = PageWithRevisionsDTO;
 export type UpdatePageResponse = Readonly<{
   page: PageDTO;
   index: SiteIndexDTO;
+  draftStructureRevision: number;
 }>;
 
-export type DeletePageResponse = Readonly<{ index: SiteIndexDTO }>;
+export type DeletePageResponse = DraftSiteIndexWithRevisionDTO;
 
 export type ListPageBlocksResponse = Readonly<{
   blocks: ReadonlyArray<BlockDTO>;
@@ -45,4 +47,4 @@ export type DeleteBlockResponse = Readonly<{ page: PageDTO }>;
 
 export type ReorderBlocksResponse = Readonly<{ page: PageDTO }>;
 
-export type ReorderChildrenResponse = Readonly<{ index: SiteIndexDTO }>;
+export type ReorderChildrenResponse = DraftSiteIndexWithRevisionDTO;

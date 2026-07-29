@@ -59,7 +59,8 @@ import {
 
 type PrismaSiteRepositoryOptions = Readonly<{
   websiteId: string;
-  client?: PrismaClient | Prisma.TransactionClient;
+  client?: PrismaClient;
+  transactionClient?: Prisma.TransactionClient;
 }>;
 
 type DraftSettingsSectionCasOptions<TSettings> = Readonly<{
@@ -92,34 +93,18 @@ function toPrismaContentState(state: ContentState): PrismaContentState {
   return state === CONTENT_STATE.PUBLISHED ? "published" : "draft";
 }
 
-function parseCanonicalIndexTimestamp(updatedAt: string): Date {
-  const normalized = updatedAt.trim();
-
-  const parsed = new Date(normalized);
-
-  if (
-    !normalized ||
-    Number.isNaN(parsed.getTime()) ||
-    parsed.toISOString() !== normalized
-  ) {
-    throw new TypeError(
-      "SiteIndex.updatedAt must be a canonical UTC timestamp produced by Date.toISOString().",
-    );
-  }
-
-  return parsed;
-}
-
 export class PrismaSiteRepository implements SiteRepository {
   private readonly websiteId: string;
   private readonly client: PrismaClient | Prisma.TransactionClient;
+  private readonly transactionScoped: boolean;
 
   constructor(opts: PrismaSiteRepositoryOptions) {
     this.websiteId = requireWebsiteId(
       opts.websiteId,
       "PrismaSiteRepository.constructor",
     );
-    this.client = opts.client ?? prisma;
+    this.client = opts.transactionClient ?? opts.client ?? prisma;
+    this.transactionScoped = opts.transactionClient !== undefined;
   }
 
   async ensureBase(): Promise<void> {
@@ -174,14 +159,14 @@ export class PrismaSiteRepository implements SiteRepository {
   async readDraftIndexWithRevision(): Promise<DraftSiteIndexWithRevision> {
     const client = this.client;
 
-    if ("$transaction" in client) {
+    if (!this.transactionScoped) {
       const prismaClient = client as PrismaClient;
 
       return prismaClient.$transaction(
         async (tx) => {
           const repository = new PrismaSiteRepository({
             websiteId: this.websiteId,
-            client: tx,
+            transactionClient: tx,
           });
 
           return repository.readDraftIndexWithRevision();
@@ -212,57 +197,6 @@ export class PrismaSiteRepository implements SiteRepository {
       index,
       draftStructureRevision: website.draftStructureRevision,
     };
-  }
-
-  async putIndex(
-    state: ContentState,
-    index: Readonly<SiteIndex>,
-  ): Promise<void> {
-    const lastPublishedAt =
-      state === CONTENT_STATE.PUBLISHED
-        ? parseCanonicalIndexTimestamp(index.updatedAt)
-        : null;
-
-    await this.ensureBase();
-
-    const prismaState = toPrismaContentState(state);
-
-    const positionUpdates = index.pages.map((page, position) =>
-      this.client.page.updateMany({
-        where: {
-          websiteId: this.websiteId,
-          state: prismaState,
-          pageId: page.id,
-        },
-        data: {
-          position,
-        },
-      }),
-    );
-
-    if (lastPublishedAt) {
-      const writes = [
-        ...positionUpdates,
-        this.client.website.update({
-          where: { id: this.websiteId },
-          data: { lastPublishedAt },
-        }),
-      ];
-
-      if ("$transaction" in this.client) {
-        await this.client.$transaction(writes);
-      } else {
-        await Promise.all(writes);
-      }
-
-      return;
-    }
-
-    if ("$transaction" in this.client) {
-      await this.client.$transaction(positionUpdates);
-    } else {
-      await Promise.all(positionUpdates);
-    }
   }
 
   async readSettings(state: ContentState): Promise<SiteSettings> {
@@ -332,11 +266,11 @@ export class PrismaSiteRepository implements SiteRepository {
   ): Promise<Readonly<{ settings: TSettings; revision: number }> | null> {
     const client = this.client;
 
-    if ("$transaction" in client) {
+    if (!this.transactionScoped) {
       return (client as PrismaClient).$transaction(async (tx) => {
         const repository = new PrismaSiteRepository({
           websiteId: this.websiteId,
-          client: tx,
+          transactionClient: tx,
         });
 
         return repository.compareAndSetDraftSettingsSection(input, options);
@@ -344,6 +278,11 @@ export class PrismaSiteRepository implements SiteRepository {
     }
 
     const transactionClient = client as Prisma.TransactionClient;
+    // Keep the lock order identical to publication and draft structure writes:
+    // Website first, then the revisioned settings row.
+    await transactionClient.$queryRaw(
+      Prisma.sql`SELECT "id" FROM "Website" WHERE "id" = ${this.websiteId} FOR UPDATE`,
+    );
     const update = await transactionClient.siteSettings.updateMany({
       where: options.updateWhere(input.expectedRevision),
       data: options.updateData(input.settings),

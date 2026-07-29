@@ -18,6 +18,33 @@ void test("maps revision preconditions and settings revision conflicts to stable
     statusFromCode(ERROR_CODES.SETTINGS_SECTION_REVISION_CONFLICT),
     409,
   );
+  assert.equal(
+    statusFromCode(ERROR_CODES.DRAFT_STRUCTURE_REVISION_CONFLICT),
+    409,
+  );
+  assert.equal(statusFromCode(ERROR_CODES.PAGE_REORDER_INVALID), 422);
+  assert.equal(statusFromCode(ERROR_CODES.PAGE_HIERARCHY_CYCLE), 422);
+  assert.equal(statusFromCode(ERROR_CODES.PAGE_PARENT_INVALID), 422);
+});
+
+void test("exposes the current structure snapshot on OCC conflict", () => {
+  const details = {
+    expectedDraftStructureRevision: 2,
+    currentDraftStructureRevision: 3,
+    current: {
+      index: { pages: [], updatedAt: "2026-07-29T10:00:00.000Z" },
+      draftStructureRevision: 3,
+    },
+  };
+  const response = toHttpError(
+    new DomainError({
+      code: ERROR_CODES.DRAFT_STRUCTURE_REVISION_CONFLICT,
+      details,
+    }),
+  );
+
+  assert.equal(response.status, 409);
+  assert.deepEqual(response.body.details, details);
 });
 
 void test("maps publication conflicts to 409 without exposing technical details", () => {

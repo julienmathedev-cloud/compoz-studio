@@ -75,6 +75,7 @@ function toPageSitemapIntentDTOFromFormValues(
 // UI form values -> API intents.
 export function toCreatePageIntentDTOFromFormValues(
   values: PageFormValues,
+  expectedDraftStructureRevision: number,
 ): CreatePageIntentDTO {
   const normalizedValues = normalizePageFormValues(values);
   const slug = toSlugIntentInput(normalizedValues.slug);
@@ -86,6 +87,7 @@ export function toCreatePageIntentDTOFromFormValues(
     parentId: normalizedValues.parentId,
     paginationEnabled: normalizedValues.paginationEnabled,
     sitemap: toPageSitemapIntentDTOFromFormValues(normalizedValues.sitemap),
+    expectedDraftStructureRevision,
     ...(slug ? { slug } : {}),
   };
 }

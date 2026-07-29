@@ -533,16 +533,11 @@ export function PageBlocksListSection({
 
       if (oldIndex === -1 || newIndex === -1) return;
 
-      const previousChildren = orderedChildren;
       const nextChildren = moveItem(orderedChildren, oldIndex, newIndex);
 
       setOrderedChildren(nextChildren);
 
-      try {
-        await moveChild(oldIndex, newIndex);
-      } catch {
-        setOrderedChildren(previousChildren);
-      }
+      await moveChild(oldIndex, newIndex).catch(() => undefined);
     },
     [moveChild, orderedChildren],
   );

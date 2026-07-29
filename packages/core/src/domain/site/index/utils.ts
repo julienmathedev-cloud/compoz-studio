@@ -98,55 +98,6 @@ export function removePageById(
   return { next: { ...index, pages }, removed: true };
 }
 
-/**
- * Reorders only the children of a parent while keeping all other pages stable.
- * @remarks
- * Returns the original index unless `childIds` exactly matches the current child id set.
- */
-export function reorderChildrenByParentId(
-  index: SiteIndex,
-  parentId: string,
-  childIds: ReadonlyArray<string>,
-): SiteIndex {
-  const pid = String(parentId ?? "").trim();
-  if (!pid) return index;
-
-  const currentChildren = index.pages.filter((p) => p.parentId === pid);
-  if (currentChildren.length === 0) return index;
-
-  // Defensive no-op unless the caller provides the complete child id set.
-  if (childIds.length !== currentChildren.length) return index;
-
-  const currentIds = currentChildren.map((c) => c.id);
-  const sameSet =
-    childIds.every((id) => currentIds.includes(id)) &&
-    currentIds.every((id) => childIds.includes(id));
-  if (!sameSet) return index;
-
-  // no-op: preserve the original index when the order is already correct
-  const already = currentIds.every((id, i) => id === childIds[i]);
-  if (already) return index;
-
-  const byId = new Map(currentChildren.map((c) => [c.id, c]));
-  const orderedChildren = childIds.map((id) => byId.get(id)!);
-
-  // Reinsert at the first existing child position to keep surrounding page order stable.
-  const firstChildIndex = index.pages.findIndex((p) => p.parentId === pid);
-
-  const without = index.pages.filter((p) => p.parentId !== pid);
-
-  const nextPages =
-    firstChildIndex >= 0
-      ? [
-          ...without.slice(0, firstChildIndex),
-          ...orderedChildren,
-          ...without.slice(firstChildIndex),
-        ]
-      : [...without, ...orderedChildren];
-
-  return { ...index, pages: nextPages };
-}
-
 /** Detaches all children from a parent while preserving the original index on no-op updates. */
 export function detachChildrenByParentId(
   index: SiteIndex,

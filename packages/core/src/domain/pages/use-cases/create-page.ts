@@ -19,22 +19,28 @@ import type {
   CreatePageResult,
 } from "@compoz/core/domain/pages/use-cases/create-page.types";
 import { applySitemapDefaults } from "@compoz/core/domain/pages/use-cases/helpers/apply-page-defaults";
+import { assertDraftStructureRevision } from "@compoz/core/domain/pages/use-cases/helpers/assert-draft-structure-revision";
 import {
   assertNameRequired,
   assertPageSlug,
   assertPaginationEnabled,
   assertParentId,
   assertPriority,
+  normalizeFinalPageState,
 } from "@compoz/core/domain/pages/validators/pages";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 
 export function createPage({
   pages,
+  structure,
   idGenerator,
   nowIso = () => new Date().toISOString(),
 }: CreatePageDeps) {
   return async function run(input: CreatePageInput): Promise<CreatePageResult> {
     const state = DEFAULT_CONTENT_STATE;
+    const expectedDraftStructureRevision = assertDraftStructureRevision(
+      input.expectedDraftStructureRevision,
+    );
 
     const name = assertNameRequired(input.name);
 
@@ -88,7 +94,7 @@ export function createPage({
       assertPriority(sitemap.priority);
     }
 
-    const page = buildPageEntity({
+    const page = normalizeFinalPageState(buildPageEntity({
       id: idGenerator.nextId(),
       parentId,
       slug,
@@ -98,24 +104,12 @@ export function createPage({
       sitemap,
       paginationEnabled,
       nowIso,
-    });
+    }));
 
-    await pages.ensureBase();
-    await pages.createDraftPage({
-      pageId: page.id,
-      parentId: page.parentId,
-      slug: page.slug,
-      name: page.name,
-      seoTitle: page.seoTitle,
-      seoDescription: page.seoDescription,
-      blocks: page.blocks,
-      sitemap: page.sitemap,
-      paginationEnabled: page.paginationEnabled,
-      metaCreatedAt: page.meta.createdAt,
-      metaUpdatedAt: page.meta.updatedAt,
+    return structure.create({
+      expectedDraftStructureRevision,
+      page,
     });
-
-    return { page };
   };
 }
 

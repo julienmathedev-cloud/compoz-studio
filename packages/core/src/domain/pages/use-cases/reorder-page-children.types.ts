@@ -2,23 +2,22 @@
  * @file packages/core/src/domain/pages/use-cases/reorder-page-children.types.ts
  * @layer core/domain/pages/use-cases
  * @description Contracts for reordering a parent's children in the draft index.
- * @remarks
- * Writes go through `SiteRepository.writeIndex()` as the index source of truth. Cache invalidation is handled outside the domain.
+ * @remarks Writes go through the dedicated draft structure transaction.
  */
 
-import type { SiteIndexDTO } from "@compoz/core/domain/site/dto";
-import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
+import type {
+  DraftPageStructureTransaction,
+  DraftStructureSnapshot,
+} from "@compoz/core/domain/pages/ports/draft-page-structure-transaction";
 
 export type ReorderPageChildrenDeps = Readonly<{
-  site: SiteRepository;
-  nowIso?: () => string;
+  structure: DraftPageStructureTransaction;
 }>;
 
 export type ReorderPageChildrenInput = Readonly<{
   parentId: string;
   childIds: ReadonlyArray<string>;
+  expectedDraftStructureRevision: number;
 }>;
 
-export type ReorderPageChildrenResult = Readonly<{
-  index: SiteIndexDTO;
-}>;
+export type ReorderPageChildrenResult = DraftStructureSnapshot;

@@ -6,7 +6,6 @@
  * Deleting the same `pageId` multiple times must leave the same state. This use case intentionally deletes content only and does not update the index.
  */
 
-import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type {
@@ -28,7 +27,7 @@ export function deletePage({ pages }: DeletePageDeps) {
     }
 
     await pages.ensureBase();
-    await pages.deleteById(DEFAULT_CONTENT_STATE, pageId);
+    await pages.deleteDraftPage(pageId);
 
     return { ok: true, pageId: pageId };
   };

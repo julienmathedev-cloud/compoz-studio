@@ -101,7 +101,19 @@ export function createPage({
     });
 
     await pages.ensureBase();
-    await pages.put(state, page);
+    await pages.createDraftPage({
+      pageId: page.id,
+      parentId: page.parentId,
+      slug: page.slug,
+      name: page.name,
+      seoTitle: page.seoTitle,
+      seoDescription: page.seoDescription,
+      blocks: page.blocks,
+      sitemap: page.sitemap,
+      paginationEnabled: page.paginationEnabled,
+      metaCreatedAt: page.meta.createdAt,
+      metaUpdatedAt: page.meta.updatedAt,
+    });
 
     return { page };
   };

@@ -53,8 +53,11 @@ export function updateSectionBlock({
 
     await pages.ensureBase();
 
-    const page = await pages.readById(DEFAULT_CONTENT_STATE, pageId);
-    if (!page) {
+    const pageRead = await pages.readByIdWithRevisions(
+      DEFAULT_CONTENT_STATE,
+      pageId,
+    );
+    if (!pageRead) {
       throw new DomainError({
         code: EC.PAGE_NOT_FOUND,
         message: EC.PAGE_NOT_FOUND,
@@ -65,6 +68,7 @@ export function updateSectionBlock({
       });
     }
 
+    const page = pageRead.page;
     const currentBlocks = Array.isArray(page.blocks) ? page.blocks : [];
     const index = currentBlocks.findIndex((b) => b.id === blockId);
 
@@ -107,16 +111,22 @@ export function updateSectionBlock({
 
     assertBlocks(nextBlocks);
 
+    const metaUpdatedAt = nowIso();
     const nextPage = {
       ...page,
       blocks: nextBlocks,
       meta: {
         ...page.meta,
-        updatedAt: nowIso(),
+        updatedAt: metaUpdatedAt,
       },
     };
 
-    await pages.put(DEFAULT_CONTENT_STATE, nextPage);
+    await pages.updateDraftPageBlocks({
+      pageId,
+      blocks: nextBlocks,
+      blocksRevision: pageRead.revisions.blocksRevision,
+      metaUpdatedAt,
+    });
 
     return {
       page: nextPage,

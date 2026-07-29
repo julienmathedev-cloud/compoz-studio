@@ -64,9 +64,12 @@ export function createSectionBlock({
 
     await pages.ensureBase();
 
-    const page = await pages.readById(DEFAULT_CONTENT_STATE, pageId);
+    const pageRead = await pages.readByIdWithRevisions(
+      DEFAULT_CONTENT_STATE,
+      pageId,
+    );
 
-    if (!page) {
+    if (!pageRead) {
       throw new DomainError({
         code: EC.PAGE_NOT_FOUND,
         message: EC.PAGE_NOT_FOUND,
@@ -77,6 +80,7 @@ export function createSectionBlock({
       });
     }
 
+    const page = pageRead.page;
     const currentBlocks = Array.isArray(page.blocks) ? [...page.blocks] : [];
     const insertAt =
       typeof input.insertAt === "number"
@@ -110,16 +114,22 @@ export function createSectionBlock({
 
     assertBlocks(nextBlocks);
 
+    const metaUpdatedAt = nowIso();
     const nextPage = {
       ...page,
       blocks: nextBlocks,
       meta: {
         ...page.meta,
-        updatedAt: nowIso(),
+        updatedAt: metaUpdatedAt,
       },
     };
 
-    await pages.put(DEFAULT_CONTENT_STATE, nextPage);
+    await pages.updateDraftPageBlocks({
+      pageId,
+      blocks: nextBlocks,
+      blocksRevision: pageRead.revisions.blocksRevision,
+      metaUpdatedAt,
+    });
 
     return {
       page: nextPage,

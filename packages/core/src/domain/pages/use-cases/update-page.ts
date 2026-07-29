@@ -12,7 +12,10 @@ import {
 } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
-import type { Page } from "@compoz/core/domain/pages/entities/page";
+import type {
+  Page,
+  PageWithRevisions,
+} from "@compoz/core/domain/pages/entities/page";
 import {
   applyNamePatch,
   applyPaginationEnabledPatch,
@@ -46,11 +49,12 @@ export function updatePage({
       });
     }
 
-    const existing = await readExistingPageById({
+    const pageRead = await readExistingPageById({
       pages,
       state: DEFAULT_CONTENT_STATE,
       pageId,
     });
+    const existing = pageRead.page;
 
     const next: Page = { ...existing };
     const changed: ChangedKey[] = [];
@@ -86,9 +90,33 @@ export function updatePage({
           })
         : null;
 
-    next.meta = { ...existing.meta, updatedAt: nowIso() };
+    const metaUpdatedAt = nowIso();
+    next.meta = { ...existing.meta, updatedAt: metaUpdatedAt };
 
-    await pages.put(DEFAULT_CONTENT_STATE, next);
+    const metadataChanged = changed.some((key) => key !== "parentId");
+    const parentChanged = changed.includes("parentId");
+
+    if (metadataChanged) {
+      await pages.updateDraftPageMetadata({
+        pageId,
+        slug: next.slug,
+        name: next.name,
+        seoTitle: next.seoTitle,
+        seoDescription: next.seoDescription,
+        sitemap: next.sitemap,
+        paginationEnabled: next.paginationEnabled,
+        metaRevision: pageRead.revisions.metaRevision,
+        metaUpdatedAt,
+      });
+    }
+
+    if (parentChanged) {
+      await pages.updateDraftPageParent({
+        pageId,
+        parentId: next.parentId,
+        metaUpdatedAt,
+      });
+    }
 
     if (menuUpdate?.changed && site) {
       await site.putSettings(DEFAULT_CONTENT_STATE, menuUpdate.settings);
@@ -107,8 +135,8 @@ async function readExistingPageById({
   pages: UpdatePageDeps["pages"];
   state: ContentState;
   pageId: string;
-}): Promise<Page> {
-  const existing = await pages.readById(state, pageId);
+}): Promise<PageWithRevisions> {
+  const existing = await pages.readByIdWithRevisions(state, pageId);
 
   if (!existing) {
     throw new DomainError({

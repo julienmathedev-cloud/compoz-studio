@@ -10,6 +10,7 @@ import type {
   PageMeta,
   PageWithRevisions,
 } from "@compoz/core/domain/pages/entities/page";
+import type { CreateDraftPageInput } from "@compoz/core/domain/pages/ports/pages-repository";
 import { normalizePersistedPageBlocks } from "@compoz/infra/pages/normalizers/normalize-persisted-page-blocks";
 import { Prisma } from "@compoz/infra/prisma/generated";
 import { PageSchema, type PageShape } from "@compoz/validation/pages/page";
@@ -34,7 +35,7 @@ export type PrismaPageRow = {
   updatedAt: Date;
 };
 
-type PrismaPageBaseWriteData = {
+type PrismaPageCreateContentData = {
   parentPageId: string | null;
   slug: string;
   name: string;
@@ -43,18 +44,18 @@ type PrismaPageBaseWriteData = {
   blocks: Prisma.InputJsonValue;
   sitemap: Prisma.InputJsonValue | typeof Prisma.JsonNull;
   paginationEnabled: boolean;
+  metaRevision: number;
+  blocksRevision: number;
   metaCreatedAt: Date;
   metaUpdatedAt: Date;
 };
 
-export type PrismaPageCreateData = PrismaPageBaseWriteData & {
+export type PrismaPageCreateData = PrismaPageCreateContentData & {
   websiteId: string;
   state: PrismaContentState;
   pageId: string;
   position: number;
 };
-
-export type PrismaPageUpdateData = PrismaPageBaseWriteData;
 
 function toJsonValue(value: unknown): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
@@ -120,25 +121,41 @@ export function toDomainPageWithRevisions(
   };
 }
 
-export function toPrismaPageCreateData(
+export function toPrismaDraftPageCreateData(
   websiteId: string,
-  state: PrismaContentState,
+  input: CreateDraftPageInput,
+  position: number,
+): PrismaPageCreateData {
+  return {
+    websiteId,
+    state: "draft",
+    pageId: input.pageId.trim(),
+    position,
+    parentPageId: input.parentId,
+    slug: input.slug.trim(),
+    name: input.name,
+    seoTitle: input.seoTitle,
+    seoDescription: input.seoDescription,
+    blocks: toJsonValue(input.blocks),
+    sitemap: toNullableJsonValue(input.sitemap),
+    paginationEnabled: input.paginationEnabled,
+    metaRevision: 0,
+    blocksRevision: 0,
+    metaCreatedAt: new Date(input.metaCreatedAt),
+    metaUpdatedAt: new Date(input.metaUpdatedAt),
+  };
+}
+
+export function toPrismaPublishedPageCreateData(
+  websiteId: string,
   page: Readonly<Page>,
   position: number,
 ): PrismaPageCreateData {
   return {
     websiteId,
-    state,
+    state: "published",
     pageId: page.id.trim(),
     position,
-    ...toPrismaPageUpdateData(page),
-  };
-}
-
-export function toPrismaPageUpdateData(
-  page: Readonly<Page>,
-): PrismaPageUpdateData {
-  return {
     parentPageId: page.parentId,
     slug: page.slug.trim(),
     name: page.name,
@@ -147,6 +164,8 @@ export function toPrismaPageUpdateData(
     blocks: toJsonValue(page.blocks),
     sitemap: toNullableJsonValue(page.sitemap),
     paginationEnabled: page.paginationEnabled,
+    metaRevision: 0,
+    blocksRevision: 0,
     metaCreatedAt: new Date(page.meta.createdAt),
     metaUpdatedAt: new Date(page.meta.updatedAt),
   };

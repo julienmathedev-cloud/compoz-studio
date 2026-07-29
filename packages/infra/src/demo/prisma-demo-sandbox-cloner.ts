@@ -152,7 +152,21 @@ export class PrismaDemoSandboxCloner implements DemoSandboxCloner {
       await targetSite.putSettings(CONTENT_STATE.DRAFT, settings);
 
       if (pages.length > 0) {
-        await targetPages.putMany(CONTENT_STATE.DRAFT, pages);
+        await targetPages.createDraftPages(
+          pages.map((page) => ({
+            pageId: page.id,
+            parentId: page.parentId,
+            slug: page.slug,
+            name: page.name,
+            seoTitle: page.seoTitle,
+            seoDescription: page.seoDescription,
+            blocks: page.blocks,
+            sitemap: page.sitemap,
+            paginationEnabled: page.paginationEnabled,
+            metaCreatedAt: page.meta.createdAt,
+            metaUpdatedAt: page.meta.updatedAt,
+          })),
+        );
       }
 
       await targetSite.putIndex(CONTENT_STATE.DRAFT, index);

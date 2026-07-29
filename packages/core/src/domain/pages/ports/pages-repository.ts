@@ -7,10 +7,56 @@
  */
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
+import type { Block } from "@compoz/core/domain/pages/entities/block";
 import type {
   Page,
+  PageSitemap,
   PageWithRevisions,
 } from "@compoz/core/domain/pages/entities/page";
+
+export type CreateDraftPageInput = Readonly<{
+  pageId: string;
+  parentId: string | null;
+  slug: string;
+  name: string;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  blocks: ReadonlyArray<Block>;
+  sitemap: PageSitemap | null;
+  paginationEnabled: boolean;
+  metaCreatedAt: string;
+  metaUpdatedAt: string;
+}>;
+
+export type UpdateDraftPageMetadataInput = Readonly<{
+  pageId: string;
+  slug: string;
+  name: string;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  sitemap: PageSitemap | null;
+  paginationEnabled: boolean;
+  metaRevision: number;
+  metaUpdatedAt: string;
+}>;
+
+export type UpdateDraftPageBlocksInput = Readonly<{
+  pageId: string;
+  blocks: ReadonlyArray<Block>;
+  blocksRevision: number;
+  metaUpdatedAt: string;
+}>;
+
+export type UpdateDraftPageParentInput = Readonly<{
+  pageId: string;
+  parentId: string | null;
+  metaUpdatedAt: string;
+}>;
+
+export type DetachDraftPageChildrenInput = Readonly<{
+  parentId: string;
+  metaUpdatedAt: string;
+}>;
 
 export interface PagesRepository {
   /** Idempotently prepares the storage backend when needed. */
@@ -33,14 +79,26 @@ export interface PagesRepository {
     pageIds: ReadonlyArray<string>,
   ): Promise<Array<Page | null>>;
 
-  /** Slug uniqueness is enforced by use cases through `readBySlug` / `existsBySlug`. */
-  put(state: ContentState, page: Page): Promise<void>;
+  createDraftPage(input: CreateDraftPageInput): Promise<void>;
 
-  /** Batch write must be idempotent and treat an empty `pages` array as a no-op. */
-  putMany(state: ContentState, pages: ReadonlyArray<Page>): Promise<void>;
+  createDraftPages(
+    inputs: ReadonlyArray<CreateDraftPageInput>,
+  ): Promise<void>;
 
-  /** Deletes by id without failing when the page no longer exists. */
-  deleteById(state: ContentState, pageId: string): Promise<void>;
+  updateDraftPageMetadata(
+    input: UpdateDraftPageMetadataInput,
+  ): Promise<void>;
+
+  updateDraftPageBlocks(input: UpdateDraftPageBlocksInput): Promise<void>;
+
+  updateDraftPageParent(input: UpdateDraftPageParentInput): Promise<void>;
+
+  detachDraftPageChildren(
+    input: DetachDraftPageChildrenInput,
+  ): Promise<number>;
+
+  /** Deletes a draft by id without failing when the page no longer exists. */
+  deleteDraftPage(pageId: string): Promise<void>;
 
   existsById(state: ContentState, pageId: string): Promise<boolean>;
 

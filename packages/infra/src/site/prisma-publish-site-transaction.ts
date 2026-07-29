@@ -13,7 +13,7 @@ import type {
   PublishedSnapshot,
 } from "@compoz/core/domain/site/ports/publish-site-transaction";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
-import { toPrismaPageCreateData } from "@compoz/infra/pages/mappers/page.mapper";
+import { toPrismaPublishedPageCreateData } from "@compoz/infra/pages/mappers/page.mapper";
 import { PrismaPagesRepository } from "@compoz/infra/pages/prisma-pages-repository";
 import { Prisma } from "@compoz/infra/prisma/generated";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
@@ -115,9 +115,8 @@ export class PrismaPublishSiteTransaction implements PublishSiteTransaction {
               if (snapshot.pages.length > 0) {
                 await transactionClient.page.createMany({
                   data: snapshot.pages.map((page, position) =>
-                    toPrismaPageCreateData(
+                    toPrismaPublishedPageCreateData(
                       this.websiteId,
-                      "published",
                       page,
                       position,
                     ),

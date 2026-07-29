@@ -118,48 +118,26 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
          * Detach direct children before deleting the page.
          *
          * - Reads the source-of-truth index.
-         * - Detaches pages through `readManyById` + `putMany`.
+         * - Updates only draft Page parent references.
          * - Only performs one-level direct child detachment.
          */
         const currentIndex = await siteRepo.readIndex(DEFAULT_CONTENT_STATE);
 
-        const childIds =
-          currentIndex?.pages
-            .filter((pageRef) => pageRef.parentId === pageId)
-            .map((pageRef) => pageRef.id) ?? [];
+        logger.debug("route.delete.detachChildren.start", {
+          websiteId,
+          pageId,
+        });
 
-        if (childIds.length > 0) {
-          logger.debug("route.delete.detachChildren.start", {
-            websiteId,
-            pageId,
-            childrenCount: childIds.length,
-          });
+        const detachedCount = await pagesRepo.detachDraftPageChildren({
+          parentId: pageId,
+          metaUpdatedAt: nowIso,
+        });
 
-          const children = await pagesRepo.readManyById(
-            DEFAULT_CONTENT_STATE,
-            childIds,
-          );
-
-          const detached = children
-            .filter((page): page is NonNullable<typeof page> => Boolean(page))
-            .filter((page) => page.parentId !== null)
-            .map((page) => ({
-              ...page,
-              parentId: null,
-              meta: { ...page.meta, updatedAt: nowIso },
-            }));
-
-          if (detached.length > 0) {
-            await pagesRepo.putMany(DEFAULT_CONTENT_STATE, detached);
-          }
-
-          logger.debug("route.delete.detachChildren.done", {
-            websiteId,
-            pageId,
-            childrenCount: childIds.length,
-            detachedCount: detached.length,
-          });
-        }
+        logger.debug("route.delete.detachChildren.done", {
+          websiteId,
+          pageId,
+          detachedCount,
+        });
 
         const runDelete = deletePage({ pages: pagesRepo });
         await runDelete({ pageId });

@@ -12,16 +12,25 @@ import type {
   Page,
   PageWithRevisions,
 } from "@compoz/core/domain/pages/entities/page";
-import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
+import type {
+  CreateDraftPageInput,
+  DetachDraftPageChildrenInput,
+  PagesRepository,
+  UpdateDraftPageBlocksInput,
+  UpdateDraftPageMetadataInput,
+  UpdateDraftPageParentInput,
+} from "@compoz/core/domain/pages/ports/pages-repository";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import {
   toDomainPage,
   toDomainPageWithRevisions,
-  toPrismaPageCreateData,
-  toPrismaPageUpdateData,
+  toPrismaDraftPageCreateData,
   type PrismaContentState,
 } from "@compoz/infra/pages/mappers/page.mapper";
-import type { Prisma, PrismaClient } from "@compoz/infra/prisma/generated";
+import {
+  Prisma,
+  type PrismaClient,
+} from "@compoz/infra/prisma/generated";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
 import { PageSchema } from "@compoz/validation/pages/page";
 
@@ -30,10 +39,10 @@ type PrismaPagesRepositoryOptions = Readonly<{
   client?: PrismaClient | Prisma.TransactionClient;
 }>;
 
-type PreparedPage = Readonly<{
-  id: string;
+type PreparedDraftPage = Readonly<{
+  pageId: string;
   slug: string;
-  page: Page;
+  input: CreateDraftPageInput;
 }>;
 
 function normalizeValue(value: unknown): string {
@@ -44,48 +53,61 @@ function toPrismaContentState(state: ContentState): PrismaContentState {
   return state === CONTENT_STATE.PUBLISHED ? "published" : "draft";
 }
 
-function assertValidPageForPut(page: Page): PreparedPage {
-  const id = normalizeValue(page?.id);
+function assertValidDraftPageInput(
+  input: CreateDraftPageInput,
+  operation: "createDraftPage" | "createDraftPages",
+): PreparedDraftPage {
+  const pageId = normalizeValue(input?.pageId);
 
-  if (!id) {
-    throw new Error("PrismaPagesRepository.put: page.id is required.");
+  if (!pageId) {
+    throw new Error(
+      `PrismaPagesRepository.${operation}: input.pageId is required.`,
+    );
   }
 
-  const slug = normalizeValue(page?.slug);
+  const slug = normalizeValue(input?.slug);
 
   if (!slug) {
-    throw new Error("PrismaPagesRepository.put: page.slug is required.");
+    throw new Error(
+      `PrismaPagesRepository.${operation}: input.slug is required.`,
+    );
   }
 
-  PageSchema.parse(page);
+  PageSchema.parse({
+    id: pageId,
+    parentId: input.parentId,
+    slug,
+    name: input.name,
+    seoTitle: input.seoTitle,
+    seoDescription: input.seoDescription,
+    blocks: input.blocks,
+    sitemap: input.sitemap,
+    paginationEnabled: input.paginationEnabled,
+    meta: {
+      createdAt: input.metaCreatedAt,
+      updatedAt: input.metaUpdatedAt,
+    },
+  });
 
-  return { id, slug, page };
+  return {
+    pageId,
+    slug,
+    input: {
+      ...input,
+      pageId,
+      slug,
+    },
+  };
 }
 
-function preparePagesForPutMany(
-  pages: ReadonlyArray<Page>,
-): ReadonlyArray<PreparedPage> {
-  const prepared: PreparedPage[] = [];
+function toJsonValue(value: unknown): Prisma.InputJsonValue {
+  return value as Prisma.InputJsonValue;
+}
 
-  for (const page of pages) {
-    const id = normalizeValue(page?.id);
-
-    if (!id) {
-      continue;
-    }
-
-    const slug = normalizeValue(page?.slug);
-
-    if (!slug) {
-      throw new Error("PrismaPagesRepository.putMany: page.slug is required.");
-    }
-
-    PageSchema.parse(page);
-
-    prepared.push({ id, slug, page });
-  }
-
-  return prepared;
+function toNullableJsonValue(
+  value: unknown,
+): Prisma.InputJsonValue | typeof Prisma.JsonNull {
+  return value === null ? Prisma.JsonNull : toJsonValue(value);
 }
 
 export class PrismaPagesRepository implements PagesRepository {
@@ -209,182 +231,208 @@ export class PrismaPagesRepository implements PagesRepository {
     });
   }
 
-  async put(state: ContentState, page: Page): Promise<void> {
-    const prepared = assertValidPageForPut(page);
-    const prismaState = toPrismaContentState(state);
+  async createDraftPage(input: CreateDraftPageInput): Promise<void> {
+    const prepared = assertValidDraftPageInput(input, "createDraftPage");
+
+    await this.ensureBase();
+
+    const maxPosition = await this.client.page.aggregate({
+      where: {
+        websiteId: this.websiteId,
+        state: "draft",
+      },
+      _max: { position: true },
+    });
+
+    const position = (maxPosition._max.position ?? -1) + 1;
+
+    await this.client.page.create({
+      data: toPrismaDraftPageCreateData(
+        this.websiteId,
+        prepared.input,
+        position,
+      ),
+    });
+  }
+
+  async createDraftPages(
+    inputs: ReadonlyArray<CreateDraftPageInput>,
+  ): Promise<void> {
+    if (inputs.length === 0) {
+      return;
+    }
+
+    const prepared = inputs.map((input) =>
+      assertValidDraftPageInput(input, "createDraftPages"),
+    );
+    const slugs = new Set<string>();
+
+    for (const item of prepared) {
+      if (slugs.has(item.slug)) {
+        throw new Error(
+          "PrismaPagesRepository.createDraftPages: duplicate slug in batch.",
+        );
+      }
+
+      slugs.add(item.slug);
+    }
+
+    await this.ensureBase();
+
+    const maxPosition = await this.client.page.aggregate({
+      where: {
+        websiteId: this.websiteId,
+        state: "draft",
+      },
+      _max: { position: true },
+    });
+    const firstPosition = (maxPosition._max.position ?? -1) + 1;
+
+    await this.client.page.createMany({
+      data: prepared.map((item, index) =>
+        toPrismaDraftPageCreateData(
+          this.websiteId,
+          item.input,
+          firstPosition + index,
+        ),
+      ),
+    });
+  }
+
+  async updateDraftPageMetadata(
+    input: UpdateDraftPageMetadataInput,
+  ): Promise<void> {
+    const pageId = normalizeValue(input.pageId);
+    const slug = normalizeValue(input.slug);
+
+    if (!pageId) {
+      throw new Error(
+        "PrismaPagesRepository.updateDraftPageMetadata: input.pageId is required.",
+      );
+    }
+
+    if (!slug) {
+      throw new Error(
+        "PrismaPagesRepository.updateDraftPageMetadata: input.slug is required.",
+      );
+    }
 
     const slugOwner = await this.client.page.findUnique({
       where: {
         websiteId_state_slug: {
           websiteId: this.websiteId,
-          state: prismaState,
-          slug: prepared.slug,
+          state: "draft",
+          slug,
         },
       },
       select: { pageId: true },
     });
 
-    if (slugOwner && slugOwner.pageId !== prepared.id) {
-      throw new Error("PrismaPagesRepository.put: slug already exists.");
+    if (slugOwner && slugOwner.pageId !== pageId) {
+      throw new Error(
+        "PrismaPagesRepository.updateDraftPageMetadata: slug already exists.",
+      );
     }
 
-    const existing = await this.client.page.findUnique({
+    await this.client.page.update({
       where: {
         websiteId_state_pageId: {
           websiteId: this.websiteId,
-          state: prismaState,
-          pageId: prepared.id,
+          state: "draft",
+          pageId,
         },
       },
-      select: { position: true },
-    });
-
-    // An existing Page row already proves that its Website foreign-key target
-    // exists. Avoid a redundant Website upsert on the page-update hot path.
-    if (!existing) {
-      await this.ensureBase();
-    }
-
-    const nextPosition =
-      existing?.position ??
-      ((
-        await this.client.page.aggregate({
-          where: {
-            websiteId: this.websiteId,
-            state: prismaState,
-          },
-          _max: { position: true },
-        })
-      )._max.position ?? -1) + 1;
-
-    await this.client.page.upsert({
-      where: {
-        websiteId_state_pageId: {
-          websiteId: this.websiteId,
-          state: prismaState,
-          pageId: prepared.id,
-        },
+      data: {
+        slug,
+        name: input.name,
+        seoTitle: input.seoTitle,
+        seoDescription: input.seoDescription,
+        sitemap: toNullableJsonValue(input.sitemap),
+        paginationEnabled: input.paginationEnabled,
+        metaRevision: input.metaRevision,
+        metaUpdatedAt: new Date(input.metaUpdatedAt),
       },
-      create: toPrismaPageCreateData(
-        this.websiteId,
-        prismaState,
-        prepared.page,
-        nextPosition,
-      ),
-      update: toPrismaPageUpdateData(prepared.page),
     });
   }
 
-  async putMany(
-    state: ContentState,
-    pages: ReadonlyArray<Page>,
+  async updateDraftPageBlocks(
+    input: UpdateDraftPageBlocksInput,
   ): Promise<void> {
-    await this.ensureBase();
+    const pageId = normalizeValue(input.pageId);
 
-    if (pages.length === 0) {
-      return;
+    if (!pageId) {
+      throw new Error(
+        "PrismaPagesRepository.updateDraftPageBlocks: input.pageId is required.",
+      );
     }
 
-    const prepared = preparePagesForPutMany(pages);
-
-    if (prepared.length === 0) {
-      return;
-    }
-
-    const slugOwnerByBatch = new Map<string, string>();
-
-    for (const item of prepared) {
-      const currentOwner = slugOwnerByBatch.get(item.slug);
-
-      if (currentOwner && currentOwner !== item.id) {
-        throw new Error(
-          "PrismaPagesRepository.putMany: duplicate slug in batch.",
-        );
-      }
-
-      slugOwnerByBatch.set(item.slug, item.id);
-    }
-
-    const prismaState = toPrismaContentState(state);
-    const ids = prepared.map((item) => item.id);
-    const slugs = prepared.map((item) => item.slug);
-
-    const [existingRows, slugRows, maxPosition] = await Promise.all([
-      this.client.page.findMany({
-        where: {
+    await this.client.page.update({
+      where: {
+        websiteId_state_pageId: {
           websiteId: this.websiteId,
-          state: prismaState,
-          pageId: { in: ids },
+          state: "draft",
+          pageId,
         },
-        select: { pageId: true, position: true },
-      }),
-      this.client.page.findMany({
-        where: {
-          websiteId: this.websiteId,
-          state: prismaState,
-          slug: { in: slugs },
-        },
-        select: { pageId: true, slug: true },
-      }),
-      this.client.page.aggregate({
-        where: {
-          websiteId: this.websiteId,
-          state: prismaState,
-        },
-        _max: { position: true },
-      }),
-    ]);
-
-    const existingPositionById = new Map(
-      existingRows.map((row) => [row.pageId, row.position]),
-    );
-
-    const expectedOwnerBySlug = new Map(
-      prepared.map((item) => [item.slug, item.id]),
-    );
-
-    for (const row of slugRows) {
-      const expectedOwner = expectedOwnerBySlug.get(row.slug);
-
-      if (expectedOwner && expectedOwner !== row.pageId) {
-        throw new Error("PrismaPagesRepository.putMany: slug already exists.");
-      }
-    }
-
-    let nextPosition = (maxPosition._max.position ?? -1) + 1;
-
-    const writes = prepared.map((item) => {
-      const existingPosition = existingPositionById.get(item.id);
-      const position =
-        existingPosition === undefined ? nextPosition++ : existingPosition;
-
-      return this.client.page.upsert({
-        where: {
-          websiteId_state_pageId: {
-            websiteId: this.websiteId,
-            state: prismaState,
-            pageId: item.id,
-          },
-        },
-        create: toPrismaPageCreateData(
-          this.websiteId,
-          prismaState,
-          item.page,
-          position,
-        ),
-        update: toPrismaPageUpdateData(item.page),
-      });
+      },
+      data: {
+        blocks: toJsonValue(input.blocks),
+        blocksRevision: input.blocksRevision,
+        metaUpdatedAt: new Date(input.metaUpdatedAt),
+      },
     });
-
-    if ("$transaction" in this.client) {
-      await this.client.$transaction(writes);
-      return;
-    }
-
-    await Promise.all(writes);
   }
 
-  async deleteById(state: ContentState, pageId: string): Promise<void> {
+  async updateDraftPageParent(
+    input: UpdateDraftPageParentInput,
+  ): Promise<void> {
+    const pageId = normalizeValue(input.pageId);
+
+    if (!pageId) {
+      throw new Error(
+        "PrismaPagesRepository.updateDraftPageParent: input.pageId is required.",
+      );
+    }
+
+    await this.client.page.update({
+      where: {
+        websiteId_state_pageId: {
+          websiteId: this.websiteId,
+          state: "draft",
+          pageId,
+        },
+      },
+      data: {
+        parentPageId: input.parentId,
+        metaUpdatedAt: new Date(input.metaUpdatedAt),
+      },
+    });
+  }
+
+  async detachDraftPageChildren(
+    input: DetachDraftPageChildrenInput,
+  ): Promise<number> {
+    const parentId = normalizeValue(input.parentId);
+
+    if (!parentId) {
+      return 0;
+    }
+
+    const result = await this.client.page.updateMany({
+      where: {
+        websiteId: this.websiteId,
+        state: "draft",
+        parentPageId: parentId,
+      },
+      data: {
+        parentPageId: null,
+        metaUpdatedAt: new Date(input.metaUpdatedAt),
+      },
+    });
+
+    return result.count;
+  }
+
+  async deleteDraftPage(pageId: string): Promise<void> {
     const id = normalizeValue(pageId);
 
     if (!id) {
@@ -394,7 +442,7 @@ export class PrismaPagesRepository implements PagesRepository {
     await this.client.page.deleteMany({
       where: {
         websiteId: this.websiteId,
-        state: toPrismaContentState(state),
+        state: "draft",
         pageId: id,
       },
     });

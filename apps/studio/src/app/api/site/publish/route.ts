@@ -36,6 +36,7 @@ import {
   PublishSiteIntentSchema,
   type PublishSiteIntentDTO,
 } from "@compoz/validation/site/publish/publish-intents";
+import { publishAndInvalidateStatusCache } from "@compoz/studio/app/api/site/publish/invalidate-publish-status-cache";
 
 function parseStatesFromQuery(req: Request): {
   from?: ContentState;
@@ -117,7 +118,6 @@ async function revalidatePublicAfterPublish(params: {
     }
   } catch (error) {
     log.warn?.("publish.revalidate.public.failed", {
-      err: error instanceof Error ? error.message : String(error),
       baseUrl,
       websiteSlug: params.websiteSlug,
     });
@@ -182,12 +182,6 @@ export async function POST(req: Request) {
           },
         });
 
-        const committedResult = await run({
-          from,
-          to,
-          cleanOrphans: dto.cleanOrphans,
-        });
-
         /**
          * Invalidates the active Website status cache.
          *
@@ -196,38 +190,18 @@ export async function POST(req: Request) {
          */
         const statusCache = getSiteStatusCache({ websiteId });
 
-        let cacheInvalidated = false;
-
-        try {
-          logger.debug?.("route.statusCache.invalidateAll.start", {
+        const { result, cacheInvalidated } =
+          await publishAndInvalidateStatusCache({
             websiteId,
+            publish: () =>
+              run({
+                from,
+                to,
+                cleanOrphans: dto.cleanOrphans,
+              }),
+            statusCache,
+            logger,
           });
-
-          cacheInvalidated = await statusCache.invalidateAll();
-
-          logger.debug?.("route.statusCache.invalidateAll.done", {
-            websiteId,
-            cacheInvalidated,
-          });
-        } catch (error) {
-          logger.error?.("route.statusCache.invalidateAll.failed", {
-            websiteId,
-            err: String(error),
-          });
-        }
-
-        const result: PublishSiteResponse["publishResult"] = cacheInvalidated
-          ? committedResult
-          : {
-              ...committedResult,
-              warnings: [
-                ...committedResult.warnings,
-                {
-                  code: EC.PUBLISH_STATUS_CACHE_INVALIDATION_FAILED,
-                  path: ["studio", "statusCache"],
-                },
-              ],
-            };
 
         logger.debug?.("publish.metrics", {
           websiteId,

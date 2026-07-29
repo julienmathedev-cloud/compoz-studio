@@ -12,10 +12,13 @@ import type {
   PublishSiteTransactionContext,
   PublishedSnapshot,
 } from "@compoz/core/domain/site/ports/publish-site-transaction";
+import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
+import { DomainError } from "@compoz/core/domain/errors/domain-error";
+import { log } from "@compoz/infra/lib/log";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import { toPrismaPublishedPageCreateData } from "@compoz/infra/pages/mappers/page.mapper";
 import { PrismaPagesRepository } from "@compoz/infra/pages/prisma-pages-repository";
-import { Prisma } from "@compoz/infra/prisma/generated";
+import { type PrismaClient, Prisma } from "@compoz/infra/prisma/generated";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
 import {
   toPrismaSiteSettingsCreateData,
@@ -25,10 +28,75 @@ import { PrismaSiteRepository } from "@compoz/infra/site/prisma-site-repository"
 import { PageSchema } from "@compoz/validation/pages/page";
 
 const MAX_SERIALIZATION_ATTEMPTS = 3;
+const PUBLISH_RETRY_BASE_DELAY_MS = 25;
+const PUBLISH_RETRY_MAX_DELAY_MS = 100;
+
+export type RetryableSerializationConflictKind = "P2034" | "P2010_40001";
+
+export type Sleep = (delayMs: number) => Promise<void>;
+export type Jitter = () => number;
+
+type PrismaPublishTransactionRunner = Pick<PrismaClient, "$transaction">;
 
 type PrismaPublishSiteTransactionOptions = Readonly<{
   websiteId: string;
+  client?: PrismaPublishTransactionRunner;
+  sleep?: Sleep;
+  jitter?: Jitter;
 }>;
+
+const defaultSleep: Sleep = (delayMs) =>
+  new Promise((resolve) => setTimeout(resolve, delayMs));
+
+const defaultJitter: Jitter = Math.random;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+export function classifyRetryableSerializationConflict(
+  error: unknown,
+): RetryableSerializationConflictKind | null {
+  if (!isRecord(error)) return null;
+
+  if (error.code === "P2034") return "P2034";
+  if (error.code !== "P2010") return null;
+
+  const meta = error.meta;
+  if (!isRecord(meta)) return null;
+
+  const driverAdapterError = meta.driverAdapterError;
+  if (!isRecord(driverAdapterError)) return null;
+
+  const cause = driverAdapterError.cause;
+  if (!isRecord(cause)) return null;
+
+  return cause.originalCode === "40001" ? "P2010_40001" : null;
+}
+
+function normalizeJitter(value: number): number {
+  if (Number.isNaN(value) || value < 0) return 0;
+  if (!Number.isFinite(value) || value > 1) return 1;
+  return value;
+}
+
+export function computePublishRetryDelayMs(params: {
+  failedAttempt: number;
+  jitter: Jitter;
+}): number {
+  const baseDelay = Math.min(
+    PUBLISH_RETRY_MAX_DELAY_MS,
+    PUBLISH_RETRY_BASE_DELAY_MS * 2 ** (params.failedAttempt - 1),
+  );
+  const normalizedJitter = normalizeJitter(params.jitter());
+
+  return Math.round(
+    Math.min(
+      PUBLISH_RETRY_MAX_DELAY_MS,
+      baseDelay * (1 + normalizedJitter),
+    ),
+  );
+}
 
 function parseCanonicalPublishedAt(value: string): Date {
   const normalized = value.trim();
@@ -47,20 +115,20 @@ function parseCanonicalPublishedAt(value: string): Date {
   return parsed;
 }
 
-function isSerializationConflict(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-
-  return "code" in error && error.code === "P2034";
-}
-
 export class PrismaPublishSiteTransaction implements PublishSiteTransaction {
   private readonly websiteId: string;
+  private readonly client: PrismaPublishTransactionRunner;
+  private readonly sleep: Sleep;
+  private readonly jitter: Jitter;
 
   constructor(opts: PrismaPublishSiteTransactionOptions) {
     this.websiteId = requireWebsiteId(
       opts.websiteId,
       "PrismaPublishSiteTransaction.constructor",
     );
+    this.client = opts.client ?? prisma;
+    this.sleep = opts.sleep ?? defaultSleep;
+    this.jitter = opts.jitter ?? defaultJitter;
   }
 
   async run<T>(
@@ -68,7 +136,7 @@ export class PrismaPublishSiteTransaction implements PublishSiteTransaction {
   ): Promise<T> {
     for (let attempt = 1; attempt <= MAX_SERIALIZATION_ATTEMPTS; attempt++) {
       try {
-        return await prisma.$transaction(
+        const result = await this.client.$transaction(
           async (transactionClient) => {
             await transactionClient.website.upsert({
               where: { id: this.websiteId },
@@ -153,13 +221,59 @@ export class PrismaPublishSiteTransaction implements PublishSiteTransaction {
             timeout: 15_000,
           },
         );
+
+        if (attempt > 1) {
+          log.info("site.publish.transaction.retrySucceeded", {
+            attempt,
+            maxAttempts: MAX_SERIALIZATION_ATTEMPTS,
+          });
+        }
+
+        return result;
       } catch (error) {
-        if (
-          attempt === MAX_SERIALIZATION_ATTEMPTS ||
-          !isSerializationConflict(error)
-        ) {
+        const conflictKind = classifyRetryableSerializationConflict(error);
+
+        if (!conflictKind) {
           throw error;
         }
+
+        log.warn("site.publish.transaction.retryableConflictDetected", {
+          attempt,
+          maxAttempts: MAX_SERIALIZATION_ATTEMPTS,
+          conflictKind,
+        });
+
+        if (attempt === MAX_SERIALIZATION_ATTEMPTS) {
+          log.error("site.publish.transaction.retryExhausted", {
+            attempt,
+            maxAttempts: MAX_SERIALIZATION_ATTEMPTS,
+            conflictKind,
+          });
+
+          throw new DomainError({
+            code: ERROR_CODES.PUBLISH_CONFLICT,
+            details: {
+              operation: "publish_site",
+              attempts: MAX_SERIALIZATION_ATTEMPTS,
+              conflictKind,
+            },
+            cause: error,
+          });
+        }
+
+        const delayMs = computePublishRetryDelayMs({
+          failedAttempt: attempt,
+          jitter: this.jitter,
+        });
+
+        log.info("site.publish.transaction.retryScheduled", {
+          attempt,
+          maxAttempts: MAX_SERIALIZATION_ATTEMPTS,
+          conflictKind,
+          delayMs,
+        });
+
+        await this.sleep(delayMs);
       }
     }
 

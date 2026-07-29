@@ -20,6 +20,26 @@ void test("maps revision preconditions and settings revision conflicts to stable
   );
 });
 
+void test("maps publication conflicts to 409 without exposing technical details", () => {
+  const response = toHttpError(
+    new DomainError({
+      code: ERROR_CODES.PUBLISH_CONFLICT,
+      details: {
+        operation: "publish_site",
+        attempts: 3,
+        conflictKind: "P2010_40001",
+      },
+      cause: new Error("database details"),
+    }),
+  );
+
+  assert.equal(statusFromCode(ERROR_CODES.PUBLISH_CONFLICT), 409);
+  assert.equal(response.status, 409);
+  assert.equal(response.body.code, ERROR_CODES.PUBLISH_CONFLICT);
+  assert.equal("details" in response.body, false);
+  assert.equal("cause" in response.body, false);
+});
+
 void test("preserves DomainError details without exposing its cause", () => {
   const response = toHttpError(
     new DomainError({

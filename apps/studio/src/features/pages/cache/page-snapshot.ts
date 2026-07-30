@@ -1,7 +1,7 @@
 /**
  * @file apps/studio/src/features/pages/cache/page-snapshot.ts
  * @layer studio/features/pages/cache
- * @description Monotone metadata merge that preserves client-managed blocks and structure.
+ * @description Independent monotone metadata and blocks merge preserving structure.
  */
 
 import type {
@@ -33,7 +33,35 @@ export function mergePageRevisionedSnapshot(
   current: PageWithRevisionsDTO | undefined,
   incoming: PageWithRevisionsDTO,
 ): PageWithRevisionsDTO {
-  return adoptPageMetadataSnapshot(current, incoming);
+  if (!current) return incoming;
+  if (
+    incoming.revisions.metaRevision <= current.revisions.metaRevision &&
+    incoming.revisions.blocksRevision <= current.revisions.blocksRevision
+  ) {
+    return current;
+  }
+  const metadata =
+    incoming.revisions.metaRevision > current.revisions.metaRevision
+      ? mergeMetadata(current.page, incoming.page)
+      : current.page;
+  const page =
+    incoming.revisions.blocksRevision > current.revisions.blocksRevision
+      ? { ...metadata, blocks: incoming.page.blocks }
+      : metadata;
+
+  return {
+    page,
+    revisions: {
+      metaRevision: Math.max(
+        current.revisions.metaRevision,
+        incoming.revisions.metaRevision,
+      ),
+      blocksRevision: Math.max(
+        current.revisions.blocksRevision,
+        incoming.revisions.blocksRevision,
+      ),
+    },
+  };
 }
 
 export function adoptPageMetadataSnapshot(

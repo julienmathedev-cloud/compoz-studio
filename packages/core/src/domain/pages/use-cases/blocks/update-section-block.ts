@@ -1,19 +1,21 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/blocks/update-section-block.ts
  * @layer core/domain/pages/use-cases/blocks
- * @description Use case that updates a section block on a draft page.
+ * @description Three-way section update through the shared block OCC executor.
  */
 
-import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
+import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
-import { applySectionBlockPatch } from "@compoz/core/domain/pages/use-cases/blocks/helpers/apply-section-block-patch";
+import type { Block, SectionBlock } from "@compoz/core/domain/pages/entities/block";
+import { mergeSectionBlock } from "@compoz/core/domain/pages/revisions/page-blocks-merge";
+import type { PageBlocksResolution } from "@compoz/core/domain/pages/revisions/page-blocks.types";
+import { executePageBlocksMutation } from "@compoz/core/domain/pages/use-cases/blocks/execute-page-blocks-mutation";
+import { assertBlocks } from "@compoz/core/domain/pages/validators/blocks";
 import type {
   UpdateSectionBlockDeps,
   UpdateSectionBlockInput,
   UpdateSectionBlockResult,
 } from "@compoz/core/domain/pages/use-cases/blocks/update-section-block.types";
-import { assertBlocks } from "@compoz/core/domain/pages/validators/blocks";
 
 export function updateSectionBlock({
   pages,
@@ -24,114 +26,136 @@ export function updateSectionBlock({
   ): Promise<UpdateSectionBlockResult> {
     const pageId = String(input.pageId ?? "").trim();
     const blockId = String(input.blockId ?? "").trim();
-    const patch =
-      input.patch && typeof input.patch === "object" ? input.patch : null;
-
-    if (!pageId) {
-      throw new DomainError({
-        code: EC.INVALID_ARGUMENT,
-        message: EC.INVALID_ARGUMENT,
-        details: { path: ["pageId"] },
-      });
+    if (!pageId || !blockId) {
+      throw new DomainError({ code: ERROR_CODES.INVALID_ARGUMENT });
     }
 
-    if (!blockId) {
-      throw new DomainError({
-        code: EC.INVALID_ARGUMENT,
-        message: EC.INVALID_ARGUMENT,
-        details: { path: ["blockId"] },
-      });
-    }
-
-    if (!patch) {
-      throw new DomainError({
-        code: EC.INVALID_ARGUMENT,
-        message: EC.INVALID_ARGUMENT,
-        details: { path: ["patch"] },
-      });
-    }
-
-    await pages.ensureBase();
-
-    const pageRead = await pages.readByIdWithRevisions(
-      DEFAULT_CONTENT_STATE,
+    return executePageBlocksMutation({
+      pages,
       pageId,
-    );
-    if (!pageRead) {
-      throw new DomainError({
-        code: EC.PAGE_NOT_FOUND,
-        message: EC.PAGE_NOT_FOUND,
-        details: {
-          path: ["pageId"],
-          meta: { pageId, state: DEFAULT_CONTENT_STATE },
-        },
-      });
-    }
-
-    const page = pageRead.page;
-    const currentBlocks = Array.isArray(page.blocks) ? page.blocks : [];
-    const index = currentBlocks.findIndex((b) => b.id === blockId);
-
-    if (index < 0) {
-      throw new DomainError({
-        code: EC.BLOCK_NOT_FOUND,
-        message: EC.BLOCK_NOT_FOUND,
-        details: {
-          path: ["blockId"],
-          meta: { blockId, pageId },
-        },
-      });
-    }
-
-    const current = currentBlocks[index];
-
-    if (current.type !== "section") {
-      throw new DomainError({
-        code: EC.BLOCK_TYPE_UNSUPPORTED,
-        message: EC.BLOCK_TYPE_UNSUPPORTED,
-        details: {
-          path: ["blocks", index, "type"],
-          meta: { type: current.type },
-        },
-      });
-    }
-
-    const next = applySectionBlockPatch(current, patch);
-
-    let nextBlocks = [...currentBlocks];
-
-    /** Only one section can own LCP priority; enabling it on this block disables it on the others. */
-    if (patch.lcpPriority === true) {
-      nextBlocks = nextBlocks.map((block) =>
-        block.type === "section" ? { ...block, lcpPriority: false } : block,
-      );
-    }
-
-    nextBlocks[index] = next;
-
-    assertBlocks(nextBlocks);
-
-    const metaUpdatedAt = nowIso();
-    const nextPage = {
-      ...page,
-      blocks: nextBlocks,
-      meta: {
-        ...page.meta,
-        updatedAt: metaUpdatedAt,
-      },
-    };
-
-    await pages.updateDraftPageBlocks({
-      pageId,
-      blocks: nextBlocks,
-      blocksRevision: pageRead.revisions.blocksRevision,
-      metaUpdatedAt,
+      expectedBlocksRevision: input.expectedBlocksRevision,
+      operation: "update",
+      nowIso,
+      resolve: (current) => resolveUpdate(input, current),
     });
-
-    return {
-      page: nextPage,
-      block: next,
-      blocks: nextBlocks,
-    };
   };
+}
+
+function resolveUpdate(
+  input: UpdateSectionBlockInput,
+  blocks: ReadonlyArray<Block>,
+): PageBlocksResolution {
+  const index = blocks.findIndex((block) => block.id === input.blockId);
+  if (index < 0) {
+    return {
+      status: "conflict",
+      conflicts: [{
+        kind: "blockDeleted",
+        path: `blocks[${input.blockId}]`,
+        blockId: input.blockId,
+      }],
+    };
+  }
+
+  const current = blocks[index];
+  if (current.type !== "section") {
+    return {
+      status: "conflict",
+      conflicts: [{
+        kind: "blockTypeChanged",
+        path: `blocks[${input.blockId}].type`,
+        baseline: "section",
+        current: current.type,
+        local: "section",
+      }],
+    };
+  }
+
+  const baseline: SectionBlock = { ...current };
+  const local: SectionBlock = { ...current };
+  if (input.changes.name) {
+    baseline.name = input.changes.name.baseline;
+    local.name = input.changes.name.local;
+  }
+  if (input.changes.containerMode) {
+    baseline.containerMode = input.changes.containerMode.baseline;
+    local.containerMode = input.changes.containerMode.local;
+  }
+  if (input.changes.cssClassName) {
+    baseline.cssClassName = input.changes.cssClassName.baseline;
+    local.cssClassName = input.changes.cssClassName.local;
+  }
+  if (input.changes.lcpPriority) {
+    baseline.lcpPriority = input.changes.lcpPriority.baseline;
+    local.lcpPriority = input.changes.lcpPriority.local;
+  }
+  if (input.changes.rows) {
+    baseline.rows = input.changes.rows.baseline;
+    local.rows = input.changes.rows.local;
+  }
+
+  const merged = mergeSectionBlock({ baseline, current, local });
+  const candidateBlock = firstValidCandidate([
+    merged.candidate,
+    local,
+    current,
+  ]);
+  const currentOwner = blocks.find((block) => block.lcpPriority)?.id ?? null;
+  if (
+    input.changes.lcpPriority?.local === true &&
+    currentOwner !== input.baselineLcpPriorityBlockId &&
+    currentOwner !== input.blockId
+  ) {
+    return {
+      status: "conflict",
+      conflicts: [
+        ...merged.conflicts,
+        {
+          kind: "fieldConflict",
+          path: "blocks.lcpPriority",
+          location: { kind: "globalLcpOwner" },
+          baseline: input.baselineLcpPriorityBlockId,
+          current: currentOwner,
+          local: input.blockId,
+        },
+      ],
+      ...(candidateBlock ? { candidateBlock } : {}),
+    };
+  }
+
+  if (merged.conflicts.length > 0) {
+    return {
+      status: "conflict",
+      conflicts: merged.conflicts,
+      ...(candidateBlock ? { candidateBlock } : {}),
+    };
+  }
+
+  let nextBlocks = [...blocks];
+  if (merged.candidate.lcpPriority && !current.lcpPriority) {
+    nextBlocks = nextBlocks.map((block) => ({
+      ...block,
+      lcpPriority: block.id === input.blockId,
+    }));
+  }
+  nextBlocks[index] = merged.candidate;
+
+  return {
+    status: "resolved",
+    blocks: nextBlocks,
+    affectedBlockId: input.blockId,
+  };
+}
+
+function firstValidCandidate(
+  candidates: ReadonlyArray<SectionBlock>,
+): SectionBlock | undefined {
+  return candidates.find((candidate) => {
+    try {
+      assertBlocks([candidate]);
+      return true;
+    } catch {
+      return false;
+    }
+  });
 }

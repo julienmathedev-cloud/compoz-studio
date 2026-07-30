@@ -11,15 +11,19 @@ import { trimOrKeep } from "@compoz/studio/lib/strings";
 
 import type {
   CreateSectionBlockIntentDTO,
+  DeleteBlockIntentDTO,
   UpdateSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
 
 import type { CreateSectionBlockPatchInput } from "@compoz/core/domain/pages/use-cases/blocks/create-section-block.types";
-import type {
-  SectionBlockPatch,
-  UpdateSectionBlockPatchInput,
-} from "@compoz/core/domain/pages/use-cases/blocks/update-section-block.types";
+import type { Block } from "@compoz/core/domain/pages/entities/block";
+import type { UpdateSectionBlockPatchInput } from "@compoz/core/domain/pages/use-cases/blocks/update-section-block.types";
 
+import {
+  preserveBaselineValue,
+  preserveValidatedBlockBaseline,
+  preserveValidatedRowsBaseline,
+} from "@compoz/studio/app/api/_adapters/pages/blocks/block-baselines";
 import { adaptCells } from "@compoz/studio/app/api/_adapters/pages/blocks/cells";
 
 function trimOptionalId(value: string | undefined): string | undefined {
@@ -67,16 +71,16 @@ export function adaptCreateSectionBlockIntent(
   });
 
   const out: CreateSectionBlockPatchInput = {
+    expectedBlocksRevision: dto.expectedBlocksRevision,
+    baselineOrder: dto.baselineOrder,
+    baselineLcpPriorityBlockId: dto.baselineLcpPriorityBlockId,
+    placement: dto.placement,
     name: trimOrKeep(dto.name ?? ""),
     containerMode: dto.containerMode,
     cssClassName: trimOrKeep(dto.cssClassName ?? ""),
     lcpPriority: Boolean(dto.lcpPriority),
     rows,
   };
-
-  if ("insertAt" in dto) {
-    out.insertAt = dto.insertAt;
-  }
 
   log.debug("studio.adapter.blocks.create.end", {
     ms: Date.now() - started,
@@ -90,26 +94,10 @@ export function adaptUpdateSectionBlockIntent(
 ): UpdateSectionBlockPatchInput {
   const started = Date.now();
 
-  const patch: SectionBlockPatch = {};
-
-  if ("name" in dto.patch) {
-    patch.name = trimOrKeep(dto.patch.name ?? "");
-  }
-
-  if ("containerMode" in dto.patch) {
-    patch.containerMode = dto.patch.containerMode;
-  }
-
-  if ("cssClassName" in dto.patch) {
-    patch.cssClassName = trimOrKeep(dto.patch.cssClassName ?? "");
-  }
-
-  if ("lcpPriority" in dto.patch) {
-    patch.lcpPriority = dto.patch.lcpPriority;
-  }
-
-  if ("rows" in dto.patch && dto.patch.rows) {
-    patch.rows = dto.patch.rows.map((row) => ({
+  const adaptLocalRows = (
+    rows: NonNullable<UpdateSectionBlockIntentDTO["changes"]["rows"]>["local"],
+  ) =>
+    rows.map((row) => ({
       id: trimOrKeep(row.id),
       columnsCount: row.columnsCount,
       reverseOn: adaptReverseOn(row.reverseOn),
@@ -118,11 +106,47 @@ export function adaptUpdateSectionBlockIntent(
         cells: adaptCells(col.cells),
       })),
     }));
-  }
 
   const out: UpdateSectionBlockPatchInput = {
-    blockId: trimOrKeep(dto.blockId),
-    patch,
+    expectedBlocksRevision: dto.expectedBlocksRevision,
+    baselineLcpPriorityBlockId: dto.baselineLcpPriorityBlockId,
+    changes: {
+      ...(dto.changes.name
+        ? {
+            name: {
+              baseline: preserveBaselineValue(dto.changes.name.baseline),
+              local: trimOrKeep(dto.changes.name.local),
+            },
+          }
+        : {}),
+      ...(dto.changes.containerMode
+        ? { containerMode: dto.changes.containerMode }
+        : {}),
+      ...(dto.changes.cssClassName
+        ? {
+            cssClassName: {
+              baseline: preserveBaselineValue(
+                dto.changes.cssClassName.baseline,
+              ),
+              local:
+                trimOrKeep(dto.changes.cssClassName.local ?? "") || undefined,
+            },
+          }
+        : {}),
+      ...(dto.changes.lcpPriority
+        ? { lcpPriority: dto.changes.lcpPriority }
+        : {}),
+      ...(dto.changes.rows
+        ? {
+            rows: {
+              baseline: preserveValidatedRowsBaseline(
+                dto.changes.rows.baseline,
+              ),
+              local: adaptLocalRows(dto.changes.rows.local),
+            },
+          }
+        : {}),
+    },
   };
 
   log.debug("studio.adapter.blocks.update.end", {
@@ -130,4 +154,16 @@ export function adaptUpdateSectionBlockIntent(
   });
 
   return out;
+}
+
+export function adaptDeleteBlockIntent(
+  dto: DeleteBlockIntentDTO,
+): Readonly<{
+  expectedBlocksRevision: number;
+  baselineBlock: Block;
+}> {
+  return {
+    expectedBlocksRevision: dto.expectedBlocksRevision,
+    baselineBlock: preserveValidatedBlockBaseline(dto.baselineBlock),
+  };
 }

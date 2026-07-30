@@ -1,7 +1,7 @@
 /**
  * @file apps/studio/src/features/pages/cache/page-snapshot.test.ts
  * @layer studio/features/pages/cache
- * @description Verifies metadata-only page cache merges and structural parent resolution.
+ * @description Verifies independent monotone metadata/block merges and structural parent resolution.
  */
 
 import assert from "node:assert/strict";
@@ -57,9 +57,9 @@ void test("an initial read adopts the complete incoming snapshot", () => {
   );
 });
 
-void test("newer metadata is adopted without replacing cached blocks or their revision", () => {
+void test("newer metadata and older blocks advance only metadata", () => {
   const current = snapshot("Old", "new-block", 2, 7);
-  const incoming = snapshot("New", "incoming-block", 3, 99);
+  const incoming = snapshot("New", "incoming-block", 3, 6);
   const merged = mergePageRevisionedSnapshot(current, incoming);
 
   assert.equal(merged.page.name, "New");
@@ -72,25 +72,21 @@ void test("newer metadata is adopted without replacing cached blocks or their re
   });
 });
 
-void test("older and equal metadata revisions preserve the current snapshot", () => {
+void test("older metadata and newer blocks advance only blocks", () => {
   const current = snapshot("Current", "current-block", 5, 5);
-  assert.strictEqual(
-    mergePageRevisionedSnapshot(
-      current,
-      snapshot("Stale", "incoming-block", 4, 99),
-    ),
+  const merged = mergePageRevisionedSnapshot(
     current,
+    snapshot("Stale", "incoming-block", 4, 6),
   );
-  assert.strictEqual(
-    mergePageRevisionedSnapshot(
-      current,
-      snapshot("Equal but different", "incoming-block", 5, 99),
-    ),
-    current,
-  );
+  assert.equal(merged.page.name, "Current");
+  assert.equal(merged.page.blocks[0]?.id, "incoming-block");
+  assert.deepEqual(merged.revisions, {
+    metaRevision: 5,
+    blocksRevision: 6,
+  });
 });
 
-void test("metadata revision never arbitrates parentId or cached blocks", () => {
+void test("both newer revisions advance their owned fields but never parent", () => {
   const current = {
     ...snapshot("Current", "current-block", 5, 5),
     page: {
@@ -111,8 +107,24 @@ void test("metadata revision never arbitrates parentId or cached blocks", () => 
   );
   assert.equal(afterMetadata.page.name, "New metadata");
   assert.equal(afterMetadata.page.parentId, "current-parent");
-  assert.equal(afterMetadata.page.blocks[0]?.id, "current-block");
-  assert.equal(afterMetadata.revisions.blocksRevision, 5);
+  assert.equal(afterMetadata.page.blocks[0]?.id, "incoming-block");
+  assert.equal(afterMetadata.revisions.blocksRevision, 99);
+});
+
+void test("both older and equal revisions preserve owned current values", () => {
+  const current = snapshot("Current", "current-block", 5, 5);
+  const older = mergePageRevisionedSnapshot(
+    current,
+    snapshot("Older", "older-block", 4, 4),
+  );
+  assert.equal(older.page.name, "Current");
+  assert.equal(older.page.blocks[0]?.id, "current-block");
+  const equal = mergePageRevisionedSnapshot(
+    current,
+    snapshot("Equal", "equal-block", 5, 5),
+  );
+  assert.equal(equal.page.name, "Current");
+  assert.equal(equal.page.blocks[0]?.id, "current-block");
 });
 
 void test("only an explicit structure patch changes parentId and stale pages cannot regress it", () => {

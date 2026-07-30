@@ -15,7 +15,7 @@ import "server-only";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
-import type { PageDTO } from "@compoz/core/domain/pages/dto";
+import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import { createSectionBlock } from "@compoz/core/domain/pages/use-cases/blocks/create-section-block";
 import { throwHttp } from "@compoz/http/http-error";
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
@@ -96,6 +96,13 @@ export async function POST(req: Request, ctx: { params: unknown }) {
         });
 
         const body = await readJsonOr400(req);
+        if (
+          !body ||
+          typeof body !== "object" ||
+          !("expectedBlocksRevision" in body)
+        ) {
+          throw new DomainError({ code: EC.REVISION_REQUIRED });
+        }
 
         const dto: CreateSectionBlockIntentDTO = parseDTOOrHttp(
           CreateSectionBlockIntentSchema,
@@ -117,7 +124,7 @@ export async function POST(req: Request, ctx: { params: unknown }) {
 
         const patch = adaptCreateSectionBlockIntent(dto);
 
-        const { page } = await runCreate({
+        const result = await runCreate({
           pageId,
           ...patch,
         });
@@ -128,7 +135,7 @@ export async function POST(req: Request, ctx: { params: unknown }) {
          * The cache may still be backed by KV in infra, but its business scope is
          * the Prisma Website.id.
          */
-        try {
+        if (result.outcome === "updated") try {
           logger.debug?.("route.statusCache.invalidate.start", {
             websiteId,
             invalidateStatus: true,
@@ -155,7 +162,11 @@ export async function POST(req: Request, ctx: { params: unknown }) {
         }
 
         const res: AddSectionBlockResponse = {
-          page: page as PageDTO,
+          outcome: result.outcome,
+          blocks: result.blocks,
+          blocksRevision: result.blocksRevision,
+          affectedBlockId: result.affectedBlockId,
+          createdBlockId: result.createdBlockId,
         };
 
         return res;

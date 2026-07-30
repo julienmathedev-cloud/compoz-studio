@@ -26,10 +26,35 @@ void test("maps revision preconditions and settings revision conflicts to stable
     statusFromCode(ERROR_CODES.PAGE_METADATA_REVISION_CONFLICT),
     409,
   );
+  assert.equal(
+    statusFromCode(ERROR_CODES.PAGE_BLOCKS_REVISION_CONFLICT),
+    409,
+  );
   assert.equal(statusFromCode(ERROR_CODES.PAGE_SLUG_CONFLICT), 409);
   assert.equal(statusFromCode(ERROR_CODES.PAGE_REORDER_INVALID), 422);
   assert.equal(statusFromCode(ERROR_CODES.PAGE_HIERARCHY_CYCLE), 422);
   assert.equal(statusFromCode(ERROR_CODES.PAGE_PARENT_INVALID), 422);
+});
+
+void test("exposes controlled Page block conflict details", () => {
+  const details = {
+    resourceId: "page",
+    expectedBlocksRevision: 2,
+    currentBlocksRevision: 3,
+    operation: "update",
+    conflictKind: "functional",
+    conflictingPaths: ["blocks[a].name"],
+    conflicts: [],
+    current: { blocks: [], blocksRevision: 3 },
+  };
+  const response = toHttpError(
+    new DomainError({
+      code: ERROR_CODES.PAGE_BLOCKS_REVISION_CONFLICT,
+      details,
+    }),
+  );
+  assert.equal(response.status, 409);
+  assert.deepEqual(response.body.details, details);
 });
 
 void test("exposes aggregated page metadata conflict details", () => {

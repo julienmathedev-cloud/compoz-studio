@@ -1678,6 +1678,35 @@
       }
     },
 
+    "pageBlocksConflict": {
+      "title": "Page blocks conflict",
+      "updateTitle": "Block content conflict",
+      "operation": "Operation: {operation}",
+      "deletedOrChanged": "The block was deleted or transformed while you were editing.",
+      "baseline": "Baseline",
+      "remote": "Saved",
+      "local": "Local",
+      "useRemote": "Use saved",
+      "keepLocal": "Keep local",
+      "cancel": "Cancel",
+      "apply": "Apply choices",
+      "currentOrder": "Saved order: {order}",
+      "localOrder": "Local order: {order}",
+      "added": "Added: {ids}",
+      "removed": "Removed: {ids}",
+      "none": "—",
+      "anchorMissing": "The targeted position no longer exists. Restart the add from the current state.",
+      "deleteChanged": "The block changed since your delete request.",
+      "useCurrent": "Use saved state",
+      "forceDelete": "Delete current version",
+      "recreate": "Recreate as a new block",
+      "abandon": "Discard and return to blocks",
+      "addAtEnd": "Explicitly add at the end",
+      "manualRebase": "This structural conflict requires a manual rebase from the saved state.",
+      "restartCurrent": "This revision can no longer be applied. Explicitly restart from the saved snapshot.",
+      "keepDraft": "Keep my draft"
+    },
+
     "pageBlockEditHeader": {
       "blockTitle": {
         "label": "Block title",

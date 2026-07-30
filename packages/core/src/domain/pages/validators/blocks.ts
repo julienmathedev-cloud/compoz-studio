@@ -111,7 +111,7 @@ export function assertBlocks(blocks: ReadonlyArray<Block>): void {
       });
     }
 
-    assertRows(block.rows, ["blocks", i, "rows"], pageCells);
+    assertRows(block.rows, ["blocks", i, "rows"], pageCells, new Set());
   }
 
   validateUniqueHeadingH1(pageCells, ["blocks"]);
@@ -121,6 +121,7 @@ function assertRows(
   rows: ReadonlyArray<BlockRow>,
   path: Path,
   pageCells: Cell[],
+  sectionCellIds: Set<string>,
 ) {
   const seenIds = new Set<string>();
 
@@ -177,7 +178,12 @@ function assertRows(
       });
     }
 
-    assertColumns(row.columns, [...rowPath, "columns"], pageCells);
+    assertColumns(
+      row.columns,
+      [...rowPath, "columns"],
+      pageCells,
+      sectionCellIds,
+    );
   }
 }
 
@@ -230,6 +236,7 @@ function assertColumns(
   columns: ReadonlyArray<BlockColumn>,
   path: Path,
   pageCells: Cell[],
+  sectionCellIds: Set<string>,
 ) {
   const seenIds = new Set<string>();
 
@@ -267,10 +274,70 @@ function assertColumns(
 
     for (let j = 0; j < col.cells.length; j++) {
       const cell = col.cells[j];
+      const cellId = String(cell.id ?? "").trim();
+      if (cellId && sectionCellIds.has(cellId)) {
+        throw new DomainError({
+          code: EC.CELL_ID_DUPLICATE,
+          message: EC.CELL_ID_DUPLICATE,
+          details: { path: [...colPath, "cells", j, "id"], meta: { id: cellId } },
+        });
+      }
 
       assertCell(cell, [...colPath, "cells", j]);
+      sectionCellIds.add(cellId);
+      assertCellCollectionIds(cell, [...colPath, "cells", j]);
       pageCells.push(cell);
     }
+  }
+}
+
+function assertUniqueIds(
+  items: ReadonlyArray<Readonly<{ id: string }>>,
+  path: Path,
+): void {
+  const seen = new Set<string>();
+  for (let index = 0; index < items.length; index++) {
+    const id = String(items[index]?.id ?? "").trim();
+    if (id && seen.has(id)) {
+      throw new DomainError({
+        code: EC.CELL_ITEM_ID_DUPLICATE,
+        message: EC.CELL_ITEM_ID_DUPLICATE,
+        details: { path: [...path, index, "id"], meta: { id } },
+      });
+    }
+    seen.add(id);
+  }
+}
+
+function assertCellCollectionIds(cell: Cell, path: Path): void {
+  switch (cell.kind) {
+    case "buttons":
+    case "gallery":
+    case "carousel":
+    case "cardCollection":
+    case "steps":
+    case "testimonials":
+    case "timeline":
+      assertUniqueIds(cell.items, [...path, "items"]);
+      if (cell.kind === "carousel" || cell.kind === "cardCollection") {
+        for (let index = 0; index < cell.items.length; index++) {
+          const item = cell.items[index];
+          if ("sections" in item) {
+            assertUniqueIds(item.sections, [
+              ...path,
+              "items",
+              index,
+              "sections",
+            ]);
+          }
+        }
+      }
+      return;
+    case "form":
+      assertUniqueIds(cell.fields, [...path, "fields"]);
+      return;
+    default:
+      return;
   }
 }
 

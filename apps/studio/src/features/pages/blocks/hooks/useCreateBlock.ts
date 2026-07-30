@@ -3,158 +3,104 @@
 /**
  * @file apps/studio/src/features/pages/blocks/hooks/useCreateBlock.ts
  * @layer studio/features/pages/blocks/hooks
- *
- * @description
- * React Query mutation hook for creating a draft section block through the pages Studio API.
- *
- * @remarks
- * - Converts UI form values to a section block create intent before calling the API.
- * - Uses save instrumentation with draft content state for logs and notifications.
- * - Synchronizes page and block-list caches from the returned page payload.
- * - Invalidates site and block status views after creation.
- * - Studio cache keys are scoped by Prisma Website.id.
+ * @description Page-scoped pessimistic block creation using the current revisioned snapshot.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import type { PageBlocksSnapshotDTO } from "@compoz/core/domain/pages/dto";
+import type { PageBlocksConflictDetails } from "@compoz/core/domain/pages/revisions/page-blocks.types";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
-import { log } from "@compoz/infra/lib/log";
-
+import type { AddSectionBlockResponse } from "@compoz/infra/http/studio/pages.types";
+import { getPageBlocksConflictDetails } from "@compoz/infra/lib/get-page-blocks-conflict-details";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
-import { syncBlocksFromPageCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
+import { syncPageBlocksSnapshotCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
+import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
+import { pageBlocksMutationScope } from "@compoz/studio/features/pages/blocks/hooks/page-blocks-mutation-scope";
 import { toCreateSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
-import {
-  invalidateBlockStatusViews,
-  invalidateSiteStatus,
-} from "@compoz/studio/features/site/status/invalidate";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { notifyCreated } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
-
-import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
-
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
+import { useState } from "react";
 
 type CreateBlockArgs = Readonly<{
-  pageId: string;
   values: SectionBlockFormValues;
-  insertAt?: number;
   label?: string;
 }>;
 
-type UseCreateBlockResult = Readonly<{
-  create: (args: CreateBlockArgs) => Promise<void>;
-  isCreating: boolean;
-}>;
-
-const logger = log.child({ ns: "hook", name: "useCreateBlock" });
-
-export function useCreateBlock(onSuccess?: () => void): UseCreateBlockResult {
+export function useCreateBlock(pageId: string, onSuccess?: () => void) {
   const t = useTranslations();
   const queryClient = useQueryClient();
   const websiteId = useWebsiteId();
-
+  const pageIdKey = String(pageId ?? "").trim();
   const entityLabel = t("studio.shared.entities.blocks");
+  const [conflict, setConflict] =
+    useState<PageBlocksConflictDetails | null>(null);
 
   const mutation = useMutation({
-    mutationKey: [
-      "w",
-      websiteId,
-      "studio",
-      "pages",
-      "blocks",
-      "create",
-    ] as const,
-
-    mutationFn: async (args: CreateBlockArgs) => {
-      const pageId = String(args.pageId ?? "").trim();
-
-      const payload = toCreateSectionBlockIntentDTOFromFormValues({
-        values: args.values,
-        insertAt: args.insertAt,
-      });
-
-      const fields = Object.keys(payload ?? {});
-
-      const response = await withSaveLogs(
-        "useCreateBlock",
-        DEFAULT_CONTENT_STATE,
-        () => pagesStudioApi.addBlock(pageId, payload),
-        {
-          entity: entityLabel,
-          fields,
-          pageId,
-          websiteId,
-        },
+    mutationKey: ["w", websiteId, "studio", "pages", pageIdKey, "blocks", "create"] as const,
+    scope: { id: pageBlocksMutationScope(websiteId, pageIdKey) },
+    mutationFn: async (args: CreateBlockArgs): Promise<AddSectionBlockResponse> => {
+      const snapshot = queryClient.getQueryData<PageBlocksSnapshotDTO>(
+        pageBlocksKey(websiteId, pageIdKey, DEFAULT_CONTENT_STATE),
       );
+      if (!snapshot) throw new Error("PAGE_BLOCKS_SNAPSHOT_REQUIRED");
 
-      return {
-        pageId,
-        fields,
-        page: response.page,
-      } as const;
+      return pagesStudioApi.addBlock(
+        pageIdKey,
+        toCreateSectionBlockIntentDTOFromFormValues({
+          values: args.values,
+          expectedBlocksRevision: snapshot.blocksRevision,
+          baselineOrder: snapshot.blocks.map((block) => block.id),
+          baselineLcpPriorityBlockId:
+            snapshot.blocks.find((block) => block.lcpPriority)?.id ?? null,
+        }),
+      );
     },
-
-    onSuccess: async ({ pageId, fields, page }, variables) => {
-      const pageIdKey = String(pageId ?? "").trim();
-
-      const label =
-        variables?.label ??
-        (page?.id ? `#${page.id}` : String(variables?.insertAt ?? ""));
-
+    onMutate: () => setConflict(null),
+    onSuccess: (response, variables) => {
+      syncPageBlocksSnapshotCache(
+        queryClient,
+        websiteId,
+        pageIdKey,
+        response,
+      );
       notifyCreated(
         t("notifications.created.title", { entity: entityLabel }),
         t("notifications.created.description", {
           entity: entityLabel,
-          name: label,
+          name: variables.label ?? response.createdBlockId,
         }),
       );
-
-      if (pageIdKey && page) {
-        syncBlocksFromPageCache(
+      onSuccess?.();
+    },
+    onError: (error) => {
+      const details = getPageBlocksConflictDetails(error);
+      if (details) {
+        syncPageBlocksSnapshotCache(
           queryClient,
           websiteId,
           pageIdKey,
-          page,
+          details.current,
           DEFAULT_CONTENT_STATE,
+          true,
         );
+        setConflict(details);
+        return;
       }
-
-      await Promise.all([
-        invalidateSiteStatus(queryClient, websiteId),
-        invalidateBlockStatusViews(queryClient, websiteId, pageIdKey),
-      ]);
-
-      logger.debug("create.ok", {
-        websiteId,
-        pageId,
-        fields,
-        returnedPageId: page?.id,
-        returnedPageSlug: page?.slug,
-      });
-
-      onSuccess?.();
-    },
-
-    onError: (error: unknown) => {
       notify.fromError(error, UiError.unexpectedSave);
-
-      logger.error("create.failed", {
-        websiteId,
-        msg: String(error),
-      });
     },
-
     retry: false,
   });
 
   return {
-    create: async (args) => {
-      await mutation.mutateAsync(args);
-    },
+    create: (args: CreateBlockArgs) => mutation.mutateAsync(args),
     isCreating: mutation.isPending,
+    conflict,
+    clearConflict: () => setConflict(null),
   };
 }
 

@@ -28,10 +28,10 @@ export type CreateDraftPageInput = Readonly<{
   metaUpdatedAt: string;
 }>;
 
-export type UpdateDraftPageBlocksInput = Readonly<{
+export type CompareAndSetDraftPageBlocksInput = Readonly<{
   pageId: string;
+  expectedBlocksRevision: number;
   blocks: ReadonlyArray<Block>;
-  blocksRevision: number;
   metaUpdatedAt: string;
 }>;
 
@@ -56,7 +56,9 @@ export interface PagesRepository {
     pageIds: ReadonlyArray<string>,
   ): Promise<Array<Page | null>>;
 
-  updateDraftPageBlocks(input: UpdateDraftPageBlocksInput): Promise<void>;
+  compareAndSetDraftPageBlocks(
+    input: CompareAndSetDraftPageBlocksInput,
+  ): Promise<boolean>;
 
   existsById(state: ContentState, pageId: string): Promise<boolean>;
 

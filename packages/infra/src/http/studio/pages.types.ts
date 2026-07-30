@@ -7,8 +7,8 @@
  */
 
 import type {
-  BlockDTO,
   PageDTO,
+  PageBlocksSnapshotDTO,
   PageWithRevisionsDTO,
 } from "@compoz/core/domain/pages/dto";
 import type {
@@ -32,17 +32,21 @@ export type UpdatePageResponse = Readonly<{
 
 export type DeletePageResponse = DraftSiteIndexWithRevisionDTO;
 
-export type ListPageBlocksResponse = Readonly<{
-  blocks: ReadonlyArray<BlockDTO>;
-  blocksRevision: number;
-}>;
+export type ListPageBlocksResponse = PageBlocksSnapshotDTO;
 
-export type AddSectionBlockResponse = Readonly<{ page: PageDTO }>;
+export type PageBlocksMutationResponse = PageBlocksSnapshotDTO &
+  Readonly<{
+    outcome: "updated" | "noChanges";
+    affectedBlockId?: string;
+  }>;
 
-export type UpdateSectionBlockResponse = Readonly<{ page: PageDTO }>;
+export type AddSectionBlockResponse = PageBlocksMutationResponse &
+  Readonly<{ createdBlockId: string }>;
 
-export type DeleteBlockResponse = Readonly<{ page: PageDTO }>;
+export type UpdateSectionBlockResponse = PageBlocksMutationResponse;
 
-export type ReorderBlocksResponse = Readonly<{ page: PageDTO }>;
+export type DeleteBlockResponse = PageBlocksMutationResponse;
+
+export type ReorderBlocksResponse = PageBlocksMutationResponse;
 
 export type ReorderChildrenResponse = DraftSiteIndexWithRevisionDTO;

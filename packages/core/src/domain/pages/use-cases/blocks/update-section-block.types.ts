@@ -1,50 +1,52 @@
 /**
  * @file packages/core/src/domain/pages/use-cases/blocks/update-section-block.types.ts
  * @layer core/domain/pages/use-cases/blocks
- * @description Contracts for updating a section block on a draft page.
+ * @description OCC intent contracts for updating a section block.
  */
 
 import type {
-  Block,
   BlockId,
   BlockRow,
-  SectionBlock,
   SectionBlockContainerMode,
 } from "@compoz/core/domain/pages/entities/block";
-import type { Page } from "@compoz/core/domain/pages/entities/page";
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
+import type { PageBlocksMutationResult } from "@compoz/core/domain/pages/revisions/page-blocks.types";
 
 export interface UpdateSectionBlockDeps {
   pages: PagesRepository;
-
-  /** Optional ISO clock override. */
   nowIso?: () => string;
 }
 
-/** Missing patch fields preserve current values; provided fields replace them. */
-export type SectionBlockPatch = {
+export type MetadataChange<T> = Readonly<{ baseline: T; local: T }>;
+
+export type UpdateSectionBlockChanges = Readonly<{
+  name?: MetadataChange<string>;
+  containerMode?: MetadataChange<SectionBlockContainerMode>;
+  cssClassName?: MetadataChange<string | undefined>;
+  lcpPriority?: MetadataChange<boolean>;
+  rows?: MetadataChange<ReadonlyArray<BlockRow>>;
+}>;
+
+/** Kept as a local editing helper; interactive persistence uses changes. */
+export type SectionBlockPatch = Readonly<{
   name?: string;
   containerMode?: SectionBlockContainerMode;
   cssClassName?: string;
   lcpPriority?: boolean;
   rows?: ReadonlyArray<BlockRow>;
-};
+}>;
 
-export type UpdateSectionBlockInput = {
+export type UpdateSectionBlockInput = Readonly<{
   pageId: string;
   blockId: BlockId;
-  patch: SectionBlockPatch;
-};
+  expectedBlocksRevision: number;
+  baselineLcpPriorityBlockId: string | null;
+  changes: UpdateSectionBlockChanges;
+}>;
 
 export type UpdateSectionBlockPatchInput = Omit<
   UpdateSectionBlockInput,
-  "pageId"
+  "pageId" | "blockId"
 >;
 
-export interface UpdateSectionBlockResult {
-  page: Page;
-
-  block: SectionBlock;
-
-  blocks: ReadonlyArray<Block>;
-}
+export type UpdateSectionBlockResult = PageBlocksMutationResult;

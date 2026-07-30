@@ -59,6 +59,11 @@ export type ImageDTO = Readonly<Image>;
 
 export type BlockDTO = Readonly<Block>;
 
+export type PageBlocksSnapshotDTO = Readonly<{
+  blocks: ReadonlyArray<BlockDTO>;
+  blocksRevision: number;
+}>;
+
 export type CellDTO = Readonly<Cell>;
 
 export type ImageEditorDTO = Readonly<ImageEditor>;

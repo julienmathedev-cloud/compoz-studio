@@ -11,8 +11,10 @@ import {
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
 import type {
+  BlockDTO,
+} from "@compoz/core/domain/pages/dto";
+import type {
   CreateSectionBlockIntentDTO,
-  ReorderBlocksIntentDTO,
   UpdateSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
 import type {
@@ -189,6 +191,10 @@ export const pagesStudioApi = {
   async deleteBlock(
     pageId: string,
     blockId: string,
+    payload: Readonly<{
+      expectedBlocksRevision: number;
+      baselineBlock: BlockDTO;
+    }>,
     opts?: HttpOpts,
   ): Promise<DeleteBlockResponse> {
     const encodedPageId = encodeSegment(pageId);
@@ -204,6 +210,7 @@ export const pagesStudioApi = {
       async () => {
         const res = await apiFetch<DeleteBlockResponse>(url, {
           method: "DELETE",
+          body: JSON.stringify(payload),
           ...(opts ?? {}),
         });
 
@@ -217,7 +224,11 @@ export const pagesStudioApi = {
 
   async reorderBlocks(
     pageId: string,
-    payload: ReorderBlocksIntentDTO,
+    payload: Readonly<{
+      expectedBlocksRevision: number;
+      baselineOrder: ReadonlyArray<string>;
+      localOrder: ReadonlyArray<string>;
+    }>,
     opts?: HttpOpts,
   ): Promise<ReorderBlocksResponse> {
     const encoded = encodeSegment(pageId);

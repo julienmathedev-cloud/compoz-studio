@@ -19,12 +19,16 @@ import { useEffect } from "react";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-import type { BlockDTO } from "@compoz/core/domain/pages/dto";
+import type {
+  BlockDTO,
+  PageBlocksSnapshotDTO,
+} from "@compoz/core/domain/pages/dto";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import type { ListPageBlocksResponse } from "@compoz/infra/http/studio/pages.types";
 import { log } from "@compoz/infra/lib/log";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
+import { adoptPageBlocksSnapshot } from "@compoz/studio/features/pages/blocks/cache/cache";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { withLoadLogs } from "@compoz/ui/hooks/instrumentation";
 
@@ -34,6 +38,8 @@ const EMPTY_BLOCKS: ReadonlyArray<BlockDTO> = [];
 
 type UseListPageBlocksResult = Readonly<{
   blocks: ReadonlyArray<BlockDTO>;
+  blocksRevision: number;
+  snapshot: PageBlocksSnapshotDTO | null;
   isLoading: boolean;
   isFetching: boolean;
 }>;
@@ -50,7 +56,7 @@ export function useListPageBlocks(
   const pageIdKey = String(pageId ?? "").trim();
   const enabled = Boolean(websiteId && pageIdKey);
 
-  const query = useQuery({
+  const query = useQuery<PageBlocksSnapshotDTO>({
     queryKey: pageBlocksKey(websiteId, pageIdKey, state),
     enabled,
 
@@ -58,7 +64,7 @@ export function useListPageBlocks(
       signal,
     }: {
       signal: AbortSignal;
-    }): Promise<ReadonlyArray<BlockDTO>> => {
+    }): Promise<PageBlocksSnapshotDTO> => {
       const response: ListPageBlocksResponse = await withLoadLogs(
         "useListPageBlocks",
         state,
@@ -79,10 +85,18 @@ export function useListPageBlocks(
         count: blocks.length,
       });
 
-      return blocks;
+      return {
+        blocks,
+        blocksRevision: response.blocksRevision,
+      };
     },
 
     refetchOnWindowFocus: false,
+    structuralSharing: (current, incoming) =>
+      adoptPageBlocksSnapshot(
+        current as PageBlocksSnapshotDTO | undefined,
+        incoming as PageBlocksSnapshotDTO,
+      ),
   });
 
   useEffect(() => {
@@ -99,7 +113,9 @@ export function useListPageBlocks(
   }, [query.error, websiteId, pageIdKey, state]);
 
   return {
-    blocks: enabled ? (query.data ?? EMPTY_BLOCKS) : EMPTY_BLOCKS,
+    blocks: enabled ? (query.data?.blocks ?? EMPTY_BLOCKS) : EMPTY_BLOCKS,
+    blocksRevision: enabled ? (query.data?.blocksRevision ?? 0) : 0,
+    snapshot: enabled ? (query.data ?? null) : null,
     isLoading: enabled ? query.isPending : false,
     isFetching: enabled ? query.isFetching : false,
   };

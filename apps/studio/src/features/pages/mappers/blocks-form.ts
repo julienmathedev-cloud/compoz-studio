@@ -33,6 +33,9 @@ type SectionColumnDTO = SectionRowDTO["columns"][number];
 type SectionRowFormValues = SectionBlockFormValues["rows"][number];
 type SectionColumnFormValues = SectionRowFormValues["columns"][number];
 type SectionRowReverseOnFormValues = SectionRowFormValues["reverseOn"];
+type UpdateRowsBaseline = NonNullable<
+  UpdateSectionBlockIntentDTO["changes"]["rows"]
+>["baseline"];
 
 function createUiId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -256,59 +259,68 @@ export function normalizeSectionBlockFormValuesForValidation(
 /** Builds a create-section-block API intent from RHF form values. */
 export function toCreateSectionBlockIntentDTOFromFormValues(args: {
   values: SectionBlockFormValues;
-  insertAt?: number;
+  expectedBlocksRevision: number;
+  baselineOrder: ReadonlyArray<string>;
+  baselineLcpPriorityBlockId: string | null;
 }): CreateSectionBlockIntentDTO {
-  const { values, insertAt } = args;
+  const { values } = args;
   const normalized = normalizeSectionBlockFormValuesForValidation(values);
 
   return {
+    expectedBlocksRevision: args.expectedBlocksRevision,
+    baselineOrder: [...args.baselineOrder],
+    baselineLcpPriorityBlockId: args.baselineLcpPriorityBlockId,
+    placement: { kind: "end" },
     ...(normalized.name ? { name: normalized.name } : {}),
     containerMode: normalized.containerMode,
     cssClassName: normalized.cssClassName,
     lcpPriority: normalized.lcpPriority,
     rows: normalized.rows,
-    insertAt,
   };
 }
 
-function toSectionBlockPatch(
-  patch: Partial<SectionBlockFormValues>,
-): UpdateSectionBlockIntentDTO["patch"] {
-  const output: UpdateSectionBlockIntentDTO["patch"] = {};
-
-  if ("name" in patch && patch.name !== undefined) {
-    output.name = normalizeName(patch.name);
-  }
-
-  if ("containerMode" in patch && patch.containerMode !== undefined) {
-    output.containerMode = normalizeContainerMode(patch.containerMode);
-  }
-
-  if ("cssClassName" in patch) {
-    output.cssClassName = normalizeCssClassName(patch.cssClassName);
-  }
-
-  if ("lcpPriority" in patch && patch.lcpPriority !== undefined) {
-    output.lcpPriority = Boolean(patch.lcpPriority);
-  }
-
-  if ("rows" in patch && patch.rows !== undefined) {
-    output.rows = normalizeRowsForValidation(patch.rows);
-  }
-
-  return output;
-}
-
-/** Builds an update-section-block API intent from a normalized form patch. */
+/** Builds changes against the exact persisted block and normalized local form. */
 export function toUpdateSectionBlockIntentDTOFromFormValues(args: {
-  blockId: string;
-  patch: Partial<SectionBlockFormValues>;
+  baselineBlock: BlockDTO;
+  local: SectionBlockFormValues;
+  expectedBlocksRevision: number;
+  baselineLcpPriorityBlockId: string | null;
 }): UpdateSectionBlockIntentDTO {
-  const { blockId, patch } = args;
-
+  const baselineBlock = args.baselineBlock;
+  const baselineForm = toSectionBlockFormValuesFromDTO(baselineBlock);
+  const local = normalizeSectionBlockFormValuesForValidation(args.local);
+  const changes: UpdateSectionBlockIntentDTO["changes"] = {};
+  if (baselineForm.name !== local.name) {
+    changes.name = { baseline: baselineBlock.name, local: local.name };
+  }
+  if (baselineForm.containerMode !== local.containerMode) {
+    changes.containerMode = {
+      baseline: baselineBlock.containerMode,
+      local: local.containerMode,
+    };
+  }
+  if (baselineForm.cssClassName !== local.cssClassName) {
+    changes.cssClassName = {
+      baseline: baselineBlock.cssClassName,
+      local: local.cssClassName || undefined,
+    };
+  }
+  if (baselineForm.lcpPriority !== local.lcpPriority) {
+    changes.lcpPriority = {
+      baseline: baselineBlock.lcpPriority,
+      local: local.lcpPriority,
+    };
+  }
+  if (JSON.stringify(baselineForm.rows) !== JSON.stringify(local.rows)) {
+    changes.rows = {
+      baseline: baselineBlock.rows as unknown as UpdateRowsBaseline,
+      local: local.rows,
+    };
+  }
   return {
-    blockId: String(blockId ?? "").trim(),
-    patch: toSectionBlockPatch(patch),
+    expectedBlocksRevision: args.expectedBlocksRevision,
+    baselineLcpPriorityBlockId: args.baselineLcpPriorityBlockId,
+    changes,
   };
 }
 
@@ -317,9 +329,9 @@ export function normalizeReorderBlocksIntentDTO(
   values: ReorderBlocksIntentDTO,
 ): ReorderBlocksIntentDTO {
   return {
-    orderedBlockIds: values.orderedBlockIds.map((id) =>
-      String(id ?? "").trim(),
-    ),
+    expectedBlocksRevision: values.expectedBlocksRevision,
+    baselineOrder: values.baselineOrder.map((id) => String(id ?? "").trim()),
+    localOrder: values.localOrder.map((id) => String(id ?? "").trim()),
   };
 }
 

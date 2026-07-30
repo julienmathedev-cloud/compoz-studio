@@ -17,11 +17,11 @@ const UPDATED_AT = "2026-07-29T10:00:00.000Z";
 type Calls = {
   findUnique: unknown[];
   findMany: unknown[];
-  update: unknown[];
+  updateMany: unknown[];
 };
 
-function repository(options?: { row?: unknown; rows?: unknown[] }) {
-  const calls: Calls = { findUnique: [], findMany: [], update: [] };
+function repository(options?: { row?: unknown; rows?: unknown[]; count?: number }) {
+  const calls: Calls = { findUnique: [], findMany: [], updateMany: [] };
   const client = {
     website: { upsert: async () => ({}) },
     page: {
@@ -33,9 +33,9 @@ function repository(options?: { row?: unknown; rows?: unknown[] }) {
         calls.findMany.push(args);
         return options?.rows ?? [];
       },
-      update: async (args: unknown) => {
-        calls.update.push(args);
-        return {};
+      updateMany: async (args: unknown) => {
+        calls.updateMany.push(args);
+        return { count: options?.count ?? 1 };
       },
     },
   };
@@ -90,27 +90,36 @@ void test("readManyById scopes by Website and draft state and preserves missing 
 void test("blocks writer cannot overwrite structure or metadata fields", async () => {
   const { calls, repository: pages } = repository();
 
-  await pages.updateDraftPageBlocks({
+  assert.equal(await pages.compareAndSetDraftPageBlocks({
     pageId: "page-a",
     blocks: [],
-    blocksRevision: 5,
+    expectedBlocksRevision: 5,
     metaUpdatedAt: UPDATED_AT,
-  });
+  }), true);
 
-  assert.deepEqual(calls.update, [
+  assert.deepEqual(calls.updateMany, [
     {
       where: {
-        websiteId_state_pageId: {
-          websiteId: WEBSITE_ID,
-          state: "draft",
-          pageId: "page-a",
-        },
+        websiteId: WEBSITE_ID,
+        state: "draft",
+        pageId: "page-a",
+        blocksRevision: 5,
       },
       data: {
         blocks: [],
-        blocksRevision: 5,
+        blocksRevision: { increment: 1 },
         metaUpdatedAt: new Date(UPDATED_AT),
       },
     },
   ]);
+});
+
+void test("blocks CAS returns false when no draft row matches the revision", async () => {
+  const { repository: pages } = repository({ count: 0 });
+  assert.equal(await pages.compareAndSetDraftPageBlocks({
+    pageId: "page-a",
+    blocks: [],
+    expectedBlocksRevision: 4,
+    metaUpdatedAt: UPDATED_AT,
+  }), false);
 });

@@ -13,8 +13,8 @@ import type {
   PageWithRevisions,
 } from "@compoz/core/domain/pages/entities/page";
 import type {
+  CompareAndSetDraftPageBlocksInput,
   PagesRepository,
-  UpdateDraftPageBlocksInput,
 } from "@compoz/core/domain/pages/ports/pages-repository";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import {
@@ -166,31 +166,32 @@ export class PrismaPagesRepository implements PagesRepository {
     });
   }
 
-  async updateDraftPageBlocks(
-    input: UpdateDraftPageBlocksInput,
-  ): Promise<void> {
+  async compareAndSetDraftPageBlocks(
+    input: CompareAndSetDraftPageBlocksInput,
+  ): Promise<boolean> {
     const pageId = normalizeValue(input.pageId);
 
     if (!pageId) {
       throw new Error(
-        "PrismaPagesRepository.updateDraftPageBlocks: input.pageId is required.",
+        "PrismaPagesRepository.compareAndSetDraftPageBlocks: input.pageId is required.",
       );
     }
 
-    await this.client.page.update({
+    const result = await this.client.page.updateMany({
       where: {
-        websiteId_state_pageId: {
-          websiteId: this.websiteId,
-          state: "draft",
-          pageId,
-        },
+        websiteId: this.websiteId,
+        state: "draft",
+        pageId,
+        blocksRevision: input.expectedBlocksRevision,
       },
       data: {
         blocks: toJsonValue(input.blocks),
-        blocksRevision: input.blocksRevision,
+        blocksRevision: { increment: 1 },
         metaUpdatedAt: new Date(input.metaUpdatedAt),
       },
     });
+
+    return result.count === 1;
   }
 
   async existsById(state: ContentState, pageId: string): Promise<boolean> {

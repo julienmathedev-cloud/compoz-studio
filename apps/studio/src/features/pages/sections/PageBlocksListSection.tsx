@@ -35,6 +35,7 @@ import { StudioWarningsPanel } from "@compoz/studio/features/_shared/components/
 import { useConfirmList } from "@compoz/studio/features/confirm/useConfirmList";
 import { useStudioDirtyGuard } from "@compoz/studio/features/dirty-guard/useStudioDirtyGuard";
 import { PageBlockListItem } from "@compoz/studio/features/pages/blocks/components/molecules/PageBlockListItem";
+import { BlockListConflictPanel } from "@compoz/studio/features/pages/blocks/conflicts/BlockListConflictPanel";
 import { useCreateBlock } from "@compoz/studio/features/pages/blocks/hooks/useCreateBlock";
 import { useDeleteBlock } from "@compoz/studio/features/pages/blocks/hooks/useDeleteBlock";
 import { useListPageBlocks } from "@compoz/studio/features/pages/blocks/hooks/useListPageBlocks";
@@ -115,7 +116,7 @@ export function PageBlocksListSection({
   const confirmList = useConfirmList();
   const backHref = `/${locale}/pages`;
 
-  const { blocks, isLoading } = useListPageBlocks(pageId);
+  const { blocks, blocksRevision, isLoading } = useListPageBlocks(pageId);
   const { index: siteIndex, isLoading: isLoadingIndex } = useReadSiteIndex();
   const { reorderChildren, isReordering: isReorderingChildren } =
     useReorderPageChildren();
@@ -431,9 +432,32 @@ export function PageBlocksListSection({
     return output;
   }, [blockStatuses.data, orderedBlocks, pageId]);
 
-  const { create, isCreating } = useCreateBlock();
-  const { remove, isDeleting, deletingBlockId } = useDeleteBlock();
-  const { reorder, isReordering } = useReorderBlocks();
+  const {
+    create,
+    isCreating,
+    conflict: createConflict,
+    clearConflict: clearCreateConflict,
+  } = useCreateBlock(pageId);
+  const {
+    remove,
+    isDeleting,
+    deletingBlockId,
+    conflict: deleteConflict,
+    clearConflict: clearDeleteConflict,
+  } = useDeleteBlock(pageId);
+  const {
+    reorder,
+    isReordering,
+    conflict: reorderConflict,
+    clearConflict: clearReorderConflict,
+  } = useReorderBlocks(pageId);
+  const blockConflict =
+    deleteConflict ?? reorderConflict ?? createConflict;
+  const clearBlockConflict = useCallback(() => {
+    clearCreateConflict();
+    clearDeleteConflict();
+    clearReorderConflict();
+  }, [clearCreateConflict, clearDeleteConflict, clearReorderConflict]);
 
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -613,7 +637,7 @@ export function PageBlocksListSection({
         containerMode: "contained",
       });
 
-      await create({ pageId, values, label: String(nextIndex) });
+      await create({ values, label: String(nextIndex) });
     } finally {
       setBusyId(null);
     }
@@ -626,7 +650,7 @@ export function PageBlocksListSection({
 
       try {
         setBusyId(blockIdToDelete);
-        await remove(pageId, blockIdToDelete);
+        await remove(blockIdToDelete);
       } finally {
         setBusyId(null);
       }
@@ -647,12 +671,16 @@ export function PageBlocksListSection({
 
       try {
         setBusyId(picked ?? "__reorder__");
-        await reorder(pageId, { orderedBlockIds: nextOrderedIds });
+        await reorder({
+          expectedBlocksRevision: blocksRevision,
+          baselineOrder: orderedIds,
+          localOrder: nextOrderedIds,
+        });
       } finally {
         setBusyId(null);
       }
     },
-    [busyId, isBusy, orderedBlocks, reorder, pageId],
+    [blocksRevision, busyId, isBusy, orderedBlocks, reorder, pageId],
   );
 
   const handleBlockDragEnd = useCallback(
@@ -669,16 +697,10 @@ export function PageBlocksListSection({
 
       if (oldIndex === -1 || newIndex === -1) return;
 
-      const previousBlocks = orderedBlocks;
       const nextBlocks = moveItem(orderedBlocks, oldIndex, newIndex);
 
       setOrderedBlocks(nextBlocks);
-
-      try {
-        await move(oldIndex, newIndex);
-      } catch {
-        setOrderedBlocks(previousBlocks);
-      }
+      await move(oldIndex, newIndex);
     },
     [move, orderedBlocks],
   );
@@ -769,6 +791,50 @@ export function PageBlocksListSection({
           {t("studio.pageBlocksListSection.bloc.back")}
         </Link>
       </Button>
+
+      {blockConflict ? (
+        <BlockListConflictPanel
+          details={blockConflict}
+          isPending={
+            blockConflict.operation === "create"
+              ? isCreating
+              : blockConflict.operation === "delete"
+                ? isDeleting
+                : blockConflict.operation === "reorder"
+                  ? isReordering
+                  : false
+          }
+          onUseCurrent={() => {
+            setOrderedBlocks(blockConflict.current.blocks);
+            clearBlockConflict();
+          }}
+          onForceDelete={
+            blockConflict.operation === "delete"
+              ? async () => {
+                  const changed = blockConflict.conflicts.find(
+                    (conflict) =>
+                      conflict.kind === "blockChangedBeforeDelete",
+                  );
+                  if (changed?.kind !== "blockChangedBeforeDelete") return;
+                  clearBlockConflict();
+                  await remove(changed.blockId);
+                }
+              : undefined
+          }
+          onRetryCreate={
+            blockConflict.operation === "create"
+              ? async () => {
+                  clearBlockConflict();
+                  await create({
+                    values: createEmptySectionBlock({
+                      containerMode: "contained",
+                    }),
+                  });
+                }
+              : undefined
+          }
+        />
+      ) : null}
 
       <Text
         as="p"

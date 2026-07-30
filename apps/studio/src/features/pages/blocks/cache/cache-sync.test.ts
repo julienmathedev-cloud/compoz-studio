@@ -13,7 +13,7 @@ import type {
   PageDTO,
   PageWithRevisionsDTO,
 } from "@compoz/core/domain/pages/dto";
-import { syncBlocksFromPageCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
+import { syncPageBlocksSnapshotCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
 
 function page(name: string, blockId: string): PageDTO {
@@ -58,14 +58,11 @@ void test("a block mutation patches only blocks in an existing revisioned page",
     current,
   );
 
-  syncBlocksFromPageCache(
+  syncPageBlocksSnapshotCache(
     queryClient,
     "website",
     "page",
-    {
-      ...page("Stale metadata", "new-block"),
-      parentId: "stale-parent",
-    },
+    { blocks: page("Stale metadata", "new-block").blocks, blocksRevision: 4 },
     "draft",
   );
 
@@ -78,17 +75,20 @@ void test("a block mutation patches only blocks in an existing revisioned page",
   assert.equal(cached?.page.parentId, "parent");
   assert.equal(cached?.page.seoTitle, "Current metadata title");
   assert.equal(cached?.page.paginationEnabled, true);
-  assert.deepEqual(cached?.revisions, current.revisions);
+  assert.deepEqual(cached?.revisions, {
+    metaRevision: 9,
+    blocksRevision: 4,
+  });
 });
 
 void test("a block mutation does not invent a page snapshot when none is cached", () => {
   const queryClient = new QueryClient();
 
-  syncBlocksFromPageCache(
+  syncPageBlocksSnapshotCache(
     queryClient,
     "website",
     "page",
-    page("Incoming", "new-block"),
+    { blocks: page("Incoming", "new-block").blocks, blocksRevision: 1 },
     "draft",
   );
 
@@ -98,4 +98,35 @@ void test("a block mutation does not invent a page snapshot when none is cached"
     ),
     undefined,
   );
+});
+
+void test("an authoritative equal-revision snapshot restores server blocks only", () => {
+  const queryClient = new QueryClient();
+  const current: PageWithRevisionsDTO = {
+    page: page("Current metadata", "optimistic"),
+    revisions: { metaRevision: 9, blocksRevision: 4 },
+  };
+  queryClient.setQueryData(
+    pageByIdKey("website", "page", "draft"),
+    current,
+  );
+
+  syncPageBlocksSnapshotCache(
+    queryClient,
+    "website",
+    "page",
+    { blocks: page("Ignored metadata", "server").blocks, blocksRevision: 4 },
+    "draft",
+    true,
+  );
+
+  const cached = queryClient.getQueryData<PageWithRevisionsDTO>(
+    pageByIdKey("website", "page", "draft"),
+  );
+  assert.equal(cached?.page.blocks[0]?.id, "server");
+  assert.equal(cached?.page.name, "Current metadata");
+  assert.deepEqual(cached?.revisions, {
+    metaRevision: 9,
+    blocksRevision: 4,
+  });
 });

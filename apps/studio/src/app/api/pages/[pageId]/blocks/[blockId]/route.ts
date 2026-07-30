@@ -14,10 +14,9 @@
 import "server-only";
 
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
-import type { PageDTO } from "@compoz/core/domain/pages/dto";
+import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import { deleteBlock } from "@compoz/core/domain/pages/use-cases/blocks/delete-block";
 import { updateSectionBlock } from "@compoz/core/domain/pages/use-cases/blocks/update-section-block";
-import { throwHttp } from "@compoz/http/http-error";
 import { readJsonOr400 } from "@compoz/infra/http/read-json";
 import type {
   DeleteBlockResponse,
@@ -26,12 +25,17 @@ import type {
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteStatusCache } from "@compoz/infra/site";
-import { adaptUpdateSectionBlockIntent } from "@compoz/studio/app/api/_adapters/pages/blocks/blocks";
+import {
+  adaptDeleteBlockIntent,
+  adaptUpdateSectionBlockIntent,
+} from "@compoz/studio/app/api/_adapters/pages/blocks/blocks";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
 import {
+  DeleteBlockIntentSchema,
+  type DeleteBlockIntentDTO,
   UpdateSectionBlockIntentSchema,
   type UpdateSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
@@ -97,6 +101,13 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
         );
 
         const body = await readJsonOr400(req);
+        if (
+          !body ||
+          typeof body !== "object" ||
+          !("expectedBlocksRevision" in body)
+        ) {
+          throw new DomainError({ code: EC.REVISION_REQUIRED });
+        }
 
         const dto: UpdateSectionBlockIntentDTO = parseDTOOrHttp(
           UpdateSectionBlockIntentSchema,
@@ -109,17 +120,6 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
           },
         );
 
-        if ("blockId" in dto && dto.blockId !== paramBlockId) {
-          throwHttp(400, {
-            code: EC.INVALID_ARGUMENT,
-            message: EC.BLOCK_ID_MISMATCH,
-            details: {
-              path: ["blockId"],
-              meta: { paramBlockId, bodyBlockId: dto.blockId },
-            },
-          });
-        }
-
         const pagesRepo = getPagesRepository({ websiteId });
         const statusCache = getSiteStatusCache({ websiteId });
 
@@ -129,20 +129,25 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
 
         const adapted = adaptUpdateSectionBlockIntent(dto);
 
-        const { page } = await runUpdate({
+        const result = await runUpdate({
           pageId,
           blockId: paramBlockId,
-          patch: adapted.patch,
+          ...adapted,
         });
 
-        await invalidateWebsiteStatusCache({
-          websiteId,
-          statusCache,
-          logger,
-        });
+        if (result.outcome === "updated") {
+          await invalidateWebsiteStatusCache({
+            websiteId,
+            statusCache,
+            logger,
+          });
+        }
 
         const res: UpdateSectionBlockResponse = {
-          page: page as PageDTO,
+          outcome: result.outcome,
+          blocks: result.blocks,
+          blocksRevision: result.blocksRevision,
+          affectedBlockId: result.affectedBlockId,
         };
 
         return res;
@@ -176,6 +181,25 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
           },
         );
 
+        const body = await readJsonOr400(req);
+        if (
+          !body ||
+          typeof body !== "object" ||
+          !("expectedBlocksRevision" in body)
+        ) {
+          throw new DomainError({ code: EC.REVISION_REQUIRED });
+        }
+        const dto: DeleteBlockIntentDTO = parseDTOOrHttp(
+          DeleteBlockIntentSchema,
+          body,
+          {
+            message: EC.VALIDATION_ERROR,
+            extras: {
+              where: "api.studio.pages.id.blocks.blockId.DELETE.payload",
+            },
+          },
+        );
+
         const pagesRepo = getPagesRepository({ websiteId });
         const statusCache = getSiteStatusCache({ websiteId });
 
@@ -183,19 +207,26 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
           pages: pagesRepo,
         });
 
-        const { page } = await runDelete({
+        const adapted = adaptDeleteBlockIntent(dto);
+        const result = await runDelete({
           pageId,
           blockId: paramBlockId,
+          ...adapted,
         });
 
-        await invalidateWebsiteStatusCache({
-          websiteId,
-          statusCache,
-          logger,
-        });
+        if (result.outcome === "updated") {
+          await invalidateWebsiteStatusCache({
+            websiteId,
+            statusCache,
+            logger,
+          });
+        }
 
         const res: DeleteBlockResponse = {
-          page: page as PageDTO,
+          outcome: result.outcome,
+          blocks: result.blocks,
+          blocksRevision: result.blocksRevision,
+          affectedBlockId: result.affectedBlockId,
         };
 
         return res;

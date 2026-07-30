@@ -51,11 +51,15 @@ export default async function BuilderPage({ params }: BuilderPageProps) {
   }
 
   const pagesRepo = getPagesRepository({ websiteId });
-  const page = await pagesRepo.readById(DEFAULT_CONTENT_STATE, pageId);
+  const pageRead = await pagesRepo.readByIdWithRevisions(
+    DEFAULT_CONTENT_STATE,
+    pageId,
+  );
 
-  if (!page) {
+  if (!pageRead) {
     notFound();
   }
+  const { page, revisions } = pageRead;
 
   const block = (page.blocks ?? []).find((item) => item.id === blockId);
 
@@ -70,7 +74,12 @@ export default async function BuilderPage({ params }: BuilderPageProps) {
       pageId={pageId}
       pageSlug={page.slug}
       blockId={blockId}
+      initialPersistedBlock={block}
       initialValues={initialValues}
+      initialBlocksRevision={revisions.blocksRevision}
+      initialLcpPriorityBlockId={
+        page.blocks.find((candidate) => candidate.lcpPriority)?.id ?? null
+      }
       isAdmin={isAdmin}
     />
   );

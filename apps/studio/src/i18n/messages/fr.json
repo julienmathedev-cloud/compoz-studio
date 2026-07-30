@@ -1679,6 +1679,35 @@
       }
     },
 
+    "pageBlocksConflict": {
+      "title": "Conflit sur les blocs de la page",
+      "updateTitle": "Conflit de contenu du bloc",
+      "operation": "Opération : {operation}",
+      "deletedOrChanged": "Le bloc a été supprimé ou transformé pendant votre édition.",
+      "baseline": "Base",
+      "remote": "Enregistré",
+      "local": "Local",
+      "useRemote": "Utiliser enregistré",
+      "keepLocal": "Conserver local",
+      "cancel": "Annuler",
+      "apply": "Appliquer les choix",
+      "currentOrder": "Ordre enregistré : {order}",
+      "localOrder": "Ordre local : {order}",
+      "added": "Ajoutés : {ids}",
+      "removed": "Supprimés : {ids}",
+      "none": "—",
+      "anchorMissing": "La position ciblée n’existe plus. Reprenez l’ajout depuis l’état courant.",
+      "deleteChanged": "Le bloc a été modifié depuis votre demande de suppression.",
+      "useCurrent": "Utiliser l’état enregistré",
+      "forceDelete": "Supprimer la version actuelle",
+      "recreate": "Recréer comme nouveau bloc",
+      "abandon": "Abandonner et revenir aux blocs",
+      "addAtEnd": "Ajouter explicitement à la fin",
+      "manualRebase": "Ce conflit structurel exige une reprise manuelle depuis l’état enregistré.",
+      "restartCurrent": "La révision n’est plus applicable. Repartez explicitement du snapshot enregistré.",
+      "keepDraft": "Conserver mon brouillon"
+    },
+
     "pageBlockEditHeader": {
       "blockTitle": {
         "label": "Titre du bloc",

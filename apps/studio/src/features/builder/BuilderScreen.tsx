@@ -18,6 +18,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   Control,
@@ -28,6 +29,7 @@ import type {
 } from "react-hook-form";
 import { useForm, useFormState, useWatch } from "react-hook-form";
 
+import type { BlockDTO } from "@compoz/core/domain/pages/dto";
 import { uploadImage } from "@compoz/infra/http/studio/media.client";
 import { log } from "@compoz/infra/lib/log";
 import {
@@ -35,10 +37,23 @@ import {
   type SectionFormStatusKind,
 } from "@compoz/studio/components/atoms/badges/SectionFormStatusBadge";
 import { BuilderCellDrawer } from "@compoz/studio/features/builder/BuilderCellDrawer";
+import { runBuilderBlockRecreation } from "@compoz/studio/features/builder/builder-block-recreation";
+import {
+  type BuilderBlockBaseline,
+  resolveBuilderMutationBaseline,
+  resolveBuilderSnapshotRebase,
+} from "@compoz/studio/features/builder/block-baseline";
 import { BuilderSidebar } from "@compoz/studio/features/builder/BuilderSidebar";
 import { useStudioDirtyGuard } from "@compoz/studio/features/dirty-guard/useStudioDirtyGuard";
 import { useListPageBlocks } from "@compoz/studio/features/pages/blocks/hooks/useListPageBlocks";
+import { useCreateBlock } from "@compoz/studio/features/pages/blocks/hooks/useCreateBlock";
 import { useUpdateBlock } from "@compoz/studio/features/pages/blocks/hooks/useUpdateBlock";
+import { BlockUpdateConflictPanel } from "@compoz/studio/features/pages/blocks/conflicts/BlockUpdateConflictPanel";
+import { BlockListConflictPanel } from "@compoz/studio/features/pages/blocks/conflicts/BlockListConflictPanel";
+import {
+  resolveBlockConflictCandidate,
+  type BlockConflictChoice,
+} from "@compoz/studio/features/pages/blocks/conflicts/resolve-block-conflict";
 import {
   normalizeSectionBlockFormValues,
   normalizeSectionBlockFormValuesForValidation,
@@ -132,7 +147,10 @@ type BuilderScreenProps = Readonly<{
   pageId: string;
   pageSlug: string;
   blockId: string;
+  initialPersistedBlock: BlockDTO;
   initialValues: SectionBlockFormValues;
+  initialBlocksRevision: number;
+  initialLcpPriorityBlockId: string | null;
   isAdmin: boolean;
 }>;
 
@@ -147,15 +165,31 @@ export function BuilderScreen({
   pageId,
   pageSlug,
   blockId,
+  initialPersistedBlock,
   initialValues,
+  initialBlocksRevision,
+  initialLcpPriorityBlockId,
   isAdmin,
 }: BuilderScreenProps) {
   const t = useTranslations();
   const locale = useLocale();
+  const router = useRouter();
   const dirtyGuard = useStudioDirtyGuard();
 
-  const { blocks } = useListPageBlocks(pageId);
-  const { update, isUpdating, updatingBlockId } = useUpdateBlock();
+  const { blocks, blocksRevision } = useListPageBlocks(pageId);
+  const {
+    update,
+    isUpdating,
+    updatingBlockId,
+    conflict: updateConflict,
+    clearConflict: clearUpdateConflict,
+  } = useUpdateBlock(pageId);
+  const {
+    create: recreateBlock,
+    conflict: recreateConflict,
+    clearConflict: clearRecreateConflict,
+    isCreating,
+  } = useCreateBlock(pageId);
 
   const backHref = `/${locale}/pages/${pageId}/blocks`;
   const previewSrc = `/preview/pages/${pageSlug}/blocks/${blockId}`;
@@ -163,15 +197,22 @@ export function BuilderScreen({
   const [selectedCellId, setSelectedCellId] = useState<string | undefined>();
   const [hoveredCellId, setHoveredCellId] = useState<string | undefined>();
 
-  const baseline = useMemo<SectionBlockFormValues>(() => {
+  const initialBaseline = useMemo<SectionBlockFormValues>(() => {
     return normalizeSectionBlockFormValues(initialValues);
   }, [initialValues]);
+  const [baseline, setBaselineValues] =
+    useState<SectionBlockFormValues>(initialBaseline);
 
   const baselineSig = useMemo(() => {
     return JSON.stringify(baseline);
   }, [baseline]);
 
-  const baselineRef = useRef<SectionBlockFormValues | null>(null);
+  const baselineRef = useRef<BuilderBlockBaseline>({
+    persistedBlock: initialPersistedBlock,
+    formValues: initialBaseline,
+    blocksRevision: initialBlocksRevision,
+    lcpPriorityBlockId: initialLcpPriorityBlockId,
+  });
   const prevBaselineSigRef = useRef<string | null>(null);
   const lastBaselinePreviewSigRef = useRef<string | null>(null);
   const lastDraftPreviewSigRef = useRef<string | null>(null);
@@ -296,11 +337,6 @@ export function BuilderScreen({
   }, [pageId, pageSlug, blockId]);
 
   useEffect(() => {
-    baselineRef.current =
-      normalizeSectionBlockFormValuesForValidation(baseline);
-  }, [baseline]);
-
-  useEffect(() => {
     const prevSig = prevBaselineSigRef.current;
     prevBaselineSigRef.current = baselineSig;
 
@@ -327,6 +363,24 @@ export function BuilderScreen({
   useEffect(() => {
     dirtyGuard.setDirty(Boolean(isDirty));
   }, [dirtyGuard, isDirty]);
+
+  useEffect(() => {
+    const rebase = resolveBuilderSnapshotRebase({
+      snapshot: { blocks, blocksRevision },
+      baselineRevision: baselineRef.current.blocksRevision,
+      blockId,
+      isDirty,
+    });
+    if (!rebase) return;
+    const nextBaseline = rebase.formValues;
+    baselineRef.current = rebase;
+    setBaselineValues(nextBaseline);
+    reset(nextBaseline, {
+      keepDirty: false,
+      keepTouched: false,
+      keepErrors: false,
+    });
+  }, [blockId, blocks, blocksRevision, isDirty, reset]);
 
   useEffect(() => {
     if (!isPreviewReady) return;
@@ -447,10 +501,6 @@ export function BuilderScreen({
       if (isUpdating) return;
 
       const baselineForPatch = baselineRef.current;
-      if (!baselineForPatch) {
-        lg.warn("save.skip.no-baseline-ref", { blockId: blockIdKey });
-        return;
-      }
 
       const normalizedNextForm = normalizeSectionBlockFormValues(values);
       const normalizedNextForValidation =
@@ -471,22 +521,35 @@ export function BuilderScreen({
       });
 
       try {
-        await update(
-          pageIdKey,
-          blockIdKey,
-          baselineForPatch,
-          normalizedNextForValidation,
-          hasOtherLcpPriority,
-        );
+        const response = await update({
+          blockId: blockIdKey,
+          baselineBlock: baselineForPatch.persistedBlock,
+          local: normalizedNextForValidation,
+          expectedBlocksRevision: baselineForPatch.blocksRevision,
+          baselineLcpPriorityBlockId: baselineForPatch.lcpPriorityBlockId,
+        });
 
         lg.debug("save.success", {
           pageId: pageIdKey,
           blockId: blockIdKey,
         });
 
-        baselineRef.current = normalizedNextForValidation;
+        const savedBaselineResult = resolveBuilderMutationBaseline({
+          response,
+          blockId: blockIdKey,
+        });
+        const savedValues = savedBaselineResult
+          ? savedBaselineResult.formValues
+          : normalizedNextForm;
+        const savedBaseline =
+          normalizeSectionBlockFormValuesForValidation(savedValues);
 
-        reset(normalizedNextForm, {
+        if (savedBaselineResult) {
+          baselineRef.current = savedBaselineResult;
+        }
+        setBaselineValues(savedValues);
+
+        reset(savedValues, {
           keepDirty: false,
           keepTouched: false,
           keepErrors: false,
@@ -496,7 +559,7 @@ export function BuilderScreen({
 
         const nextBaselinePreview = toSectionBlockShapeFromFormValues({
           blockId,
-          values: normalizedNextForValidation,
+          values: savedBaseline,
         });
 
         const nextBaselinePreviewSig = JSON.stringify(nextBaselinePreview);
@@ -564,7 +627,8 @@ export function BuilderScreen({
 
     const fallbackBaseline =
       normalizeSectionBlockFormValuesForValidation(baseline);
-    const nextBaselineForValidation = baselineRef.current ?? fallbackBaseline;
+    const nextBaselineForValidation =
+      baselineRef.current.formValues ?? fallbackBaseline;
     const nextBaselineForm = normalizeSectionBlockFormValues(
       nextBaselineForValidation,
     );
@@ -632,9 +696,137 @@ export function BuilderScreen({
     [frame],
   );
 
+  const handleResolveBlockConflict = useCallback(
+    async (choices: Readonly<Record<number, BlockConflictChoice>>) => {
+      if (!updateConflict) return;
+      const currentBlock = updateConflict.current.blocks.find(
+        (block) => block.id === blockId,
+      );
+      const candidate = resolveBlockConflictCandidate({
+        details: updateConflict,
+        choices,
+      });
+      if (!currentBlock || !candidate) return;
+
+      const candidateValues = toSectionBlockFormValuesFromDTO(candidate);
+      const response = await update({
+        blockId,
+        baselineBlock: currentBlock,
+        local: candidateValues,
+        expectedBlocksRevision: updateConflict.currentBlocksRevision,
+        baselineLcpPriorityBlockId:
+          updateConflict.current.blocks.find((block) => block.lcpPriority)?.id ??
+          null,
+      });
+      const saved = response.blocks.find((block) => block.id === blockId);
+      if (!saved) return;
+      const savedValues = toSectionBlockFormValuesFromDTO(saved);
+      const savedBaseline = resolveBuilderMutationBaseline({
+        response,
+        blockId,
+      });
+      if (!savedBaseline) return;
+      baselineRef.current = savedBaseline;
+      setBaselineValues(savedValues);
+      reset(savedValues, {
+        keepDirty: false,
+        keepTouched: false,
+        keepErrors: false,
+      });
+      dirtyGuard.setDirty(false);
+      clearUpdateConflict();
+    },
+    [
+      blockId,
+      clearUpdateConflict,
+      dirtyGuard,
+      reset,
+      update,
+      updateConflict,
+    ],
+  );
+
+  const handleAdoptCurrentSnapshot = useCallback(() => {
+    if (!updateConflict) return;
+    const currentBaseline = resolveBuilderMutationBaseline({
+      response: updateConflict.current,
+      blockId,
+    });
+    if (!currentBaseline) return;
+    baselineRef.current = currentBaseline;
+    setBaselineValues(currentBaseline.formValues);
+    reset(currentBaseline.formValues, {
+      keepDirty: false,
+      keepTouched: false,
+      keepErrors: false,
+    });
+    dirtyGuard.setDirty(false);
+    clearUpdateConflict();
+  }, [blockId, clearUpdateConflict, dirtyGuard, reset, updateConflict]);
+
+  const handleRecreateBlock = useCallback(
+    () =>
+      runBuilderBlockRecreation({
+        values: liveValues,
+        create: recreateBlock,
+        onSuccess: (createdBlockId) => {
+          clearUpdateConflict();
+          clearRecreateConflict();
+          dirtyGuard.setDirty(false);
+          router.push(
+            `/${locale}/pages/${pageId}/builder/${createdBlockId}`,
+          );
+        },
+      }),
+    [
+      clearRecreateConflict,
+      clearUpdateConflict,
+      dirtyGuard,
+      liveValues,
+      locale,
+      pageId,
+      recreateBlock,
+      router,
+    ],
+  );
+
   return (
+    <>
+      {recreateConflict ? (
+        <div className="fixed inset-x-4 top-4 z-50 mx-auto max-w-5xl">
+          <BlockListConflictPanel
+            details={recreateConflict}
+            isPending={isCreating}
+            onUseCurrent={() => {
+              clearRecreateConflict();
+              clearUpdateConflict();
+              dirtyGuard.setDirty(false);
+              router.push(backHref);
+            }}
+            onRetryCreate={() =>
+              handleRecreateBlock().catch(() => undefined)
+            }
+          />
+        </div>
+      ) : updateConflict ? (
+        <div className="fixed inset-x-4 top-4 z-50 mx-auto max-w-5xl">
+          <BlockUpdateConflictPanel
+            details={updateConflict}
+            onCancel={clearUpdateConflict}
+            onResolve={handleResolveBlockConflict}
+            onAdoptCurrent={handleAdoptCurrentSnapshot}
+            onAbandon={() => {
+              clearUpdateConflict();
+              router.push(backHref);
+            }}
+            onRecreate={handleRecreateBlock}
+          />
+        </div>
+      ) : null}
     <form
-      aria-busy={isSubmitting || isUpdatingThisBlock || undefined}
+      aria-busy={
+        isSubmitting || isUpdatingThisBlock || isCreating || undefined
+      }
       onSubmit={handleFormSubmit}
       noValidate
       className="flex min-h-0 min-w-0 flex-1"
@@ -703,6 +895,7 @@ export function BuilderScreen({
         onOpenChange={handleDrawerOpenChange}
       />
     </form>
+    </>
   );
 }
 

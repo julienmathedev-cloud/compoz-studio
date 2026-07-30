@@ -40,7 +40,10 @@ import type {
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import { Prisma, type PrismaClient } from "@compoz/infra/prisma/generated";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
-import { toDomainSiteIndex } from "@compoz/infra/site/mappers/site-index.mapper";
+import {
+  toDomainDraftSiteIndex,
+  toDomainSiteIndex,
+} from "@compoz/infra/site/mappers/site-index.mapper";
 import {
   toDomainSiteSettings,
   toDomainSiteSettingsWithRevisions,
@@ -179,8 +182,22 @@ export class PrismaSiteRepository implements SiteRepository {
 
     const transactionClient = client as Prisma.TransactionClient;
 
-    const [index, website] = await Promise.all([
-      this.readIndex(CONTENT_STATE.DRAFT),
+    const [pages, website] = await Promise.all([
+      transactionClient.page.findMany({
+        where: {
+          websiteId: this.websiteId,
+          state: "draft",
+        },
+        orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+        select: {
+          pageId: true,
+          slug: true,
+          name: true,
+          parentPageId: true,
+          metaRevision: true,
+          updatedAt: true,
+        },
+      }),
       transactionClient.website.findUnique({
         where: { id: this.websiteId },
         select: { draftStructureRevision: true },
@@ -194,7 +211,7 @@ export class PrismaSiteRepository implements SiteRepository {
     }
 
     return {
-      index,
+      index: toDomainDraftSiteIndex(pages),
       draftStructureRevision: website.draftStructureRevision,
     };
   }

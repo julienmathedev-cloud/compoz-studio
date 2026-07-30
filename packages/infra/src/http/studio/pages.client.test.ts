@@ -60,8 +60,11 @@ void test("create, parent PATCH, delete, and reorder serialize expectedDraftStru
     expectedDraftStructureRevision: 3,
   });
   await pagesStudioApi.update("page", {
-    parentId: "parent",
-    expectedDraftStructureRevision: 4,
+    parentChange: {
+      baseline: null,
+      local: "parent",
+      expectedDraftStructureRevision: 4,
+    },
   });
   await pagesStudioApi.remove("page", {
     expectedDraftStructureRevision: 5,
@@ -92,8 +95,11 @@ void test("create, parent PATCH, delete, and reorder serialize expectedDraftStru
       {
         method: "PATCH",
         body: {
-          parentId: "parent",
-          expectedDraftStructureRevision: 4,
+          parentChange: {
+            baseline: null,
+            local: "parent",
+            expectedDraftStructureRevision: 4,
+          },
         },
       },
       {

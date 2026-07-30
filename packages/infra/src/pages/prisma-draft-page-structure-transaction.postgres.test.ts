@@ -283,8 +283,11 @@ const scenarios: ConcurrentScenario[] = [
     commands: (first, second) => [
       first.update({
         pageId: "moving",
-        parentPageId: "root-b",
-        expectedDraftStructureRevision: 0,
+        parentChange: {
+          baseline: "root-a",
+          local: "root-b",
+          expectedDraftStructureRevision: 0,
+        },
       }),
       second.delete({
         pageId: "root-a",
@@ -518,13 +521,11 @@ for (const section of ["primary", "legal"] as const) {
         const [renameResult, menuResult] = await Promise.allSettled([
           structure.update({
             pageId: "page",
-            metadata: {
-              page: { ...page("page"), slug: "new" },
-              metaRevision: 0,
-            },
-            menuRenameExpectedRevisions: {
-              expectedPrimaryMenuRevision: 0,
-              expectedLegalMenuRevision: 0,
+            metadataChanges: {
+              expectedMetaRevision: 0,
+              changes: {
+                slug: { baseline: "old", local: "new" },
+              },
             },
           }),
           section === "primary"
@@ -559,25 +560,7 @@ for (const section of ["primary", "legal"] as const) {
         const renameWon = renameResult.status === "fulfilled";
         const menuWon =
           menuResult.status === "fulfilled" && menuResult.value !== null;
-        assert.notEqual(renameWon, menuWon, JSON.stringify({
-          rename:
-            renameResult.status === "rejected"
-              ? String(renameResult.reason)
-              : "fulfilled",
-          menu:
-            menuResult.status === "rejected"
-              ? String(menuResult.reason)
-              : menuResult.value === null
-                ? "null"
-                : "fulfilled",
-        }));
-        if (renameResult.status === "rejected") {
-          assert.ok(renameResult.reason instanceof DomainError);
-          assert.equal(
-            renameResult.reason.code,
-            "SETTINGS_SECTION_REVISION_CONFLICT",
-          );
-        }
+        assert.equal(renameWon, true);
 
         const [persistedPage, bundle, website] = await Promise.all([
           prisma.page.findUniqueOrThrow({
@@ -592,14 +575,14 @@ for (const section of ["primary", "legal"] as const) {
           site.readSettingsWithRevisions(CONTENT_STATE.DRAFT),
           prisma.website.findUniqueOrThrow({ where: { id: websiteId } }),
         ]);
-        assert.equal(persistedPage.slug, renameWon ? "new" : "old");
-        assert.equal(persistedPage.metaRevision, renameWon ? 1 : 0);
+        assert.equal(persistedPage.slug, "new");
+        assert.equal(persistedPage.metaRevision, 1);
         assert.equal(website.draftStructureRevision, 0);
         const href =
           section === "primary"
             ? bundle.settings.primaryMenu.items[0]?.href
             : bundle.settings.legalMenu.items[0]?.href;
-        assert.equal(href, renameWon ? "/new" : "/concurrent");
+        assert.equal(href, menuWon ? "/concurrent" : "/new");
       } finally {
         await cleanup(prisma, websiteId);
         await prisma.$disconnect();
@@ -637,13 +620,11 @@ void test(
       const [renamed, footer] = await Promise.all([
         structure.update({
           pageId: "page",
-          metadata: {
-            page: { ...page("page"), slug: "new" },
-            metaRevision: 0,
-          },
-          menuRenameExpectedRevisions: {
-            expectedPrimaryMenuRevision: 0,
-            expectedLegalMenuRevision: 0,
+          metadataChanges: {
+            expectedMetaRevision: 0,
+            changes: {
+              slug: { baseline: "old", local: "new" },
+            },
           },
         }),
         site.compareAndSetDraftFooter({
@@ -690,29 +671,36 @@ void test(
         orderBy: { position: "asc" },
       });
 
+      const transaction = new PrismaDraftPageStructureTransaction({
+        websiteId,
+        client: prisma,
+        hook: async ({ stage }) => {
+          if (stage !== "beforeMenuCas") return;
+          await prisma.siteSettings.updateMany({
+            where: { websiteId, state: "draft" },
+            data: { primaryMenuRevision: { increment: 1 } },
+          });
+        },
+      });
       await assert.rejects(
         () =>
-          new PrismaDraftPageStructureTransaction({
-            websiteId,
-            client: prisma,
-          }).update({
+          transaction.update({
             pageId: "moving",
-            parentPageId: "root-b",
-            expectedDraftStructureRevision: 0,
-            metadata: {
-              page: {
-                ...page("moving", "root-b"),
-                slug: "new",
-              },
-              metaRevision: 0,
+            parentChange: {
+              baseline: "root-a",
+              local: "root-b",
+              expectedDraftStructureRevision: 0,
             },
-            menuRenameExpectedRevisions: {
-              expectedPrimaryMenuRevision: 9,
+            metadataChanges: {
+              expectedMetaRevision: 0,
+              changes: {
+                slug: { baseline: "old", local: "new" },
+              },
             },
           }),
         (error: unknown) =>
           error instanceof DomainError &&
-          error.code === "SETTINGS_SECTION_REVISION_CONFLICT",
+          error.code === "CONFLICT",
       );
 
       const [after, website, bundle] = await Promise.all([
@@ -725,10 +713,450 @@ void test(
       ]);
       assert.deepEqual(after, before);
       assert.equal(website.draftStructureRevision, 0);
-      assert.equal(bundle.revisions.primaryMenuRevision, 0);
+      assert.equal(bundle.revisions.primaryMenuRevision, 3);
       assert.equal(bundle.settings.primaryMenu.items[0]?.href, "/old");
     } finally {
       await cleanup(prisma, websiteId);
+      await prisma.$disconnect();
+    }
+  },
+);
+
+void test(
+  "metadata merges independent and identical changes while rejecting contradictions",
+  { skip },
+  async () => {
+    const prisma = client();
+    const websiteId = `occ-metadata-merge-${randomUUID()}`;
+    try {
+      await seed(prisma, websiteId, [page("page")]);
+      const transaction = new PrismaDraftPageStructureTransaction({
+        websiteId,
+        client: prisma,
+      });
+
+      const renamed = await transaction.update({
+        pageId: "page",
+        metadataChanges: {
+          expectedMetaRevision: 0,
+          changes: {
+            name: { baseline: "page", local: "Renamed" },
+          },
+        },
+      });
+      const independent = await transaction.update({
+        pageId: "page",
+        metadataChanges: {
+          expectedMetaRevision: 0,
+          changes: {
+            seoTitle: { baseline: null, local: "SEO" },
+          },
+        },
+      });
+      const identical = await transaction.update({
+        pageId: "page",
+        metadataChanges: {
+          expectedMetaRevision: 0,
+          changes: {
+            name: { baseline: "page", local: "Renamed" },
+          },
+        },
+      });
+
+      assert.equal(renamed.revisions.metaRevision, 1);
+      assert.equal(independent.page.name, "Renamed");
+      assert.equal(independent.page.seoTitle, "SEO");
+      assert.equal(independent.revisions.metaRevision, 2);
+      assert.equal(identical.revisions.metaRevision, 2);
+      assert.equal(identical.revisions.blocksRevision, 0);
+
+      let metadataConflict: DomainError | undefined;
+      try {
+        await transaction.update({
+          pageId: "page",
+          metadataChanges: {
+            expectedMetaRevision: 0,
+            changes: {
+              name: { baseline: "page", local: "Other" },
+              seoTitle: { baseline: null, local: "Other SEO" },
+            },
+          },
+        });
+      } catch (error) {
+        if (
+          error instanceof DomainError &&
+          error.code === "PAGE_METADATA_REVISION_CONFLICT"
+        ) {
+          metadataConflict = error;
+        } else {
+          throw error;
+        }
+      }
+      assert.ok(metadataConflict);
+      assert.ok(
+        metadataConflict.details !== null &&
+          typeof metadataConflict.details === "object",
+      );
+      const conflicts = Reflect.get(
+        metadataConflict.details,
+        "conflicts",
+      );
+      assert.ok(Array.isArray(conflicts));
+      assert.deepEqual(
+        conflicts.map((conflict) =>
+          conflict !== null && typeof conflict === "object"
+            ? Reflect.get(conflict, "field")
+            : undefined,
+        ),
+        ["name", "seoTitle"],
+      );
+      const persisted = await prisma.page.findUniqueOrThrow({
+        where: {
+          websiteId_state_pageId: {
+            websiteId,
+            state: "draft",
+            pageId: "page",
+          },
+        },
+      });
+      assert.equal(persisted.name, "Renamed");
+      assert.equal(persisted.seoTitle, "SEO");
+      assert.equal(persisted.metaRevision, 2);
+      assert.equal(persisted.blocksRevision, 0);
+    } finally {
+      await cleanup(prisma, websiteId);
+      await prisma.$disconnect();
+    }
+  },
+);
+
+void test(
+  "metadata CAS retries after a post-read race and preserves concurrent blocks",
+  { skip },
+  async () => {
+    const prisma = client();
+    const websiteId = `occ-metadata-retry-${randomUUID()}`;
+    let raced = false;
+    try {
+      await seed(prisma, websiteId, [page("page")]);
+      const transaction = new PrismaDraftPageStructureTransaction({
+        websiteId,
+        client: prisma,
+        hook: async ({ stage }) => {
+          if (stage !== "afterRead" || raced) return;
+          raced = true;
+          await prisma.page.updateMany({
+            where: { websiteId, state: "draft", pageId: "page" },
+            data: {
+              name: "Remote",
+              metaRevision: { increment: 1 },
+              blocks: [
+                {
+                  id: "remote-block",
+                  type: "section",
+                  name: "Remote block",
+                  containerMode: "contained",
+                  lcpPriority: false,
+                  rows: [],
+                },
+              ],
+              blocksRevision: { increment: 1 },
+            },
+          });
+        },
+      });
+
+      const result = await transaction.update({
+        pageId: "page",
+        metadataChanges: {
+          expectedMetaRevision: 0,
+          changes: {
+            seoTitle: { baseline: null, local: "SEO" },
+          },
+        },
+      });
+      assert.equal(result.page.name, "Remote");
+      assert.equal(result.page.seoTitle, "SEO");
+      assert.equal(result.page.blocks[0]?.id, "remote-block");
+      assert.deepEqual(result.revisions, {
+        metaRevision: 2,
+        blocksRevision: 1,
+      });
+    } finally {
+      await cleanup(prisma, websiteId);
+      await prisma.$disconnect();
+    }
+  },
+);
+
+void test(
+  "metadata retry reclassifies a race as a contradiction and bounds repeated contention",
+  { skip },
+  async () => {
+    const prisma = client();
+    const conflictWebsiteId = `occ-metadata-conflict-${randomUUID()}`;
+    const boundWebsiteId = `occ-metadata-bound-${randomUUID()}`;
+    try {
+      await seed(prisma, conflictWebsiteId, [page("page")]);
+      let raced = false;
+      const conflictTransaction = new PrismaDraftPageStructureTransaction({
+        websiteId: conflictWebsiteId,
+        client: prisma,
+        hook: async ({ stage }) => {
+          if (stage !== "afterRead" || raced) return;
+          raced = true;
+          await prisma.page.updateMany({
+            where: {
+              websiteId: conflictWebsiteId,
+              state: "draft",
+              pageId: "page",
+            },
+            data: { name: "Remote", metaRevision: { increment: 1 } },
+          });
+        },
+      });
+      await assert.rejects(
+        () =>
+          conflictTransaction.update({
+            pageId: "page",
+            metadataChanges: {
+              expectedMetaRevision: 0,
+              changes: {
+                name: { baseline: "page", local: "Local" },
+              },
+            },
+          }),
+        (error: unknown) =>
+          error instanceof DomainError &&
+          error.code === "PAGE_METADATA_REVISION_CONFLICT",
+      );
+
+      await seed(prisma, boundWebsiteId, [page("page")]);
+      let attempts = 0;
+      const boundTransaction = new PrismaDraftPageStructureTransaction({
+        websiteId: boundWebsiteId,
+        client: prisma,
+        hook: async ({ stage }) => {
+          if (stage !== "beforeMetadataCas") return;
+          attempts += 1;
+          await prisma.page.updateMany({
+            where: {
+              websiteId: boundWebsiteId,
+              state: "draft",
+              pageId: "page",
+            },
+            data: { metaRevision: { increment: 1 } },
+          });
+        },
+      });
+      await assert.rejects(
+        () =>
+          boundTransaction.update({
+            pageId: "page",
+            metadataChanges: {
+              expectedMetaRevision: 0,
+              changes: {
+                seoTitle: { baseline: null, local: "SEO" },
+              },
+            },
+          }),
+        (error: unknown) =>
+          error instanceof DomainError && error.code === "CONFLICT",
+      );
+      assert.equal(attempts, 3);
+      const bounded = await prisma.page.findUniqueOrThrow({
+        where: {
+          websiteId_state_pageId: {
+            websiteId: boundWebsiteId,
+            state: "draft",
+            pageId: "page",
+          },
+        },
+      });
+      assert.equal(bounded.seoTitle, null);
+      assert.equal(bounded.metaRevision, 3);
+    } finally {
+      await cleanup(prisma, conflictWebsiteId);
+      await cleanup(prisma, boundWebsiteId);
+      await prisma.$disconnect();
+    }
+  },
+);
+
+void test(
+  "metadata and parent stay atomic while parent normalization increments metadata only when required",
+  { skip },
+  async () => {
+    const prisma = client();
+    const successWebsiteId = `occ-composite-success-${randomUUID()}`;
+    const metadataConflictWebsiteId =
+      `occ-composite-metadata-conflict-${randomUUID()}`;
+    const structureConflictWebsiteId =
+      `occ-composite-structure-conflict-${randomUUID()}`;
+    const paginationWebsiteId =
+      `occ-composite-pagination-${randomUUID()}`;
+    const websiteIds = [
+      successWebsiteId,
+      metadataConflictWebsiteId,
+      structureConflictWebsiteId,
+      paginationWebsiteId,
+    ];
+
+    try {
+      await seed(prisma, successWebsiteId, [
+        page("root-a"),
+        page("moving", "root-a"),
+        page("root-b"),
+      ]);
+      const success = await new PrismaDraftPageStructureTransaction({
+        websiteId: successWebsiteId,
+        client: prisma,
+      }).update({
+        pageId: "moving",
+        metadataChanges: {
+          expectedMetaRevision: 0,
+          changes: {
+            name: { baseline: "moving", local: "Renamed" },
+          },
+        },
+        parentChange: {
+          baseline: "root-a",
+          local: "root-b",
+          expectedDraftStructureRevision: 0,
+        },
+      });
+      assert.equal(success.page.name, "Renamed");
+      assert.equal(success.page.parentId, "root-b");
+      assert.deepEqual(success.revisions, {
+        metaRevision: 1,
+        blocksRevision: 0,
+      });
+      assert.equal(success.structure?.draftStructureRevision, 1);
+
+      await seed(prisma, metadataConflictWebsiteId, [
+        page("root-a"),
+        page("moving", "root-a"),
+        page("root-b"),
+      ]);
+      await prisma.page.updateMany({
+        where: {
+          websiteId: metadataConflictWebsiteId,
+          state: "draft",
+          pageId: "moving",
+        },
+        data: {
+          name: "Remote",
+          metaRevision: { increment: 1 },
+        },
+      });
+      await assert.rejects(
+        () =>
+          new PrismaDraftPageStructureTransaction({
+            websiteId: metadataConflictWebsiteId,
+            client: prisma,
+          }).update({
+            pageId: "moving",
+            metadataChanges: {
+              expectedMetaRevision: 0,
+              changes: {
+                name: { baseline: "moving", local: "Local" },
+              },
+            },
+            parentChange: {
+              baseline: "root-a",
+              local: "root-b",
+              expectedDraftStructureRevision: 0,
+            },
+          }),
+        (error: unknown) =>
+          error instanceof DomainError &&
+          error.code === "PAGE_METADATA_REVISION_CONFLICT",
+      );
+      const afterMetadataConflict =
+        await prisma.page.findUniqueOrThrow({
+          where: {
+            websiteId_state_pageId: {
+              websiteId: metadataConflictWebsiteId,
+              state: "draft",
+              pageId: "moving",
+            },
+          },
+        });
+      assert.equal(afterMetadataConflict.name, "Remote");
+      assert.equal(afterMetadataConflict.parentPageId, "root-a");
+
+      await seed(prisma, structureConflictWebsiteId, [
+        page("root-a"),
+        page("moving", "root-a"),
+        page("root-b"),
+      ]);
+      await prisma.website.update({
+        where: { id: structureConflictWebsiteId },
+        data: { draftStructureRevision: { increment: 1 } },
+      });
+      await assert.rejects(
+        () =>
+          new PrismaDraftPageStructureTransaction({
+            websiteId: structureConflictWebsiteId,
+            client: prisma,
+          }).update({
+            pageId: "moving",
+            metadataChanges: {
+              expectedMetaRevision: 0,
+              changes: {
+                name: { baseline: "moving", local: "Local" },
+              },
+            },
+            parentChange: {
+              baseline: "root-a",
+              local: "root-b",
+              expectedDraftStructureRevision: 0,
+            },
+          }),
+        (error: unknown) =>
+          error instanceof DomainError &&
+          error.code === "DRAFT_STRUCTURE_REVISION_CONFLICT",
+      );
+      const afterStructureConflict =
+        await prisma.page.findUniqueOrThrow({
+          where: {
+            websiteId_state_pageId: {
+              websiteId: structureConflictWebsiteId,
+              state: "draft",
+              pageId: "moving",
+            },
+          },
+        });
+      assert.equal(afterStructureConflict.name, "moving");
+      assert.equal(afterStructureConflict.metaRevision, 0);
+      assert.equal(afterStructureConflict.parentPageId, "root-a");
+
+      await seed(prisma, paginationWebsiteId, [
+        page("root-a"),
+        page("moving", "root-a"),
+      ]);
+      const normalized = await new PrismaDraftPageStructureTransaction({
+        websiteId: paginationWebsiteId,
+        client: prisma,
+      }).update({
+        pageId: "moving",
+        parentChange: {
+          baseline: "root-a",
+          local: null,
+          expectedDraftStructureRevision: 0,
+        },
+      });
+      assert.equal(normalized.page.parentId, null);
+      assert.equal(normalized.page.paginationEnabled, false);
+      assert.deepEqual(normalized.revisions, {
+        metaRevision: 1,
+        blocksRevision: 0,
+      });
+      assert.equal(normalized.structure?.draftStructureRevision, 1);
+    } finally {
+      for (const websiteId of websiteIds) {
+        await cleanup(prisma, websiteId);
+      }
       await prisma.$disconnect();
     }
   },

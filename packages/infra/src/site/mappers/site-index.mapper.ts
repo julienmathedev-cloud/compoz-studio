@@ -9,14 +9,21 @@ import {
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
 
-import type { PageSummary } from "@compoz/core/domain/pages/entities/page";
-import type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
+import type {
+  DraftPageSummary,
+  PageSummary,
+} from "@compoz/core/domain/pages/entities/page";
+import type {
+  DraftSiteIndex,
+  SiteIndex,
+} from "@compoz/core/domain/site/entities/site-index";
 
 export type PrismaSiteIndexPageRow = {
   pageId: string;
   slug: string;
   name: string;
   parentPageId: string | null;
+  metaRevision?: number;
   updatedAt: Date;
 };
 
@@ -57,6 +64,28 @@ export function toDomainSiteIndex(
 
   return {
     pages: pages.map(toDomainPageSummary),
+    updatedAt: getLatestUpdatedAt(pages).toISOString(),
+  };
+}
+
+export function toDomainDraftPageSummary(
+  page: PrismaSiteIndexPageRow & { metaRevision: number },
+): DraftPageSummary {
+  return {
+    ...toDomainPageSummary(page),
+    metaRevision: page.metaRevision,
+  };
+}
+
+export function toDomainDraftSiteIndex(
+  pages: ReadonlyArray<PrismaSiteIndexPageRow & { metaRevision: number }>,
+): DraftSiteIndex {
+  if (pages.length === 0) {
+    return { pages: [], updatedAt: new Date().toISOString() };
+  }
+
+  return {
+    pages: pages.map(toDomainDraftPageSummary),
     updatedAt: getLatestUpdatedAt(pages).toISOString(),
   };
 }

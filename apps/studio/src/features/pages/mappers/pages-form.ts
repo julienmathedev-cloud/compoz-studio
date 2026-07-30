@@ -1,14 +1,7 @@
 /**
  * @file apps/studio/src/features/pages/mappers/pages-form.ts
  * @layer studio/features/pages/mappers
- *
- * @description
- * Studio page form mappers for DTO-to-RHF values, UI normalization, and API intents.
- *
- * @remarks
- * - Delegates DTO-to-form shaping to the shared `toPageShapeFromDTO` mapper.
- * - Normalizes nullable SEO and sitemap fields before API intent creation.
- * - Does not own draft/published state; callers provide the content-state context.
+ * @description Page form mapping, canonical normalization, and targeted OCC intent construction.
  */
 
 import type { PageDTO } from "@compoz/core/domain/pages/dto";
@@ -26,7 +19,15 @@ const DEFAULT_SITEMAP: NonNullable<PageFormValues["sitemap"]> = {
   changefreq: null,
 };
 
-/** Converts a page DTO to Studio page form values through the shared page-shape mapper. */
+export type PageFormDirtyFields = Partial<
+  Readonly<Record<keyof PageFormValues, unknown>>
+>;
+
+export type PageFormSubmissionResult =
+  | Readonly<{ rebaseValues: PageFormValues }>
+  | Readonly<{ rebaseParentId: string | null }>
+  | void;
+
 export function toPageFormValuesFromDTO(
   page: PageDTO | null | undefined,
   slugFallback?: string,
@@ -34,20 +35,37 @@ export function toPageFormValuesFromDTO(
   return toPageShapeFromDTO(page, slugFallback);
 }
 
-// UI form normalization.
+export function toPageFormValuesFromDraftSources(
+  page: PageDTO | null | undefined,
+  structuralParentId: string | null | undefined,
+  slugFallback?: string,
+): PageFormValues {
+  const values = toPageFormValuesFromDTO(page, slugFallback);
+
+  return {
+    ...values,
+    parentId:
+      structuralParentId === undefined
+        ? values.parentId
+        : structuralParentId,
+  };
+}
+
 export function normalizePageFormValues(
   values: PageFormValues,
 ): PageFormValues {
   return {
     name: String(values.name ?? "").trim(),
     seoTitle:
-      values.seoTitle !== null ? String(values.seoTitle ?? "").trim() : null,
+      values.seoTitle !== null
+        ? String(values.seoTitle ?? "").trim() || null
+        : null,
     seoDescription:
       values.seoDescription !== null
         ? String(values.seoDescription ?? "").trim() || null
         : null,
     parentId: values.parentId ?? null,
-    slug: String(values.slug ?? "").trim(),
+    slug: toSlugIntentInput(String(values.slug ?? "").trim()),
     sitemap: values.sitemap
       ? {
           include: values.sitemap.include ?? DEFAULT_SITEMAP.include,
@@ -59,7 +77,19 @@ export function normalizePageFormValues(
   };
 }
 
-// API intent helpers.
+function sitemapEquals(
+  left: PageFormValues["sitemap"],
+  right: PageFormValues["sitemap"],
+): boolean {
+  if (left === null || right === null) return left === right;
+
+  return (
+    left?.include === right?.include &&
+    left?.priority === right?.priority &&
+    left?.changefreq === right?.changefreq
+  );
+}
+
 function toPageSitemapIntentDTOFromFormValues(
   values: PageFormValues["sitemap"],
 ): CreatePageIntentDTO["sitemap"] {
@@ -72,7 +102,22 @@ function toPageSitemapIntentDTOFromFormValues(
   };
 }
 
-// UI form values -> API intents.
+function toFullPageSitemapIntentDTO(
+  values: PageFormValues["sitemap"],
+): NonNullable<
+  NonNullable<
+    UpdatePageIntentDTO["metadataChanges"]
+  >["changes"]["sitemap"]
+>["baseline"] {
+  if (!values) return null;
+
+  return {
+    include: values.include ?? DEFAULT_SITEMAP.include,
+    changefreq: values.changefreq ?? DEFAULT_SITEMAP.changefreq,
+    priority: values.priority ?? DEFAULT_SITEMAP.priority,
+  };
+}
+
 export function toCreatePageIntentDTOFromFormValues(
   values: PageFormValues,
   expectedDraftStructureRevision: number,
@@ -92,46 +137,76 @@ export function toCreatePageIntentDTOFromFormValues(
   };
 }
 
-export function toUpdatePageIntentDTOFromFormValues(
-  patch: Partial<PageFormValues>,
-): UpdatePageIntentDTO {
-  const output: UpdatePageIntentDTO = {};
+export function toUpdatePageIntentDTOFromFormValues(input: Readonly<{
+  baseline: PageFormValues;
+  local: PageFormValues;
+  expectedMetaRevision: number;
+  expectedDraftStructureRevision?: number;
+  dirtyFields?: PageFormDirtyFields;
+}>): UpdatePageIntentDTO {
+  const baseline = normalizePageFormValues(input.baseline);
+  const local = normalizePageFormValues(input.local);
+  const changes: NonNullable<
+    UpdatePageIntentDTO["metadataChanges"]
+  >["changes"] = {};
 
-  if ("name" in patch && patch.name !== undefined) {
-    output.name = String(patch.name ?? "").trim();
+  if (baseline.name !== local.name) {
+    changes.name = { baseline: baseline.name, local: local.name };
+  }
+  if (baseline.slug !== local.slug) {
+    changes.slug = { baseline: baseline.slug, local: local.slug };
+  }
+  if (baseline.seoTitle !== local.seoTitle) {
+    changes.seoTitle = {
+      baseline: baseline.seoTitle,
+      local: local.seoTitle,
+    };
+  }
+  if (baseline.seoDescription !== local.seoDescription) {
+    changes.seoDescription = {
+      baseline: baseline.seoDescription,
+      local: local.seoDescription,
+    };
+  }
+  if (!sitemapEquals(baseline.sitemap, local.sitemap)) {
+    changes.sitemap = {
+      baseline: toFullPageSitemapIntentDTO(baseline.sitemap),
+      local: toFullPageSitemapIntentDTO(local.sitemap),
+    };
+  }
+  if (baseline.paginationEnabled !== local.paginationEnabled) {
+    changes.paginationEnabled = {
+      baseline: baseline.paginationEnabled,
+      local: local.paginationEnabled,
+    };
   }
 
-  if ("seoTitle" in patch) {
-    output.seoTitle =
-      patch.seoTitle !== null && patch.seoTitle !== undefined
-        ? String(patch.seoTitle).trim()
-        : null;
-  }
+  const hasMetadataChanges = Object.keys(changes).length > 0;
+  const parentChanged = baseline.parentId !== local.parentId;
 
-  if ("seoDescription" in patch) {
-    output.seoDescription =
-      patch.seoDescription !== null && patch.seoDescription !== undefined
-        ? String(patch.seoDescription).trim() || null
-        : null;
-  }
-
-  if ("slug" in patch && patch.slug !== undefined) {
-    output.slug = toSlugIntentInput(patch.slug);
-  }
-
-  if ("parentId" in patch) {
-    output.parentId = patch.parentId ?? null;
-  }
-
-  if ("paginationEnabled" in patch) {
-    output.paginationEnabled = Boolean(patch.paginationEnabled);
-  }
-
-  if ("sitemap" in patch) {
-    output.sitemap = toPageSitemapIntentDTOFromFormValues(
-      patch.sitemap ?? null,
-    );
-  }
-
-  return output;
+  return {
+    ...(hasMetadataChanges
+      ? {
+          metadataChanges: {
+            expectedMetaRevision: input.expectedMetaRevision,
+            changes,
+          },
+        }
+      : {}),
+    ...(parentChanged
+      ? {
+          parentChange: {
+            baseline: baseline.parentId,
+            local: local.parentId,
+            expectedDraftStructureRevision:
+              input.expectedDraftStructureRevision ??
+              (() => {
+                throw new Error(
+                  "A draft structure revision is required for a parent change.",
+                );
+              })(),
+          },
+        }
+      : {}),
+  };
 }

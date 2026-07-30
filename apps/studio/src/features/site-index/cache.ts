@@ -51,13 +51,57 @@ export function adoptDraftStructureSnapshot(
 ): DraftSiteIndexWithRevisionDTO {
   if (!current) return incoming;
 
-  if (
-    incoming.draftStructureRevision <= current.draftStructureRevision
-  ) {
-    return current;
-  }
+  const incomingStructureIsNewer =
+    incoming.draftStructureRevision > current.draftStructureRevision;
+  const structural = incomingStructureIsNewer ? incoming : current;
+  const currentById = new Map(
+    current.index.pages.map((page) => [page.id, page]),
+  );
+  const incomingById = new Map(
+    incoming.index.pages.map((page) => [page.id, page]),
+  );
+  let metadataChanged = false;
 
-  return incoming;
+  const pages = structural.index.pages.map((structuralPage) => {
+    const currentPage = currentById.get(structuralPage.id);
+    const incomingPage = incomingById.get(structuralPage.id);
+    if (!currentPage || !incomingPage) return structuralPage;
+
+    const metadata =
+      (incomingPage.metaRevision ?? 0) >
+      (currentPage.metaRevision ?? 0)
+        ? incomingPage
+        : currentPage;
+    if (
+      metadata.name === structuralPage.name &&
+      metadata.slug === structuralPage.slug &&
+      metadata.metaRevision === structuralPage.metaRevision
+    ) {
+      return structuralPage;
+    }
+
+    metadataChanged = true;
+    return {
+      ...structuralPage,
+      name: metadata.name,
+      slug: metadata.slug,
+      metaRevision: metadata.metaRevision,
+    };
+  });
+
+  if (!metadataChanged) return structural;
+
+  return {
+    ...structural,
+    index: {
+      ...structural.index,
+      pages,
+      updatedAt:
+        incoming.index.updatedAt > current.index.updatedAt
+          ? incoming.index.updatedAt
+          : current.index.updatedAt,
+    },
+  };
 }
 
 /**
@@ -146,18 +190,17 @@ export function adoptDraftStructurePagePatch(
     parentId: string | null;
     slug: string;
     name: string;
+    metaRevision: number;
   }>,
 ): DraftSiteIndexWithRevisionDTO {
-  if (
-    current &&
-    incoming.draftStructureRevision <
-      current.draftStructureRevision
-  ) {
-    return current;
-  }
-
   const adopted = adoptDraftStructureSnapshot(current, incoming);
-  if (!adopted.index.pages.some((item) => item.id === page.id)) {
+  const currentPage = adopted.index.pages.find(
+    (item) => item.id === page.id,
+  );
+  if (
+    !currentPage ||
+    page.metaRevision <= (currentPage.metaRevision ?? 0)
+  ) {
     return adopted;
   }
 
@@ -169,9 +212,9 @@ export function adoptDraftStructurePagePatch(
         item.id === page.id
           ? {
               ...item,
-              parentId: page.parentId,
               slug: page.slug,
               name: page.name,
+              metaRevision: page.metaRevision,
             }
           : item,
       ),
@@ -188,6 +231,7 @@ export function adoptDraftStructurePagePatchCache(
     parentId: string | null;
     slug: string;
     name: string;
+    metaRevision: number;
   }>,
   state: ContentState = DEFAULT_CONTENT_STATE,
 ): void {
@@ -200,6 +244,52 @@ export function adoptDraftStructurePagePatchCache(
     siteIndexKey(websiteIdKey, state),
     (current: DraftSiteIndexWithRevisionDTO | undefined) =>
       adoptDraftStructurePagePatch(current, incoming, page),
+  );
+}
+
+export function patchDraftPageMetadataCache(
+  queryClient: QueryClient,
+  websiteId: unknown,
+  page: Readonly<{
+    id: string;
+    slug: string;
+    name: string;
+    metaRevision: number;
+  }>,
+  state: ContentState = DEFAULT_CONTENT_STATE,
+): void {
+  patchDraftStructureCache(
+    queryClient,
+    websiteId,
+    state,
+    (current) => {
+      const currentPage = current.index.pages.find(
+        (item) => item.id === page.id,
+      );
+      if (
+        !currentPage ||
+        page.metaRevision <= (currentPage.metaRevision ?? 0)
+      ) {
+        return current;
+      }
+
+      return {
+        ...current,
+        index: {
+          ...current.index,
+          pages: current.index.pages.map((item) =>
+            item.id === page.id
+              ? {
+                  ...item,
+                  name: page.name,
+                  slug: page.slug,
+                  metaRevision: page.metaRevision,
+                }
+              : item,
+          ),
+        },
+      };
+    },
   );
 }
 

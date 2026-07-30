@@ -28,18 +28,6 @@ export type CreateDraftPageInput = Readonly<{
   metaUpdatedAt: string;
 }>;
 
-export type UpdateDraftPageMetadataInput = Readonly<{
-  pageId: string;
-  slug: string;
-  name: string;
-  seoTitle: string | null;
-  seoDescription: string | null;
-  sitemap: PageSitemap | null;
-  paginationEnabled: boolean;
-  metaRevision: number;
-  metaUpdatedAt: string;
-}>;
-
 export type UpdateDraftPageBlocksInput = Readonly<{
   pageId: string;
   blocks: ReadonlyArray<Block>;
@@ -67,10 +55,6 @@ export interface PagesRepository {
     state: ContentState,
     pageIds: ReadonlyArray<string>,
   ): Promise<Array<Page | null>>;
-
-  updateDraftPageMetadata(
-    input: UpdateDraftPageMetadataInput,
-  ): Promise<void>;
 
   updateDraftPageBlocks(input: UpdateDraftPageBlocksInput): Promise<void>;
 

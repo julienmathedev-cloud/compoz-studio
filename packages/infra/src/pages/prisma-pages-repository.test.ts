@@ -9,10 +9,7 @@ import test from "node:test";
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { PrismaPagesRepository } from "@compoz/infra/pages/prisma-pages-repository";
-import {
-  Prisma,
-  type PrismaClient,
-} from "@compoz/infra/prisma/generated";
+import type { PrismaClient } from "@compoz/infra/prisma/generated";
 
 const WEBSITE_ID = "website-a";
 const UPDATED_AT = "2026-07-29T10:00:00.000Z";
@@ -85,44 +82,6 @@ void test("readManyById scopes by Website and draft state and preserves missing 
         websiteId: WEBSITE_ID,
         state: "draft",
         pageId: { in: ["a", "b"] },
-      },
-    },
-  ]);
-});
-
-void test("metadata writer keeps its strict allowlist", async () => {
-  const { calls, repository: pages } = repository();
-
-  await pages.updateDraftPageMetadata({
-    pageId: "page-a",
-    slug: "renamed",
-    name: "Renamed",
-    seoTitle: null,
-    seoDescription: "Description",
-    sitemap: null,
-    paginationEnabled: false,
-    metaRevision: 7,
-    metaUpdatedAt: UPDATED_AT,
-  });
-
-  assert.deepEqual(calls.update, [
-    {
-      where: {
-        websiteId_state_pageId: {
-          websiteId: WEBSITE_ID,
-          state: "draft",
-          pageId: "page-a",
-        },
-      },
-      data: {
-        slug: "renamed",
-        name: "Renamed",
-        seoTitle: null,
-        seoDescription: "Description",
-        sitemap: Prisma.JsonNull,
-        paginationEnabled: false,
-        metaRevision: 7,
-        metaUpdatedAt: new Date(UPDATED_AT),
       },
     },
   ]);

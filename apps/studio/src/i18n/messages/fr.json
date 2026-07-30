@@ -1546,6 +1546,25 @@
       },
       "errors": {
         "originalMissing": "Impossible d’enregistrer : la page d’origine est introuvable. Rechargez l’index et réessayez."
+      },
+      "conflict": {
+        "title": "Des métadonnées ont été modifiées ailleurs",
+        "description": "Choisissez la valeur à conserver pour chaque champ, puis enregistrez de nouveau.",
+        "baseline": "Valeur initiale",
+        "local": "Votre valeur",
+        "remote": "Valeur distante",
+        "keepLocal": "Conserver ma valeur",
+        "adoptRemote": "Adopter la valeur distante",
+        "restoreInitial": "Revenir à la valeur initiale",
+        "resolved": "Tous les conflits sont résolus. Confirmez une nouvelle sauvegarde.",
+        "fields": {
+          "name": "Nom",
+          "slug": "Slug",
+          "seoTitle": "Titre SEO",
+          "seoDescription": "Description SEO",
+          "sitemap": "Sitemap",
+          "paginationEnabled": "Pagination"
+        }
       }
     },
 

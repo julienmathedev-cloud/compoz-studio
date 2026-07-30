@@ -1,7 +1,7 @@
 /**
  * @file packages/infra/src/pages/prisma-draft-page-structure-transaction.test.ts
  * @layer infra/pages
- * @description In-memory Prisma protocol tests for locked draft structure mutations.
+ * @description In-memory Prisma protocol tests for atomic draft page OCC mutations.
  * @remarks The invalid DATABASE_URL used by the test command is never contacted.
  */
 
@@ -49,6 +49,14 @@ type Row = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+type FakeOptions = Readonly<{
+  structureRevision?: number;
+  primaryHref?: string;
+  legalHref?: string;
+  metadataCasMisses?: number;
+  menuCasMisses?: number;
+}>;
 
 function row(
   pageId: string,
@@ -98,46 +106,43 @@ function domainPage(pageId: string, parentId: string | null): Page {
   };
 }
 
-function fakeTransaction(
-  initialRows: Row[],
-  initialRevision = 2,
-  menuHrefs?: Readonly<{ primary?: string; legal?: string }>,
-) {
-  let rows = initialRows.map((item) => ({ ...item }));
-  let revision = initialRevision;
+function fakeTransaction(initialRows: Row[], options: FakeOptions = {}) {
+  let rows = structuredClone(initialRows);
+  let revision = options.structureRevision ?? 2;
+  let metadataCasMisses = options.metadataCasMisses ?? 0;
+  let menuCasMisses = options.menuCasMisses ?? 0;
   const calls: string[] = [];
-  const args = {
-    findMany: [] as unknown[],
-    updateMany: [] as unknown[],
-    deleteMany: [] as unknown[],
-    websiteUpdate: [] as unknown[],
-    settingsUpdate: [] as unknown[],
-  };
+  const pageWrites: Array<{
+    where: Record<string, unknown>;
+    data: Record<string, unknown>;
+  }> = [];
+  const settingsWrites: unknown[] = [];
+  const websiteWrites: unknown[] = [];
   let settings = {
     websiteId: WEBSITE_ID,
     state: "draft" as const,
     header: DEFAULT_HEADER_SETTINGS,
     footer: DEFAULT_FOOTER_SETTINGS,
-    primaryMenu: menuHrefs?.primary
+    primaryMenu: options.primaryHref
       ? {
           items: [
             {
               id: "primary-page",
               label: "Page",
-              href: rel(menuHrefs.primary),
+              href: rel(options.primaryHref),
               newTab: false,
               children: [],
             },
           ],
         }
       : DEFAULT_PRIMARY_MENU_SETTINGS,
-    legalMenu: menuHrefs?.legal
+    legalMenu: options.legalHref
       ? {
           items: [
             {
               id: "legal-page",
               label: "Page",
-              href: rel(menuHrefs.legal),
+              href: rel(options.legalHref),
               newTab: false,
             },
           ],
@@ -160,16 +165,13 @@ function fakeTransaction(
   const tx = {
     website: {
       findUnique: async (input: { select?: { id?: boolean } }) => {
-        calls.push(
-          input.select?.id ? "website.exists" : "website.revision",
-        );
+        calls.push(input.select?.id ? "website.exists" : "website.revision");
         return input.select?.id
           ? { id: WEBSITE_ID }
           : { draftStructureRevision: revision };
       },
       update: async (input: unknown) => {
-        calls.push("website.increment");
-        args.websiteUpdate.push(input);
+        websiteWrites.push(input);
         revision += 1;
         return { draftStructureRevision: revision };
       },
@@ -179,25 +181,36 @@ function fakeTransaction(
       return [{ id: WEBSITE_ID }];
     },
     page: {
-      findMany: async (input: unknown) => {
-        calls.push("page.read");
-        args.findMany.push(input);
-        return rows
+      findMany: async () =>
+        rows
           .filter(
             (item) =>
               item.websiteId === WEBSITE_ID && item.state === "draft",
           )
-          .sort((a, b) => a.position - b.position);
-      },
+          .sort((left, right) => left.position - right.position),
+      findFirst: async (input: {
+        where: {
+          websiteId: string;
+          state: string;
+          slug: string;
+          pageId?: { not?: string };
+        };
+      }) =>
+        rows.find(
+          (item) =>
+            item.websiteId === input.where.websiteId &&
+            item.state === input.where.state &&
+            item.slug === input.where.slug &&
+            item.pageId !== input.where.pageId?.not,
+        ) ?? null,
       create: async (input: { data: Row }) => {
-        calls.push("page.create");
         rows.push({
           ...input.data,
+          id: `row-${input.data.pageId}`,
           sitemap:
             input.data.sitemap === Prisma.JsonNull
               ? null
               : input.data.sitemap,
-          id: `row-${input.data.pageId}`,
           createdAt: NOW,
           updatedAt: NOW,
         });
@@ -207,26 +220,43 @@ function fakeTransaction(
         where: Record<string, unknown>;
         data: Record<string, unknown>;
       }) => {
-        calls.push("page.updateMany");
-        args.updateMany.push(input);
+        pageWrites.push(input);
+        if ("metaRevision" in input.where && metadataCasMisses > 0) {
+          metadataCasMisses -= 1;
+          return { count: 0 };
+        }
+
         let count = 0;
         rows = rows.map((item) => {
-          const where = input.where;
-          const pageIds = (where["pageId"] as { in?: string[] } | string | undefined);
-          const matchesPage =
-            typeof pageIds === "string"
-              ? item.pageId === pageIds
-              : Array.isArray(pageIds?.in)
-                ? pageIds.in.includes(item.pageId)
-                : true;
-          const matchesParent =
-            !("parentPageId" in where) ||
-            item.parentPageId === where["parentPageId"];
+          const pageConstraint = input.where["pageId"] as
+            | string
+            | { in?: string[]; not?: string }
+            | undefined;
+          const pageMatches =
+            typeof pageConstraint === "string"
+              ? item.pageId === pageConstraint
+              : Array.isArray(pageConstraint?.in)
+                ? pageConstraint.in.includes(item.pageId)
+                : pageConstraint?.not
+                  ? item.pageId !== pageConstraint.not
+                  : true;
+          const parentMatches =
+            !("parentPageId" in input.where) ||
+            item.parentPageId === input.where["parentPageId"];
+          const metadataMatches =
+            !("metaRevision" in input.where) ||
+            item.metaRevision === input.where["metaRevision"];
+          const paginationMatches =
+            !("paginationEnabled" in input.where) ||
+            item.paginationEnabled === input.where["paginationEnabled"];
+
           if (
-            item.websiteId !== where["websiteId"] ||
-            item.state !== where["state"] ||
-            !matchesPage ||
-            !matchesParent
+            item.websiteId !== input.where["websiteId"] ||
+            item.state !== input.where["state"] ||
+            !pageMatches ||
+            !parentMatches ||
+            !metadataMatches ||
+            !paginationMatches
           ) {
             return item;
           }
@@ -259,8 +289,6 @@ function fakeTransaction(
       deleteMany: async (input: {
         where: { websiteId: string; state: string; pageId: string };
       }) => {
-        calls.push("page.deleteMany");
-        args.deleteMany.push(input);
         const before = rows.length;
         rows = rows.filter(
           (item) =>
@@ -287,17 +315,18 @@ function fakeTransaction(
           legalMenuRevision?: { increment: number };
         };
       }) => {
-        args.settingsUpdate.push(input);
-        if (
-          input.where.primaryMenuRevision !== undefined &&
-          input.where.primaryMenuRevision !==
-            settings.primaryMenuRevision
-        ) {
+        settingsWrites.push(input);
+        if (menuCasMisses > 0) {
+          menuCasMisses -= 1;
           return { count: 0 };
         }
         if (
-          input.where.legalMenuRevision !== undefined &&
-          input.where.legalMenuRevision !== settings.legalMenuRevision
+          (input.where.primaryMenuRevision !== undefined &&
+            input.where.primaryMenuRevision !==
+              settings.primaryMenuRevision) ||
+          (input.where.legalMenuRevision !== undefined &&
+            input.where.legalMenuRevision !==
+              settings.legalMenuRevision)
         ) {
           return { count: 0 };
         }
@@ -325,14 +354,27 @@ function fakeTransaction(
   const runner = {
     $transaction: async <T>(
       callback: (client: Prisma.TransactionClient) => Promise<T>,
-    ) => callback(tx as unknown as Prisma.TransactionClient),
+    ) => {
+      const rowsBefore = structuredClone(rows);
+      const revisionBefore = revision;
+      const settingsBefore = structuredClone(settings);
+      try {
+        return await callback(tx as unknown as Prisma.TransactionClient);
+      } catch (error) {
+        rows = rowsBefore;
+        revision = revisionBefore;
+        settings = settingsBefore;
+        throw error;
+      }
+    },
   } as Pick<PrismaClient, "$transaction">;
 
   return {
     calls,
-    args,
+    pageWrites,
+    settingsWrites,
+    websiteWrites,
     rows: () => rows,
-    revision: () => revision,
     settings: () => settings,
     transaction: new PrismaDraftPageStructureTransaction({
       websiteId: WEBSITE_ID,
@@ -342,432 +384,371 @@ function fakeTransaction(
   };
 }
 
-void test("identical reorder locks and validates but performs no writes or revision increment", async () => {
+void test("reorder locks, validates and increments structure only for a real change", async () => {
   const fake = fakeTransaction([
     row("parent", null, 0),
     row("a", "parent", 1),
     row("b", "parent", 2),
   ]);
 
-  const result = await fake.transaction.reorder({
+  const same = await fake.transaction.reorder({
     parentPageId: "parent",
     orderedPageIds: ["a", "b"],
     expectedDraftStructureRevision: 2,
   });
+  const changed = await fake.transaction.reorder({
+    parentPageId: "parent",
+    orderedPageIds: ["b", "a"],
+    expectedDraftStructureRevision: 2,
+  });
 
-  assert.equal(result.draftStructureRevision, 2);
-  assert.deepEqual(fake.args.updateMany, []);
-  assert.deepEqual(fake.args.websiteUpdate, []);
-  assert.deepEqual(fake.calls.slice(0, 4), [
-    "website.exists",
-    "website.lock",
-    "website.revision",
-    "page.read",
+  assert.equal(same.draftStructureRevision, 2);
+  assert.equal(changed.draftStructureRevision, 3);
+  assert.equal(fake.websiteWrites.length, 1);
+  assert.ok(fake.calls.indexOf("website.lock") >= 0);
+});
+
+void test("create and delete preserve structure planning and pagination normalization", async () => {
+  const fake = fakeTransaction([
+    row("root", null, 0),
+    row("child", "root", 1, {
+      paginationEnabled: true,
+      metaRevision: 4,
+    }),
+  ]);
+  await fake.transaction.create({
+    expectedDraftStructureRevision: 2,
+    page: domainPage("other", null),
+  });
+  const deleted = await fake.transaction.delete({
+    pageId: "root",
+    expectedDraftStructureRevision: 3,
+  });
+
+  assert.equal(deleted.draftStructureRevision, 4);
+  assert.equal(
+    fake.rows().find((item) => item.pageId === "child")?.paginationEnabled,
+    false,
+  );
+  assert.equal(
+    fake.rows().find((item) => item.pageId === "child")?.metaRevision,
+    5,
+  );
+});
+
+void test("metadata CAS writes only resolved columns and leaves blocks and structure untouched", async () => {
+  const fake = fakeTransaction([
+    row("page", "parent", 0, {
+      name: "Page",
+      blocks: [],
+      blocksRevision: 7,
+      metaRevision: 4,
+    }),
+  ]);
+  const result = await fake.transaction.update({
+    pageId: "page",
+    metadataChanges: {
+      expectedMetaRevision: 4,
+      changes: {
+        name: { baseline: "Page", local: "Renamed" },
+      },
+    },
+  });
+
+  assert.equal(result.page.name, "Renamed");
+  assert.deepEqual(result.revisions, {
+    metaRevision: 5,
+    blocksRevision: 7,
+  });
+  assert.equal(result.structure, undefined);
+  const write = fake.pageWrites.find(
+    (item) => "metaRevision" in item.where,
+  );
+  assert.deepEqual(write?.where, {
+    websiteId: WEBSITE_ID,
+    state: "draft",
+    pageId: "page",
+    metaRevision: 4,
+  });
+  assert.deepEqual(Object.keys(write?.data ?? {}).sort(), [
+    "metaRevision",
+    "metaUpdatedAt",
+    "name",
   ]);
 });
 
-void test("stale revision returns the current snapshot and performs no write", async () => {
-  const fake = fakeTransaction([row("page", null, 0)], 8);
+void test("same final metadata change and an empty command are no-ops", async () => {
+  const fake = fakeTransaction([
+    row("page", null, 0, { name: "Renamed", metaRevision: 5 }),
+  ]);
+  const converged = await fake.transaction.update({
+    pageId: "page",
+    metadataChanges: {
+      expectedMetaRevision: 4,
+      changes: {
+        name: { baseline: "Page", local: "Renamed" },
+      },
+    },
+  });
+  const empty = await fake.transaction.update({ pageId: "page" });
+
+  assert.equal(converged.revisions.metaRevision, 5);
+  assert.equal(empty.structure, undefined);
+  assert.deepEqual(fake.pageWrites, []);
+});
+
+void test("all contradictory metadata fields are reported before any write", async () => {
+  const fake = fakeTransaction([
+    row("page", null, 0, {
+      name: "Remote",
+      slug: "remote",
+      metaRevision: 6,
+    }),
+  ]);
 
   await assert.rejects(
     () =>
-      fake.transaction.delete({
+      fake.transaction.update({
         pageId: "page",
-        expectedDraftStructureRevision: 7,
+        metadataChanges: {
+          expectedMetaRevision: 4,
+          changes: {
+            name: { baseline: "Page", local: "Local" },
+            slug: { baseline: "page", local: "local" },
+          },
+        },
       }),
     (error: unknown) => {
       assert.ok(error instanceof DomainError);
-      assert.equal(error.code, "DRAFT_STRUCTURE_REVISION_CONFLICT");
-      assert.deepEqual(error.details, {
-        expectedDraftStructureRevision: 7,
-        currentDraftStructureRevision: 8,
-        current: {
-          index: {
-            pages: [
-              {
-                id: "page",
-                slug: "page",
-                name: "page",
-                parentId: null,
-              },
-            ],
-            updatedAt: NOW.toISOString(),
-          },
-          draftStructureRevision: 8,
-        },
-      });
+      assert.equal(error.code, "PAGE_METADATA_REVISION_CONFLICT");
+      const details = error.details as {
+        conflicts: Array<{ field: string }>;
+      };
+      assert.deepEqual(
+        details.conflicts.map((item) => item.field),
+        ["name", "slug"],
+      );
       return true;
     },
   );
-
-  assert.deepEqual(fake.args.updateMany, []);
-  assert.deepEqual(fake.args.deleteMany, []);
-  assert.deepEqual(fake.args.websiteUpdate, []);
+  assert.deepEqual(fake.pageWrites, []);
 });
 
-void test("delete scopes every write, detaches children, fixes pagination selectively, and increments once", async () => {
+void test("metadata and parent writes are atomic and structure is returned only for a real move", async () => {
   const fake = fakeTransaction([
-    row("target", null, 0),
-    row("paginated", "target", 4, {
-      paginationEnabled: true,
-      metaRevision: 5,
-    }),
-    row("plain", "target", 8, { metaRevision: 9 }),
+    row("parent", null, 0),
+    row("page", null, 1, { name: "Page", metaRevision: 2 }),
   ]);
-
-  const result = await fake.transaction.delete({
-    pageId: "target",
-    expectedDraftStructureRevision: 2,
-  });
-
-  assert.equal(result.draftStructureRevision, 3);
-  assert.deepEqual(
-    fake.rows().map((item) => ({
-      id: item.pageId,
-      parent: item.parentPageId,
-      pagination: item.paginationEnabled,
-      metaRevision: item.metaRevision,
-      position: item.position,
-    })),
-    [
-      {
-        id: "paginated",
-        parent: null,
-        pagination: false,
-        metaRevision: 6,
-        position: 0,
-      },
-      {
-        id: "plain",
-        parent: null,
-        pagination: false,
-        metaRevision: 9,
-        position: 1,
-      },
-    ],
-  );
-  assert.equal(fake.args.websiteUpdate.length, 1);
-  assert.deepEqual(fake.args.deleteMany, [
-    {
-      where: {
-        websiteId: WEBSITE_ID,
-        state: "draft",
-        pageId: "target",
-      },
-    },
-  ]);
-  assert.ok(
-    fake.args.updateMany.every((value) => {
-      const where = (value as { where: Record<string, unknown> }).where;
-      return where["websiteId"] === WEBSITE_ID && where["state"] === "draft";
-    }),
-  );
-});
-
-void test("create allocates and normalizes positions under the Website lock", async () => {
-  const fake = fakeTransaction([
-    row("root", null, 3),
-    row("child", "root", 9),
-  ]);
-
-  const result = await fake.transaction.create({
-    expectedDraftStructureRevision: 2,
-    page: domainPage("child-2", "root"),
-  });
-
-  assert.equal(result.draftStructureRevision, 3);
-  assert.deepEqual(
-    fake.rows().map((item) => [item.pageId, item.position]),
-    [
-      ["root", 0],
-      ["child", 1],
-      ["child-2", 2],
-    ],
-  );
-  assert.ok(
-    fake.calls.indexOf("website.lock") < fake.calls.indexOf("page.create"),
-  );
-});
-
-void test("same-parent metadata PATCH stays atomic without incrementing the structure revision", async () => {
-  const fake = fakeTransaction([row("page", null, 0)]);
-  const updated = {
-    ...domainPage("page", null),
-    name: "Renamed",
-    meta: {
-      createdAt: NOW.toISOString(),
-      updatedAt: "2026-07-29T11:00:00.000Z",
-    },
-  };
-
   const result = await fake.transaction.update({
     pageId: "page",
-    parentPageId: null,
-    expectedDraftStructureRevision: 2,
-    metadata: { page: updated, metaRevision: 0 },
-  });
-
-  assert.equal(result.draftStructureRevision, 2);
-  assert.equal(result.page.name, "Renamed");
-  assert.deepEqual(fake.args.websiteUpdate, []);
-  const metadataWrite = fake.args.updateMany[0] as {
-    data: Record<string, unknown>;
-  };
-  assert.equal("parentPageId" in metadataWrite.data, false);
-});
-
-void test("slug rename updates only referenced menu sections through transaction-scoped CAS", async () => {
-  const fake = fakeTransaction(
-    [row("page", null, 0, { slug: "old" })],
-    2,
-    { primary: "/old", legal: "/old" },
-  );
-  const updated = {
-    ...domainPage("page", null),
-    slug: "new",
-  };
-
-  await fake.transaction.update({
-    pageId: "page",
-    metadata: { page: updated, metaRevision: 0 },
-    menuRenameExpectedRevisions: {
-      expectedPrimaryMenuRevision: 0,
-      expectedLegalMenuRevision: 0,
+    metadataChanges: {
+      expectedMetaRevision: 2,
+      changes: {
+        name: { baseline: "Page", local: "Renamed" },
+      },
+    },
+    parentChange: {
+      baseline: null,
+      local: "parent",
+      expectedDraftStructureRevision: 2,
     },
   });
 
-  assert.equal(fake.args.settingsUpdate.length, 2);
-  assert.equal(fake.settings().primaryMenuRevision, 1);
-  assert.equal(fake.settings().legalMenuRevision, 1);
-  assert.equal(fake.settings().primaryMenu.items[0]?.href, "/new");
-  assert.equal(fake.settings().legalMenu.items[0]?.href, "/new");
+  assert.equal(result.page.parentId, "parent");
+  assert.equal(result.page.name, "Renamed");
+  assert.equal(result.structure?.draftStructureRevision, 3);
+  assert.equal(result.revisions.metaRevision, 3);
 });
 
-for (const [name, menuHrefs, expectedSections] of [
-  ["primary", { primary: "/old" }, 1],
-  ["legal", { legal: "/old" }, 1],
+void test("metadata conflict rolls back parent and structure conflict prevents metadata", async () => {
+  const metadataConflict = fakeTransaction([
+    row("parent", null, 0),
+    row("page", null, 1, { name: "Remote", metaRevision: 3 }),
+  ]);
+  await assert.rejects(() =>
+    metadataConflict.transaction.update({
+      pageId: "page",
+      metadataChanges: {
+        expectedMetaRevision: 2,
+        changes: {
+          name: { baseline: "Page", local: "Local" },
+        },
+      },
+      parentChange: {
+        baseline: null,
+        local: "parent",
+        expectedDraftStructureRevision: 2,
+      },
+    }),
+  );
+  assert.equal(
+    metadataConflict.rows().find((item) => item.pageId === "page")
+      ?.parentPageId,
+    null,
+  );
+
+  const structureConflict = fakeTransaction(
+    [row("parent", null, 0), row("page", null, 1, { name: "Page" })],
+    { structureRevision: 5 },
+  );
+  await assert.rejects(
+    () =>
+      structureConflict.transaction.update({
+        pageId: "page",
+        metadataChanges: {
+          expectedMetaRevision: 0,
+          changes: {
+            name: { baseline: "Page", local: "Local" },
+          },
+        },
+        parentChange: {
+          baseline: null,
+          local: "parent",
+          expectedDraftStructureRevision: 4,
+        },
+      }),
+    (error: unknown) =>
+      error instanceof DomainError &&
+      error.code === "DRAFT_STRUCTURE_REVISION_CONFLICT",
+  );
+  assert.equal(
+    structureConflict.rows().find((item) => item.pageId === "page")?.name,
+    "Page",
+  );
+});
+
+void test("moving a paginated page to root increments metadata revision once", async () => {
+  const fake = fakeTransaction([
+    row("parent", null, 0),
+    row("page", "parent", 1, {
+      paginationEnabled: true,
+      metaRevision: 8,
+    }),
+  ]);
+  const result = await fake.transaction.update({
+    pageId: "page",
+    parentChange: {
+      baseline: "parent",
+      local: null,
+      expectedDraftStructureRevision: 2,
+    },
+  });
+
+  assert.equal(result.page.paginationEnabled, false);
+  assert.equal(result.revisions.metaRevision, 9);
+  assert.equal(result.structure?.draftStructureRevision, 3);
+});
+
+for (const [name, options, expectedWrites] of [
+  [
+    "both menus",
+    { primaryHref: "/old", legalHref: "/old" },
+    2,
+  ],
+  ["primary only", { primaryHref: "/old" }, 1],
+  ["legal only", { legalHref: "/old" }, 1],
+  ["no menu", {}, 0],
 ] as const) {
-  void test(`slug rename updates only the ${name} menu when it alone references the page`, async () => {
+  void test(`slug rename updates ${name} using current transactional revisions`, async () => {
     const fake = fakeTransaction(
       [row("page", null, 0, { slug: "old" })],
-      2,
-      menuHrefs,
+      options,
     );
     await fake.transaction.update({
       pageId: "page",
-      metadata: {
-        page: { ...domainPage("page", null), slug: "new" },
-        metaRevision: 0,
-      },
-      menuRenameExpectedRevisions: {
-        expectedPrimaryMenuRevision: 0,
-        expectedLegalMenuRevision: 0,
+      metadataChanges: {
+        expectedMetaRevision: 0,
+        changes: {
+          slug: { baseline: "old", local: "new" },
+        },
       },
     });
-    assert.equal(fake.args.settingsUpdate.length, expectedSections);
-    assert.equal(fake.settings().primaryMenuRevision, name === "primary" ? 1 : 0);
-    assert.equal(fake.settings().legalMenuRevision, name === "legal" ? 1 : 0);
+
+    assert.equal(fake.settingsWrites.length, expectedWrites);
   });
 }
 
-void test("slug rename without menu references performs no menu writer", async () => {
-  const fake = fakeTransaction([row("page", null, 0, { slug: "old" })]);
-  await fake.transaction.update({
-    pageId: "page",
-    metadata: {
-      page: { ...domainPage("page", null), slug: "new" },
-      metaRevision: 0,
-    },
-  });
-  assert.deepEqual(fake.args.settingsUpdate, []);
-});
-
-void test("a stale referenced menu revision preserves the settings conflict code", async () => {
+void test("menu href already replaced by another value is preserved", async () => {
   const fake = fakeTransaction(
     [row("page", null, 0, { slug: "old" })],
-    2,
-    { primary: "/old", legal: "/old" },
-  );
-  await assert.rejects(
-    () =>
-      fake.transaction.update({
-        pageId: "page",
-        metadata: {
-          page: { ...domainPage("page", null), slug: "new" },
-          metaRevision: 0,
-        },
-        menuRenameExpectedRevisions: {
-          expectedPrimaryMenuRevision: 9,
-          expectedLegalMenuRevision: 0,
-        },
-      }),
-    (error: unknown) =>
-      error instanceof DomainError &&
-      error.code === "SETTINGS_SECTION_REVISION_CONFLICT",
-  );
-});
-
-void test("a stale legal-menu revision preserves the same settings conflict code", async () => {
-  const fake = fakeTransaction(
-    [row("page", null, 0, { slug: "old" })],
-    2,
-    { legal: "/old" },
-  );
-  await assert.rejects(
-    () =>
-      fake.transaction.update({
-        pageId: "page",
-        metadata: {
-          page: { ...domainPage("page", null), slug: "new" },
-          metaRevision: 0,
-        },
-        menuRenameExpectedRevisions: {
-          expectedLegalMenuRevision: 9,
-        },
-      }),
-    (error: unknown) =>
-      error instanceof DomainError &&
-      error.code === "SETTINGS_SECTION_REVISION_CONFLICT",
-  );
-});
-
-void test("a revision is required only for a menu section that is actually changed", async () => {
-  const fake = fakeTransaction(
-    [row("page", null, 0, { slug: "old" })],
-    2,
-    { primary: "/old" },
-  );
-  await assert.rejects(
-    () =>
-      fake.transaction.update({
-        pageId: "page",
-        metadata: {
-          page: { ...domainPage("page", null), slug: "new" },
-          metaRevision: 0,
-        },
-      }),
-    (error: unknown) =>
-      error instanceof DomainError && error.code === "REVISION_REQUIRED",
-  );
-});
-
-void test("an unchanged slug ignores forged menu revisions", async () => {
-  const fake = fakeTransaction(
-    [row("page", null, 0, { slug: "old" })],
-    2,
-    { primary: "/old", legal: "/old" },
+    { primaryHref: "/other" },
   );
   await fake.transaction.update({
     pageId: "page",
-    menuRenameExpectedRevisions: {
-      expectedPrimaryMenuRevision: 0,
-      expectedLegalMenuRevision: 0,
+    metadataChanges: {
+      expectedMetaRevision: 0,
+      changes: {
+        slug: { baseline: "old", local: "new" },
+      },
     },
   });
-  assert.deepEqual(fake.args.settingsUpdate, []);
-  assert.equal(fake.settings().primaryMenuRevision, 0);
-  assert.equal(fake.settings().legalMenuRevision, 0);
+
+  assert.equal(fake.settings().primaryMenu.items[0]?.href, "/other");
+  assert.deepEqual(fake.settingsWrites, []);
 });
 
-void test("runtime rejects independent menu slugs before opening a transaction", async () => {
-  const fake = fakeTransaction(
-    [row("page", null, 0, { slug: "old" })],
+void test("metadata and menu CAS misses retry the complete transaction and then succeed", async () => {
+  const metadata = fakeTransaction(
+    [row("page", null, 0, { name: "Page" })],
+    { metadataCasMisses: 1 },
+  );
+  const metadataResult = await metadata.transaction.update({
+    pageId: "page",
+    metadataChanges: {
+      expectedMetaRevision: 0,
+      changes: {
+        name: { baseline: "Page", local: "Renamed" },
+      },
+    },
+  });
+  assert.equal(metadataResult.page.name, "Renamed");
+  assert.equal(
+    metadata.calls.filter((call) => call === "website.lock").length,
     2,
-    { primary: "/old" },
   );
 
+  const menu = fakeTransaction(
+    [row("page", null, 0, { slug: "old" })],
+    { primaryHref: "/old", menuCasMisses: 1 },
+  );
+  const menuResult = await menu.transaction.update({
+    pageId: "page",
+    metadataChanges: {
+      expectedMetaRevision: 0,
+      changes: {
+        slug: { baseline: "old", local: "new" },
+      },
+    },
+  });
+  assert.equal(menuResult.page.slug, "new");
+  assert.equal(
+    menu.calls.filter((call) => call === "website.lock").length,
+    4,
+  );
+});
+
+void test("three repeated CAS misses produce a stable 409 conflict", async () => {
+  const fake = fakeTransaction(
+    [row("page", null, 0, { name: "Page" })],
+    { metadataCasMisses: 3 },
+  );
   await assert.rejects(
     () =>
       fake.transaction.update({
         pageId: "page",
-        metadata: {
-          page: { ...domainPage("page", null), slug: "new" },
-          metaRevision: 0,
-        },
-        menuRenameExpectedRevisions: {
-          expectedPrimaryMenuRevision: 0,
-          previousSlug: "forged",
-          nextSlug: "forged-next",
-        },
-      } as never),
-    (error: unknown) =>
-      error instanceof DomainError &&
-      error.code === "INVALID_ARGUMENT",
-  );
-
-  assert.deepEqual(fake.calls, []);
-  assert.deepEqual(fake.args.updateMany, []);
-  assert.deepEqual(fake.args.settingsUpdate, []);
-});
-
-for (const parentPageId of [null, "parent"] as const) {
-  void test(`runtime rejects parentPageId=${String(parentPageId)} without OCC before opening a transaction`, async () => {
-    const fake = fakeTransaction([row("page", null, 0)]);
-
-    await assert.rejects(
-      () =>
-        fake.transaction.update({
-          pageId: "page",
-          parentPageId,
-        } as never),
-      (error: unknown) =>
-        error instanceof DomainError &&
-        error.code === "REVISION_REQUIRED",
-    );
-
-    assert.deepEqual(fake.calls, []);
-    assert.deepEqual(fake.args.updateMany, []);
-    assert.deepEqual(fake.args.websiteUpdate, []);
-  });
-}
-
-void test("metadata-only update without a parent does not require structure OCC", async () => {
-  const fake = fakeTransaction([row("page", null, 0)]);
-
-  const result = await fake.transaction.update({
-    pageId: "page",
-    metadata: {
-      page: { ...domainPage("page", null), name: "Renamed" },
-      metaRevision: 0,
-    },
-  });
-
-  assert.equal(result.page.name, "Renamed");
-  assert.equal(result.draftStructureRevision, 2);
-});
-
-void test("empty update returns the locked current snapshot without any write", async () => {
-  const fake = fakeTransaction([
-    row("page", null, 0, { metaRevision: 4 }),
-  ]);
-
-  const result = await fake.transaction.update({ pageId: "page" });
-
-  assert.equal(result.draftStructureRevision, 2);
-  assert.equal(result.page.meta.updatedAt, NOW.toISOString());
-  assert.equal(fake.rows()[0]?.metaRevision, 4);
-  assert.deepEqual(fake.args.updateMany, []);
-  assert.deepEqual(fake.args.settingsUpdate, []);
-  assert.deepEqual(fake.args.websiteUpdate, []);
-});
-
-void test("metadata cannot turn a child into home before any write", async () => {
-  const fake = fakeTransaction([
-    row("parent", null, 0),
-    row("child", "parent", 1),
-  ]);
-  await assert.rejects(
-    () =>
-      fake.transaction.update({
-        pageId: "child",
-        metadata: {
-          page: { ...domainPage("child", "parent"), slug: "home" },
-          metaRevision: 0,
+        metadataChanges: {
+          expectedMetaRevision: 0,
+          changes: {
+            name: { baseline: "Page", local: "Renamed" },
+          },
         },
       }),
     (error: unknown) =>
-      error instanceof DomainError &&
-      error.code === "PAGE_PARENT_INVALID",
+      error instanceof DomainError && error.code === "CONFLICT",
   );
-  assert.deepEqual(fake.args.updateMany, []);
+  assert.equal(
+    fake.calls.filter((call) => call === "website.lock").length,
+    3,
+  );
+  assert.equal(fake.rows()[0]?.name, "Page");
 });

@@ -15,7 +15,10 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-import type { PageDTO } from "@compoz/core/domain/pages/dto";
+import type {
+  PageDTO,
+  PageWithRevisionsDTO,
+} from "@compoz/core/domain/pages/dto";
 import { setPageBlocksCache } from "@compoz/studio/features/pages/blocks/cache/cache";
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
 
@@ -31,7 +34,19 @@ export function syncBlocksFromPageCache(
 
   if (!websiteIdKey || !pageIdKey) return;
 
-  queryClient.setQueryData(pageByIdKey(websiteIdKey, pageIdKey, state), page);
+  queryClient.setQueryData(
+    pageByIdKey(websiteIdKey, pageIdKey, state),
+    (current: PageWithRevisionsDTO | undefined) =>
+      current
+        ? {
+            ...current,
+            page: {
+              ...current.page,
+              blocks: page.blocks,
+            },
+          }
+        : current,
+  );
 
   setPageBlocksCache(
     queryClient,

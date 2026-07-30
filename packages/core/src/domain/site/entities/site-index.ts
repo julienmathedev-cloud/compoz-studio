@@ -6,7 +6,10 @@
  * Holds the published page summaries for a content state.
  */
 
-import type { PageSummary } from "@compoz/core/domain/pages/entities/page";
+import type {
+  DraftPageSummary,
+  PageSummary,
+} from "@compoz/core/domain/pages/entities/page";
 
 export interface SiteIndex {
   /** Canonical page summaries for the content state. */
@@ -16,8 +19,13 @@ export interface SiteIndex {
   updatedAt: string;
 }
 
+/** Studio draft projection; published indexes intentionally omit metadata revisions. */
+export interface DraftSiteIndex extends Omit<SiteIndex, "pages"> {
+  pages: ReadonlyArray<DraftPageSummary>;
+}
+
 /** Draft structure projection carrying the Website-level OCC revision. */
 export interface DraftSiteIndexWithRevision {
-  index: SiteIndex;
+  index: DraftSiteIndex;
   draftStructureRevision: number;
 }

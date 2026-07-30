@@ -20,16 +20,21 @@ import { useEffect } from "react";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
-import type { PageDTO } from "@compoz/core/domain/pages/dto";
+import type {
+  PageDTO,
+  PageWithRevisionsDTO,
+} from "@compoz/core/domain/pages/dto";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log } from "@compoz/infra/lib/log";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
+import { mergePageRevisionedSnapshot } from "@compoz/studio/features/pages/cache/page-snapshot";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { withLoadLogs } from "@compoz/ui/hooks/instrumentation";
 
 type UseReadPageResult = Readonly<{
   page: PageDTO | null;
+  revisions: PageWithRevisionsDTO["revisions"] | null;
   isLoading: boolean;
 }>;
 
@@ -47,11 +52,20 @@ export function useReadPage(
   const pageIdKey = String(pageId ?? "").trim();
   const enabled = Boolean(websiteId && pageIdKey);
 
-  const query = useQuery<PageDTO, Error>({
+  const query = useQuery<PageWithRevisionsDTO, Error>({
     queryKey: pageByIdKey(websiteId, pageIdKey, state),
     enabled,
 
-    queryFn: async ({ signal }: { signal: AbortSignal }): Promise<PageDTO> => {
+    structuralSharing: (current, incoming) =>
+      mergePageRevisionedSnapshot(
+        current as PageWithRevisionsDTO | undefined,
+        incoming as PageWithRevisionsDTO,
+      ),
+    queryFn: async ({
+      signal,
+    }: {
+      signal: AbortSignal;
+    }): Promise<PageWithRevisionsDTO> => {
       const response = await withLoadLogs(
         "useReadPage",
         state,
@@ -62,7 +76,7 @@ export function useReadPage(
           websiteId,
         },
       );
-      return response.page;
+      return response;
     },
   });
 
@@ -80,7 +94,8 @@ export function useReadPage(
   }, [query.error, websiteId, pageIdKey, state]);
 
   return {
-    page: enabled ? (query.data ?? null) : null,
+    page: enabled ? (query.data?.page ?? null) : null,
+    revisions: enabled ? (query.data?.revisions ?? null) : null,
     isLoading: enabled ? query.isPending : false,
   };
 }

@@ -15,7 +15,6 @@ import type {
 import type {
   PagesRepository,
   UpdateDraftPageBlocksInput,
-  UpdateDraftPageMetadataInput,
 } from "@compoz/core/domain/pages/ports/pages-repository";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import {
@@ -23,9 +22,9 @@ import {
   toDomainPageWithRevisions,
   type PrismaContentState,
 } from "@compoz/infra/pages/mappers/page.mapper";
-import {
+import type {
   Prisma,
-  type PrismaClient,
+  PrismaClient,
 } from "@compoz/infra/prisma/generated";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
 
@@ -44,12 +43,6 @@ function toPrismaContentState(state: ContentState): PrismaContentState {
 
 function toJsonValue(value: unknown): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
-}
-
-function toNullableJsonValue(
-  value: unknown,
-): Prisma.InputJsonValue | typeof Prisma.JsonNull {
-  return value === null ? Prisma.JsonNull : toJsonValue(value);
 }
 
 export class PrismaPagesRepository implements PagesRepository {
@@ -170,62 +163,6 @@ export class PrismaPagesRepository implements PagesRepository {
       const row = rowByPageId.get(id);
 
       return row ? toDomainPage(row) : null;
-    });
-  }
-
-  async updateDraftPageMetadata(
-    input: UpdateDraftPageMetadataInput,
-  ): Promise<void> {
-    const pageId = normalizeValue(input.pageId);
-    const slug = normalizeValue(input.slug);
-
-    if (!pageId) {
-      throw new Error(
-        "PrismaPagesRepository.updateDraftPageMetadata: input.pageId is required.",
-      );
-    }
-
-    if (!slug) {
-      throw new Error(
-        "PrismaPagesRepository.updateDraftPageMetadata: input.slug is required.",
-      );
-    }
-
-    const slugOwner = await this.client.page.findUnique({
-      where: {
-        websiteId_state_slug: {
-          websiteId: this.websiteId,
-          state: "draft",
-          slug,
-        },
-      },
-      select: { pageId: true },
-    });
-
-    if (slugOwner && slugOwner.pageId !== pageId) {
-      throw new Error(
-        "PrismaPagesRepository.updateDraftPageMetadata: slug already exists.",
-      );
-    }
-
-    await this.client.page.update({
-      where: {
-        websiteId_state_pageId: {
-          websiteId: this.websiteId,
-          state: "draft",
-          pageId,
-        },
-      },
-      data: {
-        slug,
-        name: input.name,
-        seoTitle: input.seoTitle,
-        seoDescription: input.seoDescription,
-        sitemap: toNullableJsonValue(input.sitemap),
-        paginationEnabled: input.paginationEnabled,
-        metaRevision: input.metaRevision,
-        metaUpdatedAt: new Date(input.metaUpdatedAt),
-      },
     });
   }
 

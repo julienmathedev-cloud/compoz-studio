@@ -28,6 +28,9 @@ import type { UpdatePageInput } from "@compoz/core/domain/pages/use-cases/update
  * Domain update patch without `pageId`, which is provided by route params.
  */
 type UpdatePagePatchInput = Omit<UpdatePageInput, "pageId">;
+type MutableUpdatePagePatchInput = {
+  -readonly [K in keyof UpdatePagePatchInput]: UpdatePagePatchInput[K];
+};
 
 /**
  * Normalizes the sitemap block coming from API intents.
@@ -39,11 +42,8 @@ type UpdatePagePatchInput = Omit<UpdatePageInput, "pageId">;
  * - in patches, a missing key must remain `undefined`
  */
 function normalizeSitemap(
-  sitemap:
-    | CreatePageIntentDTO["sitemap"]
-    | UpdatePageIntentDTO["sitemap"]
-    | undefined,
-): UpdatePagePatchInput["sitemap"] | CreatePageInput["sitemap"] | undefined {
+  sitemap: CreatePageIntentDTO["sitemap"] | undefined,
+): CreatePageInput["sitemap"] | undefined {
   if (typeof sitemap === "undefined") return undefined;
   if (sitemap === null) return null;
 
@@ -120,61 +120,82 @@ export function adaptUpdatePagePayload(
   const started = Date.now();
 
   log.debug("studio.adapter.pages.update.start", {
-    hasName: "name" in dto,
-    hasSeoTitle: "seoTitle" in dto,
-    hasSeoDescription: "seoDescription" in dto,
-    hasSlug: "slug" in dto,
-    hasSitemap: "sitemap" in dto,
-    hasParentId: "parentId" in dto,
+    hasMetadataChanges: Boolean(dto.metadataChanges),
+    hasParentChange: Boolean(dto.parentChange),
   });
 
-  const out: UpdatePagePatchInput = {};
+  const out: MutableUpdatePagePatchInput = {};
 
-  if ("name" in dto && typeof dto.name === "string") {
-    out.name = trimOrKeep(dto.name);
+  if (dto.metadataChanges) {
+    const changes = dto.metadataChanges.changes;
+    out.metadataChanges = {
+      expectedMetaRevision: dto.metadataChanges.expectedMetaRevision,
+      changes: {
+        ...(changes.name
+          ? {
+              name: {
+                baseline: trimOrKeep(changes.name.baseline),
+                local: trimOrKeep(changes.name.local),
+              },
+            }
+          : {}),
+        ...(changes.slug
+          ? {
+              slug: {
+                baseline: toSlugIntentInput(changes.slug.baseline),
+                local: toSlugIntentInput(changes.slug.local),
+              },
+            }
+          : {}),
+        ...(changes.seoTitle
+          ? {
+              seoTitle: {
+                baseline:
+                  changes.seoTitle.baseline === null
+                    ? null
+                    : trimOrKeep(changes.seoTitle.baseline),
+                local:
+                  changes.seoTitle.local === null
+                    ? null
+                    : trimOrKeep(changes.seoTitle.local),
+              },
+            }
+          : {}),
+        ...(changes.seoDescription
+          ? {
+              seoDescription: {
+                baseline:
+                  changes.seoDescription.baseline === null
+                    ? null
+                    : trimOrKeep(changes.seoDescription.baseline) || null,
+                local:
+                  changes.seoDescription.local === null
+                    ? null
+                    : trimOrKeep(changes.seoDescription.local) || null,
+              },
+            }
+          : {}),
+        ...(changes.sitemap ? { sitemap: changes.sitemap } : {}),
+        ...(changes.paginationEnabled
+          ? { paginationEnabled: changes.paginationEnabled }
+          : {}),
+      },
+    };
   }
 
-  if ("seoTitle" in dto) {
-    out.seoTitle =
-      dto.seoTitle !== null && typeof dto.seoTitle === "string"
-        ? trimOrKeep(dto.seoTitle)
-        : null;
-  }
-
-  if ("seoDescription" in dto) {
-    out.seoDescription =
-      dto.seoDescription !== null && typeof dto.seoDescription === "string"
-        ? trimOrKeep(dto.seoDescription) || null
-        : null;
-  }
-
-  if ("slug" in dto && typeof dto.slug === "string") {
-    const s = toSlugIntentInput(dto.slug);
-
-    // Update: "" is an explicit reset signal.
-    out.slug = s;
-  }
-
-  if ("parentId" in dto) {
-    out.parentId = dto.parentId;
-  }
-
-  if ("paginationEnabled" in dto) {
-    out.paginationEnabled = dto.paginationEnabled;
-  }
-
-  if ("sitemap" in dto) {
-    out.sitemap = normalizeSitemap(dto.sitemap);
-  }
-
-  if ("expectedDraftStructureRevision" in dto) {
-    out.expectedDraftStructureRevision = dto.expectedDraftStructureRevision;
-  }
-  if ("expectedPrimaryMenuRevision" in dto) {
-    out.expectedPrimaryMenuRevision = dto.expectedPrimaryMenuRevision;
-  }
-  if ("expectedLegalMenuRevision" in dto) {
-    out.expectedLegalMenuRevision = dto.expectedLegalMenuRevision;
+  if (dto.parentChange) {
+    out.parentChange = {
+      baseline:
+        dto.parentChange.baseline === null
+          ? null
+          : trimOrKeep(dto.parentChange.baseline),
+      local:
+        dto.parentChange.local === null
+          ? null
+          : trimOrKeep(dto.parentChange.local),
+      expectedDraftStructureRevision:
+        dto.parentChange.expectedDraftStructureRevision,
+    };
   }
 
   log.debug("studio.adapter.pages.update.end", {

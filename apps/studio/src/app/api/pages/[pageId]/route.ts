@@ -201,8 +201,20 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
         if (
           body !== null &&
           typeof body === "object" &&
-          "parentId" in body &&
-          !("expectedDraftStructureRevision" in body)
+          "metadataChanges" in body &&
+          typeof body.metadataChanges === "object" &&
+          body.metadataChanges !== null &&
+          !("expectedMetaRevision" in body.metadataChanges)
+        ) {
+          throw new DomainError({ code: EC.REVISION_REQUIRED });
+        }
+        if (
+          body !== null &&
+          typeof body === "object" &&
+          "parentChange" in body &&
+          typeof body.parentChange === "object" &&
+          body.parentChange !== null &&
+          !("expectedDraftStructureRevision" in body.parentChange)
         ) {
           throw new DomainError({ code: EC.REVISION_REQUIRED });
         }
@@ -220,16 +232,14 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
         const payload = adaptUpdatePagePayload(dto);
         const structure = getDraftPageStructureTransaction({ websiteId });
 
-        const pagesRepo = getPagesRepository({ websiteId });
-        const { page, index, draftStructureRevision } =
-          await persistPagePatch(
-            { pages: pagesRepo, structure },
-            { pageId, ...payload },
-          );
+        const result = await persistPagePatch(
+          { structure },
+          { pageId, ...payload },
+        );
 
-        logger.debug("route.index.read", {
+        logger.debug("route.page.updated", {
           websiteId,
-          pagesCount: index.pages.length,
+          hasStructure: Boolean(result.structure),
         });
 
         /**
@@ -264,11 +274,7 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
           });
         }
 
-        const res: UpdatePageResponse = {
-          page,
-          index,
-          draftStructureRevision,
-        };
+        const res: UpdatePageResponse = result;
 
         return res;
       },

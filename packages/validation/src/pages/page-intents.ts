@@ -18,6 +18,7 @@ import {
   PageNameSchema,
   PageSeoDescriptionSchema,
   PageSeoTitleSchema,
+  PageSitemapSchema,
   SitemapChangeFreqSchema,
   SlugSchema,
 } from "@compoz/validation/pages/page";
@@ -74,23 +75,48 @@ export type CreatePageIntentDTO = z.infer<typeof CreatePageIntentSchema>;
  * Missing keys leave values unchanged. `null` is kept only where the API needs
  * an explicit clear or root-page signal.
  */
+const MetadataChangeSchema = <T extends z.ZodType>(
+  value: T,
+) =>
+  z
+    .object({
+      baseline: value,
+      local: value,
+    })
+    .strict();
+
+const PageMetadataChangesSchema = z
+  .object({
+    name: MetadataChangeSchema(PageNameSchema).optional(),
+    slug: MetadataChangeSchema(
+      z.union([SlugSchema, z.literal(""), z.literal("/")]),
+    ).optional(),
+    seoTitle: MetadataChangeSchema(PageSeoTitleSchema).optional(),
+    seoDescription: MetadataChangeSchema(
+      PageSeoDescriptionSchema,
+    ).optional(),
+    sitemap: MetadataChangeSchema(PageSitemapSchema.nullable()).optional(),
+    paginationEnabled: MetadataChangeSchema(z.boolean()).optional(),
+  })
+  .strict();
+
 export const UpdatePageIntentSchema = z
   .object({
-    name: PageNameSchema.optional(),
-    seoTitle: PageSeoTitleSchema.optional(),
-    seoDescription: PageSeoDescriptionSchema.optional(),
-    parentId: PageIdSchema.nullable().optional(),
-
-    /**
-     * Empty and home slugs are kept to support the existing UI flow.
-     */
-    slug: z.union([SlugSchema, z.literal(""), z.literal("/")]).optional(),
-
-    sitemap: PageSitemapIntentSchema.nullable().optional(),
-    paginationEnabled: z.boolean().optional(),
-    expectedDraftStructureRevision: z.number().int().nonnegative().optional(),
-    expectedPrimaryMenuRevision: z.number().int().nonnegative().optional(),
-    expectedLegalMenuRevision: z.number().int().nonnegative().optional(),
+    metadataChanges: z
+      .object({
+        expectedMetaRevision: z.number().int().nonnegative(),
+        changes: PageMetadataChangesSchema,
+      })
+      .strict()
+      .optional(),
+    parentChange: z
+      .object({
+        baseline: PageIdSchema.nullable(),
+        local: PageIdSchema.nullable(),
+        expectedDraftStructureRevision: z.number().int().nonnegative(),
+      })
+      .strict()
+      .optional(),
   })
   .strict();
 

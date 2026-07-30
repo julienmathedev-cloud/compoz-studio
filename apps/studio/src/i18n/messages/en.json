@@ -1545,6 +1545,25 @@
       },
       "errors": {
         "originalMissing": "Unable to save: the original page could not be found. Reload the index and try again."
+      },
+      "conflict": {
+        "title": "Metadata was changed elsewhere",
+        "description": "Choose which value to keep for each field, then save again.",
+        "baseline": "Initial value",
+        "local": "Your value",
+        "remote": "Remote value",
+        "keepLocal": "Keep my value",
+        "adoptRemote": "Use remote value",
+        "restoreInitial": "Restore initial value",
+        "resolved": "All conflicts are resolved. Confirm a new save.",
+        "fields": {
+          "name": "Name",
+          "slug": "Slug",
+          "seoTitle": "SEO title",
+          "seoDescription": "SEO description",
+          "sitemap": "Sitemap",
+          "paginationEnabled": "Pagination"
+        }
       }
     },
 

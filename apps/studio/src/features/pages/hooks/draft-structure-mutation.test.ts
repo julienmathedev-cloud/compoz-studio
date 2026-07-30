@@ -13,18 +13,23 @@ import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { HttpError } from "@compoz/infra/lib/api-fetch";
 import {
   adoptDraftStructureConflict,
+  adoptDraftStructureConflictDetails,
   draftStructureMutationOptions,
-  refreshMenuSettingsAfterConflict,
   requireDraftStructureSnapshot,
-  resolveMenuRenameExpectedRevisions,
 } from "@compoz/studio/features/pages/hooks/draft-structure-mutation";
+import { toUpdatePageIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/pages-form";
 import { setDraftStructureCache } from "@compoz/studio/features/site-index/cache";
-import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
 
 const SERVER = {
   index: {
     pages: [
-      { id: "server", slug: "server", name: "Server", parentId: null },
+      {
+        id: "server",
+        slug: "server",
+        name: "Server",
+        parentId: null,
+        metaRevision: 1,
+      },
     ],
     updatedAt: "2026-07-29T11:00:00.000Z",
   },
@@ -36,7 +41,13 @@ void test("conflict replaces the whole optimistic snapshot without merging", () 
   setDraftStructureCache(queryClient, "website-a", undefined, {
     index: {
       pages: [
-        { id: "local", slug: "local", name: "Local", parentId: null },
+        {
+          id: "local",
+          slug: "local",
+          name: "Local",
+          parentId: null,
+          metaRevision: 1,
+        },
       ],
       updatedAt: "2026-07-29T10:00:00.000Z",
     },
@@ -96,6 +107,45 @@ void test("older conflicts are ignored while a newer server conflict is adopted"
       .draftStructureRevision,
     6,
   );
+});
+
+void test("a new parent action uses the adopted structure revision", () => {
+  const queryClient = new QueryClient();
+  adoptDraftStructureConflictDetails(
+    queryClient,
+    "website-a",
+    {
+      expectedDraftStructureRevision: 7,
+      currentDraftStructureRevision: 8,
+      current: SERVER,
+    },
+  );
+  const baseline = {
+    name: "Local metadata",
+    slug: "local-metadata",
+    seoTitle: null,
+    seoDescription: null,
+    parentId: null,
+    sitemap: null,
+    paginationEnabled: false,
+  };
+  const payload = toUpdatePageIntentDTOFromFormValues({
+    baseline,
+    local: { ...baseline, parentId: "parent-c" },
+    expectedMetaRevision: 4,
+    expectedDraftStructureRevision:
+      requireDraftStructureSnapshot(
+        queryClient,
+        "website-a",
+      ).draftStructureRevision,
+  });
+
+  assert.deepEqual(payload.metadataChanges, undefined);
+  assert.deepEqual(payload.parentChange, {
+    baseline: null,
+    local: "parent-c",
+    expectedDraftStructureRevision: 8,
+  });
 });
 
 function deferred() {
@@ -182,159 +232,3 @@ void test(
     await Promise.all([firstResult, secondResult]);
   },
 );
-
-function settingsConflict(resourceId: "primaryMenu" | "legalMenu") {
-  return new HttpError(
-    ERROR_CODES.SETTINGS_SECTION_REVISION_CONFLICT,
-    {
-      status: 409,
-      code: ERROR_CODES.SETTINGS_SECTION_REVISION_CONFLICT,
-      body: {
-        error: {
-          code: ERROR_CODES.SETTINGS_SECTION_REVISION_CONFLICT,
-          details: {
-            resourceId,
-            expectedRevision: 1,
-            currentRevision: 2,
-            conflictingPaths: ["items"],
-          },
-        },
-      },
-    },
-  );
-}
-
-function settingsBundle(revision: number) {
-  return {
-    settings: {
-      header: {},
-      footer: {},
-      primaryMenu: {},
-      legalMenu: {},
-      social: {},
-      identity: {},
-      seo: {},
-      theme: {},
-    },
-    revisions: {
-      headerRevision: 0,
-      footerRevision: 0,
-      primaryMenuRevision: revision,
-      legalMenuRevision: revision + 1,
-      socialRevision: 0,
-      identityRevision: 0,
-      seoRevision: 0,
-      themeRevision: 0,
-    },
-  };
-}
-
-for (const resourceId of ["primaryMenu", "legalMenu"] as const) {
-  void test(`${resourceId} conflict invalidates and refetches the settings bundle`, async () => {
-    const queryClient = new QueryClient();
-    const key = settingsBundleKey("website-a", "draft");
-    setDraftStructureCache(queryClient, "website-a", undefined, SERVER);
-    const structureBefore = requireDraftStructureSnapshot(
-      queryClient,
-      "website-a",
-    );
-    let revision = 1;
-    let reads = 0;
-    await queryClient.prefetchQuery({
-      queryKey: key,
-      queryFn: async () => ({ revision: ++reads === 1 ? revision : 2 }),
-    });
-    revision = 2;
-
-    assert.equal(
-      await refreshMenuSettingsAfterConflict(
-        queryClient,
-        "website-a",
-        settingsConflict(resourceId),
-      ),
-      true,
-    );
-    assert.equal(reads, 2);
-    assert.deepEqual(queryClient.getQueryData(key), { revision: 2 });
-    assert.strictEqual(
-      requireDraftStructureSnapshot(queryClient, "website-a"),
-      structureBefore,
-    );
-  });
-}
-
-void test("structure and technical errors do not trigger settings refresh", async () => {
-  const queryClient = new QueryClient();
-  const structural = new HttpError(
-    ERROR_CODES.DRAFT_STRUCTURE_REVISION_CONFLICT,
-    {
-      status: 409,
-      code: ERROR_CODES.DRAFT_STRUCTURE_REVISION_CONFLICT,
-    },
-  );
-
-  assert.equal(
-    await refreshMenuSettingsAfterConflict(
-      queryClient,
-      "website-a",
-      structural,
-    ),
-    false,
-  );
-  assert.equal(
-    await refreshMenuSettingsAfterConflict(
-      queryClient,
-      "website-a",
-      new Error("network"),
-    ),
-    false,
-  );
-});
-
-void test("the next scoped attempt starts after conflict refetch and sees its new revision", async () => {
-  const queryClient = new QueryClient();
-  const key = settingsBundleKey("website-a", "draft");
-  let serverRevision = 1;
-  await queryClient.prefetchQuery({
-    queryKey: key,
-    queryFn: async () => settingsBundle(serverRevision),
-  });
-  serverRevision = 2;
-
-  const cache = queryClient.getMutationCache();
-  const first = cache.build(queryClient, {
-    ...draftStructureMutationOptions("website-a"),
-    mutationFn: async () => {
-      throw settingsConflict("primaryMenu");
-    },
-    onError: async (error) => {
-      await refreshMenuSettingsAfterConflict(
-        queryClient,
-        "website-a",
-        error,
-      );
-    },
-    retry: false,
-  });
-  let revisionsSeenByRetry:
-    | Awaited<ReturnType<typeof resolveMenuRenameExpectedRevisions>>
-    | undefined;
-  const second = cache.build(queryClient, {
-    ...draftStructureMutationOptions("website-a"),
-    mutationFn: async () => {
-      revisionsSeenByRetry =
-        await resolveMenuRenameExpectedRevisions(
-          queryClient,
-          "website-a",
-        );
-    },
-  });
-
-  const firstResult = first.execute(undefined).catch(() => undefined);
-  const secondResult = second.execute(undefined);
-  await Promise.all([firstResult, secondResult]);
-  assert.deepEqual(revisionsSeenByRetry, {
-    expectedPrimaryMenuRevision: 2,
-    expectedLegalMenuRevision: 3,
-  });
-});

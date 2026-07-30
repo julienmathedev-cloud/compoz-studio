@@ -4,11 +4,15 @@
  * @description Transaction boundary for Website-scoped draft page structure mutations.
  */
 
-import type { Page } from "@compoz/core/domain/pages/entities/page";
-import type { SiteIndex } from "@compoz/core/domain/site/entities/site-index";
+import type {
+  Page,
+  PageRevisions,
+  PageSitemap,
+} from "@compoz/core/domain/pages/entities/page";
+import type { DraftSiteIndex } from "@compoz/core/domain/site/entities/site-index";
 
 export type DraftStructureSnapshot = Readonly<{
-  index: SiteIndex;
+  index: DraftSiteIndex;
   draftStructureRevision: number;
 }>;
 
@@ -26,36 +30,42 @@ export type ReorderDraftSiblingsCommand = Readonly<{
   expectedDraftStructureRevision: number;
 }>;
 
-export type DraftPageMetadataWrite = Readonly<{
-  page: Page;
-  metaRevision: number;
+export type MetadataChange<T> = Readonly<{
+  baseline: T;
+  local: T;
 }>;
 
-export type DraftMenuRenameExpectedRevisions = Readonly<{
-  expectedPrimaryMenuRevision?: number;
-  expectedLegalMenuRevision?: number;
+export type PageMetadataChanges = Readonly<{
+  name?: MetadataChange<string>;
+  slug?: MetadataChange<string>;
+  seoTitle?: MetadataChange<string | null>;
+  seoDescription?: MetadataChange<string | null>;
+  sitemap?: MetadataChange<PageSitemap | null>;
+  paginationEnabled?: MetadataChange<boolean>;
 }>;
 
-type UpdateDraftPageWrite = Readonly<{
+export type UpdatePageMetadataIntent = Readonly<{
+  expectedMetaRevision: number;
+  changes: PageMetadataChanges;
+}>;
+
+export type ParentPageChangeIntent = Readonly<{
+  baseline: string | null;
+  local: string | null;
+  expectedDraftStructureRevision: number;
+}>;
+
+export type UpdateDraftPageIntent = Readonly<{
   pageId: string;
-  metadata?: DraftPageMetadataWrite;
-  menuRenameExpectedRevisions?: DraftMenuRenameExpectedRevisions;
+  metadataChanges?: UpdatePageMetadataIntent;
+  parentChange?: ParentPageChangeIntent;
 }>;
 
-export type UpdateDraftPageStructureCommand =
-  | (UpdateDraftPageWrite &
-      Readonly<{
-        parentPageId: string | null;
-        expectedDraftStructureRevision: number;
-      }>)
-  | (UpdateDraftPageWrite &
-      Readonly<{
-        parentPageId?: never;
-        expectedDraftStructureRevision?: never;
-      }>);
-
-export type UpdateDraftPageStructureResult = DraftStructureSnapshot &
-  Readonly<{ page: Page }>;
+export type UpdateDraftPageStructureResult = Readonly<{
+  page: Page;
+  revisions: PageRevisions;
+  structure?: DraftStructureSnapshot;
+}>;
 
 export type DeleteDraftPageStructureCommand = Readonly<{
   pageId: string;
@@ -72,7 +82,7 @@ export interface DraftPageStructureTransaction {
   ): Promise<DraftStructureSnapshot>;
 
   update(
-    command: UpdateDraftPageStructureCommand,
+    intent: UpdateDraftPageIntent,
   ): Promise<UpdateDraftPageStructureResult>;
 
   delete(

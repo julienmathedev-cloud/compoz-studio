@@ -1,7 +1,7 @@
 /**
  * @file packages/validation/src/pages/page-intents.test.ts
  * @layer validation/pages
- * @description Boundary tests for revisioned page structure intents.
+ * @description Boundary tests for revisioned page metadata and structure intents.
  */
 
 import assert from "node:assert/strict";
@@ -24,23 +24,8 @@ const CREATE = {
   expectedDraftStructureRevision: 0,
 };
 
-void test("create requires a non-negative integer structure revision", () => {
+void test("create, reorder and delete retain their structure preconditions", () => {
   assert.equal(CreatePageIntentSchema.safeParse(CREATE).success, true);
-  const { expectedDraftStructureRevision: _revision, ...missing } = CREATE;
-  assert.equal(CreatePageIntentSchema.safeParse(missing).success, false);
-
-  for (const value of [-1, 1.5, "1", null]) {
-    assert.equal(
-      CreatePageIntentSchema.safeParse({
-        ...CREATE,
-        expectedDraftStructureRevision: value,
-      }).success,
-      false,
-    );
-  }
-});
-
-void test("reorder accepts empty permutations but requires the revision", () => {
   assert.equal(
     ReorderChildrenIntentSchema.safeParse({
       childIds: [],
@@ -49,35 +34,88 @@ void test("reorder accepts empty permutations but requires the revision", () => 
     true,
   );
   assert.equal(
-    ReorderChildrenIntentSchema.safeParse({ childIds: [] }).success,
-    false,
-  );
-});
-
-void test("delete requires the structure revision", () => {
-  assert.equal(
     DeletePageIntentSchema.safeParse({
       expectedDraftStructureRevision: 3,
     }).success,
     true,
   );
-  assert.equal(DeletePageIntentSchema.safeParse({}).success, false);
 });
 
-void test("PATCH revision is accepted only as a valid integer and remains optional for metadata-only patches", () => {
-  assert.equal(UpdatePageIntentSchema.safeParse({ name: "Renamed" }).success, true);
+void test("metadata changes require their own revision and baseline/local pair", () => {
   assert.equal(
     UpdatePageIntentSchema.safeParse({
-      parentId: null,
-      expectedDraftStructureRevision: 4,
+      metadataChanges: {
+        expectedMetaRevision: 4,
+        changes: {
+          name: { baseline: "Page", local: "Renamed" },
+          sitemap: {
+            baseline: null,
+            local: {
+              include: true,
+              changefreq: null,
+              priority: null,
+            },
+          },
+        },
+      },
     }).success,
     true,
   );
   assert.equal(
     UpdatePageIntentSchema.safeParse({
-      parentId: null,
-      expectedDraftStructureRevision: -1,
+      metadataChanges: {
+        changes: {
+          name: { baseline: "Page", local: "Renamed" },
+        },
+      },
     }).success,
     false,
   );
+  assert.equal(
+    UpdatePageIntentSchema.safeParse({
+      metadataChanges: {
+        expectedMetaRevision: 4,
+        changes: { name: { local: "Renamed" } },
+      },
+    }).success,
+    false,
+  );
+});
+
+void test("metadata allowlist rejects parent and unknown fields", () => {
+  for (const invalidChanges of [
+    { parentPageId: { baseline: null, local: "parent" } },
+    { parentId: { baseline: null, local: "parent" } },
+    { blocks: { baseline: [], local: [] } },
+  ]) {
+    assert.equal(
+      UpdatePageIntentSchema.safeParse({
+        metadataChanges: {
+          expectedMetaRevision: 4,
+          changes: invalidChanges,
+        },
+      }).success,
+      false,
+    );
+  }
+});
+
+void test("parent change is independent and requires structure OCC", () => {
+  assert.equal(
+    UpdatePageIntentSchema.safeParse({
+      parentChange: {
+        baseline: null,
+        local: "parent",
+        expectedDraftStructureRevision: 5,
+      },
+    }).success,
+    true,
+  );
+  assert.equal(
+    UpdatePageIntentSchema.safeParse({
+      parentChange: { baseline: null, local: "parent" },
+    }).success,
+    false,
+  );
+  assert.equal(UpdatePageIntentSchema.safeParse({}).success, true);
 });

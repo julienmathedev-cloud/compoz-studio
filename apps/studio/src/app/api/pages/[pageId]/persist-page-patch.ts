@@ -20,8 +20,7 @@ export async function persistPagePatch(
 
   return {
     page: result.page as PageDTO,
-    index: result.structure.index,
-    draftStructureRevision:
-      result.structure.draftStructureRevision,
+    revisions: result.revisions,
+    ...(result.structure ? { structure: result.structure } : {}),
   };
 }

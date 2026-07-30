@@ -1,12 +1,12 @@
 /**
  * @file packages/infra/src/pages/prisma-draft-page-structure-transaction.ts
  * @layer infra/pages
- * @description Prisma transaction implementing Website-locked OCC draft structure mutations.
+ * @description Prisma transaction implementing Website-locked OCC page and draft structure mutations.
  */
 
-import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
+import type { Page } from "@compoz/core/domain/pages/entities/page";
 import type {
   CreateDraftPageStructureCommand,
   CreateDraftPageStructureResult,
@@ -14,9 +14,13 @@ import type {
   DraftPageStructureTransaction,
   DraftStructureSnapshot,
   ReorderDraftSiblingsCommand,
-  UpdateDraftPageStructureCommand,
+  UpdateDraftPageIntent,
   UpdateDraftPageStructureResult,
 } from "@compoz/core/domain/pages/ports/draft-page-structure-transaction";
+import {
+  resolvePageMetadataChanges,
+  type PageMetadataColumns,
+} from "@compoz/core/domain/pages/revisions/page-metadata";
 import {
   planCreateDraftPage,
   planDeleteDraftPage,
@@ -25,13 +29,16 @@ import {
   type DraftStructurePage,
   type DraftStructurePlan,
 } from "@compoz/core/domain/pages/structure/draft-structure-planner";
+import {
+  assertParentId,
+  normalizeFinalPageState,
+} from "@compoz/core/domain/pages/validators/pages";
 import { replacePagePathInMenus } from "@compoz/core/domain/site/helpers/replace-page-path-in-menus";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
-import { toDomainSiteIndex } from "@compoz/infra/site/mappers/site-index.mapper";
-import { PrismaSiteRepository } from "@compoz/infra/site/prisma-site-repository";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import {
   toDomainPage,
+  toDomainPageWithRevisions,
   toPrismaDraftPageCreateData,
   type PrismaPageRow,
 } from "@compoz/infra/pages/mappers/page.mapper";
@@ -40,6 +47,17 @@ import {
   type PrismaClient,
 } from "@compoz/infra/prisma/generated";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
+import { toDomainDraftSiteIndex } from "@compoz/infra/site/mappers/site-index.mapper";
+import { PrismaSiteRepository } from "@compoz/infra/site/prisma-site-repository";
+
+const UPDATE_ATTEMPTS = 3;
+
+class CompositeCasMiss extends Error {
+  constructor() {
+    super("Draft page composite CAS missed.");
+    this.name = "CompositeCasMiss";
+  }
+}
 
 export type DraftStructureTransactionStage =
   | "beforeLock"
@@ -50,6 +68,8 @@ export type DraftStructureTransactionStage =
   | "afterDelete"
   | "duringNormalization"
   | "afterNormalization"
+  | "beforeMetadataCas"
+  | "beforeMenuCas"
   | "beforeRevisionIncrement"
   | "beforeCommit";
 
@@ -71,11 +91,26 @@ type DraftPageRow = PrismaPageRow & {
   position: number;
 };
 
-type InternalCommand =
+type InternalIntent =
   | Readonly<{ kind: "create"; value: CreateDraftPageStructureCommand }>
   | Readonly<{ kind: "reorder"; value: ReorderDraftSiblingsCommand }>
-  | Readonly<{ kind: "update"; value: UpdateDraftPageStructureCommand }>
+  | Readonly<{ kind: "update"; value: UpdateDraftPageIntent }>
   | Readonly<{ kind: "delete"; value: DeleteDraftPageStructureCommand }>;
+
+type UpdateContext = Readonly<{
+  currentRow: DraftPageRow;
+  currentPage: Page;
+  effectiveParentId: string | null;
+  parentChanged: boolean;
+  metadataPatch: Partial<PageMetadataColumns>;
+  oldSlug: string;
+}>;
+
+type TransactionResult = Readonly<{
+  snapshot: DraftStructureSnapshot;
+  rows: DraftPageRow[];
+  structureChanged: boolean;
+}>;
 
 function toPlannerPages(rows: ReadonlyArray<DraftPageRow>): DraftStructurePage[] {
   return rows.map((row) => ({
@@ -93,7 +128,7 @@ function toSnapshot(
   revision: number,
   updatedAt?: string,
 ): DraftStructureSnapshot {
-  const index = toDomainSiteIndex(rows, CONTENT_STATE.DRAFT);
+  const index = toDomainDraftSiteIndex(rows);
 
   return {
     index: updatedAt ? { ...index, updatedAt } : index,
@@ -106,6 +141,17 @@ function pageNotFound(): never {
     code: ERROR_CODES.PAGE_NOT_FOUND,
     message: ERROR_CODES.PAGE_NOT_FOUND,
   });
+}
+
+function revisionRequired(): never {
+  throw new DomainError({
+    code: ERROR_CODES.REVISION_REQUIRED,
+    message: ERROR_CODES.REVISION_REQUIRED,
+  });
+}
+
+function hasOwn(object: object, key: PropertyKey): boolean {
+  return Object.prototype.hasOwnProperty.call(object, key);
 }
 
 export class PrismaDraftPageStructureTransaction
@@ -143,41 +189,37 @@ export class PrismaDraftPageStructureTransaction
   }
 
   async update(
-    command: UpdateDraftPageStructureCommand,
+    intent: UpdateDraftPageIntent,
   ): Promise<UpdateDraftPageStructureResult> {
-    const runtimeCommand = command as unknown as Readonly<
-      Record<string, unknown>
-    >;
-    const runtimeMenuRevisions =
-      runtimeCommand["menuRenameExpectedRevisions"];
-    if (
-      "menuSlugRename" in runtimeCommand ||
-      (typeof runtimeMenuRevisions === "object" &&
-        runtimeMenuRevisions !== null &&
-        ("previousSlug" in runtimeMenuRevisions ||
-          "nextSlug" in runtimeMenuRevisions))
-    ) {
-      throw new DomainError({
-        code: ERROR_CODES.INVALID_ARGUMENT,
-        message: ERROR_CODES.INVALID_ARGUMENT,
-      });
+    this.assertUpdateIntent(intent);
+
+    for (let attempt = 0; attempt < UPDATE_ATTEMPTS; attempt += 1) {
+      try {
+        const result = await this.run({ kind: "update", value: intent });
+        const row = result.rows.find((item) => item.pageId === intent.pageId);
+        if (!row) pageNotFound();
+        const current = toDomainPageWithRevisions(row);
+
+        return {
+          page: current.page,
+          revisions: current.revisions,
+          ...(result.structureChanged
+            ? { structure: result.snapshot }
+            : {}),
+        };
+      } catch (error) {
+        if (!(error instanceof CompositeCasMiss)) throw error;
+      }
     }
 
-    if (
-      Object.prototype.hasOwnProperty.call(command, "parentPageId") &&
-      command.expectedDraftStructureRevision === undefined
-    ) {
-      throw new DomainError({
-        code: ERROR_CODES.REVISION_REQUIRED,
-        message: ERROR_CODES.REVISION_REQUIRED,
-      });
-    }
-
-    const result = await this.run({ kind: "update", value: command });
-    const page = result.rows.find((row) => row.pageId === command.pageId);
-    if (!page) pageNotFound();
-
-    return { ...result.snapshot, page: toDomainPage(page) };
+    throw new DomainError({
+      code: ERROR_CODES.CONFLICT,
+      message: ERROR_CODES.CONFLICT,
+      details: {
+        resourceId: "draftPageComposite",
+        attempts: UPDATE_ATTEMPTS,
+      },
+    });
   }
 
   async delete(
@@ -186,9 +228,36 @@ export class PrismaDraftPageStructureTransaction
     return (await this.run({ kind: "delete", value: command })).snapshot;
   }
 
-  private async run(
-    command: InternalCommand,
-  ): Promise<Readonly<{ snapshot: DraftStructureSnapshot; rows: DraftPageRow[] }>> {
+  private assertUpdateIntent(intent: UpdateDraftPageIntent): void {
+    const runtime = intent as unknown as Readonly<Record<string, unknown>>;
+    if (
+      "metadata" in runtime ||
+      "parentPageId" in runtime ||
+      "menuRenameExpectedRevisions" in runtime ||
+      "expectedPrimaryMenuRevision" in runtime ||
+      "expectedLegalMenuRevision" in runtime
+    ) {
+      throw new DomainError({
+        code: ERROR_CODES.INVALID_ARGUMENT,
+        message: ERROR_CODES.INVALID_ARGUMENT,
+      });
+    }
+
+    if (
+      intent.metadataChanges &&
+      intent.metadataChanges.expectedMetaRevision === undefined
+    ) {
+      revisionRequired();
+    }
+    if (
+      intent.parentChange &&
+      intent.parentChange.expectedDraftStructureRevision === undefined
+    ) {
+      revisionRequired();
+    }
+  }
+
+  private async run(intent: InternalIntent): Promise<TransactionResult> {
     return this.client.$transaction(async (tx) => {
       const websiteExists = await tx.website.findUnique({
         where: { id: this.websiteId },
@@ -196,11 +265,11 @@ export class PrismaDraftPageStructureTransaction
       });
       if (!websiteExists) pageNotFound();
 
-      await this.invokeHook(command.kind, "beforeLock");
+      await this.invokeHook(intent.kind, "beforeLock");
       await tx.$queryRaw(
         Prisma.sql`SELECT "id" FROM "Website" WHERE "id" = ${this.websiteId} FOR UPDATE`,
       );
-      await this.invokeHook(command.kind, "afterLock");
+      await this.invokeHook(intent.kind, "afterLock");
 
       const website = await tx.website.findUnique({
         where: { id: this.websiteId },
@@ -212,102 +281,212 @@ export class PrismaDraftPageStructureTransaction
         where: { websiteId: this.websiteId, state: "draft" },
         orderBy: [{ position: "asc" }, { createdAt: "asc" }],
       })) as DraftPageRow[];
-      await this.invokeHook(command.kind, "afterRead");
+      await this.invokeHook(intent.kind, "afterRead");
 
-      const current = toSnapshot(rows, website.draftStructureRevision);
-      const expected = command.value.expectedDraftStructureRevision;
+      const currentSnapshot = toSnapshot(
+        rows,
+        website.draftStructureRevision,
+      );
+      const updateContext =
+        intent.kind === "update"
+          ? this.resolveUpdate(
+              intent.value,
+              rows,
+            )
+          : undefined;
+
+      const expectedRevision =
+        intent.kind === "update"
+          ? updateContext?.parentChanged
+            ? intent.value.parentChange?.expectedDraftStructureRevision
+            : undefined
+          : intent.value.expectedDraftStructureRevision;
 
       if (
-        expected !== undefined &&
-        expected !== website.draftStructureRevision
+        expectedRevision !== undefined &&
+        expectedRevision !== website.draftStructureRevision
       ) {
         throw new DomainError({
           code: ERROR_CODES.DRAFT_STRUCTURE_REVISION_CONFLICT,
           message: ERROR_CODES.DRAFT_STRUCTURE_REVISION_CONFLICT,
           details: {
-            expectedDraftStructureRevision: expected,
+            expectedDraftStructureRevision: expectedRevision,
             currentDraftStructureRevision: website.draftStructureRevision,
-            current,
+            current: currentSnapshot,
           },
         });
       }
 
-      const plan = this.plan(command, rows);
+      const plan = this.plan(intent, rows, updateContext);
+      const structureChanged = plan.kind !== "noop";
+      const targetPaginationDerived =
+        intent.kind === "update" &&
+        plan.paginationDisabledPageIds.includes(intent.value.pageId) &&
+        updateContext?.currentPage.paginationEnabled === true;
+
+      const effectiveUpdateContext =
+        updateContext && targetPaginationDerived
+          ? {
+              ...updateContext,
+              metadataPatch: {
+                ...updateContext.metadataPatch,
+                paginationEnabled: false,
+              },
+            }
+          : updateContext;
+
       if (plan.kind === "noop") {
         if (
-          command.kind === "update" &&
-          (command.value.metadata ||
-            plan.paginationDisabledPageIds.length > 0)
+          intent.kind === "update" &&
+          effectiveUpdateContext &&
+          (effectiveUpdateContext.parentChanged ||
+            Object.keys(effectiveUpdateContext.metadataPatch).length > 0)
         ) {
-          await this.applyUpdateWrites(tx, command.value, false, rows);
-          await this.applyPaginationNormalization(
+          await this.applyUpdateWrites(
             tx,
-            plan.paginationDisabledPageIds,
+            intent.value,
+            effectiveUpdateContext,
           );
-          const nextRows = (await tx.page.findMany({
-            where: { websiteId: this.websiteId, state: "draft" },
-            orderBy: [{ position: "asc" }, { createdAt: "asc" }],
-          })) as DraftPageRow[];
-          await this.invokeHook(command.kind, "beforeCommit");
-          return {
-            snapshot: toSnapshot(
-              nextRows,
-              website.draftStructureRevision,
-            ),
-            rows: nextRows,
-          };
         }
-
-        await this.invokeHook(command.kind, "beforeCommit");
-        return { snapshot: current, rows };
+      } else {
+        await this.applyCommandWrites(
+          tx,
+          intent,
+          rows,
+          plan,
+          effectiveUpdateContext,
+        );
       }
 
-      await this.applyCommandWrites(tx, command, rows, plan);
-      await this.invokeHook(command.kind, "beforeRevisionIncrement");
+      const remainingPaginationIds =
+        intent.kind === "update"
+          ? plan.paginationDisabledPageIds.filter(
+              (pageId) => pageId !== intent.value.pageId,
+            )
+          : [];
+      if (remainingPaginationIds.length > 0) {
+        await this.applyPaginationNormalization(tx, remainingPaginationIds);
+      }
 
-      const nextWebsite = await tx.website.update({
-        where: { id: this.websiteId },
-        data: { draftStructureRevision: { increment: 1 } },
-        select: { draftStructureRevision: true },
-      });
+      let finalStructureRevision = website.draftStructureRevision;
+      if (structureChanged) {
+        await this.invokeHook(intent.kind, "beforeRevisionIncrement");
+        const nextWebsite = await tx.website.update({
+          where: { id: this.websiteId },
+          data: { draftStructureRevision: { increment: 1 } },
+          select: { draftStructureRevision: true },
+        });
+        finalStructureRevision = nextWebsite.draftStructureRevision;
+      }
 
       const nextRows = (await tx.page.findMany({
         where: { websiteId: this.websiteId, state: "draft" },
         orderBy: [{ position: "asc" }, { createdAt: "asc" }],
       })) as DraftPageRow[];
 
-      await this.invokeHook(command.kind, "beforeCommit");
+      await this.invokeHook(intent.kind, "beforeCommit");
 
       return {
-        snapshot: toSnapshot(
-          nextRows,
-          nextWebsite.draftStructureRevision,
-          this.now().toISOString(),
-        ),
+        snapshot: structureChanged
+          ? toSnapshot(
+              nextRows,
+              finalStructureRevision,
+              this.now().toISOString(),
+            )
+          : toSnapshot(nextRows, finalStructureRevision),
         rows: nextRows,
+        structureChanged,
       };
     });
   }
 
-  private plan(
-    command: InternalCommand,
+  private resolveUpdate(
+    intent: UpdateDraftPageIntent,
     rows: ReadonlyArray<DraftPageRow>,
+  ): UpdateContext {
+    const currentRow = rows.find((row) => row.pageId === intent.pageId);
+    if (!currentRow) pageNotFound();
+    const current = toDomainPageWithRevisions(currentRow);
+
+    const normalizedParent = intent.parentChange
+      ? {
+          baseline: assertParentId(intent.parentChange.baseline),
+          local: assertParentId(intent.parentChange.local),
+        }
+      : undefined;
+    const parentChanged =
+      normalizedParent !== undefined &&
+      normalizedParent.local !== normalizedParent.baseline;
+    const effectiveParentId = parentChanged
+      ? normalizedParent.local
+      : current.page.parentId;
+
+    const resolution = intent.metadataChanges
+      ? resolvePageMetadataChanges({
+          current: current.page,
+          changes: intent.metadataChanges.changes,
+          effectiveParentId,
+        })
+      : { patch: {}, conflicts: [], changedFields: [] };
+
+    if (resolution.conflicts.length > 0 && intent.metadataChanges) {
+      throw new DomainError({
+        code: ERROR_CODES.PAGE_METADATA_REVISION_CONFLICT,
+        message: ERROR_CODES.PAGE_METADATA_REVISION_CONFLICT,
+        details: {
+          expectedMetaRevision:
+            intent.metadataChanges.expectedMetaRevision,
+          currentMetaRevision: current.revisions.metaRevision,
+          conflicts: resolution.conflicts,
+          current,
+        },
+      });
+    }
+
+    const effectivePage = normalizeFinalPageState({
+      ...current.page,
+      ...resolution.patch,
+      parentId: effectiveParentId,
+    });
+
+    return {
+      currentRow,
+      currentPage: current.page,
+      effectiveParentId,
+      parentChanged,
+      metadataPatch:
+        effectivePage.paginationEnabled !==
+        (resolution.patch.paginationEnabled ??
+          current.page.paginationEnabled)
+          ? {
+              ...resolution.patch,
+              paginationEnabled: effectivePage.paginationEnabled,
+            }
+          : resolution.patch,
+      oldSlug: current.page.slug,
+    };
+  }
+
+  private plan(
+    intent: InternalIntent,
+    rows: ReadonlyArray<DraftPageRow>,
+    updateContext?: UpdateContext,
   ): DraftStructurePlan {
     const pages = toPlannerPages(rows);
 
-    switch (command.kind) {
+    switch (intent.kind) {
       case "create": {
-        if (rows.some((row) => row.slug === command.value.page.slug)) {
+        if (rows.some((row) => row.slug === intent.value.page.slug)) {
           throw new DomainError({ code: ERROR_CODES.PAGE_SLUG_CONFLICT });
         }
 
         return planCreateDraftPage({
           pages,
           page: {
-            id: command.value.page.id,
-            parentId: command.value.page.parentId,
-            slug: command.value.page.slug,
-            paginationEnabled: command.value.page.paginationEnabled,
+            id: intent.value.page.id,
+            parentId: intent.value.page.parentId,
+            slug: intent.value.page.slug,
+            paginationEnabled: intent.value.page.paginationEnabled,
             metaRevision: 0,
             position: pages.length,
           },
@@ -316,51 +495,47 @@ export class PrismaDraftPageStructureTransaction
       case "reorder":
         return planReorderDraftSiblings({
           pages,
-          parentId: command.value.parentPageId,
-          orderedPageIds: command.value.orderedPageIds,
+          parentId: intent.value.parentPageId,
+          orderedPageIds: intent.value.orderedPageIds,
         });
       case "update": {
-        const target = pages.find(
-          (page) => page.id === command.value.pageId,
-        );
-        if (!target) pageNotFound();
+        if (!updateContext) pageNotFound();
         const effectivePages = pages.map((page) =>
-          page.id === command.value.pageId
+          page.id === intent.value.pageId
             ? {
                 ...page,
-                slug: command.value.metadata?.page.slug ?? page.slug,
+                slug:
+                  updateContext.metadataPatch.slug ?? page.slug,
                 paginationEnabled:
-                  command.value.metadata?.page.paginationEnabled ??
+                  updateContext.metadataPatch.paginationEnabled ??
                   page.paginationEnabled,
               }
             : page,
         );
         return planMoveDraftPage({
           pages: effectivePages,
-          pageId: command.value.pageId,
-          parentId:
-            command.value.parentPageId === undefined
-              ? target.parentId
-              : command.value.parentPageId,
+          pageId: intent.value.pageId,
+          parentId: updateContext.effectiveParentId,
         });
       }
       case "delete":
         return planDeleteDraftPage({
           pages,
-          pageId: command.value.pageId,
+          pageId: intent.value.pageId,
         });
     }
   }
 
   private async applyCommandWrites(
     tx: Prisma.TransactionClient,
-    command: InternalCommand,
+    intent: InternalIntent,
     rows: ReadonlyArray<DraftPageRow>,
     plan: Exclude<DraftStructurePlan, { kind: "noop" }>,
+    updateContext?: UpdateContext,
   ): Promise<void> {
-    if (command.kind === "create") {
+    if (intent.kind === "create") {
       const planned = plan.pages.find(
-        (page) => page.id === command.value.page.id,
+        (page) => page.id === intent.value.page.id,
       );
       if (!planned) pageNotFound();
 
@@ -368,30 +543,31 @@ export class PrismaDraftPageStructureTransaction
         data: toPrismaDraftPageCreateData(
           this.websiteId,
           {
-            pageId: command.value.page.id,
-            parentId: command.value.page.parentId,
-            slug: command.value.page.slug,
-            name: command.value.page.name,
-            seoTitle: command.value.page.seoTitle,
-            seoDescription: command.value.page.seoDescription,
-            blocks: command.value.page.blocks,
-            sitemap: command.value.page.sitemap,
+            pageId: intent.value.page.id,
+            parentId: intent.value.page.parentId,
+            slug: intent.value.page.slug,
+            name: intent.value.page.name,
+            seoTitle: intent.value.page.seoTitle,
+            seoDescription: intent.value.page.seoDescription,
+            blocks: intent.value.page.blocks,
+            sitemap: intent.value.page.sitemap,
             paginationEnabled: planned.paginationEnabled,
-            metaCreatedAt: command.value.page.meta.createdAt,
-            metaUpdatedAt: command.value.page.meta.updatedAt,
+            metaCreatedAt: intent.value.page.meta.createdAt,
+            metaUpdatedAt: intent.value.page.meta.updatedAt,
           },
           planned.position,
         ),
       });
     }
 
-    if (command.kind === "update") {
-      await this.applyUpdateWrites(tx, command.value, true, rows);
+    if (intent.kind === "update") {
+      if (!updateContext) pageNotFound();
+      await this.applyUpdateWrites(tx, intent.value, updateContext);
     }
 
-    if (command.kind === "delete") {
+    if (intent.kind === "delete") {
       const children = rows.filter(
-        (row) => row.parentPageId === command.value.pageId,
+        (row) => row.parentPageId === intent.value.pageId,
       );
 
       if (children.length > 0) {
@@ -399,29 +575,31 @@ export class PrismaDraftPageStructureTransaction
           where: {
             websiteId: this.websiteId,
             state: "draft",
-            parentPageId: command.value.pageId,
+            parentPageId: intent.value.pageId,
           },
           data: { parentPageId: null },
         });
       }
-      await this.invokeHook(command.kind, "afterDetach");
+      await this.invokeHook(intent.kind, "afterDetach");
 
       const deleted = await tx.page.deleteMany({
         where: {
           websiteId: this.websiteId,
           state: "draft",
-          pageId: command.value.pageId,
+          pageId: intent.value.pageId,
         },
       });
       if (deleted.count !== 1) pageNotFound();
-      await this.invokeHook(command.kind, "afterDelete");
+      await this.invokeHook(intent.kind, "afterDelete");
     }
 
-    await this.applyPaginationNormalization(
-      tx,
-      plan.paginationDisabledPageIds,
-    );
-    await this.invokeHook(command.kind, "afterPagination");
+    if (intent.kind !== "update") {
+      await this.applyPaginationNormalization(
+        tx,
+        plan.paginationDisabledPageIds,
+      );
+    }
+    await this.invokeHook(intent.kind, "afterPagination");
 
     const previousPosition = new Map(
       rows.map((row) => [row.pageId, row.position]),
@@ -429,8 +607,8 @@ export class PrismaDraftPageStructureTransaction
 
     for (const page of plan.pages) {
       if (
-        command.kind === "create" &&
-        page.id === command.value.page.id
+        intent.kind === "create" &&
+        page.id === intent.value.page.id
       ) {
         continue;
       }
@@ -444,158 +622,135 @@ export class PrismaDraftPageStructureTransaction
         },
         data: { position: page.position },
       });
-      await this.invokeHook(command.kind, "duringNormalization");
+      await this.invokeHook(intent.kind, "duringNormalization");
     }
-    await this.invokeHook(command.kind, "afterNormalization");
+    await this.invokeHook(intent.kind, "afterNormalization");
   }
 
   private async applyUpdateWrites(
     tx: Prisma.TransactionClient,
-    command: UpdateDraftPageStructureCommand,
-    includeParent: boolean,
-    knownRows?: ReadonlyArray<DraftPageRow>,
+    intent: UpdateDraftPageIntent,
+    context: UpdateContext,
   ): Promise<void> {
-    const rows =
-      knownRows ??
-      ((await tx.page.findMany({
-        where: { websiteId: this.websiteId, state: "draft" },
-        orderBy: [{ position: "asc" }, { createdAt: "asc" }],
-      })) as DraftPageRow[]);
-    if (!rows.some((row) => row.pageId === command.pageId)) pageNotFound();
-
-    const metadata = command.metadata;
-    if (
-      metadata &&
-      rows.some(
-        (row) =>
-          row.pageId !== command.pageId &&
-          row.slug === metadata.page.slug,
-      )
-    ) {
-      throw new DomainError({ code: ERROR_CODES.PAGE_SLUG_CONFLICT });
-    }
-
-    const current = rows.find((row) => row.pageId === command.pageId);
-    if (!current) pageNotFound();
-    const effectiveParentPageId =
-      includeParent && command.parentPageId !== undefined
-        ? command.parentPageId
-        : current.parentPageId;
-    const effectiveSlug = metadata?.page.slug ?? current.slug;
+    const effectiveSlug =
+      context.metadataPatch.slug ?? context.currentPage.slug;
     if (
       effectiveSlug === HOME_SLUG &&
-      effectiveParentPageId !== null
+      context.effectiveParentId !== null
     ) {
       throw new DomainError({
         code: ERROR_CODES.PAGE_PARENT_INVALID,
         message: ERROR_CODES.PAGE_PARENT_INVALID,
       });
     }
-    const effectivePaginationEnabled =
-      effectiveParentPageId === null
-        ? false
-        : (metadata?.page.paginationEnabled ??
-          current.paginationEnabled);
 
     if (
-      (includeParent && command.parentPageId !== undefined) ||
-      metadata
-    ) {
-      await tx.page.updateMany({
+      effectiveSlug !== context.currentPage.slug &&
+      (await tx.page.findFirst({
         where: {
           websiteId: this.websiteId,
           state: "draft",
-          pageId: command.pageId,
+          slug: effectiveSlug,
+          pageId: { not: intent.pageId },
         },
-        data: {
-          ...(includeParent && command.parentPageId !== undefined
-            ? { parentPageId: command.parentPageId }
-            : {}),
-          ...(metadata
-            ? {
-                slug: metadata.page.slug,
-                name: metadata.page.name,
-                seoTitle: metadata.page.seoTitle,
-                seoDescription: metadata.page.seoDescription,
-                sitemap:
-                  metadata.page.sitemap === null
-                    ? Prisma.JsonNull
-                    : (metadata.page
-                        .sitemap as unknown as Prisma.InputJsonValue),
-                paginationEnabled: effectivePaginationEnabled,
-                metaRevision: { increment: 1 },
-                metaUpdatedAt: new Date(metadata.page.meta.updatedAt),
-              }
-            : {}),
-        },
-      });
+        select: { pageId: true },
+      }))
+    ) {
+      throw new DomainError({ code: ERROR_CODES.PAGE_SLUG_CONFLICT });
     }
 
-    if (metadata && effectiveSlug !== current.slug) {
-      const site = new PrismaSiteRepository({
-        websiteId: this.websiteId,
-        transactionClient: tx,
+    if (context.parentChanged) {
+      const parentWrite = await tx.page.updateMany({
+        where: {
+          websiteId: this.websiteId,
+          state: "draft",
+          pageId: intent.pageId,
+        },
+        data: { parentPageId: context.effectiveParentId },
       });
-      const currentBundle = await site.readSettingsWithRevisions("draft");
-      const patched = replacePagePathInMenus({
-        settings: currentBundle.settings,
-        fromSlug: current.slug,
-        toSlug: effectiveSlug,
+      if (parentWrite.count !== 1) pageNotFound();
+    }
+
+    if (Object.keys(context.metadataPatch).length > 0) {
+      await this.invokeHook("update", "beforeMetadataCas");
+      const metadataWrite = await tx.page.updateMany({
+        where: {
+          websiteId: this.websiteId,
+          state: "draft",
+          pageId: intent.pageId,
+          metaRevision: context.currentRow.metaRevision,
+        },
+        data: {
+          ...(hasOwn(context.metadataPatch, "name")
+            ? { name: context.metadataPatch.name }
+            : {}),
+          ...(hasOwn(context.metadataPatch, "slug")
+            ? { slug: context.metadataPatch.slug }
+            : {}),
+          ...(hasOwn(context.metadataPatch, "seoTitle")
+            ? { seoTitle: context.metadataPatch.seoTitle }
+            : {}),
+          ...(hasOwn(context.metadataPatch, "seoDescription")
+            ? { seoDescription: context.metadataPatch.seoDescription }
+            : {}),
+          ...(hasOwn(context.metadataPatch, "sitemap")
+            ? {
+                sitemap:
+                  context.metadataPatch.sitemap === null
+                    ? Prisma.JsonNull
+                    : (context.metadataPatch
+                        .sitemap as unknown as Prisma.InputJsonValue),
+              }
+            : {}),
+          ...(hasOwn(context.metadataPatch, "paginationEnabled")
+            ? {
+                paginationEnabled:
+                  context.metadataPatch.paginationEnabled,
+              }
+            : {}),
+          metaRevision: { increment: 1 },
+          metaUpdatedAt: this.now(),
+        },
       });
-      const primaryChanged =
-        patched.settings.primaryMenu !== currentBundle.settings.primaryMenu;
-      const legalChanged =
-        patched.settings.legalMenu !== currentBundle.settings.legalMenu;
+      if (metadataWrite.count !== 1) throw new CompositeCasMiss();
+    }
 
-      if (primaryChanged) {
-        const expectedRevision =
-          command.menuRenameExpectedRevisions
-            ?.expectedPrimaryMenuRevision;
-        if (expectedRevision === undefined) {
-          throw new DomainError({ code: ERROR_CODES.REVISION_REQUIRED });
-        }
-        const primary = await site.compareAndSetDraftPrimaryMenu({
-          expectedRevision,
-          primaryMenu: patched.settings.primaryMenu,
-        });
-        if (!primary) {
-          throw new DomainError({
-            code: ERROR_CODES.SETTINGS_SECTION_REVISION_CONFLICT,
-            details: {
-              resourceId: "primaryMenu",
-              expectedRevision,
-              currentRevision:
-                currentBundle.revisions.primaryMenuRevision,
-              conflictingPaths: ["items"],
-            },
-          });
-        }
-      }
+    if (effectiveSlug !== context.oldSlug) {
+      await this.renameMenus(tx, context.oldSlug, effectiveSlug);
+    }
+  }
 
-      if (legalChanged) {
-        const expectedRevision =
-          command.menuRenameExpectedRevisions
-            ?.expectedLegalMenuRevision;
-        if (expectedRevision === undefined) {
-          throw new DomainError({ code: ERROR_CODES.REVISION_REQUIRED });
-        }
-        const legal = await site.compareAndSetDraftLegalMenu({
-          expectedRevision,
-          legalMenu: patched.settings.legalMenu,
-        });
-        if (!legal) {
-          throw new DomainError({
-            code: ERROR_CODES.SETTINGS_SECTION_REVISION_CONFLICT,
-            details: {
-              resourceId: "legalMenu",
-              expectedRevision,
-              currentRevision:
-                currentBundle.revisions.legalMenuRevision,
-              conflictingPaths: ["items"],
-            },
-          });
-        }
-      }
+  private async renameMenus(
+    tx: Prisma.TransactionClient,
+    oldSlug: string,
+    newSlug: string,
+  ): Promise<void> {
+    const site = new PrismaSiteRepository({
+      websiteId: this.websiteId,
+      transactionClient: tx,
+    });
+    const current = await site.readSettingsWithRevisions("draft");
+    const patched = replacePagePathInMenus({
+      settings: current.settings,
+      fromSlug: oldSlug,
+      toSlug: newSlug,
+    });
+    await this.invokeHook("update", "beforeMenuCas");
+
+    if (patched.settings.primaryMenu !== current.settings.primaryMenu) {
+      const updated = await site.compareAndSetDraftPrimaryMenu({
+        expectedRevision: current.revisions.primaryMenuRevision,
+        primaryMenu: patched.settings.primaryMenu,
+      });
+      if (!updated) throw new CompositeCasMiss();
+    }
+
+    if (patched.settings.legalMenu !== current.settings.legalMenu) {
+      const updated = await site.compareAndSetDraftLegalMenu({
+        expectedRevision: current.revisions.legalMenuRevision,
+        legalMenu: patched.settings.legalMenu,
+      });
+      if (!updated) throw new CompositeCasMiss();
     }
   }
 
@@ -621,9 +776,9 @@ export class PrismaDraftPageStructureTransaction
   }
 
   private async invokeHook(
-    command: InternalCommand["kind"],
+    intent: InternalIntent["kind"],
     stage: DraftStructureTransactionStage,
   ): Promise<void> {
-    await this.hook?.({ command, stage });
+    await this.hook?.({ command: intent, stage });
   }
 }

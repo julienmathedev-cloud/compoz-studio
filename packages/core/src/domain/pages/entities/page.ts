@@ -64,6 +64,12 @@ export interface PageWithRevisions {
 
 export type PageSummary = Pick<Page, "id" | "slug" | "name" | "parentId">;
 
+/** Draft-only page reference carrying the metadata OCC revision. */
+export type DraftPageSummary = PageSummary &
+  Readonly<{
+    metaRevision: number;
+  }>;
+
 export type InternalPageOption = Readonly<{
   label: string;
 

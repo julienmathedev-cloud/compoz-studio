@@ -13,23 +13,21 @@ import type {
 } from "@compoz/core/domain/pages/dto";
 import type {
   DraftSiteIndexWithRevisionDTO,
-  SiteIndexDTO,
 } from "@compoz/core/domain/site/dto";
 
 export type GetPagesIndexResponse = DraftSiteIndexWithRevisionDTO;
 
 export type CreatePageResponse = Readonly<{
   page: PageDTO;
-  index: SiteIndexDTO;
-  draftStructureRevision: number;
-}>;
+}> &
+  DraftSiteIndexWithRevisionDTO;
 
 export type GetPageByIdResponse = PageWithRevisionsDTO;
 
 export type UpdatePageResponse = Readonly<{
   page: PageDTO;
-  index: SiteIndexDTO;
-  draftStructureRevision: number;
+  revisions: PageWithRevisionsDTO["revisions"];
+  structure?: DraftSiteIndexWithRevisionDTO;
 }>;
 
 export type DeletePageResponse = DraftSiteIndexWithRevisionDTO;

@@ -3,17 +3,7 @@
 /**
  * @file apps/studio/src/features/pages/hooks/useUpdatePage.ts
  * @layer studio/features/pages/hooks
- *
- * @description
- * React Query mutation hook for updating a draft page through the pages Studio API.
- *
- * @remarks
- * - Builds a minimal API patch from the shallow diff between baseline and next UI values.
- * - Handles no-change cases before calling the API.
- * - Tracks the targeted update through `updatingPageId` so only the matching page is blocked.
- * - Seeds the page-by-id cache and updates the SiteIndex cache from the returned payload.
- * - Invalidates site and page status views after update.
- * - Studio cache keys are scoped by Prisma Website.id.
+ * @description Revision-aware draft page metadata and parent mutation hook.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,21 +12,39 @@ import { useCallback, useMemo, useState } from "react";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
-import type { PageDTO } from "@compoz/core/domain/pages/dto";
+import type {
+  PageWithRevisionsDTO,
+} from "@compoz/core/domain/pages/dto";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import type { UpdatePageResponse } from "@compoz/infra/http/studio/pages.types";
+import type { DraftStructureConflictDetails } from "@compoz/infra/lib/get-draft-structure-conflict-details";
+import type { PageMetadataConflictDetails } from "@compoz/infra/lib/get-page-metadata-conflict-details";
 import { log } from "@compoz/infra/lib/log";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
-import { toUpdatePageIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/pages-form";
+import { adoptPageMetadataConflictCurrentCache } from "@compoz/studio/features/pages/cache/page-metadata-conflict-cache";
 import {
-  adoptDraftStructureConflict,
+  mergePageRevisionedSnapshot,
+  patchPageStructureParent,
+} from "@compoz/studio/features/pages/cache/page-snapshot";
+import {
+  adoptDraftStructureConflictDetails,
   draftStructureMutationOptions,
-  refreshMenuSettingsAfterConflict,
   requireDraftStructureSnapshot,
-  resolveMenuRenameExpectedRevisions,
 } from "@compoz/studio/features/pages/hooks/draft-structure-mutation";
-import { adoptDraftStructurePagePatchCache } from "@compoz/studio/features/site-index/cache";
+import {
+  submitPageUpdateMutation,
+  type UpdatePageSubmissionOutcome,
+} from "@compoz/studio/features/pages/hooks/page-update-submission";
+import {
+  normalizePageFormValues,
+  toUpdatePageIntentDTOFromFormValues,
+  type PageFormDirtyFields,
+} from "@compoz/studio/features/pages/mappers/pages-form";
+import {
+  adoptDraftStructurePagePatchCache,
+  patchDraftPageMetadataCache,
+} from "@compoz/studio/features/site-index/cache";
 import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
 import {
@@ -50,10 +58,13 @@ import {
 } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 import { withSaveLogs } from "@compoz/ui/hooks/instrumentation";
-import { buildShallowDiff } from "@compoz/ui/lib/build-shallow-diff";
-
 import type { PageFormValues } from "@compoz/validation/pages/page-form";
 import type { UpdatePageIntentDTO } from "@compoz/validation/pages/page-intents";
+
+export type PageEditBaseline = Readonly<{
+  values: PageFormValues;
+  metaRevision: number;
+}>;
 
 type UpdatePageArgs = Readonly<{
   pageId: string;
@@ -61,129 +72,124 @@ type UpdatePageArgs = Readonly<{
   fields: ReadonlyArray<string>;
 }>;
 
-type UpdatePageMutationResult = Readonly<{
+export type UpdatePageMutationResult = Readonly<{
   pageId: string;
-  nextSlug: string;
   fields: ReadonlyArray<string>;
-  page: PageDTO;
-  snapshot: Readonly<{
-    index: UpdatePageResponse["index"];
-    draftStructureRevision: number;
-  }>;
+  response: UpdatePageResponse;
+}>;
+
+type UseUpdatePageOptions = Readonly<{
+  onSuccess?: (result: UpdatePageMutationResult) => void;
+  onMetadataConflict?: (details: PageMetadataConflictDetails) => void;
+  onStructureConflict?: (
+    details: DraftStructureConflictDetails,
+  ) => void;
 }>;
 
 type UseUpdatePageResult = Readonly<{
   update: (
     pageId: string,
-    baseline: PageFormValues,
+    baseline: PageEditBaseline,
     next: PageFormValues,
-  ) => Promise<void>;
+    dirtyFields?: PageFormDirtyFields,
+  ) => Promise<UpdatePageSubmissionOutcome>;
+  adoptMetadataConflictCurrent: (
+    details: PageMetadataConflictDetails,
+  ) => void;
   updatingPageId: string | null;
   isUpdating: boolean;
 }>;
 
+export type { UpdatePageSubmissionOutcome } from "@compoz/studio/features/pages/hooks/page-update-submission";
+
 const logger = log.child({ ns: "hook", name: "useUpdatePage" });
 
-export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
+export function useUpdatePage(
+  options: UseUpdatePageOptions = {},
+): UseUpdatePageResult {
   const t = useTranslations();
   const queryClient = useQueryClient();
   const websiteId = useWebsiteId();
-
   const entityLabel = t("studio.shared.entities.page");
-
+  const onMetadataConflict = options.onMetadataConflict;
+  const onStructureConflict = options.onStructureConflict;
   const [updatingPageId, setUpdatingPageId] = useState<string | null>(null);
 
-  const mutationFn = async (
-    args: UpdatePageArgs,
-  ): Promise<UpdatePageMutationResult> => {
-      const { pageId, payload, fields } = args;
+  const mutation = useMutation({
+    ...draftStructureMutationOptions(websiteId),
+    mutationFn: async (
+      args: UpdatePageArgs,
+    ): Promise<UpdatePageMutationResult> => {
       await queryClient.cancelQueries({
-        queryKey: siteIndexKey(
-          websiteId,
-          DEFAULT_CONTENT_STATE,
-        ),
+        queryKey: siteIndexKey(websiteId, DEFAULT_CONTENT_STATE),
         exact: true,
       });
-      const requestPayload: UpdatePageIntentDTO = { ...payload };
-      const structural = "parentId" in payload;
-      if (structural) {
-        requestPayload.expectedDraftStructureRevision =
-          requireDraftStructureSnapshot(
-            queryClient,
-            websiteId,
-          ).draftStructureRevision;
-      }
-      if ("slug" in payload) {
-        Object.assign(
-          requestPayload,
-          await resolveMenuRenameExpectedRevisions(
-            queryClient,
-            websiteId,
-          ),
-        );
-      }
 
       const response = await withSaveLogs(
         "useUpdatePage",
         DEFAULT_CONTENT_STATE,
-        async () => {
-          const result: UpdatePageResponse = await pagesStudioApi.update(
-            pageId,
-            requestPayload,
-          );
-
-          return result;
-        },
+        () => pagesStudioApi.update(args.pageId, args.payload),
         {
           entity: entityLabel,
-          fields,
-          pageId,
+          fields: args.fields,
+          pageId: args.pageId,
           websiteId,
         },
       );
 
-      const page = response.page;
-      const nextSlug = String(payload.slug ?? "").trim();
-
-      return {
-        pageId,
-        nextSlug,
-        fields,
-        page,
-        snapshot: {
-          index: response.index,
-          draftStructureRevision: response.draftStructureRevision,
-        },
-      } as const;
-    };
-
-  const handleSuccess = async ({
-    pageId,
-    nextSlug,
-    fields,
-    page,
-    snapshot,
-  }: UpdatePageMutationResult) => {
+      return { ...args, response };
+    },
+    onSuccess: async (result) => {
+      const { pageId, fields, response } = result;
       notifyUpdated(
         t("notifications.updated.title", { entity: entityLabel }),
         t("notifications.updated.description", { fields: fields.join(", ") }),
       );
 
-      adoptDraftStructurePagePatchCache(
-        queryClient,
-        websiteId,
-        snapshot,
-        page,
-        DEFAULT_CONTENT_STATE,
-      );
-
+      const incoming: PageWithRevisionsDTO = {
+        page: response.page,
+        revisions: response.revisions,
+      };
       queryClient.setQueryData(
         pageByIdKey(websiteId, pageId, DEFAULT_CONTENT_STATE),
-        page,
+        (current: PageWithRevisionsDTO | undefined) => {
+          const merged = mergePageRevisionedSnapshot(current, incoming);
+          const structuralParent = response.structure?.index.pages.find(
+            (item) => item.id === pageId,
+          )?.parentId;
+
+          return structuralParent === undefined
+            ? merged
+            : patchPageStructureParent(merged, structuralParent);
+        },
       );
 
-      const slugWasPatched = fields.includes("slug");
+      if (response.structure) {
+        adoptDraftStructurePagePatchCache(
+          queryClient,
+          websiteId,
+          response.structure,
+          {
+            ...response.page,
+            metaRevision: response.revisions.metaRevision,
+          },
+          DEFAULT_CONTENT_STATE,
+        );
+      } else {
+        patchDraftPageMetadataCache(
+          queryClient,
+          websiteId,
+          {
+            id: response.page.id,
+            name: response.page.name,
+            slug: response.page.slug,
+            metaRevision: response.revisions.metaRevision,
+          },
+          DEFAULT_CONTENT_STATE,
+        );
+      }
 
+      const slugWasPatched = fields.includes("slug");
       await Promise.all([
         invalidateSiteStatus(queryClient, websiteId),
         invalidatePageStatusViews(queryClient, websiteId),
@@ -200,121 +206,131 @@ export function useUpdatePage(onSuccess?: () => void): UseUpdatePageResult {
           : []),
       ]);
 
-      logger.debug("update.ok", {
-        websiteId,
-        pageId,
-        nextSlug,
-        fields,
-      });
-
-      onSuccess?.();
-    };
-
-  const handleError = async (
-    error: unknown,
-    args: UpdatePageArgs,
-  ) => {
-      adoptDraftStructureConflict(queryClient, websiteId, error);
-      if ("slug" in args.payload) {
-        await refreshMenuSettingsAfterConflict(
-          queryClient,
-          websiteId,
-          error,
-        );
-      }
-      notify.fromError(error, UiError.unexpectedSave);
-
-      logger.error("update.failed", {
-        websiteId,
-        msg: String(error),
-      });
-    };
-
-  const handleSettled = () => {
-      setUpdatingPageId(null);
-    };
-
-  const mutation = useMutation({
-    ...draftStructureMutationOptions(websiteId),
-    mutationFn,
-    onSuccess: handleSuccess,
-    onError: handleError,
-    onSettled: handleSettled,
+      options.onSuccess?.(result);
+    },
+    onSettled: () => setUpdatingPageId(null),
     retry: false,
   });
 
-  const isPending = mutation.isPending;
+  const adoptMetadataConflictCurrent = useCallback(
+    (details: PageMetadataConflictDetails): void => {
+      adoptPageMetadataConflictCurrentCache(
+        queryClient,
+        websiteId,
+        details,
+        DEFAULT_CONTENT_STATE,
+      );
+    },
+    [queryClient, websiteId],
+  );
 
   const update = useCallback(
-    async (pageId: string, baseline: PageFormValues, next: PageFormValues) => {
-      if (isPending) return;
-
+    async (
+      pageId: string,
+      baseline: PageEditBaseline,
+      next: PageFormValues,
+      dirtyFields?: PageFormDirtyFields,
+    ): Promise<UpdatePageSubmissionOutcome> => {
+      if (mutation.isPending) return "ignored";
       const pageIdKey = String(pageId ?? "").trim();
-
       if (!pageIdKey) {
         notify.error(
           t("uiErrors.errorGeneric"),
           t(ERROR_CODES.PAGE_ID_REQUIRED),
         );
-
-        logger.error("update.invalidPageId", {
-          websiteId,
-          pageId,
-        });
-
-        return;
+        return "ignored";
       }
+      if (updatingPageId === pageIdKey) return "ignored";
 
-      if (updatingPageId === pageIdKey) return;
-
-      const uiPatch = buildShallowDiff<PageFormValues>(baseline, next) ?? null;
-
-      if (!uiPatch) {
-        notifyNoChanges(
-          t("notifications.noChanges.title"),
-          t("notifications.noChanges.description", { entity: entityLabel }),
-        );
-
-        return;
-      }
-
-      const payload = toUpdatePageIntentDTOFromFormValues(uiPatch);
-      const fields = Object.keys(payload ?? {});
+      const normalizedBaseline = normalizePageFormValues(baseline.values);
+      const normalizedNext = normalizePageFormValues(next);
+      const parentChanged =
+        normalizedBaseline.parentId !== normalizedNext.parentId;
+      const payload = toUpdatePageIntentDTOFromFormValues({
+        baseline: normalizedBaseline,
+        local: normalizedNext,
+        expectedMetaRevision: baseline.metaRevision,
+        ...(parentChanged
+          ? {
+              expectedDraftStructureRevision:
+                requireDraftStructureSnapshot(
+                  queryClient,
+                  websiteId,
+                ).draftStructureRevision,
+            }
+          : {}),
+        ...(dirtyFields ? { dirtyFields } : {}),
+      });
+      const fields = [
+        ...Object.keys(payload.metadataChanges?.changes ?? {}),
+        ...(payload.parentChange ? ["parentId"] : []),
+      ];
 
       if (fields.length === 0) {
         notifyNoChanges(
           t("notifications.noChanges.title"),
           t("notifications.noChanges.description", { entity: entityLabel }),
         );
-
-        return;
+        return "noChanges";
       }
 
       setUpdatingPageId(pageIdKey);
-
-      await mutation.mutateAsync({
-        pageId: pageIdKey,
-        payload,
-        fields,
+      return submitPageUpdateMutation({
+        mutate: () =>
+          mutation.mutateAsync({
+            pageId: pageIdKey,
+            payload,
+            fields,
+          }),
+        onMetadataConflict,
+        onStructureConflict: (details, error) => {
+          const current = adoptDraftStructureConflictDetails(
+            queryClient,
+            websiteId,
+            details,
+          );
+          notify.fromError(error, UiError.unexpectedSave);
+          onStructureConflict?.({
+            ...details,
+            currentDraftStructureRevision:
+              current.draftStructureRevision,
+            current,
+          });
+        },
+        onUnexpectedError: (error) => {
+          notify.fromError(error, UiError.unexpectedSave);
+          logger.error("update.failed", {
+            websiteId,
+            msg: String(error),
+          });
+        },
       });
     },
     [
       entityLabel,
-      isPending,
       mutation,
+      onMetadataConflict,
+      onStructureConflict,
+      queryClient,
       t,
-      websiteId,
       updatingPageId,
+      websiteId,
     ],
   );
 
   return useMemo(
     () => ({
       update,
+      adoptMetadataConflictCurrent,
       updatingPageId,
-      isUpdating: isPending,
+      isUpdating: mutation.isPending,
     }),
-    [update, updatingPageId, isPending],
+    [
+      adoptMetadataConflictCurrent,
+      mutation.isPending,
+      update,
+      updatingPageId,
+    ],
   );
 }
 

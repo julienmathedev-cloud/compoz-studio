@@ -39,11 +39,23 @@ import { InputField } from "@compoz/studio/components/molecules/fields/InputFiel
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
 import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
+import { PageMetadataConflictPanel } from "@compoz/studio/features/pages/components/molecules/PageMetadataConflictPanel";
+import {
+  hasUnresolvedPageMetadataConflicts,
+  type PageMetadataConflictChoice,
+  type PageMetadataConflictResolution,
+  type PageMetadataConflictState,
+} from "@compoz/studio/features/pages/conflicts/page-metadata-conflict";
+import type {
+  PageFormDirtyFields,
+  PageFormSubmissionResult,
+} from "@compoz/studio/features/pages/mappers/pages-form";
 import {
   createSlugAutoSyncState,
   getAutoSlugFromName,
   type SlugAutoSyncState,
 } from "@compoz/studio/features/pages/lib/page-slug-auto-sync";
+import { applyPageFormParentRebase } from "@compoz/studio/features/pages/lib/page-form-parent-rebase";
 import {
   usePageUiWarnings,
   type PageWarningKey,
@@ -78,8 +90,17 @@ type PageFormProps = Readonly<{
   mode?: "create" | "edit";
   bFocusFields?: boolean;
   bCancelAlwaysEnabledInEdit?: boolean;
-  onSubmit: (values: PageFormValues) => void | Promise<void>;
-  onReset?: () => void;
+  onSubmit: (
+    values: PageFormValues,
+    dirtyFields: PageFormDirtyFields,
+  ) => PageFormSubmissionResult | Promise<PageFormSubmissionResult>;
+  onReset?: (resetValues: PageFormValues) => void;
+  metadataConflict?: PageMetadataConflictState | null;
+  onMetadataConflictChoice?: (
+    field: PageMetadataConflictState["unresolvedFields"][number],
+    choice: PageMetadataConflictChoice,
+    localValues: PageFormValues,
+  ) => PageMetadataConflictResolution;
   onWarningKeysChange?: (keys: PageWarningKey[]) => void;
   onDirtyChange?: (dirty: boolean) => void;
   onBlockingErrorsCountChange?: (count: number) => void;
@@ -105,6 +126,8 @@ export function PageForm({
   bCancelAlwaysEnabledInEdit = false,
   onSubmit,
   onReset,
+  metadataConflict,
+  onMetadataConflictChoice,
   onWarningKeysChange,
   onDirtyChange,
   onBlockingErrorsCountChange,
@@ -114,6 +137,7 @@ export function PageForm({
     control,
     handleSubmit,
     reset: rhfReset,
+    resetField,
     getValues,
     setValue,
   } = useForm<PageFormValues>({
@@ -123,6 +147,8 @@ export function PageForm({
     reValidateMode: "onChange",
     shouldFocusError: false,
   });
+  const resetBaselineRef = useRef(initialValues);
+  const preserveMetadataOnParentRebaseRef = useRef(false);
 
   const {
     isDirty,
@@ -130,6 +156,7 @@ export function PageForm({
     submitCount,
     isSubmitted,
     touchedFields,
+    dirtyFields,
     errors,
   } = useFormState({ control });
 
@@ -162,16 +189,6 @@ export function PageForm({
   );
 
   useEffect(() => {
-    rhfReset(initialValues, {
-      keepDirty: false,
-      keepTouched: false,
-      keepErrors: false,
-    });
-
-    slugAutoSyncRef.current = createSlugAutoSyncState({ initialValues, mode });
-  }, [initialValues, mode, rhfReset]);
-
-  useEffect(() => {
     if (mode !== "edit" || !bFocusFields || isBusy) return;
 
     queueMicrotask(() => {
@@ -195,7 +212,14 @@ export function PageForm({
   const isRootPage = values.parentId === null;
 
   useEffect(() => {
-    if (!isRootPage) return;
+    if (!isRootPage) {
+      preserveMetadataOnParentRebaseRef.current = false;
+      return;
+    }
+    if (preserveMetadataOnParentRebaseRef.current) {
+      preserveMetadataOnParentRebaseRef.current = false;
+      return;
+    }
 
     const current = getValues("paginationEnabled");
     if (current === false) return;
@@ -509,10 +533,41 @@ export function PageForm({
   return (
     <form
       aria-busy={isBusy || undefined}
-      onSubmit={handleSubmit(
-        (formValues) => onSubmit(formValues),
-        handleSubmitErrors,
-      )}
+      onSubmit={(event) => {
+        void handleSubmit(
+          async (formValues) => {
+            if (hasUnresolvedPageMetadataConflicts(metadataConflict)) {
+              return;
+            }
+
+            const result = await onSubmit(formValues, dirtyFields);
+            if (!result) return;
+
+            if ("rebaseParentId" in result) {
+              preserveMetadataOnParentRebaseRef.current =
+                result.rebaseParentId === null;
+              resetBaselineRef.current = applyPageFormParentRebase(
+                resetBaselineRef.current,
+                resetField,
+                result.rebaseParentId,
+              );
+              return;
+            }
+
+            resetBaselineRef.current = result.rebaseValues;
+            rhfReset(result.rebaseValues, {
+              keepDirty: false,
+              keepTouched: true,
+              keepErrors: true,
+            });
+            slugAutoSyncRef.current = createSlugAutoSyncState({
+              initialValues: result.rebaseValues,
+              mode,
+            });
+          },
+          handleSubmitErrors,
+        )(event);
+      }}
       noValidate
     >
       <Card variant="panel" visualMode="studio">
@@ -722,6 +777,22 @@ export function PageForm({
           </ExpandableLayout>
         </CardContent>
 
+        {metadataConflict && onMetadataConflictChoice ? (
+          <div className="px-6 pb-4">
+            <PageMetadataConflictPanel
+              state={metadataConflict}
+              onChoice={(field, choice) => {
+                const resolution = onMetadataConflictChoice(
+                  field,
+                  choice,
+                  getValues(),
+                );
+                setResolvedConflictValue(setValue, resolution);
+              }}
+            />
+          </div>
+        ) : null}
+
         <CardFooter>
           <ActionsBar
             variant="resetSubmit"
@@ -733,17 +804,17 @@ export function PageForm({
             submitLabel={submitLabel}
             submitLoadingLabel={submitLoadingLabel}
             onReset={() => {
-              rhfReset(initialValues, {
+              rhfReset(resetBaselineRef.current, {
                 keepDirty: false,
                 keepTouched: false,
                 keepErrors: false,
               });
 
               slugAutoSyncRef.current = createSlugAutoSyncState({
-                initialValues,
+                initialValues: resetBaselineRef.current,
                 mode,
               });
-              onReset?.();
+              onReset?.(resetBaselineRef.current);
             }}
           />
         </CardFooter>
@@ -753,6 +824,47 @@ export function PageForm({
 }
 
 PageForm.displayName = "PageForm";
+
+function setResolvedConflictValue(
+  setValue: UseFormSetValue<PageFormValues>,
+  resolution: PageMetadataConflictResolution,
+): void {
+  const options = {
+    shouldDirty: true,
+    shouldTouch: true,
+    shouldValidate: true,
+  } as const;
+
+  switch (resolution.field) {
+    case "name":
+    case "slug":
+      setValue(resolution.field, String(resolution.localValue ?? ""), options);
+      return;
+    case "seoTitle":
+    case "seoDescription":
+      setValue(
+        resolution.field,
+        resolution.localValue === null
+          ? null
+          : String(resolution.localValue ?? ""),
+        options,
+      );
+      return;
+    case "paginationEnabled":
+      setValue(
+        resolution.field,
+        Boolean(resolution.localValue),
+        options,
+      );
+      return;
+    case "sitemap":
+      setValue(
+        resolution.field,
+        resolution.localValue as PageFormValues["sitemap"],
+        options,
+      );
+  }
+}
 
 /** Auto-updates the slug from the name on blur until the user manually locks the slug. */
 function handleNameBlur(

@@ -1,7 +1,7 @@
 /**
  * @file apps/studio/src/app/api/pages/persist-page-patch.test.ts
  * @layer studio/app/api
- * @description Verifies PATCH orchestration preserves atomic no-op snapshots and failures.
+ * @description Verifies PATCH response mapping preserves optional structure and revisions.
  */
 
 import assert from "node:assert/strict";
@@ -9,9 +9,7 @@ import test from "node:test";
 
 import type { Page } from "@compoz/core/domain/pages/entities/page";
 import type { DraftPageStructureTransaction } from "@compoz/core/domain/pages/ports/draft-page-structure-transaction";
-import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
 import { persistPagePatch } from "@compoz/studio/app/api/pages/[pageId]/persist-page-patch";
-import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 
 const NOW = "2026-07-29T10:00:00.000Z";
 const PAGE: Page = {
@@ -26,14 +24,16 @@ const PAGE: Page = {
   paginationEnabled: false,
   meta: { createdAt: NOW, updatedAt: NOW },
 };
-const SNAPSHOT = {
+const REVISIONS = { metaRevision: 3, blocksRevision: 4 } as const;
+const STRUCTURE = {
   index: {
     pages: [
       {
         id: PAGE.id,
-        parentId: PAGE.parentId,
+        parentId: null,
         slug: PAGE.slug,
         name: PAGE.name,
+        metaRevision: 3,
       },
     ],
     updatedAt: NOW,
@@ -41,77 +41,57 @@ const SNAPSHOT = {
   draftStructureRevision: 6,
 } as const;
 
-function pages(): PagesRepository {
-  return {
-    ensureBase: async () => undefined,
-    readById: async () => PAGE,
-    readByIdWithRevisions: async () => ({
-      page: PAGE,
-      revisions: { metaRevision: 3, blocksRevision: 0 },
-    }),
-    readBySlug: async () => null,
-    readManyById: async () => [PAGE],
-    updateDraftPageMetadata: async () => {
-      assert.fail("a no-op must not write page metadata");
-    },
-    updateDraftPageBlocks: async () => undefined,
-    existsById: async () => true,
-    existsBySlug: async () => false,
-  };
-}
-
 function structure(
   update: DraftPageStructureTransaction["update"],
 ): DraftPageStructureTransaction {
   return {
-    create: async ({ page }) => ({ ...SNAPSHOT, page }),
-    reorder: async () => SNAPSHOT,
+    create: async ({ page }) => ({ ...STRUCTURE, page }),
+    reorder: async () => STRUCTURE,
     update,
-    delete: async () => SNAPSHOT,
+    delete: async () => STRUCTURE,
   };
 }
 
-void test("an effective metadata no-op produces the complete HTTP 200 payload from the locked snapshot", async () => {
-  const response = await handleRoute(
-    "api.studio.pages.id.PATCH.test",
-    new Request("http://localhost/api/pages/page", {
-      method: "PATCH",
-    }),
-    async () =>
-      persistPagePatch(
-        {
-          pages: pages(),
-          structure: structure(async (command) => {
-            assert.deepEqual(command, { pageId: PAGE.id });
-            return { ...SNAPSHOT, page: PAGE };
-          }),
+void test("metadata-only response omits structure and includes both page revisions", async () => {
+  const response = await persistPagePatch(
+    {
+      structure: structure(async (intent) => {
+        assert.equal(intent.metadataChanges?.expectedMetaRevision, 3);
+        return { page: PAGE, revisions: REVISIONS };
+      }),
+    },
+    {
+      pageId: PAGE.id,
+      metadataChanges: {
+        expectedMetaRevision: 3,
+        changes: {
+          name: { baseline: "Page", local: "Renamed" },
         },
-        { pageId: PAGE.id, name: ` ${PAGE.name} ` },
-      ),
+      },
+    },
   );
 
-  assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), {
-    page: PAGE,
-    index: SNAPSHOT.index,
-    draftStructureRevision: 6,
-  });
+  assert.deepEqual(response, { page: PAGE, revisions: REVISIONS });
 });
 
-void test("a technical no-op transaction failure remains rejected", async () => {
-  const failure = new Error("transaction unavailable");
-
-  await assert.rejects(
-    () =>
-      persistPagePatch(
-        {
-          pages: pages(),
-          structure: structure(async () => {
-            throw failure;
-          }),
-        },
-        { pageId: PAGE.id, name: PAGE.name },
-      ),
-    failure,
+void test("a real parent change returns the structure snapshot atomically", async () => {
+  const response = await persistPagePatch(
+    {
+      structure: structure(async () => ({
+        page: PAGE,
+        revisions: REVISIONS,
+        structure: STRUCTURE,
+      })),
+    },
+    {
+      pageId: PAGE.id,
+      parentChange: {
+        baseline: "parent",
+        local: null,
+        expectedDraftStructureRevision: 5,
+      },
+    },
   );
+
+  assert.deepEqual(response.structure, STRUCTURE);
 });

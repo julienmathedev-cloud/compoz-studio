@@ -39,15 +39,31 @@ import { useCreateBlock } from "@compoz/studio/features/pages/blocks/hooks/useCr
 import { useDeleteBlock } from "@compoz/studio/features/pages/blocks/hooks/useDeleteBlock";
 import { useListPageBlocks } from "@compoz/studio/features/pages/blocks/hooks/useListPageBlocks";
 import { useReorderBlocks } from "@compoz/studio/features/pages/blocks/hooks/useReorderBlocks";
+import { resolvePageStructureParent } from "@compoz/studio/features/pages/cache/page-snapshot";
 import { ChildPageListItem } from "@compoz/studio/features/pages/components/molecules/ChildPageListItem";
 import { PageForm } from "@compoz/studio/features/pages/components/organisms/PageForm";
 import { useReadPage } from "@compoz/studio/features/pages/hooks/useReadPage";
 import { useReorderPageChildren } from "@compoz/studio/features/pages/hooks/useReorderPageChildren";
 import { useUpdatePage } from "@compoz/studio/features/pages/hooks/useUpdatePage";
+import type { PageEditBaseline } from "@compoz/studio/features/pages/hooks/useUpdatePage";
+import { shouldApplyPageUpdateSuccessCleanup } from "@compoz/studio/features/pages/hooks/page-update-submission";
+import {
+  createPageMetadataConflictState,
+  finalizePageMetadataConflictValues,
+  resolvePageMetadataConflictChoice,
+  type PageMetadataConflictChoice,
+  type PageMetadataConflictState,
+} from "@compoz/studio/features/pages/conflicts/page-metadata-conflict";
+import {
+  rebasePageStructureConflictParent,
+  type PageStructureConflictRebase,
+} from "@compoz/studio/features/pages/conflicts/page-structure-conflict";
 import { createEmptySectionBlock } from "@compoz/studio/features/pages/mappers/blocks-form";
 import {
   normalizePageFormValues,
-  toPageFormValuesFromDTO,
+  toPageFormValuesFromDraftSources,
+  type PageFormDirtyFields,
+  type PageFormSubmissionResult,
 } from "@compoz/studio/features/pages/mappers/pages-form";
 import type { PageWarningKey } from "@compoz/studio/features/pages/validation/validate";
 import { computePageWarnings } from "@compoz/studio/features/pages/validation/validate";
@@ -104,18 +120,95 @@ export function PageBlocksListSection({
   const { reorderChildren, isReordering: isReorderingChildren } =
     useReorderPageChildren();
 
-  const { page, isLoading: isLoadingPage } = useReadPage(pageId);
-  const { update, isUpdating } = useUpdatePage();
+  const {
+    page,
+    revisions,
+    isLoading: isLoadingPage,
+  } = useReadPage(pageId);
+  const [pageFormKey, setPageFormKey] = useState(0);
+  const [metadataConflict, setMetadataConflict] =
+    useState<PageMetadataConflictState | null>(null);
 
-  const baselineRef = useRef<PageFormValues | null>(null);
+  const baselineRef = useRef<PageEditBaseline | null>(null);
+  const structureConflictRebaseRef =
+    useRef<PageStructureConflictRebase | null>(null);
+  const currentIndexPage = useMemo(
+    () =>
+      siteIndex?.pages.find((pageItem) => pageItem.id === pageId) ?? null,
+    [pageId, siteIndex],
+  );
+
+  const {
+    update,
+    adoptMetadataConflictCurrent,
+    isUpdating,
+  } = useUpdatePage({
+    onSuccess: ({ response }) => {
+      const responseParent = resolvePageStructureParent(
+        response.structure?.index.pages,
+        response.page.id,
+        currentIndexPage?.parentId,
+      );
+      baselineRef.current = {
+        values: toPageFormValuesFromDraftSources(
+          response.page,
+          responseParent,
+          response.page.slug,
+        ),
+        metaRevision: response.revisions.metaRevision,
+      };
+      structureConflictRebaseRef.current = null;
+      setMetadataConflict(null);
+      setPageFormKey((key) => key + 1);
+    },
+    onMetadataConflict: (details) => {
+      const baseline = baselineRef.current;
+      if (!baseline) return;
+      setMetadataConflict(
+        createPageMetadataConflictState(details, baseline.values),
+      );
+    },
+    onStructureConflict: (details) => {
+      const baseline = baselineRef.current;
+      if (!baseline) return;
+
+      const rebase = rebasePageStructureConflictParent({
+        baseline,
+        details,
+        pageId,
+      });
+      if (!rebase) return;
+
+      baselineRef.current = rebase.baseline;
+      structureConflictRebaseRef.current = rebase;
+    },
+  });
 
   const initialValues = useMemo<PageFormValues>(() => {
-    return toPageFormValuesFromDTO(page, pageId);
-  }, [page, pageId]);
+    return toPageFormValuesFromDraftSources(
+      page,
+      currentIndexPage?.parentId,
+      pageId,
+    );
+  }, [currentIndexPage, page, pageId]);
 
   useEffect(() => {
-    baselineRef.current = initialValues;
-  }, [initialValues]);
+    baselineRef.current = null;
+    structureConflictRebaseRef.current = null;
+    setMetadataConflict(null);
+  }, [pageId]);
+
+  useEffect(() => {
+    if (!page || !revisions || !currentIndexPage || baselineRef.current) return;
+    baselineRef.current = {
+      values: toPageFormValuesFromDraftSources(
+        page,
+        currentIndexPage.parentId,
+        pageId,
+      ),
+      metaRevision: revisions.metaRevision,
+    };
+  }, [currentIndexPage, page, pageId, revisions]);
 
   const parentOptions = useMemo<ReadonlyArray<ParentOption>>(() => {
     if (!siteIndex) return [];
@@ -168,7 +261,10 @@ export function PageBlocksListSection({
   const [warningKeys, setWarningKeys] = useState<PageWarningKey[]>([]);
 
   const handleSubmitPageMeta = useCallback(
-    async (values: PageFormValues) => {
+    async (
+      values: PageFormValues,
+      dirtyFields: PageFormDirtyFields,
+    ): Promise<PageFormSubmissionResult> => {
       const warningKeysNow = computePageWarnings({
         name: values.name ?? "",
         seoTitle: values.seoTitle ?? null,
@@ -205,14 +301,84 @@ export function PageBlocksListSection({
       const originalId = pageId.trim();
       if (!originalId) return;
 
-      const baselineForPatch = baselineRef.current ?? initialValues;
-      await update(originalId, baselineForPatch, normalized);
+      const baselineForPatch = baselineRef.current;
+      if (!baselineForPatch) return;
+      const outcome = await update(
+        originalId,
+        baselineForPatch,
+        normalized,
+        dirtyFields,
+      );
+      if (outcome === "structureConflict") {
+        const rebase = structureConflictRebaseRef.current;
+        structureConflictRebaseRef.current = null;
+        return rebase
+          ? { rebaseParentId: rebase.parentId }
+          : undefined;
+      }
+      if (!shouldApplyPageUpdateSuccessCleanup(outcome)) {
+        return;
+      }
+
+      if (
+        outcome === "noChanges" &&
+        metadataConflict &&
+        metadataConflict.unresolvedFields.length === 0
+      ) {
+        const rebased = finalizePageMetadataConflictValues(
+          metadataConflict,
+          normalized,
+        );
+        adoptMetadataConflictCurrent(metadataConflict.details);
+        baselineRef.current = {
+          values: rebased,
+          metaRevision: metadataConflict.details.currentMetaRevision,
+        };
+        setMetadataConflict(null);
+        setWarningKeys([]);
+        setBlockingErrorsCount(0);
+        setIsMetaDirty(false);
+        return { rebaseValues: rebased };
+      }
 
       setWarningKeys([]);
       setBlockingErrorsCount(0);
       setIsMetaDirty(false);
     },
-    [confirmList, initialValues, pageId, t, update],
+    [
+      adoptMetadataConflictCurrent,
+      confirmList,
+      metadataConflict,
+      pageId,
+      t,
+      update,
+    ],
+  );
+
+  const handleMetadataConflictChoice = useCallback(
+    (
+      field: PageMetadataConflictState["unresolvedFields"][number],
+      choice: PageMetadataConflictChoice,
+      localValues: PageFormValues,
+    ) => {
+      if (!metadataConflict) {
+        throw new Error("Page metadata conflict state is unavailable.");
+      }
+      const resolution = resolvePageMetadataConflictChoice({
+        state: metadataConflict,
+        field,
+        choice,
+        localValues,
+      });
+      baselineRef.current = {
+        values: resolution.state.occBaseline,
+        metaRevision:
+          resolution.state.details.currentMetaRevision,
+      };
+      setMetadataConflict(resolution.state);
+      return resolution;
+    },
+    [metadataConflict],
   );
 
   const children = useMemo(() => {
@@ -725,6 +891,9 @@ export function PageBlocksListSection({
         />
 
         <PageForm
+          key={`${pageId}:${
+            page && currentIndexPage ? "ready" : "loading"
+          }:${pageFormKey}`}
           initialValues={initialValues}
           parentOptions={parentOptions}
           isSaving={isUpdating}
@@ -732,7 +901,21 @@ export function PageBlocksListSection({
           bFocusFields={false}
           bCancelAlwaysEnabledInEdit
           onSubmit={handleSubmitPageMeta}
-          onReset={() => {
+          metadataConflict={metadataConflict}
+          onMetadataConflictChoice={handleMetadataConflictChoice}
+          onReset={(resetValues) => {
+            if (baselineRef.current) {
+              baselineRef.current = {
+                ...baselineRef.current,
+                values: resetValues,
+              };
+            } else if (page && revisions) {
+              baselineRef.current = {
+                values: resetValues,
+                metaRevision: revisions.metaRevision,
+              };
+            }
+            setMetadataConflict(null);
             setWarningKeys([]);
             setBlockingErrorsCount(0);
             setIsMetaDirty(false);

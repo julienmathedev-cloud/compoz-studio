@@ -37,6 +37,7 @@ import {
   type PublishSiteIntentDTO,
 } from "@compoz/validation/site/publish/publish-intents";
 import { publishAndInvalidateStatusCache } from "@compoz/studio/app/api/site/publish/invalidate-publish-status-cache";
+import { revalidatePublicAfterPublish } from "@compoz/studio/app/api/site/publish/revalidate-public-after-publish";
 
 function parseStatesFromQuery(req: Request): {
   from?: ContentState;
@@ -83,48 +84,6 @@ function resolveStateOr422(args: {
   });
 }
 
-async function revalidatePublicAfterPublish(params: {
-  siteBaseUrl?: string;
-  websiteSlug: string;
-  slugs: ReadonlyArray<string>;
-}) {
-  const baseUrl = String(
-    params.siteBaseUrl ?? process.env["NEXT_PUBLIC_SITE_ORIGIN"] ?? "",
-  ).trim();
-
-  /**
-   * Publishing remains valid when the public origin is not configured.
-   * Public revalidation is best-effort.
-   */
-  if (!baseUrl) return;
-
-  const secret = String(process.env["COMPOZ_REVALIDATE_SECRET"] ?? "").trim();
-
-  try {
-    const res = await fetch(`${baseUrl}/api/revalidate`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(secret ? { "x-revalidate-secret": secret } : {}),
-      },
-      body: JSON.stringify({
-        websiteSlug: params.websiteSlug,
-        slugs: params.slugs,
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error(`public_revalidate_failed:${res.status}`);
-    }
-  } catch (error) {
-    log.warn?.("publish.revalidate.public.failed", {
-      baseUrl,
-      websiteSlug: params.websiteSlug,
-    });
-    throw error;
-  }
-}
-
 export async function POST(req: Request) {
   const NS = "api.studio.site.publish.POST" as const;
 
@@ -156,6 +115,12 @@ export async function POST(req: Request) {
         );
 
         const isProd = process.env.NODE_ENV === "production";
+        const siteBaseUrl = String(
+          process.env["NEXT_PUBLIC_SITE_ORIGIN"] ?? "",
+        ).trim();
+        const revalidationSecret = String(
+          process.env["COMPOZ_REVALIDATE_SECRET"] ?? "",
+        ).trim();
 
         const from = resolveStateOr422({
           value: dto.from,
@@ -175,8 +140,11 @@ export async function POST(req: Request) {
           revalidator: {
             async revalidatePublished({ slugs }) {
               await revalidatePublicAfterPublish({
+                siteBaseUrl,
                 websiteSlug,
                 slugs,
+                secret: revalidationSecret,
+                logger,
               });
             },
           },

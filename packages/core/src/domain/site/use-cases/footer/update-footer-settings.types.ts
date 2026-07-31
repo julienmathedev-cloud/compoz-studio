@@ -8,6 +8,7 @@
 
 import type { FooterSettings } from "@compoz/core/domain/site/entities";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 
 export interface UpdateFooterSettingsDeps {
   repo: SiteRepository;
@@ -20,6 +21,7 @@ export interface UpdateFooterSettingsInput {
 }
 
 export interface UpdateFooterSettingsResult {
+  outcome: MutationOutcome;
   settings: FooterSettings;
   revision: number;
 }

@@ -6,12 +6,14 @@
 
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 import type { Page } from "@compoz/core/domain/pages/entities/page";
 import type {
   CreateDraftPageStructureCommand,
   CreateDraftPageStructureResult,
   DeleteDraftPageStructureCommand,
   DraftPageStructureTransaction,
+  DraftStructureMutationResult,
   DraftStructureSnapshot,
   ReorderDraftSiblingsCommand,
   UpdateDraftPageIntent,
@@ -37,7 +39,6 @@ import { replacePagePathInMenus } from "@compoz/core/domain/site/helpers/replace
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import {
-  toDomainPage,
   toDomainPageWithRevisions,
   toPrismaDraftPageCreateData,
   type PrismaPageRow,
@@ -101,7 +102,8 @@ type UpdateContext = Readonly<{
   currentRow: DraftPageRow;
   currentPage: Page;
   effectiveParentId: string | null;
-  parentChanged: boolean;
+  parentChangeRequested: boolean;
+  parentActuallyChanged: boolean;
   metadataPatch: Partial<PageMetadataColumns>;
   oldSlug: string;
 }>;
@@ -110,6 +112,8 @@ type TransactionResult = Readonly<{
   snapshot: DraftStructureSnapshot;
   rows: DraftPageRow[];
   structureChanged: boolean;
+  outcome: MutationOutcome;
+  updateMetadataPatch: Partial<PageMetadataColumns>;
 }>;
 
 function toPlannerPages(rows: ReadonlyArray<DraftPageRow>): DraftStructurePage[] {
@@ -179,13 +183,19 @@ export class PrismaDraftPageStructureTransaction
     const page = result.rows.find((row) => row.pageId === command.page.id);
     if (!page) pageNotFound();
 
-    return { ...result.snapshot, page: toDomainPage(page) };
+    const created = toDomainPageWithRevisions(page);
+    return {
+      ...result.snapshot,
+      page: created.page,
+      revisions: created.revisions,
+    };
   }
 
   async reorder(
     command: ReorderDraftSiblingsCommand,
-  ): Promise<DraftStructureSnapshot> {
-    return (await this.run({ kind: "reorder", value: command })).snapshot;
+  ): Promise<DraftStructureMutationResult> {
+    const result = await this.run({ kind: "reorder", value: command });
+    return { ...result.snapshot, outcome: result.outcome };
   }
 
   async update(
@@ -201,6 +211,8 @@ export class PrismaDraftPageStructureTransaction
         const current = toDomainPageWithRevisions(row);
 
         return {
+          outcome: result.outcome,
+          slugChanged: hasOwn(result.updateMetadataPatch, "slug"),
           page: current.page,
           revisions: current.revisions,
           ...(result.structureChanged
@@ -297,7 +309,7 @@ export class PrismaDraftPageStructureTransaction
 
       const expectedRevision =
         intent.kind === "update"
-          ? updateContext?.parentChanged
+          ? updateContext?.parentChangeRequested
             ? intent.value.parentChange?.expectedDraftStructureRevision
             : undefined
           : intent.value.expectedDraftStructureRevision;
@@ -339,7 +351,7 @@ export class PrismaDraftPageStructureTransaction
         if (
           intent.kind === "update" &&
           effectiveUpdateContext &&
-          (effectiveUpdateContext.parentChanged ||
+          (effectiveUpdateContext.parentActuallyChanged ||
             Object.keys(effectiveUpdateContext.metadataPatch).length > 0)
         ) {
           await this.applyUpdateWrites(
@@ -386,6 +398,18 @@ export class PrismaDraftPageStructureTransaction
 
       await this.invokeHook(intent.kind, "beforeCommit");
 
+      const outcome =
+        intent.kind === "update"
+          ? structureChanged ||
+            Boolean(effectiveUpdateContext?.parentActuallyChanged) ||
+            Object.keys(effectiveUpdateContext?.metadataPatch ?? {}).length > 0 ||
+            remainingPaginationIds.length > 0
+            ? "updated"
+            : "noChanges"
+          : intent.kind === "reorder" && !structureChanged
+            ? "noChanges"
+            : "updated";
+
       return {
         snapshot: structureChanged
           ? toSnapshot(
@@ -396,6 +420,8 @@ export class PrismaDraftPageStructureTransaction
           : toSnapshot(nextRows, finalStructureRevision),
         rows: nextRows,
         structureChanged,
+        outcome,
+        updateMetadataPatch: effectiveUpdateContext?.metadataPatch ?? {},
       };
     });
   }
@@ -414,12 +440,14 @@ export class PrismaDraftPageStructureTransaction
           local: assertParentId(intent.parentChange.local),
         }
       : undefined;
-    const parentChanged =
+    const parentChangeRequested =
       normalizedParent !== undefined &&
       normalizedParent.local !== normalizedParent.baseline;
-    const effectiveParentId = parentChanged
+    const effectiveParentId = parentChangeRequested
       ? normalizedParent.local
       : current.page.parentId;
+    const parentActuallyChanged =
+      parentChangeRequested && effectiveParentId !== current.page.parentId;
 
     const resolution = intent.metadataChanges
       ? resolvePageMetadataChanges({
@@ -453,7 +481,8 @@ export class PrismaDraftPageStructureTransaction
       currentRow,
       currentPage: current.page,
       effectiveParentId,
-      parentChanged,
+      parentChangeRequested,
+      parentActuallyChanged,
       metadataPatch:
         effectivePage.paginationEnabled !==
         (resolution.patch.paginationEnabled ??
@@ -659,7 +688,7 @@ export class PrismaDraftPageStructureTransaction
       throw new DomainError({ code: ERROR_CODES.PAGE_SLUG_CONFLICT });
     }
 
-    if (context.parentChanged) {
+    if (context.parentActuallyChanged) {
       const parentWrite = await tx.page.updateMany({
         where: {
           websiteId: this.websiteId,

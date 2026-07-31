@@ -8,6 +8,7 @@
 
 import type { LegalMenuSettings } from "@compoz/core/domain/site/entities/legal-menu";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 
 export interface UpdateLegalMenuSettingsDeps {
   repo: SiteRepository;
@@ -20,6 +21,7 @@ export interface UpdateLegalMenuSettingsInput {
 }
 
 export interface UpdateLegalMenuSettingsResult {
+  outcome: MutationOutcome;
   settings: LegalMenuSettings;
   revision: number;
 }

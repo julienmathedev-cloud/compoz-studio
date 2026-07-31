@@ -6,6 +6,7 @@
 
 import type {
   Page,
+  PageRevisions,
   PageSitemap,
 } from "@compoz/core/domain/pages/entities/page";
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
@@ -39,4 +40,5 @@ export type CreatePageInput = {
 
 export interface CreatePageResult extends DraftStructureSnapshot {
   page: Page;
+  revisions: PageRevisions;
 }

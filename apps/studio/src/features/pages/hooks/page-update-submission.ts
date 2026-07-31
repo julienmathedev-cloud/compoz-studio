@@ -12,6 +12,7 @@ import {
   getPageMetadataConflictDetails,
   type PageMetadataConflictDetails,
 } from "@compoz/infra/lib/get-page-metadata-conflict-details";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 
 export type UpdatePageSubmissionOutcome =
   | "submitted"
@@ -22,7 +23,7 @@ export type UpdatePageSubmissionOutcome =
 
 export type PageUpdateMutationOutcome = Extract<
   UpdatePageSubmissionOutcome,
-  "submitted" | "metadataConflict" | "structureConflict"
+  "submitted" | "noChanges" | "metadataConflict" | "structureConflict"
 >;
 
 export function shouldApplyPageUpdateSuccessCleanup(
@@ -32,7 +33,7 @@ export function shouldApplyPageUpdateSuccessCleanup(
 }
 
 export async function submitPageUpdateMutation(input: Readonly<{
-  mutate: () => Promise<unknown>;
+  mutate: () => Promise<Readonly<{ response: Readonly<{ outcome: MutationOutcome }> }>>;
   onMetadataConflict?: (details: PageMetadataConflictDetails) => void;
   onStructureConflict?: (
     details: DraftStructureConflictDetails,
@@ -41,8 +42,8 @@ export async function submitPageUpdateMutation(input: Readonly<{
   onUnexpectedError: (error: unknown) => void;
 }>): Promise<PageUpdateMutationOutcome> {
   try {
-    await input.mutate();
-    return "submitted";
+    const result = await input.mutate();
+    return result.response.outcome === "noChanges" ? "noChanges" : "submitted";
   } catch (error) {
     const metadataConflict = getPageMetadataConflictDetails(error);
     if (metadataConflict) {

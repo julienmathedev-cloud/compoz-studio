@@ -10,11 +10,15 @@ import type {
   PageSitemap,
 } from "@compoz/core/domain/pages/entities/page";
 import type { DraftSiteIndex } from "@compoz/core/domain/site/entities/site-index";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 
 export type DraftStructureSnapshot = Readonly<{
   index: DraftSiteIndex;
   draftStructureRevision: number;
 }>;
+
+export type DraftStructureMutationResult = DraftStructureSnapshot &
+  Readonly<{ outcome: MutationOutcome }>;
 
 export type CreateDraftPageStructureCommand = Readonly<{
   expectedDraftStructureRevision: number;
@@ -22,7 +26,7 @@ export type CreateDraftPageStructureCommand = Readonly<{
 }>;
 
 export type CreateDraftPageStructureResult = DraftStructureSnapshot &
-  Readonly<{ page: Page }>;
+  Readonly<{ page: Page; revisions: PageRevisions }>;
 
 export type ReorderDraftSiblingsCommand = Readonly<{
   parentPageId: string | null;
@@ -62,6 +66,8 @@ export type UpdateDraftPageIntent = Readonly<{
 }>;
 
 export type UpdateDraftPageStructureResult = Readonly<{
+  outcome: MutationOutcome;
+  slugChanged: boolean;
   page: Page;
   revisions: PageRevisions;
   structure?: DraftStructureSnapshot;
@@ -79,7 +85,7 @@ export interface DraftPageStructureTransaction {
 
   reorder(
     command: ReorderDraftSiblingsCommand,
-  ): Promise<DraftStructureSnapshot>;
+  ): Promise<DraftStructureMutationResult>;
 
   update(
     intent: UpdateDraftPageIntent,

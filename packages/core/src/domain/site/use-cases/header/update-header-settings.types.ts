@@ -8,6 +8,7 @@
 
 import type { HeaderSettings } from "@compoz/core/domain/site/entities";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 
 export interface UpdateHeaderSettingsDeps {
   repo: SiteRepository;
@@ -20,6 +21,7 @@ export interface UpdateHeaderSettingsInput {
 }
 
 export interface UpdateHeaderSettingsResult {
+  outcome: MutationOutcome;
   settings: HeaderSettings;
   revision: number;
 }

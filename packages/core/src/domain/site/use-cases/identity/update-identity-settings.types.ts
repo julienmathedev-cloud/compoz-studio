@@ -8,6 +8,7 @@
 
 import type { IdentitySettings } from "@compoz/core/domain/site/entities/identity";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 
 export interface UpdateIdentitySettingsDeps {
   repo: SiteRepository;
@@ -20,6 +21,7 @@ export interface UpdateIdentitySettingsInput {
 }
 
 export interface UpdateIdentitySettingsResult {
+  outcome: MutationOutcome;
   settings: IdentitySettings;
   revision: number;
 }

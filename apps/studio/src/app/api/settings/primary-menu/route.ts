@@ -23,6 +23,7 @@ import type {
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 import { adaptUpdatePrimaryMenuIntent } from "@compoz/studio/app/api/_adapters/menus";
+import { invalidateUpdatedSettingsStatus } from "@compoz/studio/app/api/settings/invalidate-settings-status";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
@@ -80,42 +81,19 @@ export async function PATCH(req: Request) {
       const statusCache = getSiteStatusCache({ websiteId });
 
       const run = updatePrimaryMenuSettings({ repo });
-      const { settings, revision } = await run(input);
+      const { settings, revision, outcome } = await run(input);
 
       logger.debug?.("route.primaryMenu.patch.afterWrite", {
         websiteId,
         primaryMenuKeys: Object.keys(settings),
       });
 
-      /**
-       * Invalidates the active Website status cache.
-       *
-       * The cache may still be backed by KV in infra, but its business scope is
-       * the Prisma Website.id.
-       */
-      try {
-        logger.debug?.("route.primaryMenu.patch.invalidate.start", {
-          websiteId,
-          invalidateStatus: true,
-        });
-
-        await statusCache.invalidateStatus();
-
-        logger.debug?.("route.primaryMenu.patch.invalidate.done", {
-          websiteId,
-          invalidateStatus: true,
-        });
-      } catch (error) {
-        logger.error?.("route.primaryMenu.patch.invalidate.failed", {
-          websiteId,
-          err: String(error),
-          invalidateStatus: true,
-        });
-      }
+      await invalidateUpdatedSettingsStatus({ websiteId, outcome, statusCache, logger });
 
       const res: PatchPrimaryMenuResponse = {
         settings,
         revision,
+        outcome,
       };
 
       return res;

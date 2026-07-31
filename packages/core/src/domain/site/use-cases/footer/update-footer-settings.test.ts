@@ -7,7 +7,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ContentState } from "@compoz/core/constants/common/content-state";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import { DEFAULT_HEADER_SETTINGS } from "@compoz/core/domain/site/defaults/header";
@@ -17,10 +16,7 @@ import { DEFAULT_PRIMARY_MENU_SETTINGS } from "@compoz/core/domain/site/defaults
 import { DEFAULT_SEO_SETTINGS } from "@compoz/core/domain/site/defaults/seo";
 import { DEFAULT_SOCIAL_SETTINGS } from "@compoz/core/domain/site/defaults/social";
 import { DEFAULT_THEME_SETTINGS } from "@compoz/core/domain/site/defaults/theme";
-import type {
-  SiteSettings,
-  SiteSettingsWithRevisions,
-} from "@compoz/core/domain/site/entities/site-settings";
+import type { SiteSettingsWithRevisions } from "@compoz/core/domain/site/entities/site-settings";
 import type {
   CompareAndSetDraftFooterInput,
   DraftFooterWithRevision,
@@ -66,7 +62,6 @@ function createRepository(options?: {
   const casResults = options?.casResults ?? [];
   const casInputs: CompareAndSetDraftFooterInput[] = [];
   let readIndex = 0;
-  let putSettingsCalls = 0;
 
   const repo: SiteRepository = {
     ensureBase: async () => undefined,
@@ -89,19 +84,13 @@ function createRepository(options?: {
     compareAndSetDraftSocial: async () => null,
     compareAndSetDraftSeo: async () => null,
     compareAndSetDraftTheme: async () => null,
-    putSettings: async (
-      _state: ContentState,
-      _settings: Readonly<SiteSettings>,
-    ) => {
-      putSettingsCalls += 1;
-    },
   };
 
   return {
     repo,
     casInputs,
     getReadCount: () => readIndex,
-    getPutSettingsCalls: () => putSettingsCalls,
+    getPutSettingsCalls: () => 0,
   };
 }
 
@@ -143,7 +132,7 @@ void test("persists a current revision with targeted CAS", async () => {
     expectedRevision: 1,
   });
 
-  assert.deepEqual(result, persisted);
+  assert.deepEqual(result, { ...persisted, outcome: "updated" });
   assert.deepEqual(ctx.casInputs, [
     {
       expectedRevision: 1,
@@ -170,7 +159,7 @@ void test("merges a stale local field with a concurrent change on the other fiel
     expectedRevision: 1,
   });
 
-  assert.deepEqual(result, persisted);
+  assert.deepEqual(result, { ...persisted, outcome: "updated" });
   assert.deepEqual(ctx.casInputs[0], {
     expectedRevision: 2,
     footer: { copyright: "Local", showYear: false },
@@ -187,7 +176,7 @@ void test("returns the server snapshot without CAS for the same concurrent chang
     expectedRevision: 1,
   });
 
-  assert.deepEqual(result, { settings: current, revision: 2 });
+  assert.deepEqual(result, { settings: current, revision: 2, outcome: "noChanges" });
   assert.deepEqual(ctx.casInputs, []);
 });
 
@@ -201,7 +190,7 @@ void test("classifies the only concurrent showYear change as the same change", a
     expectedRevision: 1,
   });
 
-  assert.deepEqual(result, { settings: current, revision: 2 });
+  assert.deepEqual(result, { settings: current, revision: 2, outcome: "noChanges" });
   assert.deepEqual(ctx.casInputs, []);
 });
 
@@ -249,7 +238,7 @@ void test("retries after one lost CAS and then succeeds", async () => {
     expectedRevision: 1,
   });
 
-  assert.deepEqual(result, persisted);
+  assert.deepEqual(result, { ...persisted, outcome: "updated" });
   assert.equal(ctx.getReadCount(), 2);
   assert.deepEqual(
     ctx.casInputs.map((input) => input.expectedRevision),

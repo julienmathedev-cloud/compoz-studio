@@ -29,7 +29,6 @@ import {
 } from "@compoz/studio/features/settings/_shared/revisioned-draft-snapshot";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
-import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
 import { fetchFreshSettingsSection } from "@compoz/studio/features/settings/conflicts/fetch-fresh-settings-section";
 import { primaryMenuConflictAdapter } from "@compoz/studio/features/settings/conflicts/settings-conflict-adapters";
 import type { SettingsHookResult } from "@compoz/studio/features/settings/hooks/useSettingsResource";
@@ -135,14 +134,14 @@ export function usePrimaryMenuSettings(): UsePrimaryMenuSettingsResult {
         },
       );
 
-      return requireCurrentSettingsOperation(
+      return { value: requireCurrentSettingsOperation(
         snapshot.commitSave(capturedSnapshot, {
           websiteId: capturedWebsiteId,
           baseline,
           revision: dto.revision,
           isWebsiteCurrent: () => websiteIdRef.current === capturedWebsiteId,
         }),
-      );
+      ), outcome: dto.outcome };
     },
 
     /** PATCH semantics: only changed form fields are sent to the API. */
@@ -168,12 +167,8 @@ export function usePrimaryMenuSettings(): UsePrimaryMenuSettingsResult {
     },
 
     /** Keeps derived status and shared bundle queries aligned after a successful save. */
-    onSaved: () => {
-      void invalidateSiteStatus(queryClient, websiteId);
-
-      void queryClient.invalidateQueries({
-        queryKey: settingsBundleKey(websiteId, DEFAULT_CONTENT_STATE),
-      });
+    onMutationResult: (_value, outcome) => {
+      if (outcome === "updated") void invalidateSiteStatus(queryClient, websiteId);
     },
   });
 

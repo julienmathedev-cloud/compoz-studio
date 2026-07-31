@@ -106,7 +106,7 @@ void test("ensures the base and persists a scalar local change at the current re
     expectedRevision: 1,
   });
 
-  assert.deepEqual(result, persisted);
+  assert.deepEqual(result, { ...persisted, outcome: "updated" });
   assert.equal(context.getEnsureBaseCount(), 1);
   assert.deepEqual(context.casInputs, [
     { expectedRevision: 1, settings: persisted.settings },
@@ -129,7 +129,7 @@ void test("keeps server-only and same concurrent changes without CAS", async () 
       patch: { enabled: true },
       expectedRevision: 1,
     }),
-    { settings: serverOnly, revision: 2 },
+    { settings: serverOnly, revision: 2, outcome: "noChanges" },
   );
   assert.deepEqual(
     await sameChangeContext.run({
@@ -137,7 +137,7 @@ void test("keeps server-only and same concurrent changes without CAS", async () 
       patch: { title: "Same" },
       expectedRevision: 1,
     }),
-    { settings: sameChange, revision: 2 },
+    { settings: sameChange, revision: 2, outcome: "noChanges" },
   );
   assert.deepEqual(serverOnlyContext.casInputs, []);
   assert.deepEqual(sameChangeContext.casInputs, []);
@@ -157,7 +157,7 @@ void test("merges disjoint local and server changes before CAS", async () => {
       patch: { title: "Local" },
       expectedRevision: 1,
     }),
-    persisted,
+    { ...persisted, outcome: "updated" },
   );
   assert.deepEqual(context.casInputs, [
     { expectedRevision: 2, settings: persisted.settings },
@@ -215,7 +215,7 @@ void test("uses structural equality for atomic composite values", async () => {
       patch: { metadata: { source: "baseline" } },
       expectedRevision: 1,
     }),
-    { settings: sameComposite, revision: 2 },
+    { settings: sameComposite, revision: 2, outcome: "noChanges" },
   );
   const error = await expectDomainError(
     () =>
@@ -257,7 +257,7 @@ void test("validates the merged value on every CAS attempt", async () => {
       patch: { title: "Local" },
       expectedRevision: 1,
     }),
-    persisted,
+    { ...persisted, outcome: "updated" },
   );
   assert.deepEqual(validated, [
     { ...BASELINE, title: "Local" },
@@ -294,7 +294,7 @@ void test("stops after three lost CAS races and does not persist no-ops", async 
   assert.equal(racing.casInputs.length, 3);
   assert.deepEqual(
     await noOp.run({ baseline: BASELINE, patch: {}, expectedRevision: 1 }),
-    { settings: BASELINE, revision: 1 },
+    { settings: BASELINE, revision: 1, outcome: "noChanges" },
   );
   assert.deepEqual(noOp.casInputs, []);
 });

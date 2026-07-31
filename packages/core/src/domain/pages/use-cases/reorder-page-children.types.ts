@@ -7,7 +7,7 @@
 
 import type {
   DraftPageStructureTransaction,
-  DraftStructureSnapshot,
+  DraftStructureMutationResult,
 } from "@compoz/core/domain/pages/ports/draft-page-structure-transaction";
 
 export type ReorderPageChildrenDeps = Readonly<{
@@ -20,4 +20,4 @@ export type ReorderPageChildrenInput = Readonly<{
   expectedDraftStructureRevision: number;
 }>;
 
-export type ReorderPageChildrenResult = DraftStructureSnapshot;
+export type ReorderPageChildrenResult = DraftStructureMutationResult;

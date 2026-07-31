@@ -403,7 +403,9 @@ void test("reorder locks, validates and increments structure only for a real cha
   });
 
   assert.equal(same.draftStructureRevision, 2);
+  assert.equal(same.outcome, "noChanges");
   assert.equal(changed.draftStructureRevision, 3);
+  assert.equal(changed.outcome, "updated");
   assert.equal(fake.websiteWrites.length, 1);
   assert.ok(fake.calls.indexOf("website.lock") >= 0);
 });
@@ -456,6 +458,7 @@ void test("metadata CAS writes only resolved columns and leaves blocks and struc
   });
 
   assert.equal(result.page.name, "Renamed");
+  assert.equal(result.outcome, "updated");
   assert.deepEqual(result.revisions, {
     metaRevision: 5,
     blocksRevision: 7,
@@ -493,6 +496,8 @@ void test("same final metadata change and an empty command are no-ops", async ()
   const empty = await fake.transaction.update({ pageId: "page" });
 
   assert.equal(converged.revisions.metaRevision, 5);
+  assert.equal(converged.outcome, "noChanges");
+  assert.equal(empty.outcome, "noChanges");
   assert.equal(empty.structure, undefined);
   assert.deepEqual(fake.pageWrites, []);
 });
@@ -555,9 +560,31 @@ void test("metadata and parent writes are atomic and structure is returned only 
   });
 
   assert.equal(result.page.parentId, "parent");
+  assert.equal(result.outcome, "updated");
   assert.equal(result.page.name, "Renamed");
   assert.equal(result.structure?.draftStructureRevision, 3);
   assert.equal(result.revisions.metaRevision, 3);
+});
+
+void test("a requested parent already adopted by the server does not write", async () => {
+  const fake = fakeTransaction([
+    row("parent", null, 0),
+    row("page", "parent", 1),
+  ]);
+
+  const result = await fake.transaction.update({
+    pageId: "page",
+    parentChange: {
+      baseline: null,
+      local: "parent",
+      expectedDraftStructureRevision: 2,
+    },
+  });
+
+  assert.equal(result.outcome, "noChanges");
+  assert.equal(result.structure, undefined);
+  assert.deepEqual(fake.pageWrites, []);
+  assert.deepEqual(fake.websiteWrites, []);
 });
 
 void test("metadata conflict rolls back parent and structure conflict prevents metadata", async () => {

@@ -8,6 +8,7 @@
 
 import type { PrimaryMenuSettings } from "@compoz/core/domain/site/entities/primary-menu";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 
 export interface UpdatePrimaryMenuSettingsDeps {
   repo: SiteRepository;
@@ -20,6 +21,7 @@ export interface UpdatePrimaryMenuSettingsInput {
 }
 
 export interface UpdatePrimaryMenuSettingsResult {
+  outcome: MutationOutcome;
   settings: PrimaryMenuSettings;
   revision: number;
 }

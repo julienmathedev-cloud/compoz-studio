@@ -80,8 +80,4 @@ export interface SiteRepository {
   compareAndSetDraftSeo(input: CompareAndSetDraftSeoInput): Promise<DraftSeoWithRevision | null>;
   compareAndSetDraftTheme(input: CompareAndSetDraftThemeInput): Promise<DraftThemeWithRevision | null>;
 
-  putSettings(
-    state: ContentState,
-    settings: Readonly<SiteSettings>,
-  ): Promise<void>;
 }

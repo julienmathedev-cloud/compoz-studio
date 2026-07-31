@@ -8,6 +8,7 @@
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import { compareThreeWayField } from "@compoz/core/domain/revisions/three-way-field";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
 
 const MAX_CAS_ATTEMPTS = 3;
@@ -19,6 +20,7 @@ type RevisionedSectionInput<T extends object> = Readonly<{
 }>;
 
 type RevisionedSectionResult<T extends object> = Readonly<{
+  outcome: MutationOutcome;
   settings: T;
   revision: number;
 }>;
@@ -28,11 +30,11 @@ type UpdateRevisionedSettingsSectionOptions<T extends object> = Readonly<{
   input: RevisionedSectionInput<T>;
   resourceId: string;
   fields: readonly (keyof T & string)[];
-  readCurrent: () => Promise<RevisionedSectionResult<T>>;
+  readCurrent: () => Promise<Omit<RevisionedSectionResult<T>, "outcome">>;
   compareAndSet: (
     expectedRevision: number,
     settings: T,
-  ) => Promise<RevisionedSectionResult<T> | null>;
+  ) => Promise<Omit<RevisionedSectionResult<T>, "outcome"> | null>;
   equals?: (field: keyof T & string, left: unknown, right: unknown) => boolean;
   validate?: (settings: T) => void;
 }>;
@@ -94,12 +96,12 @@ export async function updateRevisionedSettingsSection<T extends object>(
         Object.is(merged[field], current.settings[field])),
     );
 
-    if (unchanged) return current;
+    if (unchanged) return { ...current, outcome: "noChanges" };
 
     options.validate?.(merged);
 
     const persisted = await options.compareAndSet(current.revision, merged);
-    if (persisted) return persisted;
+    if (persisted) return { ...persisted, outcome: "updated" };
   }
 
   throw new DomainError({ code: ERROR_CODES.CONFLICT });

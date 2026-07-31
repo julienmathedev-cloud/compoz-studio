@@ -19,6 +19,7 @@ import { getPageBlocksConflictDetails } from "@compoz/infra/lib/get-page-blocks-
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
 import { syncPageBlocksSnapshotCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
 import { pageBlocksMutationScope } from "@compoz/studio/features/pages/blocks/hooks/page-blocks-mutation-scope";
+import { invalidateBlockMutationStatusViews } from "@compoz/studio/features/pages/blocks/hooks/invalidate-block-mutation-status-views";
 import { toUpdateSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { notifyNoChanges, notifyUpdated } from "@compoz/studio/lib/ui/notify-presets";
@@ -59,7 +60,7 @@ export function useUpdateBlock(pageId: string, onSuccess?: (response: UpdateSect
       setConflict(null);
       setUpdatingBlockId(args.blockId);
     },
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       syncPageBlocksSnapshotCache(queryClient, websiteId, pageIdKey, response);
       if (response.outcome === "noChanges") {
         notifyNoChanges(
@@ -72,6 +73,7 @@ export function useUpdateBlock(pageId: string, onSuccess?: (response: UpdateSect
           t("notifications.updated.description", { fields: "" }),
         );
       }
+      await invalidateBlockMutationStatusViews({ queryClient, websiteId, pageId: pageIdKey, outcome: response.outcome });
       onSuccess?.(response);
     },
     onError: (error) => {

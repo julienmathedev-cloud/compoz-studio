@@ -11,6 +11,7 @@ import type {
   PageBlocksSnapshotDTO,
   PageWithRevisionsDTO,
 } from "@compoz/core/domain/pages/dto";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 import type {
   DraftSiteIndexWithRevisionDTO,
 } from "@compoz/core/domain/site/dto";
@@ -19,12 +20,15 @@ export type GetPagesIndexResponse = DraftSiteIndexWithRevisionDTO;
 
 export type CreatePageResponse = Readonly<{
   page: PageDTO;
+  revisions: PageWithRevisionsDTO["revisions"];
 }> &
   DraftSiteIndexWithRevisionDTO;
 
 export type GetPageByIdResponse = PageWithRevisionsDTO;
 
 export type UpdatePageResponse = Readonly<{
+  outcome: MutationOutcome;
+  slugChanged: boolean;
   page: PageDTO;
   revisions: PageWithRevisionsDTO["revisions"];
   structure?: DraftSiteIndexWithRevisionDTO;
@@ -36,7 +40,7 @@ export type ListPageBlocksResponse = PageBlocksSnapshotDTO;
 
 export type PageBlocksMutationResponse = PageBlocksSnapshotDTO &
   Readonly<{
-    outcome: "updated" | "noChanges";
+    outcome: MutationOutcome;
     affectedBlockId?: string;
   }>;
 
@@ -49,4 +53,5 @@ export type DeleteBlockResponse = PageBlocksMutationResponse;
 
 export type ReorderBlocksResponse = PageBlocksMutationResponse;
 
-export type ReorderChildrenResponse = DraftSiteIndexWithRevisionDTO;
+export type ReorderChildrenResponse = DraftSiteIndexWithRevisionDTO &
+  Readonly<{ outcome: MutationOutcome }>;

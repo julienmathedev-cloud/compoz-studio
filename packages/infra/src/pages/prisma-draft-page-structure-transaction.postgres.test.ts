@@ -33,6 +33,7 @@ import {
 } from "@compoz/infra/pages/prisma-draft-page-structure-transaction";
 import { Prisma, PrismaClient } from "@compoz/infra/prisma/generated";
 import { PrismaPublishSiteTransaction } from "@compoz/infra/site/prisma-publish-site-transaction";
+import { PrismaDraftSiteSettingsInitializer } from "@compoz/infra/site/prisma-draft-site-settings-initializer";
 import { PrismaSiteRepository } from "@compoz/infra/site/prisma-site-repository";
 
 const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL?.trim() ?? "";
@@ -500,14 +501,11 @@ for (const section of ["primary", "legal"] as const) {
         await seed(prisma, websiteId, [
           { ...page("page"), slug: "old" },
         ]);
-        const setupSite = new PrismaSiteRepository({
+        const setupSite = new PrismaDraftSiteSettingsInitializer({
           websiteId,
           client: prisma,
         });
-        await setupSite.putSettings(
-          CONTENT_STATE.DRAFT,
-          settingsWithPageLink(section),
-        );
+        await setupSite.initializeDraftSettings(settingsWithPageLink(section));
         const site = new PrismaSiteRepository({
           websiteId,
           client: prisma,
@@ -600,14 +598,11 @@ void test(
 
     try {
       await seed(prisma, websiteId, [{ ...page("page"), slug: "old" }]);
-      const setupSite = new PrismaSiteRepository({
+      const setupSite = new PrismaDraftSiteSettingsInitializer({
         websiteId,
         client: prisma,
       });
-      await setupSite.putSettings(
-        CONTENT_STATE.DRAFT,
-        settingsWithPageLink("primary"),
-      );
+      await setupSite.initializeDraftSettings(settingsWithPageLink("primary"));
       const site = new PrismaSiteRepository({
         websiteId,
         client: prisma,
@@ -661,11 +656,9 @@ void test(
         { ...page("moving", "root-a"), slug: "old" },
         page("root-b"),
       ]);
+      const settingsInitializer = new PrismaDraftSiteSettingsInitializer({ websiteId, client: prisma });
+      await settingsInitializer.initializeDraftSettings(settingsWithPageLink("primary"));
       const site = new PrismaSiteRepository({ websiteId, client: prisma });
-      await site.putSettings(
-        CONTENT_STATE.DRAFT,
-        settingsWithPageLink("primary"),
-      );
       const before = await prisma.page.findMany({
         where: { websiteId, state: "draft" },
         orderBy: { position: "asc" },

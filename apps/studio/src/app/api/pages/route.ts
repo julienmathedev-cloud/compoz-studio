@@ -112,7 +112,7 @@ export async function POST(req: Request) {
         });
 
         const payload = adaptCreatePagePayload(dto);
-        const { page, index, draftStructureRevision } =
+        const { page, revisions, index, draftStructureRevision } =
           await runCreate(payload);
 
         logger.debug("route.index.patched", {
@@ -156,6 +156,7 @@ export async function POST(req: Request) {
 
         const res: CreatePageResponse = {
           page: page as PageDTO,
+          revisions,
           index,
           draftStructureRevision,
         };

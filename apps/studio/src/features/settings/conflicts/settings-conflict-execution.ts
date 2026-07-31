@@ -6,6 +6,7 @@
 
 import type { ConflictActionExecutionResult } from "@compoz/studio/features/conflicts/conflict-presentation";
 import type { SettingsConflictMutationPlan } from "@compoz/studio/features/settings/conflicts/settings-conflict-resolution";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 
 type Current<T extends object> = Readonly<{
   value: T;
@@ -39,8 +40,9 @@ export async function executeSettingsConflictApply<T extends object>(input: Read
   current: Current<T>;
   signal: AbortSignal;
   adoptSnapshot: (value: T, revision: number) => () => void;
-  mutate: (payload: Partial<T> | T, signal: AbortSignal) => Promise<T>;
+  mutate: (payload: Partial<T> | T, signal: AbortSignal) => Promise<Readonly<{ value: T; outcome: MutationOutcome }>>;
   commit: (value: T) => void;
+  onMutationResult: (value: T, outcome: MutationOutcome) => void;
 }>): Promise<SettingsApplyExecutionResult<T>> {
   let rollback: () => void = () => void 0;
   try {
@@ -51,8 +53,9 @@ export async function executeSettingsConflictApply<T extends object>(input: Read
       return { status: "success", value: input.current.value };
     }
     const saved = await input.mutate(input.plan.payload, input.signal);
-    input.commit(saved);
-    return { status: "success", value: saved };
+    input.commit(saved.value);
+    input.onMutationResult(saved.value, saved.outcome);
+    return { status: "success", value: saved.value };
   } catch (error: unknown) {
     rollback();
     return { status: "error", error };

@@ -19,6 +19,8 @@ export async function persistPagePatch(
   const result = await updatePage(dependencies)(input);
 
   return {
+    outcome: result.outcome,
+    slugChanged: result.slugChanged,
     page: result.page as PageDTO,
     revisions: result.revisions,
     ...(result.structure ? { structure: result.structure } : {}),

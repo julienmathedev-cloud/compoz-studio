@@ -141,10 +141,17 @@ export function useUpdatePage(
     },
     onSuccess: async (result) => {
       const { pageId, fields, response } = result;
-      notifyUpdated(
-        t("notifications.updated.title", { entity: entityLabel }),
-        t("notifications.updated.description", { fields: fields.join(", ") }),
-      );
+      if (response.outcome === "noChanges") {
+        notifyNoChanges(
+          t("notifications.noChanges.title"),
+          t("notifications.noChanges.description", { entity: entityLabel }),
+        );
+      } else {
+        notifyUpdated(
+          t("notifications.updated.title", { entity: entityLabel }),
+          t("notifications.updated.description", { fields: fields.join(", ") }),
+        );
+      }
 
       const incoming: PageWithRevisionsDTO = {
         page: response.page,
@@ -189,11 +196,10 @@ export function useUpdatePage(
         );
       }
 
-      const slugWasPatched = fields.includes("slug");
-      await Promise.all([
+      if (response.outcome === "updated") await Promise.all([
         invalidateSiteStatus(queryClient, websiteId),
         invalidatePageStatusViews(queryClient, websiteId),
-        ...(slugWasPatched
+        ...(response.slugChanged
           ? [
               queryClient.invalidateQueries({
                 queryKey: settingsBundleKey(

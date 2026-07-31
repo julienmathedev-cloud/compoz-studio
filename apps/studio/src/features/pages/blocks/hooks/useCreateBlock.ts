@@ -19,6 +19,7 @@ import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteConte
 import { syncPageBlocksSnapshotCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
 import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
 import { pageBlocksMutationScope } from "@compoz/studio/features/pages/blocks/hooks/page-blocks-mutation-scope";
+import { invalidateBlockMutationStatusViews } from "@compoz/studio/features/pages/blocks/hooks/invalidate-block-mutation-status-views";
 import { toCreateSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { notifyCreated } from "@compoz/studio/lib/ui/notify-presets";
@@ -61,7 +62,7 @@ export function useCreateBlock(pageId: string, onSuccess?: () => void) {
       );
     },
     onMutate: () => setConflict(null),
-    onSuccess: (response, variables) => {
+    onSuccess: async (response, variables) => {
       syncPageBlocksSnapshotCache(
         queryClient,
         websiteId,
@@ -75,6 +76,7 @@ export function useCreateBlock(pageId: string, onSuccess?: () => void) {
           name: variables.label ?? response.createdBlockId,
         }),
       );
+      await invalidateBlockMutationStatusViews({ queryClient, websiteId, pageId: pageIdKey, outcome: response.outcome });
       onSuccess?.();
     },
     onError: (error) => {

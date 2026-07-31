@@ -261,7 +261,6 @@ function createRepository(
       calls.theme.push(input);
       return { settings: input.theme, revision: input.expectedRevision + 1 };
     },
-    putSettings: async () => undefined,
   } satisfies SiteRepository;
 
   return { repo, calls };
@@ -363,6 +362,7 @@ void test("maps the eight section use cases to their exact read revision and CAS
     const call = calls[section][0];
 
     assert.deepEqual(results[index], {
+      outcome: "updated",
       settings,
       revision: currentRevision + 1,
     });
@@ -386,7 +386,7 @@ void test("header preserves a same concurrent boolean change without CAS", async
     expectedRevision: 1,
   });
 
-  assert.deepEqual(result, { settings: current, revision: 22 });
+  assert.deepEqual(result, { settings: current, revision: 22, outcome: "noChanges" });
   assert.deepEqual(calls.header, []);
 });
 
@@ -406,7 +406,7 @@ void test("identity treats structurally equal logos as unchanged and keeps absen
     expectedRevision: 1,
   });
 
-  assert.deepEqual(result, { settings: current, revision: 23 });
+  assert.deepEqual(result, { settings: current, revision: 23, outcome: "noChanges" });
   assert.equal("faviconMediaAssetId" in result.settings, false);
   assert.deepEqual(calls.identity, []);
 });
@@ -458,6 +458,7 @@ void test("primary menu treats equal arrays as unchanged and reports divergent o
   });
 
   assert.deepEqual(result, {
+    outcome: "noChanges",
     settings: current,
     revision: 25,
   });
@@ -676,6 +677,7 @@ void test("SEO merges a local scalar with a concurrent composite change", async 
   });
 
   assert.deepEqual(result, {
+    outcome: "updated",
     settings: { ...current, defaultTitle: "Local title" },
     revision: 34,
   });
@@ -720,6 +722,7 @@ void test("theme merges disjoint token changes and treats equal light tokens as 
   });
 
   assert.deepEqual(merged, {
+    outcome: "updated",
     settings: {
       ...DEFAULT_THEME_SETTINGS,
       lightTokens: localLight,
@@ -738,6 +741,7 @@ void test("theme merges disjoint token changes and treats equal light tokens as 
     },
   ]);
   assert.equal(unchanged.revision, 35);
+  assert.equal(unchanged.outcome, "noChanges");
   assert.deepEqual(equalContext.calls.theme, []);
 });
 

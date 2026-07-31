@@ -23,6 +23,7 @@ import {
 } from "@compoz/studio/features/pages/blocks/cache/reorder-optimistic";
 import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
 import { pageBlocksMutationScope } from "@compoz/studio/features/pages/blocks/hooks/page-blocks-mutation-scope";
+import { invalidateBlockMutationStatusViews } from "@compoz/studio/features/pages/blocks/hooks/invalidate-block-mutation-status-views";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 
@@ -63,8 +64,9 @@ export function useReorderBlocks(pageId: string, onSuccess?: () => void) {
         baselineOrder: [...intent.baselineOrder],
         localOrder: [...intent.localOrder],
       }),
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       syncPageBlocksSnapshotCache(queryClient, websiteId, pageIdKey, response);
+      await invalidateBlockMutationStatusViews({ queryClient, websiteId, pageId: pageIdKey, outcome: response.outcome });
       onSuccess?.();
     },
     onError: (error, _intent, context) => {

@@ -16,7 +16,10 @@ import {
   getPagesRepository,
 } from "@compoz/infra/pages";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
-import { getSiteRepository } from "@compoz/infra/site";
+import {
+  getDraftSiteSettingsInitializer,
+  getSiteRepository,
+} from "@compoz/infra/site";
 
 function getPageIdsFromIndex(
   pages: ReadonlyArray<{ id: string | null | undefined }> | undefined,
@@ -147,13 +150,16 @@ export class PrismaDemoSandboxCloner implements DemoSandboxCloner {
       });
 
       const targetSite = getSiteRepository({ websiteId: targetWebsiteId });
+      const targetSettings = getDraftSiteSettingsInitializer({
+        websiteId: targetWebsiteId,
+      });
       const targetStructure = getDraftPageStructureInitializer({
         websiteId: targetWebsiteId,
       });
 
       await targetSite.ensureBase();
 
-      await targetSite.putSettings(CONTENT_STATE.DRAFT, settings);
+      await targetSettings.initializeDraftSettings(settings);
 
       if (pages.length > 0) {
         await targetStructure.createDraftPages(

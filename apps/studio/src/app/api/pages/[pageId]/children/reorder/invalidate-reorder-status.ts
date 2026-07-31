@@ -5,12 +5,14 @@
  */
 
 import type { SiteStatusCachePort } from "@compoz/core/domain/site/ports/site-status-cache-port";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
+import { invalidateUpdatedPageStatus } from "@compoz/studio/app/api/pages/invalidate-page-mutation-status";
 
 type Logger = Readonly<{
   error?: (message: string, context: Readonly<Record<string, unknown>>) => void;
 }>;
 
-export async function invalidateCommittedReorderStatus<TResult>(args: {
+export async function invalidateCommittedReorderStatus<TResult extends Readonly<{ outcome: MutationOutcome }>>(args: {
   websiteId: string;
   statusCache: SiteStatusCachePort;
   logger: Logger;
@@ -18,18 +20,11 @@ export async function invalidateCommittedReorderStatus<TResult>(args: {
 }): Promise<TResult> {
   const result = await args.commit();
 
-  try {
-    await Promise.all([
-      args.statusCache.invalidateStatus(),
-      args.statusCache.invalidateStatusDetails(),
-    ]);
-  } catch (error) {
-    args.logger.error?.("route.statusCache.invalidate.failed", {
-      websiteId: args.websiteId,
-      err: String(error),
-      invalidateStatus: true,
-      invalidateStatusDetails: true,
-    });
-  }
+  await invalidateUpdatedPageStatus({
+    websiteId: args.websiteId,
+    outcome: result.outcome,
+    statusCache: args.statusCache,
+    logger: args.logger,
+  });
   return result;
 }

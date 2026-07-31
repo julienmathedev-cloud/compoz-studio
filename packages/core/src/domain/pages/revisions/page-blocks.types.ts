@@ -5,9 +5,10 @@
  */
 
 import type { Block } from "@compoz/core/domain/pages/entities/block";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 
 export type PageBlocksOperation = "create" | "update" | "delete" | "reorder";
-export type PageBlocksMutationOutcome = "updated" | "noChanges";
+export type PageBlocksMutationOutcome = MutationOutcome;
 export type PageBlocksConflictKind = "functional" | "contention";
 
 export type BlockFieldLocationSegment =

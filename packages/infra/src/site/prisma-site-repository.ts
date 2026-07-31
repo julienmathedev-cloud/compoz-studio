@@ -54,7 +54,6 @@ import {
   toPrismaPrimaryMenuSettings,
   toPrismaSeoSettings,
   toPrismaSiteSettingsCreateData,
-  toPrismaSiteSettingsUpdateData,
   toPrismaSocialSettings,
   toPrismaThemeSettings,
   type PrismaContentState,
@@ -557,27 +556,4 @@ export class PrismaSiteRepository implements SiteRepository {
     );
   }
 
-  async putSettings(
-    state: ContentState,
-    settings: Readonly<SiteSettings>,
-  ): Promise<void> {
-    await this.ensureBase();
-
-    const prismaState = toPrismaContentState(state);
-
-    await this.client.siteSettings.upsert({
-      where: {
-        websiteId_state: {
-          websiteId: this.websiteId,
-          state: prismaState,
-        },
-      },
-      create: toPrismaSiteSettingsCreateData(
-        this.websiteId,
-        prismaState,
-        settings,
-      ),
-      update: toPrismaSiteSettingsUpdateData(settings),
-    });
-  }
 }

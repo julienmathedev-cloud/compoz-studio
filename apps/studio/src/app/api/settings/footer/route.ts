@@ -23,6 +23,7 @@ import type {
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 import { adaptUpdateFooterIntent } from "@compoz/studio/app/api/_adapters/footer";
+import { invalidateUpdatedSettingsStatus } from "@compoz/studio/app/api/settings/invalidate-settings-status";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
@@ -88,35 +89,17 @@ export async function PATCH(req: Request) {
         revision: result.revision,
       });
 
-      /**
-       * Invalidates the active Website status cache.
-       *
-       * The cache may still be backed by KV in infra, but its business scope is
-       * the Prisma Website.id.
-       */
-      try {
-        logger.debug?.("route.footer.patch.invalidate.start", {
-          websiteId,
-          invalidateStatus: true,
-        });
-
-        await statusCache.invalidateStatus();
-
-        logger.debug?.("route.footer.patch.invalidate.done", {
-          websiteId,
-          invalidateStatus: true,
-        });
-      } catch (error) {
-        logger.error?.("route.footer.patch.invalidate.failed", {
-          websiteId,
-          err: String(error),
-          invalidateStatus: true,
-        });
-      }
+      await invalidateUpdatedSettingsStatus({
+        websiteId,
+        outcome: result.outcome,
+        statusCache,
+        logger,
+      });
 
       const res: PatchFooterResponse = {
         settings: result.settings,
         revision: result.revision,
+        outcome: result.outcome,
       };
 
       return res;

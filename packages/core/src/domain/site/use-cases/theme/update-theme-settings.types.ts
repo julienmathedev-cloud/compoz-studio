@@ -8,6 +8,7 @@
 
 import type { ThemeSettings } from "@compoz/core/domain/site/entities/theme";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 
 export interface UpdateThemeSettingsDeps {
   repo: SiteRepository;
@@ -20,6 +21,7 @@ export interface UpdateThemeSettingsInput {
 }
 
 export interface UpdateThemeSettingsResult {
+  outcome: MutationOutcome;
   settings: ThemeSettings;
   revision: number;
 }

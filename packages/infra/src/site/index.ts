@@ -13,6 +13,8 @@ import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import { KvSiteStatusSnapshot } from "@compoz/infra/site/kv-site-status-snapshot";
 import { PrismaPublishSiteTransaction } from "@compoz/infra/site/prisma-publish-site-transaction";
 import { PrismaSiteRepository } from "@compoz/infra/site/prisma-site-repository";
+import type { DraftSiteSettingsInitializer } from "@compoz/core/domain/site/ports/draft-site-settings-initializer";
+import { PrismaDraftSiteSettingsInitializer } from "@compoz/infra/site/prisma-draft-site-settings-initializer";
 
 const logger = log.child({ ns: "infra:site", factory: "siteRepo" });
 
@@ -48,6 +50,15 @@ export function getSiteRepository(opts: SiteRepoOptions): SiteRepository {
   hasLoggedReuse = true;
 
   return created;
+}
+
+/** Creates the provisioning-only Draft settings initializer. */
+export function getDraftSiteSettingsInitializer(
+  opts: SiteRepoOptions,
+): DraftSiteSettingsInitializer {
+  return new PrismaDraftSiteSettingsInitializer({
+    websiteId: resolveWebsiteId(opts),
+  });
 }
 
 /** Site status snapshots remain Redis-backed as a reconstructible cache. */

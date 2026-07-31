@@ -8,6 +8,7 @@
 
 import type { SocialSettings } from "@compoz/core/domain/site/entities/social";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 
 export interface UpdateSocialSettingsDeps {
   repo: SiteRepository;
@@ -20,6 +21,7 @@ export interface UpdateSocialSettingsInput {
 }
 
 export interface UpdateSocialSettingsResult {
+  outcome: MutationOutcome;
   settings: SocialSettings;
   revision: number;
 }

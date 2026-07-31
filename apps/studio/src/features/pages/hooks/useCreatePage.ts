@@ -22,7 +22,7 @@ import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-sta
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log } from "@compoz/infra/lib/log";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
-import { pageByIdKey } from "@compoz/studio/features/pages/cache/keys";
+import { seedCreatedPageCache } from "@compoz/studio/features/pages/cache/seed-created-page";
 import { toCreatePageIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/pages-form";
 import {
   adoptDraftStructureConflict,
@@ -92,6 +92,7 @@ export function useCreatePage(onSuccess?: () => void): UseCreatePageResult {
         payload,
         fields,
         page: response.page,
+        revisions: response.revisions,
         snapshot: {
           index: response.index,
           draftStructureRevision: response.draftStructureRevision,
@@ -99,7 +100,7 @@ export function useCreatePage(onSuccess?: () => void): UseCreatePageResult {
       } as const;
     },
 
-    onSuccess: async ({ payload, fields, page, snapshot }) => {
+    onSuccess: async ({ payload, fields, page, revisions, snapshot }) => {
       notifyCreated(
         t("notifications.created.title", { entity: entityLabel }),
         t("notifications.created.description", {
@@ -126,10 +127,10 @@ export function useCreatePage(onSuccess?: () => void): UseCreatePageResult {
       );
 
       if (pageIdValue) {
-        queryClient.setQueryData(
-          pageByIdKey(websiteId, pageIdValue, DEFAULT_CONTENT_STATE),
+        seedCreatedPageCache(queryClient, websiteId, DEFAULT_CONTENT_STATE, {
           page,
-        );
+          revisions,
+        });
       }
 
       await Promise.all([

@@ -45,8 +45,8 @@ function structure(
   update: DraftPageStructureTransaction["update"],
 ): DraftPageStructureTransaction {
   return {
-    create: async ({ page }) => ({ ...STRUCTURE, page }),
-    reorder: async () => STRUCTURE,
+    create: async ({ page }) => ({ ...STRUCTURE, page, revisions: REVISIONS }),
+    reorder: async () => ({ ...STRUCTURE, outcome: "updated" }),
     update,
     delete: async () => STRUCTURE,
   };
@@ -57,7 +57,7 @@ void test("metadata-only response omits structure and includes both page revisio
     {
       structure: structure(async (intent) => {
         assert.equal(intent.metadataChanges?.expectedMetaRevision, 3);
-        return { page: PAGE, revisions: REVISIONS };
+        return { outcome: "updated", slugChanged: false, page: PAGE, revisions: REVISIONS };
       }),
     },
     {
@@ -71,13 +71,15 @@ void test("metadata-only response omits structure and includes both page revisio
     },
   );
 
-  assert.deepEqual(response, { page: PAGE, revisions: REVISIONS });
+  assert.deepEqual(response, { outcome: "updated", slugChanged: false, page: PAGE, revisions: REVISIONS });
 });
 
 void test("a real parent change returns the structure snapshot atomically", async () => {
   const response = await persistPagePatch(
     {
       structure: structure(async () => ({
+        outcome: "updated",
+        slugChanged: false,
         page: PAGE,
         revisions: REVISIONS,
         structure: STRUCTURE,

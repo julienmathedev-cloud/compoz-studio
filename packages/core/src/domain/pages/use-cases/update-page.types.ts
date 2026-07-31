@@ -14,6 +14,7 @@ import type {
   Page,
   PageRevisions,
 } from "@compoz/core/domain/pages/entities/page";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 
 export type {
   MetadataChange,
@@ -33,6 +34,8 @@ export type UpdatePageInput = UpdatePageIntent &
   }>;
 
 export interface UpdatePageResult {
+  outcome: MutationOutcome;
+  slugChanged: boolean;
   page: Page;
   revisions: PageRevisions;
   structure?: DraftStructureSnapshot;

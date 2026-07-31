@@ -8,6 +8,7 @@
 
 import type { SeoSettings } from "@compoz/core/domain/site/entities/seo";
 import type { SiteRepository } from "@compoz/core/domain/site/ports/site-repository";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 
 export interface UpdateSeoSettingsDeps {
   repo: SiteRepository;
@@ -20,6 +21,7 @@ export interface UpdateSeoSettingsInput {
 }
 
 export interface UpdateSeoSettingsResult {
+  outcome: MutationOutcome;
   settings: SeoSettings;
   revision: number;
 }

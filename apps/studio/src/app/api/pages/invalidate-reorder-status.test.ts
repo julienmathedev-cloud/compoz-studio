@@ -27,7 +27,7 @@ function cache(
 
 void test("a rejected post-commit invalidation is logged and resolves", async () => {
   const messages: string[] = [];
-  const committed = { status: 200, draftStructureRevision: 7 };
+  const committed = { status: 200, draftStructureRevision: 7, outcome: "updated" as const };
   const returned = await invalidateCommittedReorderStatus({
       websiteId: "website-a",
       statusCache: cache(
@@ -72,5 +72,21 @@ void test("a rejected transaction remains rejected and skips invalidation", asyn
       }),
     transactionError,
   );
+  assert.equal(invalidations, 0);
+});
+
+void test("a committed noChanges reorder skips status invalidation", async () => {
+  let invalidations = 0;
+  const result = await invalidateCommittedReorderStatus({
+    websiteId: "website-a",
+    statusCache: cache(
+      async () => { invalidations += 1; return true; },
+      async () => { invalidations += 1; return true; },
+    ),
+    logger: {},
+    commit: async () => ({ outcome: "noChanges" as const }),
+  });
+
+  assert.equal(result.outcome, "noChanges");
   assert.equal(invalidations, 0);
 });

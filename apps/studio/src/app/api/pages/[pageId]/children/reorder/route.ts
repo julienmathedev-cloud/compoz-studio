@@ -83,20 +83,25 @@ export async function POST(req: Request, ctx: { params: unknown }) {
           statusCache,
           logger,
           commit: async (): Promise<ReorderChildrenResponse> => {
-            const { index, draftStructureRevision } = await run({
+            const { index, draftStructureRevision, outcome } = await run({
               parentId: pageId,
               childIds: dto.childIds,
               expectedDraftStructureRevision:
                 dto.expectedDraftStructureRevision,
             });
 
-            logger.debug("route.children.reordered", {
+            logger.debug(
+              outcome === "updated"
+                ? "route.children.reordered"
+                : "route.children.reorder.noChanges",
+              {
               websiteId,
               pageId,
               count: dto.childIds.length,
-            });
+              },
+            );
 
-            return { index, draftStructureRevision };
+            return { index, draftStructureRevision, outcome };
           },
         });
       },

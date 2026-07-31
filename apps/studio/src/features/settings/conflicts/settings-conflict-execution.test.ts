@@ -43,8 +43,9 @@ void test("noChanges adopts locally without mutation", async () => {
     current: { ...current, adoptCache: () => { cacheWrites += 1; } },
     signal: new AbortController().signal,
     adoptSnapshot: (_value, revision) => { assert.equal(revision, 9); return () => void 0; },
-    mutate: async () => { mutations += 1; return { title: "Unexpected" }; },
+    mutate: async () => { mutations += 1; return { value: { title: "Unexpected" }, outcome: "updated" }; },
     commit: (value) => { committed = value; },
+    onMutationResult: () => undefined,
   });
   assert.equal(result.status, "success");
   assert.deepEqual({ mutations, cacheWrites, committed }, { mutations: 0, cacheWrites: 1, committed: current.value });
@@ -60,8 +61,9 @@ void test("mutation uses the semantic payload once and rolls the OCC snapshot ba
     current,
     signal: new AbortController().signal,
     adoptSnapshot: (_value, revision) => { assert.equal(revision, plan.expectedRevision); return () => { rollbacks += 1; }; },
-    mutate: async (payload) => { mutations += 1; assert.deepEqual(payload, { title: "Local" }); return { title: "Persisted" }; },
+    mutate: async (payload) => { mutations += 1; assert.deepEqual(payload, { title: "Local" }); return { value: { title: "Persisted" }, outcome: "updated" }; },
     commit: (value) => { committed = value; },
+    onMutationResult: () => undefined,
   });
   assert.equal(success.status, "success");
   assert.deepEqual({ mutations, rollbacks, committed }, { mutations: 1, rollbacks: 0, committed: { title: "Persisted" } });
@@ -74,6 +76,7 @@ void test("mutation uses the semantic payload once and rolls the OCC snapshot ba
     adoptSnapshot: () => () => { rollbacks += 1; },
     mutate: async () => { mutations += 1; throw conflict; },
     commit: () => { throw new Error("must not commit"); },
+    onMutationResult: () => undefined,
   });
   assert.equal(failed.status, "error");
   if (failed.status === "error") assert.equal(failed.error, conflict);

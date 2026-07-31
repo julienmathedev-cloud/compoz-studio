@@ -158,7 +158,7 @@ void test("structure 409 resolves without rejection and invokes its callback onc
 
 void test("successful mutation produces submitted and allows success cleanup", async () => {
   const outcome = await submitPageUpdateMutation({
-    mutate: () => Promise.resolve(),
+    mutate: () => Promise.resolve({ response: { outcome: "updated" as const } }),
     onUnexpectedError: () => {
       assert.fail("unexpected error handler must not run");
     },
@@ -168,6 +168,16 @@ void test("successful mutation produces submitted and allows success cleanup", a
   assert.equal(shouldApplyPageUpdateSuccessCleanup(outcome), true);
   assert.equal(shouldApplyPageUpdateSuccessCleanup("noChanges"), true);
   assert.equal(shouldApplyPageUpdateSuccessCleanup("ignored"), false);
+});
+
+void test("server noChanges is propagated and remains a successful cleanup", async () => {
+  const outcome = await submitPageUpdateMutation({
+    mutate: () => Promise.resolve({ response: { outcome: "noChanges" as const } }),
+    onUnexpectedError: () => assert.fail("unexpected error handler must not run"),
+  });
+
+  assert.equal(outcome, "noChanges");
+  assert.equal(shouldApplyPageUpdateSuccessCleanup(outcome), true);
 });
 
 void test("unexpected errors keep the existing handler and rejected promise flow", async () => {

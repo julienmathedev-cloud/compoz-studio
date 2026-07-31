@@ -28,6 +28,7 @@ import {
 } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 import { getRevisionConflictDetails } from "@compoz/infra/lib/get-revision-conflict-details";
+import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 import {
   canApplyConflictResolution,
   CONFLICT_ACTION_ERROR,
@@ -67,7 +68,7 @@ export type TFunc = (
 
 /** Save result distinguishing skipped no-op saves from persisted values. */
 export type SettingsSaveResult<T> =
-  | Readonly<{ status: "noChanges"; fields: ReadonlyArray<string> }>
+  | Readonly<{ status: "noChanges"; fields: ReadonlyArray<string>; value?: T }>
   | Readonly<{ status: "saved"; value: T; fields: ReadonlyArray<string> }>
   | Readonly<{ status: "conflict" }>;
 
@@ -105,9 +106,9 @@ type UseSettingsResourceParams<T extends object> = Readonly<{
   defaults: T;
   entityLabel: string;
   load: (state: ContentState, opts?: HttpOpts) => Promise<T>;
-  save: (next: Partial<T> | T, opts?: HttpOpts) => Promise<T>;
+  save: (next: Partial<T> | T, opts?: HttpOpts) => Promise<Readonly<{ value: T; outcome: MutationOutcome }>>;
   onLoaded?: (value: T) => T | void;
-  onSaved?: (value: T) => void;
+  onMutationResult?: (value: T, outcome: MutationOutcome) => void;
   beforeSave?: (value: T) => Partial<T> | T;
   buildPatch?: (baseline: T, next: T) => Partial<T> | null;
   autoLoad?: boolean;
@@ -165,7 +166,7 @@ export function useSettingsResource<T extends object>({
   load: loader,
   save: saver,
   onLoaded,
-  onSaved,
+  onMutationResult,
   beforeSave,
   buildPatch,
   autoLoad = true,
@@ -197,7 +198,7 @@ export function useSettingsResource<T extends object>({
   const loaderRef = useRef(loader);
   const saverRef = useRef(saver);
   const onLoadedRef = useRef(onLoaded);
-  const onSavedRef = useRef(onSaved);
+  const onMutationResultRef = useRef(onMutationResult);
   const beforeSaveRef = useRef(beforeSave);
   const buildPatchRef = useRef(buildPatch);
   const entityLabelRef = useRef(entityLabel);
@@ -216,8 +217,8 @@ export function useSettingsResource<T extends object>({
   }, [onLoaded]);
 
   useEffect(() => {
-    onSavedRef.current = onSaved;
-  }, [onSaved]);
+    onMutationResultRef.current = onMutationResult;
+  }, [onMutationResult]);
 
   useEffect(() => {
     beforeSaveRef.current = beforeSave;
@@ -346,7 +347,7 @@ export function useSettingsResource<T extends object>({
         const beforeSaveFn = beforeSaveRef.current;
         const buildPatchFn = buildPatchRef.current;
         const saverFn = saverRef.current;
-        const onSavedFn = onSavedRef.current;
+        const onMutationResultFn = onMutationResultRef.current;
 
         const candidate = (
           beforeSaveFn ? beforeSaveFn(nextValues) : nextValues
@@ -365,7 +366,7 @@ export function useSettingsResource<T extends object>({
           return { status: "noChanges", fields: [] } as const;
         }
 
-        const saved = await logSpan(
+        const mutationResult = await logSpan(
           "ui.settingsResource.save",
           {
             state: DEFAULT_CONTENT_STATE,
@@ -375,10 +376,12 @@ export function useSettingsResource<T extends object>({
           () => saverFn(payload, { signal: abortController.signal }),
         );
 
-        setBaseline(saved);
-        onSavedFn?.(saved);
+        setBaseline(mutationResult.value);
+        onMutationResultFn?.(mutationResult.value, mutationResult.outcome);
 
-        return { status: "saved", value: saved, fields } as const;
+        return mutationResult.outcome === "noChanges"
+          ? { status: "noChanges", value: mutationResult.value, fields } as const
+          : { status: "saved", value: mutationResult.value, fields } as const;
       } catch (error: unknown) {
         const config = conflictConfigRef.current;
         const details = config ? getRevisionConflictDetails(error) : null;
@@ -435,7 +438,6 @@ export function useSettingsResource<T extends object>({
           adoptSnapshot: config.adoptSnapshot,
           commit: (value) => {
             setBaseline(structuredClone(value));
-            onSavedRef.current?.(value);
           },
         });
         if (result.status === "error") {
@@ -477,8 +479,9 @@ export function useSettingsResource<T extends object>({
           mutate: (payload, signal) => saverRef.current(payload, { signal }),
           commit: (value) => {
             setBaseline(value);
-            onSavedRef.current?.(value);
           },
+          onMutationResult: (value, outcome) =>
+            onMutationResultRef.current?.(value, outcome),
         });
         if (execution.status === "error") throw execution.error;
         setInternalConflict((current) => current.phase !== "idle" && current.conflictId === state.conflictId

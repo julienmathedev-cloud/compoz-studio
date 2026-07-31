@@ -66,9 +66,9 @@ function structureTransaction(
   overrides: Partial<DraftPageStructureTransaction> = {},
 ): DraftPageStructureTransaction {
   return {
-    create: async ({ page }) => ({ ...SNAPSHOT, page }),
-    reorder: async () => SNAPSHOT,
-    update: async () => ({ page: PAGE, revisions: REVISIONS }),
+    create: async ({ page }) => ({ ...SNAPSHOT, page, revisions: REVISIONS }),
+    reorder: async () => ({ ...SNAPSHOT, outcome: "updated" }),
+    update: async () => ({ outcome: "noChanges", slugChanged: false, page: PAGE, revisions: REVISIONS }),
     delete: async () => SNAPSHOT,
     ...overrides,
   };
@@ -106,7 +106,7 @@ void test("createPage sends the structure revision and initial page through the 
     structure: structureTransaction({
       create: async (input) => {
         commands.push(input);
-        return { ...SNAPSHOT, page: input.page };
+        return { ...SNAPSHOT, page: input.page, revisions: REVISIONS };
       },
     }),
     idGenerator: { nextId: () => "created-page" },
@@ -137,7 +137,7 @@ void test("reorder and delete keep using the structure transaction", async () =>
   const structure = structureTransaction({
     reorder: async (input) => {
       reorderIntent = input;
-      return SNAPSHOT;
+      return { ...SNAPSHOT, outcome: "updated" };
     },
     delete: async (input) => {
       deleteIntent = input;
@@ -183,6 +183,8 @@ void test("updatePage forwards one targeted composite intent without a repositor
       update: async (intent) => {
         received = intent;
         return {
+          outcome: "updated",
+          slugChanged: false,
           page: { ...PAGE, name: "Renamed", parentId: "parent" },
           revisions: { metaRevision: 3, blocksRevision: 3 },
           structure: SNAPSHOT,

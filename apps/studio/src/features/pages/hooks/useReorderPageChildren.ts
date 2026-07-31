@@ -21,6 +21,7 @@ import {
   type ContentState,
 } from "@compoz/core/constants/common/content-state";
 import type { DraftSiteIndexWithRevisionDTO } from "@compoz/core/domain/site/dto";
+import type { ReorderChildrenResponse } from "@compoz/infra/http/studio/pages.types";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
@@ -86,7 +87,7 @@ export function useReorderPageChildren(
   const websiteId = useWebsiteId();
 
   const mutation = useMutation<
-    DraftSiteIndexWithRevisionDTO,
+    ReorderChildrenResponse,
     unknown,
     ReorderChildrenArgs,
     ReorderOptimisticContext
@@ -158,10 +159,12 @@ export function useReorderPageChildren(
     onSuccess: async (nextSnapshot, variables) => {
       setDraftStructureCache(queryClient, websiteId, state, nextSnapshot);
 
-      await Promise.all([
-        invalidateSiteStatus(queryClient, websiteId),
-        invalidateSiteStatusDetails(queryClient, websiteId),
-      ]);
+      if (nextSnapshot.outcome === "updated") {
+        await Promise.all([
+          invalidateSiteStatus(queryClient, websiteId),
+          invalidateSiteStatusDetails(queryClient, websiteId),
+        ]);
+      }
 
       logger.debug("reorder.ok", {
         websiteId,

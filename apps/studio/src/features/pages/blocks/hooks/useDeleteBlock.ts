@@ -19,8 +19,9 @@ import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteConte
 import { syncPageBlocksSnapshotCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
 import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
 import { pageBlocksMutationScope } from "@compoz/studio/features/pages/blocks/hooks/page-blocks-mutation-scope";
+import { invalidateBlockMutationStatusViews } from "@compoz/studio/features/pages/blocks/hooks/invalidate-block-mutation-status-views";
 import { notify } from "@compoz/studio/lib/ui/notify";
-import { notifyDeleted } from "@compoz/studio/lib/ui/notify-presets";
+import { notifyDeleted, notifyNoChanges } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 
 export function useDeleteBlock(pageId: string, onSuccess?: () => void) {
@@ -51,12 +52,20 @@ export function useDeleteBlock(pageId: string, onSuccess?: () => void) {
       setConflict(null);
       setDeletingBlockId(blockId);
     },
-    onSuccess: (response, blockId) => {
+    onSuccess: async (response, blockId) => {
       syncPageBlocksSnapshotCache(queryClient, websiteId, pageIdKey, response);
-      notifyDeleted(
-        t("notifications.deleted.title", { entity: entityLabel }),
-        t("notifications.deleted.description", { entity: entityLabel, name: blockId }),
-      );
+      if (response.outcome === "noChanges") {
+        notifyNoChanges(
+          t("notifications.noChanges.title"),
+          t("notifications.noChanges.description", { entity: entityLabel }),
+        );
+      } else {
+        notifyDeleted(
+          t("notifications.deleted.title", { entity: entityLabel }),
+          t("notifications.deleted.description", { entity: entityLabel, name: blockId }),
+        );
+      }
+      await invalidateBlockMutationStatusViews({ queryClient, websiteId, pageId: pageIdKey, outcome: response.outcome });
       onSuccess?.();
     },
     onError: (error) => {

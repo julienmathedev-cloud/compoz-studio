@@ -22,6 +22,7 @@ import type { ReorderBlocksResponse } from "@compoz/infra/http/studio/pages.type
 import { log, logSpan } from "@compoz/infra/lib/log";
 import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteStatusCache } from "@compoz/infra/site";
+import { invalidateUpdatedPageStatus } from "@compoz/studio/app/api/pages/invalidate-page-mutation-status";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
@@ -87,37 +88,12 @@ export async function POST(req: Request, ctx: { params: unknown }) {
           localOrder: dto.localOrder,
         });
 
-        /**
-         * Invalidates the active Website status cache.
-         *
-         * The cache may still be backed by KV in infra, but its business scope is
-         * the Prisma Website.id.
-         */
-        if (result.outcome === "updated") try {
-          logger.debug?.("route.statusCache.invalidate.start", {
-            websiteId,
-            invalidateStatus: true,
-            invalidateStatusDetails: true,
-          });
-
-          await Promise.all([
-            statusCache.invalidateStatus(),
-            statusCache.invalidateStatusDetails(),
-          ]);
-
-          logger.debug?.("route.statusCache.invalidate.done", {
-            websiteId,
-            invalidateStatus: true,
-            invalidateStatusDetails: true,
-          });
-        } catch (error) {
-          logger.error?.("route.statusCache.invalidate.failed", {
-            websiteId,
-            err: String(error),
-            invalidateStatus: true,
-            invalidateStatusDetails: true,
-          });
-        }
+        await invalidateUpdatedPageStatus({
+          websiteId,
+          outcome: result.outcome,
+          statusCache,
+          logger,
+        });
 
         const res: ReorderBlocksResponse = {
           outcome: result.outcome,

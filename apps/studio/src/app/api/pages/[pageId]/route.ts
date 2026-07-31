@@ -34,7 +34,10 @@ import {
 import { getSiteStatusCache } from "@compoz/infra/site";
 import { adaptUpdatePagePayload } from "@compoz/studio/app/api/_adapters/pages/pages";
 import { persistPagePatch } from "@compoz/studio/app/api/pages/[pageId]/persist-page-patch";
-import { invalidateUpdatedPageStatus } from "@compoz/studio/app/api/pages/invalidate-page-mutation-status";
+import {
+  invalidateCommittedPageStatus,
+  invalidateUpdatedPageStatus,
+} from "@compoz/studio/app/api/pages/invalidate-page-mutation-status";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
@@ -136,37 +139,7 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
           removed: true,
         });
 
-        /**
-         * Invalidate the active Website status cache.
-         *
-         * The cache may still be implemented with KV in infra,
-         * but its business scope is the Prisma Website.id.
-         */
-        try {
-          logger.debug?.("route.statusCache.invalidate.start", {
-            websiteId,
-            invalidateStatus: true,
-            invalidateStatusDetails: true,
-          });
-
-          await Promise.all([
-            statusCache.invalidateStatus(),
-            statusCache.invalidateStatusDetails(),
-          ]);
-
-          logger.debug?.("route.statusCache.invalidate.done", {
-            websiteId,
-            invalidateStatus: true,
-            invalidateStatusDetails: true,
-          });
-        } catch (error) {
-          logger.error?.("route.statusCache.invalidate.failed", {
-            websiteId,
-            err: String(error),
-            invalidateStatus: true,
-            invalidateStatusDetails: true,
-          });
-        }
+        await invalidateCommittedPageStatus({ websiteId, statusCache, logger });
 
         const res: DeletePageResponse = {
           index,

@@ -4,7 +4,10 @@
  * @description KV-backed SiteStatusCachePort implementation.
  * @remarks
  * Snapshots are format-versioned and generation-versioned. Redis failures are
- * cache misses/no-ops so persisted repositories remain the source of truth.
+ * cache misses/no-ops so persisted Prisma repositories remain the source of
+ * truth. Snapshots are reconstructible; failed invalidations return false and
+ * may leave a snapshot readable for at most its 15-minute TTL. Callers must
+ * observe and log false without failing an already committed business mutation.
  */
 
 import type { SiteStatus } from "@compoz/core/domain/site/entities/site-status";
@@ -22,8 +25,21 @@ import { kvCmd } from "@compoz/infra/kv/kv-telemetry";
 import { log } from "@compoz/infra/lib/log";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 
+type StatusSnapshotRedis = Readonly<{
+  get(key: string): Promise<unknown>;
+  set(
+    key: string,
+    value: string,
+    options: Readonly<{ ex: number }>,
+  ): Promise<unknown>;
+  incr(key: string): Promise<unknown>;
+  expire(key: string, seconds: number): Promise<unknown>;
+}>;
+
 type KvSiteStatusSnapshotOptions = Readonly<{
   websiteId: string;
+  /** Infra-only test seam; production resolves Upstash lazily. */
+  redis?: StatusSnapshotRedis;
 }>;
 
 const SNAPSHOT_FORMAT_VERSION = 1 as const;
@@ -70,6 +86,7 @@ function kvCtx(base: string): string {
 
 export class KvSiteStatusSnapshot implements SiteStatusCachePort {
   private readonly websiteId: string;
+  private readonly injectedRedis?: StatusSnapshotRedis;
 
   /** Request-local memos avoid repeated generation reads in one server flow. */
   private statusVersionMemo: number | null = null;
@@ -80,6 +97,11 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
       opts.websiteId,
       "KvSiteStatusSnapshot.constructor",
     );
+    this.injectedRedis = opts.redis;
+  }
+
+  private getRedis(): StatusSnapshotRedis {
+    return this.injectedRedis ?? getUpstashRedis();
   }
 
   private warn(operation: string, error: unknown): void {
@@ -107,7 +129,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
 
     const key = statusVersionKey(this.websiteId);
     const raw = await kvCmd(kvCtx("status.version.get"), "get", () =>
-      getUpstashRedis().get(key),
+      this.getRedis().get(key),
     );
 
     const version = this.parseVersion(raw);
@@ -123,7 +145,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
     const key = statusDetailsVersionKey(this.websiteId);
 
     const raw = await kvCmd(kvCtx("details.version.get"), "get", () =>
-      getUpstashRedis().get(key),
+      this.getRedis().get(key),
     );
 
     const version = this.parseVersion(raw);
@@ -140,7 +162,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
       const version = await this.getStatusVersion();
       const key = statusSnapshotKey(this.websiteId, version);
       const raw = await kvCmd(kvCtx("status.get"), "get", () =>
-        getUpstashRedis().get(key),
+        this.getRedis().get(key),
       );
       const envelope = parseRedisJson<SnapshotEnvelope<unknown>>(raw);
 
@@ -165,7 +187,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
       };
 
       await kvCmd(kvCtx("status.set"), "set", () =>
-        getUpstashRedis().set(key, JSON.stringify(envelope), {
+        this.getRedis().set(key, JSON.stringify(envelope), {
           ex: SNAPSHOT_TTL_SECONDS,
         }),
       );
@@ -181,7 +203,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
       const version = await this.getDetailsVersion();
       const key = statusDetailsSnapshotKey(this.websiteId, version, query);
       const raw = await kvCmd(kvCtx("details.get"), "get", () =>
-        getUpstashRedis().get(key),
+        this.getRedis().get(key),
       );
       const envelope = parseRedisJson<SnapshotEnvelope<unknown>>(raw);
 
@@ -223,7 +245,7 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
       };
 
       await kvCmd(kvCtx("details.set"), "set", () =>
-        getUpstashRedis().set(key, JSON.stringify(envelope), {
+        this.getRedis().set(key, JSON.stringify(envelope), {
           ex: SNAPSHOT_TTL_SECONDS,
         }),
       );
@@ -237,13 +259,13 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
 
     try {
       const next = await kvCmd(kvCtx("invalidate.status.incr"), "other", () =>
-        getUpstashRedis().incr(key),
+        this.getRedis().incr(key),
       );
       const nextNumber = this.parseVersion(next);
       this.statusVersionMemo = nextNumber;
 
       await kvCmd(kvCtx("invalidate.status.expire"), "other", () =>
-        getUpstashRedis().expire(key, VERSION_TTL_SECONDS),
+        this.getRedis().expire(key, VERSION_TTL_SECONDS),
       );
       return true;
     } catch (error) {
@@ -259,13 +281,13 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
 
     try {
       const next = await kvCmd(kvCtx("invalidate.details.incr"), "other", () =>
-        getUpstashRedis().incr(key),
+        this.getRedis().incr(key),
       );
 
       this.bumpDetailsVersionMemo(this.parseVersion(next));
 
       await kvCmd(kvCtx("invalidate.details.expire"), "other", () =>
-        getUpstashRedis().expire(key, VERSION_TTL_SECONDS),
+        this.getRedis().expire(key, VERSION_TTL_SECONDS),
       );
       return true;
     } catch (error) {
@@ -273,13 +295,6 @@ export class KvSiteStatusSnapshot implements SiteStatusCachePort {
       this.warn("details.invalidate", error);
       return false;
     }
-  }
-
-  /** Targeted invalidation intentionally falls back to the version bump strategy. */
-  async invalidateStatusDetailsSnapshot(
-    _query: SiteStatusDetailsQuery,
-  ): Promise<boolean> {
-    return this.invalidateStatusDetails();
   }
 
   async invalidateAll(): Promise<boolean> {

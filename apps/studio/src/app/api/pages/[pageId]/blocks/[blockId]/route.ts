@@ -29,6 +29,7 @@ import {
   adaptDeleteBlockIntent,
   adaptUpdateSectionBlockIntent,
 } from "@compoz/studio/app/api/_adapters/pages/blocks/blocks";
+import { invalidateUpdatedPageStatus } from "@compoz/studio/app/api/pages/invalidate-page-mutation-status";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { unwrapParams } from "@compoz/studio/lib/unwrap-params";
@@ -40,40 +41,6 @@ import {
   type UpdateSectionBlockIntentDTO,
 } from "@compoz/validation/pages/blocks/block-intents";
 import { PageIdAndBlockIdParamSchema } from "@compoz/validation/routes/params";
-
-async function invalidateWebsiteStatusCache(params: {
-  websiteId: string;
-  statusCache: ReturnType<typeof getSiteStatusCache>;
-  logger: ReturnType<typeof log.child>;
-}) {
-  const { websiteId, statusCache, logger } = params;
-
-  try {
-    logger.debug?.("route.statusCache.invalidate.start", {
-      websiteId,
-      invalidateStatus: true,
-      invalidateStatusDetails: true,
-    });
-
-    await Promise.all([
-      statusCache.invalidateStatus(),
-      statusCache.invalidateStatusDetails(),
-    ]);
-
-    logger.debug?.("route.statusCache.invalidate.done", {
-      websiteId,
-      invalidateStatus: true,
-      invalidateStatusDetails: true,
-    });
-  } catch (error) {
-    logger.error?.("route.statusCache.invalidate.failed", {
-      websiteId,
-      err: String(error),
-      invalidateStatus: true,
-      invalidateStatusDetails: true,
-    });
-  }
-}
 
 export async function PATCH(req: Request, ctx: { params: unknown }) {
   const NS = "api.studio.pages.id.blocks.blockId.PATCH" as const;
@@ -135,13 +102,12 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
           ...adapted,
         });
 
-        if (result.outcome === "updated") {
-          await invalidateWebsiteStatusCache({
-            websiteId,
-            statusCache,
-            logger,
-          });
-        }
+        await invalidateUpdatedPageStatus({
+          websiteId,
+          outcome: result.outcome,
+          statusCache,
+          logger,
+        });
 
         const res: UpdateSectionBlockResponse = {
           outcome: result.outcome,
@@ -214,13 +180,12 @@ export async function DELETE(req: Request, ctx: { params: unknown }) {
           ...adapted,
         });
 
-        if (result.outcome === "updated") {
-          await invalidateWebsiteStatusCache({
-            websiteId,
-            statusCache,
-            logger,
-          });
-        }
+        await invalidateUpdatedPageStatus({
+          websiteId,
+          outcome: result.outcome,
+          statusCache,
+          logger,
+        });
 
         const res: DeleteBlockResponse = {
           outcome: result.outcome,

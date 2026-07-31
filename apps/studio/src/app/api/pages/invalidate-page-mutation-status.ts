@@ -11,25 +11,48 @@ type Logger = Readonly<{
   error?: (message: string, context: Readonly<Record<string, unknown>>) => void;
 }>;
 
-export async function invalidateUpdatedPageStatus(args: Readonly<{
+/**
+ * Invalidates snapshots after a committed page mutation. Redis is best-effort:
+ * a false/rejected invalidation is logged and never rejects the mutation flow.
+ */
+export async function invalidateCommittedPageStatus(args: Readonly<{
   websiteId: string;
-  outcome: MutationOutcome;
-  statusCache: SiteStatusCachePort;
+  statusCache: Pick<SiteStatusCachePort, "invalidateAll">;
   logger: Logger;
-}>): Promise<void> {
-  if (args.outcome !== "updated") return;
-
+}>): Promise<boolean> {
   try {
-    await Promise.all([
-      args.statusCache.invalidateStatus(),
-      args.statusCache.invalidateStatusDetails(),
-    ]);
+    const invalidated = await args.statusCache.invalidateAll();
+
+    if (!invalidated) {
+      args.logger.error?.("route.statusCache.invalidate.failed", {
+        websiteId: args.websiteId,
+        invalidateStatus: true,
+        invalidateStatusDetails: true,
+        failureKind: "returned-false",
+      });
+    }
+
+    return invalidated;
   } catch (error) {
     args.logger.error?.("route.statusCache.invalidate.failed", {
       websiteId: args.websiteId,
       err: String(error),
       invalidateStatus: true,
       invalidateStatusDetails: true,
+      failureKind: "rejected",
     });
+    return false;
   }
+}
+
+/** Returns true for noChanges because no invalidation was required. */
+export async function invalidateUpdatedPageStatus(args: Readonly<{
+  websiteId: string;
+  outcome: MutationOutcome;
+  statusCache: Pick<SiteStatusCachePort, "invalidateAll">;
+  logger: Logger;
+}>): Promise<boolean> {
+  if (args.outcome !== "updated") return true;
+
+  return invalidateCommittedPageStatus(args);
 }

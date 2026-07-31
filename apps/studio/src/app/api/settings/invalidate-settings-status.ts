@@ -16,16 +16,26 @@ export async function invalidateUpdatedSettingsStatus(args: Readonly<{
   outcome: MutationOutcome;
   statusCache: SiteStatusCachePort;
   logger: Logger;
-}>): Promise<void> {
-  if (args.outcome !== "updated") return;
+}>): Promise<boolean> {
+  if (args.outcome !== "updated") return true;
 
   try {
-    await args.statusCache.invalidateStatus();
+    const invalidated = await args.statusCache.invalidateStatus();
+    if (!invalidated) {
+      args.logger.error?.("route.settings.invalidate.failed", {
+        websiteId: args.websiteId,
+        invalidateStatus: true,
+        failureKind: "returned-false",
+      });
+    }
+    return invalidated;
   } catch (error) {
     args.logger.error?.("route.settings.invalidate.failed", {
       websiteId: args.websiteId,
       err: String(error),
       invalidateStatus: true,
+      failureKind: "rejected",
     });
+    return false;
   }
 }

@@ -31,6 +31,7 @@ import {
 } from "@compoz/infra/pages";
 import { getSiteRepository, getSiteStatusCache } from "@compoz/infra/site";
 import { adaptCreatePagePayload } from "@compoz/studio/app/api/_adapters/pages/pages";
+import { invalidateCommittedPageStatus } from "@compoz/studio/app/api/pages/invalidate-page-mutation-status";
 import { requireSessionWithWebsite } from "@compoz/studio/auth/require-session";
 import { handleRoute } from "@compoz/studio/lib/api/handle-route";
 import { parseDTOOrHttp } from "@compoz/validation/http/zod-to-http";
@@ -122,37 +123,7 @@ export async function POST(req: Request) {
           createdSlug: page.slug,
         });
 
-        /**
-         * Invalidates the active Website status cache.
-         *
-         * The cache may still be backed by KV in infra, but its business scope is
-         * the Prisma Website.id.
-         */
-        try {
-          logger.debug?.("route.statusCache.invalidate.start", {
-            websiteId,
-            invalidateStatus: true,
-            invalidateStatusDetails: true,
-          });
-
-          await Promise.all([
-            statusCache.invalidateStatus(),
-            statusCache.invalidateStatusDetails(),
-          ]);
-
-          logger.debug?.("route.statusCache.invalidate.done", {
-            websiteId,
-            invalidateStatus: true,
-            invalidateStatusDetails: true,
-          });
-        } catch (error) {
-          logger.error?.("route.statusCache.invalidate.failed", {
-            websiteId,
-            err: String(error),
-            invalidateStatus: true,
-            invalidateStatusDetails: true,
-          });
-        }
+        await invalidateCommittedPageStatus({ websiteId, statusCache, logger });
 
         const res: CreatePageResponse = {
           page: page as PageDTO,

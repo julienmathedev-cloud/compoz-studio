@@ -26,6 +26,7 @@ import { useStudioPreview } from "@compoz/studio/features/preview/hooks/useStudi
 import { useSettingsBundle } from "@compoz/studio/features/settings/bundle/useSettingsBundle";
 import { FooterForm } from "@compoz/studio/features/settings/footer/FooterForm";
 import { useFooterSettings } from "@compoz/studio/features/settings/footer/useFooterSettings";
+import { SettingsConflictPanel } from "@compoz/studio/features/settings/conflicts/SettingsConflictPanel";
 import type { FooterWarningKey } from "@compoz/studio/features/settings/footer/validate";
 import { computeFooterWarnings } from "@compoz/studio/features/settings/footer/validate";
 import { toFooterSettingsShapeFromFormValues } from "@compoz/studio/features/settings/mappers/footer-form";
@@ -42,7 +43,7 @@ export function FooterSection() {
   const { confirmSaveDespiteWarnings } = useStudioSaveDespiteWarningsConfirm();
   const dirtyGuard = useStudioDirtyGuard();
 
-  const { baseline, isLoading, isSaving, save } = useFooterSettings();
+  const { baseline, conflict, isLoading, isSaving, save } = useFooterSettings();
 
   const { data: settingsBundle, isLoading: isLoadingSettingsBundle } =
     useSettingsBundle(DEFAULT_CONTENT_STATE);
@@ -124,7 +125,8 @@ export function FooterSection() {
 
       if (!ok) return;
 
-      await save(values);
+      const result = await save(values);
+      if (result.status === "conflict") return;
       dirtyGuard.setDirty(false);
       setPreviewDraft(null);
     },
@@ -146,9 +148,11 @@ export function FooterSection() {
         warningKeys={warningKeys}
         warningMessageKeyPrefix="studio.footerSection.warnings"
       />
+      {conflict ? <SettingsConflictPanel conflict={conflict} focusTargetId="footer" /> : null}
 
       <FooterForm
         initialValues={baseline}
+        isConflictResolving={conflict !== null}
         isSaving={isSaving}
         onSubmit={handleSubmit}
         onReset={() => {

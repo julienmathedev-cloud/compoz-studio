@@ -58,6 +58,7 @@ void test("root parent rebasing preserves every metadata baseline and meta revis
   });
 
   assert.equal(rebase?.parentId, null);
+  assert.equal(rebase?.notice, "currentStructureAdopted");
   assert.equal(rebase?.baseline.values.parentId, null);
   assert.equal(rebase?.baseline.values.name, VALUES.name);
   assert.equal(rebase?.baseline.values.slug, VALUES.slug);
@@ -82,6 +83,7 @@ void test("a non-null server parent is adopted without metadata rebasing", () =>
   });
 
   assert.equal(rebase?.parentId, "parent-c");
+  assert.equal(rebase?.notice, "currentStructureAdopted");
   assert.equal(rebase?.baseline.values.parentId, "parent-c");
   assert.equal(rebase?.baseline.values.name, "Local metadata");
   assert.equal(rebase?.baseline.metaRevision, 4);

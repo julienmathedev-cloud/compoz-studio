@@ -22,6 +22,7 @@ import { useStudioSaveDespiteWarningsConfirm } from "@compoz/studio/features/_sh
 import { useStudioDirtyGuard } from "@compoz/studio/features/dirty-guard/useStudioDirtyGuard";
 import { IdentityForm } from "@compoz/studio/features/settings/identity/components/organisms/IdentityForm";
 import { useIdentitySettings } from "@compoz/studio/features/settings/identity/useIdentitySettings";
+import { SettingsConflictPanel } from "@compoz/studio/features/settings/conflicts/SettingsConflictPanel";
 import {
   computeIdentityWarnings,
   type IdentityWarningKey,
@@ -45,7 +46,7 @@ export function IdentitySection() {
 
   const dirtyGuard = useStudioDirtyGuard();
 
-  const { baseline, isLoading, isSaving, save } = useIdentitySettings();
+  const { baseline, conflict, isLoading, isSaving, save } = useIdentitySettings();
 
   useEffect(() => {
     lg.debug("identity.settings", {
@@ -134,7 +135,8 @@ export function IdentitySection() {
 
       if (!ok) return;
 
-      await save(values);
+      const result = await save(values);
+      if (result.status === "conflict") return;
       dirtyGuard.setDirty(false);
     },
     [confirmSaveDespiteWarnings, isLoading, isSaving, dirtyGuard, save],
@@ -158,8 +160,11 @@ export function IdentitySection() {
         warningMessageKeyPrefix="studio.identitySection.warnings"
       />
 
+      {conflict ? <SettingsConflictPanel conflict={conflict} focusTargetId="identity" /> : null}
+
       <IdentityForm
         initialValues={baseline}
+        isConflictResolving={conflict !== null}
         isSaving={isSaving}
         onSubmit={handleSubmit}
         onReset={() => {

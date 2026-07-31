@@ -26,6 +26,7 @@ import { useStudioPreview } from "@compoz/studio/features/preview/hooks/useStudi
 import { useSettingsBundle } from "@compoz/studio/features/settings/bundle/useSettingsBundle";
 import { HeaderForm } from "@compoz/studio/features/settings/header/HeaderForm";
 import { useHeaderSettings } from "@compoz/studio/features/settings/header/useHeaderSettings";
+import { SettingsConflictPanel } from "@compoz/studio/features/settings/conflicts/SettingsConflictPanel";
 import type { HeaderWarningKey } from "@compoz/studio/features/settings/header/validate";
 import { computeHeaderWarnings } from "@compoz/studio/features/settings/header/validate";
 import { toHeaderSettingsShapeFromFormValues } from "@compoz/studio/features/settings/mappers/header-form";
@@ -49,7 +50,7 @@ export function HeaderSection() {
 
   const dirtyGuard = useStudioDirtyGuard();
 
-  const { baseline, isLoading, isSaving, save } = useHeaderSettings();
+  const { baseline, conflict, isLoading, isSaving, save } = useHeaderSettings();
 
   const { data: settingsBundle, isLoading: isLoadingSettingsBundle } =
     useSettingsBundle(DEFAULT_CONTENT_STATE);
@@ -193,7 +194,8 @@ export function HeaderSection() {
 
       if (!ok) return;
 
-      await save(values);
+      const result = await save(values);
+      if (result.status === "conflict") return;
       dirtyGuard.setDirty(false);
       setPreviewDraft(null);
     },
@@ -215,9 +217,11 @@ export function HeaderSection() {
         warningKeys={warningKeys}
         warningMessageKeyPrefix="studio.headerSection.warnings"
       />
+      {conflict ? <SettingsConflictPanel conflict={conflict} focusTargetId="header" /> : null}
 
       <HeaderForm
         initialValues={baseline}
+        isConflictResolving={conflict !== null}
         isSaving={isSaving}
         onSubmit={handleSubmit}
         onReset={() => {

@@ -97,6 +97,7 @@ export function SettingsSection({
   return (
     <section
       id={id}
+      tabIndex={-1}
       aria-labelledby={titleId}
       aria-describedby={descId}
       aria-busy={isBusy || isLoading || undefined}

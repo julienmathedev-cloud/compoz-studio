@@ -795,6 +795,7 @@ export function BuilderScreen({
       {recreateConflict ? (
         <div className="fixed inset-x-4 top-4 z-50 mx-auto max-w-5xl">
           <BlockListConflictPanel
+            baselineBlocks={blocks}
             details={recreateConflict}
             isPending={isCreating}
             onUseCurrent={() => {
@@ -803,9 +804,8 @@ export function BuilderScreen({
               dirtyGuard.setDirty(false);
               router.push(backHref);
             }}
-            onRetryCreate={() =>
-              handleRecreateBlock().catch(() => undefined)
-            }
+            onRetryCreate={handleRecreateBlock}
+            useCurrentFocusAfterSuccess="none"
           />
         </div>
       ) : updateConflict ? (

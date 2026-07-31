@@ -36,6 +36,7 @@ import {
 type HeaderFormProps = Readonly<{
   initialValues: HeaderFormValues;
   isSaving?: boolean;
+  isConflictResolving?: boolean;
   onSubmit: (values: HeaderFormValues) => void | Promise<void>;
   onReset?: () => void;
   onWarningKeysChange?: (keys: HeaderWarningKey[]) => void;
@@ -47,6 +48,7 @@ type HeaderFormProps = Readonly<{
 export function HeaderForm({
   initialValues,
   isSaving,
+  isConflictResolving,
   onSubmit,
   onReset,
   onWarningKeysChange,
@@ -59,7 +61,6 @@ export function HeaderForm({
     handleSubmit,
     resetToInitialValues,
     isDirty,
-    isSubmitting,
     isBusy,
     disabledControls,
     errors,
@@ -67,6 +68,7 @@ export function HeaderForm({
     resolver: zodResolver(HeaderFormSchema),
     initialValues,
     isSaving,
+    isConflictResolving,
     onValuesChange,
     onDirtyChange,
   });
@@ -185,7 +187,7 @@ export function HeaderForm({
         <CardFooter>
           <ActionsBar
             variant="resetSubmit"
-            isSaving={isSaving || isSubmitting}
+            isSaving={isBusy}
             isDirty={isDirty}
             onReset={() => {
               resetToInitialValues();

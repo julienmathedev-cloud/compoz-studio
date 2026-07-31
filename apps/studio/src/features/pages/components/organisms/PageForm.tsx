@@ -19,7 +19,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RotateCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FieldErrors, UseFormSetValue } from "react-hook-form";
 import { Controller, useForm, useFormState, useWatch } from "react-hook-form";
 
@@ -63,6 +63,7 @@ import {
 import { useStableWarningKeys } from "@compoz/studio/features/settings/_shared/useStableWarningKeys";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { Card, CardContent, CardFooter } from "@compoz/ui/components/ui/card";
+import { FieldDescription } from "@compoz/ui/components/ui/field";
 import { focusByFieldId } from "@compoz/ui/lib/focus";
 import {
   createFieldIds,
@@ -149,6 +150,7 @@ export function PageForm({
   });
   const resetBaselineRef = useRef(initialValues);
   const preserveMetadataOnParentRebaseRef = useRef(false);
+  const [structureAdoptionNotice, setStructureAdoptionNotice] = useState(false);
 
   const {
     isDirty,
@@ -551,9 +553,11 @@ export function PageForm({
                 resetField,
                 result.rebaseParentId,
               );
+              setStructureAdoptionNotice(result.notice === "currentStructureAdopted");
               return;
             }
 
+            setStructureAdoptionNotice(false);
             resetBaselineRef.current = result.rebaseValues;
             rhfReset(result.rebaseValues, {
               keepDirty: false,
@@ -570,6 +574,11 @@ export function PageForm({
       }}
       noValidate
     >
+      {structureAdoptionNotice ? (
+        <FieldDescription aria-live="polite" className="mb-4 rounded-md border p-3" role="status" visualMode="studio">
+          {t("studio.pageForm.structureConflict.currentAdopted")}
+        </FieldDescription>
+      ) : null}
       <Card variant="panel" visualMode="studio">
         <CardContent>
           <ExpandableLayout
@@ -804,6 +813,7 @@ export function PageForm({
             submitLabel={submitLabel}
             submitLoadingLabel={submitLoadingLabel}
             onReset={() => {
+              setStructureAdoptionNotice(false);
               rhfReset(resetBaselineRef.current, {
                 keepDirty: false,
                 keepTouched: false,

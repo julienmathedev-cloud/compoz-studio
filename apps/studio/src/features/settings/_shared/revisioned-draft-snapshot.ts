@@ -94,6 +94,47 @@ export class RevisionedDraftSnapshot<T> {
     };
   }
 
+  /** Installs an explicitly fetched authoritative draft after the user starts OCC resolution. */
+  adoptAuthoritativeDraft(input: Readonly<{
+    websiteId: string;
+    baseline: T;
+    revision: number;
+    isWebsiteCurrent: () => boolean;
+  }>): T | null {
+    if (!input.isWebsiteCurrent()) return null;
+    this.generation += 1;
+    this.snapshot = {
+      websiteId: input.websiteId,
+      baseline: cloneRevisionedDraftValue(input.baseline),
+      revision: input.revision,
+    };
+    return cloneRevisionedDraftValue(input.baseline);
+  }
+
+  /** Temporarily rebases a user-triggered resolution mutation and can restore the prior OCC baseline on failure. */
+  adoptAuthoritativeDraftWithRollback(input: Readonly<{
+    websiteId: string;
+    baseline: T;
+    revision: number;
+    isWebsiteCurrent: () => boolean;
+  }>): (() => void) | null {
+    const previous = this.snapshot;
+    const adopted = this.adoptAuthoritativeDraft(input);
+    if (adopted === null) return null;
+    const installed = this.snapshot;
+    return () => {
+      if (this.snapshot !== installed || !input.isWebsiteCurrent()) return;
+      this.generation += 1;
+      this.snapshot = previous
+        ? {
+            websiteId: previous.websiteId,
+            baseline: cloneRevisionedDraftValue(previous.baseline),
+            revision: previous.revision,
+          }
+        : null;
+    };
+  }
+
   /**
    * Commits a save only while its captured snapshot is still the active draft.
    * A `null` result means the persistence succeeded but the UI context became obsolete.

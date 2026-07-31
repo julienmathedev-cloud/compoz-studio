@@ -131,6 +131,59 @@ export const I18N_RUNTIME_KEYS = {
       "studio.seoForm.indexing.structuredData.entityType.options.visualArtist",
       "studio.seoForm.indexing.structuredData.entityType.options.autoRepair",
     ] as const,
+    robots: [
+      "studio.seoForm.indexing.robots.options.index",
+      "studio.seoForm.indexing.robots.options.noindex",
+      "studio.seoForm.indexing.robots.options.follow",
+      "studio.seoForm.indexing.robots.options.nofollow",
+    ] as const,
+    twitterCards: [
+      "studio.seoForm.twitter.card.options.summary",
+      "studio.seoForm.twitter.card.options.summary_large_image",
+    ] as const,
+  },
+
+  occBlockPresentation: {
+    types: [
+      "studio.pageBlocksConflict.types.section",
+      "studio.pageBlocksConflict.types.heading",
+      "studio.pageBlocksConflict.types.richText",
+      "studio.pageBlocksConflict.types.spacer",
+      "studio.pageBlocksConflict.types.separator",
+      "studio.pageBlocksConflict.types.buttons",
+      "studio.pageBlocksConflict.types.image",
+      "studio.pageBlocksConflict.types.gallery",
+      "studio.pageBlocksConflict.types.carousel",
+      "studio.pageBlocksConflict.types.cardCollection",
+      "studio.pageBlocksConflict.types.steps",
+      "studio.pageBlocksConflict.types.testimonials",
+      "studio.pageBlocksConflict.types.form",
+      "studio.pageBlocksConflict.types.timeline",
+      "studio.pageBlocksConflict.types.card",
+      "studio.pageBlocksConflict.types.extendedCard",
+      "studio.pageBlocksConflict.types.structuredCard",
+      "studio.pageBlocksConflict.types.text",
+      "studio.pageBlocksConflict.types.email",
+      "studio.pageBlocksConflict.types.textarea",
+      "studio.pageBlocksConflict.types.select",
+      "studio.pageBlocksConflict.types.unknown",
+    ] as const,
+    invariants: [
+      "studio.pageBlocksConflict.invariants.invalidStructure",
+      "studio.pageBlocksConflict.invariants.multipleLcp",
+      "studio.pageBlocksConflict.invariants.multipleH1",
+      "studio.pageBlocksConflict.invariants.columnsMismatch",
+      "studio.pageBlocksConflict.invariants.duplicateResource",
+      "studio.pageBlocksConflict.invariants.invalidCombination",
+    ] as const,
+  },
+
+  occSettingsLists: {
+    manualReasons: [
+      "studio.settingsConflict.list.manualReasons.duplicate-id",
+      "studio.settingsConflict.list.manualReasons.order-incompatible",
+      "studio.settingsConflict.list.manualReasons.missing-parent",
+    ] as const,
   },
 
   socialSection: {

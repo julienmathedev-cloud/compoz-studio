@@ -60,6 +60,7 @@ type SocialFormProps = Readonly<{
   initialValues: SocialFormValues;
 
   isSaving?: boolean;
+  isConflictResolving?: boolean;
 
   onSubmit: (values: SocialFormValues) => void | Promise<void>;
 
@@ -198,6 +199,7 @@ function SocialItemRow({
 export function SocialForm({
   initialValues,
   isSaving,
+  isConflictResolving,
   onSubmit,
   onReset,
   onWarningKeysChange,
@@ -214,13 +216,13 @@ export function SocialForm({
     getFieldState,
     resetToInitialValues,
     isDirty,
-    isSubmitting,
     isBusy,
     submitCount,
   } = useSettingsSectionForm<SocialFormValues>({
     resolver: zodResolver(SocialFormSchema),
     initialValues,
     isSaving,
+    isConflictResolving,
     onValuesChange,
     onDirtyChange,
   });
@@ -343,7 +345,7 @@ export function SocialForm({
         <CardFooter>
           <ActionsBar
             variant="addResetSubmit"
-            isSaving={isSaving || isSubmitting}
+            isSaving={isBusy}
             isDirty={isDirty}
             onAdd={() => append(createEmptyItem())}
             onReset={() => {

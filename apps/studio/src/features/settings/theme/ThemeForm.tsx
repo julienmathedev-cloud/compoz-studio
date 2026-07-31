@@ -54,6 +54,7 @@ import {
 type ThemeFormProps = Readonly<{
   initialValues: ThemeFormValues;
   isSaving?: boolean;
+  isConflictResolving?: boolean;
   onSubmit: (values: ThemeFormValues) => void | Promise<void>;
   onReset?: () => void;
   onValuesChange?: (values: ThemeFormValues) => void;
@@ -102,6 +103,7 @@ type ThemeTokenKey = (typeof THEME_TOKEN_KEYS)[number];
 export function ThemeForm({
   initialValues,
   isSaving,
+  isConflictResolving,
   onSubmit,
   onReset,
   onValuesChange,
@@ -117,7 +119,6 @@ export function ThemeForm({
     handleSubmit,
     resetToInitialValues,
     isDirty,
-    isSubmitting,
     isBusy,
     disabledControls,
     errors,
@@ -125,6 +126,7 @@ export function ThemeForm({
     resolver: zodResolver(ThemeFormSchema),
     initialValues,
     isSaving,
+    isConflictResolving,
     onValuesChange,
     onDirtyChange,
   });
@@ -407,7 +409,7 @@ export function ThemeForm({
         <CardFooter>
           <ActionsBar
             variant="resetSubmit"
-            isSaving={isSaving || isSubmitting}
+            isSaving={isBusy}
             isDirty={isDirty}
             onReset={() => {
               resetToInitialValues();

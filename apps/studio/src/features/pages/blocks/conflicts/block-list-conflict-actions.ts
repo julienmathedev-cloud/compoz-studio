@@ -33,3 +33,11 @@ export function areBlockListConflictActionsDisabled(input: Readonly<{
 }>): boolean {
   return input.isPending || input.isActionPending;
 }
+
+export async function completeBlockListConflictMutation(input: Readonly<{
+  mutate: () => void | Promise<void>;
+  clearConflict: () => void;
+}>): Promise<void> {
+  await input.mutate();
+  input.clearConflict();
+}

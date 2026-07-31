@@ -174,3 +174,32 @@ void test("commits the normalized server baseline, revision, and captured websit
   assert.deepEqual(next.baseline, serverBaseline);
   assert.equal(snapshot.captureForSave("website-b"), null);
 });
+
+void test("adopts an explicitly fetched authoritative baseline and revision", () => {
+  const snapshot = createRevisionedDraftSnapshot<TestValues>();
+  commitDraftLoad(snapshot, "website-a", createValues("old"), 2);
+  const adopted = snapshot.adoptAuthoritativeDraft({
+    websiteId: "website-a",
+    baseline: createValues("current"),
+    revision: 7,
+    isWebsiteCurrent: () => true,
+  });
+  assert.equal(adopted?.items[0]?.label, "current");
+  assert.equal(snapshot.captureForSave("website-a")?.expectedRevision, 7);
+});
+
+void test("restores the prior OCC baseline when an explicit resolution mutation fails", () => {
+  const snapshot = createRevisionedDraftSnapshot<TestValues>();
+  commitDraftLoad(snapshot, "website-a", createValues("original"), 2);
+  const rollback = snapshot.adoptAuthoritativeDraftWithRollback({
+    websiteId: "website-a",
+    baseline: createValues("fresh"),
+    revision: 7,
+    isWebsiteCurrent: () => true,
+  });
+  assert.ok(rollback);
+  assert.equal(snapshot.captureForSave("website-a")?.expectedRevision, 7);
+  rollback();
+  assert.equal(snapshot.captureForSave("website-a")?.expectedRevision, 2);
+  assert.equal(snapshot.captureForSave("website-a")?.baseline.items[0]?.label, "original");
+});

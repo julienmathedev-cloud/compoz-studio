@@ -24,6 +24,7 @@ import { useStudioPreview } from "@compoz/studio/features/preview/hooks/useStudi
 import { toLegalMenuSettingsShapeFromFormValues } from "@compoz/studio/features/settings/mappers/legal-menu-form";
 import { LegalMenuForm } from "@compoz/studio/features/settings/menus/legal-menu/components/organisms/LegalMenuForm";
 import { useLegalMenuSettings } from "@compoz/studio/features/settings/menus/legal-menu/useLegalMenuSettings";
+import { SettingsConflictPanel } from "@compoz/studio/features/settings/conflicts/SettingsConflictPanel";
 import {
   computeLegalMenuWarnings,
   type LegalMenuWarningKey,
@@ -45,7 +46,7 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
   const [previewDraft, setPreviewDraft] =
     useState<LegalMenuSettingsShape | null>(null);
 
-  const { baseline, isLoading, isSaving, save } = useLegalMenuSettings();
+  const { baseline, conflict, isLoading, isSaving, save } = useLegalMenuSettings();
 
   const { options: internalPageOptions, isLoading: isIndexLoading } =
     useInternalPageOptions();
@@ -104,7 +105,8 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
 
       if (!ok) return;
 
-      await save(values);
+      const result = await save(values);
+      if (result.status === "conflict") return;
 
       setPreviewDraft(null);
       setIsDirty(false);
@@ -138,9 +140,11 @@ export function LegalMenuSection({ onDirtyChange }: LegalMenuSectionProps) {
         warningKeys={warningKeys}
         warningMessageKeyPrefix="studio.legalMenuSection.warnings"
       />
+      {conflict ? <SettingsConflictPanel conflict={conflict} focusTargetId="legal-menu" /> : null}
 
       <LegalMenuForm
         initialValues={baseline}
+        isConflictResolving={conflict !== null}
         isSaving={isSaving}
         internalPageOptions={internalPageOptions}
         hrefSet={hrefSet}

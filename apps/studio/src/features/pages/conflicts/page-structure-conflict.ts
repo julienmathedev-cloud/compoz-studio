@@ -16,6 +16,7 @@ type PageStructureConflictBaseline = Readonly<{
 export type PageStructureConflictRebase = Readonly<{
   baseline: PageStructureConflictBaseline;
   parentId: string | null;
+  notice: "currentStructureAdopted";
 }>;
 
 export function rebasePageStructureConflictParent(input: Readonly<{
@@ -39,5 +40,6 @@ export function rebasePageStructureConflictParent(input: Readonly<{
       },
     },
     parentId,
+    notice: "currentStructureAdopted",
   };
 }

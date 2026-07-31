@@ -23,6 +23,7 @@ import { toThemeSettingsShapeFromFormValues } from "@compoz/studio/features/sett
 import { ThemeForm } from "@compoz/studio/features/settings/theme/ThemeForm";
 import { ThemePreviewCard } from "@compoz/studio/features/settings/theme/ThemePreviewCard";
 import { useThemeSettings } from "@compoz/studio/features/settings/theme/useThemeSettings";
+import { SettingsConflictPanel } from "@compoz/studio/features/settings/conflicts/SettingsConflictPanel";
 import {
   computeThemeWarnings,
   type ThemeWarningKey,
@@ -36,7 +37,7 @@ export function ThemeSection() {
 
   const dirtyGuard = useStudioDirtyGuard();
 
-  const { baseline, isLoading, isSaving, save } = useThemeSettings();
+  const { baseline, conflict, isLoading, isSaving, save } = useThemeSettings();
 
   const [previewDraft, setPreviewDraft] = useState<ThemeSettingsShape | null>(
     null,
@@ -75,7 +76,8 @@ export function ThemeSection() {
 
       if (!ok) return;
 
-      await save(values);
+      const result = await save(values);
+      if (result.status === "conflict") return;
       dirtyGuard.setDirty(false);
       // Clear the live draft so preview falls back to the saved baseline returned by the hook.
       setPreviewDraft(null);
@@ -105,9 +107,11 @@ export function ThemeSection() {
         warningKeys={warningKeys}
         warningMessageKeyPrefix="studio.themeSection.warnings"
       />
+      {conflict ? <SettingsConflictPanel conflict={conflict} focusTargetId="theme" /> : null}
 
       <ThemeForm
         initialValues={baseline}
+        isConflictResolving={conflict !== null}
         isSaving={isSaving}
         onSubmit={handleSubmit}
         onReset={() => {

@@ -24,6 +24,7 @@ import { useStudioPreview } from "@compoz/studio/features/preview/hooks/useStudi
 import { toSocialSettingsShapeFromFormValues } from "@compoz/studio/features/settings/mappers/social-form";
 import { SocialForm } from "@compoz/studio/features/settings/social/components/organisms/SocialForm";
 import { useSocialSettings } from "@compoz/studio/features/settings/social/useSocialSettings";
+import { SettingsConflictPanel } from "@compoz/studio/features/settings/conflicts/SettingsConflictPanel";
 import {
   computeSocialWarnings,
   type SocialWarningKey,
@@ -42,7 +43,7 @@ export function SocialSection() {
     null,
   );
 
-  const { baseline, isLoading, isSaving, save } = useSocialSettings();
+  const { baseline, conflict, isLoading, isSaving, save } = useSocialSettings();
 
   /** Runtime preview shape derived from the persisted RHF baseline. */
   const baselinePreview = useMemo<SocialSettingsShape>(
@@ -81,7 +82,8 @@ export function SocialSection() {
       );
       if (!ok) return;
 
-      await save(values);
+      const result = await save(values);
+      if (result.status === "conflict") return;
       dirtyGuard.setDirty(false);
 
       /** Clear the live draft so preview falls back to the saved baseline returned by the hook. */
@@ -107,9 +109,11 @@ export function SocialSection() {
         warningKeys={warningKeys}
         warningMessageKeyPrefix="studio.socialSection.warnings"
       />
+      {conflict ? <SettingsConflictPanel conflict={conflict} focusTargetId="social" /> : null}
 
       <SocialForm
         initialValues={baseline}
+        isConflictResolving={conflict !== null}
         isSaving={isSaving}
         onSubmit={handleSubmit}
         onReset={() => {

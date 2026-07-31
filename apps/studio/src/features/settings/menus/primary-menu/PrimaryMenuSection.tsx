@@ -24,6 +24,7 @@ import { useStudioPreview } from "@compoz/studio/features/preview/hooks/useStudi
 import { toPrimaryMenuSettingsShapeFromFormValues } from "@compoz/studio/features/settings/mappers/primary-menu-form";
 import { PrimaryMenuForm } from "@compoz/studio/features/settings/menus/primary-menu/components/organisms/PrimaryMenuForm";
 import { usePrimaryMenuSettings } from "@compoz/studio/features/settings/menus/primary-menu/usePrimaryMenuSettings";
+import { SettingsConflictPanel } from "@compoz/studio/features/settings/conflicts/SettingsConflictPanel";
 import type { PrimaryMenuWarningKey } from "@compoz/studio/features/settings/menus/primary-menu/validate";
 import { computePrimaryMenuWarnings } from "@compoz/studio/features/settings/menus/primary-menu/validate";
 import type { PrimaryMenuSettingsShape } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu";
@@ -43,7 +44,7 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
   const [previewDraft, setPreviewDraft] =
     useState<PrimaryMenuSettingsShape | null>(null);
 
-  const { baseline, isLoading, isSaving, save } = usePrimaryMenuSettings();
+  const { baseline, conflict, isLoading, isSaving, save } = usePrimaryMenuSettings();
 
   /** Runtime preview shape derived from the persisted RHF baseline. */
   const baselinePreview = useMemo<PrimaryMenuSettingsShape>(() => {
@@ -98,7 +99,8 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
 
       if (!ok) return;
 
-      await save(values);
+      const result = await save(values);
+      if (result.status === "conflict") return;
 
       setPreviewDraft(null);
       setIsDirty(false);
@@ -132,9 +134,11 @@ export function PrimaryMenuSection({ onDirtyChange }: PrimaryMenuSectionProps) {
         warningKeys={warningKeys}
         warningMessageKeyPrefix="studio.primaryMenuSection.warnings"
       />
+      {conflict ? <SettingsConflictPanel conflict={conflict} focusTargetId="primary-menu" /> : null}
 
       <PrimaryMenuForm
         initialValues={baseline}
+        isConflictResolving={conflict !== null}
         isSaving={isSaving}
         internalPageOptions={internalPageOptions}
         hrefSet={hrefSet}

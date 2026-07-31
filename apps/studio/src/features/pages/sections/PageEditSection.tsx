@@ -279,7 +279,7 @@ export function PageEditSection({
         const rebase = structureConflictRebaseRef.current;
         structureConflictRebaseRef.current = null;
         return rebase
-          ? { rebaseParentId: rebase.parentId }
+          ? { rebaseParentId: rebase.parentId, notice: rebase.notice }
           : undefined;
       }
       if (!shouldApplyPageUpdateSuccessCleanup(outcome)) {

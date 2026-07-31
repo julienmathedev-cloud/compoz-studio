@@ -59,6 +59,7 @@ type UploadedRasterImage = Readonly<{
 type SeoFormProps = Readonly<{
   initialValues: SeoFormValues;
   isSaving?: boolean;
+  isConflictResolving?: boolean;
   onSubmit: (values: SeoFormValues) => void | Promise<void>;
   onReset?: () => void;
   onWarningKeysChange?: (keys: SeoWarningKey[]) => void;
@@ -71,6 +72,7 @@ type SeoFormProps = Readonly<{
 export function SeoForm({
   initialValues,
   isSaving,
+  isConflictResolving,
   onSubmit,
   onReset,
   onWarningKeysChange,
@@ -103,7 +105,6 @@ export function SeoForm({
     setValue,
     resetToInitialValues,
     isDirty,
-    isSubmitting,
     isBusy,
     disabledControls,
     errors,
@@ -113,6 +114,7 @@ export function SeoForm({
     resolver: zodResolver(SeoFormSchema),
     initialValues: rhfDefaults,
     isSaving,
+    isConflictResolving,
     onValuesChange,
     onDirtyChange,
   });
@@ -424,7 +426,7 @@ export function SeoForm({
         <CardFooter>
           <ActionsBar
             variant="resetSubmit"
-            isSaving={isSaving || isSubmitting}
+            isSaving={isBusy}
             isDirty={isDirty}
             onReset={() => {
               resetToInitialValues();

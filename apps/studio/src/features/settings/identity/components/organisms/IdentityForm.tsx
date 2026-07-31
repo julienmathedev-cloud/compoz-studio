@@ -63,6 +63,7 @@ type IdentityFormProps = Readonly<{
   initialValues: IdentityFormValues;
 
   isSaving?: boolean;
+  isConflictResolving?: boolean;
 
   onSubmit: (values: IdentityFormValues) => void | Promise<void>;
 
@@ -82,6 +83,7 @@ type IdentityFormProps = Readonly<{
 export function IdentityForm({
   initialValues,
   isSaving,
+  isConflictResolving,
   onSubmit,
   onReset,
   onUploadLogo,
@@ -97,7 +99,6 @@ export function IdentityForm({
     handleSubmit,
     resetToInitialValues,
     isDirty,
-    isSubmitting,
     isBusy,
     disabledControls,
     errors,
@@ -108,6 +109,7 @@ export function IdentityForm({
     resolver: zodResolver(IdentityFormSchema),
     initialValues,
     isSaving,
+    isConflictResolving,
     onDirtyChange,
   });
 
@@ -317,7 +319,7 @@ export function IdentityForm({
         <CardFooter>
           <ActionsBar
             variant="resetSubmit"
-            isSaving={isSaving || isSubmitting}
+            isSaving={isBusy}
             isDirty={isDirty}
             onReset={() => {
               resetToInitialValues();

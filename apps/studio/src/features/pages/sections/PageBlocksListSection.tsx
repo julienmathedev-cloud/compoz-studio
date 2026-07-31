@@ -36,6 +36,7 @@ import { useConfirmList } from "@compoz/studio/features/confirm/useConfirmList";
 import { useStudioDirtyGuard } from "@compoz/studio/features/dirty-guard/useStudioDirtyGuard";
 import { PageBlockListItem } from "@compoz/studio/features/pages/blocks/components/molecules/PageBlockListItem";
 import { BlockListConflictPanel } from "@compoz/studio/features/pages/blocks/conflicts/BlockListConflictPanel";
+import { completeBlockListConflictMutation } from "@compoz/studio/features/pages/blocks/conflicts/block-list-conflict-actions";
 import { useCreateBlock } from "@compoz/studio/features/pages/blocks/hooks/useCreateBlock";
 import { useDeleteBlock } from "@compoz/studio/features/pages/blocks/hooks/useDeleteBlock";
 import { useListPageBlocks } from "@compoz/studio/features/pages/blocks/hooks/useListPageBlocks";
@@ -314,7 +315,7 @@ export function PageBlocksListSection({
         const rebase = structureConflictRebaseRef.current;
         structureConflictRebaseRef.current = null;
         return rebase
-          ? { rebaseParentId: rebase.parentId }
+          ? { rebaseParentId: rebase.parentId, notice: rebase.notice }
           : undefined;
       }
       if (!shouldApplyPageUpdateSuccessCleanup(outcome)) {
@@ -794,6 +795,7 @@ export function PageBlocksListSection({
 
       {blockConflict ? (
         <BlockListConflictPanel
+          baselineBlocks={blocks}
           details={blockConflict}
           isPending={
             blockConflict.operation === "create"
@@ -808,6 +810,8 @@ export function PageBlocksListSection({
             setOrderedBlocks(blockConflict.current.blocks);
             clearBlockConflict();
           }}
+          localBlocks={orderedBlocks}
+          useCurrentFocusAfterSuccess="restore-trigger"
           onForceDelete={
             blockConflict.operation === "delete"
               ? async () => {
@@ -816,19 +820,25 @@ export function PageBlocksListSection({
                       conflict.kind === "blockChangedBeforeDelete",
                   );
                   if (changed?.kind !== "blockChangedBeforeDelete") return;
-                  clearBlockConflict();
-                  await remove(changed.blockId);
+                  await completeBlockListConflictMutation({
+                    mutate: async () => { await remove(changed.blockId); },
+                    clearConflict: clearBlockConflict,
+                  });
                 }
               : undefined
           }
           onRetryCreate={
             blockConflict.operation === "create"
               ? async () => {
-                  clearBlockConflict();
-                  await create({
-                    values: createEmptySectionBlock({
-                      containerMode: "contained",
-                    }),
+                  await completeBlockListConflictMutation({
+                    mutate: async () => {
+                      await create({
+                        values: createEmptySectionBlock({
+                          containerMode: "contained",
+                        }),
+                      });
+                    },
+                    clearConflict: clearBlockConflict,
                   });
                 }
               : undefined

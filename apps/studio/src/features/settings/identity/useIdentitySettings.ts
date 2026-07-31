@@ -29,6 +29,8 @@ import {
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
+import { identityConflictAdapter } from "@compoz/studio/features/settings/conflicts/settings-conflict-adapters";
+import { fetchFreshSettingsSection } from "@compoz/studio/features/settings/conflicts/fetch-fresh-settings-section";
 import type { SettingsHookResult } from "@compoz/studio/features/settings/hooks/useSettingsResource";
 import {
   useSettingsResource,
@@ -151,6 +153,33 @@ export function useIdentitySettings(): UseIdentitySettingsResult {
 
     onLoaded: normalizeIdentityFormValues,
     beforeSave: normalizeIdentityFormValues,
+
+    conflict: {
+      scope: "identity",
+      fetchCurrent: (signal) => fetchFreshSettingsSection({
+        signal,
+        queryClient,
+        websiteId: websiteIdRef.current,
+        sectionKey: "identity",
+        revisionKey: "identityRevision",
+        toFormValues: (dto) => normalizeIdentityFormValues(toIdentityFormValuesFromDTO(dto)),
+      }),
+      adoptSnapshot: (value, revision) => {
+        const capturedWebsiteId = websiteIdRef.current;
+        return requireCurrentSettingsOperation(snapshot.adoptAuthoritativeDraftWithRollback({
+          websiteId: capturedWebsiteId,
+          baseline: value,
+          revision,
+          isWebsiteCurrent: () => websiteIdRef.current === capturedWebsiteId,
+        }));
+      },
+      presentation: identityConflictAdapter(t),
+      messages: {
+        freshReadFailed: t("studio.settingsConflict.errors.freshRead"),
+        incomplete: t("studio.settingsConflict.errors.incomplete"),
+        mutationFailed: t("studio.settingsConflict.errors.mutation"),
+      },
+    },
 
     // Keep client-side status and bundle reads aligned after the server-side save.
     onSaved: () => {

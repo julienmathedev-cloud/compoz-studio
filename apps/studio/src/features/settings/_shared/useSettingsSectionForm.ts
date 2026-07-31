@@ -38,6 +38,7 @@ type UseSettingsSectionFormParams<TValues extends FieldValues> = Readonly<{
   resolver: Resolver<TValues, undefined, TValues>;
   initialValues: TValues;
   isSaving?: boolean;
+  isConflictResolving?: boolean;
   onValuesChange?: (values: TValues) => void;
   onDirtyChange?: (dirty: boolean) => void;
 }>;
@@ -66,6 +67,7 @@ export function useSettingsSectionForm<TValues extends FieldValues>({
   resolver,
   initialValues,
   isSaving,
+  isConflictResolving,
   onValuesChange,
   onDirtyChange,
 }: UseSettingsSectionFormParams<TValues>): UseSettingsSectionFormResult<TValues> {
@@ -96,7 +98,7 @@ export function useSettingsSectionForm<TValues extends FieldValues>({
     isSubmitted,
   } = useFormState({ control });
 
-  const isBusy = Boolean(isSaving || isSubmitting);
+  const isBusy = Boolean(isSaving || isSubmitting || isConflictResolving);
   const disabledControls = isBusy;
 
   useEffect(() => {

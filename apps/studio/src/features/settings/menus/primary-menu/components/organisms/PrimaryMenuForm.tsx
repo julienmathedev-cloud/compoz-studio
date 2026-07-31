@@ -53,6 +53,7 @@ import { PrimaryMenuFormSchema } from "@compoz/validation/site/settings/menus/pr
 type PrimaryMenuFormProps = Readonly<{
   initialValues: PrimaryMenuFormValues;
   isSaving?: boolean;
+  isConflictResolving?: boolean;
   onSubmit: (values: PrimaryMenuFormValues) => void | Promise<void>;
   onReset?: () => void;
   internalPageOptions?: ReadonlyArray<InternalPageOptionDTO>;
@@ -66,6 +67,7 @@ type PrimaryMenuFormProps = Readonly<{
 export function PrimaryMenuForm({
   initialValues,
   isSaving,
+  isConflictResolving,
   onSubmit,
   onReset,
   internalPageOptions,
@@ -85,7 +87,6 @@ export function PrimaryMenuForm({
     setFocus,
     resetToInitialValues,
     isDirty,
-    isSubmitting,
     isBusy,
     submitCount,
     isSubmitted,
@@ -93,6 +94,7 @@ export function PrimaryMenuForm({
     resolver: zodResolver(PrimaryMenuFormSchema),
     initialValues,
     isSaving,
+    isConflictResolving,
     onValuesChange,
     onDirtyChange,
   });
@@ -367,7 +369,7 @@ export function PrimaryMenuForm({
         <CardFooter>
           <ActionsBar
             variant="addResetSubmit"
-            isSaving={isSaving || isSubmitting}
+            isSaving={isBusy}
             isDirty={isDirty}
             onAdd={() => {
               const nextIndex = fields.length;

@@ -477,6 +477,89 @@
   },
 
   "studio": {
+    "conflictResolution": {
+      "pending": "Resolving conflict…",
+      "status": {
+        "serverOnly": "Only the saved version changed.",
+        "localOnly": "Only your local version changed.",
+        "sameChange": "Both versions made the same change.",
+        "conflict": "The versions differ: a choice is required.",
+        "manual": "This difference requires manual resolution."
+      }
+    },
+    "settingsConflict": {
+      "title": "Settings conflict",
+      "description": "The saved settings changed while you were editing. Your local draft is preserved until you decide.",
+      "labels": {
+        "baseline": "Your save baseline",
+        "server": "Currently saved",
+        "local": "Your draft"
+      },
+      "actions": {
+        "abandon": "Close and keep the local draft",
+        "adoptCurrent": "Adopt the saved settings",
+        "apply": "Apply my choices",
+        "retryFreshRead": "Reload the saved settings",
+        "useServer": "Use saved",
+        "keepLocal": "Keep local",
+        "keepAllLocal": "Keep my entire local draft"
+      },
+      "errors": {
+        "freshRead": "The saved settings could not be loaded. Your draft is unchanged.",
+        "incomplete": "Choose a version for every difference before applying the resolution.",
+        "mutation": "The resolution could not be saved. Your draft and choices are preserved."
+      },
+      "values": {
+        "empty": "No value",
+        "emptyList": "No items",
+        "item": "Item {position}",
+        "configuration": "Configured value ({count} properties)",
+        "configurationChanged": "Configuration changed",
+        "address": "Address",
+        "mediaLinked": "Linked media",
+        "mediaNotLinked": "No linked media",
+        "boolean": { "true": "Yes", "false": "No" }
+      },
+      "fields": {
+        "identity": {
+          "logo": "Logo",
+          "faviconUrl": "Favicon",
+          "faviconMediaAssetId": "Favicon media"
+        },
+        "seo": { "openGraph": "Open Graph", "twitter": "Twitter" },
+        "social": { "items": "Social links" },
+        "primaryMenu": { "items": "Primary menu items" },
+        "legalMenu": { "items": "Legal menu items" }
+      },
+      "list": {
+        "serverAdded": "Saved additions",
+        "serverRemoved": "Saved removals",
+        "localAdded": "Local additions",
+        "localRemoved": "Local removals",
+        "serverModified": "Items modified in the saved version",
+        "localModified": "Items modified in the local draft",
+        "serverOrder": "Saved order",
+        "localOrder": "Local order",
+        "position": "Position {position}",
+        "order": "Order",
+        "parent": "Parent item",
+        "noParent": "Top level",
+        "unknownParent": "Saved parent unavailable",
+        "unnamedItem": "Unnamed item",
+        "itemAdded": "Item added",
+        "itemRemoved": "Item removed",
+        "deletionModified": "Concurrent deletion and modification",
+        "propertyChanged": "Property changed",
+        "manualRequired": "Manual merge required",
+        "reason": "Reason",
+        "manualReasons": {
+          "duplicate-id": "The same identifier is reused more than once in a list.",
+          "order-incompatible": "The saved and local reorderings are incompatible.",
+          "missing-parent": "The selected parent no longer exists in the resolved list."
+        },
+        "changedValue": "{field}: {before} → {after}"
+      }
+    },
     "shared": {
       "visualize": {
         "draft": "Draft",
@@ -1024,6 +1107,10 @@
     "logoFields": {
       "altFallback": "Logo",
       "preferredTypeHint": "Recommended format: SVG for sharp rendering on all screens.",
+      "source": "File",
+      "dimensions": "Dimensions",
+      "mediaType": "Media type",
+      "mediaTypeUnknown": "Unknown format",
       "image": {
         "label": "Main logo",
         "help": "Upload your logo (recommended format: SVG)."
@@ -1157,6 +1244,9 @@
     },
 
     "pageForm": {
+      "structureConflict": {
+        "currentAdopted": "The saved page structure was adopted. Your local parent change was not applied; your other metadata changes are preserved."
+      },
       "title": {
         "label": "Page title",
         "help": "Choose a clear and descriptive title (e.g. “Home”, “Gallery”, “Contact”).",
@@ -1275,7 +1365,13 @@
         "robots": {
           "label": "Robots directive",
           "placeholder": "index,follow",
-          "help": "Controls indexing (e.g. index,follow, noindex, nofollow…)."
+          "help": "Controls indexing (e.g. index,follow, noindex, nofollow…).",
+          "options": {
+            "index": "Index this site",
+            "noindex": "Do not index this site",
+            "follow": "Follow links",
+            "nofollow": "Do not follow links"
+          }
         },
         "structuredData": {
           "label": "Structured data (JSON-LD)",
@@ -1333,7 +1429,11 @@
         "card": {
           "label": "Twitter card",
           "placeholder": "Select a card type",
-          "help": "Select the Twitter card type to use for the site."
+          "help": "Select the Twitter card type to use for the site.",
+          "options": {
+            "summary": "Summary",
+            "summary_large_image": "Summary with large image"
+          }
         },
         "site": {
           "label": "Site Twitter account",
@@ -1555,6 +1655,19 @@
         "keepLocal": "Keep my value",
         "adoptRemote": "Use remote value",
         "restoreInitial": "Restore initial value",
+        "empty": "No value",
+        "boolean": {
+          "true": "Yes",
+          "false": "No"
+        },
+        "sitemap": {
+          "included": "Included in the sitemap",
+          "excluded": "Excluded from the sitemap",
+          "frequency": "Frequency: {value}",
+          "priority": "Priority: {value}",
+          "defaultFrequency": "default",
+          "defaultPriority": "default"
+        },
         "resolved": "All conflicts are resolved. Confirm a new save.",
         "fields": {
           "name": "Name",
@@ -1690,11 +1803,6 @@
       "keepLocal": "Keep local",
       "cancel": "Cancel",
       "apply": "Apply choices",
-      "currentOrder": "Saved order: {order}",
-      "localOrder": "Local order: {order}",
-      "added": "Added: {ids}",
-      "removed": "Removed: {ids}",
-      "none": "—",
       "anchorMissing": "The targeted position no longer exists. Restart the add from the current state.",
       "deleteChanged": "The block changed since your delete request.",
       "useCurrent": "Use saved state",
@@ -1704,7 +1812,205 @@
       "addAtEnd": "Explicitly add at the end",
       "manualRebase": "This structural conflict requires a manual rebase from the saved state.",
       "restartCurrent": "This revision can no longer be applied. Explicitly restart from the saved snapshot.",
-      "keepDraft": "Keep my draft"
+      "keepDraft": "Keep my draft",
+      "resolutionError": "Conflict resolution failed. Try again or reload the saved state.",
+      "empty": "No value",
+      "configurationChanged": "Configuration changed",
+      "dimensions": "{width} × {height} pixels",
+      "collectionIncompatibleReason": "Concurrent additions, deletions, or moves prevent a safe merge of this collection.",
+      "contentionExplanation": "A concurrent operation currently prevents a safe resolution.",
+      "savedState": "Saved state",
+      "localState": "Local state",
+      "boolean": {
+        "true": "Yes",
+        "false": "No"
+      },
+      "locations": {
+        "row": "Row {position}",
+        "column": "Column {position}",
+        "rowMissing": "Row not found",
+        "columnMissing": "Column not found",
+        "cell": "Cell",
+        "cellNamed": "Cell “{name}”",
+        "cellTyped": "Cell “{type}”",
+        "cellDeleted": "Cell deleted",
+        "item": "Item",
+        "itemNamed": "Item “{name}”",
+        "itemPosition": "Item {position}",
+        "itemMissing": "Item not found",
+        "formField": "Form field",
+        "formFieldNamed": "Form field “{name}”",
+        "formFieldPosition": "Form field {position}",
+        "formFieldDeleted": "Field deleted",
+        "structuredSection": "Structured section",
+        "structuredSectionNamed": "Section “{name}”",
+        "structuredSectionPosition": "Section {position}",
+        "structuredSectionMissing": "Section not found",
+        "image": "Image",
+        "imageNamed": "Image “{name}”",
+        "imageDeleted": "Image deleted",
+        "field": "Field “{name}”",
+        "lcpOwner": "LCP image owner"
+      },
+      "blocks": {
+        "named": "Block “{name}”",
+        "unnamed": "unnamed",
+        "none": "No block",
+        "missing": "Block not found",
+        "deleted": "Deleted block"
+      },
+      "fields": {
+        "title": "Title",
+        "content": "Content",
+        "href": "Link",
+        "required": "Required",
+        "label": "Label",
+        "alt": "Alternative text",
+        "url": "URL",
+        "src": "Source",
+        "width": "Width",
+        "height": "Height",
+        "name": "Name",
+        "subtitle": "Subtitle",
+        "description": "Description",
+        "placeholder": "Placeholder",
+        "options": "Options",
+        "containerMode": "Block width",
+        "cssClassName": "CSS class",
+        "lcpPriority": "LCP priority",
+        "columnsCount": "Column count",
+        "mobile": "Mobile",
+        "tablet": "Tablet",
+        "desktop": "Desktop",
+        "level": "Level",
+        "align": "Alignment",
+        "variant": "Style",
+        "separator": "Separator",
+        "idAnchor": "Anchor",
+        "reveal": "Reveal animation",
+        "highlights": "Highlights",
+        "size": "Size",
+        "gap": "Spacing",
+        "icon": "Icon",
+        "iconPosition": "Icon position",
+        "zoomEnabled": "Image zoom",
+        "maxColumns": "Maximum columns",
+        "showDots": "Show dots",
+        "showArrows": "Show arrows",
+        "columns": "Columns",
+        "displayMode": "Display mode",
+        "quote": "Quote",
+        "authorName": "Author name",
+        "authorRole": "Author role",
+        "rating": "Rating",
+        "submitButton": "Submit button",
+        "successMessage": "Success message",
+        "errorMessage": "Error message",
+        "collapsible": "Collapsible",
+        "period": "Period",
+        "kind": "Cell type",
+        "type": "Type",
+        "itemKind": "Item type",
+        "cardKind": "Card type",
+        "unknown": "Property"
+      },
+      "order": {
+        "saved": "Block order",
+        "changes": "Additions and removals",
+        "baseline": "Initial order",
+        "current": "Saved order",
+        "local": "Local order",
+        "addedServer": "Blocks added remotely",
+        "removedServer": "Blocks removed remotely",
+        "addedLocal": "Blocks added locally",
+        "removedLocal": "Blocks removed locally"
+      },
+      "reason": "Reason",
+      "localDraft": "Local draft retained",
+      "localDraftUnavailable": "No local draft is available",
+      "deleteRequested": "Local deletion requested",
+      "operations": {
+        "create": "Add a block",
+        "update": "Update a block",
+        "delete": "Delete a block",
+        "reorder": "Reorder blocks"
+      },
+      "anchorDetails": {
+        "operation": "Affected operation",
+        "type": "Anchor type",
+        "resource": "Expected resource",
+        "state": "State preventing replay",
+        "missingState": "The anchor resource no longer exists in the saved state.",
+        "types": {
+          "block": "Block", "row": "Row", "column": "Column", "cell": "Cell", "item": "Item",
+          "formField": "Form field", "structuredSection": "Section", "image": "Image", "unknown": "Structural position"
+        }
+      },
+      "idReused": {
+        "block": "Block identifier already used",
+        "row": "Row identifier already used",
+        "column": "Column identifier already used",
+        "cell": "Cell identifier already used",
+        "item": "Item already used",
+        "formField": "Form field already used",
+        "structuredSection": "Section already used",
+        "image": "Image already used",
+        "unknown": "Resource identifier already used",
+        "explanation": "The same resource was added separately in the saved and local versions."
+      },
+      "types": {
+        "named": "Type “{type}”", "section": "Section", "heading": "Heading", "richText": "Rich text", "spacer": "Spacer",
+        "separator": "Separator", "buttons": "Buttons", "image": "Image", "gallery": "Gallery", "carousel": "Carousel",
+        "cardCollection": "Card collection", "steps": "Steps", "testimonials": "Testimonials", "form": "Form", "timeline": "Timeline",
+        "card": "Card", "extendedCard": "Extended card", "structuredCard": "Structured card", "text": "Text", "email": "Email", "textarea": "Text area", "select": "Select", "unknown": "Unknown type"
+      },
+      "values": {
+        "containerMode": { "contained": "Contained", "fullBleed": "Full width" },
+        "align": { "left": "Left", "center": "Centered", "right": "Right", "full": "Full width" },
+        "variant": { "default": "Default", "hero": "Hero", "carousel": "Carousel", "slider": "Slider", "vertical": "Vertical", "horizontal": "Horizontal", "static": "Static", "marquee": "Marquee", "secondary": "Secondary", "outline": "Outline", "ghost": "Ghost" },
+        "displayMode": { "static": "Static", "marquee": "Marquee" },
+        "iconPosition": { "before": "Before the label", "after": "After the label" },
+        "size": { "sm": "Small", "md": "Medium", "lg": "Large", "xl": "Extra large", "full": "Full width" },
+        "kind": { "heading": "Heading", "richText": "Rich text", "spacer": "Spacer", "separator": "Separator", "buttons": "Buttons", "image": "Image", "gallery": "Gallery", "carousel": "Carousel", "cardCollection": "Card collection", "steps": "Steps", "testimonials": "Testimonials", "form": "Form", "timeline": "Timeline" },
+        "type": { "section": "Section", "text": "Text", "email": "Email", "textarea": "Text area", "select": "Select" },
+        "itemKind": { "image": "Image", "card": "Card", "extendedCard": "Extended card", "structuredCard": "Structured card" },
+        "cardKind": { "card": "Card", "extendedCard": "Extended card", "structuredCard": "Structured card" },
+        "level": { "h1": "Heading H1", "h2": "Heading H2", "h3": "Heading H3", "h4": "Heading H4", "h5": "Heading H5", "h6": "Heading H6" },
+        "gap": { "sm": "Small", "md": "Medium", "lg": "Large" }
+      },
+      "revision": {
+        "expected": "Expected revision",
+        "current": "Saved revision"
+      },
+      "structural": {
+        "initialType": "Initial type",
+        "savedType": "Saved type",
+        "localType": "Local type",
+        "localOperation": "Local operation",
+        "savedState": "Relevant saved state"
+      },
+      "invariants": {
+        "invalidStructure": "The block structure no longer satisfies the site rules.",
+        "multipleLcp": "Several blocks would own LCP priority.",
+        "multipleH1": "The page would contain more than one H1 heading.",
+        "columnsMismatch": "The saved columns are incompatible with the expected layout.",
+        "duplicateResource": "The combined structure would reuse the same resource more than once.",
+        "invalidCombination": "The saved and local changes form an invalid block combination."
+      },
+      "kinds": {
+        "blockDeleted": "Block deleted",
+        "blockChangedBeforeDelete": "Delete on a changed block",
+        "blockTypeChanged": "Block type changed",
+        "cellTypeChanged": "Cell type changed",
+        "itemTypeChanged": "Item type changed",
+        "collectionIncompatible": "Incompatible collection",
+        "orderIncompatible": "Incompatible order",
+        "globalInvariant": "Incompatible global rule",
+        "idReused": "Identifier reused",
+        "anchorMissing": "Position not found",
+        "revisionAhead": "Revision is ahead",
+        "contention": "Concurrent operation"
+      }
     },
 
     "pageBlockEditHeader": {
@@ -1755,9 +2061,12 @@
         "spacer": "Spacer",
         "separator": "Separator",
         "buttons": "Buttons",
+        "card": "Cards",
         "cardCollection": "Card collection",
+        "extendedCard": "Extended cards",
         "steps": "Steps",
         "testimonials": "Testimonials",
+        "structuredCard": "Structured card",
         "form": "Form",
         "timeline": "Timeline"
       },

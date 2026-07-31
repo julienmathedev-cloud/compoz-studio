@@ -24,6 +24,8 @@ import {
   patchSettingsBundleCache,
 } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
+import { fetchFreshSettingsBundle } from "@compoz/studio/features/settings/bundle/fetchFreshSettingsBundle";
+import { fetchFreshSettingsSection } from "@compoz/studio/features/settings/conflicts/fetch-fresh-settings-section";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
 
 const WEBSITE_ID = "website-1";
@@ -95,6 +97,103 @@ function createSettingsBundle(): SiteSettingsWithRevisionsDTO {
     },
   };
 }
+
+void test("reads a fresh bundle without consulting or mutating the React Query cache", async () => {
+  const queryClient = createQueryClient();
+  const cached = createSettingsBundle();
+  const fresh = { ...createSettingsBundle(), revisions: { ...createSettingsBundle().revisions, identityRevision: 9 } };
+  const key = settingsBundleKey(WEBSITE_ID, DEFAULT_CONTENT_STATE);
+  const originalFetch = globalThis.fetch;
+  queryClient.setQueryData(key, cached);
+  globalThis.fetch = async () => new Response(JSON.stringify(fresh), { headers: { "content-type": "application/json" } });
+
+  try {
+    const result = await fetchFreshSettingsBundle(DEFAULT_CONTENT_STATE);
+    assert.equal(result.revisions.identityRevision, 9);
+    assert.deepEqual(queryClient.getQueryData(key), cached);
+  } finally {
+    globalThis.fetch = originalFetch;
+    queryClient.clear();
+  }
+});
+
+void test("defers fresh section cache adoption until the user explicitly decides", async () => {
+  const queryClient = createQueryClient();
+  const cached = createSettingsBundle();
+  const fresh = { ...createSettingsBundle(), settings: { ...createSettingsBundle().settings, footer: { copyright: "Fresh", showYear: false } }, revisions: { ...createSettingsBundle().revisions, footerRevision: 12 } };
+  const key = settingsBundleKey(WEBSITE_ID, DEFAULT_CONTENT_STATE);
+  const originalFetch = globalThis.fetch;
+  queryClient.setQueryData(key, cached);
+  globalThis.fetch = async () => new Response(JSON.stringify(fresh), { headers: { "content-type": "application/json" } });
+  try {
+    const section = await fetchFreshSettingsSection({
+      signal: new AbortController().signal,
+      queryClient,
+      websiteId: WEBSITE_ID,
+      sectionKey: "footer",
+      revisionKey: "footerRevision",
+      toFormValues: (value) => value,
+    });
+    assert.deepEqual(queryClient.getQueryData(key), cached);
+    section.adoptCache();
+    assert.deepEqual((queryClient.getQueryData(key) as SiteSettingsWithRevisionsDTO).settings.footer, fresh.settings.footer);
+    assert.equal((queryClient.getQueryData(key) as SiteSettingsWithRevisionsDTO).revisions.footerRevision, 12);
+  } finally {
+    globalThis.fetch = originalFetch;
+    queryClient.clear();
+  }
+});
+
+void test("fresh bundle read propagates non-OK HTTP responses", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ error: { code: "UNKNOWN" } }), {
+    status: 500,
+    headers: { "content-type": "application/json" },
+  });
+  try {
+    await assert.rejects(fetchFreshSettingsBundle(DEFAULT_CONTENT_STATE), (error: unknown) => {
+      return typeof error === "object" && error !== null && "status" in error && error.status === 500;
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+void test("fresh bundle read rejects invalid JSON and incomplete payloads", async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => new Response("{invalid", { headers: { "content-type": "application/json" } });
+    await assert.rejects(fetchFreshSettingsBundle(DEFAULT_CONTENT_STATE), /settingsStudioApi\.bundle\.get/u);
+
+    globalThis.fetch = async () => new Response(JSON.stringify({ settings: createSettingsBundle().settings }), { headers: { "content-type": "application/json" } });
+    await assert.rejects(fetchFreshSettingsBundle(DEFAULT_CONTENT_STATE), /invalid dto\.settings or dto\.revisions/u);
+
+    const bundle = createSettingsBundle();
+    globalThis.fetch = async () => new Response(JSON.stringify({ ...bundle, settings: { ...bundle.settings, identity: undefined } }), { headers: { "content-type": "application/json" } });
+    await assert.rejects(fetchFreshSettingsBundle(DEFAULT_CONTENT_STATE), /invalid dto\.settings or dto\.revisions/u);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+void test("fresh bundle read propagates network and abort failures", async () => {
+  const originalFetch = globalThis.fetch;
+  const networkFailure = new TypeError("network unavailable");
+  try {
+    globalThis.fetch = async () => { throw networkFailure; };
+    await assert.rejects(fetchFreshSettingsBundle(DEFAULT_CONTENT_STATE), networkFailure);
+
+    const controller = new AbortController();
+    globalThis.fetch = async (_input, init) => new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true });
+    });
+    const pending = fetchFreshSettingsBundle(DEFAULT_CONTENT_STATE, controller.signal);
+    controller.abort();
+    await assert.rejects(pending, (error: unknown) => error instanceof DOMException && error.name === "AbortError");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
 
 void test("recognizes only complete revisioned settings bundles", () => {
   const bundle = createSettingsBundle();

@@ -37,6 +37,7 @@ import {
 type FooterFormProps = Readonly<{
   initialValues: FooterFormValues;
   isSaving?: boolean;
+  isConflictResolving?: boolean;
   onSubmit: (values: FooterFormValues) => void | Promise<void>;
   onReset?: () => void;
   onWarningKeysChange?: (keys: FooterWarningKey[]) => void;
@@ -48,6 +49,7 @@ type FooterFormProps = Readonly<{
 export function FooterForm({
   initialValues,
   isSaving,
+  isConflictResolving,
   onSubmit,
   onReset,
   onWarningKeysChange,
@@ -60,7 +62,6 @@ export function FooterForm({
     handleSubmit,
     resetToInitialValues,
     isDirty,
-    isSubmitting,
     isBusy,
     disabledControls,
     errors,
@@ -71,6 +72,7 @@ export function FooterForm({
     resolver: zodResolver(FooterFormSchema),
     initialValues,
     isSaving,
+    isConflictResolving,
     onValuesChange,
     onDirtyChange,
   });
@@ -159,7 +161,7 @@ export function FooterForm({
         <CardFooter>
           <ActionsBar
             variant="resetSubmit"
-            isSaving={isSaving || isSubmitting}
+            isSaving={isBusy}
             isDirty={isDirty}
             onReset={() => {
               resetToInitialValues();

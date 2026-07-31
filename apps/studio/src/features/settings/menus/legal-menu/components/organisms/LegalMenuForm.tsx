@@ -78,6 +78,7 @@ function countBlockingErrors(value: unknown): number {
 type LegalMenuFormProps = Readonly<{
   initialValues: LegalMenuFormValues;
   isSaving?: boolean;
+  isConflictResolving?: boolean;
   onSubmit: (values: LegalMenuFormValues) => void | Promise<void>;
   onReset?: () => void;
   internalPageOptions?: ReadonlyArray<InternalPageOptionDTO>;
@@ -91,6 +92,7 @@ type LegalMenuFormProps = Readonly<{
 export function LegalMenuForm({
   initialValues,
   isSaving,
+  isConflictResolving,
   onSubmit,
   onReset,
   internalPageOptions,
@@ -106,7 +108,6 @@ export function LegalMenuForm({
     trigger,
     resetToInitialValues,
     isDirty,
-    isSubmitting,
     isBusy,
     submitCount,
     isSubmitted,
@@ -114,6 +115,7 @@ export function LegalMenuForm({
     resolver: zodResolver(LegalMenuFormSchema),
     initialValues,
     isSaving,
+    isConflictResolving,
     onValuesChange,
     onDirtyChange,
   });
@@ -250,7 +252,7 @@ export function LegalMenuForm({
         <CardFooter>
           <ActionsBar
             variant="addResetSubmit"
-            isSaving={isSaving || isSubmitting}
+            isSaving={isBusy}
             isDirty={isDirty}
             onAdd={() => append(createEmptyItem())}
             onReset={() => {

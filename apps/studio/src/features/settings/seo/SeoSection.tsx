@@ -22,6 +22,7 @@ import { useStudioSaveDespiteWarningsConfirm } from "@compoz/studio/features/_sh
 import { useStudioDirtyGuard } from "@compoz/studio/features/dirty-guard/useStudioDirtyGuard";
 import { SeoForm } from "@compoz/studio/features/settings/seo/components/organisms/SeoForm";
 import { useSeoSettings } from "@compoz/studio/features/settings/seo/useSeoSettings";
+import { SettingsConflictPanel } from "@compoz/studio/features/settings/conflicts/SettingsConflictPanel";
 import {
   computeSeoWarnings,
   type SeoWarningKey,
@@ -43,7 +44,7 @@ export function SeoSection() {
 
   const dirtyGuard = useStudioDirtyGuard();
 
-  const { baseline, isLoading, isSaving, save } = useSeoSettings();
+  const { baseline, conflict, isLoading, isSaving, save } = useSeoSettings();
 
   const [warningKeys, setWarningKeys] = useState<SeoWarningKey[]>([]);
 
@@ -87,7 +88,8 @@ export function SeoSection() {
 
       if (!ok) return;
 
-      await save(values);
+      const result = await save(values);
+      if (result.status === "conflict") return;
       dirtyGuard.setDirty(false);
     },
     [confirmSaveDespiteWarnings, isLoading, isSaving, dirtyGuard, save],
@@ -108,9 +110,11 @@ export function SeoSection() {
         warningKeys={warningKeys}
         warningMessageKeyPrefix="studio.seoSection.warnings"
       />
+      {conflict ? <SettingsConflictPanel conflict={conflict} focusTargetId="seo" /> : null}
 
       <SeoForm
         initialValues={baseline}
+        isConflictResolving={conflict !== null}
         isSaving={isSaving}
         onSubmit={handleSubmit}
         onReset={() => {

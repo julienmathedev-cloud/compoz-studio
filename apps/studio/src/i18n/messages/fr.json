@@ -478,6 +478,89 @@
   },
 
   "studio": {
+    "conflictResolution": {
+      "pending": "Résolution en cours…",
+      "status": {
+        "serverOnly": "Seule la version enregistrée a changé.",
+        "localOnly": "Seule votre version locale a changé.",
+        "sameChange": "Les deux versions ont effectué le même changement.",
+        "conflict": "Les versions sont différentes : un choix est nécessaire.",
+        "manual": "Cette différence nécessite une résolution manuelle."
+      }
+    },
+    "settingsConflict": {
+      "title": "Conflit sur les réglages",
+      "description": "Les réglages enregistrés ont changé pendant votre édition. Votre brouillon local est conservé jusqu’à votre décision.",
+      "labels": {
+        "baseline": "Base de votre enregistrement",
+        "server": "Enregistré maintenant",
+        "local": "Votre brouillon"
+      },
+      "actions": {
+        "abandon": "Fermer et conserver le brouillon local",
+        "adoptCurrent": "Adopter les réglages enregistrés",
+        "apply": "Appliquer mes choix",
+        "retryFreshRead": "Recharger les réglages enregistrés",
+        "useServer": "Utiliser enregistré",
+        "keepLocal": "Conserver local",
+        "keepAllLocal": "Conserver entièrement mon brouillon local"
+      },
+      "errors": {
+        "freshRead": "Impossible de charger les réglages enregistrés. Votre brouillon reste inchangé.",
+        "incomplete": "Choisissez une version pour chaque différence avant d’appliquer la résolution.",
+        "mutation": "La résolution n’a pas pu être enregistrée. Votre brouillon et vos choix sont conservés."
+      },
+      "values": {
+        "empty": "Aucune valeur",
+        "emptyList": "Aucun élément",
+        "item": "Élément {position}",
+        "configuration": "Configuration renseignée ({count} propriétés)",
+        "configurationChanged": "Configuration modifiée",
+        "address": "Adresse",
+        "mediaLinked": "Média associé",
+        "mediaNotLinked": "Aucun média associé",
+        "boolean": { "true": "Oui", "false": "Non" }
+      },
+      "fields": {
+        "identity": {
+          "logo": "Logo",
+          "faviconUrl": "Favicon",
+          "faviconMediaAssetId": "Média du favicon"
+        },
+        "seo": { "openGraph": "Open Graph", "twitter": "Twitter" },
+        "social": { "items": "Liens sociaux" },
+        "primaryMenu": { "items": "Éléments du menu principal" },
+        "legalMenu": { "items": "Éléments du menu légal" }
+      },
+      "list": {
+        "serverAdded": "Ajouts enregistrés",
+        "serverRemoved": "Suppressions enregistrées",
+        "localAdded": "Ajouts locaux",
+        "localRemoved": "Suppressions locales",
+        "serverModified": "Éléments modifiés dans la version enregistrée",
+        "localModified": "Éléments modifiés dans le brouillon local",
+        "serverOrder": "Ordre enregistré",
+        "localOrder": "Ordre local",
+        "position": "Position {position}",
+        "order": "Ordre",
+        "parent": "Élément parent",
+        "noParent": "Premier niveau",
+        "unknownParent": "Parent enregistré indisponible",
+        "unnamedItem": "Élément sans libellé",
+        "itemAdded": "Élément ajouté",
+        "itemRemoved": "Élément supprimé",
+        "deletionModified": "Suppression et modification concurrentes",
+        "propertyChanged": "Propriété modifiée",
+        "manualRequired": "Fusion manuelle requise",
+        "reason": "Raison",
+        "manualReasons": {
+          "duplicate-id": "Un même identifiant est réutilisé plusieurs fois dans une liste.",
+          "order-incompatible": "Les réorganisations enregistrée et locale sont incompatibles.",
+          "missing-parent": "Le parent choisi n’existe plus dans la liste résolue."
+        },
+        "changedValue": "{field} : {before} → {after}"
+      }
+    },
     "shared": {
       "visualize": {
         "draft": "Brouillon",
@@ -1025,6 +1108,10 @@
     "logoFields": {
       "altFallback": "Logo",
       "preferredTypeHint": "Format recommandé : SVG pour un rendu net sur tous les écrans.",
+      "source": "Fichier",
+      "dimensions": "Dimensions",
+      "mediaType": "Type de média",
+      "mediaTypeUnknown": "Format inconnu",
       "image": {
         "label": "Logo principal",
         "help": "Téléchargez votre logo (format recommandé : SVG)."
@@ -1158,6 +1245,9 @@
     },
 
     "pageForm": {
+      "structureConflict": {
+        "currentAdopted": "La structure enregistrée de la page a été adoptée. Votre changement local de parent n’a pas été appliqué ; vos autres modifications de métadonnées sont conservées."
+      },
       "title": {
         "label": "Titre de la page",
         "help": "Choisissez un titre clair et descriptif (par ex. : “Accueil”, “Galerie”, “Contact”).",
@@ -1276,7 +1366,13 @@
         "robots": {
           "label": "Directive robots",
           "placeholder": "index,follow",
-          "help": "Contrôle l’indexation (ex. : index,follow, noindex, nofollow…)."
+          "help": "Contrôle l’indexation (ex. : index,follow, noindex, nofollow…).",
+          "options": {
+            "index": "Indexer ce site",
+            "noindex": "Ne pas indexer ce site",
+            "follow": "Suivre les liens",
+            "nofollow": "Ne pas suivre les liens"
+          }
         },
         "structuredData": {
           "label": "Données structurées JSON-LD",
@@ -1334,7 +1430,11 @@
         "card": {
           "label": "Carte Twitter",
           "placeholder": "Sélectionnez un type de carte",
-          "help": "Sélectionnez le type de carte Twitter à utiliser pour le site."
+          "help": "Sélectionnez le type de carte Twitter à utiliser pour le site.",
+          "options": {
+            "summary": "Résumé",
+            "summary_large_image": "Résumé avec grande image"
+          }
         },
         "site": {
           "label": "Compte Twitter du site",
@@ -1556,6 +1656,19 @@
         "keepLocal": "Conserver ma valeur",
         "adoptRemote": "Adopter la valeur distante",
         "restoreInitial": "Revenir à la valeur initiale",
+        "empty": "Aucune valeur",
+        "boolean": {
+          "true": "Oui",
+          "false": "Non"
+        },
+        "sitemap": {
+          "included": "Incluse dans le sitemap",
+          "excluded": "Exclue du sitemap",
+          "frequency": "Fréquence : {value}",
+          "priority": "Priorité : {value}",
+          "defaultFrequency": "par défaut",
+          "defaultPriority": "par défaut"
+        },
         "resolved": "Tous les conflits sont résolus. Confirmez une nouvelle sauvegarde.",
         "fields": {
           "name": "Nom",
@@ -1691,11 +1804,6 @@
       "keepLocal": "Conserver local",
       "cancel": "Annuler",
       "apply": "Appliquer les choix",
-      "currentOrder": "Ordre enregistré : {order}",
-      "localOrder": "Ordre local : {order}",
-      "added": "Ajoutés : {ids}",
-      "removed": "Supprimés : {ids}",
-      "none": "—",
       "anchorMissing": "La position ciblée n’existe plus. Reprenez l’ajout depuis l’état courant.",
       "deleteChanged": "Le bloc a été modifié depuis votre demande de suppression.",
       "useCurrent": "Utiliser l’état enregistré",
@@ -1705,7 +1813,205 @@
       "addAtEnd": "Ajouter explicitement à la fin",
       "manualRebase": "Ce conflit structurel exige une reprise manuelle depuis l’état enregistré.",
       "restartCurrent": "La révision n’est plus applicable. Repartez explicitement du snapshot enregistré.",
-      "keepDraft": "Conserver mon brouillon"
+      "keepDraft": "Conserver mon brouillon",
+      "resolutionError": "La résolution du conflit a échoué. Réessayez ou rechargez l’état enregistré.",
+      "empty": "Aucune valeur",
+      "configurationChanged": "Configuration modifiée",
+      "dimensions": "{width} × {height} pixels",
+      "collectionIncompatibleReason": "Des ajouts, suppressions ou déplacements concurrents empêchent une fusion sûre de cette collection.",
+      "contentionExplanation": "Une opération concurrente empêche actuellement une résolution sûre.",
+      "savedState": "État enregistré",
+      "localState": "État local",
+      "boolean": {
+        "true": "Oui",
+        "false": "Non"
+      },
+      "locations": {
+        "row": "Ligne {position}",
+        "column": "Colonne {position}",
+        "rowMissing": "Ligne introuvable",
+        "columnMissing": "Colonne introuvable",
+        "cell": "Cellule",
+        "cellNamed": "Cellule « {name} »",
+        "cellTyped": "Cellule « {type} »",
+        "cellDeleted": "Cellule supprimée",
+        "item": "Élément",
+        "itemNamed": "Élément « {name} »",
+        "itemPosition": "Élément {position}",
+        "itemMissing": "Élément introuvable",
+        "formField": "Champ de formulaire",
+        "formFieldNamed": "Champ de formulaire « {name} »",
+        "formFieldPosition": "Champ de formulaire {position}",
+        "formFieldDeleted": "Champ supprimé",
+        "structuredSection": "Section structurée",
+        "structuredSectionNamed": "Section « {name} »",
+        "structuredSectionPosition": "Section {position}",
+        "structuredSectionMissing": "Section introuvable",
+        "image": "Image",
+        "imageNamed": "Image « {name} »",
+        "imageDeleted": "Image supprimée",
+        "field": "Champ « {name} »",
+        "lcpOwner": "Propriétaire de l’image LCP"
+      },
+      "blocks": {
+        "named": "Bloc « {name} »",
+        "unnamed": "sans nom",
+        "none": "Aucun bloc",
+        "missing": "Bloc introuvable",
+        "deleted": "Bloc supprimé"
+      },
+      "fields": {
+        "title": "Titre",
+        "content": "Contenu",
+        "href": "Lien",
+        "required": "Obligatoire",
+        "label": "Libellé",
+        "alt": "Texte alternatif",
+        "url": "URL",
+        "src": "Source",
+        "width": "Largeur",
+        "height": "Hauteur",
+        "name": "Nom",
+        "subtitle": "Sous-titre",
+        "description": "Description",
+        "placeholder": "Texte indicatif",
+        "options": "Options",
+        "containerMode": "Largeur du bloc",
+        "cssClassName": "Classe CSS",
+        "lcpPriority": "Priorité LCP",
+        "columnsCount": "Nombre de colonnes",
+        "mobile": "Mobile",
+        "tablet": "Tablette",
+        "desktop": "Ordinateur",
+        "level": "Niveau",
+        "align": "Alignement",
+        "variant": "Style",
+        "separator": "Séparateur",
+        "idAnchor": "Ancre",
+        "reveal": "Animation d’apparition",
+        "highlights": "Mises en avant",
+        "size": "Taille",
+        "gap": "Espacement",
+        "icon": "Icône",
+        "iconPosition": "Position de l’icône",
+        "zoomEnabled": "Zoom de l’image",
+        "maxColumns": "Colonnes maximales",
+        "showDots": "Afficher les points",
+        "showArrows": "Afficher les flèches",
+        "columns": "Colonnes",
+        "displayMode": "Mode d’affichage",
+        "quote": "Citation",
+        "authorName": "Nom de l’auteur",
+        "authorRole": "Rôle de l’auteur",
+        "rating": "Note",
+        "submitButton": "Bouton d’envoi",
+        "successMessage": "Message de succès",
+        "errorMessage": "Message d’erreur",
+        "collapsible": "Repliable",
+        "period": "Période",
+        "kind": "Type de cellule",
+        "type": "Type",
+        "itemKind": "Type d’élément",
+        "cardKind": "Type de carte",
+        "unknown": "Propriété"
+      },
+      "order": {
+        "saved": "Ordre des blocs",
+        "changes": "Ajouts et suppressions",
+        "baseline": "Ordre initial",
+        "current": "Ordre enregistré",
+        "local": "Ordre local",
+        "addedServer": "Blocs ajoutés à distance",
+        "removedServer": "Blocs supprimés à distance",
+        "addedLocal": "Blocs ajoutés localement",
+        "removedLocal": "Blocs supprimés localement"
+      },
+      "reason": "Raison",
+      "localDraft": "Brouillon local conservé",
+      "localDraftUnavailable": "Aucun brouillon local disponible",
+      "deleteRequested": "Suppression locale demandée",
+      "operations": {
+        "create": "Ajout d’un bloc",
+        "update": "Modification d’un bloc",
+        "delete": "Suppression d’un bloc",
+        "reorder": "Réorganisation des blocs"
+      },
+      "anchorDetails": {
+        "operation": "Opération concernée",
+        "type": "Type d’ancre",
+        "resource": "Ressource attendue",
+        "state": "État empêchant le rejeu",
+        "missingState": "La ressource d’ancrage n’existe plus dans l’état enregistré.",
+        "types": {
+          "block": "Bloc", "row": "Ligne", "column": "Colonne", "cell": "Cellule", "item": "Élément",
+          "formField": "Champ de formulaire", "structuredSection": "Section", "image": "Image", "unknown": "Position structurelle"
+        }
+      },
+      "idReused": {
+        "block": "Identifiant de bloc déjà utilisé",
+        "row": "Identifiant de ligne déjà utilisé",
+        "column": "Identifiant de colonne déjà utilisé",
+        "cell": "Identifiant de cellule déjà utilisé",
+        "item": "Élément déjà utilisé",
+        "formField": "Champ de formulaire déjà utilisé",
+        "structuredSection": "Section déjà utilisée",
+        "image": "Image déjà utilisée",
+        "unknown": "Identifiant d’une ressource déjà utilisé",
+        "explanation": "La même ressource a été ajoutée séparément dans les versions enregistrée et locale."
+      },
+      "types": {
+        "named": "Type « {type} »", "section": "Section", "heading": "Titre", "richText": "Texte riche", "spacer": "Espacement",
+        "separator": "Séparateur", "buttons": "Boutons", "image": "Image", "gallery": "Galerie", "carousel": "Carrousel",
+        "cardCollection": "Collection de cartes", "steps": "Étapes", "testimonials": "Témoignages", "form": "Formulaire", "timeline": "Chronologie",
+        "card": "Carte", "extendedCard": "Carte étendue", "structuredCard": "Carte structurée", "text": "Texte", "email": "E-mail", "textarea": "Zone de texte", "select": "Liste de choix", "unknown": "Type inconnu"
+      },
+      "values": {
+        "containerMode": { "contained": "Contenu avec marges", "fullBleed": "Pleine largeur" },
+        "align": { "left": "À gauche", "center": "Centré", "right": "À droite", "full": "Pleine largeur" },
+        "variant": { "default": "Par défaut", "hero": "Hero", "carousel": "Carrousel", "slider": "Diaporama", "vertical": "Vertical", "horizontal": "Horizontal", "static": "Statique", "marquee": "Défilant", "secondary": "Secondaire", "outline": "Contour", "ghost": "Discret" },
+        "displayMode": { "static": "Statique", "marquee": "Défilant" },
+        "iconPosition": { "before": "Avant le libellé", "after": "Après le libellé" },
+        "size": { "sm": "Petit", "md": "Moyen", "lg": "Grand", "xl": "Très grand", "full": "Pleine largeur" },
+        "kind": { "heading": "Titre", "richText": "Texte riche", "spacer": "Espacement", "separator": "Séparateur", "buttons": "Boutons", "image": "Image", "gallery": "Galerie", "carousel": "Carrousel", "cardCollection": "Collection de cartes", "steps": "Étapes", "testimonials": "Témoignages", "form": "Formulaire", "timeline": "Chronologie" },
+        "type": { "section": "Section", "text": "Texte", "email": "E-mail", "textarea": "Zone de texte", "select": "Liste de choix" },
+        "itemKind": { "image": "Image", "card": "Carte", "extendedCard": "Carte étendue", "structuredCard": "Carte structurée" },
+        "cardKind": { "card": "Carte", "extendedCard": "Carte étendue", "structuredCard": "Carte structurée" },
+        "level": { "h1": "Titre H1", "h2": "Titre H2", "h3": "Titre H3", "h4": "Titre H4", "h5": "Titre H5", "h6": "Titre H6" },
+        "gap": { "sm": "Petit", "md": "Moyen", "lg": "Grand" }
+      },
+      "revision": {
+        "expected": "Révision attendue",
+        "current": "Révision enregistrée"
+      },
+      "structural": {
+        "initialType": "Type initial",
+        "savedType": "Type enregistré",
+        "localType": "Type local",
+        "localOperation": "Opération locale",
+        "savedState": "État enregistré pertinent"
+      },
+      "invariants": {
+        "invalidStructure": "La structure des blocs ne respecte plus les règles du site.",
+        "multipleLcp": "Plusieurs blocs deviendraient propriétaires de la priorité LCP.",
+        "multipleH1": "La page contiendrait plusieurs titres H1.",
+        "columnsMismatch": "Les colonnes enregistrées sont incompatibles avec la mise en page attendue.",
+        "duplicateResource": "La structure combinée réutiliserait plusieurs fois la même ressource.",
+        "invalidCombination": "Les changements enregistrés et locaux produisent une combinaison de blocs invalide."
+      },
+      "kinds": {
+        "blockDeleted": "Bloc supprimé",
+        "blockChangedBeforeDelete": "Suppression sur un bloc modifié",
+        "blockTypeChanged": "Type de bloc modifié",
+        "cellTypeChanged": "Type de cellule modifié",
+        "itemTypeChanged": "Type d’élément modifié",
+        "collectionIncompatible": "Collection incompatible",
+        "orderIncompatible": "Ordre incompatible",
+        "globalInvariant": "Règle globale incompatible",
+        "idReused": "Identifiant réutilisé",
+        "anchorMissing": "Position introuvable",
+        "revisionAhead": "Révision dépassée",
+        "contention": "Opération concurrente"
+      }
     },
 
     "pageBlockEditHeader": {

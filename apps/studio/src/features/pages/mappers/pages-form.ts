@@ -25,7 +25,7 @@ export type PageFormDirtyFields = Partial<
 
 export type PageFormSubmissionResult =
   | Readonly<{ rebaseValues: PageFormValues }>
-  | Readonly<{ rebaseParentId: string | null }>
+  | Readonly<{ rebaseParentId: string | null; notice: "currentStructureAdopted" }>
   | void;
 
 export function toPageFormValuesFromDTO(

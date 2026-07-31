@@ -30,6 +30,8 @@ import {
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
+import { fetchFreshSettingsSection } from "@compoz/studio/features/settings/conflicts/fetch-fresh-settings-section";
+import { socialConflictAdapter } from "@compoz/studio/features/settings/conflicts/settings-conflict-adapters";
 import type { SettingsHookResult } from "@compoz/studio/features/settings/hooks/useSettingsResource";
 import {
   useSettingsResource,
@@ -153,6 +155,17 @@ export function useSocialSettings(): UseSocialSettingsResult {
     onLoaded: normalizeSocialFormValues,
 
     beforeSave: normalizeSocialFormValues,
+
+    conflict: {
+      scope: "social",
+      fetchCurrent: (signal) => fetchFreshSettingsSection({ signal, queryClient, websiteId: websiteIdRef.current, sectionKey: "social", revisionKey: "socialRevision", toFormValues: (dto) => normalizeSocialFormValues(toSocialFormValuesFromDTO(dto)) }),
+      adoptSnapshot: (value, revision) => {
+        const capturedWebsiteId = websiteIdRef.current;
+        return requireCurrentSettingsOperation(snapshot.adoptAuthoritativeDraftWithRollback({ websiteId: capturedWebsiteId, baseline: value, revision, isWebsiteCurrent: () => websiteIdRef.current === capturedWebsiteId }));
+      },
+      presentation: socialConflictAdapter(t),
+      messages: { freshReadFailed: t("studio.settingsConflict.errors.freshRead"), incomplete: t("studio.settingsConflict.errors.incomplete"), mutationFailed: t("studio.settingsConflict.errors.mutation") },
+    },
 
     /** Keeps derived status and shared bundle queries aligned after a successful save. */
     onSaved: () => {

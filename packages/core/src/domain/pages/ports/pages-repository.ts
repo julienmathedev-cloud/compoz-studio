@@ -35,6 +35,13 @@ export type CompareAndSetDraftPageBlocksInput = Readonly<{
   metaUpdatedAt: string;
 }>;
 
+/** Lightweight page metadata required to build a public sitemap entry. */
+export type PageSitemapMetadata = Readonly<{
+  id: string;
+  sitemap: PageSitemap | null;
+  metaUpdatedAt: string;
+}>;
+
 export interface PagesRepository {
   /** Idempotently prepares the storage backend when needed. */
   ensureBase(): Promise<void>;
@@ -55,6 +62,15 @@ export interface PagesRepository {
     state: ContentState,
     pageIds: ReadonlyArray<string>,
   ): Promise<Array<Page | null>>;
+
+  /**
+   * Lightweight batch read for sitemap generation. Results preserve `pageIds`
+   * order and return `null` for empty, missing, or out-of-scope identifiers.
+   */
+  readManySitemapMetadataById(
+    state: ContentState,
+    pageIds: ReadonlyArray<string>,
+  ): Promise<Array<PageSitemapMetadata | null>>;
 
   compareAndSetDraftPageBlocks(
     input: CompareAndSetDraftPageBlocksInput,

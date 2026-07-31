@@ -8,7 +8,7 @@
  * @remarks
  * - Resolves the active Website from the request host through Prisma WebsiteDomain.
  * - Returns a valid empty sitemap when no Website matches the host.
- * - Uses the published SiteIndex and each published page sitemap settings.
+ * - Uses the published SiteIndex and a targeted batch sitemap projection.
  * - Uses the SEO base URL first, then `NEXT_PUBLIC_SITE_URL`, and falls back to relative paths.
  * - Explicit `/t/:websiteSlug` fallback routes have their own dedicated sitemap route.
  */
@@ -19,14 +19,11 @@ import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
-import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { HOME_SLUG } from "@compoz/core/domain/slug/constants";
+import { getPagesRepository } from "@compoz/infra/pages";
 import { getSiteRepository } from "@compoz/infra/site";
 import { resolvePublicWebsiteFromHost } from "@compoz/infra/websites/resolve-public-website";
-import {
-  getPublishedHomePageByWebsiteId,
-  getPublishedPageBySlugByWebsiteId,
-} from "@compoz/site/lib/pages/published-page-loaders";
+import { loadPublishedSitemapData } from "@compoz/site/lib/sitemap/load-published-sitemap-data";
 import {
   canonicalFromBase,
   stripTrailingSlashes,
@@ -63,19 +60,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const websiteId = website.websiteId;
 
-  const siteRepo = getSiteRepository({ websiteId });
-  await siteRepo.ensureBase();
-
-  const [index, settings] = await Promise.all([
-    siteRepo.readIndex(CONTENT_STATE.PUBLISHED),
-    siteRepo.readSettings(CONTENT_STATE.PUBLISHED),
-  ]);
+  const { index, settings, pages } = await loadPublishedSitemapData({
+    pagesRepository: getPagesRepository({ websiteId }),
+    siteRepository: getSiteRepository({ websiteId }),
+  });
 
   if (!index) {
     notFound();
   }
 
-  const pages = index.pages ?? [];
   const indexLastModified = toLastModified(index.updatedAt) ?? new Date();
 
   const seoBaseUrl = settings?.seo?.baseUrl ?? "";
@@ -85,20 +78,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     stripTrailingSlashes(seoBaseUrl) || stripTrailingSlashes(envBaseUrl) || "";
 
   const entries = await Promise.all(
-    pages.map(async (ref) => {
+    pages.map(({ ref, metadata }) => {
       const slugRaw = String(ref.slug ?? "").trim();
       const slug = slugRaw || HOME_SLUG;
 
-      const page =
-        slug === HOME_SLUG
-          ? await getPublishedHomePageByWebsiteId(websiteId)
-          : await getPublishedPageBySlugByWebsiteId(websiteId, slug);
-
-      if (!page) {
-        return null;
-      }
-
-      if (page.sitemap?.include === false) {
+      if (metadata.sitemap?.include === false) {
         return null;
       }
 
@@ -108,9 +92,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       return {
         url,
-        lastModified: toLastModified(page.meta?.updatedAt) ?? indexLastModified,
-        changeFrequency: page.sitemap?.changefreq ?? "weekly",
-        priority: page.sitemap?.priority ?? (slug === HOME_SLUG ? 1 : 0.7),
+        lastModified: toLastModified(metadata.metaUpdatedAt) ?? indexLastModified,
+        changeFrequency: metadata.sitemap?.changefreq ?? "weekly",
+        priority:
+          metadata.sitemap?.priority ?? (slug === HOME_SLUG ? 1 : 0.7),
       } satisfies MetadataRoute.Sitemap[number];
     }),
   );

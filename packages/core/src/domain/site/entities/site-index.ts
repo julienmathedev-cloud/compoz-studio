@@ -1,9 +1,10 @@
 /**
  * @file packages/core/src/domain/site/entities/site-index.ts
  * @layer core/domain/site/entities
- * @description Canonical site page index.
+ * @description Lightweight site page index projection.
  * @remarks
- * Holds the published page summaries for a content state.
+ * Rebuilt from persisted Page rows ordered by `position`; it is not a
+ * separately persisted aggregate.
  */
 
 import type {
@@ -12,19 +13,19 @@ import type {
 } from "@compoz/core/domain/pages/entities/page";
 
 export interface SiteIndex {
-  /** Canonical page summaries for the content state. */
+  /** Lightweight summaries of Page rows for the content state. */
   pages: ReadonlyArray<PageSummary>;
 
-  /** ISO timestamp of the latest logical index write. */
+  /** Projection timestamp: Page.updatedAt maximum for Draft, Website.lastPublishedAt for Published. */
   updatedAt: string;
 }
 
-/** Studio draft projection; published indexes intentionally omit metadata revisions. */
+/** Draft projection carrying Page metadata revisions; Published summaries omit them. */
 export interface DraftSiteIndex extends Omit<SiteIndex, "pages"> {
   pages: ReadonlyArray<DraftPageSummary>;
 }
 
-/** Draft structure projection carrying the Website-level OCC revision. */
+/** Draft projection variant carrying the Website-level structure OCC revision. */
 export interface DraftSiteIndexWithRevision {
   index: DraftSiteIndex;
   draftStructureRevision: number;

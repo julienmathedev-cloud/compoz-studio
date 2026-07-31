@@ -56,6 +56,7 @@ function pagesRepository(): PagesRepository {
     readBySlug: async () => null,
     readManyById: async (_state, ids) =>
       ids.map((id) => (id === PAGE.id ? PAGE : null)),
+    readManySitemapMetadataById: async () => [],
     compareAndSetDraftPageBlocks: async () => true,
     existsById: async () => true,
     existsBySlug: async () => false,

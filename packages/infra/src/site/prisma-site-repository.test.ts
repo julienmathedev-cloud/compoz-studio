@@ -7,6 +7,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import { DEFAULT_FOOTER_SETTINGS } from "@compoz/core/domain/site/defaults/footer";
 import { DEFAULT_HEADER_SETTINGS } from "@compoz/core/domain/site/defaults/header";
 import { DEFAULT_IDENTITY_SETTINGS } from "@compoz/core/domain/site/defaults/identity";
@@ -54,6 +55,8 @@ const NEXT_SOCIAL = {
     },
   ],
 };
+
+const LAST_PUBLISHED_AT = new Date("2026-07-29T10:00:00.000Z");
 
 function persistedRow(footerRevision: number, footer = NEXT_FOOTER) {
   return {
@@ -525,4 +528,75 @@ void test("does not convert other Prisma creation errors into CAS misses", async
       }),
     (error: unknown) => error === technicalError,
   );
+});
+
+void test("builds the published SiteIndex from a lightweight Page projection", async () => {
+  const pageFindManyCalls: unknown[] = [];
+  const websiteFindUniqueCalls: unknown[] = [];
+  const client = {
+    page: {
+      findMany: async (args: unknown) => {
+        pageFindManyCalls.push(args);
+
+        return [
+          {
+            pageId: "page-a",
+            slug: "page-a",
+            name: "Page A",
+            parentPageId: null,
+            updatedAt: new Date("2026-07-29T09:00:00.000Z"),
+          },
+        ];
+      },
+    },
+    website: {
+      findUnique: async (args: unknown) => {
+        websiteFindUniqueCalls.push(args);
+        return { lastPublishedAt: LAST_PUBLISHED_AT };
+      },
+    },
+  } as unknown as PrismaClient;
+  const repository = new PrismaSiteRepository({
+    websiteId: WEBSITE_ID,
+    client,
+  });
+
+  assert.deepEqual(await repository.readIndex(CONTENT_STATE.PUBLISHED), {
+    pages: [{ id: "page-a", slug: "page-a", name: "Page A", parentId: null }],
+    updatedAt: LAST_PUBLISHED_AT.toISOString(),
+  });
+  assert.deepEqual(pageFindManyCalls, [
+    {
+      where: { websiteId: WEBSITE_ID, state: "published" },
+      orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+      select: {
+        pageId: true,
+        slug: true,
+        name: true,
+        parentPageId: true,
+        updatedAt: true,
+      },
+    },
+  ]);
+  assert.deepEqual(websiteFindUniqueCalls, [
+    { where: { id: WEBSITE_ID }, select: { lastPublishedAt: true } },
+  ]);
+});
+
+void test("uses lastPublishedAt for an empty published SiteIndex", async () => {
+  const client = {
+    page: { findMany: async () => [] },
+    website: {
+      findUnique: async () => ({ lastPublishedAt: LAST_PUBLISHED_AT }),
+    },
+  } as unknown as PrismaClient;
+  const repository = new PrismaSiteRepository({
+    websiteId: WEBSITE_ID,
+    client,
+  });
+
+  assert.deepEqual(await repository.readIndex(CONTENT_STATE.PUBLISHED), {
+    pages: [],
+    updatedAt: LAST_PUBLISHED_AT.toISOString(),
+  });
 });

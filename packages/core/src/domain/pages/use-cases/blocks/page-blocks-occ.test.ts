@@ -105,6 +105,7 @@ class MemoryPages implements PagesRepository {
   async readById() { return (await this.readByIdWithRevisions()).page; }
   async readBySlug() { return null; }
   async readManyById() { return []; }
+  async readManySitemapMetadataById() { return []; }
   async existsById() { return false; }
   async existsBySlug() { return false; }
 }

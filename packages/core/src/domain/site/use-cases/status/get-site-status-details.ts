@@ -3,8 +3,8 @@
  * @layer core/domain/site/use-cases/status
  * @description Returns lazy-loaded draft versus published page and block status details.
  * @remarks
- * Uses a read-through status details cache and recomputes from source-of-truth
- * indexes on cache miss.
+ * Uses a read-through status details cache and recomputes from persisted Page
+ * rows and lightweight SiteIndex projections on cache miss.
  */
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -53,8 +53,7 @@ export function getSiteStatusDetails({
       return { details: cached };
     }
 
-    // Cold path: recompute from persisted pages and site indexes.
-    await Promise.all([pages.ensureBase(), site.ensureBase()]);
+    // Cold path: recompute from persisted pages and projections.
 
     const pagesDetails: SiteStatusPageDetails[] = [];
 
@@ -158,7 +157,7 @@ export function getSiteStatusDetails({
     }
 
     // Global mode: page IDs come from the union of draft and published
-    // source-of-truth indexes.
+    // Page-row projections.
     const [draftIndex, publishedIndex] = await Promise.all([
       site.readIndex(CONTENT_STATE.DRAFT),
       site.readIndex(CONTENT_STATE.PUBLISHED),

@@ -175,7 +175,7 @@ export function computePagesAndBlocksDiff(args: {
   let blocksModified = 0;
   let blocksDeleted = 0;
 
-  // Count published blocks from the published source-of-truth index.
+  // Count published blocks from the published Page-row projection.
   for (const ref of publishedIndexRefs) {
     const publishedPage = publishedPagesById.get(ref.id);
 

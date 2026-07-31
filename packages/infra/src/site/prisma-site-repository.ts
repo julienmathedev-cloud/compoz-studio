@@ -3,7 +3,9 @@
  * @layer infra/site
  * @description Prisma-backed SiteRepository implementation.
  * @remarks
- * Settings and the published index timestamp are persisted in PostgreSQL; index pages are projected by `Page.position`.
+ * Page rows remain persisted source data; this repository projects lightweight
+ * summaries ordered by `Page.position`. Published projection timestamps use
+ * `Website.lastPublishedAt`.
  */
 
 import {
@@ -19,6 +21,7 @@ import type {
   SiteSettingsWithRevisions,
 } from "@compoz/core/domain/site/entities/site-settings";
 import type {
+  CompareAndSetDraftFooterInput,
   CompareAndSetDraftHeaderInput,
   CompareAndSetDraftIdentityInput,
   CompareAndSetDraftLegalMenuInput,
@@ -26,6 +29,7 @@ import type {
   CompareAndSetDraftSeoInput,
   CompareAndSetDraftSocialInput,
   CompareAndSetDraftThemeInput,
+  DraftFooterWithRevision,
   DraftHeaderWithRevision,
   DraftIdentityWithRevision,
   DraftLegalMenuWithRevision,
@@ -33,8 +37,6 @@ import type {
   DraftSeoWithRevision,
   DraftSocialWithRevision,
   DraftThemeWithRevision,
-  CompareAndSetDraftFooterInput,
-  DraftFooterWithRevision,
   SiteRepository,
 } from "@compoz/core/domain/site/ports/site-repository";
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
@@ -67,7 +69,9 @@ type PrismaSiteRepositoryOptions = Readonly<{
 
 type DraftSettingsSectionCasOptions<TSettings> = Readonly<{
   updateWhere: (expectedRevision: number) => Prisma.SiteSettingsWhereInput;
-  updateData: (settings: Readonly<TSettings>) => Prisma.SiteSettingsUpdateManyMutationInput;
+  updateData: (
+    settings: Readonly<TSettings>,
+  ) => Prisma.SiteSettingsUpdateManyMutationInput;
   createSettings: (
     defaults: SiteSettings,
     settings: Readonly<TSettings>,
@@ -150,7 +154,9 @@ export class PrismaSiteRepository implements SiteRepository {
 
     const index = toDomainSiteIndex(pages, state);
 
-    if (state !== CONTENT_STATE.PUBLISHED) return index;
+    if (state !== CONTENT_STATE.PUBLISHED) {
+      return index;
+    }
 
     return {
       ...index,
@@ -277,7 +283,10 @@ export class PrismaSiteRepository implements SiteRepository {
   }
 
   private async compareAndSetDraftSettingsSection<TSettings>(
-    input: Readonly<{ expectedRevision: number; settings: Readonly<TSettings> }>,
+    input: Readonly<{
+      expectedRevision: number;
+      settings: Readonly<TSettings>;
+    }>,
     options: DraftSettingsSectionCasOptions<TSettings>,
   ): Promise<Readonly<{ settings: TSettings; revision: number }> | null> {
     const client = this.client;
@@ -430,7 +439,10 @@ export class PrismaSiteRepository implements SiteRepository {
           primaryMenu: toPrismaPrimaryMenuSettings(primaryMenu),
           primaryMenuRevision: { increment: 1 },
         }),
-        createSettings: (defaults, primaryMenu) => ({ ...defaults, primaryMenu }),
+        createSettings: (defaults, primaryMenu) => ({
+          ...defaults,
+          primaryMenu,
+        }),
         createRevision: { primaryMenuRevision: 1 },
         result: (bundle) => ({
           settings: bundle.settings.primaryMenu,
@@ -555,5 +567,4 @@ export class PrismaSiteRepository implements SiteRepository {
       },
     );
   }
-
 }

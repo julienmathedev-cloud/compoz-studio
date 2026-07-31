@@ -40,8 +40,6 @@ export async function GET(req: Request) {
       async () => {
         const repo = getSiteRepository({ websiteId });
 
-        await repo.ensureBase();
-
         const { settings, revisions } =
           await repo.readSettingsWithRevisions(state);
 

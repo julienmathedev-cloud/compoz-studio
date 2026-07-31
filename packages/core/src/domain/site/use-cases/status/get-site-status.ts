@@ -3,7 +3,8 @@
  * @layer core/domain/site/use-cases/status
  * @description Returns the global draft versus published site status.
  * @remarks
- * Uses a read-through status cache and recomputes from source-of-truth indexes on cache miss.
+ * Uses a read-through status cache and recomputes from persisted Page rows and
+ * their lightweight SiteIndex projections on cache miss.
  */
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
@@ -35,8 +36,7 @@ export function getSiteStatus({ pages, site, cache }: GetSiteStatusDeps) {
     const cached = await cache.readStatusSnapshot();
     if (cached) return { status: cached };
 
-    // Cold path: recompute from persisted pages, settings, and site indexes.
-    await Promise.all([pages.ensureBase(), site.ensureBase()]);
+    // Cold path: recompute from persisted pages, settings, and projections.
 
     const [draftIndex, publishedIndex, draftSettings, publishedSettings] =
       await Promise.all([
@@ -58,7 +58,7 @@ export function getSiteStatus({ pages, site, cache }: GetSiteStatusDeps) {
       publishedSettings,
     );
 
-    // Batch reads keep page and block counters aligned with the source-of-truth indexes.
+    // Batch reads keep page and block counters aligned with Page-row projections.
     const draftIds = draftIndex.pages.map((r) => r.id);
     const publishedIds = publishedIndex.pages.map((r) => r.id);
 

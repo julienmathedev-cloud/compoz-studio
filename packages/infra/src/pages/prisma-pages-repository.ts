@@ -19,6 +19,7 @@ import type {
 import { requireWebsiteId } from "@compoz/infra/lib/require-website-id";
 import {
   toDomainPage,
+  toDomainPageSitemapMetadata,
   toDomainPageWithRevisions,
   type PrismaContentState,
 } from "@compoz/infra/pages/mappers/page.mapper";
@@ -163,6 +164,44 @@ export class PrismaPagesRepository implements PagesRepository {
       const row = rowByPageId.get(id);
 
       return row ? toDomainPage(row) : null;
+    });
+  }
+
+  async readManySitemapMetadataById(
+    state: ContentState,
+    pageIds: ReadonlyArray<string>,
+  ) {
+    const prismaState = toPrismaContentState(state);
+    const ids = pageIds.map(normalizeValue);
+    const nonEmptyIds = [...new Set(ids.filter(Boolean))];
+
+    if (nonEmptyIds.length === 0) {
+      return pageIds.map(() => null);
+    }
+
+    const rows = await this.client.page.findMany({
+      where: {
+        websiteId: this.websiteId,
+        state: prismaState,
+        pageId: { in: nonEmptyIds },
+      },
+      select: {
+        pageId: true,
+        sitemap: true,
+        metaUpdatedAt: true,
+      },
+    });
+
+    const rowByPageId = new Map(rows.map((row) => [row.pageId, row]));
+
+    return ids.map((id) => {
+      if (!id) {
+        return null;
+      }
+
+      const row = rowByPageId.get(id);
+
+      return row ? toDomainPageSitemapMetadata(row) : null;
     });
   }
 

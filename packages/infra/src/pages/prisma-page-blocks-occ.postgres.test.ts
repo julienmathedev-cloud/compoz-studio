@@ -72,6 +72,8 @@ function repositoryWithCas(
       delegate.readByIdWithRevisions(state, pageId),
     readBySlug: (state, slug) => delegate.readBySlug(state, slug),
     readManyById: (state, pageIds) => delegate.readManyById(state, pageIds),
+    readManySitemapMetadataById: (state, pageIds) =>
+      delegate.readManySitemapMetadataById(state, pageIds),
     compareAndSetDraftPageBlocks,
     existsById: (state, pageId) => delegate.existsById(state, pageId),
     existsBySlug: (state, slug) => delegate.existsBySlug(state, slug),

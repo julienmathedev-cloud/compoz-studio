@@ -8,12 +8,20 @@ import type { Block } from "@compoz/core/domain/pages/entities/block";
 import type {
   Page,
   PageMeta,
+  PageSitemap,
   PageWithRevisions,
 } from "@compoz/core/domain/pages/entities/page";
-import type { CreateDraftPageInput } from "@compoz/core/domain/pages/ports/pages-repository";
+import type {
+  CreateDraftPageInput,
+  PageSitemapMetadata,
+} from "@compoz/core/domain/pages/ports/pages-repository";
 import { normalizePersistedPageBlocks } from "@compoz/infra/pages/normalizers/normalize-persisted-page-blocks";
 import { Prisma } from "@compoz/infra/prisma/generated";
-import { PageSchema, type PageShape } from "@compoz/validation/pages/page";
+import {
+  PageSchema,
+  PageSitemapSchema,
+  type PageShape,
+} from "@compoz/validation/pages/page";
 
 export type PrismaContentState = "draft" | "published";
 
@@ -33,6 +41,12 @@ export type PrismaPageRow = {
   metaUpdatedAt: Date;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type PrismaPageSitemapMetadataRow = {
+  pageId: string;
+  sitemap: unknown;
+  metaUpdatedAt: Date;
 };
 
 type PrismaPageCreateContentData = {
@@ -107,6 +121,20 @@ export function toDomainPage(row: PrismaPageRow): Page {
   });
 
   return toDomainPageFromShape(parsed);
+}
+
+export function toDomainPageSitemapMetadata(
+  row: PrismaPageSitemapMetadataRow,
+): PageSitemapMetadata {
+  const sitemap: PageSitemap | null = PageSitemapSchema.nullable().parse(
+    row.sitemap,
+  );
+
+  return {
+    id: row.pageId,
+    sitemap,
+    metaUpdatedAt: row.metaUpdatedAt.toISOString(),
+  };
 }
 
 export function toDomainPageWithRevisions(

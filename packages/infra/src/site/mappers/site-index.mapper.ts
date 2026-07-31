@@ -4,10 +4,7 @@
  * @description Maps Prisma page rows to the computed SiteIndex domain projection.
  */
 
-import {
-  CONTENT_STATE,
-  type ContentState,
-} from "@compoz/core/constants/common/content-state";
+import type { ContentState } from "@compoz/core/constants/common/content-state";
 
 import type {
   DraftPageSummary,
@@ -27,10 +24,8 @@ export type PrismaSiteIndexPageRow = {
   updatedAt: Date;
 };
 
-function defaultIndex(state: ContentState): SiteIndex {
-  return state === CONTENT_STATE.DRAFT
-    ? { pages: [], updatedAt: new Date().toISOString() }
-    : { pages: [], updatedAt: "" };
+function defaultIndex(_state: ContentState): SiteIndex {
+  return { pages: [], updatedAt: "" };
 }
 
 function getLatestUpdatedAt(
@@ -81,7 +76,7 @@ export function toDomainDraftSiteIndex(
   pages: ReadonlyArray<PrismaSiteIndexPageRow & { metaRevision: number }>,
 ): DraftSiteIndex {
   if (pages.length === 0) {
-    return { pages: [], updatedAt: new Date().toISOString() };
+    return { pages: [], updatedAt: "" };
   }
 
   return {

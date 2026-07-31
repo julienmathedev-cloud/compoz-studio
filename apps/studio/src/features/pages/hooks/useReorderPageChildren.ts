@@ -30,6 +30,7 @@ import {
   draftStructureMutationOptions,
   requireDraftStructureSnapshot,
 } from "@compoz/studio/features/pages/hooks/draft-structure-mutation";
+import { invalidatePageMutationStatusViews } from "@compoz/studio/features/pages/hooks/invalidate-page-mutation-status-views";
 import {
   patchDraftStructureCache,
   rollbackDraftStructureReorder,
@@ -37,10 +38,6 @@ import {
   type ReorderOptimisticContext,
 } from "@compoz/studio/features/site-index/cache";
 import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
-import {
-  invalidateSiteStatus,
-  invalidateSiteStatusDetails,
-} from "@compoz/studio/features/site/status/invalidate";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 
@@ -160,10 +157,11 @@ export function useReorderPageChildren(
       setDraftStructureCache(queryClient, websiteId, state, nextSnapshot);
 
       if (nextSnapshot.outcome === "updated") {
-        await Promise.all([
-          invalidateSiteStatus(queryClient, websiteId),
-          invalidateSiteStatusDetails(queryClient, websiteId),
-        ]);
+        await invalidatePageMutationStatusViews({
+          queryClient,
+          websiteId,
+          outcome: nextSnapshot.outcome,
+        });
       }
 
       logger.debug("reorder.ok", {

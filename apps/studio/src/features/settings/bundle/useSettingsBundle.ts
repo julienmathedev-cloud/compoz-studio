@@ -12,14 +12,15 @@
  * - Uses the React Query AbortSignal for cancellable bundle reads.
  */
 
-import type { QueryFunctionContext } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
 import type { SiteSettings } from "@compoz/core/domain/site/entities/site-settings";
-import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
-import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
+import {
+  selectSettingsBundleSettings,
+  settingsBundleQueryOptions,
+} from "@compoz/studio/features/settings/bundle/query";
 
 type UseSettingsBundleResult = ReturnType<typeof useQuery<SiteSettings, Error>>;
 
@@ -30,22 +31,9 @@ export function useSettingsBundle(
   const enabled = Boolean(websiteId);
 
   return useQuery({
-    queryKey: settingsBundleKey(websiteId, state),
+    ...settingsBundleQueryOptions(websiteId, state),
     enabled,
-
-    queryFn: async (
-      ctx: QueryFunctionContext<ReturnType<typeof settingsBundleKey>>,
-    ): Promise<SiteSettings> => {
-      const dto = await settingsStudioApi.bundle.get(state, {
-        signal: ctx.signal,
-      });
-
-      if (!dto?.settings) {
-        throw new Error("settings-bundle: missing dto.settings");
-      }
-
-      return dto.settings as SiteSettings;
-    },
+    select: selectSettingsBundleSettings,
   });
 }
 

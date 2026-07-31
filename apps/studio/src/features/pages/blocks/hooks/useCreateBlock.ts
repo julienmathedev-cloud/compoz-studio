@@ -76,7 +76,7 @@ export function useCreateBlock(pageId: string, onSuccess?: () => void) {
           name: variables.label ?? response.createdBlockId,
         }),
       );
-      await invalidateBlockMutationStatusViews({ queryClient, websiteId, pageId: pageIdKey, outcome: response.outcome });
+      await invalidateBlockMutationStatusViews({ queryClient, websiteId, outcome: response.outcome });
       onSuccess?.();
     },
     onError: (error) => {

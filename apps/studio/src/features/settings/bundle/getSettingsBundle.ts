@@ -16,10 +16,10 @@
 import type { QueryClient } from "@tanstack/react-query";
 
 import type { ContentState } from "@compoz/core/constants/common/content-state";
-import type { SiteSettingsWithRevisionsDTO } from "@compoz/core/domain/site/dto";
-import { settingsStudioApi } from "@compoz/infra/http/studio/site-settings.client";
 import { isSettingsBundle } from "@compoz/studio/features/settings/bundle/cache";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
+import { settingsBundleQueryOptions } from "@compoz/studio/features/settings/bundle/query";
+import type { SiteSettingsWithRevisionsDTO } from "@compoz/core/domain/site/dto";
 
 function requireWebsiteId(value: unknown, field = "websiteId"): string {
   const websiteId = String(value ?? "").trim();
@@ -55,22 +55,7 @@ export async function getSettingsBundle(
     });
   }
 
-  return queryClient.fetchQuery<SiteSettingsWithRevisionsDTO>({
-    queryKey: key,
-    queryFn: async ({ signal }) => {
-      const dto = await settingsStudioApi.bundle.get(state, {
-        signal,
-      });
-
-      if (!isSettingsBundle(dto)) {
-        throw new Error(
-          "settings-bundle: invalid dto.settings or dto.revisions",
-        );
-      }
-
-      return dto;
-    },
-  });
+  return queryClient.fetchQuery(settingsBundleQueryOptions(websiteIdKey, state));
 }
 
 getSettingsBundle.displayName = "getSettingsBundle";

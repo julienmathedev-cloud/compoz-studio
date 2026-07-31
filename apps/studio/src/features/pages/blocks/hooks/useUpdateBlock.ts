@@ -73,7 +73,7 @@ export function useUpdateBlock(pageId: string, onSuccess?: (response: UpdateSect
           t("notifications.updated.description", { fields: "" }),
         );
       }
-      await invalidateBlockMutationStatusViews({ queryClient, websiteId, pageId: pageIdKey, outcome: response.outcome });
+      await invalidateBlockMutationStatusViews({ queryClient, websiteId, outcome: response.outcome });
       onSuccess?.(response);
     },
     onError: (error) => {

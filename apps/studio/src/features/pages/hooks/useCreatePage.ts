@@ -31,10 +31,7 @@ import {
 } from "@compoz/studio/features/pages/hooks/draft-structure-mutation";
 import { setDraftStructureCache } from "@compoz/studio/features/site-index/cache";
 import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
-import {
-  invalidatePageStatusViews,
-  invalidateSiteStatus,
-} from "@compoz/studio/features/site/status/invalidate";
+import { invalidateAllSiteStatusViews } from "@compoz/studio/features/site/status/invalidate";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { notifyCreated } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
@@ -133,10 +130,7 @@ export function useCreatePage(onSuccess?: () => void): UseCreatePageResult {
         });
       }
 
-      await Promise.all([
-        invalidateSiteStatus(queryClient, websiteId),
-        invalidatePageStatusViews(queryClient, websiteId),
-      ]);
+      await invalidateAllSiteStatusViews(queryClient, websiteId);
 
       onSuccess?.();
     },

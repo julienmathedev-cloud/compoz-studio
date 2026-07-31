@@ -10,7 +10,6 @@
  * @remarks
  * - Returns `UserDTO | null` depending on the selected user id.
  * - Users are global Studio data, so no draft/published state is involved.
- * - Keeps previous user data during refetches to avoid UI flicker.
  */
 
 import { useEffect } from "react";
@@ -18,10 +17,9 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import type { UserDTO } from "@compoz/core/domain/users/dto";
-import { adminUsersStudioApi } from "@compoz/infra/http/studio/users.client";
 import { log } from "@compoz/infra/lib/log";
 
-import { userByIdKey } from "@compoz/studio/features/admin/users/cache/keys";
+import { readUserQueryOptions } from "@compoz/studio/features/admin/users/hooks/read-user-query";
 import { notify } from "@compoz/studio/lib/ui/notify";
 
 type UseReadUserResult = Readonly<{
@@ -33,21 +31,8 @@ const lg = log.child({ ns: "hook", name: "useReadUser" });
 
 export function useReadUser(userId: string): UseReadUserResult {
   const userIdKey = String(userId ?? "").trim();
-  const enabled = Boolean(userIdKey);
-
-  const options = {
-    queryKey: userByIdKey(userIdKey),
-    enabled,
-
-    queryFn: async ({ signal }: { signal: AbortSignal }): Promise<UserDTO> => {
-      const res = await adminUsersStudioApi.getById(userIdKey, { signal });
-
-      // Flatten the route response for query consumers.
-      return res.user;
-    },
-
-    placeholderData: (prev: UserDTO | undefined) => prev,
-  } as const;
+  const options = readUserQueryOptions(userIdKey);
+  const enabled = options.enabled;
 
   const query = useQuery<UserDTO, Error>(options);
 

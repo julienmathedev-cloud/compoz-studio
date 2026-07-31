@@ -66,7 +66,7 @@ export function useReorderBlocks(pageId: string, onSuccess?: () => void) {
       }),
     onSuccess: async (response) => {
       syncPageBlocksSnapshotCache(queryClient, websiteId, pageIdKey, response);
-      await invalidateBlockMutationStatusViews({ queryClient, websiteId, pageId: pageIdKey, outcome: response.outcome });
+      await invalidateBlockMutationStatusViews({ queryClient, websiteId, outcome: response.outcome });
       onSuccess?.();
     },
     onError: (error, _intent, context) => {

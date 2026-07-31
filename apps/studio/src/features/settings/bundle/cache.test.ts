@@ -27,6 +27,7 @@ import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSe
 import { fetchFreshSettingsBundle } from "@compoz/studio/features/settings/bundle/fetchFreshSettingsBundle";
 import { fetchFreshSettingsSection } from "@compoz/studio/features/settings/conflicts/fetch-fresh-settings-section";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
+import { settingsBundleQueryOptions } from "@compoz/studio/features/settings/bundle/query";
 
 const WEBSITE_ID = "website-1";
 
@@ -138,6 +139,52 @@ void test("defers fresh section cache adoption until the user explicitly decides
     section.adoptCache();
     assert.deepEqual((queryClient.getQueryData(key) as SiteSettingsWithRevisionsDTO).settings.footer, fresh.settings.footer);
     assert.equal((queryClient.getQueryData(key) as SiteSettingsWithRevisionsDTO).revisions.footerRevision, 12);
+  } finally {
+    globalThis.fetch = originalFetch;
+    queryClient.clear();
+  }
+});
+
+void test("adopts an authoritative conflict section into a canonical hook-originated bundle", async () => {
+  const queryClient = createQueryClient();
+  const cached = createSettingsBundle();
+  const fresh = {
+    ...createSettingsBundle(),
+    settings: {
+      ...createSettingsBundle().settings,
+      footer: { copyright: "Authoritative", showYear: false },
+    },
+    revisions: { ...createSettingsBundle().revisions, footerRevision: 12 },
+  };
+  const key = settingsBundleKey(WEBSITE_ID, DEFAULT_CONTENT_STATE);
+  const originalFetch = globalThis.fetch;
+  let response = cached;
+  globalThis.fetch = async () => new Response(JSON.stringify(response), {
+    headers: { "content-type": "application/json" },
+  });
+
+  try {
+    await queryClient.fetchQuery(
+      settingsBundleQueryOptions(WEBSITE_ID, DEFAULT_CONTENT_STATE),
+    );
+    response = fresh;
+    const section = await fetchFreshSettingsSection({
+      signal: new AbortController().signal,
+      queryClient,
+      websiteId: WEBSITE_ID,
+      sectionKey: "footer",
+      revisionKey: "footerRevision",
+      toFormValues: (value) => value,
+    });
+    section.adoptCache();
+
+    const adopted = queryClient.getQueryData<SiteSettingsWithRevisionsDTO>(key);
+    assert.ok(adopted);
+    assert.equal(isSettingsBundle(adopted), true);
+    assert.deepEqual(adopted.settings.footer, fresh.settings.footer);
+    assert.equal(adopted.revisions.footerRevision, fresh.revisions.footerRevision);
+    assert.deepEqual(adopted.settings.header, cached.settings.header);
+    assert.equal(adopted.revisions.headerRevision, cached.revisions.headerRevision);
   } finally {
     globalThis.fetch = originalFetch;
     queryClient.clear();

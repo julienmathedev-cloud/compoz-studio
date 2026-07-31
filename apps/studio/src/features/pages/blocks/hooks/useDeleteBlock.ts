@@ -65,7 +65,7 @@ export function useDeleteBlock(pageId: string, onSuccess?: () => void) {
           t("notifications.deleted.description", { entity: entityLabel, name: blockId }),
         );
       }
-      await invalidateBlockMutationStatusViews({ queryClient, websiteId, pageId: pageIdKey, outcome: response.outcome });
+      await invalidateBlockMutationStatusViews({ queryClient, websiteId, outcome: response.outcome });
       onSuccess?.();
     },
     onError: (error) => {

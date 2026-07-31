@@ -9,27 +9,30 @@ import test from "node:test";
 import { QueryClient } from "@tanstack/react-query";
 
 import { invalidateBlockMutationStatusViews } from "@compoz/studio/features/pages/blocks/hooks/invalidate-block-mutation-status-views";
+import {
+  siteStatusDetailsPrefix,
+  siteStatusKey,
+} from "@compoz/studio/features/site/status/keys";
 
 void test("block status views invalidate after updated but not noChanges", async () => {
   const queryClient = new QueryClient();
-  let calls = 0;
-  queryClient.invalidateQueries = async () => {
-    calls += 1;
-  };
+  const calls: unknown[] = [];
+  queryClient.invalidateQueries = async (filters) => { calls.push(filters); };
 
   await invalidateBlockMutationStatusViews({
     queryClient,
     websiteId: "website-a",
-    pageId: "page-a",
     outcome: "noChanges",
   });
-  assert.equal(calls, 0);
+  assert.equal(calls.length, 0);
 
   await invalidateBlockMutationStatusViews({
     queryClient,
     websiteId: "website-a",
-    pageId: "page-a",
     outcome: "updated",
   });
-  assert.equal(calls, 5);
+  assert.deepEqual(calls, [
+    { queryKey: siteStatusKey("website-a") },
+    { queryKey: siteStatusDetailsPrefix("website-a") },
+  ]);
 });

@@ -36,6 +36,7 @@ import {
   submitPageUpdateMutation,
   type UpdatePageSubmissionOutcome,
 } from "@compoz/studio/features/pages/hooks/page-update-submission";
+import { invalidatePageMutationStatusViews } from "@compoz/studio/features/pages/hooks/invalidate-page-mutation-status-views";
 import {
   normalizePageFormValues,
   toUpdatePageIntentDTOFromFormValues,
@@ -47,10 +48,6 @@ import {
 } from "@compoz/studio/features/site-index/cache";
 import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
-import {
-  invalidatePageStatusViews,
-  invalidateSiteStatus,
-} from "@compoz/studio/features/site/status/invalidate";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import {
   notifyNoChanges,
@@ -197,8 +194,11 @@ export function useUpdatePage(
       }
 
       if (response.outcome === "updated") await Promise.all([
-        invalidateSiteStatus(queryClient, websiteId),
-        invalidatePageStatusViews(queryClient, websiteId),
+        invalidatePageMutationStatusViews({
+          queryClient,
+          websiteId,
+          outcome: response.outcome,
+        }),
         ...(response.slugChanged
           ? [
               queryClient.invalidateQueries({

@@ -27,7 +27,7 @@ import { PrismaDemoSandboxCloner } from "@compoz/infra/demo/prisma-demo-sandbox-
 import { PrismaDemoSandboxDataCleaner } from "@compoz/infra/demo/prisma-demo-sandbox-data-cleaner";
 import { PrismaDemoSandboxRepository } from "@compoz/infra/demo/prisma-demo-sandbox-repository";
 import { PrismaDemoSeedReader } from "@compoz/infra/demo/prisma-demo-seed-reader";
-import { createUuidV7IdGenerator } from "@compoz/infra/id/uuidv7";
+import { getIdGenerator } from "@compoz/infra/id";
 import { getUsersRepository } from "@compoz/infra/users";
 import { buildDemoUserPassword } from "@compoz/studio/auth/demo-auth";
 
@@ -44,7 +44,7 @@ export async function runStartDemoSandbox({
 
   const createSandbox = createDemoSandboxFromSeed({
     users,
-    idGenerator: createUuidV7IdGenerator(),
+    idGenerator: getIdGenerator(),
     seedReader,
     sandboxCloner,
     passwordBuilder: {

@@ -88,7 +88,6 @@ packages/
   http/       HTTP helpers, envelopes, and errors
 
 scripts/      Maintenance and validation scripts
-docs/         Project documentation
 ```
 
 ## Local development
@@ -157,11 +156,13 @@ Optional variables are used for integrations and operational behavior:
 - `COMPOZ_REVALIDATE_SECRET`: protects public site revalidation routes.
 - `CRON_SECRET`: protects internal cleanup routes.
 - `RESEND_API_KEY` and `CONTACT_FROM_EMAIL`: contact form email delivery.
-- `KV_REST_API_URL`: Upstash Redis endpoint.
-- `KV_REST_API_TOKEN`: Upstash Redis token.
+- `KV_REST_API_URL` / `KV_REST_API_TOKEN`: preferred complete Upstash Redis REST credential pair.
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`: alternative complete Upstash Redis REST credential pair.
 - `NEXT_PUBLIC_LOG_LEVEL`: logging verbosity.
 
 Additional environment variables exist for demo, telemetry, and site verification flows. They should be configured only when those flows are needed.
+
+Redis currently stores the reconstructible cache of Studio site statuses. When both Redis credential families are configured, the `KV_REST_API_*` pair takes priority. A credential pair must be complete and values from the two families are never mixed.
 
 ## Code quality
 
@@ -182,7 +183,7 @@ Prisma validation is available through:
 pnpm db:validate
 ```
 
-The root `pnpm check` command runs strict linting, type checking, and both application builds.
+The root `pnpm check` command runs strict linting, type checking, the i18n guard, the Studio build, and the Site build.
 
 ## Project status
 

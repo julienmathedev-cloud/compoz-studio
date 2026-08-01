@@ -21,6 +21,7 @@ import { DEFAULT_THEME_SETTINGS } from "@compoz/core/domain/site/defaults/theme"
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
 import type { Page } from "@compoz/core/domain/pages/entities/page";
 import type {
+  PublishedSnapshot,
   PublishSiteTransaction,
   PublishSiteTransactionContext,
 } from "@compoz/core/domain/site/ports/publish-site-transaction";
@@ -48,7 +49,7 @@ function createContext(params?: {
   draftIndex?: SiteIndex;
   publishedIndex?: SiteIndex;
   draftPages?: Array<Page | null>;
-  onReplacePublishedSnapshot?: () => void;
+  onReplacePublishedSnapshot?: (snapshot: PublishedSnapshot) => void;
 }): PublishSiteTransactionContext {
   const site = {
     readIndex: async (state: string) =>
@@ -64,8 +65,8 @@ function createContext(params?: {
   return {
     site: site as unknown as SiteRepository,
     pages: pages as unknown as PagesRepository,
-    replacePublishedSnapshot: async () => {
-      params?.onReplacePublishedSnapshot?.();
+    replacePublishedSnapshot: async (snapshot) => {
+      params?.onReplacePublishedSnapshot?.(snapshot);
     },
   };
 }
@@ -111,6 +112,31 @@ class RejectedTransaction implements PublishSiteTransaction {
     });
   }
 }
+
+void test("uses the injected clock for the published snapshot timestamp", async () => {
+  let publishedSnapshot: PublishedSnapshot | undefined;
+  const transaction: PublishSiteTransaction = {
+    async run<T>(operation: (context: PublishSiteTransactionContext) => Promise<T>) {
+      return operation(
+        createContext({
+          onReplacePublishedSnapshot: (snapshot) => {
+            publishedSnapshot = snapshot;
+          },
+        }),
+      );
+    },
+  };
+  const run = publishSite({
+    transaction,
+    runtime: { isProd: false },
+    nowIso: () => "2026-08-01T12:34:56.789Z",
+  });
+
+  await run();
+
+  assert.ok(publishedSnapshot);
+  assert.equal(publishedSnapshot.publishedAt, "2026-08-01T12:34:56.789Z");
+});
 
 void test("revalidates exactly once after an internally retried transaction commits", async () => {
   const transaction = new InternallyRetriedTransaction();

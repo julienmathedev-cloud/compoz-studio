@@ -2,7 +2,7 @@
  * @file packages/infra/src/id/uuidv7.ts
  * @layer infra/id
  *
- * @description Factory access to infrastructure ID generators.
+ * @description UUIDv7 implementation of the Core IdGenerator port.
  */
 
 import type { IdGenerator } from "@compoz/core/domain/ports/id-generator";

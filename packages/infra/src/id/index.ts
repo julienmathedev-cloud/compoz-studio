@@ -4,7 +4,9 @@
  * @description Factory access to infrastructure ID generators.
  */
 import { createUuidV7IdGenerator } from "@compoz/infra/id/uuidv7";
+import type { IdGenerator } from "@compoz/core/domain/ports/id-generator";
 
-export function getIdGenerator() {
+/** Public factory for the production Core ID generator. */
+export function getIdGenerator(): IdGenerator {
   return createUuidV7IdGenerator();
 }

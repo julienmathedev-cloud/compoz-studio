@@ -31,6 +31,7 @@ import {
 export function publishSite({
   transaction,
   runtime,
+  nowIso = () => new Date().toISOString(),
   revalidator,
 }: PublishSiteDeps) {
   return async function run(
@@ -99,7 +100,7 @@ export function publishSite({
       await context.replacePublishedSnapshot({
         pages: prepared.pages,
         settings: sourceSettings,
-        publishedAt: new Date().toISOString(),
+        publishedAt: nowIso(),
       });
 
       const slugs = Array.from(

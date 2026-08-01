@@ -14,6 +14,8 @@
 
 import "server-only";
 
+import { randomUUID } from "node:crypto";
+
 import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { throwHttp } from "@compoz/http/http-error";
 import type { UploadSvgResponse } from "@compoz/infra/http/studio/media.types";
@@ -273,7 +275,7 @@ export async function POST(req: Request) {
         const safeBase = sanitizeFilename(originalName.replace(/\.[^.]+$/, ""));
 
         const { year, month } = nowParts();
-        const filename = `${safeBase}-${Date.now()}.svg`;
+        const filename = `${safeBase}-${Date.now()}-${randomUUID()}.svg`;
 
         const key = buildStorageKey({
           websiteId,

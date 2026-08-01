@@ -11,27 +11,25 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
+import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { routing } from "@compoz/studio/i18n/routing";
 import { I18N_RUNTIME_KEYS } from "@compoz/studio/i18n/runtime-keys";
+import { UiError } from "@compoz/studio/lib/ui/uiError";
 
 /* -------------------------------------------------------------------------- */
 /*                                   Config                                   */
 /* -------------------------------------------------------------------------- */
 
 const LOCALES = routing.locales;
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const REPOSITORY_ROOT = path.resolve(SCRIPT_DIR, "..");
 
 const MESSAGES_PATH_BY_LOCALE: Record<(typeof LOCALES)[number], string> = {
-  fr: path.resolve(process.cwd(), "src/i18n/messages/fr.json"),
-  en: path.resolve(process.cwd(), "src/i18n/messages/en.json"),
+  fr: path.resolve(REPOSITORY_ROOT, "apps/studio/src/i18n/messages/fr.json"),
+  en: path.resolve(REPOSITORY_ROOT, "apps/studio/src/i18n/messages/en.json"),
 };
-
-const ERROR_CODES_TS_PATH = path.resolve(
-  process.cwd(),
-  "src/core/domain/errors/codes.ts",
-);
-
-const UI_ERROR_TS_PATH = path.resolve(process.cwd(), "src/lib/ui/uiError.ts");
 
 const ERRORS_NAMESPACE = "errors";
 const UI_ERRORS_NAMESPACE = "uiErrors";
@@ -102,22 +100,6 @@ function toSet(arr: string[]) {
   return new Set(arr);
 }
 
-/**
- * Extrait les valeurs `"TOKEN"` depuis un enum ou objet TS :
- *   FOO = "bar"
- *   FOO: "BAR"
- */
-function extractStringValues(tsFileContent: string) {
-  const re = /["'=]\s*"?([A-Za-z0-9_]+)"?/g;
-  const values = new Set<string>();
-
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(tsFileContent)) !== null) {
-    values.add(m[1]);
-  }
-  return values;
-}
-
 function flattenRuntimeKeys(input: unknown): string[] {
   const out: string[] = [];
   if (!isObject(input)) return out;
@@ -186,9 +168,7 @@ function main() {
 
   /* --------------------- 3) ERROR_CODES ----------------------- */
 
-  const errorCodes = extractStringValues(
-    fs.readFileSync(ERROR_CODES_TS_PATH, "utf8"),
-  );
+  const errorCodes = new Set(Object.values(ERROR_CODES));
 
   for (const locale of LOCALES) {
     const obj = getValueAtPath(messages[locale], ERRORS_NAMESPACE);
@@ -223,9 +203,7 @@ function main() {
 
   /* --------------------- 4) uiErrors -------------------------- */
 
-  const uiErrorTokens = extractStringValues(
-    fs.readFileSync(UI_ERROR_TS_PATH, "utf8"),
-  );
+  const uiErrorTokens = new Set(Object.values(UiError));
 
   for (const locale of LOCALES) {
     const obj = getValueAtPath(messages[locale], UI_ERRORS_NAMESPACE);
@@ -288,6 +266,12 @@ function main() {
   console.log(
     "✅ i18n guard OK (parity + ERROR_CODES + uiErrors + runtime keys).",
   );
+  for (const locale of LOCALES) {
+    console.log(`${locale.toUpperCase()} leaf keys: ${msgLeafKeysByLocale[locale].size}`);
+  }
+  console.log(`ERROR_CODES: ${errorCodes.size}`);
+  console.log(`uiErrors: ${uiErrorTokens.size}`);
+  console.log(`runtime keys: ${runtimeSet.size}`);
 }
 
 main();

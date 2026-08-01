@@ -28,6 +28,8 @@ export interface PublishSiteRuntime {
 export interface PublishSiteDeps {
   transaction: PublishSiteTransaction;
   runtime: PublishSiteRuntime;
+  /** Injectable clock so published snapshots remain deterministic in tests. */
+  nowIso?: () => string;
   /** Optional infra-side revalidation to avoid coupling core to a web framework. */
   revalidator?: PublicRevalidator;
 }

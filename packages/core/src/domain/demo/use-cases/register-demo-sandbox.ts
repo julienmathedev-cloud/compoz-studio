@@ -11,6 +11,7 @@ import type {
   RegisterDemoSandboxInput,
   RegisterDemoSandboxResult,
 } from "@compoz/core/domain/demo/use-cases/register-demo-sandbox.types";
+import { assertDemoSandboxWebsiteIdentity } from "@compoz/core/domain/demo/assert-demo-sandbox-website-identity";
 import {
   ERROR_CODES as EC,
   type ErrorCode,
@@ -66,6 +67,8 @@ export function registerDemoSandbox({
     const userId = assertNonEmptyTrimmed(input.userId, ["userId"]);
     const websiteId = assertNonEmptyTrimmed(input.websiteId, ["websiteId"]);
     const expiresAt = assertIsoDateString(input.expiresAt, ["expiresAt"]);
+
+    assertDemoSandboxWebsiteIdentity({ demoInstanceId, websiteId });
 
     await demoSandboxes.ensureBase();
 

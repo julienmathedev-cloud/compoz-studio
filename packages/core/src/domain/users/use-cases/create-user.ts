@@ -23,6 +23,7 @@ import {
 
 export function createUser({
   users,
+  adminUserProvisioning,
   idGenerator,
   nowIso = () => new Date().toISOString(),
 }: CreateUserDeps) {
@@ -52,17 +53,21 @@ export function createUser({
 
     const now = nowIso();
 
-    const user = await users.create({
+    const record = {
       user: {
         id: idGenerator.nextId(),
         email,
         name,
-        status: "active",
+        status: "active" as const,
         rbac,
         meta: { createdAt: now, updatedAt: now },
       },
       password,
-    });
+    };
+
+    const user = adminUserProvisioning
+      ? await adminUserProvisioning.createUserWithWebsiteProvisioning(record)
+      : await users.create(record);
 
     return { user };
   };

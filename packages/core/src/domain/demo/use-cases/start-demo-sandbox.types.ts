@@ -34,6 +34,12 @@ export interface StartDemoSandboxDeps {
     sandbox: DemoSandbox;
   }>;
 
+  rollbackProvisionedSandbox: (input: {
+    demoInstanceId: string;
+    userId: string;
+    websiteId: string;
+  }) => Promise<void>;
+
   nowIso?: () => string;
   ttlMs: number;
 }

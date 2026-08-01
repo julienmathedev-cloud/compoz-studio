@@ -74,7 +74,11 @@ export async function POST(req: Request) {
       await usersRepo.ensureBase();
 
       const idGenerator = getIdGenerator();
-      const runCreate = createUser({ users: usersRepo, idGenerator });
+      const runCreate = createUser({
+        users: usersRepo,
+        adminUserProvisioning: usersRepo,
+        idGenerator,
+      });
 
       const payload = adaptCreateUserPayload(dto);
       const { user } = await runCreate(payload);

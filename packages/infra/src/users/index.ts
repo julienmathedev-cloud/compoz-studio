@@ -5,15 +5,14 @@
  * @remarks Studio users are global and website access is carried by RBAC fields.
  */
 
-import type { UsersRepository } from "@compoz/core/domain/users/ports/users-repository";
 import { log } from "@compoz/infra/lib/log";
 import { PrismaUsersRepository } from "@compoz/infra/users/prisma-users-repository";
 
 const logger = log.child({ ns: "infra:users", factory: "usersRepo" });
 
-let repoSingleton: UsersRepository | null = null;
+let repoSingleton: PrismaUsersRepository | null = null;
 
-export function getUsersRepository(): UsersRepository {
+export function getUsersRepository(): PrismaUsersRepository {
   if (repoSingleton) {
     logger.debug("users.repository.reuse");
 

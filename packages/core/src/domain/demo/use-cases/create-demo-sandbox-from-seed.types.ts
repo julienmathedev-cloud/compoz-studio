@@ -25,10 +25,14 @@ export interface DemoSandboxSeedReader {
 export interface DemoSandboxCloner {
   cloneSeedToWebsite: (args: {
     sourceWebsiteId: string;
+    demoInstanceId: string;
     targetWebsiteId: string;
   }) => Promise<DemoSandboxCloneResult>;
 
-  deleteSandboxWebsite?: (websiteId: string) => Promise<void>;
+  deleteSandboxWebsite: (args: {
+    demoInstanceId: string;
+    websiteId: string;
+  }) => Promise<void>;
 }
 
 export interface DemoSandboxPasswordBuilder {

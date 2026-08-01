@@ -24,6 +24,7 @@ import { registerDemoSandbox } from "@compoz/core/domain/demo/use-cases/register
 import { startDemoSandbox } from "@compoz/core/domain/demo/use-cases/start-demo-sandbox";
 
 import { PrismaDemoSandboxCloner } from "@compoz/infra/demo/prisma-demo-sandbox-cloner";
+import { PrismaDemoSandboxDataCleaner } from "@compoz/infra/demo/prisma-demo-sandbox-data-cleaner";
 import { PrismaDemoSandboxRepository } from "@compoz/infra/demo/prisma-demo-sandbox-repository";
 import { PrismaDemoSeedReader } from "@compoz/infra/demo/prisma-demo-seed-reader";
 import { createUuidV7IdGenerator } from "@compoz/infra/id/uuidv7";
@@ -39,6 +40,7 @@ export async function runStartDemoSandbox({
   const demoSandboxes = new PrismaDemoSandboxRepository();
   const seedReader = new PrismaDemoSeedReader();
   const sandboxCloner = new PrismaDemoSandboxCloner();
+  const sandboxDataCleaner = new PrismaDemoSandboxDataCleaner();
 
   const createSandbox = createDemoSandboxFromSeed({
     users,
@@ -63,6 +65,8 @@ export async function runStartDemoSandbox({
     findReusableDemoSandbox: findReusableSandbox,
     createDemoSandboxFromSeed: createSandbox,
     registerDemoSandbox: registerSandbox,
+    rollbackProvisionedSandbox: (input) =>
+      sandboxDataCleaner.rollbackProvisionedSandbox(input),
     ttlMs: DEMO_SANDBOX_TTL_MS,
   });
 

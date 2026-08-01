@@ -138,6 +138,7 @@ export function createDemoSandboxFromSeed({
 
     await sandboxCloner.cloneSeedToWebsite({
       sourceWebsiteId: resolvedSeedWebsiteId,
+      demoInstanceId,
       targetWebsiteId: websiteId,
     });
 
@@ -147,9 +148,18 @@ export function createDemoSandboxFromSeed({
         password,
       });
     } catch (error) {
-      await sandboxCloner
-        .deleteSandboxWebsite?.(websiteId)
-        .catch(() => undefined);
+      try {
+        await sandboxCloner.deleteSandboxWebsite({
+          demoInstanceId,
+          websiteId,
+        });
+      } catch (rollbackError) {
+        throw new AggregateError(
+          [rollbackError],
+          "Demo sandbox user creation failed and Website rollback failed.",
+          { cause: error },
+        );
+      }
 
       throw error;
     }

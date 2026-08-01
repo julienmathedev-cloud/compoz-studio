@@ -13,15 +13,32 @@ import type {
   UserStatus,
   UserSummary,
 } from "@compoz/core/domain/users/entities/user";
+import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
+import { DomainError } from "@compoz/core/domain/errors/domain-error";
+import type { AdminUserProvisioningTransaction } from "@compoz/core/domain/users/ports/admin-user-provisioning-transaction";
+import type { UpdateAdminUserProvisioningInput } from "@compoz/core/domain/users/ports/admin-user-provisioning-transaction";
 import type { UsersRepository } from "@compoz/core/domain/users/ports/users-repository";
 import { Prisma } from "@compoz/infra/prisma/generated";
+import type { PrismaClient } from "@compoz/infra/prisma/generated";
 import { prisma } from "@compoz/infra/prisma/prisma-client";
 import { UserSchema } from "@compoz/validation/users/user";
 import bcrypt from "bcryptjs";
 
 type CreateUserInput = Parameters<UsersRepository["create"]>[0];
 
-type PrismaUserWithAccesses = Awaited<ReturnType<typeof readPrismaUserById>>;
+type PrismaUserWithAccesses = {
+  id: string;
+  email: string;
+  name: string;
+  status: string;
+  role: string;
+  defaultWebsiteId: string | null;
+  demo: Prisma.JsonValue | null;
+  createdAt: Date;
+  updatedAt: Date;
+  lastLoginAt: Date | null;
+  accesses: Array<{ websiteId: string; role: string }>;
+};
 
 function normalizeEmail(input: unknown): string {
   return String(input ?? "")
@@ -69,8 +86,8 @@ function toPrismaDemoMeta(demo: UserDemoMeta): Prisma.InputJsonObject {
   };
 }
 
-async function readPrismaUserById(id: string) {
-  return prisma.user.findUnique({
+async function readPrismaUserById(client: PrismaClient, id: string) {
+  return client.user.findUnique({
     where: { id },
     include: {
       accesses: {
@@ -81,7 +98,7 @@ async function readPrismaUserById(id: string) {
   });
 }
 
-function toDomainUser(row: NonNullable<PrismaUserWithAccesses>): User {
+function toDomainUser(row: PrismaUserWithAccesses): User {
   const websiteIds = row.accesses.map((access) => access.websiteId);
   const defaultWebsiteId = row.defaultWebsiteId ?? websiteIds[0] ?? "";
   const demo = toDemoMeta(row.demo);
@@ -141,7 +158,107 @@ function accessWebsiteIds(user: User): string[] {
   return [...new Set(user.rbac.websiteIds.map(normalizeId).filter(Boolean))];
 }
 
-export class PrismaUsersRepository implements UsersRepository {
+function toPrismaUserData(args: {
+  user: User;
+  passwordHash: string;
+}) {
+  const { user, passwordHash } = args;
+  const websiteIds = accessWebsiteIds(user);
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    status: user.status,
+    role: user.rbac.role,
+    defaultWebsiteId: user.rbac.defaultWebsiteId,
+    passwordHash,
+    createdAt: new Date(user.meta.createdAt),
+    updatedAt: new Date(user.meta.updatedAt),
+    lastLoginAt: user.meta.lastLoginAt ? new Date(user.meta.lastLoginAt) : null,
+    ...(user.demo ? { demo: toPrismaDemoMeta(user.demo) } : {}),
+    accesses: {
+      create: websiteIds.map((websiteId) => ({
+        websiteId,
+        role: toWebsiteRole(user.rbac.role),
+      })),
+    },
+  };
+}
+
+async function provisionStandardWebsites(
+  tx: Prisma.TransactionClient,
+  websiteIds: ReadonlyArray<string>,
+): Promise<void> {
+  if (websiteIds.length === 0) return;
+
+  const existing = await tx.website.findMany({
+    where: { id: { in: [...websiteIds] } },
+    select: { id: true, type: true },
+  });
+  const existingById = new Map(existing.map((website) => [website.id, website]));
+
+  for (const websiteId of websiteIds) {
+    const website = existingById.get(websiteId);
+
+    if (website && website.type !== "site") {
+      throw new DomainError({
+        code: EC.USER_WEBSITE_IDS_INVALID,
+        message: EC.USER_WEBSITE_IDS_INVALID,
+        details: {
+          path: ["rbac", "websiteIds"],
+          meta: { websiteId, reason: "WEBSITE_NOT_ASSIGNABLE" },
+        },
+      });
+    }
+  }
+
+  const missingIds = websiteIds.filter((websiteId) => !existingById.has(websiteId));
+
+  if (missingIds.length > 0) {
+    await tx.website.createMany({
+      data: missingIds.map((websiteId) => ({
+        id: websiteId,
+        slug: websiteId,
+        name: websiteId,
+        type: "site" as const,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  const resolved = await tx.website.findMany({
+    where: { id: { in: [...websiteIds] } },
+    select: { id: true, type: true },
+  });
+  const resolvedById = new Map(resolved.map((website) => [website.id, website]));
+
+  for (const websiteId of websiteIds) {
+    const website = resolvedById.get(websiteId);
+    const reason = !website ? "WEBSITE_SLUG_COLLISION" : "WEBSITE_NOT_ASSIGNABLE";
+
+    if (!website || website.type !== "site") {
+      throw new DomainError({
+        code: EC.USER_WEBSITE_IDS_INVALID,
+        message: EC.USER_WEBSITE_IDS_INVALID,
+        details: {
+          path: ["rbac", "websiteIds"],
+          meta: { websiteId, reason },
+        },
+      });
+    }
+  }
+}
+
+export class PrismaUsersRepository
+  implements UsersRepository, AdminUserProvisioningTransaction
+{
+  private readonly client: PrismaClient;
+
+  constructor(opts: { client?: PrismaClient } = {}) {
+    this.client = opts.client ?? prisma;
+  }
+
   async ensureBase(): Promise<void> {
     // no-op: Prisma schema/migrations own table creation.
   }
@@ -153,7 +270,7 @@ export class PrismaUsersRepository implements UsersRepository {
       return null;
     }
 
-    const row = await readPrismaUserById(id);
+    const row = await readPrismaUserById(this.client, id);
 
     return row ? toDomainUser(row) : null;
   }
@@ -165,7 +282,7 @@ export class PrismaUsersRepository implements UsersRepository {
       return null;
     }
 
-    const row = await prisma.user.findUnique({
+    const row = await this.client.user.findUnique({
       where: { email: normalizedEmail },
       include: {
         accesses: {
@@ -190,30 +307,8 @@ export class PrismaUsersRepository implements UsersRepository {
       "PrismaUsersRepository.create",
     );
     const passwordHash = await bcrypt.hash(password, 10);
-    const websiteIds = accessWebsiteIds(user);
-
-    await prisma.user.create({
-      data: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        status: user.status,
-        role: user.rbac.role,
-        defaultWebsiteId: user.rbac.defaultWebsiteId,
-        passwordHash,
-        createdAt: new Date(user.meta.createdAt),
-        updatedAt: new Date(user.meta.updatedAt),
-        lastLoginAt: user.meta.lastLoginAt
-          ? new Date(user.meta.lastLoginAt)
-          : null,
-        ...(user.demo ? { demo: toPrismaDemoMeta(user.demo) } : {}),
-        accesses: {
-          create: websiteIds.map((websiteId) => ({
-            websiteId,
-            role: toWebsiteRole(user.rbac.role),
-          })),
-        },
-      },
+    await this.client.user.create({
+      data: toPrismaUserData({ user, passwordHash }),
     });
 
     return user;
@@ -223,7 +318,7 @@ export class PrismaUsersRepository implements UsersRepository {
     const next = assertValidUserForWrite(user, "PrismaUsersRepository.put");
     const websiteIds = accessWebsiteIds(next);
 
-    await prisma.$transaction(async (tx) => {
+    await this.client.$transaction(async (tx) => {
       const existing = await tx.user.findUnique({
         where: { id: next.id },
         select: { id: true },
@@ -268,6 +363,132 @@ export class PrismaUsersRepository implements UsersRepository {
     });
   }
 
+  /**
+   * Persists an admin-created user and any missing standard Websites as one
+   * PostgreSQL transaction. Demo provisioning intentionally keeps using
+   * `create()` so it cannot create standard Websites implicitly.
+   */
+  async createUserWithWebsiteProvisioning(input: {
+    user: User;
+    password: string;
+  }): Promise<User> {
+    const password = String(input.password ?? "").trim();
+
+    if (!password) {
+      throw new Error(
+        "PrismaUsersRepository.createUserWithWebsiteProvisioning: password is required.",
+      );
+    }
+
+    const user = assertValidUserForWrite(
+      input.user,
+      "PrismaUsersRepository.createUserWithWebsiteProvisioning",
+    );
+    const passwordHash = await bcrypt.hash(password, 10);
+    const websiteIds = accessWebsiteIds(user);
+
+    await this.client.$transaction(async (tx) => {
+      await provisionStandardWebsites(tx, websiteIds);
+      await tx.user.create({ data: toPrismaUserData({ user, passwordHash }) });
+    });
+
+    return user;
+  }
+
+  /**
+   * Persists an admin user patch atomically with RBAC Website provisioning.
+   * A password hash is computed before the transaction; it is never written
+   * separately from the corresponding user/access update.
+   */
+  async updateUserWithWebsiteProvisioning(
+    input: UpdateAdminUserProvisioningInput,
+  ): Promise<User> {
+    const password = input.password?.trim();
+    const passwordHash = password ? await bcrypt.hash(password, 10) : undefined;
+
+    return this.client.$transaction(async (tx) => {
+      const existing = await tx.user.findUnique({
+        where: { id: input.userId },
+        include: {
+          accesses: {
+            orderBy: [{ websiteId: "asc" }],
+            select: { websiteId: true, role: true },
+          },
+        },
+      });
+
+      if (!existing) {
+        throw new DomainError({
+          code: EC.USER_NOT_FOUND,
+          message: EC.USER_NOT_FOUND,
+          details: { path: ["userId"], meta: { userId: input.userId } },
+        });
+      }
+
+      const data: Prisma.UserUpdateInput = {
+        updatedAt: new Date(input.updatedAt),
+      };
+      const scalarChanges = input.scalarChanges;
+
+      if (scalarChanges?.email && scalarChanges.email !== existing.email) {
+        const conflict = await tx.user.findUnique({
+          where: { email: scalarChanges.email },
+          select: { id: true },
+        });
+
+        if (conflict && conflict.id !== input.userId) {
+          throw new DomainError({
+            code: EC.USER_EMAIL_CONFLICT,
+            message: EC.USER_EMAIL_CONFLICT,
+            details: { path: ["email"], meta: { email: scalarChanges.email } },
+          });
+        }
+      }
+
+      if (scalarChanges?.email) data.email = scalarChanges.email;
+      if (scalarChanges?.name) data.name = scalarChanges.name;
+      if (scalarChanges?.status) data.status = scalarChanges.status;
+      if (passwordHash) data.passwordHash = passwordHash;
+
+      const rbacChange = input.rbacChange;
+      const websiteIds = rbacChange ? [...rbacChange.websiteIds] : [];
+
+      if (rbacChange) {
+        await provisionStandardWebsites(tx, websiteIds);
+        data.role = rbacChange.role;
+        data.defaultWebsiteId = rbacChange.defaultWebsiteId;
+      }
+
+      await tx.user.update({
+        where: { id: input.userId },
+        data,
+      });
+
+      if (rbacChange) {
+        await tx.websiteAccess.deleteMany({ where: { userId: input.userId } });
+        await tx.websiteAccess.createMany({
+          data: websiteIds.map((websiteId) => ({
+            userId: input.userId,
+            websiteId,
+            role: toWebsiteRole(rbacChange.role),
+          })),
+        });
+      }
+
+      const updated = await tx.user.findUniqueOrThrow({
+        where: { id: input.userId },
+        include: {
+          accesses: {
+            orderBy: [{ websiteId: "asc" }],
+            select: { websiteId: true, role: true },
+          },
+        },
+      });
+
+      return toDomainUser(updated);
+    });
+  }
+
   async putMany(users: ReadonlyArray<User>): Promise<void> {
     for (const user of users) {
       await this.put(user);
@@ -282,7 +503,7 @@ export class PrismaUsersRepository implements UsersRepository {
       return;
     }
 
-    const existing = await prisma.user.findUnique({
+    const existing = await this.client.user.findUnique({
       where: { id },
       select: { id: true },
     });
@@ -293,7 +514,7 @@ export class PrismaUsersRepository implements UsersRepository {
 
     const passwordHash = await bcrypt.hash(pwd, 10);
 
-    await prisma.user.update({
+    await this.client.user.update({
       where: { id },
       data: { passwordHash },
     });
@@ -306,7 +527,7 @@ export class PrismaUsersRepository implements UsersRepository {
       return false;
     }
 
-    const row = await prisma.user.findUnique({
+    const row = await this.client.user.findUnique({
       where: { id },
       select: { passwordHash: true },
     });
@@ -327,7 +548,7 @@ export class PrismaUsersRepository implements UsersRepository {
       return;
     }
 
-    await prisma.user.deleteMany({
+    await this.client.user.deleteMany({
       where: { id },
     });
   }
@@ -339,7 +560,7 @@ export class PrismaUsersRepository implements UsersRepository {
       return;
     }
 
-    await prisma.user.deleteMany({
+    await this.client.user.deleteMany({
       where: { email: normalizedEmail },
     });
   }
@@ -351,7 +572,7 @@ export class PrismaUsersRepository implements UsersRepository {
       return false;
     }
 
-    const count = await prisma.user.count({ where: { id } });
+    const count = await this.client.user.count({ where: { id } });
 
     return count > 0;
   }
@@ -363,7 +584,7 @@ export class PrismaUsersRepository implements UsersRepository {
       return false;
     }
 
-    const count = await prisma.user.count({
+    const count = await this.client.user.count({
       where: { email: normalizedEmail },
     });
 
@@ -371,7 +592,7 @@ export class PrismaUsersRepository implements UsersRepository {
   }
 
   async list(): Promise<ReadonlyArray<UserSummary>> {
-    const rows = await prisma.user.findMany({
+    const rows = await this.client.user.findMany({
       orderBy: [{ email: "asc" }],
       select: {
         id: true,
@@ -397,7 +618,7 @@ export class PrismaUsersRepository implements UsersRepository {
       return normalizedIds.map(() => null);
     }
 
-    const rows = await prisma.user.findMany({
+    const rows = await this.client.user.findMany({
       where: { id: { in: uniqueIds } },
       include: {
         accesses: {

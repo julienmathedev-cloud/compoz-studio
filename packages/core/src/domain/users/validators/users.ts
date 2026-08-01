@@ -25,6 +25,8 @@ function normalizeLower(value: unknown): string {
   return normalizeString(value).toLowerCase();
 }
 
+const STANDARD_WEBSITE_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 function assertNonEmptyString(args: {
   value: unknown;
   code: ErrorCode;
@@ -120,9 +122,30 @@ export function assertWebsiteIds(
     });
   }
 
-  const websiteIds = Array.from(
-    new Set(raw.map((websiteId) => normalizeLower(websiteId)).filter(Boolean)),
-  );
+  const websiteIds = raw.map((websiteId) => normalizeLower(websiteId));
+
+  if (
+    websiteIds.some(
+      (websiteId) =>
+        websiteId.length < 2 ||
+        websiteId.length > 63 ||
+        !STANDARD_WEBSITE_ID_PATTERN.test(websiteId),
+    )
+  ) {
+    throw new DomainError({
+      code: EC.USER_WEBSITE_IDS_INVALID,
+      message: EC.USER_WEBSITE_IDS_INVALID,
+      details: { path, meta: { reason: "invalid_website_id" } },
+    });
+  }
+
+  if (new Set(websiteIds).size !== websiteIds.length) {
+    throw new DomainError({
+      code: EC.USER_WEBSITE_IDS_INVALID,
+      message: EC.USER_WEBSITE_IDS_INVALID,
+      details: { path, meta: { reason: "duplicate_website_id" } },
+    });
+  }
 
   const wildcardIndex = websiteIds.indexOf("*");
 

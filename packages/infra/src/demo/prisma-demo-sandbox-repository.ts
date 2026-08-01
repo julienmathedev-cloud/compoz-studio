@@ -5,6 +5,7 @@
  */
 
 import type { DemoSandbox } from "@compoz/core/domain/demo/entities/demo-sandbox";
+import { assertDemoSandboxWebsiteIdentity } from "@compoz/core/domain/demo/assert-demo-sandbox-website-identity";
 import type { DemoSandboxRepository } from "@compoz/core/domain/demo/ports/demo-sandbox-repository";
 
 import { prisma } from "@compoz/infra/prisma/prisma-client";
@@ -66,6 +67,25 @@ export class PrismaDemoSandboxRepository implements DemoSandboxRepository {
     return row ? toDomainSandbox(row) : null;
   }
 
+  async readWebsiteById(websiteId: string) {
+    const id = normalizeWebsiteId(websiteId);
+
+    if (!id) return null;
+
+    const row = await prisma.website.findUnique({
+      where: { id },
+      select: { id: true, type: true, expiresAt: true },
+    });
+
+    return row
+      ? {
+          id: row.id,
+          type: row.type,
+          expiresAt: row.expiresAt?.toISOString() ?? null,
+        }
+      : null;
+  }
+
   async put(sandbox: DemoSandbox): Promise<void> {
     const demoInstanceId = normalizeDemoInstanceId(sandbox.demoInstanceId);
     const userId = String(sandbox.userId ?? "").trim();
@@ -78,6 +98,8 @@ export class PrismaDemoSandboxRepository implements DemoSandboxRepository {
         "PrismaDemoSandboxRepository.put: sandbox is incomplete.",
       );
     }
+
+    assertDemoSandboxWebsiteIdentity({ demoInstanceId, websiteId });
 
     if (
       Number.isNaN(expiresAt.getTime()) ||

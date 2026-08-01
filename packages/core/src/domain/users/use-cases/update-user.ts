@@ -10,6 +10,10 @@ import { ERROR_CODES as EC } from "@compoz/core/domain/errors/codes";
 import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import type { User } from "@compoz/core/domain/users/entities/user";
 import type {
+  AdminUserRbacChange,
+  AdminUserScalarChanges,
+} from "@compoz/core/domain/users/ports/admin-user-provisioning-transaction";
+import type {
   UpdateUserDeps,
   UpdateUserInput,
   UpdateUserResult,
@@ -27,6 +31,7 @@ type Mutable<T> = { -readonly [K in keyof T]: T[K] };
 
 export function updateUser({
   users,
+  adminUserProvisioning,
   nowIso = () => new Date().toISOString(),
 }: UpdateUserDeps) {
   return async function run(input: UpdateUserInput): Promise<UpdateUserResult> {
@@ -54,6 +59,12 @@ export function updateUser({
 
     const next = { ...existing } as Mutable<User>;
     const changed: ChangedKey[] = [];
+    const scalarChanges: {
+      email?: string;
+      name?: string;
+      status?: User["status"];
+    } = {};
+    let rbacChange: AdminUserRbacChange | undefined;
 
     if (typeof input.email === "string") {
       const email = assertUserEmail(input.email, ["email"]);
@@ -70,6 +81,7 @@ export function updateUser({
         }
 
         next.email = email;
+        scalarChanges.email = email;
         changed.push("email");
       }
     }
@@ -79,6 +91,7 @@ export function updateUser({
 
       if (name !== existing.name) {
         next.name = name;
+        scalarChanges.name = name;
         changed.push("name");
       }
     }
@@ -88,6 +101,7 @@ export function updateUser({
 
       if (status !== existing.status) {
         next.status = status;
+        scalarChanges.status = status;
         changed.push("status");
       }
     }
@@ -105,12 +119,15 @@ export function updateUser({
 
       if (!same) {
         next.rbac = rbac;
+        rbacChange = rbac;
         changed.push("rbac");
       }
     }
 
+    let password: string | undefined;
+
     if (typeof input.password === "string") {
-      const password = input.password.trim();
+      password = input.password.trim();
 
       if (!password) {
         throw new DomainError({
@@ -120,16 +137,37 @@ export function updateUser({
         });
       }
 
-      await users.setPassword(userId, password);
     }
 
-    if (changed.length === 0) {
+    if (changed.length === 0 && !password) {
       return { user: existing };
     }
 
-    next.meta = { ...existing.meta, updatedAt: nowIso() };
+    if (changed.length > 0 || password) {
+      next.meta = { ...existing.meta, updatedAt: nowIso() };
+    }
 
-    await users.put(next);
+    if (adminUserProvisioning) {
+      const user = await adminUserProvisioning.updateUserWithWebsiteProvisioning({
+        userId,
+        ...(Object.keys(scalarChanges).length > 0
+          ? { scalarChanges: scalarChanges as AdminUserScalarChanges }
+          : {}),
+        ...(rbacChange ? { rbacChange } : {}),
+        ...(password ? { password } : {}),
+        updatedAt: next.meta.updatedAt,
+      });
+
+      return { user };
+    }
+
+    if (password) {
+      await users.setPassword(userId, password);
+    }
+
+    if (changed.length > 0) {
+      await users.put(next);
+    }
 
     return { user: next };
   };

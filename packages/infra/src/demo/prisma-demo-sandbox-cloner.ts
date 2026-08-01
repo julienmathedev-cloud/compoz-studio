@@ -5,6 +5,7 @@
  */
 
 import { CONTENT_STATE } from "@compoz/core/constants/common/content-state";
+import { assertDemoSandboxWebsiteIdentity } from "@compoz/core/domain/demo/assert-demo-sandbox-website-identity";
 import type {
   DemoSandboxCloneResult,
   DemoSandboxCloner,
@@ -81,10 +82,15 @@ function normalizeWebsiteId(value: unknown): string {
 export class PrismaDemoSandboxCloner implements DemoSandboxCloner {
   async cloneSeedToWebsite(args: {
     sourceWebsiteId: string;
+    demoInstanceId: string;
     targetWebsiteId: string;
   }): Promise<DemoSandboxCloneResult> {
     const sourceWebsiteId = normalizeWebsiteId(args.sourceWebsiteId);
     const targetWebsiteId = normalizeWebsiteId(args.targetWebsiteId);
+    const { demoInstanceId } = assertDemoSandboxWebsiteIdentity({
+      demoInstanceId: args.demoInstanceId,
+      websiteId: targetWebsiteId,
+    });
 
     if (!sourceWebsiteId) {
       throw new Error(
@@ -138,6 +144,8 @@ export class PrismaDemoSandboxCloner implements DemoSandboxCloner {
 
     const pages = assertAllPagesResolved(pageIds, rawPages);
 
+    let websiteCreated = false;
+
     try {
       await prisma.website.create({
         data: {
@@ -148,6 +156,7 @@ export class PrismaDemoSandboxCloner implements DemoSandboxCloner {
           sourceWebsiteId: sourceWebsite.id,
         },
       });
+      websiteCreated = true;
 
       const targetSite = getSiteRepository({ websiteId: targetWebsiteId });
       const targetSettings = getDraftSiteSettingsInitializer({
@@ -179,8 +188,19 @@ export class PrismaDemoSandboxCloner implements DemoSandboxCloner {
         );
       }
     } catch (error) {
-      // Roll back the sandbox website when cloning fails, without masking the original error.
-      await this.deleteSandboxWebsite(targetWebsiteId).catch(() => undefined);
+      if (!websiteCreated) {
+        throw error;
+      }
+
+      try {
+        await this.deleteSandboxWebsite({ demoInstanceId, websiteId: targetWebsiteId });
+      } catch (rollbackError) {
+        throw new AggregateError(
+          [rollbackError],
+          "Demo sandbox cloning failed and Website rollback failed.",
+          { cause: error },
+        );
+      }
 
       throw error;
     }
@@ -190,29 +210,27 @@ export class PrismaDemoSandboxCloner implements DemoSandboxCloner {
     };
   }
 
-  async deleteSandboxWebsite(websiteId: string): Promise<void> {
-    const targetWebsiteId = normalizeWebsiteId(websiteId);
-
-    if (!targetWebsiteId) {
-      return;
-    }
-
-    // Avoid deleting a sandbox website when media cleanup is not guaranteed yet.
-    const mediaAssets = await prisma.mediaAsset.count({
-      where: {
-        websiteId: targetWebsiteId,
-      },
+  async deleteSandboxWebsite(args: {
+    demoInstanceId: string;
+    websiteId: string;
+  }): Promise<void> {
+    const targetWebsiteId = normalizeWebsiteId(args.websiteId);
+    assertDemoSandboxWebsiteIdentity({
+      demoInstanceId: args.demoInstanceId,
+      websiteId: targetWebsiteId,
     });
 
-    if (mediaAssets > 0) {
-      return;
+    const website = await prisma.website.findUnique({
+      where: { id: targetWebsiteId },
+      select: { id: true, type: true },
+    });
+
+    if (!website || website.type !== "sandbox") {
+      throw new Error(
+        "PrismaDemoSandboxCloner.deleteSandboxWebsite: target Website is not a sandbox.",
+      );
     }
 
-    await prisma.website.deleteMany({
-      where: {
-        id: targetWebsiteId,
-        type: "sandbox",
-      },
-    });
+    await prisma.website.delete({ where: { id: targetWebsiteId } });
   }
 }

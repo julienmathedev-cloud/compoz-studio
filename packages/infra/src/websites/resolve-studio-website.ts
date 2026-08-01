@@ -34,6 +34,8 @@ type WebsiteRow = Readonly<{
   id: string;
   slug: string;
   name: string;
+  type: "site" | "sandbox";
+  expiresAt: Date | null;
 }>;
 
 function normalizeId(input: unknown): string {
@@ -68,24 +70,30 @@ function toResolution(
 
 async function readStudioWebsiteById(
   websiteId: string,
+  now: Date,
 ): Promise<WebsiteRow | null> {
   if (!websiteId) {
     return null;
   }
 
-  return prisma.website.findFirst({
+  const website = await prisma.website.findFirst({
     where: {
       id: websiteId,
-      type: {
-        in: ["site", "sandbox"],
-      },
     },
     select: {
       id: true,
       slug: true,
       name: true,
+      type: true,
+      expiresAt: true,
     },
   });
+
+  if (!website) return null;
+
+  if (website.type === "site") return website;
+
+  return website.expiresAt && website.expiresAt > now ? website : null;
 }
 
 async function readFallbackWebsite(): Promise<WebsiteRow | null> {
@@ -98,6 +106,8 @@ async function readFallbackWebsite(): Promise<WebsiteRow | null> {
       id: true,
       slug: true,
       name: true,
+      type: true,
+      expiresAt: true,
     },
   });
 }
@@ -116,11 +126,13 @@ function canUseWebsite(args: {
 export async function resolveStudioWebsite(args: {
   activeWebsiteId?: string | null;
   user: StudioWebsiteResolverUser;
+  now?: () => Date;
 }): Promise<StudioWebsiteResolution> {
   const allowedWebsiteIds = normalizeUniqueIds(args.user.accessibleWebsiteIds);
   const activeWebsiteId = normalizeId(args.activeWebsiteId);
   const defaultWebsiteId = normalizeId(args.user.defaultWebsiteId);
   const isAdmin = isAdminRole(args.user.role);
+  const now = args.now?.() ?? new Date();
 
   if (
     isAdmin &&
@@ -130,7 +142,7 @@ export async function resolveStudioWebsite(args: {
       allowedWebsiteIds,
     })
   ) {
-    const website = await readStudioWebsiteById(activeWebsiteId);
+    const website = await readStudioWebsiteById(activeWebsiteId, now);
 
     if (website) {
       return toResolution(website, "cookie");
@@ -144,7 +156,7 @@ export async function resolveStudioWebsite(args: {
       allowedWebsiteIds,
     })
   ) {
-    const website = await readStudioWebsiteById(defaultWebsiteId);
+    const website = await readStudioWebsiteById(defaultWebsiteId, now);
 
     if (website) {
       return toResolution(website, "user-default");
@@ -152,7 +164,7 @@ export async function resolveStudioWebsite(args: {
   }
 
   if (!isAdmin && allowedWebsiteIds.length === 1) {
-    const website = await readStudioWebsiteById(allowedWebsiteIds[0] ?? "");
+    const website = await readStudioWebsiteById(allowedWebsiteIds[0] ?? "", now);
 
     if (website) {
       return toResolution(website, "first-accessible");
@@ -164,9 +176,9 @@ export async function resolveStudioWebsite(args: {
   }
 
   for (const websiteId of allowedWebsiteIds) {
-    const website = await readStudioWebsiteById(websiteId);
+    const website = await readStudioWebsiteById(websiteId, now);
 
-    if (website) {
+    if (website?.type === "site") {
       return toResolution(website, "first-accessible");
     }
   }

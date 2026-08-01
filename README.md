@@ -155,7 +155,7 @@ Optional variables are used for integrations and operational behavior:
 - `BLOB_READ_WRITE_TOKEN`: required for media operations; Vercel Blob is the only supported media backend.
 - `MAX_IMAGE_UPLOAD_BYTES` and `NEXT_PUBLIC_MAX_IMAGE_UPLOAD_BYTES`: image upload size limits.
 - `COMPOZ_REVALIDATE_SECRET`: protects public site revalidation routes.
-- `COMPOZ_CRON_SECRET`: protects internal cleanup routes.
+- `CRON_SECRET`: protects internal cleanup routes.
 - `RESEND_API_KEY` and `CONTACT_FROM_EMAIL`: contact form email delivery.
 - `KV_REST_API_URL`: Upstash Redis endpoint.
 - `KV_REST_API_TOKEN`: Upstash Redis token.

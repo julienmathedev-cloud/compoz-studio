@@ -25,7 +25,8 @@ export interface UserDemoMeta {
 /**
  * User role and website access scope.
  * @remarks
- * `websiteIds` may contain `"*"` to represent global admin access.
+ * Website IDs are explicit, normalized standard Website identifiers; wildcard
+ * access is not supported.
  */
 export interface UserRbac {
   readonly role: UserRole;

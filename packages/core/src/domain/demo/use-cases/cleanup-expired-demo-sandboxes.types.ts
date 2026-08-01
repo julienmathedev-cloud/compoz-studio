@@ -5,10 +5,14 @@
  */
 
 import type { DemoSandboxRepository } from "@compoz/core/domain/demo/ports/demo-sandbox-repository";
+import type { DemoSandbox } from "@compoz/core/domain/demo/entities/demo-sandbox";
 import type { UsersRepository } from "@compoz/core/domain/users/ports/users-repository";
 
 export interface DemoSandboxDataCleaner {
-  deleteSandboxData(websiteId: string): Promise<void>;
+  deleteExpiredSandbox(
+    sandbox: DemoSandbox,
+    nowIso: string,
+  ): Promise<"cleaned" | "skipped">;
 }
 
 export interface CleanupExpiredDemoSandboxesDeps {
@@ -36,7 +40,7 @@ export type CleanupExpiredDemoSandboxesResult = Readonly<{
     demoInstanceId: string;
     websiteId: string;
     userId: string;
-    status: "cleaned" | "failed";
+    status: "cleaned" | "skipped" | "failed";
     error?: string;
   }>;
 }>;

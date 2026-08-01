@@ -8,12 +8,20 @@
 
 import type { DemoSandbox } from "@compoz/core/domain/demo/entities/demo-sandbox";
 
+export type DemoSandboxWebsite = Readonly<{
+  id: string;
+  type: "site" | "sandbox";
+  expiresAt: string | null;
+}>;
+
 export interface DemoSandboxRepository {
   ensureBase(): Promise<void>;
 
   list(): Promise<ReadonlyArray<DemoSandbox>>;
 
   readByDemoInstanceId(demoInstanceId: string): Promise<DemoSandbox | null>;
+
+  readWebsiteById(websiteId: string): Promise<DemoSandboxWebsite | null>;
 
   put(sandbox: DemoSandbox): Promise<void>;
 

@@ -127,7 +127,10 @@ export async function PATCH(req: Request, ctx: { params: unknown }) {
 
       const payload = adaptUpdateUserPayload(dto);
 
-      const runUpdate = updateUser({ users: usersRepo });
+      const runUpdate = updateUser({
+        users: usersRepo,
+        adminUserProvisioning: usersRepo,
+      });
       const { user } = await runUpdate({ userId, ...payload });
 
       lg.debug("route.user.updated", {

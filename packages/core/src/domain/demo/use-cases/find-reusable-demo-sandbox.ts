@@ -11,6 +11,7 @@ import type {
   FindReusableDemoSandboxInput,
   FindReusableDemoSandboxResult,
 } from "@compoz/core/domain/demo/use-cases/find-reusable-demo-sandbox.types";
+import { assertDemoSandboxWebsiteIdentity } from "@compoz/core/domain/demo/assert-demo-sandbox-website-identity";
 import {
   ERROR_CODES as EC,
   type ErrorCode,
@@ -66,6 +67,11 @@ export function findReusableDemoSandbox({
         },
       });
     }
+
+    assertDemoSandboxWebsiteIdentity({
+      demoInstanceId: sandbox.demoInstanceId,
+      websiteId: sandbox.websiteId,
+    });
 
     const now = nowIso();
 
@@ -146,6 +152,54 @@ export function findReusableDemoSandbox({
             sandboxWebsiteId: sandbox.websiteId,
             userDefaultWebsiteId: user.rbac.defaultWebsiteId,
             reason: "DEMO_SANDBOX_WEBSITE_MISMATCH",
+          },
+        },
+      });
+    }
+
+    if (!user.rbac.websiteIds.includes(sandbox.websiteId)) {
+      throw new DomainError({
+        code: EC.FORBIDDEN,
+        message: EC.FORBIDDEN,
+        details: {
+          path: ["user", "rbac", "websiteIds"],
+          meta: {
+            demoInstanceId,
+            userId: user.id,
+            websiteId: sandbox.websiteId,
+            reason: "DEMO_SANDBOX_ACCESS_MISSING",
+          },
+        },
+      });
+    }
+
+    const website = await demoSandboxes.readWebsiteById(sandbox.websiteId);
+
+    if (!website || website.type !== "sandbox") {
+      throw new DomainError({
+        code: EC.NOT_FOUND,
+        message: EC.NOT_FOUND,
+        details: {
+          path: ["websiteId"],
+          meta: {
+            demoInstanceId,
+            websiteId: sandbox.websiteId,
+            reason: "DEMO_SANDBOX_WEBSITE_NOT_FOUND_OR_INVALID",
+          },
+        },
+      });
+    }
+
+    if (!website.expiresAt || isExpired(website.expiresAt, now)) {
+      throw new DomainError({
+        code: EC.FORBIDDEN,
+        message: EC.FORBIDDEN,
+        details: {
+          path: ["website", "expiresAt"],
+          meta: {
+            demoInstanceId,
+            websiteId: sandbox.websiteId,
+            reason: "DEMO_SANDBOX_WEBSITE_EXPIRED",
           },
         },
       });

@@ -61,6 +61,7 @@ export function startDemoSandbox({
   findReusableDemoSandbox,
   createDemoSandboxFromSeed,
   registerDemoSandbox,
+  rollbackProvisionedSandbox,
   nowIso = () => new Date().toISOString(),
   ttlMs,
 }: StartDemoSandboxDeps) {
@@ -100,12 +101,32 @@ export function startDemoSandbox({
       expiresAt,
     });
 
-    const registered = await registerDemoSandbox({
-      demoInstanceId: created.demoInstanceId,
-      userId: created.user.id,
-      websiteId: created.websiteId,
-      expiresAt,
-    });
+    let registered;
+
+    try {
+      registered = await registerDemoSandbox({
+        demoInstanceId: created.demoInstanceId,
+        userId: created.user.id,
+        websiteId: created.websiteId,
+        expiresAt,
+      });
+    } catch (error) {
+      try {
+        await rollbackProvisionedSandbox({
+          demoInstanceId: created.demoInstanceId,
+          userId: created.user.id,
+          websiteId: created.websiteId,
+        });
+      } catch (rollbackError) {
+        throw new AggregateError(
+          [rollbackError],
+          "Demo sandbox registration failed and provisioning rollback failed.",
+          { cause: error },
+        );
+      }
+
+      throw error;
+    }
 
     return {
       mode: "created",

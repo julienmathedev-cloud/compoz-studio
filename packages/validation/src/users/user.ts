@@ -47,14 +47,19 @@ export const UserStatusSchema = z.enum(["active", "disabled"], {
 });
 
 /**
- * Website IDs are normalized at the boundary and cannot use the wildcard value.
+ * Website IDs trigger standard Website provisioning from the administration
+ * boundary, so they use the public slug convention rather than arbitrary IDs.
  */
 export const WebsiteIdSchema = z
   .string()
   .trim()
-  .min(1, ERROR_CODES.USER_WEBSITE_IDS_REQUIRED)
+  .min(2, ERROR_CODES.USER_WEBSITE_IDS_INVALID)
+  .max(63, ERROR_CODES.USER_WEBSITE_IDS_INVALID)
   .transform((value) => value.toLowerCase())
-  .refine((value) => value !== "*", ERROR_CODES.USER_WEBSITE_IDS_INVALID);
+  .refine(
+    (value) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value),
+    ERROR_CODES.USER_WEBSITE_IDS_INVALID,
+  );
 
 export const WebsiteIdsSchema = z
   .array(WebsiteIdSchema)

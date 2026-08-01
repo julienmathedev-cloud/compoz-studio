@@ -8,10 +8,12 @@
 
 import type { IdGenerator } from "@compoz/core/domain/ports/id-generator";
 import type { User, UserRbac } from "@compoz/core/domain/users/entities/user";
+import type { AdminUserProvisioningTransaction } from "@compoz/core/domain/users/ports/admin-user-provisioning-transaction";
 import type { UsersRepository } from "@compoz/core/domain/users/ports/users-repository";
 
 export interface CreateUserDeps {
   users: UsersRepository;
+  adminUserProvisioning?: AdminUserProvisioningTransaction;
   idGenerator: IdGenerator;
   nowIso?: () => string;
 }

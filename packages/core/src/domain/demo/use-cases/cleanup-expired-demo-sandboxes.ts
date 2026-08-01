@@ -63,22 +63,19 @@ export function cleanupExpiredDemoSandboxes({
       demoInstanceId: string;
       websiteId: string;
       userId: string;
-      status: "cleaned" | "failed";
+      status: "cleaned" | "skipped" | "failed";
       error?: string;
     }> = [];
 
     for (const sandbox of expiredSandboxes) {
       try {
-        await sandboxDataCleaner.deleteSandboxData(sandbox.websiteId);
-
-        await users.deleteById(sandbox.userId);
-        await demoSandboxes.deleteByDemoInstanceId(sandbox.demoInstanceId);
+        const status = await sandboxDataCleaner.deleteExpiredSandbox(sandbox, now);
 
         items.push({
           demoInstanceId: sandbox.demoInstanceId,
           websiteId: sandbox.websiteId,
           userId: sandbox.userId,
-          status: "cleaned",
+          status,
         });
       } catch (error) {
         items.push({

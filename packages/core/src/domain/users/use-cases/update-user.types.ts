@@ -11,6 +11,7 @@ import type {
   UserRbac,
   UserStatus,
 } from "@compoz/core/domain/users/entities/user";
+import type { AdminUserProvisioningTransaction } from "@compoz/core/domain/users/ports/admin-user-provisioning-transaction";
 import type { UsersRepository } from "@compoz/core/domain/users/ports/users-repository";
 
 export type UpdateUserInput = {
@@ -28,5 +29,6 @@ export type UpdateUserResult = {
 
 export type UpdateUserDeps = {
   users: UsersRepository;
+  adminUserProvisioning?: AdminUserProvisioningTransaction;
   nowIso?: () => string;
 };

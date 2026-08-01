@@ -16,33 +16,14 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 
+import { log } from "@compoz/infra/lib/log";
+import { isAuthorizedCronRequest } from "@compoz/studio/app/api/internal/demo/cleanup/cron-auth";
 import { runCleanupExpiredDemoSandboxes } from "@compoz/studio/lib/demo/cleanup-expired-demo-sandboxes";
 
 export const runtime = "nodejs";
 
-const CRON_SECRET_HEADER = "x-cron-secret" as const;
-
-function getCronSecret(): string {
-  const secret = String(process.env["COMPOZ_CRON_SECRET"] ?? "").trim();
-
-  if (!secret) {
-    throw new Error("Missing COMPOZ_CRON_SECRET.");
-  }
-
-  return secret;
-}
-
-function isAuthorized(req: Request): boolean {
-  const expectedSecret = getCronSecret();
-  const receivedSecret = String(
-    req.headers.get(CRON_SECRET_HEADER) ?? "",
-  ).trim();
-
-  return Boolean(receivedSecret) && receivedSecret === expectedSecret;
-}
-
-export async function POST(req: Request) {
-  if (!isAuthorized(req)) {
+export async function GET(req: Request) {
+  if (!isAuthorizedCronRequest(req)) {
     return NextResponse.json(
       {
         error: {
@@ -58,8 +39,27 @@ export async function POST(req: Request) {
     continueOnError: true,
   });
 
-  return NextResponse.json({
-    ok: true,
-    cleanup: result,
-  });
+  for (const item of result.items) {
+    if (item.status === "failed") {
+      log.error("demo.sandbox.cleanup.failed", {
+        demoInstanceId: item.demoInstanceId,
+        websiteId: item.websiteId,
+        userId: item.userId,
+        errorName: item.error?.split(":")[0] || "Error",
+      });
+    }
+  }
+
+  return NextResponse.json(
+    {
+      ok: result.failed === 0,
+      cleanup: {
+        total: result.total,
+        expired: result.expired,
+        cleaned: result.cleaned,
+        failed: result.failed,
+      },
+    },
+    { status: result.failed > 0 ? 503 : 200 },
+  );
 }

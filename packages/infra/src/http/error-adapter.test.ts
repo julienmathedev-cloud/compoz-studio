@@ -158,6 +158,21 @@ void test("keeps errors without details in their existing shape", () => {
   assert.equal("details" in response.body, false);
 });
 
+void test("maps a non-assignable Website to a stable client error", () => {
+  const response = toHttpError(
+    new DomainError({
+      code: ERROR_CODES.USER_WEBSITE_IDS_INVALID,
+      details: {
+        path: ["rbac", "websiteIds"],
+        meta: { websiteId: "demo-instance", reason: "WEBSITE_NOT_ASSIGNABLE" },
+      },
+    }),
+  );
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body.code, ERROR_CODES.USER_WEBSITE_IDS_INVALID);
+});
+
 void test("keeps Zod errors on the existing validation-error path", () => {
   const parsed = FooterSettingsSchema.safeParse({
     copyright: "Compoz",

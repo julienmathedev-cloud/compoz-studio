@@ -59,6 +59,10 @@ import {
   settingsConflictId,
   type SettingsConflictScope,
 } from "@compoz/studio/features/settings/conflicts/settings-conflict-id";
+import {
+  canReuseSettingsLoad,
+  type InFlightSettingsLoad,
+} from "@compoz/studio/features/settings/hooks/settings-load-deduplication";
 
 /** Minimal translation function contract compatible with next-intl. */
 export type TFunc = (
@@ -184,11 +188,7 @@ export function useSettingsResource<T extends object>({
   const pendingLoadsRef = useRef<number>(0);
 
   /** Reuses identical in-flight loads and aborts stale loads for different states. */
-  const inFlightLoadRef = useRef<{
-    state: ContentState;
-    promise: Promise<T>;
-    ctrl: AbortController;
-  } | null>(null);
+  const inFlightLoadRef = useRef<InFlightSettingsLoad<T> | null>(null);
 
   const abortCurrent = useCallback(() => {
     ctrlRef.current?.abort();
@@ -274,7 +274,7 @@ export function useSettingsResource<T extends object>({
 
       // Reuse an identical in-flight load instead of starting a duplicate request.
       const inFlight = inFlightLoadRef.current;
-      if (inFlight && inFlight.state === state) {
+      if (canReuseSettingsLoad(inFlight, state)) {
         return inFlight.promise;
       }
 

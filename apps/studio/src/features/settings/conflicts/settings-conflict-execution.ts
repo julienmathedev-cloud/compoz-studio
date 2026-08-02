@@ -32,7 +32,7 @@ export async function executeSettingsCurrentAdoption<T extends object>(input: Re
 }
 
 export type SettingsApplyExecutionResult<T extends object> =
-  | Readonly<{ status: "success"; value: T }>
+  | Readonly<{ status: "success"; value: T; outcome: MutationOutcome }>
   | Readonly<{ status: "error"; error: unknown }>;
 
 export async function executeSettingsConflictApply<T extends object>(input: Readonly<{
@@ -50,12 +50,13 @@ export async function executeSettingsConflictApply<T extends object>(input: Read
     if (input.plan.status === "noChanges") {
       input.current.adoptCache();
       input.commit(input.current.value);
-      return { status: "success", value: input.current.value };
+      input.onMutationResult(input.current.value, "noChanges");
+      return { status: "success", value: input.current.value, outcome: "noChanges" };
     }
     const saved = await input.mutate(input.plan.payload, input.signal);
     input.commit(saved.value);
     input.onMutationResult(saved.value, saved.outcome);
-    return { status: "success", value: saved.value };
+    return { status: "success", value: saved.value, outcome: saved.outcome };
   } catch (error: unknown) {
     rollback();
     return { status: "error", error };

@@ -37,6 +37,7 @@ void test("adopting current performs no mutation and rolls back partial effects 
 void test("noChanges adopts locally without mutation", async () => {
   let mutations = 0;
   let cacheWrites = 0;
+  let mutationCallbacks = 0;
   let committed: Values | null = null;
   const result = await executeSettingsConflictApply({
     plan: { status: "noChanges", value: current.value, baseline: current.value, expectedRevision: 9 },
@@ -45,10 +46,17 @@ void test("noChanges adopts locally without mutation", async () => {
     adoptSnapshot: (_value, revision) => { assert.equal(revision, 9); return () => void 0; },
     mutate: async () => { mutations += 1; return { value: { title: "Unexpected" }, outcome: "updated" }; },
     commit: (value) => { committed = value; },
-    onMutationResult: () => undefined,
+    onMutationResult: (value, outcome) => {
+      mutationCallbacks += 1;
+      assert.deepEqual(value, current.value);
+      assert.equal(outcome, "noChanges");
+    },
   });
   assert.equal(result.status, "success");
-  assert.deepEqual({ mutations, cacheWrites, committed }, { mutations: 0, cacheWrites: 1, committed: current.value });
+  assert.deepEqual(
+    { mutations, cacheWrites, mutationCallbacks, committed },
+    { mutations: 0, cacheWrites: 1, mutationCallbacks: 1, committed: current.value },
+  );
 });
 
 void test("mutation uses the semantic payload once and rolls the OCC snapshot back on error", async () => {

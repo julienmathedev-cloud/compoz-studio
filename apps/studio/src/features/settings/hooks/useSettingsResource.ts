@@ -55,6 +55,7 @@ import {
   executeSettingsConflictApply,
   executeSettingsCurrentAdoption,
 } from "@compoz/studio/features/settings/conflicts/settings-conflict-execution";
+import { executeSettingsAutomaticRebase } from "@compoz/studio/features/settings/conflicts/settings-conflict-auto-rebase";
 import {
   settingsConflictId,
   type SettingsConflictScope,
@@ -63,6 +64,7 @@ import {
   canReuseSettingsLoad,
   type InFlightSettingsLoad,
 } from "@compoz/studio/features/settings/hooks/settings-load-deduplication";
+import { SettingsSaveDeduplicator } from "@compoz/studio/features/settings/hooks/settings-save-deduplication";
 
 /** Minimal translation function contract compatible with next-intl. */
 export type TFunc = (
@@ -138,8 +140,9 @@ export function wrapSettingsSaveWithToasts<T extends object>(
   }>,
 ): (nextValues: T) => Promise<SettingsSaveResult<T>> {
   const { t, entityLabel, save } = params;
+  const deduplicator = new SettingsSaveDeduplicator<SettingsSaveResult<T>>();
 
-  return async (nextValues: T) => {
+  return (nextValues: T) => deduplicator.run(async () => {
     const result = await save(nextValues);
 
     if (result.status === "conflict") return result;
@@ -161,7 +164,7 @@ export function wrapSettingsSaveWithToasts<T extends object>(
     );
 
     return result;
-  };
+  });
 }
 
 export function useSettingsResource<T extends object>({
@@ -183,6 +186,9 @@ export function useSettingsResource<T extends object>({
   const [internalConflict, setInternalConflict] = useState<SettingsConflictMachineState<T>>({ phase: "idle" });
   const conflictSequenceRef = useRef(0);
   const conflictActionPendingRef = useRef(false);
+  const saveDeduplicator = useRef(
+    new SettingsSaveDeduplicator<SettingsSaveResult<T>>(),
+  ).current;
 
   const ctrlRef = useRef<AbortController | null>(null);
   const pendingLoadsRef = useRef<number>(0);
@@ -333,7 +339,7 @@ export function useSettingsResource<T extends object>({
     [abortCurrent],
   );
 
-  const save = useCallback(
+  const performSave = useCallback(
     async (nextValues: T): Promise<SettingsSaveResult<T>> => {
       abortCurrent();
 
@@ -342,13 +348,12 @@ export function useSettingsResource<T extends object>({
 
       setIsSaving(true);
       let attemptedLocal = nextValues;
+      const beforeSaveFn = beforeSaveRef.current;
+      const buildPatchFn = buildPatchRef.current;
+      const saverFn = saverRef.current;
+      const onMutationResultFn = onMutationResultRef.current;
 
       try {
-        const beforeSaveFn = beforeSaveRef.current;
-        const buildPatchFn = buildPatchRef.current;
-        const saverFn = saverRef.current;
-        const onMutationResultFn = onMutationResultRef.current;
-
         const candidate = (
           beforeSaveFn ? beforeSaveFn(nextValues) : nextValues
         ) as T;
@@ -386,20 +391,102 @@ export function useSettingsResource<T extends object>({
         const config = conflictConfigRef.current;
         const details = config ? getRevisionConflictDetails(error) : null;
         if (config && details) {
-          const opened = transitionSettingsConflict<T>({ phase: "idle" }, {
-            type: "open",
-            conflictId: settingsConflictId(
-              config.scope,
-              ++conflictSequenceRef.current,
-              details.currentRevision,
-            ),
-            baseline: structuredClone(baseline),
-            local: structuredClone(attemptedLocal),
+          const originalBaseline = structuredClone(baseline);
+          const originalLocal = structuredClone(attemptedLocal);
+          const publishInteractiveConflict = (input: Readonly<{
+            baseline: T;
+            local: T;
+            revision: number;
+            current?: SettingsConflictFreshCurrent<T>;
+            freshReadError?: string;
+          }>) => {
+            let state = transitionSettingsConflict<T>({ phase: "idle" }, {
+              type: "open",
+              conflictId: settingsConflictId(
+                config.scope,
+                ++conflictSequenceRef.current,
+                input.revision,
+              ),
+              baseline: structuredClone(input.baseline),
+              local: structuredClone(input.local),
+            });
+            if (input.current) {
+              state = transitionSettingsConflict(state, {
+                type: "freshReadSucceeded",
+                current: input.current,
+              });
+            } else if (input.freshReadError) {
+              state = transitionSettingsConflict(state, {
+                type: "freshReadFailed",
+                error: input.freshReadError,
+              });
+            }
+            setInternalConflict(state);
+          };
+
+          const automatic = await executeSettingsAutomaticRebase({
+            baseline: originalBaseline,
+            local: originalLocal,
+            signal: abortController.signal,
+            fetchCurrent: config.fetchCurrent,
+            presentation: config.presentation,
+            normalize: beforeSaveFn
+              ? (value) => beforeSaveFn(value) as T
+              : undefined,
+            adoptSnapshot: config.adoptSnapshot,
+            mutate: (payload, signal) => saverFn(payload, { signal }),
+            commit: (value) => {
+              setBaseline(value);
+            },
+            onMutationResult: (value, outcome) => {
+              onMutationResultFn?.(value, outcome);
+            },
           });
-          if (opened.phase === "idle") throw error;
-          const state = opened;
-          setInternalConflict(state);
-          await fetchConflictCurrent(state);
+
+          if (automatic.status === "resolved") {
+            return automatic.result;
+          }
+          if (automatic.status === "interactive") {
+            publishInteractiveConflict({
+              baseline: originalBaseline,
+              local: originalLocal,
+              revision: automatic.current.revision,
+              current: automatic.current,
+            });
+            return { status: "conflict" };
+          }
+          if (automatic.status === "freshReadFailed") {
+            publishInteractiveConflict({
+              baseline: originalBaseline,
+              local: originalLocal,
+              revision: details.currentRevision,
+              freshReadError: config.messages.freshReadFailed,
+            });
+            return { status: "conflict" };
+          }
+
+          const secondDetails = getRevisionConflictDetails(automatic.error);
+          if (!secondDetails) {
+            notify.fromError(automatic.error, UiError.unexpectedSave);
+            throw automatic.error;
+          }
+
+          try {
+            const latest = await config.fetchCurrent(abortController.signal);
+            publishInteractiveConflict({
+              baseline: automatic.current.value,
+              local: automatic.plan.value,
+              revision: latest.revision,
+              current: latest,
+            });
+          } catch {
+            publishInteractiveConflict({
+              baseline: automatic.current.value,
+              local: automatic.plan.value,
+              revision: secondDetails.currentRevision,
+              freshReadError: config.messages.freshReadFailed,
+            });
+          }
           return { status: "conflict" };
         }
         notify.fromError(error, UiError.unexpectedSave);
@@ -409,8 +496,12 @@ export function useSettingsResource<T extends object>({
         ctrlRef.current = null;
       }
     },
-    [baseline, abortCurrent, fetchConflictCurrent],
+    [baseline, abortCurrent],
   );
+
+  const save = useCallback((nextValues: T): Promise<SettingsSaveResult<T>> => {
+    return saveDeduplicator.run(() => performSave(nextValues));
+  }, [performSave, saveDeduplicator]);
 
   const conflict = useMemo<SettingsConflictController | null>(() => {
     const state = internalConflict;

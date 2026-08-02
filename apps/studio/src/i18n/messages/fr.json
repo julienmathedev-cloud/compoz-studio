@@ -513,6 +513,7 @@
         "retryFreshRead": "Recharger les réglages enregistrés",
         "useServer": "Utiliser enregistré",
         "keepLocal": "Conserver local",
+        "keepLocalAndSave": "Conserver ma version et enregistrer",
         "keepAllLocal": "Conserver entièrement mon brouillon local"
       },
       "errors": {
@@ -1659,13 +1660,23 @@
       },
       "conflict": {
         "title": "Des métadonnées ont été modifiées ailleurs",
-        "description": "Choisissez la valeur à conserver pour chaque champ, puis enregistrez de nouveau.",
+        "description": "Les métadonnées enregistrées ont changé pendant votre édition. Votre brouillon local est conservé jusqu’à votre décision.",
         "baseline": "Valeur initiale",
         "local": "Votre valeur",
         "remote": "Valeur distante",
         "keepLocal": "Conserver ma valeur",
-        "adoptRemote": "Adopter la valeur distante",
-        "restoreInitial": "Revenir à la valeur initiale",
+        "adoptRemote": "Utiliser la valeur enregistrée",
+        "actions": {
+          "abandon": "Fermer et conserver le brouillon local",
+          "adoptCurrent": "Adopter les métadonnées enregistrées",
+          "keepAllLocal": "Conserver ma version et enregistrer",
+          "apply": "Appliquer mes choix et enregistrer",
+          "retryFreshRead": "Recharger les métadonnées enregistrées"
+        },
+        "errors": {
+          "incomplete": "Choisissez une version pour chaque différence avant d’appliquer la résolution.",
+          "mutation": "La résolution n’a pas pu être enregistrée. Votre brouillon et vos choix sont conservés."
+        },
         "empty": "Aucune valeur",
         "boolean": {
           "true": "Oui",
@@ -1679,7 +1690,6 @@
           "defaultFrequency": "par défaut",
           "defaultPriority": "par défaut"
         },
-        "resolved": "Tous les conflits sont résolus. Confirmez une nouvelle sauvegarde.",
         "fields": {
           "name": "Nom",
           "slug": "Slug",

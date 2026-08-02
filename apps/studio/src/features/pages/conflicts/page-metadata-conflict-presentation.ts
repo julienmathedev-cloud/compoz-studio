@@ -8,7 +8,15 @@ import type {
   ConflictDisplayValue,
   ConflictPresentationGroup,
 } from "@compoz/studio/features/conflicts/conflict-presentation";
-import type { PageMetadataConflictState } from "@compoz/studio/features/pages/conflicts/page-metadata-conflict";
+import type { PageMetadataField } from "@compoz/core/domain/pages/revisions/page-metadata";
+import { resolutionModeForStatus } from "@compoz/studio/features/conflicts/conflict-presentation";
+import {
+  PAGE_METADATA_CONFLICT_FIELDS,
+  pageMetadataConflictStatus,
+  type PageMetadataConflictChoices,
+  type PageMetadataConflictState,
+} from "@compoz/studio/features/pages/conflicts/page-metadata-conflict";
+import { toPageFormValuesFromDTO } from "@compoz/studio/features/pages/mappers/pages-form";
 
 type MetadataTranslations = (
   key: string,
@@ -26,7 +34,7 @@ function isSitemap(value: unknown): value is Readonly<{
 }
 
 function displayMetadataValue(
-  field: PageMetadataConflictState["unresolvedFields"][number],
+  field: PageMetadataField,
   value: unknown,
   t: MetadataTranslations,
   tChangeFrequency: ChangeFrequencyTranslations,
@@ -57,23 +65,30 @@ function displayMetadataValue(
 
 export function toPageMetadataConflictPresentation(
   state: PageMetadataConflictState,
+  choices: PageMetadataConflictChoices,
   t: MetadataTranslations,
   tChangeFrequency: ChangeFrequencyTranslations,
 ): readonly ConflictPresentationGroup[] {
+  const current = toPageFormValuesFromDTO(state.details.current.page);
+
   return [{
     id: "page-metadata",
-    items: state.details.conflicts
-      .filter((conflict) => state.unresolvedFields.includes(conflict.field))
-      .map((conflict) => ({
-        id: conflict.field,
-        label: t(`fields.${conflict.field}`),
-        status: "conflict" as const,
-        resolutionMode: "choice" as const,
+    items: PAGE_METADATA_CONFLICT_FIELDS.flatMap((field) => {
+      const status = pageMetadataConflictStatus(state, field);
+      if (!status) return [];
+
+      return [{
+        id: field,
+        label: t(`fields.${field}`),
+        status,
+        resolutionMode: resolutionModeForStatus(status),
+        choice: choices[field],
         comparison: {
-          baseline: displayMetadataValue(conflict.field, conflict.baseline, t, tChangeFrequency),
-          server: displayMetadataValue(conflict.field, conflict.current, t, tChangeFrequency),
-          local: displayMetadataValue(conflict.field, conflict.local, t, tChangeFrequency),
+          baseline: displayMetadataValue(field, state.baseline[field], t, tChangeFrequency),
+          server: displayMetadataValue(field, current[field], t, tChangeFrequency),
+          local: displayMetadataValue(field, state.local[field], t, tChangeFrequency),
         },
-      })),
+      }];
+    }),
   }];
 }

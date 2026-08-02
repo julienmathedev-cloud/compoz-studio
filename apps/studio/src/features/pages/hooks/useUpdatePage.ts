@@ -33,7 +33,9 @@ import {
   requireDraftStructureSnapshot,
 } from "@compoz/studio/features/pages/hooks/draft-structure-mutation";
 import {
+  shouldRunNormalPageUpdateSuccess,
   submitPageUpdateMutation,
+  type PageUpdateCompletionMode,
   type UpdatePageSubmissionOutcome,
 } from "@compoz/studio/features/pages/hooks/page-update-submission";
 import { invalidatePageMutationStatusViews } from "@compoz/studio/features/pages/hooks/invalidate-page-mutation-status-views";
@@ -67,13 +69,21 @@ type UpdatePageArgs = Readonly<{
   pageId: string;
   payload: UpdatePageIntentDTO;
   fields: ReadonlyArray<string>;
+  completion: PageUpdateCompletionMode;
 }>;
 
 export type UpdatePageMutationResult = Readonly<{
   pageId: string;
   fields: ReadonlyArray<string>;
   response: UpdatePageResponse;
+  completion: UpdatePageArgs["completion"];
 }>;
+
+export type PageMetadataOnlyUpdateResult =
+  | Readonly<{ status: "submitted"; response: UpdatePageResponse }>
+  | Readonly<{ status: "noChanges" }>
+  | Readonly<{ status: "metadataConflict" }>
+  | Readonly<{ status: "ignored" }>;
 
 type UseUpdatePageOptions = Readonly<{
   onSuccess?: (result: UpdatePageMutationResult) => void;
@@ -90,6 +100,11 @@ type UseUpdatePageResult = Readonly<{
     next: PageFormValues,
     dirtyFields?: PageFormDirtyFields,
   ) => Promise<UpdatePageSubmissionOutcome>;
+  resolveMetadataConflict: (
+    pageId: string,
+    baseline: PageEditBaseline,
+    next: PageFormValues,
+  ) => Promise<PageMetadataOnlyUpdateResult>;
   adoptMetadataConflictCurrent: (
     details: PageMetadataConflictDetails,
   ) => void;
@@ -212,7 +227,9 @@ export function useUpdatePage(
           : []),
       ]);
 
-      options.onSuccess?.(result);
+      if (shouldRunNormalPageUpdateSuccess(result.completion)) {
+        options.onSuccess?.(result);
+      }
     },
     onSettled: () => setUpdatingPageId(null),
     retry: false,
@@ -230,23 +247,27 @@ export function useUpdatePage(
     [queryClient, websiteId],
   );
 
-  const update = useCallback(
+  const executeUpdate = useCallback(
     async (
       pageId: string,
       baseline: PageEditBaseline,
       next: PageFormValues,
+      completion: UpdatePageArgs["completion"],
       dirtyFields?: PageFormDirtyFields,
-    ): Promise<UpdatePageSubmissionOutcome> => {
-      if (mutation.isPending) return "ignored";
+    ): Promise<Readonly<{
+      outcome: UpdatePageSubmissionOutcome;
+      response?: UpdatePageResponse;
+    }>> => {
+      if (mutation.isPending) return { outcome: "ignored" };
       const pageIdKey = String(pageId ?? "").trim();
       if (!pageIdKey) {
         notify.error(
           t("uiErrors.errorGeneric"),
           t(ERROR_CODES.PAGE_ID_REQUIRED),
         );
-        return "ignored";
+        return { outcome: "ignored" };
       }
-      if (updatingPageId === pageIdKey) return "ignored";
+      if (updatingPageId === pageIdKey) return { outcome: "ignored" };
 
       const normalizedBaseline = normalizePageFormValues(baseline.values);
       const normalizedNext = normalizePageFormValues(next);
@@ -277,17 +298,22 @@ export function useUpdatePage(
           t("notifications.noChanges.title"),
           t("notifications.noChanges.description", { entity: entityLabel }),
         );
-        return "noChanges";
+        return { outcome: "noChanges" };
       }
 
       setUpdatingPageId(pageIdKey);
-      return submitPageUpdateMutation({
-        mutate: () =>
-          mutation.mutateAsync({
+      let response: UpdatePageResponse | undefined;
+      const outcome = await submitPageUpdateMutation({
+        mutate: async () => {
+          const result = await mutation.mutateAsync({
             pageId: pageIdKey,
             payload,
             fields,
-          }),
+            completion,
+          });
+          response = result.response;
+          return result;
+        },
         onMetadataConflict,
         onStructureConflict: (details, error) => {
           const current = adoptDraftStructureConflictDetails(
@@ -311,6 +337,7 @@ export function useUpdatePage(
           });
         },
       });
+      return { outcome, ...(response ? { response } : {}) };
     },
     [
       entityLabel,
@@ -324,9 +351,44 @@ export function useUpdatePage(
     ],
   );
 
+  const update = useCallback(
+    async (
+      pageId: string,
+      baseline: PageEditBaseline,
+      next: PageFormValues,
+      dirtyFields?: PageFormDirtyFields,
+    ): Promise<UpdatePageSubmissionOutcome> => (
+      await executeUpdate(pageId, baseline, next, "normal", dirtyFields)
+    ).outcome,
+    [executeUpdate],
+  );
+
+  const resolveMetadataConflict = useCallback(async (
+    pageId: string,
+    baseline: PageEditBaseline,
+    next: PageFormValues,
+  ): Promise<PageMetadataOnlyUpdateResult> => {
+    const structuralParentId = baseline.values.parentId;
+    const result = await executeUpdate(
+      pageId,
+      baseline,
+      { ...next, parentId: structuralParentId },
+      "metadata-only",
+    );
+    if (result.outcome === "submitted" && result.response) {
+      return { status: "submitted", response: result.response };
+    }
+    if (result.outcome === "metadataConflict") {
+      return { status: "metadataConflict" };
+    }
+    if (result.outcome === "noChanges") return { status: "noChanges" };
+    return { status: "ignored" };
+  }, [executeUpdate]);
+
   return useMemo(
     () => ({
       update,
+      resolveMetadataConflict,
       adoptMetadataConflictCurrent,
       updatingPageId,
       isUpdating: mutation.isPending,
@@ -334,6 +396,7 @@ export function useUpdatePage(
     [
       adoptMetadataConflictCurrent,
       mutation.isPending,
+      resolveMetadataConflict,
       update,
       updatingPageId,
     ],

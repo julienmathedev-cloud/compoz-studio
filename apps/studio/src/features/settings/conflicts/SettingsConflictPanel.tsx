@@ -8,7 +8,8 @@
 
 import { useTranslations } from "next-intl";
 
-import { ConflictResolutionPanel } from "@compoz/studio/features/conflicts/ConflictResolutionPanel";
+import { ControlledConflictResolutionPanel } from "@compoz/studio/features/conflicts/ControlledConflictResolutionPanel";
+import { toSettingsConflictPanelController } from "@compoz/studio/features/settings/conflicts/settings-conflict-panel-controller";
 import type { SettingsConflictController } from "@compoz/studio/features/settings/hooks/useSettingsResource";
 
 type SettingsConflictPanelProps = Readonly<{
@@ -24,47 +25,18 @@ export function SettingsConflictPanel({
   const tConflict = useTranslations("studio.conflictResolution");
 
   return (
-    <ConflictResolutionPanel
-      actions={[
-        {
-          id: "abandon",
-          label: t("actions.abandon"),
-          variant: "outline",
-          onClick: conflict.abandon,
-          focusAfterSuccess: "restore-trigger",
-        },
-        ...(conflict.canResolve ? [{
-          id: "adopt-current",
-          label: t("actions.adoptCurrent"),
-          variant: "outline" as const,
-          onClick: conflict.adoptCurrent,
-          focusAfterSuccess: "target" as const,
-          focusTargetId,
-        }, ...(conflict.canKeepLocal ? [{
-          id: "keep-all-local",
-          label: t("actions.keepAllLocal"),
-          variant: "outline" as const,
-          onClick: conflict.keepLocal,
-          focusAfterSuccess: "target" as const,
-          focusTargetId,
-        }] : []), {
-          id: "apply",
-          label: t("actions.apply"),
-          onClick: conflict.apply,
-          disabled: !conflict.canApply,
-          focusAfterSuccess: "target" as const,
-          focusTargetId,
-        }] : [{
-          id: "retry-fresh-read",
-          label: t("actions.retryFreshRead"),
-          onClick: conflict.retryFreshRead,
-          focusAfterSuccess: "panel" as const,
-        }]),
-      ]}
-      conflictId={conflict.conflictId}
+    <ControlledConflictResolutionPanel
+      actionLabels={{
+        abandon: t("actions.abandon"),
+        "adopt-current": t("actions.adoptCurrent"),
+        "keep-all-local": t("actions.keepAllLocal"),
+        keepLocalSimple: t("actions.keepLocalAndSave"),
+        apply: t("actions.apply"),
+        "retry-fresh-read": t("actions.retryFreshRead"),
+      }}
+      controller={toSettingsConflictPanelController(conflict)}
       description={t("description")}
-      error={conflict.error}
-      groups={conflict.groups}
+      focusTargetId={focusTargetId}
       labels={{
         baseline: t("labels.baseline"),
         server: t("labels.server"),
@@ -73,8 +45,6 @@ export function SettingsConflictPanel({
         keepLocal: t("actions.keepLocal"),
         pending: tConflict("pending"),
       }}
-      onChoice={conflict.choose}
-      pending={conflict.pending}
       title={t("title")}
     />
   );

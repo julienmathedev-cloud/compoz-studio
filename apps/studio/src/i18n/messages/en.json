@@ -512,6 +512,7 @@
         "retryFreshRead": "Reload the saved settings",
         "useServer": "Use saved",
         "keepLocal": "Keep local",
+        "keepLocalAndSave": "Keep my version and save",
         "keepAllLocal": "Keep my entire local draft"
       },
       "errors": {
@@ -1658,13 +1659,23 @@
       },
       "conflict": {
         "title": "Metadata was changed elsewhere",
-        "description": "Choose which value to keep for each field, then save again.",
+        "description": "The saved metadata changed while you were editing. Your local draft is preserved until you decide.",
         "baseline": "Initial value",
         "local": "Your value",
         "remote": "Remote value",
         "keepLocal": "Keep my value",
-        "adoptRemote": "Use remote value",
-        "restoreInitial": "Restore initial value",
+        "adoptRemote": "Use saved value",
+        "actions": {
+          "abandon": "Close and keep the local draft",
+          "adoptCurrent": "Adopt the saved metadata",
+          "keepAllLocal": "Keep my version and save",
+          "apply": "Apply my choices and save",
+          "retryFreshRead": "Reload the saved metadata"
+        },
+        "errors": {
+          "incomplete": "Choose a version for every difference before applying the resolution.",
+          "mutation": "The resolution could not be saved. Your draft and choices are preserved."
+        },
         "empty": "No value",
         "boolean": {
           "true": "Yes",
@@ -1678,7 +1689,6 @@
           "defaultFrequency": "default",
           "defaultPriority": "default"
         },
-        "resolved": "All conflicts are resolved. Confirm a new save.",
         "fields": {
           "name": "Name",
           "slug": "Slug",

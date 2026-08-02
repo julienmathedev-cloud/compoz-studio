@@ -10,9 +10,15 @@ import test from "node:test";
 import { ERROR_CODES } from "@compoz/core/domain/errors/codes";
 import { HttpError } from "@compoz/infra/lib/api-fetch";
 import {
+  shouldRunNormalPageUpdateSuccess,
   shouldApplyPageUpdateSuccessCleanup,
   submitPageUpdateMutation,
 } from "@compoz/studio/features/pages/hooks/page-update-submission";
+
+void test("metadata-only completion never runs the normal close or remount owner", () => {
+  assert.equal(shouldRunNormalPageUpdateSuccess("normal"), true);
+  assert.equal(shouldRunNormalPageUpdateSuccess("metadata-only"), false);
+});
 
 const DETAILS = {
   expectedMetaRevision: 2,

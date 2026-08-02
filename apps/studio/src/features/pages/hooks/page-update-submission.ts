@@ -21,6 +21,14 @@ export type UpdatePageSubmissionOutcome =
   | "structureConflict"
   | "ignored";
 
+export type PageUpdateCompletionMode = "normal" | "metadata-only";
+
+export function shouldRunNormalPageUpdateSuccess(
+  completion: PageUpdateCompletionMode,
+): boolean {
+  return completion === "normal";
+}
+
 export type PageUpdateMutationOutcome = Extract<
   UpdatePageSubmissionOutcome,
   "submitted" | "noChanges" | "metadataConflict" | "structureConflict"

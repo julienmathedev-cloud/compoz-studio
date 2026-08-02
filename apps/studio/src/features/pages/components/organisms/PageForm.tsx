@@ -19,7 +19,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RotateCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FieldErrors, UseFormSetValue } from "react-hook-form";
 import { Controller, useForm, useFormState, useWatch } from "react-hook-form";
 
@@ -40,12 +40,13 @@ import { SelectField } from "@compoz/studio/components/molecules/fields/SelectFi
 import { SwitchField } from "@compoz/studio/components/molecules/fields/SwitchField";
 import { TextareaField } from "@compoz/studio/components/molecules/fields/TextareaField";
 import { PageMetadataConflictPanel } from "@compoz/studio/features/pages/components/molecules/PageMetadataConflictPanel";
-import {
-  hasUnresolvedPageMetadataConflicts,
-  type PageMetadataConflictChoice,
-  type PageMetadataConflictResolution,
-  type PageMetadataConflictState,
-} from "@compoz/studio/features/pages/conflicts/page-metadata-conflict";
+import type {
+  PageMetadataConflictCommitNotification,
+  PageMetadataConflictMutationRequest,
+  PageMetadataConflictMutationResult,
+} from "@compoz/studio/features/pages/conflicts/page-metadata-conflict-controller";
+import type { PageMetadataConflictState } from "@compoz/studio/features/pages/conflicts/page-metadata-conflict";
+import { usePageMetadataConflictController } from "@compoz/studio/features/pages/conflicts/usePageMetadataConflictController";
 import type {
   PageFormDirtyFields,
   PageFormSubmissionResult,
@@ -56,6 +57,7 @@ import {
   type SlugAutoSyncState,
 } from "@compoz/studio/features/pages/lib/page-slug-auto-sync";
 import { applyPageFormParentRebase } from "@compoz/studio/features/pages/lib/page-form-parent-rebase";
+import { commitPageFormMetadataResolution } from "@compoz/studio/features/pages/lib/page-form-metadata-commit";
 import {
   usePageUiWarnings,
   type PageWarningKey,
@@ -97,11 +99,14 @@ type PageFormProps = Readonly<{
   ) => PageFormSubmissionResult | Promise<PageFormSubmissionResult>;
   onReset?: (resetValues: PageFormValues) => void;
   metadataConflict?: PageMetadataConflictState | null;
-  onMetadataConflictChoice?: (
-    field: PageMetadataConflictState["unresolvedFields"][number],
-    choice: PageMetadataConflictChoice,
-    localValues: PageFormValues,
-  ) => PageMetadataConflictResolution;
+  onMetadataConflictAbandon?: () => void;
+  onMetadataConflictCommit?: (
+    notification: PageMetadataConflictCommitNotification,
+  ) => void;
+  onMetadataConflictMutate?: (
+    request: PageMetadataConflictMutationRequest,
+    state: PageMetadataConflictState,
+  ) => Promise<PageMetadataConflictMutationResult>;
   onWarningKeysChange?: (keys: PageWarningKey[]) => void;
   onDirtyChange?: (dirty: boolean) => void;
   onBlockingErrorsCountChange?: (count: number) => void;
@@ -128,7 +133,9 @@ export function PageForm({
   onSubmit,
   onReset,
   metadataConflict,
-  onMetadataConflictChoice,
+  onMetadataConflictAbandon,
+  onMetadataConflictCommit,
+  onMetadataConflictMutate,
   onWarningKeysChange,
   onDirtyChange,
   onBlockingErrorsCountChange,
@@ -189,6 +196,32 @@ export function PageForm({
   const slugAutoSyncRef = useRef(
     createSlugAutoSyncState({ initialValues, mode }),
   );
+  const commitMetadataConflictValues = useCallback((nextValues: PageFormValues) => {
+    resetBaselineRef.current = commitPageFormMetadataResolution(
+      resetBaselineRef.current,
+      resetField,
+      nextValues,
+    );
+    slugAutoSyncRef.current = createSlugAutoSyncState({
+      initialValues: resetBaselineRef.current,
+      mode,
+    });
+  }, [mode, resetField]);
+  const metadataConflictController = usePageMetadataConflictController({
+    state: metadataConflict ?? null,
+    pending: isBusy,
+    incompleteError: t("studio.pageEditSection.conflict.errors.incomplete"),
+    mutationError: t("studio.pageEditSection.conflict.errors.mutation"),
+    getLocalValues: getValues,
+    commitValues: commitMetadataConflictValues,
+    onAbandon: () => onMetadataConflictAbandon?.(),
+    onCommit: (notification) => {
+      onMetadataConflictCommit?.(notification);
+    },
+    onMutate: (request, state) => onMetadataConflictMutate
+      ? onMetadataConflictMutate(request, state)
+      : Promise.resolve({ status: "error" }),
+  });
 
   useEffect(() => {
     if (mode !== "edit" || !bFocusFields || isBusy) return;
@@ -538,7 +571,7 @@ export function PageForm({
       onSubmit={(event) => {
         void handleSubmit(
           async (formValues) => {
-            if (hasUnresolvedPageMetadataConflicts(metadataConflict)) {
+            if (metadataConflict) {
               return;
             }
 
@@ -578,6 +611,14 @@ export function PageForm({
         <FieldDescription aria-live="polite" className="mb-4 rounded-md border p-3" role="status" visualMode="studio">
           {t("studio.pageForm.structureConflict.currentAdopted")}
         </FieldDescription>
+      ) : null}
+      {metadataConflictController ? (
+        <div className="mb-4">
+          <PageMetadataConflictPanel
+            controller={metadataConflictController}
+            focusTargetId={nameIds.fieldId}
+          />
+        </div>
       ) : null}
       <Card variant="panel" visualMode="studio">
         <CardContent>
@@ -786,22 +827,6 @@ export function PageForm({
           </ExpandableLayout>
         </CardContent>
 
-        {metadataConflict && onMetadataConflictChoice ? (
-          <div className="px-6 pb-4">
-            <PageMetadataConflictPanel
-              state={metadataConflict}
-              onChoice={(field, choice) => {
-                const resolution = onMetadataConflictChoice(
-                  field,
-                  choice,
-                  getValues(),
-                );
-                setResolvedConflictValue(setValue, resolution);
-              }}
-            />
-          </div>
-        ) : null}
-
         <CardFooter>
           <ActionsBar
             variant="resetSubmit"
@@ -834,47 +859,6 @@ export function PageForm({
 }
 
 PageForm.displayName = "PageForm";
-
-function setResolvedConflictValue(
-  setValue: UseFormSetValue<PageFormValues>,
-  resolution: PageMetadataConflictResolution,
-): void {
-  const options = {
-    shouldDirty: true,
-    shouldTouch: true,
-    shouldValidate: true,
-  } as const;
-
-  switch (resolution.field) {
-    case "name":
-    case "slug":
-      setValue(resolution.field, String(resolution.localValue ?? ""), options);
-      return;
-    case "seoTitle":
-    case "seoDescription":
-      setValue(
-        resolution.field,
-        resolution.localValue === null
-          ? null
-          : String(resolution.localValue ?? ""),
-        options,
-      );
-      return;
-    case "paginationEnabled":
-      setValue(
-        resolution.field,
-        Boolean(resolution.localValue),
-        options,
-      );
-      return;
-    case "sitemap":
-      setValue(
-        resolution.field,
-        resolution.localValue as PageFormValues["sitemap"],
-        options,
-      );
-  }
-}
 
 /** Auto-updates the slug from the name on blur until the user manually locks the slug. */
 function handleNameBlur(

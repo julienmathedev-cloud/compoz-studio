@@ -51,11 +51,13 @@ import type { PageEditBaseline } from "@compoz/studio/features/pages/hooks/useUp
 import { shouldApplyPageUpdateSuccessCleanup } from "@compoz/studio/features/pages/hooks/page-update-submission";
 import {
   createPageMetadataConflictState,
-  finalizePageMetadataConflictValues,
-  resolvePageMetadataConflictChoice,
-  type PageMetadataConflictChoice,
   type PageMetadataConflictState,
 } from "@compoz/studio/features/pages/conflicts/page-metadata-conflict";
+import type { PageMetadataConflictResolutionOutcome } from "@compoz/studio/features/pages/conflicts/page-metadata-conflict-controller";
+import { applyPageBlocksMetadataResolutionPresentationCleanup } from "@compoz/studio/features/pages/conflicts/page-metadata-conflict-presentation-cleanup";
+import {
+  usePageMetadataConflictPersistence,
+} from "@compoz/studio/features/pages/conflicts/usePageMetadataConflictPersistence";
 import {
   rebasePageStructureConflictParent,
   type PageStructureConflictRebase,
@@ -132,6 +134,8 @@ export function PageBlocksListSection({
     useState<PageMetadataConflictState | null>(null);
 
   const baselineRef = useRef<PageEditBaseline | null>(null);
+  const submittedBaselineRef = useRef<PageEditBaseline | null>(null);
+  const submittedValuesRef = useRef<PageFormValues | null>(null);
   const structureConflictRebaseRef =
     useRef<PageStructureConflictRebase | null>(null);
   const currentIndexPage = useMemo(
@@ -142,6 +146,7 @@ export function PageBlocksListSection({
 
   const {
     update,
+    resolveMetadataConflict,
     adoptMetadataConflictCurrent,
     isUpdating,
   } = useUpdatePage({
@@ -164,10 +169,11 @@ export function PageBlocksListSection({
       setPageFormKey((key) => key + 1);
     },
     onMetadataConflict: (details) => {
-      const baseline = baselineRef.current;
-      if (!baseline) return;
+      const baseline = submittedBaselineRef.current ?? baselineRef.current;
+      const local = submittedValuesRef.current;
+      if (!baseline || !local) return;
       setMetadataConflict(
-        createPageMetadataConflictState(details, baseline.values),
+        createPageMetadataConflictState(details, baseline.values, local),
       );
     },
     onStructureConflict: (details) => {
@@ -196,6 +202,8 @@ export function PageBlocksListSection({
 
   useEffect(() => {
     baselineRef.current = null;
+    submittedBaselineRef.current = null;
+    submittedValuesRef.current = null;
     structureConflictRebaseRef.current = null;
     setMetadataConflict(null);
   }, [pageId]);
@@ -305,6 +313,8 @@ export function PageBlocksListSection({
 
       const baselineForPatch = baselineRef.current;
       if (!baselineForPatch) return;
+      submittedBaselineRef.current = baselineForPatch;
+      submittedValuesRef.current = normalized;
       const outcome = await update(
         originalId,
         baselineForPatch,
@@ -322,66 +332,45 @@ export function PageBlocksListSection({
         return;
       }
 
-      if (
-        outcome === "noChanges" &&
-        metadataConflict &&
-        metadataConflict.unresolvedFields.length === 0
-      ) {
-        const rebased = finalizePageMetadataConflictValues(
-          metadataConflict,
-          normalized,
-        );
-        adoptMetadataConflictCurrent(metadataConflict.details);
-        baselineRef.current = {
-          values: rebased,
-          metaRevision: metadataConflict.details.currentMetaRevision,
-        };
-        setMetadataConflict(null);
-        setWarningKeys([]);
-        setBlockingErrorsCount(0);
-        setIsMetaDirty(false);
-        return { rebaseValues: rebased };
-      }
-
       setWarningKeys([]);
       setBlockingErrorsCount(0);
       setIsMetaDirty(false);
     },
     [
-      adoptMetadataConflictCurrent,
       confirmList,
-      metadataConflict,
       pageId,
       t,
       update,
     ],
   );
 
-  const handleMetadataConflictChoice = useCallback(
-    (
-      field: PageMetadataConflictState["unresolvedFields"][number],
-      choice: PageMetadataConflictChoice,
-      localValues: PageFormValues,
-    ) => {
-      if (!metadataConflict) {
-        throw new Error("Page metadata conflict state is unavailable.");
-      }
-      const resolution = resolvePageMetadataConflictChoice({
-        state: metadataConflict,
-        field,
-        choice,
-        localValues,
-      });
-      baselineRef.current = {
-        values: resolution.state.occBaseline,
-        metaRevision:
-          resolution.state.details.currentMetaRevision,
-      };
-      setMetadataConflict(resolution.state);
-      return resolution;
-    },
-    [metadataConflict],
-  );
+  const closeMetadataConflict = useCallback(() => {
+    setMetadataConflict(null);
+  }, []);
+
+  const handleMetadataResolved = useCallback((
+    outcome: PageMetadataConflictResolutionOutcome,
+  ) => {
+    applyPageBlocksMetadataResolutionPresentationCleanup(outcome, {
+      clearWarnings: () => setWarningKeys([]),
+      clearBlockingErrors: () => setBlockingErrorsCount(0),
+      markSectionClean: () => setIsMetaDirty(false),
+      clearStructureConflict: () => {
+        structureConflictRebaseRef.current = null;
+      },
+      remountForm: () => setPageFormKey((key) => key + 1),
+    });
+  }, []);
+
+  const metadataConflictPersistence = usePageMetadataConflictPersistence({
+    baselineRef,
+    submittedBaselineRef,
+    submittedValuesRef,
+    resolveMetadataConflict,
+    adoptCache: adoptMetadataConflictCurrent,
+    close: closeMetadataConflict,
+    onResolved: handleMetadataResolved,
+  });
 
   const children = useMemo(() => {
     const pages = siteIndex?.pages ?? [];
@@ -978,7 +967,9 @@ export function PageBlocksListSection({
           bCancelAlwaysEnabledInEdit
           onSubmit={handleSubmitPageMeta}
           metadataConflict={metadataConflict}
-          onMetadataConflictChoice={handleMetadataConflictChoice}
+          onMetadataConflictAbandon={closeMetadataConflict}
+          onMetadataConflictCommit={metadataConflictPersistence.commit}
+          onMetadataConflictMutate={metadataConflictPersistence.mutate}
           onReset={(resetValues) => {
             if (baselineRef.current) {
               baselineRef.current = {

@@ -29,11 +29,13 @@ import type { PageEditBaseline } from "@compoz/studio/features/pages/hooks/useUp
 import { shouldApplyPageUpdateSuccessCleanup } from "@compoz/studio/features/pages/hooks/page-update-submission";
 import {
   createPageMetadataConflictState,
-  finalizePageMetadataConflictValues,
-  resolvePageMetadataConflictChoice,
-  type PageMetadataConflictChoice,
   type PageMetadataConflictState,
 } from "@compoz/studio/features/pages/conflicts/page-metadata-conflict";
+import type { PageMetadataConflictResolutionOutcome } from "@compoz/studio/features/pages/conflicts/page-metadata-conflict-controller";
+import { applyPageEditMetadataResolutionPresentationCleanup } from "@compoz/studio/features/pages/conflicts/page-metadata-conflict-presentation-cleanup";
+import {
+  usePageMetadataConflictPersistence,
+} from "@compoz/studio/features/pages/conflicts/usePageMetadataConflictPersistence";
 import {
   rebasePageStructureConflictParent,
   type PageStructureConflictRebase,
@@ -86,6 +88,8 @@ export function PageEditSection({
 
   /** Baseline used to build minimal update patches. */
   const baselineRef = useRef<PageEditBaseline | null>(null);
+  const submittedBaselineRef = useRef<PageEditBaseline | null>(null);
+  const submittedValuesRef = useRef<PageFormValues | null>(null);
   const baselinePageIdRef = useRef<string | null>(null);
   const structureConflictRebaseRef =
     useRef<PageStructureConflictRebase | null>(null);
@@ -175,6 +179,7 @@ export function PageEditSection({
 
   const {
     update,
+    resolveMetadataConflict,
     adoptMetadataConflictCurrent,
     isUpdating,
   } = useUpdatePage({
@@ -198,13 +203,15 @@ export function PageEditSection({
       onCancelEdit();
     },
     onMetadataConflict: (details) => {
-      const baseline = baselineRef.current;
-      if (!baseline) return;
+      const baseline = submittedBaselineRef.current ?? baselineRef.current;
+      const local = submittedValuesRef.current;
+      if (!baseline || !local) return;
       setMetadataConflictEntry({
         pageId: details.current.page.id,
         state: createPageMetadataConflictState(
           details,
           baseline.values,
+          local,
         ),
       });
     },
@@ -269,6 +276,8 @@ export function PageEditSection({
 
       const baselineForPatch = baselineRef.current;
       if (!baselineForPatch) return;
+      submittedBaselineRef.current = baselineForPatch;
+      submittedValuesRef.current = normalized;
       const outcome = await update(
         originalId,
         baselineForPatch,
@@ -286,69 +295,49 @@ export function PageEditSection({
         return;
       }
 
-      if (
-        outcome === "noChanges" &&
-        metadataConflict &&
-        metadataConflict.unresolvedFields.length === 0
-      ) {
-        const rebased = finalizePageMetadataConflictValues(
-          metadataConflict,
-          normalized,
-        );
-        adoptMetadataConflictCurrent(metadataConflict.details);
-        baselineRef.current = {
-          values: rebased,
-          metaRevision: metadataConflict.details.currentMetaRevision,
-        };
-        setMetadataConflictEntry(null);
-        setWarningKeys([]);
-        setBlockingErrorsCount(0);
-        setIsMetaDirty(false);
-        onDirtyChange?.(false);
-        return { rebaseValues: rebased };
-      }
     },
     [
-      adoptMetadataConflictCurrent,
       confirmSaveDespiteWarnings,
       create,
       editId,
       mode,
-      metadataConflict,
       onDirtyChange,
       page,
       update,
     ],
   );
 
-  const handleMetadataConflictChoice = useCallback(
-    (
-      field: PageMetadataConflictState["unresolvedFields"][number],
-      choice: PageMetadataConflictChoice,
-      localValues: PageFormValues,
-    ) => {
-      if (!metadataConflict) {
-        throw new Error("Page metadata conflict state is unavailable.");
-      }
-      const resolution = resolvePageMetadataConflictChoice({
-        state: metadataConflict,
-        field,
-        choice,
-        localValues,
-      });
-      baselineRef.current = {
-        values: resolution.state.occBaseline,
-        metaRevision:
-          resolution.state.details.currentMetaRevision,
-      };
-      setMetadataConflictEntry({
-        pageId: metadataConflict.details.current.page.id,
-        state: resolution.state,
-      });
-      return resolution;
-    },
-    [metadataConflict],
-  );
+  const closeMetadataConflict = useCallback(() => {
+    setMetadataConflictEntry(null);
+  }, []);
+
+  const handleMetadataResolved = useCallback((
+    outcome: PageMetadataConflictResolutionOutcome,
+  ) => {
+    applyPageEditMetadataResolutionPresentationCleanup(outcome, {
+      clearWarnings: () => setWarningKeys([]),
+      clearBlockingErrors: () => setBlockingErrorsCount(0),
+      markSectionClean: () => {
+        setIsMetaDirty(false);
+        onDirtyChange?.(false);
+      },
+      clearStructureConflict: () => {
+        structureConflictRebaseRef.current = null;
+      },
+      remountForm: () => setFormKey((key) => key + 1),
+      closeEditor: onCancelEdit,
+    });
+  }, [onCancelEdit, onDirtyChange]);
+
+  const metadataConflictPersistence = usePageMetadataConflictPersistence({
+    baselineRef,
+    submittedBaselineRef,
+    submittedValuesRef,
+    resolveMetadataConflict,
+    adoptCache: adoptMetadataConflictCurrent,
+    close: closeMetadataConflict,
+    onResolved: handleMetadataResolved,
+  });
 
   const sectionLoading = Boolean(
     isLoading || (mode === "edit" && isLoadingPage),
@@ -380,7 +369,9 @@ export function PageEditSection({
         mode={mode}
         onSubmit={handleSubmit}
         metadataConflict={metadataConflict}
-        onMetadataConflictChoice={handleMetadataConflictChoice}
+        onMetadataConflictAbandon={closeMetadataConflict}
+        onMetadataConflictCommit={metadataConflictPersistence.commit}
+        onMetadataConflictMutate={metadataConflictPersistence.mutate}
         onReset={() => {
           setWarningKeys([]);
           setBlockingErrorsCount(0);

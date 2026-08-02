@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { equalJsonValue } from "@compoz/core/domain/revisions/json-value-equality";
+import { toDecisionConflictGroups } from "@compoz/studio/features/conflicts/conflict-presentation";
 import {
   buildSemanticSettingsPatch,
   buildSettingsConflictMutationPlan,
@@ -58,6 +59,73 @@ void test("applies explicit server and local choices while preserving automatic 
     resolveSettingsConflictValues({ snapshot, choices: { name: "local" } }),
     { status: "resolved", value: { name: "C", enabled: true } },
   );
+});
+
+void test("shows two scalar decisions while keeping server-only and local-only values in the minimal plan", () => {
+  type MixedValues = Readonly<{
+    siteName: string;
+    tagline: string;
+    logo: string;
+    localNote: string;
+  }>;
+  const mixedSnapshot = {
+    baseline: { siteName: "Base", tagline: "Base", logo: "base.svg", localNote: "Base" },
+    current: { siteName: "Saved name", tagline: "Saved tagline", logo: "saved.svg", localNote: "Base" },
+    local: { siteName: "Local name", tagline: "Local tagline", logo: "base.svg", localNote: "Local note" },
+    currentRevision: 9,
+  } satisfies Readonly<{
+    baseline: MixedValues;
+    current: MixedValues;
+    local: MixedValues;
+    currentRevision: number;
+  }>;
+  const mixedFields = {
+    labels: {
+      siteName: "Site name",
+      tagline: "Tagline",
+      logo: "Logo",
+      localNote: "Local note",
+    },
+    display: (_key: keyof MixedValues, value: MixedValues[keyof MixedValues]) => ({
+      kind: "text" as const,
+      text: value,
+    }),
+  };
+  const completeGroups = toSettingsConflictPresentation({
+    snapshot: mixedSnapshot,
+    ...mixedFields,
+  });
+  const visibleGroups = toDecisionConflictGroups(completeGroups);
+
+  assert.deepEqual(completeGroups[0]?.items.map((item) => [item.id, item.status]), [
+    ["siteName", "conflict"],
+    ["tagline", "conflict"],
+    ["logo", "server-only"],
+    ["localNote", "local-only"],
+  ]);
+  assert.deepEqual(visibleGroups[0]?.items.map((item) => item.id), [
+    "siteName",
+    "tagline",
+  ]);
+
+  const plan = buildSettingsConflictMutationPlan({
+    snapshot: mixedSnapshot,
+    choices: { siteName: "server", tagline: "local" },
+    fields: mixedFields,
+  });
+  assert.equal(plan.status, "mutation");
+  if (plan.status === "mutation") {
+    assert.deepEqual(plan.value, {
+      siteName: "Saved name",
+      tagline: "Local tagline",
+      logo: "saved.svg",
+      localNote: "Local note",
+    });
+    assert.deepEqual(plan.payload, {
+      tagline: "Local tagline",
+      localNote: "Local note",
+    });
+  }
 });
 
 void test("resolves server-only, local-only, and same-change fields automatically", () => {

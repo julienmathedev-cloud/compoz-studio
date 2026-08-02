@@ -438,16 +438,13 @@ export function PageBlocksListSection({
   const {
     reorder,
     isReordering,
-    conflict: reorderConflict,
-    clearConflict: clearReorderConflict,
   } = useReorderBlocks(pageId);
   const blockConflict =
-    deleteConflict ?? reorderConflict ?? createConflict;
+    deleteConflict ?? createConflict;
   const clearBlockConflict = useCallback(() => {
     clearCreateConflict();
     clearDeleteConflict();
-    clearReorderConflict();
-  }, [clearCreateConflict, clearDeleteConflict, clearReorderConflict]);
+  }, [clearCreateConflict, clearDeleteConflict]);
 
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -791,17 +788,33 @@ export function PageBlocksListSection({
               ? isCreating
               : blockConflict.operation === "delete"
                 ? isDeleting
-                : blockConflict.operation === "reorder"
-                  ? isReordering
-                  : false
+                : false
           }
           onUseCurrent={() => {
             setOrderedBlocks(blockConflict.current.blocks);
             clearBlockConflict();
           }}
+          onCancel={() => {
+            const orderConflict = blockConflict.conflicts.find(
+              (conflict) => conflict.kind === "orderIncompatible",
+            );
+            if (orderConflict?.kind === "orderIncompatible") {
+              const blocksById = new Map(
+                [...blockConflict.current.blocks, ...orderedBlocks].map(
+                  (block) => [block.id, block] as const,
+                ),
+              );
+              setOrderedBlocks(
+                orderConflict.localOrder.flatMap((id) => {
+                  const block = blocksById.get(id);
+                  return block ? [block] : [];
+                }),
+              );
+            }
+            clearBlockConflict();
+          }}
           localBlocks={orderedBlocks}
-          useCurrentFocusAfterSuccess="restore-trigger"
-          onForceDelete={
+          onKeepLocal={
             blockConflict.operation === "delete"
               ? async () => {
                   const changed = blockConflict.conflicts.find(
@@ -814,10 +827,7 @@ export function PageBlocksListSection({
                     clearConflict: clearBlockConflict,
                   });
                 }
-              : undefined
-          }
-          onRetryCreate={
-            blockConflict.operation === "create"
+              : blockConflict.operation === "create"
               ? async () => {
                   await completeBlockListConflictMutation({
                     mutate: async () => {

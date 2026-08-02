@@ -31,13 +31,34 @@ export function reorderPageChildren({
       });
     }
 
-    const childIds = Array.isArray(input?.childIds)
-      ? input.childIds.map((id) => String(id ?? "").trim())
-      : [];
+    const normalizeOrder = (order: unknown): string[] =>
+      Array.isArray(order)
+        ? order.map((id) => String(id ?? "").trim())
+        : [];
+    const baselineOrder = normalizeOrder(input?.baselineOrder);
+    const localOrder = normalizeOrder(input?.localOrder);
+    const baselineIds = new Set(baselineOrder);
+    if (
+      !Array.isArray(input?.baselineOrder) ||
+      !Array.isArray(input?.localOrder) ||
+      baselineOrder.some((id) => !id) ||
+      localOrder.some((id) => !id) ||
+      baselineIds.size !== baselineOrder.length ||
+      new Set(localOrder).size !== localOrder.length ||
+      baselineOrder.length !== localOrder.length ||
+      localOrder.some((id) => !baselineIds.has(id))
+    ) {
+      throw new DomainError({
+        code: EC.INVALID_ARGUMENT,
+        message: EC.INVALID_ARGUMENT,
+        details: { path: ["baselineOrder", "localOrder"] },
+      });
+    }
 
     return structure.reorder({
       parentPageId: parentId,
-      orderedPageIds: childIds,
+      baselineOrder,
+      localOrder,
       expectedDraftStructureRevision: assertDraftStructureRevision(
         input.expectedDraftStructureRevision,
       ),

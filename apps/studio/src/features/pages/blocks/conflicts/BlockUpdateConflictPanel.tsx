@@ -3,20 +3,22 @@
 /**
  * @file apps/studio/src/features/pages/blocks/conflicts/BlockUpdateConflictPanel.tsx
  * @layer studio/features/pages/blocks/conflicts
- * @description Dedicated Page block update conflict chooser.
+ * @description Block-update adapter for the shared OCC resolution panel.
  */
 
-import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import type { PageBlocksConflictDetails } from "@compoz/core/domain/pages/revisions/page-blocks.types";
 import type { Block } from "@compoz/core/domain/pages/entities/block";
-import { ConflictResolutionPanel } from "@compoz/studio/features/conflicts/ConflictResolutionPanel";
+import type { PageBlocksConflictDetails } from "@compoz/core/domain/pages/revisions/page-blocks.types";
+import {
+  ConflictResolutionPanel,
+  type ConflictResolutionChoices,
+} from "@compoz/studio/features/conflicts/ConflictResolutionPanel";
 import {
   CONFLICT_ACTION_ERROR,
   CONFLICT_ACTION_SUCCESS,
+  type ConflictActionExecutionResult,
 } from "@compoz/studio/features/conflicts/conflict-presentation";
-import { blockUpdateConflictPolicy } from "@compoz/studio/features/pages/blocks/conflicts/block-update-conflict-policy";
 import {
   getBlockConflictPresentationId,
   toBlockConflictPresentation,
@@ -31,11 +33,31 @@ type BlockUpdateConflictPanelProps = Readonly<{
   ) => void | Promise<void>;
   onAbandon?: () => void;
   onRecreate?: () => void | Promise<void>;
-  onKeepCurrent?: () => void;
   onDeleteExplicit?: () => void | Promise<void>;
   onAdoptCurrent?: () => void;
   baselineBlocks?: readonly Block[];
 }>;
+
+async function complete(
+  action: (() => void | Promise<void>) | undefined,
+): Promise<ConflictActionExecutionResult> {
+  if (!action) return CONFLICT_ACTION_ERROR;
+  await action();
+  return CONFLICT_ACTION_SUCCESS;
+}
+
+function conflictDescriptionKey(details: PageBlocksConflictDetails): string {
+  if (details.conflicts.every((conflict) => conflict.kind === "fieldConflict")) {
+    return "fieldConflictDescription";
+  }
+  if (details.conflicts.some((conflict) => conflict.kind === "blockDeleted")) {
+    return "blockDeletedDescription";
+  }
+  if (details.conflicts.some((conflict) => conflict.kind === "orderIncompatible")) {
+    return "orderConflictDescription";
+  }
+  return "structuralConflictDescription";
+}
 
 export function BlockUpdateConflictPanel({
   details,
@@ -43,68 +65,68 @@ export function BlockUpdateConflictPanel({
   onResolve,
   onAbandon,
   onRecreate,
-  onKeepCurrent,
   onDeleteExplicit,
   onAdoptCurrent,
   baselineBlocks,
 }: BlockUpdateConflictPanelProps) {
-  const [choices, setChoices] = useState<Record<string, BlockConflictChoice>>({});
-  const [isResolving, setIsResolving] = useState(false);
-  const [resolutionError, setResolutionError] = useState<string | null>(null);
   const t = useTranslations("studio.pageBlocksConflict");
   const tConflict = useTranslations("studio.conflictResolution");
-  const conflictSignature = JSON.stringify(
-    details.conflicts.map((conflict) => [conflict.kind, conflict.path]),
-  );
-  useEffect(() => {
-    setChoices({});
-    setIsResolving(false);
-    setResolutionError(null);
-  }, [conflictSignature, details.currentBlocksRevision]);
 
-  const policy = useMemo(
-    () => blockUpdateConflictPolicy({ details, choices: Object.fromEntries(details.conflicts.map((conflict, index) => [index, choices[getBlockConflictPresentationId(conflict.path)]])) }),
-    [choices, details],
-  );
+  const apply = async (
+    choices: ConflictResolutionChoices,
+  ): Promise<ConflictActionExecutionResult> => {
+    const indexedChoices = Object.fromEntries(
+      details.conflicts.map((conflict, index) => [
+        index,
+        choices[getBlockConflictPresentationId(conflict.path)] === "server"
+          ? "remote"
+          : "local",
+      ]),
+    ) as Record<number, BlockConflictChoice>;
+    const allServer = Object.values(choices).every((choice) => choice === "server");
+    const deleted = details.conflicts.some((conflict) => conflict.kind === "blockDeleted");
+    const deleteChanged = details.conflicts.some(
+      (conflict) => conflict.kind === "blockChangedBeforeDelete",
+    );
 
-  const resolveAsync = async (action: () => void | Promise<void>) => {
-    if (isResolving) return CONFLICT_ACTION_ERROR;
-    setResolutionError(null);
-    setIsResolving(true);
-    try {
-      await action();
-      return CONFLICT_ACTION_SUCCESS;
-    } catch {
-      setResolutionError(t("resolutionError"));
-      return CONFLICT_ACTION_ERROR;
-    } finally {
-      setIsResolving(false);
+    if (deleted) {
+      return allServer ? complete(onAbandon) : complete(onRecreate);
     }
+    if (deleteChanged && !allServer && onDeleteExplicit) {
+      return complete(onDeleteExplicit);
+    }
+    if (allServer && onAdoptCurrent) return complete(onAdoptCurrent);
+    return complete(() => onResolve(indexedChoices));
   };
 
-  const indexedChoices = Object.fromEntries(details.conflicts.map((conflict, index) => [index, choices[getBlockConflictPresentationId(conflict.path)]])) as Record<number, BlockConflictChoice>;
-  return <ConflictResolutionPanel
-    actions={[
-      { id: "cancel", label: policy.showKeepDraft ? t("keepDraft") : t("cancel"), variant: "outline", onClick: () => { onCancel(); return CONFLICT_ACTION_SUCCESS; }, focusAfterSuccess: "restore-trigger" as const },
-      ...(policy.showApply ? [{ id: "apply", label: t("apply"), disabled: !policy.canApply, onClick: () => resolveAsync(() => onResolve(indexedChoices)), focusAfterSuccess: "restore-trigger" as const }] : []),
-      ...(policy.showDeletedActions && onAbandon ? [{ id: "abandon", label: t("abandon"), variant: "outline" as const, onClick: () => { onAbandon(); return CONFLICT_ACTION_SUCCESS; } }] : []),
-      ...(policy.showDeletedActions && onRecreate ? [{ id: "recreate", label: t("recreate"), onClick: () => resolveAsync(onRecreate), focusAfterSuccess: "none" as const }] : []),
-      ...(policy.showDeleteChangedActions && onKeepCurrent ? [{ id: "current", label: t("useCurrent"), variant: "outline" as const, onClick: () => { onKeepCurrent(); return CONFLICT_ACTION_SUCCESS; }, focusAfterSuccess: "restore-trigger" as const }] : []),
-      ...(policy.showDeleteChangedActions && onDeleteExplicit ? [{ id: "delete", label: t("forceDelete"), variant: "destructive" as const, onClick: () => resolveAsync(onDeleteExplicit) }] : []),
-      ...(policy.showAdoptCurrent && onAdoptCurrent ? [{ id: "adopt", label: t("useCurrent"), onClick: () => { onAdoptCurrent(); return CONFLICT_ACTION_SUCCESS; }, focusAfterSuccess: "restore-trigger" as const }] : []),
-    ]}
-    conflictId={`page-block-${details.currentBlocksRevision}`}
-    description={policy.showAdoptCurrent ? t("restartCurrent") : policy.requiresManualRebase ? t("manualRebase") : t("deletedOrChanged")}
-    error={resolutionError ?? undefined}
-    groups={toBlockConflictPresentation(details, choices, t, { currentBlocks: details.current.blocks, baselineBlocks, localBlocks: details.candidateBlock ? [details.candidateBlock] : undefined, candidateBlock: details.candidateBlock }, !policy.requiresManualRebase)}
-    labels={{ baseline: t("baseline"), server: t("remote"), local: t("local"), useServer: t("useRemote"), keepLocal: t("keepLocal"), pending: tConflict("pending") }}
-    onChoice={(id: string, choice: "server" | "local") => {
-      setResolutionError(null);
-      setChoices((current) => ({ ...current, [id]: choice === "server" ? "remote" : "local" }));
-    }}
-    pending={isResolving}
-    title={t("updateTitle")}
-  />;
+  return (
+    <ConflictResolutionPanel
+      conflictKey={`page-block-${details.currentBlocksRevision}-${details.operation}`}
+      description={t(conflictDescriptionKey(details))}
+      groups={toBlockConflictPresentation(details, t, {
+        currentBlocks: details.current.blocks,
+        baselineBlocks,
+        localBlocks: details.candidateBlock ? [details.candidateBlock] : undefined,
+        candidateBlock: details.candidateBlock,
+      })}
+      labels={{
+        baseline: t("baseline"),
+        server: t("remote"),
+        local: t("local"),
+        useServer: tConflict("actions.useServer"),
+        keepLocal: tConflict("actions.keepLocal"),
+        pending: tConflict("pending"),
+        cancel: tConflict("actions.cancel"),
+        apply: tConflict("actions.apply"),
+      }}
+      onApply={apply}
+      onCancel={() => {
+        onCancel();
+        return CONFLICT_ACTION_SUCCESS;
+      }}
+      title={t("updateTitle")}
+    />
+  );
 }
 
 BlockUpdateConflictPanel.displayName = "BlockUpdateConflictPanel";

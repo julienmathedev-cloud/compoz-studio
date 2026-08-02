@@ -124,8 +124,36 @@ export type UpdatePageIntentDTO = z.infer<typeof UpdatePageIntentSchema>;
 
 export const ReorderChildrenIntentSchema = z
   .object({
-    childIds: z.array(PageIdSchema),
+    baselineOrder: z.array(PageIdSchema),
+    localOrder: z.array(PageIdSchema),
     expectedDraftStructureRevision: z.number().int().nonnegative(),
+  })
+  .superRefine(({ baselineOrder, localOrder }, context) => {
+    if (new Set(baselineOrder).size !== baselineOrder.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["baselineOrder"],
+        message: "baselineOrder must not contain duplicates.",
+      });
+    }
+    if (new Set(localOrder).size !== localOrder.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["localOrder"],
+        message: "localOrder must not contain duplicates.",
+      });
+    }
+    const baselineIds = new Set(baselineOrder);
+    if (
+      baselineOrder.length !== localOrder.length ||
+      localOrder.some((id) => !baselineIds.has(id))
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["localOrder"],
+        message: "localOrder must be a permutation of baselineOrder.",
+      });
+    }
   })
   .strict();
 

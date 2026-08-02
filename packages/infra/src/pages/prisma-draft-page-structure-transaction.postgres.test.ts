@@ -238,6 +238,7 @@ void test(
 type ConcurrentScenario = Readonly<{
   name: string;
   pages: ReadonlyArray<Page>;
+  expectedFulfilled: number;
   commands: (
     first: PrismaDraftPageStructureTransaction,
     second: PrismaDraftPageStructureTransaction,
@@ -248,6 +249,7 @@ const scenarios: ConcurrentScenario[] = [
   {
     name: "two creations",
     pages: [page("root")],
+    expectedFulfilled: 1,
     commands: (first, second) => [
       first.create({
         page: page("created-a"),
@@ -262,6 +264,7 @@ const scenarios: ConcurrentScenario[] = [
   {
     name: "creation against reorder",
     pages: [page("root"), page("a", "root"), page("b", "root")],
+    expectedFulfilled: 2,
     commands: (first, second) => [
       first.create({
         page: page("created"),
@@ -269,7 +272,8 @@ const scenarios: ConcurrentScenario[] = [
       }),
       second.reorder({
         parentPageId: "root",
-        orderedPageIds: ["b", "a"],
+        baselineOrder: ["a", "b"],
+        localOrder: ["b", "a"],
         expectedDraftStructureRevision: 0,
       }),
     ],
@@ -281,6 +285,7 @@ const scenarios: ConcurrentScenario[] = [
       page("root-b"),
       page("moving", "root-a"),
     ],
+    expectedFulfilled: 1,
     commands: (first, second) => [
       first.update({
         pageId: "moving",
@@ -299,6 +304,7 @@ const scenarios: ConcurrentScenario[] = [
   {
     name: "delete against reorder",
     pages: [page("root"), page("a", "root"), page("b", "root")],
+    expectedFulfilled: 1,
     commands: (first, second) => [
       first.delete({
         pageId: "root",
@@ -306,7 +312,8 @@ const scenarios: ConcurrentScenario[] = [
       }),
       second.reorder({
         parentPageId: "root",
-        orderedPageIds: ["b", "a"],
+        baselineOrder: ["a", "b"],
+        localOrder: ["b", "a"],
         expectedDraftStructureRevision: 0,
       }),
     ],
@@ -315,7 +322,7 @@ const scenarios: ConcurrentScenario[] = [
 
 for (const scenario of scenarios) {
   void test(
-    `${scenario.name} serializes one success and one OCC conflict`,
+    `${scenario.name} preserves its OCC policy under one Website lock`,
     { skip },
     async () => {
       const prisma = client();
@@ -337,19 +344,21 @@ for (const scenario of scenarios) {
         const settled = await Promise.allSettled(
           scenario.commands(first, second),
         );
-        assert.equal(
-          settled.filter((result) => result.status === "fulfilled").length,
-          1,
-        );
-        const rejection = settled.find(
-          (result): result is PromiseRejectedResult =>
-            result.status === "rejected",
-        );
-        assert.ok(rejection?.reason instanceof DomainError);
-        assert.equal(
-          rejection.reason.code,
-          "DRAFT_STRUCTURE_REVISION_CONFLICT",
-        );
+        const fulfilled = settled.filter(
+          (result) => result.status === "fulfilled",
+        ).length;
+        assert.equal(fulfilled, scenario.expectedFulfilled);
+        if (scenario.expectedFulfilled === 1) {
+          const rejection = settled.find(
+            (result): result is PromiseRejectedResult =>
+              result.status === "rejected",
+          );
+          assert.ok(rejection?.reason instanceof DomainError);
+          assert.equal(
+            rejection.reason.code,
+            "DRAFT_STRUCTURE_REVISION_CONFLICT",
+          );
+        }
 
         const rows = await prisma.page.findMany({
           where: { websiteId, state: "draft" },
@@ -370,6 +379,118 @@ for (const scenario of scenarios) {
     },
   );
 }
+
+void test(
+  "concurrent compatible reorders merge both order intents",
+  { skip },
+  async () => {
+    const prisma = client();
+    const websiteId = `occ-compatible-reorder-${randomUUID()}`;
+    try {
+      await seed(prisma, websiteId, [
+        page("root"),
+        page("a", "root"),
+        page("b", "root"),
+        page("c", "root"),
+        page("d", "root"),
+      ]);
+      const synchronized = barrier(2);
+      const first = new PrismaDraftPageStructureTransaction({
+        websiteId,
+        client: prisma,
+        hook: synchronized,
+      });
+      const second = new PrismaDraftPageStructureTransaction({
+        websiteId,
+        client: prisma,
+        hook: synchronized,
+      });
+      const results = await Promise.all([
+        first.reorder({
+          parentPageId: "root",
+          baselineOrder: ["a", "b", "c", "d"],
+          localOrder: ["b", "a", "c", "d"],
+          expectedDraftStructureRevision: 0,
+        }),
+        second.reorder({
+          parentPageId: "root",
+          baselineOrder: ["a", "b", "c", "d"],
+          localOrder: ["a", "b", "d", "c"],
+          expectedDraftStructureRevision: 0,
+        }),
+      ]);
+      assert.deepEqual(
+        results.map((result) => result.outcome),
+        ["updated", "updated"],
+      );
+      const [children, website] = await Promise.all([
+        prisma.page.findMany({
+          where: { websiteId, state: "draft", parentPageId: "root" },
+          orderBy: { position: "asc" },
+          select: { pageId: true, position: true },
+        }),
+        prisma.website.findUniqueOrThrow({ where: { id: websiteId } }),
+      ]);
+      assert.deepEqual(children.map((item) => item.pageId), ["b", "a", "d", "c"]);
+      assert.deepEqual(children.map((item) => item.position), [1, 2, 3, 4]);
+      assert.equal(website.draftStructureRevision, 2);
+    } finally {
+      await cleanup(prisma, websiteId);
+      await prisma.$disconnect();
+    }
+  },
+);
+
+void test(
+  "concurrent incompatible reorders return a recoverable structure conflict",
+  { skip },
+  async () => {
+    const prisma = client();
+    const websiteId = `occ-incompatible-reorder-${randomUUID()}`;
+    try {
+      await seed(prisma, websiteId, [
+        page("root"),
+        page("a", "root"),
+        page("b", "root"),
+        page("c", "root"),
+      ]);
+      const synchronized = barrier(2);
+      const [first, second] = [
+        new PrismaDraftPageStructureTransaction({ websiteId, client: prisma, hook: synchronized }),
+        new PrismaDraftPageStructureTransaction({ websiteId, client: prisma, hook: synchronized }),
+      ];
+      const settled = await Promise.allSettled([
+        first.reorder({
+          parentPageId: "root",
+          baselineOrder: ["a", "b", "c"],
+          localOrder: ["a", "c", "b"],
+          expectedDraftStructureRevision: 0,
+        }),
+        second.reorder({
+          parentPageId: "root",
+          baselineOrder: ["a", "b", "c"],
+          localOrder: ["b", "a", "c"],
+          expectedDraftStructureRevision: 0,
+        }),
+      ]);
+      assert.equal(settled.filter((result) => result.status === "fulfilled").length, 1);
+      const rejection = settled.find(
+        (result): result is PromiseRejectedResult => result.status === "rejected",
+      );
+      assert.ok(rejection?.reason instanceof DomainError);
+      assert.equal(rejection.reason.code, "DRAFT_STRUCTURE_REVISION_CONFLICT");
+      assert.equal(
+        typeof rejection.reason.details === "object" &&
+          rejection.reason.details !== null &&
+          "current" in rejection.reason.details,
+        true,
+      );
+    } finally {
+      await cleanup(prisma, websiteId);
+      await prisma.$disconnect();
+    }
+  },
+);
 
 void test(
   "distinct Websites do not share the OCC revision or lock",

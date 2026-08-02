@@ -81,7 +81,7 @@ const t = (key: string, values?: Record<string, string | number>) => {
 };
 
 void test("formats typed locations, LCP owners, rich text, and order details safely", () => {
-  const items = toBlockConflictPresentation(details, {}, t)[0]?.items ?? [];
+  const items = toBlockConflictPresentation(details, t)[0]?.items ?? [];
   const field = items[0];
   assert.match(field?.label ?? "", /Block Hero · Row 1 · Field Title/);
   assert.equal(field?.comparison?.server.kind, "rich-text");
@@ -207,7 +207,7 @@ void test("classifies reused identifiers for every supported resource without ex
   ] as const;
   for (const [path, expectedLabel] of paths) {
     const current: PageBlocksConflictDetails = { ...details, conflicts: [{ kind: "idReused", path, id: "secret-resource-id" }] };
-    const item = toBlockConflictPresentation(current, {}, t)[0]?.items[0];
+    const item = toBlockConflictPresentation(current, t)[0]?.items[0];
     assert.equal(item?.label, expectedLabel);
     assert.doesNotMatch(JSON.stringify(item), /secret-resource-id/u);
   }
@@ -228,14 +228,14 @@ void test("presents every structural conflict branch with semantic comparisons o
       { kind: "revisionAhead", path: "blocksRevision", expectedBlocksRevision: 2, currentBlocksRevision: 4 },
     ],
   };
-  const items = toBlockConflictPresentation(structural, {}, t, { currentBlocks: [block], baselineBlocks: [block], candidateBlock: { ...block, id: "candidate", name: "Candidate" } })[0]?.items ?? [];
+  const items = toBlockConflictPresentation(structural, t, { currentBlocks: [block], baselineBlocks: [block], candidateBlock: { ...block, id: "candidate", name: "Candidate" } })[0]?.items ?? [];
   assert.equal(items.length, structural.conflicts.length);
   assert.ok(items.every((item) => item.comparison || (item.details?.length ?? 0) > 0));
   assert.equal(items.find((item) => item.label === "kinds.revisionAhead")?.comparison, undefined);
   assert.equal(items.find((item) => item.label === "kinds.anchorMissing")?.comparison, undefined);
   for (const kind of ["blockTypeChanged", "cellTypeChanged", "itemTypeChanged"] as const) {
     const item = items.find((candidate) => candidate.label === `kinds.${kind}`);
-    assert.equal(item?.resolutionMode, "manual");
+    assert.equal(item?.resolutionMode, "choice");
     assert.deepEqual(item?.details?.map((detail) => detail.label), ["structural.initialType", "structural.savedType", "structural.localType"]);
   }
   const cellTypes = items.find((item) => item.label === "kinds.cellTypeChanged")?.details?.map((detail) => detail.value.kind === "text" ? detail.value.text : "");
@@ -263,7 +263,7 @@ void test("maps every known global invariant category and safely hides unknown c
       { kind: "globalInvariant", path: "blocks", invariant: "FUTURE_PRIVATE_CODE" },
     ],
   };
-  const items = toBlockConflictPresentation(invariantDetails, {}, t)[0]?.items ?? [];
+  const items = toBlockConflictPresentation(invariantDetails, t)[0]?.items ?? [];
   const serialized = JSON.stringify(items);
   assert.match(serialized, /invariants\.multipleLcp|invariants\.multipleH1|invariants\.invalidCombination/);
   assert.doesNotMatch(serialized, /BLOCKS_MULTIPLE_LCP_DETECTED|HEADING_CELL_UNIQUE_H1|FUTURE_PRIVATE_CODE/);
@@ -285,7 +285,7 @@ void test("separates remote and local order changes and resolves candidate block
     }],
   };
   const serverAdded = { ...block, id: "server-added", name: "Server addition" };
-  const item = toBlockConflictPresentation(orderDetails, {}, t, { currentBlocks: [block, serverAdded], baselineBlocks: [block], localBlocks: [block, candidate], candidateBlock: candidate })[0]?.items[0];
+  const item = toBlockConflictPresentation(orderDetails, t, { currentBlocks: [block, serverAdded], baselineBlocks: [block], localBlocks: [block, candidate], candidateBlock: candidate })[0]?.items[0];
   assert.ok(item?.details?.some((detail) => detail.id === "added-server"));
   assert.ok(item?.details?.some((detail) => detail.id === "removed-server"));
   const localAdded = item?.details?.find((detail) => detail.id === "added-local")?.value;
@@ -294,8 +294,8 @@ void test("separates remote and local order changes and resolves candidate block
   assert.doesNotMatch(JSON.stringify(item), /candidate-id|server-added|removed-both/u);
 });
 
-void test("makes field conflicts read-only when a structural conflict prevents applying choices", () => {
-  const items = toBlockConflictPresentation(details, {}, t, { currentBlocks: [block] }, false)[0]?.items ?? [];
-  assert.equal(items[0]?.resolutionMode, "manual");
-  assert.equal(items[0]?.choice, undefined);
+void test("normalizes every block conflict to an explicit binary choice", () => {
+  const items = toBlockConflictPresentation(details, t, { currentBlocks: [block] })[0]?.items ?? [];
+  assert.ok(items.every((item) => item.resolutionMode === "choice"));
+  assert.ok(items.every((item) => item.choice === undefined));
 });

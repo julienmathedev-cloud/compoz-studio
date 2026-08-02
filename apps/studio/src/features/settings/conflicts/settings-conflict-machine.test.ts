@@ -60,13 +60,11 @@ void test("adoption and apply serialize actions and close only on completion", (
   assert.equal(transitionSettingsConflict(applying, { type: "abandon" }), applying);
 });
 
-void test("mutation error preserves choices and allows a new explicit attempt", () => {
+void test("mutation error allows a new explicit attempt while UI choices remain outside the machine", () => {
   const ready = transitionSettingsConflict(opened(), { type: "freshReadSucceeded", current: fresh });
-  const chosen = transitionSettingsConflict(ready, { type: "choose", itemId: "title", choice: "local" });
-  const applying = transitionSettingsConflict(chosen, { type: "startApply" });
+  const applying = transitionSettingsConflict(ready, { type: "startApply" });
   const failed = transitionSettingsConflict(applying, { type: "mutationFailed", error: "Mutation failed" });
   assert.equal(failed.phase, "mutationError");
-  assert.equal(failed.choices.title, "local");
   assert.equal(transitionSettingsConflict(failed, { type: "startApply" }).phase, "applying");
 });
 

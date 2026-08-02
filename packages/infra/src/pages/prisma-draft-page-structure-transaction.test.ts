@@ -393,12 +393,14 @@ void test("reorder locks, validates and increments structure only for a real cha
 
   const same = await fake.transaction.reorder({
     parentPageId: "parent",
-    orderedPageIds: ["a", "b"],
+    baselineOrder: ["a", "b"],
+    localOrder: ["a", "b"],
     expectedDraftStructureRevision: 2,
   });
   const changed = await fake.transaction.reorder({
     parentPageId: "parent",
-    orderedPageIds: ["b", "a"],
+    baselineOrder: ["a", "b"],
+    localOrder: ["b", "a"],
     expectedDraftStructureRevision: 2,
   });
 
@@ -408,6 +410,112 @@ void test("reorder locks, validates and increments structure only for a real cha
   assert.equal(changed.outcome, "updated");
   assert.equal(fake.websiteWrites.length, 1);
   assert.ok(fake.calls.indexOf("website.lock") >= 0);
+});
+
+void test("stale compatible reorder merges current and local intent", async () => {
+  const fake = fakeTransaction([
+    row("parent", null, 0),
+    row("a", "parent", 1),
+    row("b", "parent", 2),
+    row("c", "parent", 3),
+    row("d", "parent", 4),
+  ]);
+  await fake.transaction.reorder({
+    parentPageId: "parent",
+    baselineOrder: ["a", "b", "c", "d"],
+    localOrder: ["b", "a", "c", "d"],
+    expectedDraftStructureRevision: 2,
+  });
+  const merged = await fake.transaction.reorder({
+    parentPageId: "parent",
+    baselineOrder: ["a", "b", "c", "d"],
+    localOrder: ["a", "b", "d", "c"],
+    expectedDraftStructureRevision: 2,
+  });
+  assert.equal(merged.outcome, "updated");
+  assert.deepEqual(
+    fake.rows()
+      .filter((item) => item.parentPageId === "parent")
+      .sort((left, right) => left.position - right.position)
+      .map((item) => item.pageId),
+    ["b", "a", "d", "c"],
+  );
+  assert.equal(merged.draftStructureRevision, 4);
+});
+
+void test("stale incompatible reorder returns a recoverable structure conflict", async () => {
+  const fake = fakeTransaction([
+    row("parent", null, 0),
+    row("a", "parent", 1),
+    row("b", "parent", 2),
+    row("c", "parent", 3),
+  ]);
+  await fake.transaction.reorder({
+    parentPageId: "parent",
+    baselineOrder: ["a", "b", "c"],
+    localOrder: ["a", "c", "b"],
+    expectedDraftStructureRevision: 2,
+  });
+  await assert.rejects(
+    () => fake.transaction.reorder({
+      parentPageId: "parent",
+      baselineOrder: ["a", "b", "c"],
+      localOrder: ["b", "a", "c"],
+      expectedDraftStructureRevision: 2,
+    }),
+    (error: unknown) =>
+      error instanceof DomainError &&
+      error.code === "DRAFT_STRUCTURE_REVISION_CONFLICT" &&
+      typeof error.details === "object" &&
+      error.details !== null &&
+      "current" in error.details,
+  );
+  assert.deepEqual(
+    fake.rows()
+      .filter((item) => item.parentPageId === "parent")
+      .sort((left, right) => left.position - right.position)
+      .map((item) => item.pageId),
+    ["a", "c", "b"],
+  );
+});
+
+void test("reorder rejects an expected revision ahead of the locked state", async () => {
+  const fake = fakeTransaction([
+    row("parent", null, 0),
+    row("a", "parent", 1),
+    row("b", "parent", 2),
+  ]);
+  await assert.rejects(
+    () => fake.transaction.reorder({
+      parentPageId: "parent",
+      baselineOrder: ["a", "b"],
+      localOrder: ["b", "a"],
+      expectedDraftStructureRevision: 3,
+    }),
+    (error: unknown) =>
+      error instanceof DomainError &&
+      error.code === "DRAFT_STRUCTURE_REVISION_CONFLICT",
+  );
+  assert.equal(fake.websiteWrites.length, 0);
+});
+
+void test("reorder against a removed parent returns the current snapshot", async () => {
+  const fake = fakeTransaction([row("other", null, 0)]);
+  await assert.rejects(
+    () => fake.transaction.reorder({
+      parentPageId: "removed-parent",
+      baselineOrder: ["a"],
+      localOrder: ["a"],
+      expectedDraftStructureRevision: 2,
+    }),
+    (error: unknown) =>
+      error instanceof DomainError &&
+      error.code === "DRAFT_STRUCTURE_REVISION_CONFLICT" &&
+      typeof error.details === "object" &&
+      error.details !== null &&
+      "current" in error.details,
+  );
+  assert.equal(fake.websiteWrites.length, 0);
 });
 
 void test("create and delete preserve structure planning and pagination normalization", async () => {

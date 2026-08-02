@@ -489,6 +489,12 @@
   "studio": {
     "conflictResolution": {
       "pending": "Resolving conflict…",
+      "actions": {
+        "cancel": "Cancel and return to draft",
+        "apply": "Apply my choices",
+        "useServer": "Use the saved value",
+        "keepLocal": "Keep my value"
+      },
       "status": {
         "serverOnly": "Only the saved version changed.",
         "localOnly": "Only your local version changed.",
@@ -506,14 +512,8 @@
         "local": "Your draft"
       },
       "actions": {
-        "abandon": "Close and keep the local draft",
-        "adoptCurrent": "Adopt the saved settings",
-        "apply": "Apply my choices",
-        "retryFreshRead": "Reload the saved settings",
-        "useServer": "Use saved",
-        "keepLocal": "Keep local",
-        "keepLocalAndSave": "Keep my version and save",
-        "keepAllLocal": "Keep my entire local draft"
+        "useServerStructure": "Use the saved structure",
+        "keepLocalStructure": "Keep my local structure"
       },
       "errors": {
         "freshRead": "The saved settings could not be loaded. Your draft is unchanged.",
@@ -1663,15 +1663,6 @@
         "baseline": "Initial value",
         "local": "Your value",
         "remote": "Remote value",
-        "keepLocal": "Keep my value",
-        "adoptRemote": "Use saved value",
-        "actions": {
-          "abandon": "Close and keep the local draft",
-          "adoptCurrent": "Adopt the saved metadata",
-          "keepAllLocal": "Keep my version and save",
-          "apply": "Apply my choices and save",
-          "retryFreshRead": "Reload the saved metadata"
-        },
         "errors": {
           "incomplete": "Choose a version for every difference before applying the resolution.",
           "mutation": "The resolution could not be saved. Your draft and choices are preserved."
@@ -1815,25 +1806,30 @@
       "title": "Page blocks conflict",
       "updateTitle": "Block content conflict",
       "operation": "Operation: {operation}",
-      "deletedOrChanged": "The block was deleted or transformed while you were editing.",
+      "fieldConflictDescription": "The same block property changed in the saved version and in your draft.",
+      "blockDeletedDescription": "The block was deleted while you were editing your draft.",
+      "orderConflictDescription": "The saved order and your local order are incompatible.",
+      "structuralConflictDescription": "The saved structure and your local structure are incompatible.",
+      "reorderConflict": {
+        "title": "Conflict",
+        "description": "The block order changed elsewhere. The latest state was loaded; please retry your action."
+      },
       "baseline": "Baseline",
       "remote": "Saved",
       "local": "Local",
-      "useRemote": "Use saved",
-      "keepLocal": "Keep local",
-      "cancel": "Cancel",
-      "apply": "Apply choices",
       "anchorMissing": "The targeted position no longer exists. Restart the add from the current state.",
       "deleteChanged": "The block changed since your delete request.",
-      "useCurrent": "Use saved state",
-      "forceDelete": "Delete current version",
-      "recreate": "Recreate as a new block",
-      "abandon": "Discard and return to blocks",
-      "addAtEnd": "Explicitly add at the end",
-      "manualRebase": "This structural conflict requires a manual rebase from the saved state.",
-      "restartCurrent": "This revision can no longer be applied. Explicitly restart from the saved snapshot.",
-      "keepDraft": "Keep my draft",
-      "resolutionError": "Conflict resolution failed. Try again or reload the saved state.",
+      "choices": {
+        "keepDeletion": "Keep the deletion",
+        "recreateBlock": "Recreate my block",
+        "keepSavedBlock": "Keep the saved block",
+        "useSavedStructure": "Use the saved structure",
+        "keepLocalStructure": "Keep my local structure",
+        "useSavedOrder": "Use the saved order",
+        "keepLocalOrder": "Keep my order",
+        "keepSavedState": "Use the saved state",
+        "retryLocalOperation": "Keep my local operation"
+      },
       "empty": "No value",
       "configurationChanged": "Configuration changed",
       "dimensions": "{width} × {height} pixels",

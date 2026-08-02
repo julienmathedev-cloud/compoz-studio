@@ -142,6 +142,71 @@ void test("keepLocal and apply each execute one metadata-only mutation without p
   }
 });
 
+void test("mixed Apply sends one complete mutation with hidden local-only and server-only metadata", async () => {
+  const mixedState = createPageMetadataConflictState(
+    {
+      ...details,
+      current: {
+        ...details.current,
+        page: {
+          ...details.current.page,
+          seoTitle: "Saved title",
+        },
+      },
+    },
+    structuralBaseline,
+    {
+      ...local,
+      seoDescription: "Local description",
+    },
+  );
+  const resolution = resolvePageMetadataConflictValues({
+    state: mixedState,
+    choices: { name: "local" },
+    localParentId: "local-parent",
+  });
+  assert.equal(resolution.status, "resolved");
+  if (resolution.status !== "resolved") return;
+
+  let calls = 0;
+  const result = await executePageMetadataConflictMutation({
+    request: {
+      pageId: "page",
+      baseline: {
+        values: currentPageMetadataValues(mixedState, "local-parent"),
+        metaRevision: details.currentMetaRevision,
+      },
+      values: resolution.values,
+    },
+    state: mixedState,
+    structuralBaseline: { values: structuralBaseline, metaRevision: 2 },
+    beforeMutation: () => undefined,
+    resolve: async (_pageId, _baseline, next) => {
+      calls += 1;
+      assert.equal(next.name, "Local");
+      assert.equal(next.seoTitle, "Saved title");
+      assert.equal(next.seoDescription, "Local description");
+      return {
+        status: "submitted",
+        response: {
+          ...response,
+          page: {
+            ...response.page,
+            ...next,
+          },
+        },
+      };
+    },
+  });
+
+  assert.equal(calls, 1);
+  assert.equal(result.status, "success");
+  if (result.status === "success") {
+    assert.equal(result.values.seoTitle, "Saved title");
+    assert.equal(result.values.seoDescription, "Local description");
+  }
+});
+
 void test("a second 409 performs no retry and returns a new resolvable conflict outcome", async () => {
   let calls = 0;
   const result = await executePageMetadataConflictMutation({

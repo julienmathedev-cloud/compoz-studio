@@ -8,9 +8,8 @@
 
 import { useTranslations } from "next-intl";
 
-import { ControlledConflictResolutionPanel } from "@compoz/studio/features/conflicts/ControlledConflictResolutionPanel";
+import { ConflictResolutionPanel } from "@compoz/studio/features/conflicts/ConflictResolutionPanel";
 import { toPageMetadataConflictPresentation } from "@compoz/studio/features/pages/conflicts/page-metadata-conflict-presentation";
-import { toPageMetadataConflictPanelController } from "@compoz/studio/features/pages/conflicts/page-metadata-conflict-panel-controller";
 import type { PageMetadataConflictController } from "@compoz/studio/features/pages/conflicts/usePageMetadataConflictController";
 
 type PageMetadataConflictPanelProps = Readonly<{
@@ -27,34 +26,29 @@ export function PageMetadataConflictPanel({
   const tChangeFrequency = useTranslations("studio.pageForm.sitemap.changefreq.options");
 
   return (
-    <ControlledConflictResolutionPanel
-      actionLabels={{
-        abandon: t("actions.abandon"),
-        "adopt-current": t("actions.adoptCurrent"),
-        "keep-all-local": t("actions.keepAllLocal"),
-        keepLocalSimple: t("actions.keepAllLocal"),
-        apply: t("actions.apply"),
-        "retry-fresh-read": t("actions.retryFreshRead"),
-      }}
-      controller={toPageMetadataConflictPanelController(
-        controller,
-        toPageMetadataConflictPresentation(
-          controller.state,
-          controller.choices,
-          t,
-          tChangeFrequency,
-        ),
-      )}
+    <ConflictResolutionPanel
+      conflictKey={controller.conflictId}
       description={t("description")}
+      error={controller.error}
       focusTargetId={focusTargetId}
+      groups={toPageMetadataConflictPresentation(
+        controller.state,
+        t,
+        tChangeFrequency,
+      )}
+      isPending={controller.pending}
       labels={{
         baseline: t("baseline"),
         server: t("remote"),
         local: t("local"),
-        useServer: t("adoptRemote"),
-        keepLocal: t("keepLocal"),
+        useServer: tConflict("actions.useServer"),
+        keepLocal: tConflict("actions.keepLocal"),
         pending: tConflict("pending"),
+        cancel: tConflict("actions.cancel"),
+        apply: tConflict("actions.apply"),
       }}
+      onApply={controller.apply}
+      onCancel={controller.abandon}
       title={t("title")}
     />
   );

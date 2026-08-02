@@ -4,8 +4,6 @@
  * @description Pure state machine used by the Settings OCC React controller.
  */
 
-import type { ConflictResolutionChoice } from "@compoz/studio/features/conflicts/conflict-presentation";
-
 export type SettingsConflictFreshCurrent<T extends object> = Readonly<{
   value: T;
   revision: number;
@@ -17,7 +15,6 @@ type Session<T extends object> = Readonly<{
   baseline: T;
   local: T;
   current?: SettingsConflictFreshCurrent<T>;
-  choices: Readonly<Record<string, ConflictResolutionChoice>>;
   error?: string;
 }>;
 
@@ -30,7 +27,6 @@ export type SettingsConflictMachineEvent<T extends object> =
   | Readonly<{ type: "startFreshRead" }>
   | Readonly<{ type: "freshReadSucceeded"; current: SettingsConflictFreshCurrent<T> }>
   | Readonly<{ type: "freshReadFailed"; error: string }>
-  | Readonly<{ type: "choose"; itemId: string; choice: ConflictResolutionChoice }>
   | Readonly<{ type: "startApply" }>
   | Readonly<{ type: "startAdoptingCurrent" }>
   | Readonly<{ type: "mutationFailed"; error: string }>
@@ -53,7 +49,6 @@ export function transitionSettingsConflict<T extends object>(
       conflictId: event.conflictId,
       baseline: event.baseline,
       local: event.local,
-      choices: {},
     };
   }
   if (state.phase === "idle") return state;
@@ -70,10 +65,6 @@ export function transitionSettingsConflict<T extends object>(
     case "freshReadFailed":
       return state.phase === "loadingCurrent"
         ? { ...state, phase: "freshReadError", error: event.error }
-        : state;
-    case "choose":
-      return (state.phase === "ready" || state.phase === "mutationError") && state.current
-        ? { ...state, choices: { ...state.choices, [event.itemId]: event.choice }, error: undefined }
         : state;
     case "startApply":
       return (state.phase === "ready" || state.phase === "mutationError") && state.current
@@ -99,7 +90,6 @@ export function transitionSettingsConflict<T extends object>(
             baseline: event.baseline,
             local: event.local,
             current: undefined,
-            choices: {},
             error: event.error,
           }
         : state;

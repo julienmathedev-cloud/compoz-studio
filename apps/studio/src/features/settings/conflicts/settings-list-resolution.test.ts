@@ -7,15 +7,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { toDecisionConflictGroups } from "@compoz/studio/features/conflicts/conflict-presentation";
 import {
   legalMenuConflictAdapter,
   primaryMenuConflictAdapter,
   socialConflictAdapter,
 } from "@compoz/studio/features/settings/conflicts/settings-conflict-adapters";
-import {
-  buildSettingsConflictMutationPlan,
-  buildSettingsWholeLocalMutationPlan,
-} from "@compoz/studio/features/settings/conflicts/settings-conflict-resolution";
+import { buildSettingsConflictMutationPlan } from "@compoz/studio/features/settings/conflicts/settings-conflict-resolution";
 import type { LegalMenuFormValues } from "@compoz/validation/site/settings/menus/legal-menu/legal-menu-form";
 import type { PrimaryMenuFormValues } from "@compoz/validation/site/settings/menus/primary-menu/primary-menu-form";
 import type { SocialFormValues } from "@compoz/validation/site/settings/social/social-form";
@@ -99,6 +97,56 @@ void test("Social requires choices for the same property and deletion versus mod
   assert.doesNotMatch(visiblePresentation(presentation), /social-private/);
 });
 
+void test("Social hides automatic additions while its complete plan keeps them", () => {
+  const adapter = socialConflictAdapter(t);
+  const baseline: SocialFormValues = {
+    items: [{ id: "base", kind: "website", href: "https://base.example" }],
+  };
+  const current: SocialFormValues = {
+    items: [
+      { ...baseline.items[0]!, href: "https://saved.example" },
+      { id: "saved-addition", kind: "linkedin", href: "https://saved-addition.example" },
+    ],
+  };
+  const local: SocialFormValues = {
+    items: [
+      { ...baseline.items[0]!, href: "https://local.example" },
+      { id: "local-addition", kind: "github", href: "https://local-addition.example" },
+    ],
+  };
+  const completeGroups = adapter.fieldStrategies?.items?.present({
+    baseline: baseline.items,
+    current: current.items,
+    local: local.items,
+    choices: {},
+  }) ?? [];
+  const visibleGroups = toDecisionConflictGroups([{
+    id: "social",
+    items: completeGroups,
+  }]);
+
+  assert.ok(completeGroups.some((item) => item.resolutionMode === "automatic"));
+  assert.deepEqual(visibleGroups[0]?.items.map((item) => item.id), [
+    "items:base:property:href",
+  ]);
+
+  const plan = buildSettingsConflictMutationPlan({
+    snapshot: { baseline, current, local, currentRevision: 45 },
+    choices: { "items:base:property:href": "local" },
+    fields: adapter,
+  });
+  assert.equal(plan.status, "mutation");
+  if (plan.status === "mutation") {
+    assert.deepEqual(plan.payload, {
+      items: [
+        { ...baseline.items[0]!, href: "https://local.example" },
+        current.items[1],
+        local.items[1],
+      ],
+    });
+  }
+});
+
 void test("Social makes incompatible same-ID additions explicit and refuses duplicated IDs", () => {
   const strategy = socialConflictAdapter(t).fieldStrategies?.items;
   assert.ok(strategy);
@@ -119,10 +167,10 @@ void test("Social makes incompatible same-ID additions explicit and refuses dupl
     ],
     local: [],
     choices: {},
-  }), { status: "manual", reason: "duplicate-id" });
+  }), { status: "incomplete", missingChoices: ["items:manual:duplicate-id"] });
 });
 
-void test("Social adopts one-sided order and marks incompatible concurrent order as manual", () => {
+void test("Social adopts one-sided order and makes incompatible order an explicit choice", () => {
   const strategy = socialConflictAdapter(t).fieldStrategies?.items;
   assert.ok(strategy);
   const baseline: SocialFormValues["items"] = [
@@ -138,7 +186,17 @@ void test("Social adopts one-sided order and marks incompatible concurrent order
     current: [baseline[1]!, baseline[0]!, baseline[2]!],
     local: [baseline[0]!, baseline[2]!, baseline[1]!],
     choices: {},
-  }), { status: "manual", reason: "order-incompatible" });
+  }), { status: "incomplete", missingChoices: ["items:manual:order-incompatible"] });
+  const localOrder = strategy.resolve({
+    baseline,
+    current: [baseline[1]!, baseline[0]!, baseline[2]!],
+    local: [baseline[0]!, baseline[2]!, baseline[1]!],
+    choices: { "items:manual:order-incompatible": "local" },
+  });
+  assert.equal(localOrder.status, "resolved");
+  if (localOrder.status === "resolved") {
+    assert.deepEqual(localOrder.value.map((item) => item.id), ["a", "c", "b"]);
+  }
 });
 
 void test("Primary menu combines parent and child additions and reconstructs the complete tree", () => {
@@ -226,7 +284,7 @@ void test("Primary menu refuses same-property conflicts, deletion changes, and i
     current: [baseline[1]!, baseline[0]!, baseline[2]!],
     local: [baseline[0]!, baseline[2]!, baseline[1]!],
     choices: {},
-  }), { status: "manual", reason: "order-incompatible" });
+  }), { status: "incomplete", missingChoices: ["items:manual:order-incompatible"] });
 });
 
 void test("Legal menu resolves additions and independent changes while preserving full payloads", () => {
@@ -325,19 +383,30 @@ void test("Settings mutation planning delegates items, emits one complete array,
     choices: {},
     fields: adapter,
   });
-  assert.deepEqual(manual, { status: "manual", field: "items", reason: "order-incompatible" });
-  const keepLocal = buildSettingsWholeLocalMutationPlan({
+  assert.deepEqual(manual, {
+    status: "incomplete",
+    missingKeys: ["items:manual:order-incompatible"],
+  });
+  const selectedLocal = buildSettingsConflictMutationPlan({
     snapshot: {
       baseline: orderedBaseline,
       current: { items: [orderedBaseline.items[1]!, orderedBaseline.items[0]!, orderedBaseline.items[2]!] },
       local: { items: [orderedBaseline.items[0]!, orderedBaseline.items[2]!, orderedBaseline.items[1]!] },
       currentRevision: 44,
     },
+    choices: { "items:manual:order-incompatible": "local" },
     fields: adapter,
   });
-  assert.equal(keepLocal.status, "mutation");
-  assert.equal(keepLocal.expectedRevision, 44);
-  if (keepLocal.status === "mutation") {
-    assert.deepEqual(keepLocal.payload, { items: [orderedBaseline.items[0]!, orderedBaseline.items[2]!, orderedBaseline.items[1]!] });
-  }
+  assert.equal(selectedLocal.status, "mutation");
+  const selectedServer = buildSettingsConflictMutationPlan({
+    snapshot: {
+      baseline: orderedBaseline,
+      current: { items: [orderedBaseline.items[1]!, orderedBaseline.items[0]!, orderedBaseline.items[2]!] },
+      local: { items: [orderedBaseline.items[0]!, orderedBaseline.items[2]!, orderedBaseline.items[1]!] },
+      currentRevision: 44,
+    },
+    choices: { "items:manual:order-incompatible": "server" },
+    fields: adapter,
+  });
+  assert.equal(selectedServer.status, "noChanges");
 });

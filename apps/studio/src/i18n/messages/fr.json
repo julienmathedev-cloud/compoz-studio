@@ -490,6 +490,12 @@
   "studio": {
     "conflictResolution": {
       "pending": "Résolution en cours…",
+      "actions": {
+        "cancel": "Annuler et revenir au brouillon",
+        "apply": "Appliquer mes choix",
+        "useServer": "Utiliser la valeur enregistrée",
+        "keepLocal": "Conserver ma valeur"
+      },
       "status": {
         "serverOnly": "Seule la version enregistrée a changé.",
         "localOnly": "Seule votre version locale a changé.",
@@ -507,14 +513,8 @@
         "local": "Votre brouillon"
       },
       "actions": {
-        "abandon": "Fermer et conserver le brouillon local",
-        "adoptCurrent": "Adopter les réglages enregistrés",
-        "apply": "Appliquer mes choix",
-        "retryFreshRead": "Recharger les réglages enregistrés",
-        "useServer": "Utiliser enregistré",
-        "keepLocal": "Conserver local",
-        "keepLocalAndSave": "Conserver ma version et enregistrer",
-        "keepAllLocal": "Conserver entièrement mon brouillon local"
+        "useServerStructure": "Utiliser la structure enregistrée",
+        "keepLocalStructure": "Conserver ma structure locale"
       },
       "errors": {
         "freshRead": "Impossible de charger les réglages enregistrés. Votre brouillon reste inchangé.",
@@ -1664,15 +1664,6 @@
         "baseline": "Valeur initiale",
         "local": "Votre valeur",
         "remote": "Valeur distante",
-        "keepLocal": "Conserver ma valeur",
-        "adoptRemote": "Utiliser la valeur enregistrée",
-        "actions": {
-          "abandon": "Fermer et conserver le brouillon local",
-          "adoptCurrent": "Adopter les métadonnées enregistrées",
-          "keepAllLocal": "Conserver ma version et enregistrer",
-          "apply": "Appliquer mes choix et enregistrer",
-          "retryFreshRead": "Recharger les métadonnées enregistrées"
-        },
         "errors": {
           "incomplete": "Choisissez une version pour chaque différence avant d’appliquer la résolution.",
           "mutation": "La résolution n’a pas pu être enregistrée. Votre brouillon et vos choix sont conservés."
@@ -1816,25 +1807,30 @@
       "title": "Conflit sur les blocs de la page",
       "updateTitle": "Conflit de contenu du bloc",
       "operation": "Opération : {operation}",
-      "deletedOrChanged": "Le bloc a été supprimé ou transformé pendant votre édition.",
+      "fieldConflictDescription": "La même propriété du bloc a été modifiée dans la version enregistrée et dans votre brouillon.",
+      "blockDeletedDescription": "Le bloc a été supprimé pendant que vous modifiiez votre brouillon.",
+      "orderConflictDescription": "L’ordre enregistré et votre ordre local sont incompatibles.",
+      "structuralConflictDescription": "La structure enregistrée et votre structure locale sont incompatibles.",
+      "reorderConflict": {
+        "title": "Conflit",
+        "description": "L’ordre des blocs a changé ailleurs. L’état le plus récent a été chargé ; veuillez recommencer votre action."
+      },
       "baseline": "Base",
       "remote": "Enregistré",
       "local": "Local",
-      "useRemote": "Utiliser enregistré",
-      "keepLocal": "Conserver local",
-      "cancel": "Annuler",
-      "apply": "Appliquer les choix",
       "anchorMissing": "La position ciblée n’existe plus. Reprenez l’ajout depuis l’état courant.",
       "deleteChanged": "Le bloc a été modifié depuis votre demande de suppression.",
-      "useCurrent": "Utiliser l’état enregistré",
-      "forceDelete": "Supprimer la version actuelle",
-      "recreate": "Recréer comme nouveau bloc",
-      "abandon": "Abandonner et revenir aux blocs",
-      "addAtEnd": "Ajouter explicitement à la fin",
-      "manualRebase": "Ce conflit structurel exige une reprise manuelle depuis l’état enregistré.",
-      "restartCurrent": "La révision n’est plus applicable. Repartez explicitement du snapshot enregistré.",
-      "keepDraft": "Conserver mon brouillon",
-      "resolutionError": "La résolution du conflit a échoué. Réessayez ou rechargez l’état enregistré.",
+      "choices": {
+        "keepDeletion": "Conserver la suppression",
+        "recreateBlock": "Recréer mon bloc",
+        "keepSavedBlock": "Conserver le bloc enregistré",
+        "useSavedStructure": "Utiliser la structure enregistrée",
+        "keepLocalStructure": "Conserver ma structure locale",
+        "useSavedOrder": "Utiliser l’ordre enregistré",
+        "keepLocalOrder": "Conserver mon ordre",
+        "keepSavedState": "Utiliser l’état enregistré",
+        "retryLocalOperation": "Conserver mon opération locale"
+      },
       "empty": "Aucune valeur",
       "configurationChanged": "Configuration modifiée",
       "dimensions": "{width} × {height} pixels",

@@ -8,7 +8,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { SectionBlock } from "@compoz/core/domain/pages/entities/block";
+import { mergeSectionBlock } from "@compoz/core/domain/pages/revisions/page-blocks-merge";
 import type { PageBlocksConflictDetails } from "@compoz/core/domain/pages/revisions/page-blocks.types";
+import { toDecisionConflictGroups } from "@compoz/studio/features/conflicts/conflict-presentation";
+import {
+  getBlockConflictPresentationId,
+  toBlockConflictPresentation,
+} from "@compoz/studio/features/pages/blocks/conflicts/block-conflict-presentation";
 import { resolveBlockConflictCandidate } from "@compoz/studio/features/pages/blocks/conflicts/resolve-block-conflict";
 
 const block = {
@@ -90,6 +96,61 @@ void test("keepLocal preserves candidate and adoptRemote replaces selected paths
   if (rich?.kind === "richText") {
     assert.equal(rich.content, "<p>local</p>");
   }
+});
+
+void test("shows only the divergent property and preserves an adjacent automatic merge in the candidate", () => {
+  const candidate = structuredClone(block);
+  const rich = candidate.rows[0]?.columns[0]?.cells[0];
+  assert.equal(rich?.kind, "richText");
+  if (rich?.kind === "richText") rich.content = "<p>automatically merged</p>";
+  const mixedDetails: PageBlocksConflictDetails = {
+    ...details,
+    conflictingPaths: [details.conflicts[0]!.path],
+    conflicts: [details.conflicts[0]!],
+    candidateBlock: candidate,
+  };
+  const groups = toDecisionConflictGroups(toBlockConflictPresentation(
+    mixedDetails,
+    (key) => key,
+    {
+      currentBlocks: mixedDetails.current.blocks,
+      baselineBlocks: [block],
+      candidateBlock: candidate,
+    },
+  ));
+
+  assert.deepEqual(groups[0]?.items.map((item) => item.id), [
+    getBlockConflictPresentationId("blocks[block].name"),
+  ]);
+  const resolved = resolveBlockConflictCandidate({
+    details: mixedDetails,
+    choices: { 0: "remote" },
+  });
+  assert.equal(resolved?.name, "Remote");
+  const resolvedRich = resolved?.rows[0]?.columns[0]?.cells[0];
+  assert.equal(
+    resolvedRich?.kind === "richText" ? resolvedRich.content : null,
+    "<p>automatically merged</p>",
+  );
+});
+
+void test("a fully compatible block merge is resolved upstream without panel details", () => {
+  const current = structuredClone(block);
+  current.name = "Saved name";
+  const local = structuredClone(block);
+  const rich = local.rows[0]?.columns[0]?.cells[0];
+  assert.equal(rich?.kind, "richText");
+  if (rich?.kind === "richText") rich.content = "<p>Local content</p>";
+
+  const merged = mergeSectionBlock({ baseline: block, current, local });
+
+  assert.deepEqual(merged.conflicts, []);
+  assert.equal(merged.candidate.name, "Saved name");
+  const mergedRich = merged.candidate.rows[0]?.columns[0]?.cells[0];
+  assert.equal(
+    mergedRich?.kind === "richText" ? mergedRich.content : null,
+    "<p>Local content</p>",
+  );
 });
 
 void test("missing candidate cannot silently manufacture a block", () => {

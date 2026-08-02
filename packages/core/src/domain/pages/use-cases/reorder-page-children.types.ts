@@ -16,7 +16,8 @@ export type ReorderPageChildrenDeps = Readonly<{
 
 export type ReorderPageChildrenInput = Readonly<{
   parentId: string;
-  childIds: ReadonlyArray<string>;
+  baselineOrder: ReadonlyArray<string>;
+  localOrder: ReadonlyArray<string>;
   expectedDraftStructureRevision: number;
 }>;
 

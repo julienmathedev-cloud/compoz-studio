@@ -10,6 +10,7 @@ import test from "node:test";
 import type { Page } from "@compoz/core/domain/pages/entities/page";
 import type { DraftPageStructureTransaction } from "@compoz/core/domain/pages/ports/draft-page-structure-transaction";
 import type { PagesRepository } from "@compoz/core/domain/pages/ports/pages-repository";
+import { DomainError } from "@compoz/core/domain/errors/domain-error";
 import { createPage } from "@compoz/core/domain/pages/use-cases/create-page";
 import { deletePage } from "@compoz/core/domain/pages/use-cases/delete-page";
 import { reorderPageChildren } from "@compoz/core/domain/pages/use-cases/reorder-page-children";
@@ -148,7 +149,8 @@ void test("reorder and delete keep using the structure transaction", async () =>
 
   await reorderPageChildren({ structure })({
     parentId: "parent",
-    childIds: [PAGE.id],
+    baselineOrder: [PAGE.id],
+    localOrder: [PAGE.id],
     expectedDraftStructureRevision: 4,
   });
   await deletePage({ structure })({
@@ -157,7 +159,23 @@ void test("reorder and delete keep using the structure transaction", async () =>
   });
 
   assert.equal(reorderIntent?.expectedDraftStructureRevision, 4);
+  assert.deepEqual(reorderIntent?.baselineOrder, [PAGE.id]);
+  assert.deepEqual(reorderIntent?.localOrder, [PAGE.id]);
   assert.equal(deleteIntent?.expectedDraftStructureRevision, 4);
+});
+
+void test("reorder rejects missing parent, revision, and non-permutation orders", async () => {
+  const run = reorderPageChildren({ structure: structureTransaction() });
+  for (const input of [
+    { parentId: "", baselineOrder: [PAGE.id], localOrder: [PAGE.id], expectedDraftStructureRevision: 4 },
+    { parentId: "parent", baselineOrder: [PAGE.id], localOrder: [PAGE.id], expectedDraftStructureRevision: undefined },
+    { parentId: "parent", baselineOrder: [PAGE.id], localOrder: ["other"], expectedDraftStructureRevision: 4 },
+  ]) {
+    await assert.rejects(
+      () => run(input as never),
+      (error: unknown) => error instanceof DomainError,
+    );
+  }
 });
 
 void test("updatePage forwards one targeted composite intent without a repository read", async () => {

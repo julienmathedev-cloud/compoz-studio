@@ -52,7 +52,7 @@ void test("abandon closes only the OCC panel and never enters terminal cleanup",
     "utf8",
   );
   const abandonStart = source.lastIndexOf("abandon: () => {");
-  const abandonEnd = source.indexOf("adoptCurrent,", abandonStart);
+  const abandonEnd = source.indexOf("apply,", abandonStart);
   const abandonBranch = source.slice(abandonStart, abandonEnd);
 
   assert.ok(abandonStart > 0);
@@ -67,7 +67,7 @@ void test("adoptCurrent emits terminal presentation without entering the mutatio
     "utf8",
   );
   const adoptStart = source.indexOf("const adoptCurrent =");
-  const adoptEnd = source.indexOf("const keepLocal =", adoptStart);
+  const adoptEnd = source.indexOf("const apply =", adoptStart);
   const adoptBranch = source.slice(adoptStart, adoptEnd);
 
   assert.ok(adoptStart > 0);

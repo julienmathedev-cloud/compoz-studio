@@ -13,7 +13,6 @@ import { resolutionModeForStatus } from "@compoz/studio/features/conflicts/confl
 import {
   PAGE_METADATA_CONFLICT_FIELDS,
   pageMetadataConflictStatus,
-  type PageMetadataConflictChoices,
   type PageMetadataConflictState,
 } from "@compoz/studio/features/pages/conflicts/page-metadata-conflict";
 import { toPageFormValuesFromDTO } from "@compoz/studio/features/pages/mappers/pages-form";
@@ -65,7 +64,6 @@ function displayMetadataValue(
 
 export function toPageMetadataConflictPresentation(
   state: PageMetadataConflictState,
-  choices: PageMetadataConflictChoices,
   t: MetadataTranslations,
   tChangeFrequency: ChangeFrequencyTranslations,
 ): readonly ConflictPresentationGroup[] {
@@ -82,7 +80,6 @@ export function toPageMetadataConflictPresentation(
         label: t(`fields.${field}`),
         status,
         resolutionMode: resolutionModeForStatus(status),
-        choice: choices[field],
         comparison: {
           baseline: displayMetadataValue(field, state.baseline[field], t, tChangeFrequency),
           server: displayMetadataValue(field, current[field], t, tChangeFrequency),

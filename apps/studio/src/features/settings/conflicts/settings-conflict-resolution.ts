@@ -209,32 +209,3 @@ export function buildSettingsConflictMutationPlan<T extends object>(input: Reado
     fields,
   };
 }
-
-export function buildSettingsWholeLocalMutationPlan<T extends object>(input: Readonly<{
-  snapshot: SettingsConflictSnapshot<T>;
-  normalize?: (value: T) => T;
-  fields: SettingsConflictPresentationAdapter<T>;
-}>): Exclude<SettingsConflictMutationPlan<T>, { status: "incomplete" | "manual" }> {
-  const value = input.normalize?.(input.snapshot.local) ?? input.snapshot.local;
-  const payload = buildSemanticSettingsPatch({
-    current: input.snapshot.current,
-    resolved: value,
-    fields: input.fields,
-  });
-  const fields = Object.keys(payload as Record<string, unknown>);
-  return fields.length === 0
-    ? {
-        status: "noChanges",
-        value,
-        baseline: input.snapshot.current,
-        expectedRevision: input.snapshot.currentRevision,
-      }
-    : {
-        status: "mutation",
-        value,
-        baseline: input.snapshot.current,
-        expectedRevision: input.snapshot.currentRevision,
-        payload,
-        fields,
-      };
-}

@@ -30,6 +30,7 @@ import {
   draftStructureMutationOptions,
   requireDraftStructureSnapshot,
 } from "@compoz/studio/features/pages/hooks/draft-structure-mutation";
+import { createReorderPageChildrenIntent } from "@compoz/studio/features/pages/hooks/reorder-page-children-intent";
 import { invalidatePageMutationStatusViews } from "@compoz/studio/features/pages/hooks/invalidate-page-mutation-status-views";
 import {
   patchDraftStructureCache,
@@ -43,7 +44,9 @@ import { UiError } from "@compoz/studio/lib/ui/uiError";
 
 type ReorderChildrenArgs = Readonly<{
   parentId: string;
-  childIds: string[];
+  baselineOrder: string[];
+  localOrder: string[];
+  expectedDraftStructureRevision: number;
 }>;
 
 type UseReorderPageChildrenResult = Readonly<{
@@ -91,17 +94,13 @@ export function useReorderPageChildren(
   >({
     ...draftStructureMutationOptions(websiteId),
 
-    mutationFn: async ({ parentId, childIds }) => {
+    mutationFn: async ({
+      parentId,
+      baselineOrder,
+      localOrder,
+      expectedDraftStructureRevision,
+    }) => {
       const parentIdKey = String(parentId ?? "").trim();
-      const orderedChildIds = childIds ?? [];
-      await queryClient.cancelQueries({
-        queryKey: siteIndexKey(websiteId, state),
-        exact: true,
-      });
-      const current = requireDraftStructureSnapshot(
-        queryClient,
-        websiteId,
-      );
 
       const response = await logSpan(
         "ui.pages.children.reorder",
@@ -109,20 +108,20 @@ export function useReorderPageChildren(
           state,
           websiteId,
           parentId: parentIdKey,
-          count: orderedChildIds.length,
+          count: localOrder.length,
         },
         () =>
           pagesStudioApi.reorderChildren(parentIdKey, {
-            childIds: orderedChildIds,
-            expectedDraftStructureRevision:
-              current.draftStructureRevision,
+            baselineOrder,
+            localOrder,
+            expectedDraftStructureRevision,
           }),
       );
 
       return response;
     },
 
-    onMutate: async ({ parentId, childIds }) => {
+    onMutate: async ({ parentId, baselineOrder, localOrder }) => {
       await queryClient.cancelQueries({
         queryKey: siteIndexKey(websiteId, state),
         exact: true,
@@ -134,7 +133,7 @@ export function useReorderPageChildren(
       const optimistic = optimisticReorder(
         before,
         parentId,
-        childIds,
+        localOrder,
       );
       patchDraftStructureCache(
         queryClient,
@@ -146,10 +145,8 @@ export function useReorderPageChildren(
         before,
         optimistic,
         parentPageId: parentId,
-        orderedPageIdsBefore: before.index.pages
-          .filter((page) => page.parentId === parentId)
-          .map((page) => page.id),
-        orderedPageIdsOptimistic: [...childIds],
+        orderedPageIdsBefore: baselineOrder,
+        orderedPageIdsOptimistic: [...localOrder],
       };
     },
 
@@ -168,7 +165,7 @@ export function useReorderPageChildren(
         websiteId,
         state,
         parentId: variables.parentId,
-        count: variables.childIds.length,
+        count: variables.localOrder.length,
       });
     },
 
@@ -207,10 +204,14 @@ export function useReorderPageChildren(
       if (!parentIdKey) {
         return;
       }
-      await mutation.mutateAsync({
-        parentId: parentIdKey,
-        childIds: orderedChildIds,
-      });
+      const before = requireDraftStructureSnapshot(queryClient, websiteId);
+      await mutation.mutateAsync(
+        createReorderPageChildrenIntent(
+          before,
+          parentIdKey,
+          orderedChildIds,
+        ),
+      );
     },
     isReordering: mutation.isPending,
   };

@@ -798,14 +798,14 @@ export function BuilderScreen({
             baselineBlocks={blocks}
             details={recreateConflict}
             isPending={isCreating}
+            onCancel={clearRecreateConflict}
             onUseCurrent={() => {
               clearRecreateConflict();
               clearUpdateConflict();
               dirtyGuard.setDirty(false);
               router.push(backHref);
             }}
-            onRetryCreate={handleRecreateBlock}
-            useCurrentFocusAfterSuccess="none"
+            onKeepLocal={handleRecreateBlock}
           />
         </div>
       ) : updateConflict ? (

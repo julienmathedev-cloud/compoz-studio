@@ -23,6 +23,7 @@ import {
   resolvePageMetadataChanges,
   type PageMetadataColumns,
 } from "@compoz/core/domain/pages/revisions/page-metadata";
+import { resolveThreeWayOrder } from "@compoz/core/domain/pages/revisions/three-way-order";
 import {
   planCreateDraftPage,
   planDeleteDraftPage,
@@ -314,10 +315,7 @@ export class PrismaDraftPageStructureTransaction
             : undefined
           : intent.value.expectedDraftStructureRevision;
 
-      if (
-        expectedRevision !== undefined &&
-        expectedRevision !== website.draftStructureRevision
-      ) {
+      const revisionConflict = (): never => {
         throw new DomainError({
           code: ERROR_CODES.DRAFT_STRUCTURE_REVISION_CONFLICT,
           message: ERROR_CODES.DRAFT_STRUCTURE_REVISION_CONFLICT,
@@ -327,9 +325,35 @@ export class PrismaDraftPageStructureTransaction
             current: currentSnapshot,
           },
         });
+      };
+
+      if (
+        intent.kind === "reorder" &&
+        intent.value.parentPageId !== null &&
+        !rows.some((row) => row.pageId === intent.value.parentPageId)
+      ) {
+        revisionConflict();
       }
 
-      const plan = this.plan(intent, rows, updateContext);
+      if (
+        expectedRevision !== undefined &&
+        (intent.kind === "reorder"
+          ? expectedRevision > website.draftStructureRevision
+          : expectedRevision !== website.draftStructureRevision)
+      ) {
+        revisionConflict();
+      }
+
+      const resolvedReorderOrder =
+        intent.kind === "reorder"
+          ? this.resolveReorderOrder(intent.value, rows, revisionConflict)
+          : undefined;
+      const plan = this.plan(
+        intent,
+        rows,
+        updateContext,
+        resolvedReorderOrder,
+      );
       const structureChanged = plan.kind !== "noop";
       const targetPaginationDerived =
         intent.kind === "update" &&
@@ -500,6 +524,7 @@ export class PrismaDraftPageStructureTransaction
     intent: InternalIntent,
     rows: ReadonlyArray<DraftPageRow>,
     updateContext?: UpdateContext,
+    resolvedReorderOrder?: ReadonlyArray<string>,
   ): DraftStructurePlan {
     const pages = toPlannerPages(rows);
 
@@ -525,7 +550,7 @@ export class PrismaDraftPageStructureTransaction
         return planReorderDraftSiblings({
           pages,
           parentId: intent.value.parentPageId,
-          orderedPageIds: intent.value.orderedPageIds,
+          orderedPageIds: resolvedReorderOrder ?? intent.value.localOrder,
         });
       case "update": {
         if (!updateContext) pageNotFound();
@@ -553,6 +578,24 @@ export class PrismaDraftPageStructureTransaction
           pageId: intent.value.pageId,
         });
     }
+  }
+
+  private resolveReorderOrder(
+    command: ReorderDraftSiblingsCommand,
+    rows: ReadonlyArray<DraftPageRow>,
+    revisionConflict: () => never,
+  ): ReadonlyArray<string> {
+    const currentOrder = rows
+      .filter((row) => row.parentPageId === command.parentPageId)
+      .map((row) => row.pageId);
+    const resolution = resolveThreeWayOrder({
+      baselineOrder: command.baselineOrder,
+      localOrder: command.localOrder,
+      currentOrder,
+      path: "children",
+    });
+    if (resolution.status === "conflict") revisionConflict();
+    return resolution.order;
   }
 
   private async applyCommandWrites(

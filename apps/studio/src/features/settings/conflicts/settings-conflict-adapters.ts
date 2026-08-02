@@ -492,6 +492,33 @@ function identifiedListStrategy<TValue>(input: Readonly<{
       const baselineNodes = input.definition.toNodes(values.baseline);
       const serverNodes = input.definition.toNodes(values.current);
       const localNodes = input.definition.toNodes(values.local);
+      if (analysis.result.status === "manual") {
+        const choiceId = `items:manual:${analysis.result.reason}`;
+        return [{
+          id: choiceId,
+          label: input.t("studio.settingsConflict.list.manualRequired"),
+          status: "conflict" as const,
+          resolutionMode: "choice" as const,
+          choice: values.choices[choiceId],
+          comparison: {
+            baseline: listNodesValue(baselineNodes, input.descriptor, input.t),
+            server: listNodesValue(serverNodes, input.descriptor, input.t),
+            local: listNodesValue(localNodes, input.descriptor, input.t),
+          },
+          details: [{
+            id: "reason",
+            label: input.t("studio.settingsConflict.list.reason"),
+            value: {
+              kind: "text" as const,
+              text: input.t(`studio.settingsConflict.list.manualReasons.${analysis.result.reason}`),
+            },
+          }],
+          options: {
+            server: input.t("studio.settingsConflict.actions.useServerStructure"),
+            local: input.t("studio.settingsConflict.actions.keepLocalStructure"),
+          },
+        }];
+      }
       return analysis.changes.map((change) => listConflictItem({
         change,
         descriptor: input.descriptor,
@@ -506,7 +533,13 @@ function identifiedListStrategy<TValue>(input: Readonly<{
       const result = analyze(values).result;
       if (result.status === "resolved") return result;
       if (result.status === "incomplete") return result;
-      return { status: "manual", reason: result.reason };
+      const choiceId = `items:manual:${result.reason}`;
+      const choice = values.choices[choiceId];
+      if (!choice) return { status: "incomplete", missingChoices: [choiceId] };
+      return {
+        status: "resolved",
+        value: choice === "server" ? values.current : values.local,
+      };
     },
   };
 }

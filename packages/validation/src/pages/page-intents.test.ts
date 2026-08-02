@@ -28,7 +28,8 @@ void test("create, reorder and delete retain their structure preconditions", () 
   assert.equal(CreatePageIntentSchema.safeParse(CREATE).success, true);
   assert.equal(
     ReorderChildrenIntentSchema.safeParse({
-      childIds: [],
+      baselineOrder: [],
+      localOrder: [],
       expectedDraftStructureRevision: 2,
     }).success,
     true,
@@ -38,6 +39,31 @@ void test("create, reorder and delete retain their structure preconditions", () 
       expectedDraftStructureRevision: 3,
     }).success,
     true,
+  );
+});
+
+void test("reorder requires safe revisioned permutations", () => {
+  const valid = {
+    baselineOrder: ["a", "b"],
+    localOrder: ["b", "a"],
+    expectedDraftStructureRevision: 2,
+  };
+  assert.equal(ReorderChildrenIntentSchema.safeParse(valid).success, true);
+  for (const invalid of [
+    { ...valid, expectedDraftStructureRevision: -1 },
+    { ...valid, expectedDraftStructureRevision: 1.5 },
+    { ...valid, baselineOrder: ["a", "a"] },
+    { ...valid, localOrder: ["b", "b"] },
+    { ...valid, localOrder: ["a", "c"] },
+  ]) {
+    assert.equal(ReorderChildrenIntentSchema.safeParse(invalid).success, false);
+  }
+  assert.equal(
+    ReorderChildrenIntentSchema.safeParse({
+      baselineOrder: ["a"],
+      localOrder: ["a"],
+    }).success,
+    false,
   );
 });
 

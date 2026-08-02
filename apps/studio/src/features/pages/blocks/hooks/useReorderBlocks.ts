@@ -8,20 +8,19 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useRef } from "react";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import type { PageBlocksSnapshotDTO } from "@compoz/core/domain/pages/dto";
-import type { PageBlocksConflictDetails } from "@compoz/core/domain/pages/revisions/page-blocks.types";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
-import { getPageBlocksConflictDetails } from "@compoz/infra/lib/get-page-blocks-conflict-details";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
-import { useState } from "react";
 import { syncPageBlocksSnapshotCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
 import {
   canRollbackOptimisticReorder,
   optimisticReorderSnapshot,
 } from "@compoz/studio/features/pages/blocks/cache/reorder-optimistic";
 import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
+import { adoptPageBlocksReorderConflict } from "@compoz/studio/features/pages/blocks/hooks/block-reorder-conflict";
 import { pageBlocksMutationScope } from "@compoz/studio/features/pages/blocks/hooks/page-blocks-mutation-scope";
 import { invalidateBlockMutationStatusViews } from "@compoz/studio/features/pages/blocks/hooks/invalidate-block-mutation-status-views";
 import { notify } from "@compoz/studio/lib/ui/notify";
@@ -39,15 +38,13 @@ export function useReorderBlocks(pageId: string, onSuccess?: () => void) {
   const websiteId = useWebsiteId();
   const pageIdKey = String(pageId ?? "").trim();
   const entityLabel = t("studio.shared.entities.blocks");
-  const [conflict, setConflict] =
-    useState<PageBlocksConflictDetails | null>(null);
   const key = pageBlocksKey(websiteId, pageIdKey, DEFAULT_CONTENT_STATE);
+  const pendingReorderRef = useRef<Promise<unknown> | null>(null);
 
   const mutation = useMutation({
     mutationKey: ["w", websiteId, "studio", "pages", pageIdKey, "blocks", "reorder"] as const,
     scope: { id: pageBlocksMutationScope(websiteId, pageIdKey) },
     onMutate: async (intent: ReorderArgs) => {
-      setConflict(null);
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<PageBlocksSnapshotDTO>(key);
       if (!previous) return { previous: undefined, optimisticOrder: intent.localOrder };
@@ -70,6 +67,20 @@ export function useReorderBlocks(pageId: string, onSuccess?: () => void) {
       onSuccess?.();
     },
     onError: (error, _intent, context) => {
+      const conflict = adoptPageBlocksReorderConflict({
+        queryClient,
+        websiteId,
+        pageId: pageIdKey,
+        error,
+      });
+      if (conflict) {
+        notify.error(
+          t("studio.pageBlocksConflict.reorderConflict.title"),
+          t("studio.pageBlocksConflict.reorderConflict.description"),
+        );
+        return;
+      }
+
       const current = queryClient.getQueryData<PageBlocksSnapshotDTO>(key);
       if (
         context?.previous &&
@@ -81,30 +92,33 @@ export function useReorderBlocks(pageId: string, onSuccess?: () => void) {
       ) {
         queryClient.setQueryData(key, context.previous);
       }
-      const details = getPageBlocksConflictDetails(error);
-      if (details) {
-        syncPageBlocksSnapshotCache(
-          queryClient,
-          websiteId,
-          pageIdKey,
-          details.current,
-          DEFAULT_CONTENT_STATE,
-          true,
-        );
-        setConflict(details);
-        return;
-      }
       notify.fromError(error, UiError.unexpectedSave);
     },
     retry: false,
   });
 
+  const reorder = async (intent: ReorderArgs): Promise<void> => {
+    const running = pendingReorderRef.current;
+    if (running) {
+      await running;
+      return;
+    }
+
+    const execution = mutation.mutateAsync(intent);
+    pendingReorderRef.current = execution;
+    try {
+      await execution;
+    } finally {
+      if (pendingReorderRef.current === execution) {
+        pendingReorderRef.current = null;
+      }
+    }
+  };
+
   return {
-    reorder: (intent: ReorderArgs) => mutation.mutateAsync(intent),
+    reorder,
     isReordering: mutation.isPending,
     entityLabel,
-    conflict,
-    clearConflict: () => setConflict(null),
   };
 }
 

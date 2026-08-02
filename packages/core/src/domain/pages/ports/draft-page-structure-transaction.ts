@@ -30,7 +30,8 @@ export type CreateDraftPageStructureResult = DraftStructureSnapshot &
 
 export type ReorderDraftSiblingsCommand = Readonly<{
   parentPageId: string | null;
-  orderedPageIds: ReadonlyArray<string>;
+  baselineOrder: ReadonlyArray<string>;
+  localOrder: ReadonlyArray<string>;
   expectedDraftStructureRevision: number;
 }>;
 

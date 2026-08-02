@@ -53,6 +53,10 @@ export type ConflictPresentationItem = Readonly<{
   comparison?: ConflictPresentationComparison;
   resolutionMode: "automatic" | "choice" | "manual";
   choice?: ConflictResolutionChoice;
+  options?: Readonly<{
+    server: string;
+    local: string;
+  }>;
   details?: readonly ConflictPresentationDetail[];
 }>;
 
@@ -61,6 +65,33 @@ export type ConflictPresentationGroup = Readonly<{
   label?: string;
   items: readonly ConflictPresentationItem[];
 }>;
+
+export function isDecisionItem(
+  item: ConflictPresentationItem,
+): boolean {
+  return item.resolutionMode === "choice";
+}
+
+export function toDecisionConflictGroups(
+  groups: readonly ConflictPresentationGroup[],
+): readonly ConflictPresentationGroup[] {
+  return groups.flatMap((group) => {
+    const items = group.items.filter(isDecisionItem);
+    return items.length > 0 ? [{ ...group, items }] : [];
+  });
+}
+
+export function toDecisionConflictChoices(
+  groups: readonly ConflictPresentationGroup[],
+  choices: Readonly<Record<string, ConflictResolutionChoice>>,
+): Readonly<Record<string, ConflictResolutionChoice>> {
+  const decisionIds = new Set(
+    groups.flatMap((group) => group.items.filter(isDecisionItem).map((item) => item.id)),
+  );
+  return Object.fromEntries(
+    Object.entries(choices).filter(([itemId]) => decisionIds.has(itemId)),
+  );
+}
 
 export function classifyConflictValue<T>(
   baseline: T,
@@ -99,10 +130,12 @@ export function conflictPresentationStatusKey(input: Readonly<{
 
 export function hasCompleteConflictChoices(
   groups: readonly ConflictPresentationGroup[],
+  choices?: Readonly<Record<string, ConflictResolutionChoice>>,
 ): boolean {
   return groups.every((group) =>
     group.items.every(
-      (item) => item.resolutionMode !== "choice" || item.choice !== undefined,
+      (item) => item.resolutionMode !== "choice" ||
+        (choices ? choices[item.id] !== undefined : item.choice !== undefined),
     ),
   );
 }
@@ -110,8 +143,9 @@ export function hasCompleteConflictChoices(
 export function canApplyConflictResolution(
   groups: readonly ConflictPresentationGroup[],
   pending = false,
+  choices?: Readonly<Record<string, ConflictResolutionChoice>>,
 ): boolean {
-  return !pending && hasCompleteConflictChoices(groups) && groups.every((group) =>
+  return !pending && hasCompleteConflictChoices(groups, choices) && groups.every((group) =>
     group.items.every((item) => item.resolutionMode !== "manual"),
   );
 }

@@ -14,7 +14,10 @@ import {
   CONFLICT_ACTION_SUCCESS,
   conflictPresentationStatusKey,
   hasCompleteConflictChoices,
+  isDecisionItem,
   resolutionModeForStatus,
+  toDecisionConflictChoices,
+  toDecisionConflictGroups,
   toPlainTextRichText,
   type ConflictPresentationGroup,
 } from "@compoz/studio/features/conflicts/conflict-presentation";
@@ -25,6 +28,83 @@ import {
   scheduleConflictFocus,
   shouldRestoreConflictTrigger,
 } from "@compoz/studio/features/conflicts/conflict-focus";
+
+const decisionPresentation: readonly ConflictPresentationGroup[] = [
+  {
+    id: "mixed",
+    label: "Mixed",
+    items: [
+      { id: "name", label: "Name", status: "conflict", resolutionMode: "choice" },
+      { id: "server", label: "Server", status: "server-only", resolutionMode: "automatic" },
+      { id: "local", label: "Local", status: "local-only", resolutionMode: "automatic" },
+      { id: "same", label: "Same", status: "same-change", resolutionMode: "automatic" },
+    ],
+  },
+  {
+    id: "automatic-only",
+    label: "Automatic only",
+    items: [
+      { id: "automatic", label: "Automatic", status: "local-only", resolutionMode: "automatic" },
+    ],
+  },
+  {
+    id: "second-decision",
+    label: "Second decision",
+    items: [
+      { id: "slug", label: "Slug", status: "conflict", resolutionMode: "choice" },
+    ],
+  },
+];
+
+void test("projects only decision items and removes groups that become empty", () => {
+  const groups = toDecisionConflictGroups(decisionPresentation);
+
+  assert.deepEqual(groups.map((group) => [
+    group.id,
+    group.label,
+    group.items.map((item) => item.id),
+  ]), [
+    ["mixed", "Mixed", ["name"]],
+    ["second-decision", "Second decision", ["slug"]],
+  ]);
+  assert.equal(isDecisionItem(decisionPresentation[0]!.items[0]!), true);
+  assert.equal(isDecisionItem(decisionPresentation[0]!.items[1]!), false);
+  assert.equal(isDecisionItem({ id: "manual", label: "Manual", status: "conflict", resolutionMode: "manual" }), false);
+});
+
+void test("Apply validates and forwards only visible explicit decisions", () => {
+  const groups = toDecisionConflictGroups(decisionPresentation);
+  const oneDecision = toDecisionConflictGroups([decisionPresentation[0]!]);
+
+  assert.equal(canApplyConflictResolution(oneDecision, false, { name: "local" }), true);
+  assert.equal(canApplyConflictResolution(groups, false, { name: "server" }), false);
+  assert.equal(canApplyConflictResolution(groups, false, {
+    name: "server",
+    slug: "local",
+  }), true);
+  assert.deepEqual(toDecisionConflictChoices(decisionPresentation, {
+    name: "server",
+    server: "local",
+    local: "server",
+    same: "local",
+    automatic: "server",
+    slug: "local",
+  }), {
+    name: "server",
+    slug: "local",
+  });
+});
+
+void test("focus skips hidden automatic items and targets the first unresolved decision", () => {
+  const groups = toDecisionConflictGroups(decisionPresentation);
+
+  assert.equal(getFirstRequiredConflictChoiceId(groups), "name");
+  assert.equal(getFirstRequiredConflictChoiceId(groups, { name: "server" }), "slug");
+  assert.equal(getFirstRequiredConflictChoiceId(groups, {
+    name: "server",
+    slug: "local",
+  }), null);
+});
 
 void test("classifies every changed triple and excludes unchanged values", () => {
   assert.equal(classifyConflictValue("a", "a", "a"), null);
@@ -74,6 +154,28 @@ void test("requires a choice only for explicitly conflicting values", () => {
   ] }]), false);
   assert.equal(canApplyConflictResolution([{ id: "manual", items: [{ id: "item", label: "Item", status: "conflict", resolutionMode: "manual" }] }]), false);
   assert.equal(canApplyConflictResolution([{ id: "automatic", items: [{ id: "item", label: "Item", status: "server-only", resolutionMode: "automatic" }] }]), true);
+});
+
+void test("validates the panel-owned server, local, partial, mixed, and automatic choices", () => {
+  const one: readonly ConflictPresentationGroup[] = [{
+    id: "one",
+    items: [{ id: "title", label: "Title", status: "conflict", resolutionMode: "choice" }],
+  }];
+  assert.equal(canApplyConflictResolution(one, false, {}), false);
+  assert.equal(canApplyConflictResolution(one, false, { title: "server" }), true);
+  assert.equal(canApplyConflictResolution(one, false, { title: "local" }), true);
+
+  const several: readonly ConflictPresentationGroup[] = [{
+    id: "several",
+    items: [
+      ...one[0]!.items,
+      { id: "slug", label: "Slug", status: "conflict", resolutionMode: "choice" },
+      { id: "automatic", label: "Automatic", status: "local-only", resolutionMode: "automatic" },
+    ],
+  }];
+  assert.equal(canApplyConflictResolution(several, false, { title: "server" }), false);
+  assert.equal(canApplyConflictResolution(several, false, { title: "server", slug: "local" }), true);
+  assert.equal(canApplyConflictResolution(several, true, { title: "server", slug: "local" }), false);
 });
 
 void test("formats rich text into safe readable text", () => {

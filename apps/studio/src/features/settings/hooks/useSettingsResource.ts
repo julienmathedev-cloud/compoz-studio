@@ -30,16 +30,14 @@ import { UiError } from "@compoz/studio/lib/ui/uiError";
 import { getRevisionConflictDetails } from "@compoz/infra/lib/get-revision-conflict-details";
 import type { MutationOutcome } from "@compoz/core/domain/revisions/mutation-outcome";
 import {
-  canApplyConflictResolution,
   CONFLICT_ACTION_ERROR,
   CONFLICT_ACTION_SUCCESS,
   type ConflictActionExecutionResult,
   type ConflictPresentationGroup,
-  type ConflictResolutionChoice,
 } from "@compoz/studio/features/conflicts/conflict-presentation";
+import type { ConflictResolutionChoices } from "@compoz/studio/features/conflicts/ConflictResolutionPanel";
 import {
   buildSettingsConflictMutationPlan,
-  buildSettingsWholeLocalMutationPlan,
   toSettingsConflictPresentation,
   type SettingsConflictMutationPlan,
   type SettingsConflictPresentationAdapter,
@@ -51,10 +49,7 @@ import {
   type SettingsConflictFreshCurrent,
   type SettingsConflictMachineState,
 } from "@compoz/studio/features/settings/conflicts/settings-conflict-machine";
-import {
-  executeSettingsConflictApply,
-  executeSettingsCurrentAdoption,
-} from "@compoz/studio/features/settings/conflicts/settings-conflict-execution";
+import { executeSettingsConflictApply } from "@compoz/studio/features/settings/conflicts/settings-conflict-execution";
 import { executeSettingsAutomaticRebase } from "@compoz/studio/features/settings/conflicts/settings-conflict-auto-rebase";
 import {
   settingsConflictId,
@@ -86,14 +81,10 @@ export type SettingsConflictController = Readonly<{
   pending: boolean;
   error?: string;
   canResolve: boolean;
-  canApply: boolean;
-  canKeepLocal: boolean;
-  choose: (itemId: string, choice: ConflictResolutionChoice) => void;
   abandon: () => ConflictActionExecutionResult;
-  adoptCurrent: () => Promise<ConflictActionExecutionResult>;
-  keepLocal: () => Promise<ConflictActionExecutionResult>;
-  apply: () => Promise<ConflictActionExecutionResult>;
-  retryFreshRead: () => Promise<ConflictActionExecutionResult>;
+  apply: (
+    choices: ConflictResolutionChoices,
+  ) => Promise<ConflictActionExecutionResult>;
 }>;
 
 export type SettingsHookResult<T extends object> = Readonly<{
@@ -182,7 +173,6 @@ export function useSettingsResource<T extends object>({
   const [baseline, setBaseline] = useState<T>(defaults);
   const [isLoading, setIsLoading] = useState<boolean>(Boolean(autoLoad));
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  type ActiveConflict = Exclude<SettingsConflictMachineState<T>, { phase: "idle" }>;
   const [internalConflict, setInternalConflict] = useState<SettingsConflictMachineState<T>>({ phase: "idle" });
   const conflictSequenceRef = useRef(0);
   const conflictActionPendingRef = useRef(false);
@@ -241,38 +231,6 @@ export function useSettingsResource<T extends object>({
   useEffect(() => {
     conflictConfigRef.current = conflictConfig;
   }, [conflictConfig]);
-
-  const fetchConflictCurrent = useCallback(async (
-    state: ActiveConflict,
-  ): Promise<ConflictActionExecutionResult> => {
-    const config = conflictConfigRef.current;
-    if (!config || conflictActionPendingRef.current) return CONFLICT_ACTION_ERROR;
-    const loadingState = state.phase === "loadingCurrent"
-      ? state
-      : transitionSettingsConflict(state, { type: "startFreshRead" });
-    if (loadingState.phase !== "loadingCurrent") return CONFLICT_ACTION_ERROR;
-    conflictActionPendingRef.current = true;
-    const controller = newAbort();
-    ctrlRef.current = controller;
-    setInternalConflict((current) => current.phase !== "idle" && current.conflictId === state.conflictId
-      ? loadingState
-      : current);
-    try {
-      const current = await config.fetchCurrent(controller.signal);
-      setInternalConflict((active) => active.phase !== "idle" && active.conflictId === state.conflictId
-        ? transitionSettingsConflict(active, { type: "freshReadSucceeded", current })
-        : active);
-      return CONFLICT_ACTION_SUCCESS;
-    } catch {
-      setInternalConflict((active) => active.phase !== "idle" && active.conflictId === state.conflictId
-        ? transitionSettingsConflict(active, { type: "freshReadFailed", error: config.messages.freshReadFailed })
-        : active);
-      return CONFLICT_ACTION_ERROR;
-    } finally {
-      if (ctrlRef.current === controller) ctrlRef.current = null;
-      conflictActionPendingRef.current = false;
-    }
-  }, []);
 
   const load = useCallback(
     async (nextState?: ContentState) => {
@@ -514,42 +472,8 @@ export function useSettingsResource<T extends object>({
       currentRevision: state.current.revision,
     } : null;
     const groups = snapshot
-      ? toSettingsConflictPresentation({ ...config.presentation, snapshot, choices: state.choices })
+      ? toSettingsConflictPresentation({ ...config.presentation, snapshot })
       : [];
-
-    const adoptCurrent = async (): Promise<ConflictActionExecutionResult> => {
-      if (!state.current || isSettingsConflictPending(state) || conflictActionPendingRef.current) return CONFLICT_ACTION_ERROR;
-      conflictActionPendingRef.current = true;
-      setInternalConflict((current) => current.phase !== "idle" && current.conflictId === state.conflictId
-        ? transitionSettingsConflict(current, { type: "startAdoptingCurrent" })
-        : current);
-      try {
-        const result = await executeSettingsCurrentAdoption({
-          current: state.current,
-          adoptSnapshot: config.adoptSnapshot,
-          commit: (value) => {
-            setBaseline(structuredClone(value));
-          },
-        });
-        if (result.status === "error") {
-          setInternalConflict((current) => current.phase !== "idle" && current.conflictId === state.conflictId
-            ? transitionSettingsConflict(current, { type: "mutationFailed", error: config.messages.mutationFailed })
-            : current);
-          return CONFLICT_ACTION_ERROR;
-        }
-        setInternalConflict((current) => current.phase !== "idle" && current.conflictId === state.conflictId
-          ? transitionSettingsConflict(current, { type: "complete" })
-          : current);
-        return CONFLICT_ACTION_SUCCESS;
-      } catch {
-        setInternalConflict((current) => current.phase !== "idle" && current.conflictId === state.conflictId
-          ? transitionSettingsConflict(current, { type: "mutationFailed", error: config.messages.mutationFailed })
-          : current);
-        return CONFLICT_ACTION_ERROR;
-      } finally {
-        conflictActionPendingRef.current = false;
-      }
-    };
 
     type ExecutablePlan = Exclude<SettingsConflictMutationPlan<T>, { status: "incomplete" | "manual" }>;
     const executePlan = async (plan: ExecutablePlan): Promise<ConflictActionExecutionResult> => {
@@ -582,9 +506,32 @@ export function useSettingsResource<T extends object>({
       } catch (error: unknown) {
         const nextDetails = getRevisionConflictDetails(error);
         if (nextDetails) {
-          setInternalConflict((current) => current.phase !== "idle" && current.conflictId === state.conflictId
-            ? transitionSettingsConflict(current, { type: "secondConflict", baseline: conflictCurrent.value, local: plan.value, error: config.messages.mutationFailed })
-            : current);
+          try {
+            const latest = await config.fetchCurrent(mutationController.signal);
+            let nextState = transitionSettingsConflict<T>({ phase: "idle" }, {
+              type: "open",
+              conflictId: settingsConflictId(
+                config.scope,
+                ++conflictSequenceRef.current,
+                latest.revision,
+              ),
+              baseline: conflictCurrent.value,
+              local: plan.value,
+            });
+            nextState = transitionSettingsConflict(nextState, {
+              type: "freshReadSucceeded",
+              current: latest,
+            });
+            setInternalConflict((current) =>
+              current.phase !== "idle" && current.conflictId === state.conflictId
+                ? nextState
+                : current,
+            );
+          } catch {
+            setInternalConflict((current) => current.phase !== "idle" && current.conflictId === state.conflictId
+              ? transitionSettingsConflict(current, { type: "secondConflict", baseline: conflictCurrent.value, local: plan.value, error: config.messages.mutationFailed })
+              : current);
+          }
         } else {
           setInternalConflict((current) => current.phase !== "idle" && current.conflictId === state.conflictId
             ? transitionSettingsConflict(current, { type: "mutationFailed", error: config.messages.mutationFailed })
@@ -597,11 +544,13 @@ export function useSettingsResource<T extends object>({
       }
     };
 
-    const apply = async (): Promise<ConflictActionExecutionResult> => {
+    const apply = async (
+      choices: ConflictResolutionChoices,
+    ): Promise<ConflictActionExecutionResult> => {
       if (!snapshot || isSettingsConflictPending(state) || conflictActionPendingRef.current) return CONFLICT_ACTION_ERROR;
       const plan = buildSettingsConflictMutationPlan({
         snapshot,
-        choices: state.choices,
+        choices,
         normalize: beforeSaveRef.current
           ? (value) => beforeSaveRef.current?.(value) as T
           : undefined,
@@ -616,32 +565,12 @@ export function useSettingsResource<T extends object>({
       return executePlan(plan);
     };
 
-    const keepLocal = async (): Promise<ConflictActionExecutionResult> => {
-      if (!snapshot || isSettingsConflictPending(state) || conflictActionPendingRef.current) return CONFLICT_ACTION_ERROR;
-      return executePlan(buildSettingsWholeLocalMutationPlan({
-        snapshot,
-        normalize: beforeSaveRef.current
-          ? (value) => beforeSaveRef.current?.(value) as T
-          : undefined,
-        fields: config.presentation,
-      }));
-    };
-
-    const hasManualResolution = groups.some((group) =>
-      group.items.some((item) => item.resolutionMode === "manual"),
-    );
-
     return {
       conflictId: state.conflictId,
       groups,
       pending: isSettingsConflictPending(state),
       error: state.error,
       canResolve: snapshot !== null,
-      canApply: snapshot !== null && canApplyConflictResolution(groups, isSettingsConflictPending(state)),
-      canKeepLocal: snapshot !== null && hasManualResolution && !isSettingsConflictPending(state),
-      choose: (itemId, choice) => setInternalConflict((current) => current.phase !== "idle" && current.conflictId === state.conflictId
-        ? transitionSettingsConflict(current, { type: "choose", itemId, choice })
-        : current),
       abandon: () => {
         if (isSettingsConflictPending(state)) return CONFLICT_ACTION_ERROR;
         setInternalConflict((current) => current.phase !== "idle" && current.conflictId === state.conflictId
@@ -649,12 +578,9 @@ export function useSettingsResource<T extends object>({
           : current);
         return CONFLICT_ACTION_SUCCESS;
       },
-      adoptCurrent,
-      keepLocal,
       apply,
-      retryFreshRead: () => fetchConflictCurrent(state),
     };
-  }, [conflictConfig, fetchConflictCurrent, internalConflict]);
+  }, [conflictConfig, internalConflict]);
 
   useEffect(() => {
     if (!autoLoad) return;

@@ -4,9 +4,11 @@
  * @description Pure decisions for local conflict-panel focus management.
  */
 
-import type {
-  ConflictActionExecutionResult,
-  ConflictPresentationGroup,
+import {
+  isDecisionItem,
+  type ConflictActionExecutionResult,
+  type ConflictPresentationGroup,
+  type ConflictResolutionChoice,
 } from "@compoz/studio/features/conflicts/conflict-presentation";
 
 export async function executeConflictAction(
@@ -23,10 +25,13 @@ export async function executeConflictAction(
 
 export function getFirstRequiredConflictChoiceId(
   groups: readonly ConflictPresentationGroup[],
+  choices: Readonly<Record<string, ConflictResolutionChoice>> = {},
 ): string | null {
   for (const group of groups) {
     const unresolved = group.items.find(
-      (item) => item.resolutionMode === "choice" && item.choice === undefined,
+      (item) => isDecisionItem(item) &&
+        choices[item.id] === undefined &&
+        item.choice === undefined,
     );
     if (unresolved) return unresolved.id;
   }

@@ -70,7 +70,8 @@ void test("create, parent PATCH, delete, and reorder serialize expectedDraftStru
     expectedDraftStructureRevision: 5,
   });
   await pagesStudioApi.reorderChildren("parent", {
-    childIds: [],
+    baselineOrder: [],
+    localOrder: [],
     expectedDraftStructureRevision: 6,
   });
 
@@ -109,7 +110,8 @@ void test("create, parent PATCH, delete, and reorder serialize expectedDraftStru
       {
         method: "POST",
         body: {
-          childIds: [],
+          baselineOrder: [],
+          localOrder: [],
           expectedDraftStructureRevision: 6,
         },
       },

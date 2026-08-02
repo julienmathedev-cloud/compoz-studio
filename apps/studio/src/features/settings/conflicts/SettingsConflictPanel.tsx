@@ -8,8 +8,7 @@
 
 import { useTranslations } from "next-intl";
 
-import { ControlledConflictResolutionPanel } from "@compoz/studio/features/conflicts/ControlledConflictResolutionPanel";
-import { toSettingsConflictPanelController } from "@compoz/studio/features/settings/conflicts/settings-conflict-panel-controller";
+import { ConflictResolutionPanel } from "@compoz/studio/features/conflicts/ConflictResolutionPanel";
 import type { SettingsConflictController } from "@compoz/studio/features/settings/hooks/useSettingsResource";
 
 type SettingsConflictPanelProps = Readonly<{
@@ -23,28 +22,32 @@ export function SettingsConflictPanel({
 }: SettingsConflictPanelProps) {
   const t = useTranslations("studio.settingsConflict");
   const tConflict = useTranslations("studio.conflictResolution");
+  const requiresDecision = conflict.groups.some((group) =>
+    group.items.some((item) => item.resolutionMode === "choice"),
+  );
+
+  if (!conflict.canResolve || !requiresDecision) return null;
 
   return (
-    <ControlledConflictResolutionPanel
-      actionLabels={{
-        abandon: t("actions.abandon"),
-        "adopt-current": t("actions.adoptCurrent"),
-        "keep-all-local": t("actions.keepAllLocal"),
-        keepLocalSimple: t("actions.keepLocalAndSave"),
-        apply: t("actions.apply"),
-        "retry-fresh-read": t("actions.retryFreshRead"),
-      }}
-      controller={toSettingsConflictPanelController(conflict)}
+    <ConflictResolutionPanel
+      conflictKey={conflict.conflictId}
       description={t("description")}
+      error={conflict.error}
       focusTargetId={focusTargetId}
+      groups={conflict.groups}
+      isPending={conflict.pending}
       labels={{
         baseline: t("labels.baseline"),
         server: t("labels.server"),
         local: t("labels.local"),
-        useServer: t("actions.useServer"),
-        keepLocal: t("actions.keepLocal"),
+        useServer: tConflict("actions.useServer"),
+        keepLocal: tConflict("actions.keepLocal"),
         pending: tConflict("pending"),
+        cancel: tConflict("actions.cancel"),
+        apply: tConflict("actions.apply"),
       }}
+      onApply={conflict.apply}
+      onCancel={conflict.abandon}
       title={t("title")}
     />
   );

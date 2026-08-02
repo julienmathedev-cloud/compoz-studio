@@ -85,7 +85,8 @@ export async function POST(req: Request, ctx: { params: unknown }) {
           commit: async (): Promise<ReorderChildrenResponse> => {
             const { index, draftStructureRevision, outcome } = await run({
               parentId: pageId,
-              childIds: dto.childIds,
+              baselineOrder: dto.baselineOrder,
+              localOrder: dto.localOrder,
               expectedDraftStructureRevision:
                 dto.expectedDraftStructureRevision,
             });
@@ -97,7 +98,7 @@ export async function POST(req: Request, ctx: { params: unknown }) {
               {
               websiteId,
               pageId,
-              count: dto.childIds.length,
+              count: dto.localOrder.length,
               },
             );
 

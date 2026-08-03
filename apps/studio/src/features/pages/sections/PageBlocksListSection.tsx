@@ -36,7 +36,11 @@ import { useConfirmList } from "@compoz/studio/features/confirm/useConfirmList";
 import { useStudioDirtyGuard } from "@compoz/studio/features/dirty-guard/useStudioDirtyGuard";
 import { PageBlockListItem } from "@compoz/studio/features/pages/blocks/components/molecules/PageBlockListItem";
 import { BlockListConflictPanel } from "@compoz/studio/features/pages/blocks/conflicts/BlockListConflictPanel";
-import { completeBlockListConflictMutation } from "@compoz/studio/features/pages/blocks/conflicts/block-list-conflict-actions";
+import {
+  completeBlockDeleteConflictRetry,
+  completeBlockListConflictMutation,
+  resolveBlockDeleteConflictRetry,
+} from "@compoz/studio/features/pages/blocks/conflicts/block-list-conflict-actions";
 import { useCreateBlock } from "@compoz/studio/features/pages/blocks/hooks/useCreateBlock";
 import { useDeleteBlock } from "@compoz/studio/features/pages/blocks/hooks/useDeleteBlock";
 import { useListPageBlocks } from "@compoz/studio/features/pages/blocks/hooks/useListPageBlocks";
@@ -432,15 +436,22 @@ export function PageBlocksListSection({
     remove,
     isDeleting,
     deletingBlockId,
-    conflict: deleteConflict,
+    conflict: deleteConflictState,
     clearConflict: clearDeleteConflict,
   } = useDeleteBlock(pageId);
+  const deleteConflict = deleteConflictState?.details ?? null;
   const {
     reorder,
     isReordering,
   } = useReorderBlocks(pageId);
   const blockConflict =
     deleteConflict ?? createConflict;
+  const deleteRetryDecision = deleteConflictState
+    ? resolveBlockDeleteConflictRetry({
+        details: deleteConflictState.details,
+        failedBlockId: deleteConflictState.blockId,
+      })
+    : { kind: "unavailable" as const };
   const clearBlockConflict = useCallback(() => {
     clearCreateConflict();
     clearDeleteConflict();
@@ -816,14 +827,15 @@ export function PageBlocksListSection({
           localBlocks={orderedBlocks}
           onKeepLocal={
             blockConflict.operation === "delete"
-              ? async () => {
-                  const changed = blockConflict.conflicts.find(
-                    (conflict) =>
-                      conflict.kind === "blockChangedBeforeDelete",
-                  );
-                  if (changed?.kind !== "blockChangedBeforeDelete") return;
-                  await completeBlockListConflictMutation({
-                    mutate: async () => { await remove(changed.blockId); },
+              ? deleteRetryDecision.kind === "unavailable"
+                ? undefined
+                : async () => {
+                  await completeBlockDeleteConflictRetry({
+                    decision: deleteRetryDecision,
+                    remove,
+                    adoptCurrent: () => {
+                      setOrderedBlocks(blockConflict.current.blocks);
+                    },
                     clearConflict: clearBlockConflict,
                   });
                 }

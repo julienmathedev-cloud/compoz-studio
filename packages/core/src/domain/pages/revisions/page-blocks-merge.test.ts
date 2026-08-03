@@ -458,7 +458,7 @@ void test("start, end, before, after, moved and removed anchors obey stable inte
       result.status === "resolved" ? result.order : null),
     [
       ["local", "remote", "a", "b"],
-      ["a", "b", "local", "remote"],
+      ["a", "b", "remote", "local"],
       ["a", "local", "b"],
       ["a", "local", "b"],
     ],
@@ -477,6 +477,51 @@ void test("start, end, before, after, moved and removed anchors obey stable inte
     placement: { kind: "after", blockId: "a" },
   });
   assert.deepEqual(removed, { status: "anchorMissing", id: "a" });
+});
+
+void test("end appends after the current order even when the baseline tail changed", () => {
+  const removedBaselineTail = createPlacementOrder({
+    baselineOrder: ["a", "b"],
+    currentOrder: ["a"],
+    blockId: "local",
+    placement: { kind: "end" },
+  });
+  const concurrentAddition = createPlacementOrder({
+    baselineOrder: ["a", "b"],
+    currentOrder: ["a", "b", "remote"],
+    blockId: "local",
+    placement: { kind: "end" },
+  });
+
+  assert.deepEqual(removedBaselineTail, {
+    status: "resolved",
+    order: ["a", "local"],
+  });
+  assert.deepEqual(concurrentAddition, {
+    status: "resolved",
+    order: ["a", "b", "remote", "local"],
+  });
+  if (concurrentAddition.status === "resolved") {
+    assert.equal(concurrentAddition.order.length, 4);
+    assert.deepEqual(
+      new Set(concurrentAddition.order),
+      new Set(["a", "b", "remote", "local"]),
+    );
+  }
+});
+
+void test("relative placements retain anchorMissing when their anchor was removed", () => {
+  for (const placement of [
+    { kind: "before", blockId: "gone" },
+    { kind: "after", blockId: "gone" },
+  ] as const) {
+    assert.deepEqual(createPlacementOrder({
+      baselineOrder: ["a", "gone"],
+      currentOrder: ["a"],
+      blockId: "local",
+      placement,
+    }), { status: "anchorMissing", id: "gone" });
+  }
 });
 
 void test("concurrent interval order must remain canonical and local batches preserve local order", () => {
@@ -555,6 +600,41 @@ void test("nested additions preserve local order and conflict without dropping c
       ["one", "local-z", "local-a", "two", "three"],
     );
   }
+
+  const incompatibleCurrentOrder = [
+    steps.items[1],
+    steps.items[0],
+    steps.items[2],
+  ];
+  const incompatibleLocalOrder = [
+    steps.items[0],
+    steps.items[2],
+    steps.items[1],
+  ];
+  const orderOnly = mergeSectionBlock({
+    baseline: withItems(steps.items),
+    current: withItems(incompatibleCurrentOrder),
+    local: withItems(incompatibleLocalOrder),
+  });
+  assert.deepEqual(
+    orderOnly.conflicts.map((conflict) => conflict.kind),
+    ["orderIncompatible"],
+  );
+
+  const orderWithLocalAddition = mergeSectionBlock({
+    baseline: withItems(steps.items),
+    current: withItems(incompatibleCurrentOrder),
+    local: withItems([
+      steps.items[0],
+      { id: "local-order-addition", title: "Local", description: "Local" },
+      steps.items[2],
+      steps.items[1],
+    ]),
+  });
+  assert.deepEqual(
+    orderWithLocalAddition.conflicts.map((conflict) => conflict.kind),
+    ["orderIncompatible", "collectionIncompatible"],
+  );
 
   const remoteItems = [
     steps.items[0],

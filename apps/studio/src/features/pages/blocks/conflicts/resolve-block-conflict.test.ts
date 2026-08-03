@@ -447,3 +447,154 @@ void test("typed locations adopt every remotely resolvable field kind", () => {
   );
   assert.equal(resolved.lcpPriority, true);
 });
+
+const orderedRow = (id: string, name: string): SectionBlock["rows"][number] => ({
+  id,
+  columnsCount: 1,
+  reverseOn: { mobile: false, tablet: false, desktop: false },
+  columns: [{
+    id: `${id}-column`,
+    cells: [{
+      id: `${id}-content`,
+      kind: "richText",
+      content: `<p>${name}</p>`,
+      reveal: false,
+    }],
+  }],
+});
+
+const orderedCandidate: SectionBlock = {
+  ...block,
+  rows: [
+    orderedRow("row-b", "Merged B"),
+    orderedRow("row-server", "Server addition"),
+    orderedRow("row-a", "Merged A"),
+    orderedRow("row-c", "Merged C"),
+  ],
+};
+
+const rowOrderConflict = {
+  kind: "orderIncompatible" as const,
+  path: "blocks[block].rows",
+  baselineOrder: ["row-a", "row-b", "row-c"],
+  currentOrder: ["row-b", "row-server", "row-a", "row-c"],
+  localOrder: ["row-a", "row-c", "row-b"],
+  addedBlockIds: ["row-server"],
+  removedBlockIds: [],
+};
+
+function orderedDetails(
+  conflicts: PageBlocksConflictDetails["conflicts"],
+  candidateBlock: SectionBlock = orderedCandidate,
+): PageBlocksConflictDetails {
+  return {
+    ...details,
+    conflictingPaths: conflicts.map((conflict) => conflict.path),
+    conflicts,
+    current: { blocks: [candidateBlock], blocksRevision: 2 },
+    candidateBlock,
+  };
+}
+
+void test("applies local and remote incompatible row orders without changing merged objects", () => {
+  const local = resolveBlockConflictCandidate({
+    details: orderedDetails([rowOrderConflict]),
+    choices: { 0: "local" },
+  });
+  assert.deepEqual(local?.rows.map((row) => row.id), [
+    "row-a",
+    "row-c",
+    "row-b",
+    "row-server",
+  ]);
+  assert.equal(local?.rows[0]?.columns[0]?.cells[0]?.id, "row-a-content");
+
+  const remote = resolveBlockConflictCandidate({
+    details: orderedDetails([rowOrderConflict]),
+    choices: { 0: "remote" },
+  });
+  assert.deepEqual(remote?.rows.map((row) => row.id), [
+    "row-b",
+    "row-server",
+    "row-a",
+    "row-c",
+  ]);
+});
+
+void test("combines field and order choices independently in both directions", () => {
+  const nameConflict = details.conflicts[0]!;
+  const localOrderRemoteField = resolveBlockConflictCandidate({
+    details: orderedDetails([nameConflict, rowOrderConflict]),
+    choices: { 0: "remote", 1: "local" },
+  });
+  assert.equal(localOrderRemoteField?.name, "Remote");
+  assert.deepEqual(localOrderRemoteField?.rows.map((row) => row.id), [
+    "row-a",
+    "row-c",
+    "row-b",
+    "row-server",
+  ]);
+
+  const remoteOrderLocalField = resolveBlockConflictCandidate({
+    details: orderedDetails([nameConflict, rowOrderConflict]),
+    choices: { 0: "local", 1: "remote" },
+  });
+  assert.equal(remoteOrderLocalField?.name, "Local");
+  assert.deepEqual(remoteOrderLocalField?.rows.map((row) => row.id), [
+    "row-b",
+    "row-server",
+    "row-a",
+    "row-c",
+  ]);
+});
+
+void test("preserves the exact candidate identity set when ordering with a remote addition", () => {
+  const resolved = resolveBlockConflictCandidate({
+    details: orderedDetails([rowOrderConflict]),
+    choices: { 0: "local" },
+  });
+  const ids = resolved?.rows.map((row) => row.id) ?? [];
+  assert.equal(ids.filter((id) => id === "row-server").length, 1);
+  assert.equal(new Set(ids).size, orderedCandidate.rows.length);
+  assert.deepEqual(new Set(ids), new Set(orderedCandidate.rows.map((row) => row.id)));
+});
+
+void test("targets a nested identified collection without reordering its siblings", () => {
+  const column = (id: string) => ({ id, cells: [] });
+  const nestedCandidate: SectionBlock = {
+    ...block,
+    rows: [{
+      id: "target-row",
+      columnsCount: 3,
+      reverseOn: { mobile: false, tablet: false, desktop: false },
+      columns: [column("column-b"), column("column-a"), column("column-c")],
+    }, orderedRow("untouched-row", "Untouched")],
+  };
+  const nestedOrder = {
+    kind: "orderIncompatible" as const,
+    path: "blocks[block].rows[target-row].columns",
+    baselineOrder: ["column-a", "column-b", "column-c"],
+    currentOrder: ["column-b", "column-a", "column-c"],
+    localOrder: ["column-a", "column-c", "column-b"],
+    addedBlockIds: [],
+    removedBlockIds: [],
+  };
+  const resolved = resolveBlockConflictCandidate({
+    details: orderedDetails([nestedOrder], nestedCandidate),
+    choices: { 0: "local" },
+  });
+  assert.deepEqual(resolved?.rows[0]?.columns.map((item) => item.id), [
+    "column-a",
+    "column-c",
+    "column-b",
+  ]);
+  assert.strictEqual(resolved?.rows[1], nestedCandidate.rows[1]);
+});
+
+void test("rejects an order path that does not target a supported candidate collection", () => {
+  const resolved = resolveBlockConflictCandidate({
+    details: orderedDetails([{ ...rowOrderConflict, path: "blocks[block].unknown" }]),
+    choices: { 0: "local" },
+  });
+  assert.equal(resolved, null);
+});

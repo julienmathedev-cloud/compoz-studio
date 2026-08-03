@@ -167,6 +167,7 @@ function identifiedValues(value: unknown): readonly IdentifiedValue[] {
 
 type IdentifiedDescriptor = Readonly<{
   describe: (item: IdentifiedValue, index: number) => string;
+  describeOrder: (item: IdentifiedValue) => string;
   describeChange: (initial: IdentifiedValue, next: IdentifiedValue, initialIndex: number, nextIndex: number) => string;
 }>;
 
@@ -253,6 +254,10 @@ function socialDescriptor(t: T): IdentifiedDescriptor {
   };
   return {
     describe,
+    describeOrder: (item) => {
+      const kind = typeof item["kind"] === "string" ? t(`studio.social.kind.${item["kind"]}`) : t("studio.settingsConflict.values.configurationChanged");
+      return `${kind} — ${String(item["href"] ?? "")}`;
+    },
     describeChange: (initial, next, initialIndex, nextIndex) => {
       const changes = [
         !equalJsonValue(initial["kind"], next["kind"]) ? changeSummary(t("studio.socialFieldsItem.kind.label"), typeof initial["kind"] === "string" ? t(`studio.social.kind.${initial["kind"]}`) : initial["kind"], typeof next["kind"] === "string" ? t(`studio.social.kind.${next["kind"]}`) : next["kind"], t) : null,
@@ -277,6 +282,12 @@ function menuDescriptor(t: T): IdentifiedDescriptor {
   ].join(" · ");
   return {
     describe,
+    describeOrder: (item) => {
+      const label = String(item["label"] ?? t("studio.settingsConflict.list.unnamedItem"));
+      return typeof item["parentLabel"] === "string"
+        ? `${label} — ${item["parentLabel"]}`
+        : label;
+    },
     describeChange: (initial, next, initialIndex, nextIndex) => {
       const changes = [
         !equalJsonValue(initial["label"], next["label"]) ? changeSummary(t("studio.menuFieldsItem.labelField.label"), initial["label"], next["label"], t) : null,
@@ -391,6 +402,23 @@ function listNodesValue(
   };
 }
 
+function listNodeOrderLabels(
+  nodes: readonly SettingsListNode[],
+  descriptor: IdentifiedDescriptor,
+): readonly string[] {
+  return nodes.map((node) => {
+    const parent = node.parentId
+      ? nodes.find((candidate) => candidate.id === node.parentId)
+      : undefined;
+    return descriptor.describeOrder({
+      ...node.value,
+      id: node.id,
+      parentId: node.parentId,
+      parentLabel: parent ? objectName(parent.value) : undefined,
+    } as IdentifiedValue);
+  });
+}
+
 function listPropertyValue(
   property: string,
   value: unknown,
@@ -494,17 +522,23 @@ function identifiedListStrategy<TValue>(input: Readonly<{
       const localNodes = input.definition.toNodes(values.local);
       if (analysis.result.status === "manual") {
         const choiceId = `items:manual:${analysis.result.reason}`;
+        const isOrderConflict = analysis.result.reason === "order-incompatible";
         return [{
           id: choiceId,
           label: input.t("studio.settingsConflict.list.manualRequired"),
           status: "conflict" as const,
           resolutionMode: "choice" as const,
           choice: values.choices[choiceId],
-          comparison: {
+          comparison: isOrderConflict ? undefined : {
             baseline: listNodesValue(baselineNodes, input.descriptor, input.t),
             server: listNodesValue(serverNodes, input.descriptor, input.t),
             local: listNodesValue(localNodes, input.descriptor, input.t),
           },
+          orderComparison: isOrderConflict ? {
+            baseline: listNodeOrderLabels(baselineNodes, input.descriptor),
+            server: listNodeOrderLabels(serverNodes, input.descriptor),
+            local: listNodeOrderLabels(localNodes, input.descriptor),
+          } : undefined,
           details: [{
             id: "reason",
             label: input.t("studio.settingsConflict.list.reason"),
@@ -514,8 +548,8 @@ function identifiedListStrategy<TValue>(input: Readonly<{
             },
           }],
           options: {
-            server: input.t("studio.settingsConflict.actions.useServerStructure"),
-            local: input.t("studio.settingsConflict.actions.keepLocalStructure"),
+            server: input.t("studio.conflictResolution.actions.useServer"),
+            local: input.t("studio.conflictResolution.actions.keepLocal"),
           },
         }];
       }

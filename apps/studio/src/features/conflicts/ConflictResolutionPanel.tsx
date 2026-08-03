@@ -6,7 +6,7 @@
  * @description Single interactive panel for every Studio OCC conflict.
  */
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -14,6 +14,7 @@ import {
   conflictPresentationStatusKey,
   toDecisionConflictChoices,
   toDecisionConflictGroups,
+  toManualConflictGroups,
   type ConflictActionExecutionResult,
   type ConflictDisplayValue,
   type ConflictPresentationGroup,
@@ -33,6 +34,20 @@ export type ConflictResolutionChoices = Readonly<
   Record<string, ConflictResolutionChoice>
 >;
 
+export type ConflictResolutionPanelAction =
+  | Readonly<{
+      kind: "choices";
+      onApply: (
+        choices: ConflictResolutionChoices,
+      ) => ConflictActionExecutionResult | Promise<ConflictActionExecutionResult>;
+    }>
+  | Readonly<{
+      kind: "direct";
+      label: string;
+      onAction: () => ConflictActionExecutionResult | Promise<ConflictActionExecutionResult>;
+    }>
+  | Readonly<{ kind: "close-only" }>;
+
 type ConflictResolutionPanelProps = Readonly<{
   conflictKey: string;
   title: string;
@@ -47,18 +62,26 @@ type ConflictResolutionPanelProps = Readonly<{
     pending: string;
     cancel: string;
     apply: string;
+    orderBaseline: string;
+    orderServer: string;
+    orderLocal: string;
+    position: string;
   }>;
+  action: ConflictResolutionPanelAction;
   isPending?: boolean;
   error?: string;
   focusTargetId?: string;
   onCancel: () => ConflictActionExecutionResult | Promise<ConflictActionExecutionResult>;
-  onApply: (
-    choices: ConflictResolutionChoices,
-  ) => ConflictActionExecutionResult | Promise<ConflictActionExecutionResult>;
 }>;
 
-function displayValue(value: ConflictDisplayValue): string {
-  return value.kind === "list" ? value.items.join(" · ") : value.text;
+function displayValue(value: ConflictDisplayValue): ReactNode {
+  return value.kind === "list" ? (
+    <ul className="list-disc space-y-1 pl-5">
+      {value.items.map((item, index) => (
+        <li key={`${index}-${item}`}>{item}</li>
+      ))}
+    </ul>
+  ) : value.text;
 }
 
 export function ConflictResolutionPanel({
@@ -67,11 +90,11 @@ export function ConflictResolutionPanel({
   description,
   groups,
   labels,
+  action,
   isPending = false,
   error,
   focusTargetId,
   onCancel,
-  onApply,
 }: ConflictResolutionPanelProps) {
   const titleId = useId();
   const descriptionId = useId();
@@ -94,8 +117,14 @@ export function ConflictResolutionPanel({
   const pending = isPending || actionPending;
   const decisionGroups = toDecisionConflictGroups(groups);
   const decisionChoices = toDecisionConflictChoices(decisionGroups, choices);
-  const canApply = decisionGroups.length > 0 &&
+  const hasGranularChoices = decisionGroups.length > 0;
+  const canApply = action.kind === "choices" && hasGranularChoices &&
     canApplyConflictResolution(decisionGroups, pending, decisionChoices);
+  const presentationGroups = action.kind === "choices"
+    ? decisionGroups
+    : action.kind === "direct"
+      ? toManualConflictGroups(groups)
+      : groups;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -115,10 +144,9 @@ export function ConflictResolutionPanel({
 
     queueMicrotask(() => {
       if (!mountedRef.current) return;
-      const firstRequiredId = getFirstRequiredConflictChoiceId(
-        decisionGroups,
-        decisionChoices,
-      );
+      const firstRequiredId = action.kind === "choices"
+        ? getFirstRequiredConflictChoiceId(decisionGroups, decisionChoices)
+        : null;
       const firstChoice = firstRequiredId
         ? conflictItemDomIdentity(conflictKey, firstRequiredId).firstChoiceToken
         : null;
@@ -129,7 +157,7 @@ export function ConflictResolutionPanel({
         : null;
       (input ?? panelRef.current)?.focus();
     });
-  }, [conflictKey, decisionChoices, decisionGroups]);
+  }, [action.kind, conflictKey, decisionChoices, decisionGroups]);
 
   const restoreTriggerFocus = () => {
     const trigger = triggerRef.current;
@@ -194,8 +222,8 @@ export function ConflictResolutionPanel({
             {description}
           </p>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {decisionGroups.map((group) => (
+        <CardContent className="mt-2 space-y-4">
+          {presentationGroups.map((group) => (
             <section aria-label={group.label} className="space-y-3" key={group.id}>
               {group.label ? <p className="font-medium">{group.label}</p> : null}
               {group.items.map((item) => {
@@ -209,21 +237,71 @@ export function ConflictResolutionPanel({
                       {t(`status.${conflictPresentationStatusKey(item)}`)}
                     </FieldDescription>
                     {item.comparison ? <dl className="mt-2 grid gap-1 text-sm">
-                      <div><dt className="inline font-medium">{labels.baseline}: </dt><dd className="inline">{displayValue(item.comparison.baseline)}</dd></div>
-                      <div><dt className="inline font-medium">{labels.server}: </dt><dd className="inline">{displayValue(item.comparison.server)}</dd></div>
-                      <div><dt className="inline font-medium">{labels.local}: </dt><dd className="inline">{displayValue(item.comparison.local)}</dd></div>
+                      <div><dt className="inline font-medium">{labels.baseline}: </dt><dd className={item.comparison.baseline.kind === "list" ? "mt-1" : "inline"}>{displayValue(item.comparison.baseline)}</dd></div>
+                      <div><dt className="inline font-medium">{labels.server}: </dt><dd className={item.comparison.server.kind === "list" ? "mt-1" : "inline"}>{displayValue(item.comparison.server)}</dd></div>
+                      <div><dt className="inline font-medium">{labels.local}: </dt><dd className={item.comparison.local.kind === "list" ? "mt-1" : "inline"}>{displayValue(item.comparison.local)}</dd></div>
                     </dl> : null}
+                    {item.orderComparison ? (
+                      <div className="mt-3 text-sm">
+                        <div className="space-y-3 md:hidden">
+                          {([
+                            [labels.orderBaseline, item.orderComparison.baseline],
+                            [labels.orderServer, item.orderComparison.server],
+                            [labels.orderLocal, item.orderComparison.local],
+                          ] as const).map(([label, order]) => (
+                            <section key={label}>
+                              <p className="font-medium">{label}</p>
+                              <ol className="list-decimal space-y-1 pl-5">
+                                {order.map((value, index) => (
+                                  <li key={`${index}-${value}`}>{value}</li>
+                                ))}
+                              </ol>
+                            </section>
+                          ))}
+                        </div>
+                        <div className="hidden overflow-x-auto md:block">
+                          <table className="w-full border-collapse text-left">
+                            <caption className="sr-only">{item.label}</caption>
+                            <thead>
+                              <tr>
+                                <th className="border-b p-2" scope="col">{labels.position}</th>
+                                <th className="border-b p-2" scope="col">{labels.orderBaseline}</th>
+                                <th className="border-b p-2" scope="col">{labels.orderServer}</th>
+                                <th className="border-b p-2" scope="col">{labels.orderLocal}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {Array.from({
+                                length: Math.max(
+                                  item.orderComparison.baseline.length,
+                                  item.orderComparison.server.length,
+                                  item.orderComparison.local.length,
+                                ),
+                              }, (_, index) => (
+                                <tr key={index}>
+                                  <th className="border-b p-2 font-medium" scope="row">{index + 1}</th>
+                                  <td className="border-b p-2">{item.orderComparison?.baseline[index] ?? "—"}</td>
+                                  <td className="border-b p-2">{item.orderComparison?.server[index] ?? "—"}</td>
+                                  <td className="border-b p-2">{item.orderComparison?.local[index] ?? "—"}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ) : null}
                     {item.details?.length ? (
                       <dl className="mt-2 grid gap-1 text-sm">
                         {item.details.map((detail) => (
                           <div key={detail.id}>
                             <dt className="inline font-medium">{detail.label}: </dt>
-                            <dd className="inline">{displayValue(detail.value)}</dd>
+                            <dd className={detail.value.kind === "list" ? "mt-1" : "inline"}>{displayValue(detail.value)}</dd>
                           </div>
                         ))}
                       </dl>
                     ) : null}
-                    <FieldSet aria-describedby={domIdentity.statusId} className="mt-3" disabled={pending}>
+                    {action.kind === "choices" && item.resolutionMode === "choice" ? (
+                      <FieldSet aria-describedby={domIdentity.statusId} className="mt-3" disabled={pending}>
                       <FieldLegend className="sr-only">{item.label}</FieldLegend>
                       <div className="flex flex-wrap gap-3">
                         <Field orientation="horizontal">
@@ -262,7 +340,8 @@ export function ConflictResolutionPanel({
                           </FieldLabel>
                         </Field>
                       </div>
-                    </FieldSet>
+                      </FieldSet>
+                    ) : null}
                   </div>
                 );
               })}
@@ -280,14 +359,26 @@ export function ConflictResolutionPanel({
             >
               {labels.cancel}
             </Button>
-            <Button
-              aria-disabled={!canApply}
-              disabled={!canApply}
-              onClick={() => { void runAction(() => onApply({ ...decisionChoices }), focusStableTarget); }}
-              type="button"
-            >
-              {labels.apply}
-            </Button>
+            {action.kind === "choices" && hasGranularChoices ? (
+              <Button
+                aria-disabled={!canApply}
+                disabled={!canApply}
+                onClick={() => { void runAction(() => action.onApply({ ...decisionChoices }), focusStableTarget); }}
+                type="button"
+              >
+                {labels.apply}
+              </Button>
+            ) : null}
+            {action.kind === "direct" ? (
+              <Button
+                aria-disabled={pending}
+                disabled={pending}
+                onClick={() => { void runAction(action.onAction, focusStableTarget); }}
+                type="button"
+              >
+                {action.label}
+              </Button>
+            ) : null}
           </div>
         </CardContent>
       </div>

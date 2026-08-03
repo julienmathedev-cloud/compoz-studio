@@ -493,25 +493,34 @@
     "conflictResolution": {
       "pending": "Résolution en cours…",
       "actions": {
-        "cancel": "Annuler et revenir au brouillon",
+        "cancel": "Fermer et décider plus tard",
         "apply": "Appliquer mes choix",
-        "useServer": "Utiliser la valeur enregistrée",
-        "keepLocal": "Conserver ma valeur"
+        "useServer": "Conserver la version enregistrée",
+        "keepLocal": "Conserver ma modification"
+      },
+      "labels": {
+        "initialVersion": "Version initiale",
+        "savedVersion": "Version enregistrée",
+        "yourDraft": "Votre brouillon",
+        "initialOrder": "Ordre initial",
+        "savedOrder": "Ordre enregistré",
+        "yourOrder": "Votre ordre",
+        "position": "Position"
       },
       "status": {
         "serverOnly": "Seule la version enregistrée a changé.",
         "localOnly": "Seule votre version locale a changé.",
         "sameChange": "Les deux versions ont effectué le même changement.",
         "conflict": "Les versions sont différentes : un choix est nécessaire.",
-        "manual": "Cette différence nécessite une résolution manuelle."
+        "manual": "Rechargez la version enregistrée avant de continuer."
       }
     },
     "settingsConflict": {
-      "title": "Conflit sur les réglages",
-      "description": "Les réglages enregistrés ont changé pendant votre édition. Votre brouillon local est conservé jusqu’à votre décision.",
+      "title": "Des réglages ont été modifiés pendant votre édition",
+      "description": "Certaines modifications enregistrées sont différentes de celles de votre brouillon. Choisissez la version à conserver pour chaque différence.",
       "labels": {
-        "baseline": "Base de votre enregistrement",
-        "server": "Enregistré maintenant",
+        "baseline": "Version initiale",
+        "server": "Version enregistrée",
         "local": "Votre brouillon"
       },
       "actions": {
@@ -1261,6 +1270,10 @@
       "structureConflict": {
         "currentAdopted": "La structure enregistrée de la page a été adoptée. Votre changement local de parent n’a pas été appliqué ; vos autres modifications de métadonnées sont conservées."
       },
+      "reorderConflict": {
+        "title": "L’ordre des pages a été modifié",
+        "description": "Un autre déplacement a été enregistré avant le vôtre. L’ordre le plus récent a été chargé. Recommencez votre déplacement."
+      },
       "title": {
         "label": "Titre de la page",
         "help": "Choisissez un titre clair et descriptif (par ex. : “Accueil”, “Galerie”, “Contact”).",
@@ -1662,11 +1675,11 @@
         "originalMissing": "Impossible d’enregistrer : la page d’origine est introuvable. Rechargez l’index et réessayez."
       },
       "conflict": {
-        "title": "Des métadonnées ont été modifiées ailleurs",
-        "description": "Les métadonnées enregistrées ont changé pendant votre édition. Votre brouillon local est conservé jusqu’à votre décision.",
-        "baseline": "Valeur initiale",
-        "local": "Votre valeur",
-        "remote": "Valeur distante",
+        "title": "Les infos de la page ont été modifiées pendant votre édition",
+        "description": "Certaines modifications enregistrées sont différentes de celles de votre brouillon. Choisissez la version à conserver pour chaque différence.",
+        "baseline": "Version initiale",
+        "local": "Votre brouillon",
+        "remote": "Version enregistrée",
         "errors": {
           "incomplete": "Choisissez une version pour chaque différence avant d’appliquer la résolution.",
           "mutation": "La résolution n’a pas pu être enregistrée. Votre brouillon et vos choix sont conservés."
@@ -1815,8 +1828,43 @@
       "orderConflictDescription": "L’ordre enregistré et votre ordre local sont incompatibles.",
       "structuralConflictDescription": "La structure enregistrée et votre structure locale sont incompatibles.",
       "reorderConflict": {
-        "title": "Conflit",
-        "description": "L’ordre des blocs a changé ailleurs. L’état le plus récent a été chargé ; veuillez recommencer votre action."
+        "title": "L’ordre des blocs a été modifié",
+        "description": "Un autre déplacement a été enregistré avant le vôtre. L’ordre le plus récent a été chargé. Recommencez votre déplacement."
+      },
+      "scenarios": {
+        "content": {
+          "title": "Le contenu du bloc a été modifié pendant votre édition",
+          "fieldDescription": "Certaines modifications enregistrées sont différentes de celles de votre brouillon. Choisissez la version à conserver pour chaque différence.",
+          "structuralDescription": "Le contenu enregistré est différent de celui de votre brouillon. Choisissez la version à conserver."
+        },
+        "blockDeleted": {
+          "title": "Le bloc a été supprimé pendant votre édition",
+          "description": "Le bloc n’existe plus dans la version enregistrée. Vous pouvez conserver sa suppression ou recréer le bloc à partir de votre brouillon."
+        },
+        "blockChangedBeforeDelete": {
+          "title": "Le bloc a été modifié avant sa suppression",
+          "description": "Le bloc enregistré contient des modifications plus récentes. Vous pouvez conserver cette version ou confirmer la suppression demandée."
+        },
+        "contention": {
+          "title": "Le contenu du bloc a encore été modifié",
+          "description": "Une autre modification a été enregistrée pendant votre enregistrement. Choisissez de conserver la version enregistrée ou de réessayer avec votre brouillon."
+        },
+        "revisionAhead": {
+          "title": "La version affichée n’est plus synchronisée",
+          "description": "Les données affichées ne correspondent plus à la version enregistrée. Rechargez la version enregistrée avant de reprendre vos modifications."
+        },
+        "idReused": {
+          "title": "Deux modifications du bloc sont incompatibles",
+          "description": "Un même élément du bloc a été créé différemment dans les deux versions. Choisissez de conserver la version enregistrée ou celle de votre brouillon."
+        },
+        "globalInvariant": {
+          "title": "Les modifications du bloc sont incompatibles",
+          "description": "Votre brouillon ne peut pas être combiné avec la version enregistrée. Conservez la version enregistrée, puis reprenez votre modification depuis le contenu actuel."
+        },
+        "orderIncompatible": {
+          "title": "L’ordre des éléments du bloc a été modifié pendant votre édition",
+          "description": "Les mêmes éléments ont été réorganisés différemment dans les deux versions. Choisissez l’ordre à conserver."
+        }
       },
       "baseline": "Base",
       "remote": "Enregistré",
@@ -1826,10 +1874,15 @@
       "choices": {
         "keepDeletion": "Conserver la suppression",
         "recreateBlock": "Recréer mon bloc",
+        "keepSavedVersion": "Conserver la version enregistrée",
+        "keepMyChange": "Conserver ma modification",
+        "confirmDeletion": "Confirmer la suppression",
+        "retryDraft": "Réessayer avec mon brouillon",
+        "reloadSavedVersion": "Recharger la version enregistrée",
         "keepSavedBlock": "Conserver le bloc enregistré",
         "useSavedStructure": "Utiliser la structure enregistrée",
         "keepLocalStructure": "Conserver ma structure locale",
-        "useSavedOrder": "Utiliser l’ordre enregistré",
+        "useSavedOrder": "Conserver l’ordre enregistré",
         "keepLocalOrder": "Conserver mon ordre",
         "keepSavedState": "Utiliser l’état enregistré",
         "retryLocalOperation": "Conserver mon opération locale"
@@ -1936,10 +1989,19 @@
       },
       "order": {
         "saved": "Ordre des blocs",
+        "titles": {
+          "blocks": "Ordre des blocs",
+          "rows": "Ordre des lignes",
+          "columns": "Ordre des colonnes",
+          "cells": "Ordre des cellules",
+          "items": "Ordre des éléments",
+          "fields": "Ordre des champs",
+          "sections": "Ordre des sections"
+        },
         "changes": "Ajouts et suppressions",
         "baseline": "Ordre initial",
         "current": "Ordre enregistré",
-        "local": "Ordre local",
+        "local": "Votre ordre",
         "addedServer": "Blocs ajoutés à distance",
         "removedServer": "Blocs supprimés à distance",
         "addedLocal": "Blocs ajoutés localement",
@@ -2029,7 +2091,7 @@
         "idReused": "Identifiant réutilisé",
         "anchorMissing": "Position introuvable",
         "revisionAhead": "Révision dépassée",
-        "contention": "Opération concurrente"
+        "contention": "Modification enregistrée pendant l’enregistrement"
       }
     },
 

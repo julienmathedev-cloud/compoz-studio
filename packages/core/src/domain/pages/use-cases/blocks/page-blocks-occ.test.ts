@@ -158,7 +158,7 @@ void test("create generates its block ID once, retries CAS, and returns revision
   assert.deepEqual(pages.blocks.map((block) => block.id), ["a", "new-1"]);
 });
 
-void test("same-interval concurrent creates converge to lexical ID order", async () => {
+void test("end placement appends after concurrent creates in the saved order", async () => {
   async function createAfter(remoteId: string, localId: string) {
     const pages = new MemoryPages([section("a"), section(remoteId)]);
     pages.revision = 1;
@@ -177,8 +177,29 @@ void test("same-interval concurrent creates converge to lexical ID order", async
     });
     return result.blocks.map((block) => block.id);
   }
-  assert.deepEqual(await createAfter("z", "b"), ["a", "b", "z"]);
+  assert.deepEqual(await createAfter("z", "b"), ["a", "z", "b"]);
   assert.deepEqual(await createAfter("b", "z"), ["a", "b", "z"]);
+});
+
+void test("end placement succeeds after the last baseline block was deleted", async () => {
+  const pages = new MemoryPages([section("a")]);
+  pages.revision = 1;
+  const result = await createSectionBlock({
+    pages,
+    idGenerator: { nextId: () => "local" },
+  })({
+    pageId: "page",
+    expectedBlocksRevision: 0,
+    baselineOrder: ["a", "b"],
+    baselineLcpPriorityBlockId: null,
+    placement: { kind: "end" },
+    containerMode: "contained",
+    lcpPriority: false,
+    rows: [],
+  });
+
+  assert.equal(result.outcome, "updated");
+  assert.deepEqual(result.blocks.map((block) => block.id), ["a", "local"]);
 });
 
 void test("missing create anchor and concurrent LCP activation are functional conflicts", async () => {

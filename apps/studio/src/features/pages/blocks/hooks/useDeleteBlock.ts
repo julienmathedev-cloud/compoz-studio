@@ -12,7 +12,6 @@ import { useState } from "react";
 
 import { DEFAULT_CONTENT_STATE } from "@compoz/core/constants/common/content-state";
 import type { PageBlocksSnapshotDTO } from "@compoz/core/domain/pages/dto";
-import type { PageBlocksConflictDetails } from "@compoz/core/domain/pages/revisions/page-blocks.types";
 import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import { getPageBlocksConflictDetails } from "@compoz/infra/lib/get-page-blocks-conflict-details";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
@@ -20,6 +19,10 @@ import { syncPageBlocksSnapshotCache } from "@compoz/studio/features/pages/block
 import { pageBlocksKey } from "@compoz/studio/features/pages/blocks/cache/keys";
 import { pageBlocksMutationScope } from "@compoz/studio/features/pages/blocks/hooks/page-blocks-mutation-scope";
 import { invalidateBlockMutationStatusViews } from "@compoz/studio/features/pages/blocks/hooks/invalidate-block-mutation-status-views";
+import {
+  createDeleteBlockConflictState,
+  type DeleteBlockConflictState,
+} from "@compoz/studio/features/pages/blocks/hooks/delete-block-conflict-state";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import { notifyDeleted, notifyNoChanges } from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
@@ -32,7 +35,7 @@ export function useDeleteBlock(pageId: string, onSuccess?: () => void) {
   const entityLabel = t("studio.shared.entities.blocks");
   const [deletingBlockId, setDeletingBlockId] = useState<string | null>(null);
   const [conflict, setConflict] =
-    useState<PageBlocksConflictDetails | null>(null);
+    useState<DeleteBlockConflictState | null>(null);
 
   const mutation = useMutation({
     mutationKey: ["w", websiteId, "studio", "pages", pageIdKey, "blocks", "delete"] as const,
@@ -53,6 +56,7 @@ export function useDeleteBlock(pageId: string, onSuccess?: () => void) {
       setDeletingBlockId(blockId);
     },
     onSuccess: async (response, blockId) => {
+      setConflict(null);
       syncPageBlocksSnapshotCache(queryClient, websiteId, pageIdKey, response);
       if (response.outcome === "noChanges") {
         notifyNoChanges(
@@ -68,7 +72,7 @@ export function useDeleteBlock(pageId: string, onSuccess?: () => void) {
       await invalidateBlockMutationStatusViews({ queryClient, websiteId, outcome: response.outcome });
       onSuccess?.();
     },
-    onError: (error) => {
+    onError: (error, blockId) => {
       const details = getPageBlocksConflictDetails(error);
       if (details) {
         syncPageBlocksSnapshotCache(
@@ -79,7 +83,7 @@ export function useDeleteBlock(pageId: string, onSuccess?: () => void) {
           DEFAULT_CONTENT_STATE,
           true,
         );
-        setConflict(details);
+        setConflict(createDeleteBlockConflictState(details, blockId));
         return;
       }
       notify.fromError(error, UiError.unexpectedSave);

@@ -62,6 +62,7 @@ void test("presents real and mergeable changes with only server/local choices", 
     state,
     t,
     (key) => ({ monthly: "Monthly" })[key] ?? key,
+    "Page title",
   );
   const items = groups[0]?.items ?? [];
 
@@ -71,6 +72,7 @@ void test("presents real and mergeable changes with only server/local choices", 
     ["paginationEnabled", "server-only", "automatic"],
   ]);
   assert.equal(items[0]?.choice, undefined);
+  assert.equal(items[0]?.label, "Page title");
   assert.equal(items[1]?.comparison?.local.kind, "list");
   assert.equal(items[2]?.comparison?.server.kind, "boolean");
 });

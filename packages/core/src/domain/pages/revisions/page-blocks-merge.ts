@@ -386,6 +386,18 @@ function mergeIdentifiedCollection<T extends Identified>(input: Readonly<{
 
   if (orderResolution.status === "conflict") {
     context.conflicts.push(orderResolution.conflict);
+    const hasLocalOnlyAddition = local.some(
+      (item) => !baselineById.has(item.id) && !currentById.has(item.id),
+    );
+    if (hasLocalOnlyAddition) {
+      context.conflicts.push({
+        kind: "collectionIncompatible",
+        path,
+        baseline,
+        current,
+        local,
+      });
+    }
   }
 
   if (orderResolution.status === "resolved") {
@@ -1113,6 +1125,17 @@ export function createPlacementOrder(input: Readonly<{
       status: "orderIncompatible";
       conflict: Extract<BlockConflict, { kind: "orderIncompatible" }>;
     }> {
+  if (
+    input.placement.kind === "end" &&
+    new Set(input.currentOrder).size === input.currentOrder.length &&
+    !input.currentOrder.includes(input.blockId)
+  ) {
+    return {
+      status: "resolved",
+      order: [...input.currentOrder, input.blockId],
+    };
+  }
+
   const anchors = placementAnchors(input.baselineOrder, input.placement);
   const placementAnchorId =
     "blockId" in input.placement ? input.placement.blockId : "";

@@ -7,6 +7,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import type { ConflictPresentationItem } from "@compoz/studio/features/conflicts/conflict-presentation";
 import { toDecisionConflictGroups } from "@compoz/studio/features/conflicts/conflict-presentation";
 import {
   legalMenuConflictAdapter,
@@ -21,7 +22,7 @@ import type { SocialFormValues } from "@compoz/validation/site/settings/social/s
 const t = (key: string, values?: Record<string, string | number | Date>) =>
   values ? `${key}:${Object.values(values).join(":")}` : key;
 
-function visiblePresentation(items: readonly Readonly<{ id: string; label: string; context?: string; comparison?: unknown; details?: unknown }>[]): string {
+function visiblePresentation(items: readonly Readonly<{ id: string; label: string; context?: string; comparison?: unknown; orderComparison?: unknown; details?: unknown }>[]): string {
   return JSON.stringify(items.map(({ label, context, comparison, details }) => ({ label, context, comparison, details })));
 }
 
@@ -197,6 +198,95 @@ void test("Social adopts one-sided order and makes incompatible order an explici
   if (localOrder.status === "resolved") {
     assert.deepEqual(localOrder.value.map((item) => item.id), ["a", "c", "b"]);
   }
+});
+
+void test("Social, Primary, and Legal incompatible orders expose short explicit sequences", () => {
+  const assertOrderPresentation = (
+    presentation: readonly ConflictPresentationItem[],
+    expected: Readonly<{
+      baseline: readonly string[];
+      server: readonly string[];
+      local: readonly string[];
+    }>,
+  ) => {
+    assert.equal(presentation.length, 1);
+    assert.deepEqual(presentation[0]?.orderComparison, expected);
+    assert.equal(presentation[0]?.comparison, undefined);
+    assert.deepEqual(presentation[0]?.options, {
+      server: "studio.conflictResolution.actions.useServer",
+      local: "studio.conflictResolution.actions.keepLocal",
+    });
+    assert.doesNotMatch(JSON.stringify(presentation[0]?.orderComparison), /position|·/iu);
+  };
+
+  const social = [
+    { id: "a", kind: "website" as const, href: "https://a.example" },
+    { id: "b", kind: "linkedin" as const, href: "https://b.example" },
+    { id: "c", kind: "github" as const, href: "https://c.example" },
+  ];
+  assertOrderPresentation(
+    socialConflictAdapter(t).fieldStrategies!.items!.present({
+      baseline: social,
+      current: [social[1]!, social[0]!, social[2]!],
+      local: [social[0]!, social[2]!, social[1]!],
+      choices: {},
+    }),
+    {
+      baseline: [
+        "studio.social.kind.website — https://a.example",
+        "studio.social.kind.linkedin — https://b.example",
+        "studio.social.kind.github — https://c.example",
+      ],
+      server: [
+        "studio.social.kind.linkedin — https://b.example",
+        "studio.social.kind.website — https://a.example",
+        "studio.social.kind.github — https://c.example",
+      ],
+      local: [
+        "studio.social.kind.website — https://a.example",
+        "studio.social.kind.github — https://c.example",
+        "studio.social.kind.linkedin — https://b.example",
+      ],
+    },
+  );
+
+  const child = (id: string, label: string) => ({ id, label, href: `/${id}`, newTab: false });
+  const parent = (children: PrimaryMenuFormValues["items"][number]["children"]): PrimaryMenuFormValues["items"][number] => ({
+    id: "parent",
+    label: "Parent",
+    href: "/parent",
+    newTab: false,
+    children,
+  });
+  const children = [child("a", "A"), child("b", "B"), child("c", "C")];
+  assertOrderPresentation(
+    primaryMenuConflictAdapter(t).fieldStrategies!.items!.present({
+      baseline: [parent(children)],
+      current: [parent([children[1]!, children[0]!, children[2]!])],
+      local: [parent([children[0]!, children[2]!, children[1]!])],
+      choices: {},
+    }),
+    {
+      baseline: ["Parent", "A — Parent", "B — Parent", "C — Parent"],
+      server: ["Parent", "B — Parent", "A — Parent", "C — Parent"],
+      local: ["Parent", "A — Parent", "C — Parent", "B — Parent"],
+    },
+  );
+
+  const legal = [child("a", "A"), child("b", "B"), child("c", "C")];
+  assertOrderPresentation(
+    legalMenuConflictAdapter(t).fieldStrategies!.items!.present({
+      baseline: legal,
+      current: [legal[1]!, legal[0]!, legal[2]!],
+      local: [legal[0]!, legal[2]!, legal[1]!],
+      choices: {},
+    }),
+    {
+      baseline: ["A", "B", "C"],
+      server: ["B", "A", "C"],
+      local: ["A", "C", "B"],
+    },
+  );
 });
 
 void test("Primary menu combines parent and child additions and reconstructs the complete tree", () => {

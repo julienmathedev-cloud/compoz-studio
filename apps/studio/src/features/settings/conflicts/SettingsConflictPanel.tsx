@@ -30,6 +30,7 @@ export function SettingsConflictPanel({
 
   return (
     <ConflictResolutionPanel
+      action={{ kind: "choices", onApply: conflict.apply }}
       conflictKey={conflict.conflictId}
       description={t("description")}
       error={conflict.error}
@@ -37,16 +38,19 @@ export function SettingsConflictPanel({
       groups={conflict.groups}
       isPending={conflict.pending}
       labels={{
-        baseline: t("labels.baseline"),
-        server: t("labels.server"),
-        local: t("labels.local"),
+        baseline: tConflict("labels.initialVersion"),
+        server: tConflict("labels.savedVersion"),
+        local: tConflict("labels.yourDraft"),
         useServer: tConflict("actions.useServer"),
         keepLocal: tConflict("actions.keepLocal"),
         pending: tConflict("pending"),
         cancel: tConflict("actions.cancel"),
         apply: tConflict("actions.apply"),
+        orderBaseline: tConflict("labels.initialOrder"),
+        orderServer: tConflict("labels.savedOrder"),
+        orderLocal: tConflict("labels.yourOrder"),
+        position: tConflict("labels.position"),
       }}
-      onApply={conflict.apply}
       onCancel={conflict.abandon}
       title={t("title")}
     />

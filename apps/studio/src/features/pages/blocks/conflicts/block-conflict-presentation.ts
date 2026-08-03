@@ -30,6 +30,68 @@ export type BlockConflictPresentationContext = Readonly<{
   candidateBlock?: Block;
 }>;
 
+export type BlockConflictPanelScenario = Readonly<{
+  kind:
+    | "field"
+    | "structural"
+    | "blockDeleted"
+    | "blockChangedBeforeDelete"
+    | "contention"
+    | "revisionAhead"
+    | "idReused"
+    | "globalInvariant"
+    | "orderIncompatible";
+  titleKey: string;
+  descriptionKey: string;
+  actionMode: "choices" | "reload";
+}>;
+
+export function selectBlockConflictPanelScenario(
+  details: PageBlocksConflictDetails,
+): BlockConflictPanelScenario {
+  const has = (kind: BlockConflict["kind"]): boolean =>
+    details.conflicts.some((conflict) => conflict.kind === kind);
+
+  if (has("revisionAhead")) {
+    return { kind: "revisionAhead", titleKey: "scenarios.revisionAhead.title", descriptionKey: "scenarios.revisionAhead.description", actionMode: "reload" };
+  }
+  if (has("globalInvariant")) {
+    return { kind: "globalInvariant", titleKey: "scenarios.globalInvariant.title", descriptionKey: "scenarios.globalInvariant.description", actionMode: "reload" };
+  }
+  if (details.conflictKind === "contention") {
+    return { kind: "contention", titleKey: "scenarios.contention.title", descriptionKey: "scenarios.contention.description", actionMode: "choices" };
+  }
+  if (has("blockDeleted")) {
+    return { kind: "blockDeleted", titleKey: "scenarios.blockDeleted.title", descriptionKey: "scenarios.blockDeleted.description", actionMode: "choices" };
+  }
+  if (has("blockChangedBeforeDelete")) {
+    return { kind: "blockChangedBeforeDelete", titleKey: "scenarios.blockChangedBeforeDelete.title", descriptionKey: "scenarios.blockChangedBeforeDelete.description", actionMode: "choices" };
+  }
+  if (has("idReused")) {
+    return { kind: "idReused", titleKey: "scenarios.idReused.title", descriptionKey: "scenarios.idReused.description", actionMode: "choices" };
+  }
+  if (
+    has("blockTypeChanged") ||
+    has("cellTypeChanged") ||
+    has("itemTypeChanged") ||
+    has("collectionIncompatible") ||
+    has("anchorMissing")
+  ) {
+    return { kind: "structural", titleKey: "scenarios.content.title", descriptionKey: "scenarios.content.structuralDescription", actionMode: "choices" };
+  }
+  if (has("orderIncompatible")) {
+    return { kind: "orderIncompatible", titleKey: "scenarios.orderIncompatible.title", descriptionKey: "scenarios.orderIncompatible.description", actionMode: "choices" };
+  }
+  return { kind: "field", titleKey: "scenarios.content.title", descriptionKey: "scenarios.content.fieldDescription", actionMode: "choices" };
+}
+
+export function requiresFullVersionBlockResolution(
+  details: PageBlocksConflictDetails,
+): boolean {
+  const scenario = selectBlockConflictPanelScenario(details);
+  return scenario.kind === "idReused" || scenario.kind === "structural";
+}
+
 function allBlocks(context: BlockConflictPresentationContext): readonly Block[] {
   return [
     ...context.currentBlocks,
@@ -299,12 +361,103 @@ function structuralContext(path: string, context: BlockConflictPresentationConte
   return [blockLabel(blockId, context, t), ...describeSegments(block, segments, t)].join(" · ");
 }
 
-function orderItems(ids: readonly string[], context: BlockConflictPresentationContext, t: T): readonly string[] {
-  return ids.map((id) => blockLabel(id, context, t));
+type OrderCollection = "blocks" | "rows" | "columns" | "cells" | "items" | "fields" | "sections";
+
+function orderCollectionFromPath(path: string): OrderCollection {
+  const matches = [...path.matchAll(/(?:^|\.)(blocks|rows|columns|cells|items|fields|sections)(?:\[[^\]]+\])?/gu)];
+  const collection = matches.at(-1)?.[1];
+  return collection === "rows" ||
+    collection === "columns" ||
+    collection === "cells" ||
+    collection === "items" ||
+    collection === "fields" ||
+    collection === "sections"
+    ? collection
+    : "blocks";
 }
 
-function listDetail(id: string, label: string, ids: readonly string[], context: BlockConflictPresentationContext, t: T): ConflictPresentationDetail | null {
-  return ids.length > 0 ? { id, label, value: { kind: "list", items: orderItems(ids, context, t) } } : null;
+function currentOrderBlocks(context: BlockConflictPresentationContext): readonly Block[] {
+  return [
+    ...context.currentBlocks,
+    ...(context.candidateBlock ? [context.candidateBlock] : []),
+  ];
+}
+
+function positionalLabel(
+  value: Identified,
+  index: number,
+  namedKey: string,
+  positionKey: string,
+  t: T,
+): string {
+  const name = semanticName(value);
+  return name
+    ? t(namedKey, { name })
+    : t(positionKey, { position: index + 1 });
+}
+
+function nestedOrderLabel(
+  id: string,
+  collection: Exclude<OrderCollection, "blocks">,
+  context: BlockConflictPresentationContext,
+  t: T,
+): string {
+  for (const block of currentOrderBlocks(context)) {
+    for (const [rowIndex, row] of block.rows.entries()) {
+      if (collection === "rows" && row.id === id) {
+        return t("locations.row", { position: rowIndex + 1 });
+      }
+      for (const [columnIndex, column] of row.columns.entries()) {
+        if (collection === "columns" && column.id === id) {
+          return t("locations.column", { position: columnIndex + 1 });
+        }
+        for (const cell of column.cells) {
+          if (collection === "cells" && cell.id === id) return cellLabel(cell, t);
+          if (collection === "items") {
+            const index = identifiedItems(cell).findIndex((item) => item.id === id);
+            const item = identifiedItems(cell)[index];
+            if (item) return positionalLabel(item, index, "locations.itemNamed", "locations.itemPosition", t);
+          }
+          if (collection === "fields" && cell.kind === "form") {
+            const index = cell.fields.findIndex((field) => field.id === id);
+            const field = cell.fields[index];
+            if (field) return positionalLabel(field, index, "locations.formFieldNamed", "locations.formFieldPosition", t);
+          }
+          if (collection === "sections" && cell.kind === "cardCollection") {
+            for (const item of cell.items) {
+              if (!("sections" in item)) continue;
+              const index = item.sections.findIndex((section) => section.id === id);
+              const section = item.sections[index];
+              if (section) return positionalLabel(section, index, "locations.structuredSectionNamed", "locations.structuredSectionPosition", t);
+            }
+          }
+        }
+      }
+    }
+  }
+  switch (collection) {
+    case "rows": return t("locations.rowMissing");
+    case "columns": return t("locations.columnMissing");
+    case "cells": return t("locations.cellDeleted");
+    case "items": return t("locations.itemMissing");
+    case "fields": return t("locations.formFieldDeleted");
+    case "sections": return t("locations.structuredSectionMissing");
+  }
+}
+
+function orderItems(
+  ids: readonly string[],
+  collection: OrderCollection,
+  context: BlockConflictPresentationContext,
+  t: T,
+): readonly string[] {
+  return ids.map((id) => collection === "blocks"
+    ? blockLabel(id, context, t)
+    : nestedOrderLabel(id, collection, context, t));
+}
+
+function listDetail(id: string, label: string, ids: readonly string[], collection: OrderCollection, context: BlockConflictPresentationContext, t: T): ConflictPresentationDetail | null {
+  return ids.length > 0 ? { id, label, value: { kind: "list", items: orderItems(ids, collection, context, t) } } : null;
 }
 
 function text(value: string): ConflictDisplayValue {
@@ -419,8 +572,8 @@ export function toBlockConflictPresentation(
           resolutionMode: "choice",
           comparison: comparison(conflict, context, t),
           options: {
-            server: t("choices.keepSavedBlock"),
-            local: t("choices.keepDeletion"),
+            server: t("choices.keepSavedVersion"),
+            local: t("choices.confirmDeletion"),
           },
         };
       case "blockTypeChanged":
@@ -432,10 +585,6 @@ export function toBlockConflictPresentation(
           context: structuralContext(conflict.path, context, t),
           status: "conflict",
           resolutionMode: "choice",
-          options: {
-            server: t("choices.useSavedStructure"),
-            local: t("choices.keepLocalStructure"),
-          },
           details: [
             { id: "initial-type", label: t("structural.initialType"), value: text(structuralType(conflict.baseline, t)) },
             { id: "saved-type", label: t("structural.savedType"), value: text(structuralType(conflict.current, t)) },
@@ -449,10 +598,6 @@ export function toBlockConflictPresentation(
           context: structuralContext(conflict.path, context, t),
           status: "conflict",
           resolutionMode: "choice",
-          options: {
-            server: t("choices.useSavedStructure"),
-            local: t("choices.keepLocalStructure"),
-          },
           details: [
             { id: "operation", label: t("structural.localOperation"), value: text(t(`operations.${details.operation}`)) },
             { id: "saved-state", label: t("structural.savedState"), value: display(conflict.current, t, context) },
@@ -460,23 +605,26 @@ export function toBlockConflictPresentation(
           ],
         };
       case "orderIncompatible": {
+        const collection = orderCollectionFromPath(conflict.path);
         const baselineSet = new Set(conflict.baselineOrder);
         const currentSet = new Set(conflict.currentOrder);
         const localSet = new Set(conflict.localOrder);
         const detailsList = [
-          listDetail("baseline-order", t("order.baseline"), conflict.baselineOrder, context, t),
-          listDetail("current-order", t("order.current"), conflict.currentOrder, context, t),
-          listDetail("local-order", t("order.local"), conflict.localOrder, context, t),
-          listDetail("added-server", t("order.addedServer"), conflict.currentOrder.filter((value) => !baselineSet.has(value)), context, t),
-          listDetail("removed-server", t("order.removedServer"), conflict.baselineOrder.filter((value) => !currentSet.has(value)), context, t),
-          listDetail("added-local", t("order.addedLocal"), conflict.localOrder.filter((value) => !baselineSet.has(value)), context, t),
-          listDetail("removed-local", t("order.removedLocal"), conflict.baselineOrder.filter((value) => !localSet.has(value)), context, t),
+          listDetail("added-server", t("order.addedServer"), conflict.currentOrder.filter((value) => !baselineSet.has(value)), collection, context, t),
+          listDetail("removed-server", t("order.removedServer"), conflict.baselineOrder.filter((value) => !currentSet.has(value)), collection, context, t),
+          listDetail("added-local", t("order.addedLocal"), conflict.localOrder.filter((value) => !baselineSet.has(value)), collection, context, t),
+          listDetail("removed-local", t("order.removedLocal"), conflict.baselineOrder.filter((value) => !localSet.has(value)), collection, context, t),
         ].filter((detail): detail is ConflictPresentationDetail => detail !== null);
         return {
           id,
-          label: t("order.saved"),
+          label: t(`order.titles.${collection}`),
           status: "conflict",
           resolutionMode: "choice",
+          orderComparison: {
+            baseline: orderItems(conflict.baselineOrder, collection, context, t),
+            server: orderItems(conflict.currentOrder, collection, context, t),
+            local: orderItems(conflict.localOrder, collection, context, t),
+          },
           details: detailsList,
           options: {
             server: t("choices.useSavedOrder"),
@@ -486,7 +634,7 @@ export function toBlockConflictPresentation(
       }
       case "idReused": {
         const kind = resourceKindFromPath(conflict.path);
-        return { id, label: t(`idReused.${kind}`), context: structuralContext(conflict.path, context, t), status: "conflict", resolutionMode: "choice", options: { server: t("choices.useSavedStructure"), local: t("choices.keepLocalStructure") }, details: [{ id: "reason", label: t("reason"), value: text(t("idReused.explanation")) }] };
+        return { id, label: t(`idReused.${kind}`), context: structuralContext(conflict.path, context, t), status: "conflict", resolutionMode: "choice", options: { server: t("choices.keepSavedVersion"), local: t("choices.keepMyChange") }, details: [{ id: "reason", label: t("reason"), value: text(t("idReused.explanation")) }] };
       }
       case "anchorMissing": {
         const anchorKind = findBlock(conflict.id, context)
@@ -498,8 +646,8 @@ export function toBlockConflictPresentation(
           status: "conflict",
           resolutionMode: "choice",
           options: {
-            server: t("choices.keepSavedState"),
-            local: t("choices.retryLocalOperation"),
+            server: t("choices.keepSavedVersion"),
+            local: t("choices.retryDraft"),
           },
           details: [
             { id: "operation", label: t("anchorDetails.operation"), value: text(t(`operations.${details.operation}`)) },
@@ -510,15 +658,44 @@ export function toBlockConflictPresentation(
         };
       }
       case "globalInvariant":
-        return { id, label: t("kinds.globalInvariant"), status: "conflict", resolutionMode: "choice", options: { server: t("choices.keepSavedState"), local: t("choices.retryLocalOperation") }, details: [{ id: "invariant", label: t("reason"), value: text(t(`invariants.${blockInvariantPresentationKey(conflict.invariant)}`)) }] };
+        return { id, label: t("kinds.globalInvariant"), status: "conflict", resolutionMode: "manual", details: [{ id: "invariant", label: t("reason"), value: text(t(`invariants.${blockInvariantPresentationKey(conflict.invariant)}`)) }] };
       case "revisionAhead":
-        return { id, label: t("kinds.revisionAhead"), status: "conflict", resolutionMode: "choice", options: { server: t("choices.keepSavedState"), local: t("choices.retryLocalOperation") }, details: [{ id: "expected", label: t("revision.expected"), value: text(String(conflict.expectedBlocksRevision)) }, { id: "current", label: t("revision.current"), value: text(String(conflict.currentBlocksRevision)) }] };
+        return { id, label: t("kinds.revisionAhead"), status: "conflict", resolutionMode: "manual", details: [{ id: "expected", label: t("revision.expected"), value: text(String(conflict.expectedBlocksRevision)) }, { id: "current", label: t("revision.current"), value: text(String(conflict.currentBlocksRevision)) }] };
       default:
         return assertNever(conflict);
     }
   });
   if (details.conflictKind === "contention") {
-    items.push({ id: "contention", label: t("kinds.contention"), status: "conflict", resolutionMode: "choice", options: { server: t("choices.keepSavedState"), local: t("choices.retryLocalOperation") }, details: [{ id: "reason", label: t("reason"), value: text(t("contentionExplanation")) }] });
+    items.push({ id: "contention", label: t("kinds.contention"), status: "conflict", resolutionMode: "choice", options: { server: t("choices.keepSavedVersion"), local: t("choices.retryDraft") }, details: [{ id: "reason", label: t("reason"), value: text(t("contentionExplanation")) }] });
+  }
+  if (requiresFullVersionBlockResolution(details)) {
+    const representativeIndex = details.conflicts.findIndex((conflict) =>
+      conflict.kind === "idReused" ||
+      conflict.kind === "anchorMissing" ||
+      conflict.kind === "blockTypeChanged" ||
+      conflict.kind === "cellTypeChanged" ||
+      conflict.kind === "itemTypeChanged" ||
+      conflict.kind === "collectionIncompatible",
+    );
+    const representative = items[representativeIndex];
+    const representativeConflict = details.conflicts[representativeIndex];
+    if (representative) {
+      return [{
+        id: "block-conflicts",
+        items: [{
+          ...representative,
+          resolutionMode: "choice",
+          options: {
+            server: t("choices.keepSavedVersion"),
+            local: t(
+              representativeConflict?.kind === "anchorMissing"
+                ? "choices.retryDraft"
+                : "choices.keepMyChange",
+            ),
+          },
+        }],
+      }];
+    }
   }
   return [{ id: "block-conflicts", items }];
 }

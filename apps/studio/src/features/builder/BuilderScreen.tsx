@@ -29,7 +29,7 @@ import type {
 } from "react-hook-form";
 import { useForm, useFormState, useWatch } from "react-hook-form";
 
-import type { BlockDTO } from "@compoz/core/domain/pages/dto";
+import type { BlockDTO, PageBlocksSnapshotDTO } from "@compoz/core/domain/pages/dto";
 import { uploadImage } from "@compoz/infra/http/studio/media.client";
 import { log } from "@compoz/infra/lib/log";
 import {
@@ -40,6 +40,10 @@ import { BuilderCellDrawer } from "@compoz/studio/features/builder/BuilderCellDr
 import { runBuilderBlockRecreation } from "@compoz/studio/features/builder/builder-block-recreation";
 import {
   type BuilderBlockBaseline,
+  completeBuilderCurrentSnapshotAdoption,
+  requireBuilderMutationBaseline,
+  resolveBuilderContentionRetryIntent,
+  resolveBuilderCurrentSnapshotAdoption,
   resolveBuilderMutationBaseline,
   resolveBuilderSnapshotRebase,
 } from "@compoz/studio/features/builder/block-baseline";
@@ -696,6 +700,37 @@ export function BuilderScreen({
     [frame],
   );
 
+  const applyBuilderConflictBaseline = useCallback(
+    (savedBaseline: BuilderBlockBaseline) => {
+      baselineRef.current = savedBaseline;
+      setBaselineValues(savedBaseline.formValues);
+      reset(savedBaseline.formValues, {
+        keepDirty: false,
+        keepTouched: false,
+        keepErrors: false,
+      });
+    },
+    [reset],
+  );
+
+  const finalizeBuilderConflictSnapshot = useCallback(
+    (response: PageBlocksSnapshotDTO) => {
+      const savedBaseline = requireBuilderMutationBaseline({
+        response,
+        blockId,
+      });
+      applyBuilderConflictBaseline(savedBaseline);
+      dirtyGuard.setDirty(false);
+      clearUpdateConflict();
+    },
+    [
+      applyBuilderConflictBaseline,
+      blockId,
+      clearUpdateConflict,
+      dirtyGuard,
+    ],
+  );
+
   const handleResolveBlockConflict = useCallback(
     async (choices: Readonly<Record<number, BlockConflictChoice>>) => {
       if (!updateConflict) return;
@@ -718,51 +753,37 @@ export function BuilderScreen({
           updateConflict.current.blocks.find((block) => block.lcpPriority)?.id ??
           null,
       });
-      const saved = response.blocks.find((block) => block.id === blockId);
-      if (!saved) return;
-      const savedValues = toSectionBlockFormValuesFromDTO(saved);
-      const savedBaseline = resolveBuilderMutationBaseline({
-        response,
-        blockId,
-      });
-      if (!savedBaseline) return;
-      baselineRef.current = savedBaseline;
-      setBaselineValues(savedValues);
-      reset(savedValues, {
-        keepDirty: false,
-        keepTouched: false,
-        keepErrors: false,
-      });
-      dirtyGuard.setDirty(false);
-      clearUpdateConflict();
+      finalizeBuilderConflictSnapshot(response);
     },
     [
       blockId,
-      clearUpdateConflict,
-      dirtyGuard,
-      reset,
+      finalizeBuilderConflictSnapshot,
       update,
       updateConflict,
     ],
   );
 
   const handleAdoptCurrentSnapshot = useCallback(() => {
-    if (!updateConflict) return;
-    const currentBaseline = resolveBuilderMutationBaseline({
-      response: updateConflict.current,
-      blockId,
+    if (!updateConflict) throw new Error("BLOCK_CONFLICT_REQUIRED");
+    completeBuilderCurrentSnapshotAdoption({
+      adoption: resolveBuilderCurrentSnapshotAdoption({
+        snapshot: updateConflict.current,
+        blockId,
+      }),
+      onAdoptBaseline: applyBuilderConflictBaseline,
+      onClearConflict: clearUpdateConflict,
+      onMarkClean: () => dirtyGuard.setDirty(false),
+      onNavigateBack: () => router.push(backHref),
     });
-    if (!currentBaseline) return;
-    baselineRef.current = currentBaseline;
-    setBaselineValues(currentBaseline.formValues);
-    reset(currentBaseline.formValues, {
-      keepDirty: false,
-      keepTouched: false,
-      keepErrors: false,
-    });
-    dirtyGuard.setDirty(false);
-    clearUpdateConflict();
-  }, [blockId, clearUpdateConflict, dirtyGuard, reset, updateConflict]);
+  }, [
+    applyBuilderConflictBaseline,
+    backHref,
+    blockId,
+    clearUpdateConflict,
+    dirtyGuard,
+    router,
+    updateConflict,
+  ]);
 
   const handleRecreateBlock = useCallback(
     () =>
@@ -790,6 +811,28 @@ export function BuilderScreen({
     ],
   );
 
+  const handleRetryDraftAfterContention = useCallback(async () => {
+    if (!updateConflict) throw new Error("BLOCK_CONFLICT_REQUIRED");
+    const intent = resolveBuilderContentionRetryIntent({
+      details: updateConflict,
+      blockId,
+      liveValues,
+    });
+    if (!intent) {
+      await handleRecreateBlock();
+      return;
+    }
+    const response = await update(intent);
+    finalizeBuilderConflictSnapshot(response);
+  }, [
+    blockId,
+    finalizeBuilderConflictSnapshot,
+    handleRecreateBlock,
+    liveValues,
+    update,
+    updateConflict,
+  ]);
+
   return (
     <>
       {recreateConflict ? (
@@ -815,6 +858,7 @@ export function BuilderScreen({
             onCancel={clearUpdateConflict}
             onResolve={handleResolveBlockConflict}
             onAdoptCurrent={handleAdoptCurrentSnapshot}
+            onRetryDraft={handleRetryDraftAfterContention}
             onAbandon={() => {
               clearUpdateConflict();
               router.push(backHref);

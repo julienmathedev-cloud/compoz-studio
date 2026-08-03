@@ -23,10 +23,12 @@ export function PageMetadataConflictPanel({
 }: PageMetadataConflictPanelProps) {
   const t = useTranslations("studio.pageEditSection.conflict");
   const tConflict = useTranslations("studio.conflictResolution");
+  const tPageForm = useTranslations("studio.pageForm");
   const tChangeFrequency = useTranslations("studio.pageForm.sitemap.changefreq.options");
 
   return (
     <ConflictResolutionPanel
+      action={{ kind: "choices", onApply: controller.apply }}
       conflictKey={controller.conflictId}
       description={t("description")}
       error={controller.error}
@@ -35,19 +37,23 @@ export function PageMetadataConflictPanel({
         controller.state,
         t,
         tChangeFrequency,
+        tPageForm("title.label"),
       )}
       isPending={controller.pending}
       labels={{
-        baseline: t("baseline"),
-        server: t("remote"),
-        local: t("local"),
+        baseline: tConflict("labels.initialVersion"),
+        server: tConflict("labels.savedVersion"),
+        local: tConflict("labels.yourDraft"),
         useServer: tConflict("actions.useServer"),
         keepLocal: tConflict("actions.keepLocal"),
         pending: tConflict("pending"),
         cancel: tConflict("actions.cancel"),
         apply: tConflict("actions.apply"),
+        orderBaseline: tConflict("labels.initialOrder"),
+        orderServer: tConflict("labels.savedOrder"),
+        orderLocal: tConflict("labels.yourOrder"),
+        position: tConflict("labels.position"),
       }}
-      onApply={controller.apply}
       onCancel={controller.abandon}
       title={t("title")}
     />

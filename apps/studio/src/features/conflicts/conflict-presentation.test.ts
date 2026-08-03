@@ -18,6 +18,7 @@ import {
   resolutionModeForStatus,
   toDecisionConflictChoices,
   toDecisionConflictGroups,
+  toManualConflictGroups,
   toPlainTextRichText,
   type ConflictPresentationGroup,
 } from "@compoz/studio/features/conflicts/conflict-presentation";
@@ -70,6 +71,21 @@ void test("projects only decision items and removes groups that become empty", (
   assert.equal(isDecisionItem(decisionPresentation[0]!.items[0]!), true);
   assert.equal(isDecisionItem(decisionPresentation[0]!.items[1]!), false);
   assert.equal(isDecisionItem({ id: "manual", label: "Manual", status: "conflict", resolutionMode: "manual" }), false);
+});
+
+void test("projects only directly actionable manual items from mixed groups", () => {
+  const groups: readonly ConflictPresentationGroup[] = [{
+    id: "mixed",
+    items: [
+      { id: "manual", label: "Manual", status: "conflict", resolutionMode: "manual" },
+      { id: "choice", label: "Choice", status: "conflict", resolutionMode: "choice" },
+    ],
+  }];
+
+  assert.deepEqual(
+    toManualConflictGroups(groups)[0]?.items.map((item) => item.id),
+    ["manual"],
+  );
 });
 
 void test("Apply validates and forwards only visible explicit decisions", () => {

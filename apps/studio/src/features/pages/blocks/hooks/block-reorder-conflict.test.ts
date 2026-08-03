@@ -126,4 +126,15 @@ void test("the reorder hook has one attempt, no interactive state, and one confl
   assert.match(sectionSource, /if \(fromIndex === toIndex\) return/u);
   assert.match(sectionSource, /expectedBlocksRevision: blocksRevision/u);
   assert.match(sectionSource, /finally \{\s*setBusyId\(null\)/u);
+
+  const fr = JSON.parse(readFileSync(new URL("../../../../i18n/messages/fr.json", import.meta.url), "utf8")) as { studio: { pageBlocksConflict: { reorderConflict: { title: string; description: string } } } };
+  const en = JSON.parse(readFileSync(new URL("../../../../i18n/messages/en.json", import.meta.url), "utf8")) as typeof fr;
+  assert.deepEqual(fr.studio.pageBlocksConflict.reorderConflict, {
+    title: "L’ordre des blocs a été modifié",
+    description: "Un autre déplacement a été enregistré avant le vôtre. L’ordre le plus récent a été chargé. Recommencez votre déplacement.",
+  });
+  assert.deepEqual(en.studio.pageBlocksConflict.reorderConflict, {
+    title: "Block order was changed",
+    description: "Another move was saved before yours. The latest order has been loaded. Repeat your move.",
+  });
 });

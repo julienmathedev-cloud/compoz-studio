@@ -33,6 +33,12 @@ export type ConflictPresentationComparison = Readonly<{
   local: ConflictDisplayValue;
 }>;
 
+export type ConflictOrderPresentationComparison = Readonly<{
+  baseline: readonly string[];
+  server: readonly string[];
+  local: readonly string[];
+}>;
+
 export type ConflictActionExecutionResult =
   | Readonly<{ status: "success" }>
   | Readonly<{ status: "error" }>;
@@ -51,6 +57,7 @@ export type ConflictPresentationItem = Readonly<{
   context?: string;
   status: ConflictPresentationStatus;
   comparison?: ConflictPresentationComparison;
+  orderComparison?: ConflictOrderPresentationComparison;
   resolutionMode: "automatic" | "choice" | "manual";
   choice?: ConflictResolutionChoice;
   options?: Readonly<{
@@ -77,6 +84,17 @@ export function toDecisionConflictGroups(
 ): readonly ConflictPresentationGroup[] {
   return groups.flatMap((group) => {
     const items = group.items.filter(isDecisionItem);
+    return items.length > 0 ? [{ ...group, items }] : [];
+  });
+}
+
+export function toManualConflictGroups(
+  groups: readonly ConflictPresentationGroup[],
+): readonly ConflictPresentationGroup[] {
+  return groups.flatMap((group) => {
+    const items = group.items.filter(
+      (item) => item.resolutionMode === "manual",
+    );
     return items.length > 0 ? [{ ...group, items }] : [];
   });
 }

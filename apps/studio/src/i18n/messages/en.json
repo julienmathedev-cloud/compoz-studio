@@ -492,25 +492,34 @@
     "conflictResolution": {
       "pending": "Resolving conflict…",
       "actions": {
-        "cancel": "Cancel and return to draft",
+        "cancel": "Close and decide later",
         "apply": "Apply my choices",
-        "useServer": "Use the saved value",
-        "keepLocal": "Keep my value"
+        "useServer": "Keep the saved version",
+        "keepLocal": "Keep my change"
+      },
+      "labels": {
+        "initialVersion": "Initial version",
+        "savedVersion": "Saved version",
+        "yourDraft": "Your draft",
+        "initialOrder": "Initial order",
+        "savedOrder": "Saved order",
+        "yourOrder": "Your order",
+        "position": "Position"
       },
       "status": {
         "serverOnly": "Only the saved version changed.",
         "localOnly": "Only your local version changed.",
         "sameChange": "Both versions made the same change.",
         "conflict": "The versions differ: a choice is required.",
-        "manual": "This difference requires manual resolution."
+        "manual": "Reload the saved version before continuing."
       }
     },
     "settingsConflict": {
-      "title": "Settings conflict",
-      "description": "The saved settings changed while you were editing. Your local draft is preserved until you decide.",
+      "title": "Settings were changed while you were editing",
+      "description": "Some saved changes differ from those in your draft. Choose which version to keep for each difference.",
       "labels": {
-        "baseline": "Your save baseline",
-        "server": "Currently saved",
+        "baseline": "Initial version",
+        "server": "Saved version",
         "local": "Your draft"
       },
       "actions": {
@@ -1260,6 +1269,10 @@
       "structureConflict": {
         "currentAdopted": "The saved page structure was adopted. Your local parent change was not applied; your other metadata changes are preserved."
       },
+      "reorderConflict": {
+        "title": "Page order was changed",
+        "description": "Another move was saved before yours. The latest order has been loaded. Repeat your move."
+      },
       "title": {
         "label": "Page title",
         "help": "Choose a clear and descriptive title (e.g. “Home”, “Gallery”, “Contact”).",
@@ -1661,11 +1674,11 @@
         "originalMissing": "Unable to save: the original page could not be found. Reload the index and try again."
       },
       "conflict": {
-        "title": "Metadata was changed elsewhere",
-        "description": "The saved metadata changed while you were editing. Your local draft is preserved until you decide.",
-        "baseline": "Initial value",
-        "local": "Your value",
-        "remote": "Remote value",
+        "title": "Page details were changed while you were editing",
+        "description": "Some saved changes differ from those in your draft. Choose which version to keep for each difference.",
+        "baseline": "Initial version",
+        "local": "Your draft",
+        "remote": "Saved version",
         "errors": {
           "incomplete": "Choose a version for every difference before applying the resolution.",
           "mutation": "The resolution could not be saved. Your draft and choices are preserved."
@@ -1814,8 +1827,43 @@
       "orderConflictDescription": "The saved order and your local order are incompatible.",
       "structuralConflictDescription": "The saved structure and your local structure are incompatible.",
       "reorderConflict": {
-        "title": "Conflict",
-        "description": "The block order changed elsewhere. The latest state was loaded; please retry your action."
+        "title": "Block order was changed",
+        "description": "Another move was saved before yours. The latest order has been loaded. Repeat your move."
+      },
+      "scenarios": {
+        "content": {
+          "title": "The block content was changed while you were editing",
+          "fieldDescription": "Some saved changes differ from those in your draft. Choose which version to keep for each difference.",
+          "structuralDescription": "The saved content differs from your draft. Choose which version to keep."
+        },
+        "blockDeleted": {
+          "title": "The block was deleted while you were editing",
+          "description": "The block no longer exists in the saved version. You can keep it deleted or recreate the block from your draft."
+        },
+        "blockChangedBeforeDelete": {
+          "title": "The block was changed before deletion",
+          "description": "The saved block contains more recent changes. You can keep this version or confirm the requested deletion."
+        },
+        "contention": {
+          "title": "The block content was changed again",
+          "description": "Another change was saved while your changes were being saved. Choose whether to keep the saved version or try again with your draft."
+        },
+        "revisionAhead": {
+          "title": "The displayed version is no longer in sync",
+          "description": "The displayed data no longer matches the saved version. Reload the saved version before resuming your changes."
+        },
+        "idReused": {
+          "title": "Two block changes are incompatible",
+          "description": "The same block element was created differently in both versions. Choose whether to keep the saved version or your draft version."
+        },
+        "globalInvariant": {
+          "title": "The block changes are incompatible",
+          "description": "Your draft cannot be combined with the saved version. Keep the saved version, then resume your change from the current content."
+        },
+        "orderIncompatible": {
+          "title": "The order of the block elements was changed while you were editing",
+          "description": "The same elements were reordered differently in both versions. Choose which order to keep."
+        }
       },
       "baseline": "Baseline",
       "remote": "Saved",
@@ -1823,12 +1871,17 @@
       "anchorMissing": "The targeted position no longer exists. Restart the add from the current state.",
       "deleteChanged": "The block changed since your delete request.",
       "choices": {
-        "keepDeletion": "Keep the deletion",
+        "keepDeletion": "Keep it deleted",
         "recreateBlock": "Recreate my block",
+        "keepSavedVersion": "Keep the saved version",
+        "keepMyChange": "Keep my change",
+        "confirmDeletion": "Confirm deletion",
+        "retryDraft": "Try again with my draft",
+        "reloadSavedVersion": "Reload the saved version",
         "keepSavedBlock": "Keep the saved block",
         "useSavedStructure": "Use the saved structure",
         "keepLocalStructure": "Keep my local structure",
-        "useSavedOrder": "Use the saved order",
+        "useSavedOrder": "Keep the saved order",
         "keepLocalOrder": "Keep my order",
         "keepSavedState": "Use the saved state",
         "retryLocalOperation": "Keep my local operation"
@@ -1935,10 +1988,19 @@
       },
       "order": {
         "saved": "Block order",
+        "titles": {
+          "blocks": "Block order",
+          "rows": "Row order",
+          "columns": "Column order",
+          "cells": "Cell order",
+          "items": "Item order",
+          "fields": "Field order",
+          "sections": "Section order"
+        },
         "changes": "Additions and removals",
         "baseline": "Initial order",
         "current": "Saved order",
-        "local": "Local order",
+        "local": "Your order",
         "addedServer": "Blocks added remotely",
         "removedServer": "Blocks removed remotely",
         "addedLocal": "Blocks added locally",
@@ -2028,7 +2090,7 @@
         "idReused": "Identifier reused",
         "anchorMissing": "Position not found",
         "revisionAhead": "Revision is ahead",
-        "contention": "Concurrent operation"
+        "contention": "Change saved while saving"
       }
     },
 

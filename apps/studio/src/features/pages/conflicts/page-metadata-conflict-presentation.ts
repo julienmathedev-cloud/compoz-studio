@@ -66,6 +66,7 @@ export function toPageMetadataConflictPresentation(
   state: PageMetadataConflictState,
   t: MetadataTranslations,
   tChangeFrequency: ChangeFrequencyTranslations,
+  pageTitleLabel?: string,
 ): readonly ConflictPresentationGroup[] {
   const current = toPageFormValuesFromDTO(state.details.current.page);
 
@@ -77,7 +78,9 @@ export function toPageMetadataConflictPresentation(
 
       return [{
         id: field,
-        label: t(`fields.${field}`),
+        label: field === "name" && pageTitleLabel
+          ? pageTitleLabel
+          : t(`fields.${field}`),
         status,
         resolutionMode: resolutionModeForStatus(status),
         comparison: {

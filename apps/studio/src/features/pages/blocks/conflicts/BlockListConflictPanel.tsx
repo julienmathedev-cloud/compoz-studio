@@ -13,13 +13,17 @@ import type { PageBlocksConflictDetails } from "@compoz/core/domain/pages/revisi
 import {
   ConflictResolutionPanel,
   type ConflictResolutionChoices,
+  type ConflictResolutionPanelAction,
 } from "@compoz/studio/features/conflicts/ConflictResolutionPanel";
 import {
   CONFLICT_ACTION_ERROR,
   CONFLICT_ACTION_SUCCESS,
   type ConflictActionExecutionResult,
 } from "@compoz/studio/features/conflicts/conflict-presentation";
-import { toBlockConflictPresentation } from "@compoz/studio/features/pages/blocks/conflicts/block-conflict-presentation";
+import {
+  selectBlockConflictPanelScenario,
+  toBlockConflictPresentation,
+} from "@compoz/studio/features/pages/blocks/conflicts/block-conflict-presentation";
 
 type BlockListConflictPanelProps = Readonly<{
   details: PageBlocksConflictDetails;
@@ -50,21 +54,25 @@ export function BlockListConflictPanel({
 }: BlockListConflictPanelProps) {
   const t = useTranslations("studio.pageBlocksConflict");
   const tConflict = useTranslations("studio.conflictResolution");
-  const description = details.conflicts.some((conflict) => conflict.kind === "anchorMissing")
-    ? t("anchorMissing")
-    : details.conflicts.some((conflict) => conflict.kind === "blockChangedBeforeDelete")
-      ? t("deleteChanged")
-      : t("operation", { operation: details.operation });
+  const scenario = selectBlockConflictPanelScenario(details);
 
   const apply = (choices: ConflictResolutionChoices) => {
     const keepLocal = Object.values(choices).some((choice) => choice === "local");
     return complete(keepLocal ? onKeepLocal : onUseCurrent);
   };
+  const action: ConflictResolutionPanelAction = scenario.actionMode === "reload"
+    ? {
+        kind: "direct",
+        label: t("choices.reloadSavedVersion"),
+        onAction: () => complete(onUseCurrent),
+      }
+    : { kind: "choices", onApply: apply };
 
   return (
     <ConflictResolutionPanel
+      action={action}
       conflictKey={`page-block-list-${details.currentBlocksRevision}-${details.operation}`}
-      description={description}
+      description={t(scenario.descriptionKey)}
       groups={toBlockConflictPresentation(details, t, {
         currentBlocks: details.current.blocks,
         baselineBlocks,
@@ -73,21 +81,24 @@ export function BlockListConflictPanel({
       })}
       isPending={isPending}
       labels={{
-        baseline: t("baseline"),
-        server: t("remote"),
-        local: t("local"),
+        baseline: tConflict("labels.initialVersion"),
+        server: tConflict("labels.savedVersion"),
+        local: tConflict("labels.yourDraft"),
         useServer: tConflict("actions.useServer"),
         keepLocal: tConflict("actions.keepLocal"),
         pending: tConflict("pending"),
         cancel: tConflict("actions.cancel"),
         apply: tConflict("actions.apply"),
+        orderBaseline: tConflict("labels.initialOrder"),
+        orderServer: tConflict("labels.savedOrder"),
+        orderLocal: tConflict("labels.yourOrder"),
+        position: tConflict("labels.position"),
       }}
-      onApply={apply}
       onCancel={() => {
         onCancel();
         return CONFLICT_ACTION_SUCCESS;
       }}
-      title={t("title")}
+      title={t(scenario.titleKey)}
     />
   );
 }

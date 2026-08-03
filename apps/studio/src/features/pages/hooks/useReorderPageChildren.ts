@@ -15,6 +15,7 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 import {
   DEFAULT_CONTENT_STATE,
@@ -85,6 +86,7 @@ export function useReorderPageChildren(
 ): UseReorderPageChildrenResult {
   const queryClient = useQueryClient();
   const websiteId = useWebsiteId();
+  const t = useTranslations();
 
   const mutation = useMutation<
     ReorderChildrenResponse,
@@ -175,7 +177,14 @@ export function useReorderPageChildren(
         websiteId,
         error,
       );
-      if (!adopted && context) {
+      if (adopted) {
+        notify.error(
+          t("studio.pageForm.reorderConflict.title"),
+          t("studio.pageForm.reorderConflict.description"),
+        );
+        return;
+      }
+      if (context) {
         patchDraftStructureCache(
           queryClient,
           websiteId,

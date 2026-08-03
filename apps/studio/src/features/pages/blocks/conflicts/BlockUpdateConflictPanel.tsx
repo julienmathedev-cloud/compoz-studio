@@ -13,6 +13,7 @@ import type { PageBlocksConflictDetails } from "@compoz/core/domain/pages/revisi
 import {
   ConflictResolutionPanel,
   type ConflictResolutionChoices,
+  type ConflictResolutionPanelAction,
 } from "@compoz/studio/features/conflicts/ConflictResolutionPanel";
 import {
   CONFLICT_ACTION_ERROR,
@@ -21,8 +22,10 @@ import {
 } from "@compoz/studio/features/conflicts/conflict-presentation";
 import {
   getBlockConflictPresentationId,
+  selectBlockConflictPanelScenario,
   toBlockConflictPresentation,
 } from "@compoz/studio/features/pages/blocks/conflicts/block-conflict-presentation";
+import { executeBlockUpdateConflictChoice } from "@compoz/studio/features/pages/blocks/conflicts/block-update-conflict-actions";
 import type { BlockConflictChoice } from "@compoz/studio/features/pages/blocks/conflicts/resolve-block-conflict";
 
 type BlockUpdateConflictPanelProps = Readonly<{
@@ -35,6 +38,7 @@ type BlockUpdateConflictPanelProps = Readonly<{
   onRecreate?: () => void | Promise<void>;
   onDeleteExplicit?: () => void | Promise<void>;
   onAdoptCurrent?: () => void;
+  onRetryDraft?: () => void | Promise<void>;
   baselineBlocks?: readonly Block[];
 }>;
 
@@ -46,19 +50,6 @@ async function complete(
   return CONFLICT_ACTION_SUCCESS;
 }
 
-function conflictDescriptionKey(details: PageBlocksConflictDetails): string {
-  if (details.conflicts.every((conflict) => conflict.kind === "fieldConflict")) {
-    return "fieldConflictDescription";
-  }
-  if (details.conflicts.some((conflict) => conflict.kind === "blockDeleted")) {
-    return "blockDeletedDescription";
-  }
-  if (details.conflicts.some((conflict) => conflict.kind === "orderIncompatible")) {
-    return "orderConflictDescription";
-  }
-  return "structuralConflictDescription";
-}
-
 export function BlockUpdateConflictPanel({
   details,
   onCancel,
@@ -67,10 +58,12 @@ export function BlockUpdateConflictPanel({
   onRecreate,
   onDeleteExplicit,
   onAdoptCurrent,
+  onRetryDraft,
   baselineBlocks,
 }: BlockUpdateConflictPanelProps) {
   const t = useTranslations("studio.pageBlocksConflict");
   const tConflict = useTranslations("studio.conflictResolution");
+  const scenario = selectBlockConflictPanelScenario(details);
 
   const apply = async (
     choices: ConflictResolutionChoices,
@@ -95,14 +88,28 @@ export function BlockUpdateConflictPanel({
     if (deleteChanged && !allServer && onDeleteExplicit) {
       return complete(onDeleteExplicit);
     }
-    if (allServer && onAdoptCurrent) return complete(onAdoptCurrent);
-    return complete(() => onResolve(indexedChoices));
+    return executeBlockUpdateConflictChoice({
+      scenarioKind: scenario.kind,
+      allServer,
+      indexedChoices,
+      onAdoptCurrent,
+      onRetryDraft,
+      onResolve,
+    });
   };
+  const action: ConflictResolutionPanelAction = scenario.actionMode === "reload"
+    ? {
+        kind: "direct",
+        label: t("choices.reloadSavedVersion"),
+        onAction: () => complete(onAdoptCurrent),
+      }
+    : { kind: "choices", onApply: apply };
 
   return (
     <ConflictResolutionPanel
+      action={action}
       conflictKey={`page-block-${details.currentBlocksRevision}-${details.operation}`}
-      description={t(conflictDescriptionKey(details))}
+      description={t(scenario.descriptionKey)}
       groups={toBlockConflictPresentation(details, t, {
         currentBlocks: details.current.blocks,
         baselineBlocks,
@@ -110,21 +117,24 @@ export function BlockUpdateConflictPanel({
         candidateBlock: details.candidateBlock,
       })}
       labels={{
-        baseline: t("baseline"),
-        server: t("remote"),
-        local: t("local"),
+        baseline: tConflict("labels.initialVersion"),
+        server: tConflict("labels.savedVersion"),
+        local: tConflict("labels.yourDraft"),
         useServer: tConflict("actions.useServer"),
         keepLocal: tConflict("actions.keepLocal"),
         pending: tConflict("pending"),
         cancel: tConflict("actions.cancel"),
         apply: tConflict("actions.apply"),
+        orderBaseline: tConflict("labels.initialOrder"),
+        orderServer: tConflict("labels.savedOrder"),
+        orderLocal: tConflict("labels.yourOrder"),
+        position: tConflict("labels.position"),
       }}
-      onApply={apply}
       onCancel={() => {
         onCancel();
         return CONFLICT_ACTION_SUCCESS;
       }}
-      title={t("updateTitle")}
+      title={t(scenario.titleKey)}
     />
   );
 }

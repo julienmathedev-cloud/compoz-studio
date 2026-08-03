@@ -25,6 +25,7 @@ import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteConte
 import {
   createRevisionedDraftSnapshot,
   requireCurrentSettingsOperation,
+  requireRevisionedDraftSave,
   throwIfSettingsOperationAborted,
 } from "@compoz/studio/features/settings/_shared/revisioned-draft-snapshot";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
@@ -99,13 +100,9 @@ export function useSocialSettings(): UseSocialSettingsResult {
     /** Writes the social slice, then mirrors the response into the settings bundle cache. */
     save: async (next, opts) => {
       const capturedWebsiteId = websiteIdRef.current;
-      const capturedSnapshot = snapshot.captureForSave(capturedWebsiteId);
-
-      if (!capturedSnapshot) {
-        throw new Error(
-          "Social settings cannot be saved without a revisioned draft snapshot.",
-        );
-      }
+      const capturedSnapshot = requireRevisionedDraftSave(
+        snapshot.captureForSave(capturedWebsiteId),
+      );
 
       const patch = toUpdateSocialIntentDTOFromFormValues(next);
       const dto = await settingsStudioApi.social.patch(

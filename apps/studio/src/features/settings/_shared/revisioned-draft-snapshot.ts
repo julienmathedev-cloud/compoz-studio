@@ -10,6 +10,8 @@
  * - Load generations and snapshot identity prevent obsolete operations from becoming writable.
  */
 
+import { UiError } from "@compoz/studio/lib/ui/uiError";
+
 export type DraftSnapshot<T> = Readonly<{
   websiteId: string;
   baseline: T;
@@ -167,6 +169,16 @@ export function cloneRevisionedDraftValue<T>(value: T): T {
 
 export function createRevisionedDraftSnapshot<T>(): RevisionedDraftSnapshot<T> {
   return new RevisionedDraftSnapshot<T>();
+}
+
+export function requireRevisionedDraftSave<T>(
+  value: DraftSnapshotSave<T> | null,
+): DraftSnapshotSave<T> {
+  if (value === null) {
+    throw new Error(UiError.settingsDraftSnapshotRequired);
+  }
+
+  return value;
 }
 
 export function throwIfSettingsOperationAborted(

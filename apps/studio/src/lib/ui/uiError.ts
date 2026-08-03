@@ -18,6 +18,8 @@ export const UiError = {
   requestAborted: "requestAborted",
   serverError: "serverError",
   unexpectedSave: "unexpectedSave",
+  settingsDraftSnapshotRequired: "settingsDraftSnapshotRequired",
+  settingsBundleInvalid: "settingsBundleInvalid",
 
   http400: "http400",
   http400Title: "http400Title",

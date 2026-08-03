@@ -20,12 +20,14 @@ import { DEFAULT_SOCIAL_SETTINGS } from "@compoz/core/domain/site/defaults/socia
 import { DEFAULT_THEME_SETTINGS } from "@compoz/core/domain/site/defaults/theme";
 import type { SiteSettingsWithRevisionsDTO } from "@compoz/core/domain/site/dto";
 import { patchSettingsBundleCache } from "@compoz/studio/features/settings/bundle/cache";
+import { fetchFreshSettingsBundle } from "@compoz/studio/features/settings/bundle/fetchFreshSettingsBundle";
 import { getSettingsBundle } from "@compoz/studio/features/settings/bundle/getSettingsBundle";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
 import {
   selectSettingsBundleSettings,
   settingsBundleQueryOptions,
 } from "@compoz/studio/features/settings/bundle/query";
+import { UiError } from "@compoz/studio/lib/ui/uiError";
 
 const WEBSITE_ID = "website-1";
 
@@ -57,6 +59,23 @@ function createBundle(): SiteSettingsWithRevisionsDTO {
 function createQueryClient(): QueryClient {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } });
 }
+
+void test("rejects an invalid settings bundle with a UI error token", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({}), {
+    headers: { "content-type": "application/json" },
+  });
+
+  try {
+    await assert.rejects(
+      fetchFreshSettingsBundle(DEFAULT_CONTENT_STATE),
+      (error: unknown) =>
+        error instanceof Error && error.message === UiError.settingsBundleInvalid,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
 
 void test("canonical options cache the complete bundle while select exposes settings", async () => {
   const queryClient = createQueryClient();

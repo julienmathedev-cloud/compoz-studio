@@ -7,7 +7,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createRevisionedDraftSnapshot } from "@compoz/studio/features/settings/_shared/revisioned-draft-snapshot";
+import {
+  createRevisionedDraftSnapshot,
+  requireRevisionedDraftSave,
+  type DraftSnapshotSave,
+} from "@compoz/studio/features/settings/_shared/revisioned-draft-snapshot";
+import { UiError } from "@compoz/studio/lib/ui/uiError";
 
 type TestValues = {
   items: Array<{ label: string; nested: { value: string | undefined } }>;
@@ -38,6 +43,27 @@ function commitDraftLoad(
   assert.ok(loaded);
   return loaded;
 }
+
+void test("requires a revisioned draft snapshot for saves", () => {
+  assert.throws(
+    () => requireRevisionedDraftSave(null),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.message === UiError.settingsDraftSnapshotRequired,
+  );
+
+  const save: DraftSnapshotSave<TestValues> = {
+    snapshot: {
+      websiteId: "website-a",
+      baseline: createValues(),
+      revision: 1,
+    },
+    baseline: createValues(),
+    expectedRevision: 1,
+  };
+
+  assert.equal(requireRevisionedDraftSave(save), save);
+});
 
 void test("isolates nested loaded form values while preserving undefined and null", () => {
   const snapshot = createRevisionedDraftSnapshot<TestValues>();

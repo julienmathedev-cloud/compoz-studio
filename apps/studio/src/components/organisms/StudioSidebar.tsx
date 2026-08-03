@@ -313,7 +313,7 @@ export function StudioSidebar({
 
       <SidebarFooter className="items-center justify-center">
         <SidebarGroupLabel className="truncate text-sm font-semibold">
-          V0.5
+          V1.0
         </SidebarGroupLabel>
       </SidebarFooter>
 

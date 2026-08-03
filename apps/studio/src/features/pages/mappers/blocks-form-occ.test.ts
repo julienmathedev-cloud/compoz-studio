@@ -27,6 +27,7 @@ void test("an editable row projected from persisted rows=[] remains a local addi
   assert.equal(projected.rows.length, 1);
   const local = {
     ...projected,
+    name: "Renamed",
     rows: [{
       ...projected.rows[0]!,
       reverseOn: {
@@ -42,6 +43,7 @@ void test("an editable row projected from persisted rows=[] remains a local addi
     baselineLcpPriorityBlockId: null,
   });
 
+  assert.deepEqual(Object.keys(intent.changes), ["name", "rows"]);
   assert.deepEqual(intent.changes.rows?.baseline, []);
   assert.equal(intent.changes.rows?.local.length, 1);
   const merged = mergeSectionBlock({

@@ -17,12 +17,17 @@ import { pagesStudioApi } from "@compoz/infra/http/studio/pages.client";
 import type { UpdateSectionBlockResponse } from "@compoz/infra/http/studio/pages.types";
 import { getPageBlocksConflictDetails } from "@compoz/infra/lib/get-page-blocks-conflict-details";
 import { useWebsiteId } from "@compoz/studio/features/admin/website/WebsiteContext";
+import { isAutomaticRevisionMerge } from "@compoz/studio/features/conflicts/occ-notifications";
 import { syncPageBlocksSnapshotCache } from "@compoz/studio/features/pages/blocks/cache/cache-sync";
 import { pageBlocksMutationScope } from "@compoz/studio/features/pages/blocks/hooks/page-blocks-mutation-scope";
 import { invalidateBlockMutationStatusViews } from "@compoz/studio/features/pages/blocks/hooks/invalidate-block-mutation-status-views";
 import { toUpdateSectionBlockIntentDTOFromFormValues } from "@compoz/studio/features/pages/mappers/blocks-form";
 import { notify } from "@compoz/studio/lib/ui/notify";
-import { notifyNoChanges, notifyUpdated } from "@compoz/studio/lib/ui/notify-presets";
+import {
+  notifyAutomaticMerge,
+  notifyNoChanges,
+  notifyUpdated,
+} from "@compoz/studio/lib/ui/notify-presets";
 import { UiError } from "@compoz/studio/lib/ui/uiError";
 import type { SectionBlockFormValues } from "@compoz/validation/pages/blocks/block-form";
 
@@ -32,6 +37,12 @@ type UpdateArgs = Readonly<{
   local: SectionBlockFormValues;
   expectedBlocksRevision: number;
   baselineLcpPriorityBlockId: string | null;
+}>;
+
+type UpdateBlockMutationResult = Readonly<{
+  response: UpdateSectionBlockResponse;
+  fields: readonly string[];
+  expectedBlocksRevision: number;
 }>;
 
 export function useUpdateBlock(pageId: string, onSuccess?: (response: UpdateSectionBlockResponse) => void) {
@@ -54,23 +65,43 @@ export function useUpdateBlock(pageId: string, onSuccess?: (response: UpdateSect
         expectedBlocksRevision: args.expectedBlocksRevision,
         baselineLcpPriorityBlockId: args.baselineLcpPriorityBlockId,
       });
-      return pagesStudioApi.updateBlock(pageIdKey, args.blockId, payload);
+      const fields = Object.keys(payload.changes);
+      const response = await pagesStudioApi.updateBlock(
+        pageIdKey,
+        args.blockId,
+        payload,
+      );
+      return {
+        response,
+        fields,
+        expectedBlocksRevision: payload.expectedBlocksRevision,
+      } satisfies UpdateBlockMutationResult;
     },
     onMutate: (args) => {
       setConflict(null);
       setUpdatingBlockId(args.blockId);
     },
-    onSuccess: async (response) => {
+    onSuccess: async ({ response, fields, expectedBlocksRevision }) => {
       syncPageBlocksSnapshotCache(queryClient, websiteId, pageIdKey, response);
-      if (response.outcome === "noChanges") {
+      const automaticMerge = response.outcome === "updated" &&
+        isAutomaticRevisionMerge(
+          expectedBlocksRevision,
+          response.blocksRevision,
+        );
+      if (automaticMerge) {
+        notifyAutomaticMerge(
+          t("notifications.automaticMerge.title"),
+          t("notifications.automaticMerge.description"),
+        );
+      } else if (response.outcome === "noChanges") {
         notifyNoChanges(
           t("notifications.noChanges.title"),
           t("notifications.noChanges.description", { entity: entityLabel }),
         );
-      } else {
+      } else if (fields.length > 0) {
         notifyUpdated(
           t("notifications.updated.title", { entity: entityLabel }),
-          t("notifications.updated.description", { fields: "" }),
+          t("notifications.updated.description", { fields: fields.join(", ") }),
         );
       }
       await invalidateBlockMutationStatusViews({ queryClient, websiteId, outcome: response.outcome });
@@ -97,7 +128,9 @@ export function useUpdateBlock(pageId: string, onSuccess?: (response: UpdateSect
   });
 
   return {
-    update: (args: UpdateArgs) => mutation.mutateAsync(args),
+    update: async (args: UpdateArgs): Promise<UpdateSectionBlockResponse> => (
+      await mutation.mutateAsync(args)
+    ).response,
     updatingBlockId,
     isUpdating: mutation.isPending,
     conflict,

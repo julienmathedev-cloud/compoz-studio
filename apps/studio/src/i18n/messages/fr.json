@@ -48,6 +48,10 @@
       "title": "{entity} mis à jour",
       "description": "Les champs suivants ont été mis à jour : {fields}."
     },
+    "automaticMerge": {
+      "title": "Modifications fusionnées",
+      "description": "Des modifications ont été enregistrées pendant votre édition. Elles ont été fusionnées automatiquement avec les vôtres."
+    },
     "created": {
       "title": "{entity} créé",
       "description": "{entity} « {name} » a été créé."

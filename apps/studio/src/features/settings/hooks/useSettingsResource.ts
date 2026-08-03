@@ -23,6 +23,7 @@ import type { HttpOpts } from "@compoz/infra/http/internal";
 import { logSpan } from "@compoz/infra/lib/log";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import {
+  notifyAutomaticMerge,
   notifyNoChanges,
   notifyUpdated,
 } from "@compoz/studio/lib/ui/notify-presets";
@@ -60,6 +61,10 @@ import {
   type InFlightSettingsLoad,
 } from "@compoz/studio/features/settings/hooks/settings-load-deduplication";
 import { SettingsSaveDeduplicator } from "@compoz/studio/features/settings/hooks/settings-save-deduplication";
+import {
+  AUTOMATIC_MERGE_NOTIFICATION,
+  settingsSaveNotificationFor,
+} from "@compoz/studio/features/settings/hooks/settings-save-notification";
 
 /** Minimal translation function contract compatible with next-intl. */
 export type TFunc = (
@@ -69,8 +74,18 @@ export type TFunc = (
 
 /** Save result distinguishing skipped no-op saves from persisted values. */
 export type SettingsSaveResult<T> =
-  | Readonly<{ status: "noChanges"; fields: ReadonlyArray<string>; value?: T }>
-  | Readonly<{ status: "saved"; value: T; fields: ReadonlyArray<string> }>
+  | Readonly<{
+      status: "noChanges";
+      fields: ReadonlyArray<string>;
+      value?: T;
+      notification?: typeof AUTOMATIC_MERGE_NOTIFICATION;
+    }>
+  | Readonly<{
+      status: "saved";
+      value: T;
+      fields: ReadonlyArray<string>;
+      notification?: typeof AUTOMATIC_MERGE_NOTIFICATION;
+    }>
   | Readonly<{ status: "conflict" }>;
 
 export type FreshSettingsSection<T extends object> = SettingsConflictFreshCurrent<T>;
@@ -136,23 +151,26 @@ export function wrapSettingsSaveWithToasts<T extends object>(
   return (nextValues: T) => deduplicator.run(async () => {
     const result = await save(nextValues);
 
-    if (result.status === "conflict") return result;
+    const notification = settingsSaveNotificationFor(result);
 
-    if (result.status === "noChanges") {
+    if (notification?.kind === "automaticMerge") {
+      notifyAutomaticMerge(
+        t("notifications.automaticMerge.title"),
+        t("notifications.automaticMerge.description"),
+      );
+    } else if (notification?.kind === "noChanges") {
       notifyNoChanges(
         t("notifications.noChanges.title", { entity: entityLabel }),
         t("notifications.noChanges.description", { entity: entityLabel }),
       );
-
-      return result;
+    } else if (notification?.kind === "updated") {
+      notifyUpdated(
+        t("notifications.updated.title", { entity: entityLabel }),
+        t("notifications.updated.description", {
+          fields: notification.fields.join(", "),
+        }),
+      );
     }
-
-    notifyUpdated(
-      t("notifications.updated.title", { entity: entityLabel }),
-      t("notifications.updated.description", {
-        fields: result.fields.join(", "),
-      }),
-    );
 
     return result;
   });
@@ -402,7 +420,10 @@ export function useSettingsResource<T extends object>({
           });
 
           if (automatic.status === "resolved") {
-            return automatic.result;
+            return {
+              ...automatic.result,
+              notification: AUTOMATIC_MERGE_NOTIFICATION,
+            };
           }
           if (automatic.status === "interactive") {
             publishInteractiveConflict({

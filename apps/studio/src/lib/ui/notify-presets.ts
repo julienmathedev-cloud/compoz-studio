@@ -29,3 +29,7 @@ export function notifyUpdated(title: string, description: string): void {
 export function notifyNoChanges(title: string, description: string): void {
   notify.info(title, description);
 }
+
+export function notifyAutomaticMerge(title: string, description: string): void {
+  notify.info(title, description);
+}

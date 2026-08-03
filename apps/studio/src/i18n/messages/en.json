@@ -48,6 +48,10 @@
       "title": "{entity} updated",
       "description": "The following fields have been updated: {fields}."
     },
+    "automaticMerge": {
+      "title": "Changes merged",
+      "description": "Changes were saved while you were editing. They were automatically merged with yours."
+    },
     "created": {
       "title": "{entity} created",
       "description": "{entity} “{name}” has been created."

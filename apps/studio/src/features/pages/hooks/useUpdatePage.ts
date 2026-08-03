@@ -38,6 +38,7 @@ import {
   type PageUpdateCompletionMode,
   type UpdatePageSubmissionOutcome,
 } from "@compoz/studio/features/pages/hooks/page-update-submission";
+import { isAutomaticRevisionMerge } from "@compoz/studio/features/conflicts/occ-notifications";
 import { invalidatePageMutationStatusViews } from "@compoz/studio/features/pages/hooks/invalidate-page-mutation-status-views";
 import {
   normalizePageFormValues,
@@ -52,6 +53,7 @@ import { siteIndexKey } from "@compoz/studio/features/site-index/keys";
 import { settingsBundleKey } from "@compoz/studio/features/settings/bundle/keys";
 import { notify } from "@compoz/studio/lib/ui/notify";
 import {
+  notifyAutomaticMerge,
   notifyNoChanges,
   notifyUpdated,
 } from "@compoz/studio/lib/ui/notify-presets";
@@ -74,6 +76,7 @@ type UpdatePageArgs = Readonly<{
 
 export type UpdatePageMutationResult = Readonly<{
   pageId: string;
+  payload: UpdatePageIntentDTO;
   fields: ReadonlyArray<string>;
   response: UpdatePageResponse;
   completion: UpdatePageArgs["completion"];
@@ -152,8 +155,20 @@ export function useUpdatePage(
       return { ...args, response };
     },
     onSuccess: async (result) => {
-      const { pageId, fields, response } = result;
-      if (response.outcome === "noChanges") {
+      const { pageId, payload, fields, response } = result;
+      const metadataChanges = payload.metadataChanges;
+      const automaticMetadataMerge = response.outcome === "updated" &&
+        metadataChanges !== undefined &&
+        isAutomaticRevisionMerge(
+          metadataChanges.expectedMetaRevision,
+          response.revisions.metaRevision,
+        );
+      if (automaticMetadataMerge) {
+        notifyAutomaticMerge(
+          t("notifications.automaticMerge.title"),
+          t("notifications.automaticMerge.description"),
+        );
+      } else if (response.outcome === "noChanges") {
         notifyNoChanges(
           t("notifications.noChanges.title"),
           t("notifications.noChanges.description", { entity: entityLabel }),

@@ -167,7 +167,7 @@
     "PAGE_BLOCKS_REVISION_CONFLICT": "Les blocs de la page ont été modifiés. Rechargez leur état avant de réessayer.",
     "PAGE_REORDER_INVALID": "L’ordre des pages est invalide ou incomplet.",
     "PAGE_HIERARCHY_CYCLE": "Ce déplacement créerait un cycle dans la hiérarchie des pages.",
-    "PAGE_PARENT_INVALID": "La page parente sélectionnée n’est pas valide.",
+    "PAGE_PARENT_INVALID": "Cette page ne peut pas être rattachée à la page parente sélectionnée.",
 
     "LEGAL_MENU_LABEL_REQUIRED": "Le libellé du lien légal est requis.",
     "LEGAL_MENU_LABEL_TOO_LONG": "Le libellé du lien légal est trop long.",
@@ -1290,6 +1290,7 @@
       "parent": {
         "label": "Page parente",
         "help": "Sélectionnez une page pour la définir comme parente.",
+        "helpHasChildren": "Cette page possède des sous-pages et doit rester une page racine.",
         "none": "Aucune page parente"
       },
       "pagination": {

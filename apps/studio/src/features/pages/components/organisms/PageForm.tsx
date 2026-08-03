@@ -90,6 +90,7 @@ type PageFormProps = Readonly<{
   initialValues: PageFormValues;
   isSaving?: boolean;
   parentOptions?: ReadonlyArray<ParentOption>;
+  parentSelectionDisabled?: boolean;
   mode?: "create" | "edit";
   bFocusFields?: boolean;
   bCancelAlwaysEnabledInEdit?: boolean;
@@ -140,6 +141,7 @@ export function PageForm({
   onDirtyChange,
   onBlockingErrorsCountChange,
   parentOptions,
+  parentSelectionDisabled = false,
 }: PageFormProps) {
   const {
     control,
@@ -495,7 +497,11 @@ export function PageForm({
             ids={parentIds}
             name={field.name}
             label={t("studio.pageForm.parent.label")}
-            help={t("studio.pageForm.parent.help")}
+            help={
+              parentSelectionDisabled
+                ? t("studio.pageForm.parent.helpHasChildren")
+                : t("studio.pageForm.parent.help")
+            }
             value={field.value ?? NO_PARENT_VALUE}
             onChange={(value) => {
               const next = String(value ?? "").trim();
@@ -531,7 +537,7 @@ export function PageForm({
                 label: option.label,
               })),
             ]}
-            disabled={isBusy}
+            disabled={isBusy || parentSelectionDisabled}
           />
         )}
       />

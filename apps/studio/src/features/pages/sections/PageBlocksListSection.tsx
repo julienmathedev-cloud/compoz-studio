@@ -971,6 +971,7 @@ export function PageBlocksListSection({
           }:${pageFormKey}`}
           initialValues={initialValues}
           parentOptions={parentOptions}
+          parentSelectionDisabled={children.length > 0}
           isSaving={isUpdating}
           mode="edit"
           bFocusFields={false}

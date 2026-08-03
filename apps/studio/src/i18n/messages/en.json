@@ -167,7 +167,7 @@
     "PAGE_BLOCKS_REVISION_CONFLICT": "The page blocks were modified. Reload their state before trying again.",
     "PAGE_REORDER_INVALID": "The page order is invalid or incomplete.",
     "PAGE_HIERARCHY_CYCLE": "This move would create a cycle in the page hierarchy.",
-    "PAGE_PARENT_INVALID": "The selected parent page is invalid.",
+    "PAGE_PARENT_INVALID": "This page cannot be attached to the selected parent page.",
 
     "LEGAL_MENU_LABEL_REQUIRED": "Legal link label is required.",
     "LEGAL_MENU_LABEL_TOO_LONG": "Legal link label is too long.",
@@ -1289,6 +1289,7 @@
       "parent": {
         "label": "Parent page",
         "help": "Select a page to set it as parent.",
+        "helpHasChildren": "This page has child pages and must remain a root page.",
         "none": "No parent page"
       },
       "pagination": {

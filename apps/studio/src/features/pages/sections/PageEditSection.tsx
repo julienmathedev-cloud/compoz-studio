@@ -108,6 +108,12 @@ export function PageEditSection({
   }, [editId, index]);
   const refName = indexPage?.name ?? null;
 
+  const parentSelectionDisabled = useMemo(() => {
+    if (mode !== "edit" || !editId || !index) return false;
+
+    return index.pages.some((pageItem) => pageItem.parentId === editId);
+  }, [editId, index, mode]);
+
   const initialValues = useMemo<PageFormValues>(() => {
     if (mode === "create") {
       return toPageFormValuesFromDraftSources(null, undefined, "");
@@ -365,6 +371,7 @@ export function PageEditSection({
         }:${formKey}`}
         initialValues={initialValues}
         parentOptions={parentOptions}
+        parentSelectionDisabled={parentSelectionDisabled}
         isSaving={isSaving}
         mode={mode}
         onSubmit={handleSubmit}

@@ -13,9 +13,15 @@
  * - Focuses the first row-level blocking error after a failed submit.
  */
 
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import type { FieldErrors } from "react-hook-form";
 import {
   useController,
@@ -24,7 +30,6 @@ import {
   useWatch,
   type Control,
   type ControllerRenderProps,
-  type FieldArrayWithId,
   type UseFormClearErrors,
   type UseFormSetValue,
   type UseFormTrigger,
@@ -79,8 +84,8 @@ type RowErrorMessages = Partial<Record<"kind" | "href", string | undefined>>;
 type RowInvalidFlags = Partial<Record<"kind" | "href", boolean>>;
 
 type SocialItemRowProps = Readonly<{
+  sortableId: string;
   index: number;
-  field: FieldArrayWithId<SocialFormValues, "items", "fieldId">;
   control: Control<SocialFormValues>;
   trigger: UseFormTrigger<SocialFormValues>;
   setValue: UseFormSetValue<SocialFormValues>;
@@ -88,17 +93,13 @@ type SocialItemRowProps = Readonly<{
   disabled: boolean;
   showError: boolean;
   rowIdPrefix: string;
-  isFirst: boolean;
-  isLast: boolean;
   onRemove: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
 }>;
 
 /** RHF-connected row for one social item. */
 function SocialItemRow({
+  sortableId,
   index,
-  field,
   control,
   trigger,
   setValue,
@@ -106,12 +107,20 @@ function SocialItemRow({
   disabled,
   showError,
   rowIdPrefix,
-  isFirst,
-  isLast,
   onRemove,
-  onMoveUp,
-  onMoveDown,
 }: SocialItemRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: sortableId,
+    disabled,
+  });
+
   const kindCtrl = useController({
     name: `items.${index}.kind` as const,
     control,
@@ -166,33 +175,45 @@ function SocialItemRow({
     });
   };
 
+  const style = {
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+      : undefined,
+    transition,
+  };
+
   return (
-    <SocialFieldsItem
-      key={field.fieldId}
-      idPrefix={rowIdPrefix}
-      disabled={disabled}
-      isFirst={isFirst}
-      isLast={isLast}
-      onRemove={onRemove}
-      onMoveUp={onMoveUp}
-      onMoveDown={onMoveDown}
-      kindField={
-        kindCtrl.field as ControllerRenderProps<
-          SocialFormValues,
-          `items.${number}.kind`
-        >
-      }
-      hrefField={
-        hrefCtrl.field as ControllerRenderProps<
-          SocialFormValues,
-          `items.${number}.href`
-        >
-      }
-      invalid={invalid}
-      error={error}
-      onHrefValidateNow={validateHrefNow}
-      onHrefClearBySwitch={clearHrefBySwitch}
-    />
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(isDragging && "opacity-60")}
+    >
+      <SocialFieldsItem
+        idPrefix={rowIdPrefix}
+        disabled={disabled}
+        dragHandleProps={{
+          ...attributes,
+          ...listeners,
+        }}
+        onRemove={onRemove}
+        kindField={
+          kindCtrl.field as ControllerRenderProps<
+            SocialFormValues,
+            `items.${number}.kind`
+          >
+        }
+        hrefField={
+          hrefCtrl.field as ControllerRenderProps<
+            SocialFormValues,
+            `items.${number}.href`
+          >
+        }
+        invalid={invalid}
+        error={error}
+        onHrefValidateNow={validateHrefNow}
+        onHrefClearBySwitch={clearHrefBySwitch}
+      />
+    </div>
   );
 }
 
@@ -263,6 +284,23 @@ export function SocialForm({
 
   const showError = hasSubmittedOnce || submitCount > 0;
 
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      if (!over || active.id === over.id) return;
+      if (isBusy) return;
+
+      const oldIndex = fields.findIndex((field) => field.id === active.id);
+      const newIndex = fields.findIndex((field) => field.id === over.id);
+
+      if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return;
+
+      move(oldIndex, newIndex);
+    },
+    [fields, isBusy, move],
+  );
+
   // Section badges count row-level blocking errors from the current field-array state.
   const blockingErrorsCount = useMemo(() => {
     const items = values.items ?? [];
@@ -312,33 +350,37 @@ export function SocialForm({
           {fields.length === 0 ? (
             <EmptyState text={t("studio.socialForm.empty")} />
           ) : (
-            fields.map((field, index) => {
-              const rowIdPrefix = `${formIdPrefix}-item-${index}`;
+            <DndContext
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={fields.map((field) => field.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {fields.map((field, index) => {
+                  const rowIdPrefix = `${formIdPrefix}-item-${index}`;
 
-              return (
-                <Fragment key={field.fieldId}>
-                  <SocialItemRow
-                    index={index}
-                    field={field}
-                    control={control}
-                    trigger={trigger}
-                    setValue={setValue}
-                    clearErrors={clearErrors}
-                    disabled={isBusy}
-                    showError={showError}
-                    rowIdPrefix={rowIdPrefix}
-                    isFirst={index === 0}
-                    isLast={index === fields.length - 1}
-                    onRemove={() => remove(index)}
-                    onMoveUp={() => move(index, Math.max(0, index - 1))}
-                    onMoveDown={() =>
-                      move(index, Math.min(fields.length - 1, index + 1))
-                    }
-                  />
-                  {index < fields.length - 1 ? <Separator /> : null}
-                </Fragment>
-              );
-            })
+                  return (
+                    <Fragment key={field.fieldId}>
+                      <SocialItemRow
+                        sortableId={field.id}
+                        index={index}
+                        control={control}
+                        trigger={trigger}
+                        setValue={setValue}
+                        clearErrors={clearErrors}
+                        disabled={isBusy}
+                        showError={showError}
+                        rowIdPrefix={rowIdPrefix}
+                        onRemove={() => remove(index)}
+                      />
+                      {index < fields.length - 1 ? <Separator /> : null}
+                    </Fragment>
+                  );
+                })}
+              </SortableContext>
+            </DndContext>
           )}
         </CardContent>
 

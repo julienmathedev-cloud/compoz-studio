@@ -13,11 +13,9 @@
  */
 
 import { SOCIAL_KIND_EMAIL } from "@compoz/core/constants/social/social-kinds";
-import { StudioIcon } from "@compoz/studio/components/atoms/StudioIcon";
 import { DeleteButton } from "@compoz/studio/components/atoms/buttons/DeleteButton";
-import { TooltipButton } from "@compoz/studio/components/atoms/buttons/TooltipButton";
-import { StudioButtonGroup } from "@compoz/studio/components/molecules/controls/StudioButtonGroup";
 import { SelectField } from "@compoz/studio/components/molecules/fields/SelectField";
+import { DragHandle } from "@compoz/studio/features/dnd/DragHandle";
 import { NewSocialLinkField } from "@compoz/studio/features/settings/social/components/molecules/NewSocialLinkField";
 import { createFieldIds } from "@compoz/ui/lib/forms/use-id-prefix";
 import {
@@ -26,15 +24,19 @@ import {
 } from "@compoz/ui/lib/social/social-kind-icons";
 import { cn } from "@compoz/ui/lib/utils";
 import { MENU_ITEM_LAYOUT, ROW_END } from "@compoz/ui/styles/studio/layout";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { useMemo, type ComponentPropsWithoutRef } from "react";
 import type { ControllerRenderProps, FieldValues } from "react-hook-form";
 
 type RowErrorMessages = Partial<Record<"kind" | "href", string | undefined>>;
 type RowInvalidFlags = Partial<Record<"kind" | "href", boolean>>;
 
 type RHFField = ControllerRenderProps<FieldValues, string>;
+
+type DragHandleProps = Omit<
+  ComponentPropsWithoutRef<"button">,
+  "type" | "children"
+>;
 
 type SocialFieldsItemProps = Readonly<{
   idPrefix: string;
@@ -50,12 +52,8 @@ type SocialFieldsItemProps = Readonly<{
   /** Allows the parent to keep PATCH semantics when switching between email and URL modes. */
   onHrefClearBySwitch?: () => void;
 
+  dragHandleProps?: DragHandleProps;
   onRemove: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-
-  isFirst?: boolean;
-  isLast?: boolean;
   disabled?: boolean;
 }>;
 
@@ -102,11 +100,8 @@ export function SocialFieldsItem({
   error,
   onHrefValidateNow,
   onHrefClearBySwitch,
+  dragHandleProps,
   onRemove,
-  onMoveUp,
-  onMoveDown,
-  isFirst = false,
-  isLast = false,
   disabled = false,
 }: SocialFieldsItemProps) {
   const kindIds = createFieldIds(idPrefix, "kind");
@@ -136,92 +131,62 @@ export function SocialFieldsItem({
   };
 
   return (
-    <div className={cn(MENU_ITEM_LAYOUT)}>
-      <SelectField
-        ids={kindIds}
-        name={kindField.name}
-        label={t("studio.socialFieldsItem.kind.label")}
-        value={kindValue}
-        onChange={(v) => {
-          const prevKind = kindValue;
-          const nextKind = normalizeSocialKind(String(v));
+    <div className={cn("grid grid-cols-[auto_1fr] gap-3")}>
+      <div className="pt-[2.2rem]">
+        <DragHandle
+          className={cn(disabled && "pointer-events-none opacity-50")}
+          disabled={disabled}
+          {...dragHandleProps}
+        />
+      </div>
 
-          const prevIsEmail = prevKind === SOCIAL_KIND_EMAIL;
-          const nextIsEmail = nextKind === SOCIAL_KIND_EMAIL;
+      <div className={cn(MENU_ITEM_LAYOUT)}>
+        <SelectField
+          ids={kindIds}
+          name={kindField.name}
+          label={t("studio.socialFieldsItem.kind.label")}
+          value={kindValue}
+          onChange={(v) => {
+            const prevKind = kindValue;
+            const nextKind = normalizeSocialKind(String(v));
 
-          kindField.onChange(nextKind);
+            const prevIsEmail = prevKind === SOCIAL_KIND_EMAIL;
+            const nextIsEmail = nextKind === SOCIAL_KIND_EMAIL;
 
-          if (prevIsEmail !== nextIsEmail) {
-            clearHrefBySwitch();
-          }
-        }}
-        items={selectItems}
-        placeholder={t("studio.socialFieldsItem.kind.placeholder")}
-        disabled={disabled}
-        invalid={invalid?.kind}
-        error={error?.kind}
-        help={t("studio.socialFieldsItem.kind.help")}
-      />
+            kindField.onChange(nextKind);
 
-      <NewSocialLinkField
-        ids={hrefIds}
-        name={hrefField.name}
-        isEmail={isEmail}
-        value={hrefDisplay}
-        onChange={(raw) => {
-          hrefField.onChange(buildCanonicalHref(raw, isEmail));
-        }}
-        onBlur={validateHrefNow}
-        invalid={invalid?.href}
-        error={error?.href}
-        disabled={disabled}
-        placeholderEmail={t("studio.socialFieldsItem.href.placeholderEmail")}
-        placeholderUrl={t("studio.socialFieldsItem.href.placeholderUrl")}
-        helpEmail={t("studio.socialFieldsItem.href.helpEmail")}
-        helpUrl={t("studio.socialFieldsItem.href.helpUrl")}
-      />
+            if (prevIsEmail !== nextIsEmail) {
+              clearHrefBySwitch();
+            }
+          }}
+          items={selectItems}
+          placeholder={t("studio.socialFieldsItem.kind.placeholder")}
+          disabled={disabled}
+          invalid={invalid?.kind}
+          error={error?.kind}
+          help={t("studio.socialFieldsItem.kind.help")}
+        />
 
-      <div className={cn(ROW_END)}>
-        <div className="mt-[1.6rem] flex h-9 items-center">
-          <StudioButtonGroup className="shrink-0">
-            <TooltipButton
-              type="button"
-              variant="ghost"
-              visualMode="studio"
-              size="icon"
-              onClick={onMoveUp}
-              disabled={disabled || isFirst}
-              aria-label={t("common.moveUp")}
-              tooltip={
-                disabled || isFirst
-                  ? disabled
-                    ? t("common.actionUnavailable")
-                    : t("common.alreadyTop")
-                  : t("common.moveUp")
-              }
-            >
-              <StudioIcon icon={ChevronUp} />
-            </TooltipButton>
+        <NewSocialLinkField
+          ids={hrefIds}
+          name={hrefField.name}
+          isEmail={isEmail}
+          value={hrefDisplay}
+          onChange={(raw) => {
+            hrefField.onChange(buildCanonicalHref(raw, isEmail));
+          }}
+          onBlur={validateHrefNow}
+          invalid={invalid?.href}
+          error={error?.href}
+          disabled={disabled}
+          placeholderEmail={t("studio.socialFieldsItem.href.placeholderEmail")}
+          placeholderUrl={t("studio.socialFieldsItem.href.placeholderUrl")}
+          helpEmail={t("studio.socialFieldsItem.href.helpEmail")}
+          helpUrl={t("studio.socialFieldsItem.href.helpUrl")}
+        />
 
-            <TooltipButton
-              type="button"
-              variant="ghost"
-              visualMode="studio"
-              size="icon"
-              onClick={onMoveDown}
-              disabled={disabled || isLast}
-              aria-label={t("common.moveDown")}
-              tooltip={
-                disabled || isLast
-                  ? disabled
-                    ? t("common.actionUnavailable")
-                    : t("common.alreadyBottom")
-                  : t("common.moveDown")
-              }
-            >
-              <StudioIcon icon={ChevronDown} />
-            </TooltipButton>
-
+        <div className={cn(ROW_END)}>
+          <div className="mt-[1.6rem] flex h-9 items-center">
             <DeleteButton
               size="icon"
               disabled={disabled}
@@ -233,7 +198,7 @@ export function SocialFieldsItem({
                 ),
               }}
             />
-          </StudioButtonGroup>
+          </div>
         </div>
       </div>
     </div>

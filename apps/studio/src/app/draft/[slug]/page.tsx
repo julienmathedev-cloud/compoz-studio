@@ -57,7 +57,12 @@ export async function generateMetadata({
   const title =
     (page.seoTitle ?? "").trim() || h1 || (page.name ?? "").trim() || undefined;
 
-  return { title };
+  const description = (page.seoDescription ?? "").trim();
+
+  return {
+    title,
+    ...(description ? { description } : {}),
+  };
 }
 
 export default async function DraftPage({ params }: PageParams) {

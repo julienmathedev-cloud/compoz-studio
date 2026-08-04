@@ -40,7 +40,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const title =
     (page.seoTitle ?? "").trim() || h1 || (page.name ?? "").trim() || undefined;
 
-  return { title };
+  const description = (page.seoDescription ?? "").trim();
+
+  return {
+    title,
+    ...(description ? { description } : {}),
+  };
 }
 
 function hrefForDraftSlug(slug: string): string {

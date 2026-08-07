@@ -85,7 +85,7 @@ export const TwitterSettingsSchema = z
 
 export type TwitterSettingsShape = z.infer<typeof TwitterSettingsSchema>;
 
-const OptionalStructuredDataStringSchema = z.string().trim().min(1).optional();
+const OptionalStructuredDataStringSchema = z.string().trim().optional();
 
 export const StructuredDataEntityTypeSchema = z.enum([
   "person",
@@ -115,9 +115,9 @@ export const StructuredDataSettingsSchema = z
     telephone: OptionalStructuredDataStringSchema,
     email: OptionalStructuredDataStringSchema,
     address: StructuredDataAddressSchema.optional(),
-    areaServed: z.array(z.string().trim().min(1)).optional(),
+    areaServed: z.array(z.string().trim()).optional(),
     priceRange: OptionalStructuredDataStringSchema,
-    openingHours: z.array(z.string().trim().min(1)).optional(),
+    openingHours: z.array(z.string().trim()).optional(),
   })
   .strict();
 

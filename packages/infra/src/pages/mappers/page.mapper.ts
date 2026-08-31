@@ -15,7 +15,6 @@ import type {
   CreateDraftPageInput,
   PageSitemapMetadata,
 } from "@compoz/core/domain/pages/ports/pages-repository";
-import { normalizePersistedPageBlocks } from "@compoz/infra/pages/normalizers/normalize-persisted-page-blocks";
 import { Prisma } from "@compoz/infra/prisma/generated";
 import {
   PageSchema,
@@ -111,7 +110,7 @@ export function toDomainPage(row: PrismaPageRow): Page {
     name: row.name,
     seoTitle: row.seoTitle,
     seoDescription: row.seoDescription,
-    blocks: normalizePersistedPageBlocks(row.blocks),
+    blocks: row.blocks,
     meta: {
       createdAt: row.metaCreatedAt.toISOString(),
       updatedAt: row.metaUpdatedAt.toISOString(),

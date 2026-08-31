@@ -125,7 +125,6 @@ export function SiteAppImage({
       blurDataURL={placeholder === "blur" ? blurDataURL : undefined}
       style={style}
       onLoad={onLoad}
-      unoptimized={true}
     />
   );
 }
